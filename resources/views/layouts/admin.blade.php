@@ -3,8 +3,11 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI Admin Portal</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="manifest" href="{{ asset('manifest.json') }}">
+      <link rel="apple-touch-icon" href="{{ asset('img/logo.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
@@ -33,25 +36,37 @@
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar" style="border-right: 2px solid rgba(248,113,113,0.1);">
-            <div class="db-logo">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
-               <span class="admin-brand">SpeakReady AI Admin</span>
-            </div>
+             <div class="db-logo d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
+                   <span class="admin-brand">SpeakReady AI Admin</span>
+                </div>
+                <button class="d-lg-none" style="background:none;border:none;color:var(--tx2);font-size:1.5rem;padding:0;line-height:1;" onclick="document.getElementById('dbSidebar').classList.remove('mob-open')">
+                   <i class="fa-solid fa-xmark"></i>
+                </button>
+             </div>
             <div class="db-nav">
                <div class="db-nav-section">Core Modules</div>
                <a href="{{ route('admin.dashboard') }}" class="db-nl {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Admin Dashboard</a>
                <a href="{{ route('admin.users') }}" class="db-nl {{ request()->routeIs('admin.users') ? 'active' : '' }}"><i class="fa-solid fa-users"></i> User Management</a>
                <a href="{{ route('admin.categories') }}" class="db-nl {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> Categories</a>
-               <a href="{{ route('admin.questions') }}" class="db-nl {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-question"></i> Question Bank</a>
+               <a href="{{ route('admin.questions') }}" class="db-nl {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> Question Bank</a>
                <a href="{{ route('admin.modules') }}" class="db-nl {{ request()->routeIs('admin.modules') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Learning Content</a>
                
                <div class="db-nav-section">Monitoring</div>
-               <a href="#" class="db-nl"><i class="fa-solid fa-video"></i> Session Monitoring</a>
-               <a href="#" class="db-nl"><i class="fa-solid fa-magnifying-glass-chart"></i> Feedback Audit</a>
+               <a href="{{ route('admin.sessions.index') }}" class="db-nl {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> Session Monitoring</a>
+               <a href="{{ route('admin.feedback.index') }}" class="db-nl {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Audit</a>
+               <a href="{{ route('admin.feedback.complaints') }}" class="db-nl {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i> User Complaints</a>
                
                <div class="db-nav-section">System</div>
-               <a href="#" class="db-nl"><i class="fa-solid fa-robot"></i> AI Providers</a>
-               <a href="#" class="db-nl"><i class="fa-solid fa-gear"></i> System Settings</a>
+               <a href="{{ route('admin.ai.dashboard') }}" class="db-nl {{ request()->routeIs('admin.ai.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i> AI Providers</a>
+               <a href="{{ route('admin.ai.providers') }}" class="db-nl {{ request()->routeIs('admin.ai.providers') ? 'active' : '' }}" style="padding-left: 40px; font-size: 0.85rem;"><i class="fa-solid fa-server"></i> Management</a>
+               <a href="{{ route('admin.ai.prompts') }}" class="db-nl {{ request()->routeIs('admin.ai.prompts') ? 'active' : '' }}" style="padding-left: 40px; font-size: 0.85rem;"><i class="fa-solid fa-comment-dots"></i> Prompts</a>
+               <a href="{{ route('admin.ai.testing') }}" class="db-nl {{ request()->routeIs('admin.ai.testing') ? 'active' : '' }}" style="padding-left: 40px; font-size: 0.85rem;"><i class="fa-solid fa-vial"></i> Testing</a>
+               <a href="{{ route('admin.ai.logs') }}" class="db-nl {{ request()->routeIs('admin.ai.logs') ? 'active' : '' }}" style="padding-left: 40px; font-size: 0.85rem;"><i class="fa-solid fa-clipboard-list"></i> Logs</a>
+               <a href="{{ route('admin.ai.settings') }}" class="db-nl {{ request()->routeIs('admin.ai.settings') ? 'active' : '' }}" style="padding-left: 40px; font-size: 0.85rem;"><i class="fa-solid fa-sliders"></i> Settings</a>
+               
+               <a href="{{ route('admin.settings.index') }}" class="db-nl {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i> System Settings</a>
             </div>
             <div class="db-bottom">
                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
@@ -71,7 +86,7 @@
                   <i class="fa-solid fa-magnifying-glass"></i>
                   <input type="text" placeholder="Search Admin Portal...">
                </div>
-               <div class="ms-auto d-flex align-items-center gap-3">
+               <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <span class="db-badge" style="background:rgba(248,113,113,.15);color:#f87171;border:1px solid rgba(248,113,113,.3)"><i class="fa-solid fa-user-shield me-2"></i> Administrator</span>
                   <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleTheme()">
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
@@ -117,5 +132,17 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js') }}"></script>
+      <!-- PWA Service Worker Registration -->
+      <script>
+         if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+               }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+               });
+            });
+         }
+      </script>
    </body>
 </html>

@@ -2,44 +2,132 @@
 
 @section('content')
 <div class="db-section active">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h4 style="color:var(--tx);font-weight:700">Feedback Center</h4>
             <p style="color:var(--tx3)">Review your past interviews and AI-generated insights.</p>
         </div>
     </div>
 
-    @if($sessions->count() > 0)
-    <div class="row g-4">
-        @foreach($sessions as $session)
-        <div class="col-md-6 col-lg-4">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;display:flex;flex-direction:column;">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <span class="db-badge" style="background:rgba(139,92,246,.15);color:#a78bfa">{{ ucfirst($session->difficulty) }}</span>
-                    <span style="font-size:.8rem;color:var(--tx3)">{{ $session->created_at->format('M d, Y') }}</span>
-                </div>
-                
-                <h5 style="color:var(--tx);margin-bottom:8px;">{{ $session->category->name ?? 'General Interview' }}</h5>
-                <p style="color:var(--tx3);font-size:.9rem;flex-grow:1;">{{ Str::limit($session->feedback->strengths ?? 'No feedback recorded.', 80) }}</p>
-                
-                <div class="mt-3 pt-3" style="border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;">
-                    <div style="color:var(--tx)">
-                        <span style="font-size:1.2rem;font-weight:700;color:#34d399">{{ $session->score->overall_readiness_score ?? 0 }}</span>
-                        <span style="font-size:.8rem;color:var(--tx3)">/100</span>
-                    </div>
-                    <a href="{{ route('user.review', $session->id) }}" class="btn btn-outline-primary btn-sm" style="border-radius:8px">View Details</a>
+    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h5 style="color:var(--tx);margin:0;font-weight:bold;">Feedback History</h5>
+            <div class="d-flex gap-2 flex-wrap">
+                <select id="categoryFilter" class="form-select border-0" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
+                    <option value="">All Categories</option>
+                    <option value="Job Interview">Job Interview</option>
+                    <option value="Scholarship Interview">Scholarship Interview</option>
+                    <option value="IT Interview">IT Interview</option>
+                    <option value="College Admission">College Admission</option>
+                </select>
+                <button class="btn btn-outline-secondary" id="sortDateBtn" style="border-radius:8px;"><i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date</button>
+                <div class="input-group" style="width:250px;">
+                    <span class="input-group-text border-0" style="background:var(--bg);color:var(--tx3);border-radius:8px 0 0 8px;"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="feedbackSearch" class="form-control border-0" placeholder="Search Feedback..." style="background:var(--bg);color:var(--tx);border-radius:0 8px 8px 0;">
                 </div>
             </div>
         </div>
-        @endforeach
+
+        <div class="table-responsive">
+            <table class="table align-middle" style="color:var(--tx);" id="feedbackTable">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
+                        <th class="border-0">Date</th>
+                        <th class="border-0">Interview Type</th>
+                        <th class="border-0">Score</th>
+                        <th class="border-0">Rating</th>
+                        <th class="border-0 text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($sessions as $session)
+                    <tr style="border-bottom: 1px solid var(--bd);" data-category="{{ $session->category ? $session->category->name : 'Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
+                        <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
+                        <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->name : 'Job Interview' }}</td>
+                        <td class="border-0 py-3 fw-bold">{{ $session->score ? $session->score->overall_readiness_score : 0 }}%</td>
+                        <td class="border-0 py-3">
+                            @php $sc = $session->score ? $session->score->overall_readiness_score : 0; @endphp
+                            @if($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
+                            @elseif($sc >= 70) <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
+                            @elseif($sc >= 50) <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
+                            @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Improvement</span>
+                            @endif
+                        </td>
+                        <td class="border-0 py-3 text-end"><a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary" style="border-radius: 8px;">View Details</a></td>
+                    </tr>
+                    @endforeach
+                    @if($sessions->count() == 0)
+                    <!-- Mock data for demonstration if DB is empty -->
+                    <tr style="border-bottom: 1px solid var(--bd);" data-category="Job Interview" data-date="1718668800">
+                        <td class="border-0 py-3">June 18, 2026</td>
+                        <td class="border-0 py-3 fw-bold">Job Interview</td>
+                        <td class="border-0 py-3 fw-bold">88%</td>
+                        <td class="border-0 py-3"><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span></td>
+                        <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-primary" style="border-radius: 8px;">View Details</button></td>
+                    </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination UI -->
+        <nav aria-label="Feedback pagination" class="mt-4">
+            <ul class="pagination justify-content-end mb-0" id="feedbackPagination">
+                <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" style="background:var(--bg);color:var(--tx3);border-color:var(--bd);">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#" style="background:#3b82f6;border-color:#3b82f6;color:#fff;">1</a></li>
+                <li class="page-item"><a class="page-link" href="#" style="background:var(--sf);color:var(--tx);border-color:var(--bd);">2</a></li>
+                <li class="page-item"><a class="page-link" href="#" style="background:var(--sf);color:var(--tx);border-color:var(--bd);">Next</a></li>
+            </ul>
+        </nav>
     </div>
-    @else
-    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:48px;text-align:center">
-        <i class="fa-solid fa-clipboard-check" style="font-size:3rem;color:var(--tx3);margin-bottom:16px;"></i>
-        <h5 style="color:var(--tx)">No Feedback Found</h5>
-        <p style="color:var(--tx3)">Complete your first mock interview to get AI feedback.</p>
-        <a href="{{ route('interview.setup') }}" class="btn bgrd px-4 py-2 mt-3">Start Practice</a>
-    </div>
-    @endif
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('feedbackSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const sortBtn = document.getElementById('sortDateBtn');
+        const tbody = document.querySelector('#feedbackTable tbody');
+        let sortDesc = true;
+
+        function filterTable() {
+            const search = searchInput.value.toLowerCase();
+            const cat = categoryFilter.value.toLowerCase();
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const rowCat = row.getAttribute('data-category').toLowerCase();
+                
+                const matchesSearch = text.includes(search);
+                const matchesCat = cat === "" || rowCat.includes(cat);
+
+                if (matchesSearch && matchesCat) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        if(searchInput) searchInput.addEventListener('keyup', filterTable);
+        if(categoryFilter) categoryFilter.addEventListener('change', filterTable);
+
+        if(sortBtn) {
+            sortBtn.addEventListener('click', function() {
+                sortDesc = !sortDesc;
+                sortBtn.innerHTML = sortDesc ? '<i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date' : '<i class="fa-solid fa-arrow-up-wide-short me-1"></i> Sort by Date';
+                
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                rows.sort((a, b) => {
+                    const d1 = parseInt(a.getAttribute('data-date') || 0);
+                    const d2 = parseInt(b.getAttribute('data-date') || 0);
+                    return sortDesc ? d2 - d1 : d1 - d2;
+                });
+                
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        }
+    });
+</script>
 @endsection

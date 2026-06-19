@@ -77,7 +77,7 @@
                     </div>
                     
                     <div id="aiVoiceVisualizer" style="display: none; align-items: center; margin-bottom: 15px;">
-                        <div style="background:rgba(139,92,246,.1); padding:8px 12px; border-radius:12px; display:flex; align-items:center;">
+                        <div style="background:rgba(59,130,246,.1); padding:8px 12px; border-radius:12px; display:flex; align-items:center;">
                             <i class="fa-solid fa-robot" style="color:var(--pur); font-size:1.2rem; margin-right:10px;"></i>
                             <div class="d-flex align-items-center" style="height:24px;">
                                 <div class="ai-wave-bar"></div>
@@ -192,7 +192,7 @@
             <h4 style="color:var(--tx);font-weight:700">Interview Workspace Ready</h4>
             <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} questions. The AI visualizer and STAR analyzer will run in real-time as you respond.</p>
             <div style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
-                <span class="db-badge" style="background:rgba(139,92,246,.15);color:#a78bfa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
+                <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
                 <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-bullseye me-1"></i> {{ ucfirst($sessionRecord->coach_focus_mode) }} Focus</span>
             </div>
             <button class="bgrd btn px-4 py-3 w-100" style="font-size:1.1rem;font-weight:600" onclick="startInterviewSession()">Begin Interview <i class="fa-solid fa-play ms-2"></i></button>

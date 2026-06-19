@@ -13,8 +13,8 @@
     <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden">
         
         <!-- Unread Notification -->
-        <div style="padding:20px 24px;border-bottom:1px solid var(--bd);background:rgba(139,92,246,0.03);display:flex;align-items:flex-start">
-            <div style="width:48px;height:48px;background:rgba(139,92,246,.15);color:#a78bfa;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-right:16px;flex-shrink:0">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--bd);background:rgba(59,130,246,0.03);display:flex;align-items:flex-start">
+            <div style="width:48px;height:48px;background:rgba(59,130,246,.15);color:#60a5fa;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-right:16px;flex-shrink:0">
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
             </div>
             <div style="flex-grow:1">

@@ -21,7 +21,7 @@
         background: var(--pur);
         color: #fff;
         border-color: var(--pur);
-        box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        box-shadow: 0 4px 15px rgba(59,130,246,0.3);
     }
     
     .quiz-container {
@@ -60,11 +60,11 @@
         gap: 15px;
     }
     .option-card:hover {
-        background: rgba(139,92,246,0.05);
-        border-color: rgba(139,92,246,0.5);
+        background: rgba(59,130,246,0.05);
+        border-color: rgba(59,130,246,0.5);
     }
     .option-card.selected {
-        background: rgba(139,92,246,0.1);
+        background: rgba(59,130,246,0.1);
         border-color: var(--pur);
     }
     .option-letter {
@@ -100,7 +100,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        box-shadow: 0 10px 25px rgba(139,92,246,0.4);
+        box-shadow: 0 10px 25px rgba(59,130,246,0.4);
         cursor: pointer;
         transition: 0.3s;
         z-index: 100;
@@ -108,7 +108,7 @@
     }
     .ll-ai-fab:hover {
         transform: scale(1.1);
-        box-shadow: 0 15px 35px rgba(139,92,246,0.5);
+        box-shadow: 0 15px 35px rgba(59,130,246,0.5);
     }
 </style>
 

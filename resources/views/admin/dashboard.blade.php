@@ -52,8 +52,8 @@
         text-decoration: none;
     }
     .quick-action-btn:hover {
-        background: var(--pur, #8b5cf6);
-        border-color: var(--pur, #8b5cf6);
+        background: var(--pur, #3b82f6);
+        border-color: var(--pur, #3b82f6);
         color: #fff;
     }
     
@@ -100,7 +100,7 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
-        background: #8b5cf6;
+        background: #3b82f6;
         border: 2px solid var(--sf);
     }
     .activity-item:last-child { margin-bottom: 0; }
@@ -122,7 +122,7 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie me-2" style="color:#8b5cf6;"></i>Admin Dashboard</h4>
+            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie me-2" style="color:#3b82f6;"></i>Admin Dashboard</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">System overview, user analytics, and platform health.</p>
         </div>
         <!-- Feature 16: Quick Actions Panel -->
@@ -138,7 +138,7 @@
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card text-center p-3 h-100">
-                <div style="font-size:1.5rem;color:#8b5cf6;margin-bottom:8px;"><i class="fa-solid fa-users"></i></div>
+                <div style="font-size:1.5rem;color:#3b82f6;margin-bottom:8px;"><i class="fa-solid fa-users"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">1,250</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Registered Users</div>
             </div>
@@ -237,7 +237,7 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div style="width:32px;height:32px;border-radius:50%;background:#8b5cf6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">JD</div>
+                                        <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">JD</div>
                                         <span>Juan Dela Cruz</span>
                                     </div>
                                 </td>
@@ -315,7 +315,7 @@
                         <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="fw-bold" style="color:#fbbf24;width:20px;">1</span>
-                                <div style="width:30px;height:30px;border-radius:50%;background:#8b5cf6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">JO</div>
+                                <div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">JO</div>
                                 <span style="font-size:0.9rem;">John</span>
                             </div>
                             <span class="fw-bold text-success">96%</span>
@@ -406,7 +406,7 @@
         <div class="col-lg-4">
 
             <!-- Feature 7: AI Usage Monitoring -->
-            <div class="premium-card mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(139,92,246,0.05) 100%);">
+            <div class="premium-card mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
                 <h6 class="fw-bold mb-4"><i class="fa-solid fa-microchip me-2 text-primary"></i>AI Usage Monitoring</h6>
                 
                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
@@ -448,7 +448,7 @@
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Grammar</span><span class="fw-bold">90%</span></div>
-                    <div class="progress-track"><div class="progress-fill" style="width:90%;background:#8b5cf6;"></div></div>
+                    <div class="progress-track"><div class="progress-fill" style="width:90%;background:#3b82f6;"></div></div>
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Professionalism</span><span class="fw-bold">80%</span></div>
@@ -545,13 +545,13 @@ document.addEventListener("DOMContentLoaded", function() {
             datasets: [{
                 label: 'New Registrations',
                 data: [120, 190, 300, 450, 600, 850],
-                borderColor: '#8b5cf6',
+                borderColor: '#3b82f6',
                 backgroundColor: gradientLine,
                 borderWidth: 3,
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: '#1e1e2d',
-                pointBorderColor: '#8b5cf6',
+                pointBorderColor: '#3b82f6',
                 pointRadius: 4
             }]
         },
@@ -574,7 +574,7 @@ document.addEventListener("DOMContentLoaded", function() {
             labels: ['Job', 'Scholarship', 'College', 'IT'],
             datasets: [{
                 data: [1250, 820, 670, 2080],
-                backgroundColor: ['#8b5cf6', '#34d399', '#fbbf24', '#60a5fa'],
+                backgroundColor: ['#3b82f6', '#34d399', '#fbbf24', '#60a5fa'],
                 borderWidth: 0,
                 hoverOffset: 4
             }]

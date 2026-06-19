@@ -8,7 +8,7 @@
     .desc-text { font-size:.75rem;color:var(--tx3);margin-top:4px; }
     
     .custom-radio { position:relative;display:flex;align-items:flex-start;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);cursor:pointer;margin-bottom:10px;transition:all 0.2s; }
-    .custom-radio:hover { border-color:#a78bfa; }
+    .custom-radio:hover { border-color:#60a5fa; }
     .custom-radio input[type="radio"] { margin-top:4px;margin-right:12px;accent-color:var(--pur); }
     .custom-radio .r-title { font-weight:600;font-size:.9rem;color:var(--tx);display:block; }
     .custom-radio .r-desc { font-size:.75rem;color:var(--tx3);display:block; }
@@ -78,7 +78,7 @@
 
                 <!-- Interview Structure -->
                 <div class="setup-panel">
-                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-layer-group me-2" style="color:#a78bfa"></i> Interview Structure</h5>
+                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-layer-group me-2" style="color:#60a5fa"></i> Interview Structure</h5>
                     
                     <label class="olbl mb-3">Difficulty Level</label>
                     <div class="row g-3 mb-4">
@@ -207,7 +207,7 @@
             <!-- Right Column: Live Summary -->
             <div class="col-lg-4">
                 <div style="position:sticky;top:20px;">
-                    <div class="setup-panel" style="background:linear-gradient(145deg, rgba(139,92,246,0.05) 0%, rgba(59,130,246,0.05) 100%); border:1px solid rgba(139,92,246,0.2);">
+                    <div class="setup-panel" style="background:linear-gradient(145deg, rgba(59,130,246,0.05) 0%, rgba(59,130,246,0.05) 100%); border:1px solid rgba(59,130,246,0.2);">
                         <h5 style="font-weight:700;margin-bottom:20px;color:var(--pur);text-align:center"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
                         
                         <div class="summary-row">
@@ -244,7 +244,7 @@
                         </div>
                         
                         <div style="margin-top:30px;">
-                            <button type="submit" class="bgrd btn w-100 py-3" style="font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 15px rgba(139,92,246,0.3)">
+                            <button type="submit" class="bgrd btn w-100 py-3" style="font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)">
                                 Start Mock Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
                         </div>

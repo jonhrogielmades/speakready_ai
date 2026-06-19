@@ -21,7 +21,7 @@
         background: var(--pur);
         color: #fff;
         border-color: var(--pur);
-        box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        box-shadow: 0 4px 15px rgba(59,130,246,0.3);
     }
 
     .chat-container {
@@ -40,7 +40,7 @@
         display: flex;
         align-items: center;
         gap: 15px;
-        background: rgba(139,92,246,0.05);
+        background: rgba(59,130,246,0.05);
     }
     .chat-avatar {
         width: 45px;
@@ -135,7 +135,7 @@
         transition: 0.2s;
     }
     .suggestion-chip:hover {
-        background: rgba(139,92,246,0.1);
+        background: rgba(59,130,246,0.1);
     }
 </style>
 

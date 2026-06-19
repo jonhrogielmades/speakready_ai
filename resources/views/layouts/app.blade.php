@@ -3,8 +3,11 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>SpeakReady AI - Automate Everything with AI Agents</title>
+      <meta name="theme-color" content="#ffffff">
+      <title>SpeakReady AI - AI-Based Interview Practice System</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="manifest" href="{{ asset('manifest.json') }}">
+      <link rel="apple-touch-icon" href="{{ asset('img/logo.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
@@ -77,7 +80,7 @@
                   <i class="fa-solid fa-magnifying-glass"></i>
                   <input type="text" placeholder="Search...">
                </div>
-               <div class="ms-auto d-flex align-items-center gap-3">
+               <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleTheme()">
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
@@ -126,5 +129,17 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js') }}"></script>
+      <!-- PWA Service Worker Registration -->
+      <script>
+         if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+               }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+               });
+            });
+         }
+      </script>
    </body>
 </html>

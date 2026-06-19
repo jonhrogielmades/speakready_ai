@@ -4,7 +4,7 @@
 <style>
     /* Premium aesthetics for Learning Lab */
     .ll-header {
-        background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(52,211,153,0.1) 100%);
+        background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(52,211,153,0.1) 100%);
         border: 1px solid var(--bd);
         border-radius: 20px;
         padding: 30px;
@@ -22,7 +22,7 @@
     }
     .ll-stat-card:hover {
         transform: translateY(-5px);
-        border-color: rgba(139,92,246,0.3);
+        border-color: rgba(59,130,246,0.3);
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
     .ll-stat-val {
@@ -50,7 +50,7 @@
         background: var(--pur);
         color: #fff;
         border-color: var(--pur);
-        box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        box-shadow: 0 4px 15px rgba(59,130,246,0.3);
     }
     .ll-category-list {
         background: var(--sf);
@@ -69,7 +69,7 @@
         margin-bottom: 5px;
     }
     .ll-category-item:hover, .ll-category-item.active {
-        background: rgba(139,92,246,0.1);
+        background: rgba(59,130,246,0.1);
         color: var(--pur);
     }
     .ll-module-card {
@@ -85,7 +85,7 @@
     .ll-module-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        border-color: rgba(139,92,246,0.4);
+        border-color: rgba(59,130,246,0.4);
     }
     .ll-progress-bar {
         width: 100%;
@@ -113,7 +113,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        box-shadow: 0 10px 25px rgba(139,92,246,0.4);
+        box-shadow: 0 10px 25px rgba(59,130,246,0.4);
         cursor: pointer;
         transition: 0.3s;
         z-index: 100;
@@ -121,7 +121,7 @@
     }
     .ll-ai-fab:hover {
         transform: scale(1.1);
-        box-shadow: 0 15px 35px rgba(139,92,246,0.5);
+        box-shadow: 0 15px 35px rgba(59,130,246,0.5);
     }
 </style>
 

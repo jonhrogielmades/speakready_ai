@@ -116,14 +116,14 @@
     <!-- Top Header & Actions -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-users-gear me-2" style="color:#8b5cf6;"></i>User Management</h4>
+            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-users-gear me-2" style="color:#3b82f6;"></i>User Management</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage users, track performance, and broadcast announcements.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <!-- Feature 14 & 15: Broadcast Announcements -->
             <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#broadcastModal"><i class="fa-solid fa-bullhorn me-2"></i>Broadcast</button>
             <!-- Feature 3: Add User -->
-            <button class="btn btn-primary" style="background:#8b5cf6;border-color:#8b5cf6;" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fa-solid fa-user-plus me-2"></i>Add User</button>
+            <button class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;" data-bs-toggle="modal" data-bs-target="#addUserModal"><i class="fa-solid fa-user-plus me-2"></i>Add User</button>
             <!-- Feature 18: Export -->
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fa-solid fa-file-export me-2"></i>Export</button>
@@ -142,7 +142,7 @@
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy me-2 text-warning"></i>Top Performing Users</h6>
                 <div class="d-flex justify-content-between p-2 mb-2 rounded" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);">
-                    <div class="d-flex align-items-center gap-2"><span class="fw-bold text-warning" style="width:20px;">1</span><div style="width:28px;height:28px;border-radius:50%;background:#8b5cf6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">MS</div><span style="font-size:0.9rem;">Maria Santos</span></div>
+                    <div class="d-flex align-items-center gap-2"><span class="fw-bold text-warning" style="width:20px;">1</span><div style="width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">MS</div><span style="font-size:0.9rem;">Maria Santos</span></div>
                     <span class="fw-bold text-success">98% Avg</span>
                 </div>
                 <div class="d-flex justify-content-between p-2 mb-2 rounded" style="background:var(--bg3);">
@@ -210,7 +210,7 @@
                     <tr>
                         <td>
                             <div class="d-flex align-items-center gap-3">
-                                <div style="width:40px;height:40px;border-radius:50%;background:#8b5cf6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;">JD</div>
+                                <div style="width:40px;height:40px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;">JD</div>
                                 <div><div class="fw-bold">Juan Dela Cruz</div><div style="font-size:0.75rem;color:var(--tx3);">IT Student</div></div>
                             </div>
                         </td>
@@ -233,7 +233,7 @@
                             </div>
                         </td>
                         <td>admin@nexusai.com</td>
-                        <td><span class="stat-badge primary" style="background:rgba(139,92,246,0.15);color:#a78bfa;">Admin</span></td>
+                        <td><span class="stat-badge primary" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Admin</span></td>
                         <td><span class="stat-badge success">🟢 Active</span></td>
                         <td style="color:var(--tx2);">Jan 01, 2026</td>
                         <td class="text-end">
@@ -288,7 +288,7 @@
             <span style="font-size:0.85rem;color:var(--tx2);">Showing 1 to 4 of 1,250 entries</span>
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item disabled"><a class="page-link" href="#" style="background:var(--bg3);border-color:var(--bd);color:var(--tx2);">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#" style="background:#8b5cf6;border-color:#8b5cf6;">1</a></li>
+                <li class="page-item active"><a class="page-link" href="#" style="background:#3b82f6;border-color:#3b82f6;">1</a></li>
                 <li class="page-item"><a class="page-link" href="#" style="background:var(--bg3);border-color:var(--bd);color:var(--tx2);">2</a></li>
                 <li class="page-item"><a class="page-link" href="#" style="background:var(--bg3);border-color:var(--bd);color:var(--tx2);">Next</a></li>
             </ul>
@@ -304,7 +304,7 @@
         <div class="modal-content">
             <div class="modal-header d-flex justify-content-between align-items-center pb-0 border-0">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div style="width:60px;height:60px;border-radius:50%;background:#8b5cf6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.5rem;">JD</div>
+                    <div style="width:60px;height:60px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.5rem;">JD</div>
                     <div>
                         <h4 class="mb-0 fw-bold">Juan Dela Cruz</h4>
                         <div style="color:var(--tx2);font-size:0.9rem;">ID: USR-98241 <span class="stat-badge success ms-2">🟢 Active</span></div>
@@ -340,7 +340,7 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="premium-card p-3" style="background:linear-gradient(135deg, var(--sf) 0%, rgba(139,92,246,0.1) 100%);">
+                                <div class="premium-card p-3" style="background:linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.1) 100%);">
                                     <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Interview Statistics</h6>
                                     <div class="row text-center mb-3">
                                         <div class="col-6 mb-3">
@@ -423,7 +423,7 @@
                                     <h6 class="fw-bold mb-3">Category Performance</h6>
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Job Interview</span><span class="fw-bold">90%</span></div>
-                                        <div class="progress-track"><div class="progress-fill" style="width:90%;background:#8b5cf6;"></div></div>
+                                        <div class="progress-track"><div class="progress-fill" style="width:90%;background:#3b82f6;"></div></div>
                                     </div>
                                     <div class="mb-3">
                                         <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>IT Interview</span><span class="fw-bold">85%</span></div>
@@ -517,7 +517,7 @@
             <div class="modal-footer border-0 pb-3 pt-0">
                 <button type="button" class="btn btn-outline-danger me-auto"><i class="fa-solid fa-ban me-2"></i>Suspend Account</button>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" style="background:#8b5cf6;border-color:#8b5cf6;"><i class="fa-solid fa-download me-2"></i>Export Full Report</button>
+                <button type="button" class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;"><i class="fa-solid fa-download me-2"></i>Export Full Report</button>
             </div>
         </div>
     </div>
@@ -563,7 +563,7 @@
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" style="background:#8b5cf6;border-color:#8b5cf6;">Create User</button>
+                <button type="button" class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;">Create User</button>
             </div>
         </div>
     </div>
@@ -606,7 +606,7 @@
             </div>
             <div class="modal-footer border-0">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" style="background:#8b5cf6;border-color:#8b5cf6;">Save Changes</button>
+                <button type="button" class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;">Save Changes</button>
             </div>
         </div>
     </div>

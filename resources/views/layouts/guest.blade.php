@@ -3,8 +3,11 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI - Practice Smarter. Interview Better.</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      <link rel="manifest" href="{{ asset('manifest.json') }}">
+      <link rel="apple-touch-icon" href="{{ asset('img/logo.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
@@ -47,9 +50,9 @@
          <nav id="nbar">
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
-                  <a href="#" class="d-flex align-items-center gap-2" style="font-size:1.2rem;font-weight:700;color:var(--tx)">
-                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
-                     <span>SpeakReady AI</span>
+                  <a href="#" class="d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
+                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0; flex-shrink: 0;">
+                     <span class="text-truncate">SpeakReady AI</span>
                   </a>
                   <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
                      <a href="#" class="nav-link">Home</a>
@@ -60,7 +63,7 @@
                      <a href="#faq" class="nav-link">FAQ</a>
                      <a href="#contact" class="nav-link">Contact Us</a>
                   </div>
-                  <div class="d-flex align-items-center gap-2">
+                  <div class="d-flex align-items-center gap-2 flex-shrink-0">
                      <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:12px" aria-label="Toggle theme">
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
@@ -266,7 +269,7 @@
                <div class="row g-4">
                   <div class="col-md-3 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(139,92,246,.15);color:var(--pur)"><i class="fa-solid fa-chalkboard-user fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:var(--pur)"><i class="fa-solid fa-chalkboard-user fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">AI Mock Interview</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Simulated interview sessions tailored to your chosen field.</p>
                      </div>
@@ -780,6 +783,12 @@
 
                <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">By signing up, you agree to our <a href="#" style="color:var(--pur)">Terms</a> &amp; <a href="#" style="color:var(--pur)">Privacy Policy</a></p>
             </div>
+            <!-- Close Button at Bottom -->
+            <div class="text-center mt-5 mb-3">
+               <button type="button" class="boc d-inline-flex align-items-center justify-content-center" data-bs-dismiss="offcanvas" style="width: 48px; height: 48px; border-radius: 50%; opacity: 0.8;" aria-label="Close">
+                  <i class="fa-solid fa-xmark fs-5"></i>
+               </button>
+            </div>
          </div>
       </div>
       
@@ -843,6 +852,18 @@
                  });
              }
          });
+      </script>
+      <!-- PWA Service Worker Registration -->
+      <script>
+         if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+               }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+               });
+            });
+         }
       </script>
    </body>
 </html>

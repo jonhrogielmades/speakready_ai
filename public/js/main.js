@@ -290,7 +290,7 @@ function initOverviewChart() {
     }
     const c = ctx.getContext('2d');
     const g = c.createLinearGradient(0, 0, 0, 280);
-    g.addColorStop(0, 'rgba(139,92,246,0.35)');
+    g.addColorStop(0, 'rgba(59,130,246,0.35)');
     g.addColorStop(1, 'rgba(59,130,246,0.02)');
     let labels = typeof window.dashboardChartLabels !== 'undefined' && window.dashboardChartLabels.length > 0 ? window.dashboardChartLabels : Array.from({
         length: 30
@@ -309,7 +309,7 @@ function initOverviewChart() {
                 data,
                 fill: true,
                 backgroundColor: g,
-                borderColor: '#8b5cf6',
+                borderColor: '#3b82f6',
                 borderWidth: 2.5,
                 pointRadius: 0,
                 pointHoverRadius: 5,
@@ -324,9 +324,9 @@ function initOverviewChart() {
                 },
                 tooltip: {
                     backgroundColor: 'rgba(22,22,42,.95)',
-                    titleColor: '#a78bfa',
+                    titleColor: '#60a5fa',
                     bodyColor: '#a8a8c8',
-                    borderColor: 'rgba(139,92,246,.3)',
+                    borderColor: 'rgba(59,130,246,.3)',
                     borderWidth: 1,
                     padding: 10,
                     callbacks: {
@@ -375,8 +375,8 @@ function initAnalyticsChart() {
     }
     const c = ctx.getContext('2d');
     const g1 = c.createLinearGradient(0, 0, 0, 250);
-    g1.addColorStop(0, 'rgba(139,92,246,0.3)');
-    g1.addColorStop(1, 'rgba(139,92,246,0.01)');
+    g1.addColorStop(0, 'rgba(59,130,246,0.3)');
+    g1.addColorStop(1, 'rgba(59,130,246,0.01)');
     const g2 = c.createLinearGradient(0, 0, 0, 250);
     g2.addColorStop(0, 'rgba(52,211,153,0.2)');
     g2.addColorStop(1, 'rgba(52,211,153,0.01)');
@@ -394,10 +394,10 @@ function initAnalyticsChart() {
                     data: [8200, 9100, 10400, 9800, 11200, 12800, 14100, 15600, 17200, 19000, 21400, 24800],
                     fill: true,
                     backgroundColor: g1,
-                    borderColor: '#8b5cf6',
+                    borderColor: '#3b82f6',
                     borderWidth: 2.5,
                     pointRadius: 3,
-                    pointBackgroundColor: '#8b5cf6',
+                    pointBackgroundColor: '#3b82f6',
                     tension: .4
                 },
                 {
@@ -430,9 +430,9 @@ function initAnalyticsChart() {
                 },
                 tooltip: {
                     backgroundColor: 'rgba(22,22,42,.95)',
-                    titleColor: '#a78bfa',
+                    titleColor: '#60a5fa',
                     bodyColor: '#a8a8c8',
-                    borderColor: 'rgba(139,92,246,.3)',
+                    borderColor: 'rgba(59,130,246,.3)',
                     borderWidth: 1,
                     padding: 10
                 }
@@ -605,8 +605,8 @@ function markAllRead() {
     const unreadCount = document.getElementById('unreadCount');
     if (unreadCount) {
         unreadCount.textContent = '0 new';
-        unreadCount.style.background = 'rgba(139,92,246,.1)';
-        unreadCount.style.color = '#a78bfa';
+        unreadCount.style.background = 'rgba(59,130,246,.1)';
+        unreadCount.style.color = '#60a5fa';
     }
     const notifBadge = document.getElementById('notifBadge');
     if (notifBadge) notifBadge.style.display = 'none';

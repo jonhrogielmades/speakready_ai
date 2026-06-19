@@ -21,7 +21,7 @@
         background: var(--pur);
         color: #fff;
         border-color: var(--pur);
-        box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        box-shadow: 0 4px 15px rgba(59,130,246,0.3);
     }
     .star-card {
         background: var(--sf);
@@ -51,7 +51,7 @@
     .bg-s { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
     .bg-t { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
     .bg-a { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-    .bg-r { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+    .bg-r { background: linear-gradient(135deg, #3b82f6 0%, #6d28d9 100%); }
     
     .practice-box {
         background: var(--bg);
@@ -72,7 +72,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        box-shadow: 0 10px 25px rgba(139,92,246,0.4);
+        box-shadow: 0 10px 25px rgba(59,130,246,0.4);
         cursor: pointer;
         transition: 0.3s;
         z-index: 100;
@@ -80,7 +80,7 @@
     }
     .ll-ai-fab:hover {
         transform: scale(1.1);
-        box-shadow: 0 15px 35px rgba(139,92,246,0.5);
+        box-shadow: 0 15px 35px rgba(59,130,246,0.5);
     }
 </style>
 
@@ -134,11 +134,11 @@
             </div>
         </div>
         <div class="col-md-6 col-lg-3">
-            <div class="star-card" style="border-top: 4px solid #8b5cf6">
+            <div class="star-card" style="border-top: 4px solid #3b82f6">
                 <div class="star-icon-wrap bg-r"><i class="fa-solid fa-chart-line"></i></div>
                 <h5 style="color:var(--tx);font-weight:700">Result</h5>
                 <p style="color:var(--tx3);font-size:0.9rem">Describe the outcome of your actions. Take credit for your accomplishments and quantify when possible.</p>
-                <div style="font-size:0.8rem;color:#8b5cf6;font-weight:600;margin-top:10px">10-15% of your answer</div>
+                <div style="font-size:0.8rem;color:#3b82f6;font-weight:600;margin-top:10px">10-15% of your answer</div>
             </div>
         </div>
     </div>

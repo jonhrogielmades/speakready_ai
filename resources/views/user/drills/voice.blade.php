@@ -18,7 +18,7 @@
     /* Wave animation */
     @keyframes wave { 0%, 100% { height: 20px; } 50% { height: 80px; } }
     .wave-bar {
-        width: 6px; background: #8b5cf6; border-radius: 4px;
+        width: 6px; background: #3b82f6; border-radius: 4px;
         animation: wave 1s infinite ease-in-out;
     }
     /* Filler word highlight */
@@ -50,7 +50,7 @@
     .stat-lbl { font-size: 0.8rem; color: var(--tx3); text-transform: uppercase; letter-spacing: 1px; }
 
     .nav-pills .nav-link { color: var(--tx3); border-radius: 8px; padding: 10px 20px; font-weight: 600; }
-    .nav-pills .nav-link.active { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+    .nav-pills .nav-link.active { background: rgba(139, 92, 246, 0.15); color: #60a5fa; }
 
     .tab-pane { display: none; }
     .tab-pane.active { display: block; animation: fadeIn 0.4s ease; }
@@ -79,7 +79,7 @@
 <div class="db-section active">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700;margin:0;"><i class="fa-solid fa-ear-listen" style="color:#a78bfa;margin-right:8px;"></i> Voice Rehearsal Studio</h4>
+            <h4 style="color:var(--tx);font-weight:700;margin:0;"><i class="fa-solid fa-ear-listen" style="color:#60a5fa;margin-right:8px;"></i> Voice Rehearsal Studio</h4>
             <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;">Master your delivery, pacing, and tone with AI analysis.</p>
         </div>
         <ul class="nav nav-pills" id="moduleTabs">
@@ -107,7 +107,7 @@
                     </div>
 
                     <div class="text-center mb-5">
-                        <h5 style="color:#a78bfa;font-size:0.85rem;font-weight:700;letter-spacing:1px;margin-bottom:12px;">PROMPT</h5>
+                        <h5 style="color:#60a5fa;font-size:0.85rem;font-weight:700;letter-spacing:1px;margin-bottom:12px;">PROMPT</h5>
                         <h3 id="promptText" style="color:var(--tx);font-weight:600;line-height:1.4;">"Tell me about a time you showed leadership."</h3>
                     </div>
 
@@ -115,7 +115,7 @@
                     <div style="margin-bottom:40px;position:relative;height:140px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:24px;border:1px solid var(--bd);">
                         <!-- Idle State -->
                         <div id="micIdle" class="text-center">
-                            <div style="width:64px;height:64px;border-radius:50%;background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#a78bfa;font-size:1.8rem;transition:all 0.3s;">
+                            <div style="width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#60a5fa;font-size:1.8rem;transition:all 0.3s;">
                                 <i class="fa-solid fa-microphone"></i>
                             </div>
                             <div id="statusText" style="color:var(--tx3);margin-top:12px;font-size:0.9rem;">Ready to record</div>
@@ -135,7 +135,7 @@
 
                     <!-- Controls -->
                     <div class="d-flex justify-content-center gap-3 mb-4">
-                        <button id="btnStart" class="btn" style="background:#8b5cf6;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="startRec()"><i class="fa-solid fa-play me-2"></i> Start</button>
+                        <button id="btnStart" class="btn" style="background:#3b82f6;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="startRec()"><i class="fa-solid fa-play me-2"></i> Start</button>
                         <button id="btnPause" class="btn btn-warning" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="pauseRec()"><i class="fa-solid fa-pause me-2"></i> Pause</button>
                         <button id="btnResume" class="btn btn-info" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="resumeRec()"><i class="fa-solid fa-play me-2"></i> Resume</button>
                         <button id="btnStop" class="btn btn-danger" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="stopRec()"><i class="fa-solid fa-stop me-2"></i> Stop & Analyze</button>
@@ -179,8 +179,8 @@
             <!-- Right: Post-Analysis Dashboard -->
             <div class="col-lg-4">
                 <div id="analysisPanel" style="opacity:0.5;pointer-events:none;transition:opacity 0.4s;">
-                    <div class="premium-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(139,92,246,0.05) 100%);">
-                        <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#a78bfa;"></i> AI Assessment</h6>
+                    <div class="premium-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
+                        <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> AI Assessment</h6>
                         
                         <!-- Clarity & Confidence -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -202,7 +202,7 @@
                                 <span style="font-weight:700;" id="resPaceRating">--</span>
                             </div>
                             <div class="progress-track" style="height:6px;">
-                                <div id="paceBar" class="progress-fill" style="width:0%;background:#8b5cf6;"></div>
+                                <div id="paceBar" class="progress-fill" style="width:0%;background:#3b82f6;"></div>
                             </div>
                             <div style="font-size:0.75rem;color:var(--tx3);margin-top:6px;text-align:right;" id="resPaceDesc">Optimal: 100-150 WPM</div>
                         </div>
@@ -622,7 +622,7 @@ function saveSession() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td style="color:var(--tx2);font-size:0.9rem;">${d}</td>
-        <td><span class="badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;">${cat}</span></td>
+        <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${cat}</span></td>
         <td style="color:#34d399;font-weight:600;">${cl}</td>
         <td>${w}</td>
         <td style="color:#f87171;">${f}</td>
@@ -644,7 +644,7 @@ function loadHistory() {
     hist.reverse().forEach(h => {
         html += `<tr>
             <td style="color:var(--tx2);font-size:0.9rem;">${h.d}</td>
-            <td><span class="badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;">${h.c}</span></td>
+            <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${h.c}</span></td>
             <td style="color:#34d399;font-weight:600;">${h.cl}</td>
             <td>${h.w}</td>
             <td style="color:#f87171;">${h.f}</td>

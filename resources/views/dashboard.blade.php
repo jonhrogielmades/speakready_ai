@@ -44,8 +44,8 @@
         transition: all 0.2s;
     }
     .quick-action-btn:hover {
-        background: var(--pur, #8b5cf6);
-        border-color: var(--pur, #8b5cf6);
+        background: var(--pur, #3b82f6);
+        border-color: var(--pur, #3b82f6);
         color: #fff;
     }
     
@@ -59,7 +59,7 @@
     .progress-fill {
         height: 100%;
         border-radius: 10px;
-        background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
     }
     
     .badge-icon {
@@ -101,8 +101,8 @@
         font-size: 0.85rem;
     }
     .nav-pills .nav-link.active {
-        background-color: rgba(139, 92, 246, 0.2);
-        color: #a78bfa;
+        background-color: rgba(59, 130, 246, 0.2);
+        color: #60a5fa;
     }
     
     .notif-item {
@@ -119,7 +119,7 @@
     <!-- Feature 1: Welcome Section -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div class="d-flex align-items-center gap-3">
-            <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg, #8b5cf6, #3b82f6);display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;font-weight:700;border:2px solid #fff;">
+            <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg, #2563eb, #60a5fa);display:flex;align-items:center;justify-content:center;color:white;font-size:1.5rem;font-weight:700;border:2px solid #fff;">
                 {{ substr(Auth::user()->name ?? 'User', 0, 1) }}
             </div>
             <div>
@@ -155,7 +155,7 @@
             <div class="row g-3 mb-4">
                 <div class="col-6 col-md-3">
                     <div class="premium-card text-center p-3">
-                        <div style="font-size:1.5rem;color:#a78bfa;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i></div>
+                        <div style="font-size:1.5rem;color:#60a5fa;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i></div>
                         <div style="font-size:1.5rem;font-weight:700;">{{ $profile->total_sessions ?? 35 }}</div>
                         <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;">Total Sessions</div>
                     </div>
@@ -229,10 +229,10 @@
                         <h6 class="fw-bold mb-4">Learning Lab Progress</h6>
                         
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <div style="width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.15);display:flex;align-items:center;justify-content:center;color:#8b5cf6;"><i class="fa-solid fa-comments"></i></div>
+                            <div style="width:40px;height:40px;border-radius:10px;background:rgba(59,130,246,0.15);display:flex;align-items:center;justify-content:center;color:#3b82f6;"><i class="fa-solid fa-comments"></i></div>
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Communication Skills</span><span>80%</span></div>
-                                <div class="progress-track" style="height:4px;"><div class="progress-fill" style="width:80%;background:#8b5cf6;"></div></div>
+                                <div class="progress-track" style="height:4px;"><div class="progress-fill" style="width:80%;background:#3b82f6;"></div></div>
                             </div>
                         </div>
                         
@@ -259,7 +259,7 @@
                 <!-- Feature 7: AI Feedback Summary -->
                 <div class="col-md-6">
                     <div class="premium-card h-100">
-                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#a78bfa"></i> AI Feedback Summary</h6>
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#60a5fa"></i> AI Feedback Summary</h6>
                         <div class="p-3 mb-3" style="background:rgba(52,211,153,0.05);border-radius:12px;border:1px solid rgba(52,211,153,0.2);">
                             <h6 style="color:#34d399;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Top Strengths</h6>
                             <ul style="margin:0;padding-left:20px;font-size:0.9rem;color:var(--tx2);">
@@ -281,12 +281,12 @@
                 
                 <!-- Feature 8: AI Recommendations -->
                 <div class="col-md-6">
-                    <div class="premium-card h-100" style="background:linear-gradient(180deg, var(--sf) 0%, rgba(139,92,246,0.05) 100%);">
+                    <div class="premium-card h-100" style="background:linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-lightbulb me-2" style="color:#fbbf24"></i> AI Recommendations</h6>
                         <p style="font-size:0.85rem;color:var(--tx3);margin-bottom:15px;">Based on your recent performance, AI suggests:</p>
                         
                         <div class="d-flex align-items-center gap-3 mb-3 p-2 rounded hover-bg" style="background:var(--bg3);">
-                            <div style="color:#a78bfa;"><i class="fa-solid fa-bullseye"></i></div>
+                            <div style="color:#60a5fa;"><i class="fa-solid fa-bullseye"></i></div>
                             <div style="font-size:0.9rem;">Practice Behavioral Questions</div>
                         </div>
                         <div class="d-flex align-items-center gap-3 mb-3 p-2 rounded hover-bg" style="background:var(--bg3);">
@@ -322,7 +322,7 @@
                             @forelse($recentSessions ?? [] as $session)
                             <tr>
                                 <td style="color:var(--tx2);font-size:0.9rem;">{{ $session->created_at ? $session->created_at->format('M d') : 'June 18' }}</td>
-                                <td><span class="badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;">{{ $session->category ? $session->category->name : 'Job Interview' }}</span></td>
+                                <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">{{ $session->category ? $session->category->name : 'Job Interview' }}</span></td>
                                 <td><span style="color:#34d399;font-weight:600;">{{ $session->score ? $session->score->overall_readiness_score . '%' : '92%' }}</span></td>
                                 <td class="text-end">
                                     <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:0.8rem;border-radius:8px;">View</a>
@@ -332,7 +332,7 @@
                             <!-- Mock data if no sessions exist -->
                             <tr>
                                 <td style="color:var(--tx2);font-size:0.9rem;">June 18</td>
-                                <td><span class="badge" style="background:rgba(139,92,246,0.15);color:#a78bfa;">Job Interview</span></td>
+                                <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Job Interview</span></td>
                                 <td><span style="color:#34d399;font-weight:600;">92%</span></td>
                                 <td class="text-end"><button class="btn btn-sm btn-outline-primary" style="font-size:0.8rem;border-radius:8px;">View</button></td>
                             </tr>
@@ -362,10 +362,10 @@
             </div>
 
             <!-- Feature 9: Daily Practice Challenge -->
-            <div class="premium-card mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(139,92,246,0.1) 100%); border: 1px solid rgba(139,92,246,0.3);">
+            <div class="premium-card mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.1) 100%); border: 1px solid rgba(59,130,246,0.3);">
                 <div class="d-flex align-items-center gap-2 mb-3">
-                    <i class="fa-solid fa-calendar-day" style="color:#a78bfa;font-size:1.2rem;"></i>
-                    <h6 class="fw-bold m-0" style="color:#a78bfa;">Today's Challenge</h6>
+                    <i class="fa-solid fa-calendar-day" style="color:#60a5fa;font-size:1.2rem;"></i>
+                    <h6 class="fw-bold m-0" style="color:#60a5fa;">Today's Challenge</h6>
                 </div>
                 <h5 class="fw-bold mb-2">Answer 3 Behavioral Questions</h5>
                 <p style="font-size:0.85rem;color:var(--tx2);margin-bottom:15px;">Earn extra XP and maintain your streak!</p>
@@ -373,7 +373,7 @@
                     <span class="badge" style="background:rgba(251,191,36,0.2);color:#fbbf24;">+50 XP</span>
                     <span class="badge" style="background:rgba(52,211,153,0.2);color:#34d399;">+1 Streak</span>
                 </div>
-                <button class="btn w-100" style="background:#8b5cf6;color:white;font-weight:600;border-radius:10px;">Start Challenge</button>
+                <button class="btn w-100" style="background:#3b82f6;color:white;font-weight:600;border-radius:10px;">Start Challenge</button>
             </div>
 
             <!-- Feature 13: Upcoming Goals -->
@@ -407,7 +407,7 @@
                         <div style="font-size:0.65rem;color:var(--tx3);">7-Day<br>Streak</div>
                     </div>
                     <div class="text-center" title="STAR Master">
-                        <div class="badge-icon mx-auto mb-1" style="background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.3);color:#a78bfa;"><i class="fa-solid fa-star"></i></div>
+                        <div class="badge-icon mx-auto mb-1" style="background:rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.3);color:#60a5fa;"><i class="fa-solid fa-star"></i></div>
                         <div style="font-size:0.65rem;color:var(--tx3);">STAR<br>Master</div>
                     </div>
                     <div class="text-center" title="Excellent Communicator">
@@ -481,13 +481,13 @@ document.addEventListener("DOMContentLoaded", function() {
             datasets: [{
                 label: 'Readiness Score',
                 data: chartDataObj.daily.data,
-                borderColor: '#8b5cf6',
+                borderColor: '#3b82f6',
                 backgroundColor: gradientLine,
                 borderWidth: 3,
                 tension: 0.4,
                 fill: true,
                 pointBackgroundColor: '#1e1e2d',
-                pointBorderColor: '#8b5cf6',
+                pointBorderColor: '#3b82f6',
                 pointBorderWidth: 2,
                 pointRadius: 4,
                 pointHoverRadius: 6
