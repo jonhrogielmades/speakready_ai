@@ -1,20 +1,20 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
 <div class="db-section active">
     <!-- Feature 2 & 15: Header, Report Info, Export -->
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
             <a href="{{ route('user.feedback') }}" class="btn btn-link text-decoration-none p-0 mb-2" style="color:#3b82f6;"><i class="fa-solid fa-arrow-left me-2"></i>Back to Feedback Center</a>
             <h4 style="color:var(--tx);font-weight:700">Detailed Feedback Report</h4>
             <div class="d-flex gap-3 mt-2" style="font-size:0.9rem;color:var(--tx3)">
                 <span><i class="fa-regular fa-calendar me-1"></i> {{ $sessionRecord->created_at->format('M d, Y') }}</span>
-                <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->name ?? 'Job Interview' }}</span>
+                <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'Job Interview' }}</span>
                 <span><i class="fa-solid fa-signal me-1"></i> {{ ucfirst($sessionRecord->difficulty ?? 'Intermediate') }}</span>
                 <span><i class="fa-regular fa-clock me-1"></i> {{ floor(($sessionRecord->duration_seconds ?? 0) / 60) }}m {{ ($sessionRecord->duration_seconds ?? 0) % 60 }}s</span>
             </div>
         </div>
-        <div class="text-end d-flex gap-4 align-items-center flex-wrap">
+        <div class="text-md-end d-flex gap-4 align-items-center flex-wrap mt-3 mt-md-0">
             <!-- Feature 3: Overall Performance Score & Rating -->
             <div class="text-start">
                 @php 
@@ -24,12 +24,17 @@
                     elseif($overall >= 50) { $rating = 'Fair'; $color = '#f59e0b'; }
                     else { $rating = 'Needs Improvement'; $color = '#ef4444'; }
                 @endphp
-                <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
-                <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
+                <div class="d-flex align-items-center gap-2 d-md-block">
+                    <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
+                    <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
+                </div>
             </div>
-            <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:8px;">
-                    <i class="fa-solid fa-download me-2"></i>Export Report
+            <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto">
+                <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0" id="btnShareSession" type="button" style="border-radius:8px;" onclick="toggleShare()">
+                    <i class="fa-solid fa-share-nodes me-2"></i>{{ $sessionRecord->is_public ? 'Shared Link' : 'Share Session' }}
+                </button>
+                <button class="btn btn-outline-secondary dropdown-toggle flex-grow-1 flex-md-grow-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:8px;">
+                    <i class="fa-solid fa-download me-2"></i>Export
                 </button>
                 <ul class="dropdown-menu shadow-sm" style="background:var(--sf);border-color:var(--bd)">
                     <li><a class="dropdown-item" href="#" style="color:var(--tx)" onclick="window.print()"><i class="fa-solid fa-file-pdf text-danger me-2"></i> PDF Format</a></li>
@@ -103,7 +108,8 @@
                         ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 85, 'color' => '#10b981'],
                         ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 92, 'color' => '#8b5cf6'],
                         ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 88, 'color' => '#f59e0b'],
-                        ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score ?? 80, 'color' => '#ef4444']
+                        ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score ?? 80, 'color' => '#ef4444'],
+                        ['name' => 'Body Language', 'score' => $sessionRecord->score->body_language_score ?? 85, 'color' => '#ec4899']
                     ];
                 @endphp
                 <div class="row g-4">
@@ -206,13 +212,33 @@
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
                                     <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Confidence</div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">Moderate</div>
+                                    <div style="color:{{ ($answer->confidence_score ?? 85) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->confidence_score ?? 85 }}%</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
                                     <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Filler Words</div>
                                     <div style="color:#ef4444;font-weight:bold;font-size:1.1rem;">{{ $answer->filler_words_count ?? 3 }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 16: Body Language Breakdown -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(236,72,153,0.05);border-radius:12px;border:1px solid rgba(236,72,153,0.2);">
+                                    <div>
+                                        <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:2px;"><i class="fa-solid fa-eye me-2" style="color:#ec4899"></i>Eye Contact</div>
+                                    </div>
+                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->eye_contact_score ?? 90 }}%</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(236,72,153,0.05);border-radius:12px;border:1px solid rgba(236,72,153,0.2);">
+                                    <div>
+                                        <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:2px;"><i class="fa-solid fa-person me-2" style="color:#ec4899"></i>Posture</div>
+                                    </div>
+                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->posture_score ?? 90 }}%</div>
                                 </div>
                             </div>
                         </div>
@@ -282,4 +308,28 @@
     </div>
 
 </div>
+
+<script>
+function toggleShare() {
+    fetch('{{ route('interview.toggleShare', $sessionRecord->id) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (data.is_public) {
+                prompt('Your session is now public! Copy this link to share:', data.share_url);
+                document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Shared Link';
+            } else {
+                alert('Session is now private. The previous link is disabled.');
+                document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Share Session';
+            }
+        }
+    });
+}
+</script>
 @endsection

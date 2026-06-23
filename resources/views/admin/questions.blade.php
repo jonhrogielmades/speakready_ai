@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <div class="db-section active" id="sec-admin-questions">
     <!-- Overview Cards -->
@@ -29,9 +29,11 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage interview questions.</p>
         </div>
         <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-danger py-2" id="btnBulkDelete" style="font-size:.85rem; display:none;" onclick="submitBulkDelete()"><i class="fa-solid fa-trash me-1"></i> Delete Selected</button>
             <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate via AI</button>
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
             <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
+            <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> Datasets</button>
             <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal"><i class="fa-solid fa-plus me-1"></i> Add Question</button>
         </div>
     </div>
@@ -40,10 +42,47 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+    <style>
+        .category-card:hover {
+            border-color: var(--tx3) !important;
+        }
+        .category-card.active {
+            background: rgba(255,255,255,0.05) !important;
+            border-color: #0dcaf0 !important;
+        }
+        .category-card {
+            cursor: pointer; 
+            min-width: 160px; 
+            background: var(--sf); 
+            border: 1px solid var(--bd); 
+            border-radius: 14px; 
+            padding: 16px; 
+            text-align: center; 
+            transition: 0.2s;
+        }
+    </style>
+
+    <!-- Category Filter Cards -->
+    <div class="d-flex gap-3 mb-4" style="overflow-x:auto; padding-bottom:8px;">
+        <div class="category-card active" onclick="filterCategory('all', this)">
+            <h6 style="color:var(--tx); margin:0; font-weight:600;">All Categories</h6>
+            <span class="badge bg-secondary mt-2">{{ $totalQuestions }} Questions</span>
+        </div>
+        @foreach($categories as $c)
+        <div class="category-card" onclick="filterCategory('{{ $c->id }}', this)">
+            <h6 style="color:var(--tx); margin:0; font-weight:600;">{{ $c->title }}</h6>
+            <span class="badge bg-secondary mt-2">{{ $c->questions_count }} Questions</span>
+        </div>
+        @endforeach
+    </div>
+
     <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <table class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
+                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600;width:40px;">
+                        <input class="form-check-input" type="checkbox" id="selectAllQuestions" onclick="toggleAllQuestions(this)">
+                    </th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">ID</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Question</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
@@ -54,7 +93,10 @@
             </thead>
             <tbody>
                 @foreach($questions as $q)
-                <tr>
+                <tr class="question-row" data-category-id="{{ $q->category_id }}">
+                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                        <input class="form-check-input question-checkbox" type="checkbox" value="{{ $q->id }}" onchange="toggleBulkDeleteBtn()">
+                    </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $q->id }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px;max-width:250px;">
                         <div class="fw-bold">{{ Str::limit($q->question_text, 60) }}</div>
@@ -71,7 +113,7 @@
                         <span class="badge bg-secondary mb-1 d-block">{{ $q->type }}</span>
                         @if($q->difficulty == 'Easy') <span class="badge bg-success d-block">Easy</span>
                         @elseif($q->difficulty == 'Medium') <span class="badge bg-warning text-dark d-block">Medium</span>
-                        @else <span class="badge bg-danger d-block">Hard</span>
+                        @else <span class="badge d-block" style="background: var(--danger-bg); color: var(--danger-tx);">Hard</span>
                         @endif
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
@@ -88,7 +130,7 @@
                                 <button class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
                             </form>
                             <button class="btn btn-sm btn-outline-info" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#previewQuestionModal{{ $q->id }}" title="Preview"><i class="fa-solid fa-eye"></i></button>
-                            <button class="btn btn-sm btn-outline-light" style="font-size:.7rem" onclick="openAnalytics({{ $q->id }})" title="Analytics"><i class="fa-solid fa-chart-line"></i></button>
+                            <button class="btn btn-sm btn-outline-success" style="font-size:.7rem" onclick="openAnalytics({{ $q->id }})" title="Analytics"><i class="fa-solid fa-chart-line"></i></button>
                             <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editQuestionModal{{ $q->id }}">Edit</button>
                             <button class="btn btn-sm btn-outline-danger" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal{{ $q->id }}">Delete</button>
                         </div>
@@ -346,7 +388,116 @@
     </div>
 </div>
 
+<!-- Datasets Modal -->
+<div class="modal fade" id="datasetsModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border:1px solid var(--bd)">
+            <div class="modal-header" style="border-bottom:1px solid var(--bd)">
+                <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-globe me-2"></i> Community Datasets</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--tx3); font-size:.85rem; margin-bottom: 20px;">Browse and import predefined question sets from the community to quickly build your Question Bank.</p>
+                <div class="row">
+                    <!-- Web Dev Dataset -->
+                    <div class="col-md-4 mb-3">
+                        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
+                            <h6 style="color:var(--tx);font-weight:700;">Web Developer Pack</h6>
+                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;">Technical and behavioral questions tailored for frontend and backend web developers.</p>
+                            <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="dataset" value="web_dev">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import (3)</button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Sales Dataset -->
+                    <div class="col-md-4 mb-3">
+                        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
+                            <h6 style="color:var(--tx);font-weight:700;">Sales Professional</h6>
+                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;">Situational and behavioral questions for evaluating sales and client-facing roles.</p>
+                            <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="dataset" value="sales">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import (3)</button>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Leadership Dataset -->
+                    <div class="col-md-4 mb-3">
+                        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
+                            <h6 style="color:var(--tx);font-weight:700;">Leadership & Mgt.</h6>
+                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;">Questions focusing on team management, conflict resolution, and leadership style.</p>
+                            <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="dataset" value="leadership">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import (3)</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" action="{{ route('admin.questions.bulk-delete') }}" method="POST" style="display:none;">
+    @csrf
+</form>
+
 <script>
+function filterCategory(categoryId, cardElement) {
+    document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
+    cardElement.classList.add('active');
+
+    let rows = document.querySelectorAll('.question-row');
+    rows.forEach(row => {
+        if (categoryId === 'all' || row.getAttribute('data-category-id') == categoryId) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function toggleAllQuestions(source) {
+    let checkboxes = document.querySelectorAll('.question-checkbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+    toggleBulkDeleteBtn();
+}
+
+function toggleBulkDeleteBtn() {
+    let checked = document.querySelectorAll('.question-checkbox:checked').length;
+    let btn = document.getElementById('btnBulkDelete');
+    if(checked > 0) {
+        btn.style.display = 'inline-block';
+    } else {
+        btn.style.display = 'none';
+        document.getElementById('selectAllQuestions').checked = false;
+    }
+}
+
+function submitBulkDelete() {
+    if(!confirm('Are you sure you want to delete all selected questions?')) return;
+    
+    let form = document.getElementById('bulkDeleteForm');
+    
+    // remove existing hidden inputs
+    form.querySelectorAll('input[name="question_ids[]"]').forEach(el => el.remove());
+
+    let checkboxes = document.querySelectorAll('.question-checkbox:checked');
+    checkboxes.forEach(cb => {
+        let input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'question_ids[]';
+        input.value = cb.value;
+        form.appendChild(input);
+    });
+    
+    form.submit();
+}
+
 function openAnalytics(questionId) {
     var myModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
     myModal.show();

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
 <style>
@@ -9,23 +9,6 @@
         padding: 24px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
-    .custom-table th {
-        color: var(--tx3, #808090);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-        border-bottom: 1px solid var(--bd);
-        padding: 12px 16px;
-    }
-    .custom-table td {
-        padding: 16px;
-        border-bottom: 1px solid var(--bd);
-        color: var(--tx, #e0e0e0);
-        vertical-align: middle;
-        font-size: 0.9rem;
-    }
-    .custom-table tr:last-child td { border-bottom: none; }
 </style>
 
 <div class="db-section active">

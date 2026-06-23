@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
 <style>
@@ -25,24 +25,6 @@
     .stat-badge.danger { background: rgba(248, 113, 113, 0.15); color: #f87171; }
     .stat-badge.primary { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
     .stat-badge.secondary { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
-    
-    .custom-table th {
-        color: var(--tx3, #808090);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-        border-bottom: 1px solid var(--bd);
-        padding: 12px 16px;
-    }
-    .custom-table td {
-        padding: 16px;
-        border-bottom: 1px solid var(--bd);
-        color: var(--tx, #e0e0e0);
-        vertical-align: middle;
-        font-size: 0.9rem;
-    }
-    .custom-table tr:last-child td { border-bottom: none; }
     .chart-container { position: relative; height: 250px; width: 100%; }
 </style>
 

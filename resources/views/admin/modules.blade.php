@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <div class="db-section active" id="sec-admin-modules">
     <div class="mb-4 d-flex justify-content-between align-items-center">

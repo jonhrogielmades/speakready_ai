@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
 <style>
@@ -49,31 +49,9 @@
     .stat-val { font-size: 1.5rem; font-weight: 700; color: var(--tx); }
     .stat-lbl { font-size: 0.8rem; color: var(--tx3); text-transform: uppercase; letter-spacing: 1px; }
 
-    .nav-pills .nav-link { color: var(--tx3); border-radius: 8px; padding: 10px 20px; font-weight: 600; }
-    .nav-pills .nav-link.active { background: rgba(139, 92, 246, 0.15); color: #60a5fa; }
-
     .tab-pane { display: none; }
     .tab-pane.active { display: block; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    
-    .custom-table th {
-        color: var(--tx3, #808090);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-        border-bottom: 1px solid var(--bd);
-        padding: 12px 16px;
-    }
-    .custom-table td {
-        padding: 16px;
-        border-bottom: 1px solid var(--bd);
-        color: var(--tx, #e0e0e0);
-        vertical-align: middle;
-    }
-    .custom-table tr:last-child td {
-        border-bottom: none;
-    }
 </style>
 
 <div class="db-section active">

@@ -13,7 +13,96 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        return view('admin.dashboard');
+        $registeredUsersCount = \App\Models\User::count();
+        $activeTodayCount = \App\Models\InterviewSession::whereDate('created_at', today())->distinct('user_id')->count() 
+            ?: \App\Models\User::whereDate('updated_at', '>=', now()->subDay())->count();
+        $mockInterviewsCount = \App\Models\InterviewSession::count();
+        $aiFeedbacksCount = \App\Models\Feedback::count();
+        $modulesCompletedCount = \App\Models\LearningProgress::where('status', 'completed')->count();
+        
+        $recentSessions = \App\Models\InterviewSession::with(['user', 'category', 'score'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+            
+        // Top users based on highest score
+        $leaderboard = \App\Models\Score::select('scores.*', 'users.name as user_name', 'users.id as user_id', 'users.email')
+            ->join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
+            ->join('users', 'interview_sessions.user_id', '=', 'users.id')
+            ->orderBy('scores.overall_readiness_score', 'desc')
+            ->take(3)
+            ->get();
+
+        // Users needing support (< 60 score)
+        $usersNeedingSupport = \App\Models\Score::select('scores.*', 'users.name as user_name', 'users.id as user_id')
+            ->join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
+            ->join('users', 'interview_sessions.user_id', '=', 'users.id')
+            ->where('scores.overall_readiness_score', '<', 60)
+            ->orderBy('scores.overall_readiness_score', 'asc')
+            ->take(3)
+            ->get();
+
+        // Avg performance metrics
+        $avgClarity = round(\App\Models\Score::avg('clarity_score') ?? 0);
+        $avgRelevance = round(\App\Models\Score::avg('relevance_score') ?? 0);
+        $avgGrammar = round(\App\Models\Score::avg('grammar_score') ?? 0);
+        $avgProfessionalism = round(\App\Models\Score::avg('professionalism_score') ?? 0);
+
+        // Activity Logs Mock based on recent users
+        $recentActivities = \App\Models\User::orderBy('created_at', 'desc')->take(4)->get()->map(function($user) {
+            return [
+                'text' => 'User registered: ' . $user->name,
+                'time' => $user->created_at->diffForHumans()
+            ];
+        });
+
+        // Analytics for charts
+        $categoriesDonut = \App\Models\InterviewSession::join('categories', 'interview_sessions.category_id', '=', 'categories.id')
+            ->selectRaw('categories.title as label, count(*) as count')
+            ->groupBy('categories.title')
+            ->get();
+
+        $chartLabels = $categoriesDonut->pluck('label');
+        $chartData = $categoriesDonut->pluck('count');
+
+        // Readiness Distribution
+        $highlyAcc = \App\Models\Score::where('overall_readiness_score', '>=', 90)->count();
+        $acceptable = \App\Models\Score::whereBetween('overall_readiness_score', [70, 89])->count();
+        $needsImp = \App\Models\Score::whereBetween('overall_readiness_score', [50, 69])->count();
+        $poor = \App\Models\Score::where('overall_readiness_score', '<', 50)->count();
+        $readinessData = [$highlyAcc, $acceptable, $needsImp, $poor];
+
+        // User Growth (Last 6 months)
+        $userGrowthLabels = [];
+        $userGrowthData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $userGrowthLabels[] = $date->format('M');
+            $userGrowthData[] = \App\Models\User::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+        }
+
+        return view('admin.dashboard', compact(
+            'registeredUsersCount',
+            'activeTodayCount',
+            'mockInterviewsCount',
+            'aiFeedbacksCount',
+            'modulesCompletedCount',
+            'recentSessions',
+            'leaderboard',
+            'usersNeedingSupport',
+            'avgClarity',
+            'avgRelevance',
+            'avgGrammar',
+            'avgProfessionalism',
+            'chartLabels',
+            'chartData',
+            'readinessData',
+            'userGrowthLabels',
+            'userGrowthData',
+            'recentActivities'
+        ));
     }
 
     // Category CRUD
@@ -150,6 +239,18 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Question deleted successfully');
     }
 
+    public function bulkDestroyQuestions(Request $request)
+    {
+        $request->validate([
+            'question_ids' => 'required|array',
+            'question_ids.*' => 'exists:questions,id'
+        ]);
+
+        Question::whereIn('id', $request->question_ids)->delete();
+        
+        return redirect()->back()->with('success', 'Selected questions deleted successfully');
+    }
+
     public function toggleQuestionStatus(Question $question)
     {
         $question->status = $question->status === 'active' ? 'inactive' : 'active';
@@ -193,7 +294,7 @@ class AdminController extends Controller
     public function questionsDashboard()
     {
         $questions = Question::all();
-        $categories = Category::all();
+        $categories = Category::withCount('questions')->get();
         
         $totalQuestions = $questions->count();
         $activeQuestions = $questions->where('status', 'active')->count();
@@ -229,6 +330,53 @@ class AdminController extends Controller
 
         fclose($fileHandle);
         return redirect()->back()->with('success', 'Questions imported successfully');
+    }
+
+    public function importDataset(Request $request)
+    {
+        $request->validate([
+            'dataset' => 'required|string'
+        ]);
+
+        // Get a default category for the imported questions, or create one
+        $category = Category::firstOrCreate(
+            ['title' => 'Community Datasets'],
+            ['description' => 'Imported from external datasets', 'status' => 'active']
+        );
+
+        $questionsToImport = [];
+
+        if ($request->dataset === 'web_dev') {
+            $questionsToImport = [
+                ['question_text' => 'Explain the concept of closures in JavaScript.', 'type' => 'Technical', 'difficulty' => 'Medium'],
+                ['question_text' => 'What are the main differences between React and Vue?', 'type' => 'Technical', 'difficulty' => 'Medium'],
+                ['question_text' => 'Describe a time you optimized the performance of a web application.', 'type' => 'Behavioral', 'difficulty' => 'Hard']
+            ];
+        } elseif ($request->dataset === 'sales') {
+            $questionsToImport = [
+                ['question_text' => 'How do you handle objections from a potential client?', 'type' => 'Situational', 'difficulty' => 'Medium'],
+                ['question_text' => 'Describe your most successful sale. What made it successful?', 'type' => 'Behavioral', 'difficulty' => 'Hard'],
+                ['question_text' => 'What CRM tools are you most familiar with?', 'type' => 'Technical', 'difficulty' => 'Easy']
+            ];
+        } elseif ($request->dataset === 'leadership') {
+            $questionsToImport = [
+                ['question_text' => 'Tell me about a time you had to resolve a conflict within your team.', 'type' => 'Behavioral', 'difficulty' => 'Medium'],
+                ['question_text' => 'How do you motivate a team member who is underperforming?', 'type' => 'Situational', 'difficulty' => 'Hard'],
+                ['question_text' => 'Describe your leadership style.', 'type' => 'Personal', 'difficulty' => 'Medium']
+            ];
+        }
+
+        foreach ($questionsToImport as $q) {
+            Question::create([
+                'question_text' => $q['question_text'],
+                'type' => $q['type'],
+                'difficulty' => $q['difficulty'],
+                'category_id' => $category->id,
+                'status' => 'active'
+            ]);
+        }
+
+        return redirect()->back()->with('success', count($questionsToImport) . ' questions imported from ' . $request->dataset . ' dataset successfully!');
     }
 
     public function exportQuestions()
@@ -434,5 +582,72 @@ class AdminController extends Controller
         \Illuminate\Support\Facades\Storage::disk('public')->delete($resource->file_path);
         $resource->delete();
         return redirect()->back()->with('success', 'Resource deleted successfully');
+    }
+
+    public function fetchLatestActivities(Request $request)
+    {
+        $activitiesQuery = \App\Models\ActivityLog::with('user')->orderBy('id', 'desc');
+        $latestActivities = $activitiesQuery->take(15)->get();
+        $newCount = \App\Models\ActivityLog::whereNull('read_at')->count();
+
+        $html = '';
+        if ($latestActivities->isEmpty()) {
+            $html = '<div class="p-3 text-center text-muted" style="font-size:0.85rem;">No recent activities.</div>';
+        } else {
+            foreach ($latestActivities as $activity) {
+                $time = $activity->created_at->diffForHumans();
+                $userName = $activity->user ? $activity->user->name : 'System';
+                $isNew = is_null($activity->read_at);
+                $bgClass = $isNew ? 'rgba(59,130,246,0.1)' : 'transparent';
+                
+                $html .= '
+                <div class="dropdown-item d-flex flex-column gap-1 border-bottom admin-activity-item" data-id="'.$activity->id.'" style="background: '.$bgClass.'; padding: 12px 16px; border-color: var(--bd) !important; white-space: normal;">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <span class="fw-bold text-truncate" style="font-size: 0.85rem; color: var(--tx);">'.$userName.'</span>
+                        <div class="d-flex gap-2 align-items-center flex-shrink-0">
+                            <span style="font-size: 0.7rem; color: var(--tx3);">'.$time.'</span>
+                            '.($isNew ? '<button class="btn btn-sm p-0 m-0 act-mark-read text-primary" onclick="markActivityRead('.$activity->id.', event)" title="Mark as read"><i class="fa-solid fa-circle text-primary" style="font-size:8px;"></i></button>' : '').'
+                            <button class="btn btn-sm p-0 m-0 act-delete text-danger" onclick="deleteActivity('.$activity->id.', event)" title="Delete"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--tx2);">'.htmlspecialchars($activity->description ?: $activity->action).'</div>
+                </div>';
+            }
+        }
+
+        return response()->json([
+            'html' => $html,
+            'new_count' => $newCount,
+        ]);
+    }
+
+    public function markAllActivitiesRead()
+    {
+        \App\Models\ActivityLog::whereNull('read_at')->update(['read_at' => now()]);
+        return response()->json(['success' => true]);
+    }
+
+    public function clearAllActivities()
+    {
+        \App\Models\ActivityLog::truncate();
+        return response()->json(['success' => true]);
+    }
+
+    public function markActivityRead($id)
+    {
+        $log = \App\Models\ActivityLog::find($id);
+        if ($log) {
+            $log->update(['read_at' => now()]);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteActivity($id)
+    {
+        $log = \App\Models\ActivityLog::find($id);
+        if ($log) {
+            $log->delete();
+        }
+        return response()->json(['success' => true]);
     }
 }

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('content')
 <style>
     .setup-panel { background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;margin-bottom:20px; }
@@ -7,14 +7,14 @@
     .oinp:focus { outline:none;border-color:var(--pur); }
     .desc-text { font-size:.75rem;color:var(--tx3);margin-top:4px; }
     
-    .custom-radio { position:relative;display:flex;align-items:flex-start;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);cursor:pointer;margin-bottom:10px;transition:all 0.2s; }
+    .custom-radio { position:relative;display:flex;align-items:flex-start;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);cursor:pointer;margin-bottom:10px;transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s, transform 0.2s; }
     .custom-radio:hover { border-color:#60a5fa; }
     .custom-radio input[type="radio"] { margin-top:4px;margin-right:12px;accent-color:var(--pur); }
     .custom-radio .r-title { font-weight:600;font-size:.9rem;color:var(--tx);display:block; }
     .custom-radio .r-desc { font-size:.75rem;color:var(--tx3);display:block; }
     
     .cbx-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
-    .custom-cbx { display:flex;align-items:center;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg3);cursor:pointer;font-size:.85rem;color:var(--tx);transition:all 0.2s; }
+    .custom-cbx { display:flex;align-items:center;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg3);cursor:pointer;font-size:.85rem;color:var(--tx);transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s, transform 0.2s; }
     .custom-cbx:hover { border-color:#60a5fa; }
     .custom-cbx input[type="checkbox"] { margin-right:10px;accent-color:#60a5fa; }
 
@@ -48,11 +48,14 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="olbl">Interview Category</label>
-                            <select class="oinp setup-input" name="category_name" id="valCategory" required>
-                                <option value="Job Interview">Job Interview</option>
-                                <option value="Scholarship Interview">Scholarship Interview</option>
-                                <option value="College Admission Interview">College Admission Interview</option>
-                                <option value="IT/Programming Interview">IT/Programming Interview</option>
+                            <select class="oinp setup-input" name="category_id" id="valCategory" required>
+                                @if(isset($categories) && $categories->count() > 0)
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->title }}</option>
+                                    @endforeach
+                                @else
+                                    <option value="" disabled selected>No Categories Available (Contact Admin)</option>
+                                @endif
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -72,6 +75,22 @@
                                 <option value="claude">Claude (Anthropic)</option>
                                 <option value="wisdomgate">WisdomGate</option>
                             </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Personalization -->
+                <div class="setup-panel">
+                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-file-lines me-2" style="color:#a78bfa"></i> Advanced Personalization <span class="badge bg-primary" style="font-size:0.7rem;vertical-align:middle;margin-left:5px">New</span></h5>
+                    <p style="font-size:.85rem;color:var(--tx3);margin-bottom:15px">Provide your resume and the target job description to get highly tailored, role-specific questions.</p>
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="olbl">Paste Resume / CV (Optional)</label>
+                            <textarea class="oinp setup-input" name="resume_text" rows="4" placeholder="Paste your resume text here so the AI can ask about your specific past experiences..."></textarea>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="olbl">Paste Job Description (Optional)</label>
+                            <textarea class="oinp setup-input" name="job_description" rows="4" placeholder="Paste the exact job description you are applying for to tailor the questions to those specific requirements..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -147,6 +166,7 @@
                                 <option value="Problem Solving">Problem Solving</option>
                                 <option value="Leadership">Leadership</option>
                                 <option value="Teamwork">Teamwork</option>
+                                <option value="Salary Negotiation">Salary Negotiation (New)</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -155,6 +175,20 @@
                                 <option value="beginner">Beginner Mode (More hints & feedback)</option>
                                 <option value="standard" selected>Standard Mode (Balanced experience)</option>
                                 <option value="challenge">Challenge Mode (No hints, harder follow-ups)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-12">
+                            <label class="olbl">Company Persona Simulator</label>
+                            <p style="font-size:.75rem;color:var(--tx3);margin-top:-4px;margin-bottom:8px;">Have the AI simulate the specific interview style of top companies.</p>
+                            <select class="oinp setup-input" name="company_persona" id="valPersona">
+                                <option value="" selected>Standard (General Industry)</option>
+                                <option value="Amazon">Amazon (Leadership Principles)</option>
+                                <option value="Google">Google (Googlyness & Technical)</option>
+                                <option value="McKinsey">McKinsey (Consulting & Case)</option>
+                                <option value="Goldman Sachs">Goldman Sachs (Finance & High Pressure)</option>
                             </select>
                         </div>
                     </div>
@@ -235,6 +269,10 @@
                             <span class="summary-val" id="sumFocus">General Practice</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-label">Company Persona:</span>
+                            <span class="summary-val" id="sumPersona">Standard</span>
+                        </div>
+                        <div class="summary-row">
                             <span class="summary-label">AI Provider:</span>
                             <span class="summary-val" id="sumProvider">Gemini</span>
                         </div>
@@ -283,6 +321,12 @@
         // Focus
         const focus = document.getElementById('valFocus').value;
         document.getElementById('sumFocus').innerText = focus;
+
+        // Persona
+        const persona = document.getElementById('valPersona');
+        if (persona) {
+            document.getElementById('sumPersona').innerText = persona.options[persona.selectedIndex].text.split(' (')[0];
+        }
 
         // Provider
         const provider = document.getElementById('valProvider');

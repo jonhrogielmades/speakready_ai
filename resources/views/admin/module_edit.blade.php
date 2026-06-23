@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 

@@ -47,8 +47,20 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            
+            if (in_array($user->status, ['inactive', 'suspended'])) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
+                ])->withInput($request->only('email'));
+            }
+
             $request->session()->regenerate();
-            if (Auth::user()->is_admin) {
+            if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
             }
             return redirect()->route('dashboard');
@@ -56,6 +68,24 @@ class AuthController extends Controller
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
+    }
+
+    public function requestReactivation(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && in_array($user->status, ['inactive', 'suspended'])) {
+            $user->update(['reactivation_requested_at' => now()]);
+            return back()->with('success', 'Your reactivation request has been sent to the admin.');
+        }
+
+        return back()->withErrors([
+            'email' => 'Unable to process your request at this time.',
         ])->onlyInput('email');
     }
 
@@ -70,15 +100,29 @@ class AuthController extends Controller
 
     public function redirectToGoogle()
     {
-        return \Laravel\Socialite\Facades\Socialite::driver('google')->redirect();
+        return \Laravel\Socialite\Facades\Socialite::driver('google')->stateless()->redirect();
     }
 
     public function handleGoogleCallback()
     {
         try {
-            $googleUser = \Laravel\Socialite\Facades\Socialite::driver('google')->user();
+            $driver = \Laravel\Socialite\Facades\Socialite::driver('google')->stateless();
+            // Disable SSL verification for local development (Laragon)
+            if (app()->environment('local')) {
+                $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+            }
+            $googleUser = $driver->user();
             
-            $user = User::where('google_id', $googleUser->id)->orWhere('email', $googleUser->email)->first();
+            $user = User::withTrashed()
+                ->where(function ($query) use ($googleUser) {
+                    $query->where('google_id', $googleUser->id)
+                          ->orWhere('email', $googleUser->email);
+                })->first();
+
+            if ($user && $user->trashed()) {
+                // Automatically restore the user's account if they log back in with Google
+                $user->restore();
+            }
 
             if (!$user) {
                 $user = User::create([
@@ -86,6 +130,7 @@ class AuthController extends Controller
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'password' => null, // No password for Google login
+                    'profile_photo_path' => $googleUser->avatar,
                 ]);
 
                 // Create profile for SpeakReady AI features
@@ -94,12 +139,33 @@ class AuthController extends Controller
                     'readiness_score' => 0,
                     'total_sessions' => 0,
                 ]);
-            } elseif (!$user->google_id) {
-                // Link the google_id if the user exists but hasn't logged in with Google before
-                $user->update(['google_id' => $googleUser->id]);
+            } else {
+                $updates = [];
+                if (!$user->google_id) {
+                    $updates['google_id'] = $googleUser->id;
+                }
+                if (!$user->profile_photo_path) {
+                    $updates['profile_photo_path'] = $googleUser->avatar;
+                }
+                if (!empty($updates)) {
+                    $user->update($updates);
+                }
             }
 
             Auth::login($user);
+
+            // Send an email notification for the Google login
+            $user->notify(new \App\Notifications\GoogleLoginAlert());
+
+            if (in_array($user->status, ['inactive', 'suspended'])) {
+                Auth::logout();
+                request()->session()->invalidate();
+                request()->session()->regenerateToken();
+
+                return redirect('/')->withErrors([
+                    'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
+                ])->withInput(['email' => $user->email]);
+            }
 
             if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
@@ -107,7 +173,8 @@ class AuthController extends Controller
             return redirect()->route('dashboard');
 
         } catch (\Exception $e) {
-            return redirect('/')->withErrors(['email' => 'Failed to login with Google.']);
+            \Illuminate\Support\Facades\Log::error('Google login failed: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect('/')->withErrors(['email' => 'Failed to login with Google: ' . $e->getMessage()]);
         }
     }
 }

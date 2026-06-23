@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+class LearningProgress extends Model
+{
+    use HasFactory;
+
     protected $table = 'learning_progress';
 
     protected $fillable = [
@@ -25,3 +29,4 @@ use Illuminate\Database\Eloquent\Model;
     {
         return $this->belongsTo(LearningModule::class);
     }
+}

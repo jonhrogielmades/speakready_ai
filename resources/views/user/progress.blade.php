@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
 <div class="db-section active">
@@ -161,7 +161,7 @@
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table align-middle" style="color:var(--tx);">
+                    <table class="table custom-table align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent;">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
                                 <th class="border-0">Date</th>
@@ -175,7 +175,7 @@
                             @foreach($sessions as $session)
                             <tr style="border-bottom: 1px solid var(--bd);">
                                 <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
-                                <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->name : 'Job Interview' }}</td>
+                                <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->title : 'Job Interview' }}</td>
                                 <td class="border-0 py-3">{{ $session->score ? $session->score->overall_readiness_score : 82 }}%</td>
                                 <td class="border-0 py-3">
                                     @php $sc = $session->score ? $session->score->overall_readiness_score : 82; @endphp

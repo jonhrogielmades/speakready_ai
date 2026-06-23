@@ -1,27 +1,41 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
 <style>
     /* Chat specific styles */
     .chat-container { display: flex; height: calc(100vh - 140px); background: var(--sf); border: 1px solid var(--bd); border-radius: 18px; overflow: hidden; }
     .chat-sidebar { width: 280px; border-right: 1px solid var(--bd); display: flex; flex-direction: column; }
-    .chat-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
+    .chat-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
     .chat-messages { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
-    
+
     .chat-bubble { max-width: 80%; padding: 16px 20px; border-radius: 18px; font-size: .95rem; line-height: 1.5; }
     .bubble-ai { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-bottom-left-radius: 4px; color: var(--tx); align-self: flex-start; }
     .bubble-user { background: var(--pur); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
-    
-    .chat-input-area { padding: 20px; border-top: 1px solid var(--bd); background: rgba(0,0,0,0.2); }
+
+    .chat-input-area { padding: 20px; border-top: 1px solid var(--bd); background: rgba(0,0,0,0.2); flex-shrink: 0; }
     .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--bg); border: 1px solid var(--bd); border-radius: 16px; padding: 8px 16px; transition: border-color 0.3s; }
     .chat-input-wrapper:focus-within { border-color: var(--pur); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    .chat-textarea { flex-grow: 1; background: transparent; border: none; color: var(--tx); resize: none; max-height: 150px; padding: 8px 0; outline: none; }
-    .chat-send-btn { background: var(--pur); color: #fff; border: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-left: 12px; margin-bottom: 4px; cursor: pointer; transition: 0.2s; }
+    .chat-textarea { flex-grow: 1; background: transparent; border: none; color: var(--tx); resize: none; max-height: 120px; padding: 8px 0; outline: none; font-family: "Space Grotesk", sans-serif; font-size: 0.9rem; }
+    .chat-send-btn { background: var(--pur); color: #fff; border: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-left: 12px; margin-bottom: 4px; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
     .chat-send-btn:hover { opacity: 0.9; transform: scale(1.05); }
 
     .history-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; color: var(--tx3); font-size: .9rem; display: flex; align-items: center; }
     .history-item:hover, .history-item.active { background: rgba(255,255,255,0.05); color: var(--tx); }
     .history-item i { margin-right: 12px; opacity: 0.7; }
+
+    /* Mobile-specific: full height chat within the mobile layout */
+    @media (max-width: 767px) {
+        .chat-container {
+            height: calc(100dvh - 56px - 64px - 48px);
+            min-height: 320px;
+            border-radius: 14px !important;
+            flex-direction: column !important;
+        }
+        .chat-sidebar { display: none !important; }
+        .chat-messages { padding: 12px; gap: 10px; }
+        .chat-input-area { padding: 10px 12px; }
+        .chat-bubble { max-width: 90%; padding: 10px 14px; font-size: 0.875rem; }
+    }
 </style>
 
 <div class="db-section active p-0" style="height:100%">
@@ -134,7 +148,17 @@
             if(!text) return;
 
             // Add user message
-            const initialHtml = `{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}`;
+            const initialHtml = `
+                @if(Auth::check() && Auth::user()->profile_photo_path)
+                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://']))
+                        <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                    @else
+                        <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                    @endif
+                @else
+                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                @endif
+            `;
             
             // Create user bubble
             const userMsgDiv = document.createElement('div');
@@ -142,7 +166,7 @@
             userMsgDiv.style.gap = '16px';
             userMsgDiv.innerHTML = `
                     <div class="chat-bubble bubble-user">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
-                    <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700">
+                    <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700;padding:0;overflow:hidden;border:1px solid var(--bd);">
                         ${initialHtml}
                     </div>
             `;
@@ -321,8 +345,16 @@
                         msgDiv.style.gap = '16px';
                         msgDiv.innerHTML = `
                                 <div class="chat-bubble bubble-user">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>
-                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700;padding:0;overflow:hidden;border:1px solid var(--bd);">
+                                    @if(Auth::check() && Auth::user()->profile_photo_path)
+                                        @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://']))
+                                            <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                                        @else
+                                            <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
+                                        @endif
+                                    @else
+                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                    @endif
                                 </div>
                         `;
                     } else {

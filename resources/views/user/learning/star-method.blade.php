@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
 <style>

@@ -7,31 +7,178 @@ use Illuminate\Support\Facades\Log;
 
 class AIService
 {
-    public static function generateQuestions($num, $position, $difficulty, $focus, $provider)
+    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null)
     {
-        $prompt = "Generate $num mock interview questions for a '$position' role. The difficulty level should be '$difficulty'. The interview focus is '$focus'. Return ONLY a valid JSON array of strings containing the questions. Do not include any markdown formatting, headers, or explanations.";
+        $jobDescription = self::truncateText($jobDescription);
+        $resumeText = self::truncateText($resumeText);
 
-        try {
-            switch ($provider) {
-                case 'gemini':
-                    return self::callGemini($prompt);
-                case 'cohere':
-                    return self::callCohere($prompt);
-                case 'groq':
-                    return self::callGroq($prompt);
-                case 'openrouter':
-                    return self::callOpenRouter($prompt);
-                case 'claude':
-                    return self::callClaude($prompt);
-                case 'wisdomgate':
-                    return self::callWisdomGate($prompt);
-                default:
-                    return self::callGemini($prompt);
-            }
-        } catch (\Exception $e) {
-            Log::error('AI Generation Error: ' . $e->getMessage());
-            return [];
+        $prompt = "Generate $num mock interview questions for a '$position' role. The difficulty level should be '$difficulty'. The interview focus is '$focus'. ";
+        
+        if ($focus === 'Salary Negotiation') {
+            $prompt .= "This is a Salary Negotiation simulation. Generate questions and statements that a hiring manager or recruiter would use during a compensation negotiation, including budget constraints, asking for expected salary, and presenting counter-offers. ";
         }
+        
+        if (!empty($companyPersona)) {
+            $prompt .= "You must act as an interviewer from '$companyPersona'. Structure your questions according to their specific interview culture (e.g., if Amazon, use Leadership Principles and STAR method focus; if Google, focus on Googlyness and open-ended technical scaling; if McKinsey, use consulting case-like framing). ";
+        }
+        
+        if (!empty($jobDescription)) {
+            $prompt .= "The questions must be highly tailored to the following Job Description: \"$jobDescription\". ";
+        }
+        if (!empty($resumeText)) {
+            $prompt .= "The candidate has provided their resume. Create behavioral and experience-based questions that specifically ask about details, projects, or experiences mentioned in this Resume: \"$resumeText\". ";
+        }
+        
+        $prompt .= "Return ONLY a valid JSON array of strings containing the questions. Do not include any markdown formatting, headers, or explanations.\n";
+        $prompt .= "EXAMPLE OUTPUT FORMAT:\n";
+        $prompt .= "[\n  \"Can you describe a time when you had to overcome a significant technical challenge?\",\n  \"How do you prioritize your tasks when facing multiple tight deadlines?\"\n]";
+
+        $maxRetries = 3;
+        $attempt = 0;
+
+        while ($attempt < $maxRetries) {
+            try {
+                $response = [];
+                switch ($provider) {
+                    case 'gemini':
+                        $response = self::callGemini($prompt);
+                        break;
+                    case 'cohere':
+                        $response = self::callCohere($prompt);
+                        break;
+                    case 'groq':
+                        $response = self::callGroq($prompt);
+                        break;
+                    case 'openrouter':
+                        $response = self::callOpenRouter($prompt);
+                        break;
+                    case 'claude':
+                        $response = self::callClaude($prompt);
+                        break;
+                    case 'wisdomgate':
+                        $response = self::callWisdomGate($prompt);
+                        break;
+                    default:
+                        $response = self::callGemini($prompt);
+                        break;
+                }
+                if (!empty($response)) {
+                    return $response;
+                }
+            } catch (\Exception $e) {
+                Log::error("AI Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
+            }
+
+            $attempt++;
+            if ($attempt < $maxRetries) {
+                sleep(1);
+            }
+        }
+        
+        Log::error("AI Generation Failed after {$maxRetries} attempts.");
+        return [];
+    }
+
+    public static function generateFeedback($sessionData, $answersData, $provider)
+    {
+        $prompt = "You are an expert Interview Coach evaluating a candidate's interview session. Evaluate the following interview answers and provide highly accurate feedback and scores.\n";
+        $prompt .= "Target Position: " . ($sessionData['target_position'] ?? 'General') . "\n";
+        $prompt .= "Difficulty: " . ($sessionData['difficulty'] ?? 'Medium') . "\n\n";
+        $prompt .= "Here is the transcript:\n";
+        
+        foreach ($answersData as $index => $ans) {
+            $prompt .= "Index ID: " . $ans['id'] . "\n";
+            $prompt .= "Question: " . $ans['question'] . "\n";
+            $prompt .= "Candidate Answer: " . ($ans['answer'] ?? '(Skipped or no answer)') . "\n\n";
+        }
+
+        $prompt .= <<<EOT
+Provide your evaluation STRICTLY as a JSON object with the following structure. Do not include any markdown formatting or explanations outside the JSON object.
+
+CRITICAL INSTRUCTION FOR SKIPPED ANSWERS:
+If the Candidate Answer is '(Skipped or no answer)', you MUST set score, clarity_score, relevance_score, grammar_score, and professionalism_score strictly to 0. The ai_feedback should advise them not to skip questions.
+
+EXAMPLE OUTPUT FORMAT:
+{
+  "per_question_feedback": [
+    {
+      "id": 1,
+      "score": 85,
+      "clarity_score": 90,
+      "relevance_score": 80,
+      "grammar_score": 95,
+      "professionalism_score": 90,
+      "ai_feedback": "You clearly explained your role, but could have focused more on the specific outcome.",
+      "better_sample_answer": "In my previous role, I led a team of 5 to redesign the checkout flow. Using the STAR method, the situation was...",
+      "follow_up_question": "What metrics did you use to measure the success of that redesign?"
+    },
+    {
+      "id": 2,
+      "score": 0,
+      "clarity_score": 0,
+      "relevance_score": 0,
+      "grammar_score": 0,
+      "professionalism_score": 0,
+      "ai_feedback": "You skipped this question. In a real interview, skipping a question can be detrimental. Always try to provide at least a partial answer.",
+      "better_sample_answer": "Even if you haven't faced this exact scenario, you could say: 'While I haven't directly encountered X, in a similar situation Y, I did Z...'",
+      "follow_up_question": "Can you think of any parallel experience you could draw from to answer this?"
+    }
+  ],
+  "session_feedback": {
+    "overall_readiness_score": 75,
+    "strengths": "Strong communication and clear articulation of past technical achievements.",
+    "weaknesses": "Tendency to skip behavioral questions or provide brief answers without the STAR method.",
+    "improvement_suggestions": "Practice using the STAR method (Situation, Task, Action, Result) to structure your behavioral answers more effectively."
+  }
+}
+
+Now, provide the JSON evaluation for the transcript provided above using this exact schema.
+EOT;
+
+        $maxRetries = 3;
+        $attempt = 0;
+
+        while ($attempt < $maxRetries) {
+            try {
+                $response = [];
+                switch ($provider) {
+                    case 'gemini':
+                        $response = self::callGemini($prompt);
+                        break;
+                    case 'cohere':
+                        $response = self::callCohere($prompt);
+                        break;
+                    case 'groq':
+                        $response = self::callGroq($prompt);
+                        break;
+                    case 'openrouter':
+                        $response = self::callOpenRouter($prompt);
+                        break;
+                    case 'claude':
+                        $response = self::callClaude($prompt);
+                        break;
+                    case 'wisdomgate':
+                        $response = self::callWisdomGate($prompt);
+                        break;
+                    default:
+                        $response = self::callGemini($prompt);
+                        break;
+                }
+                if (!empty($response)) {
+                    return $response;
+                }
+            } catch (\Exception $e) {
+                Log::error("AI Feedback Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
+            }
+
+            $attempt++;
+            if ($attempt < $maxRetries) {
+                sleep(1);
+            }
+        }
+        
+        Log::error("AI Feedback Generation Failed after {$maxRetries} attempts.");
+        return [];
     }
 
     public static function chatMessage($message, $history = [], $provider = 'gemini')
@@ -59,12 +206,60 @@ class AIService
         }
     }
 
+    private static function truncateText($text, $maxWords = 800)
+    {
+        if (empty($text)) return $text;
+        $words = explode(' ', $text);
+        if (count($words) > $maxWords) {
+            return implode(' ', array_slice($words, 0, $maxWords)) . '... [Truncated for length]';
+        }
+        return $text;
+    }
+
     private static function parseJsonResponse($content)
     {
         // Strip markdown backticks if present
         $content = preg_replace('/^```json\s*|```\s*$/i', '', trim($content));
         $content = preg_replace('/^```\s*|```\s*$/i', '', trim($content));
+        
+        // Extract JSON using substring if there is any trailing/leading text
+        $firstChar = strpos($content, '{');
+        $firstBracket = strpos($content, '[');
+        
+        $startPos = false;
+        if ($firstChar !== false && $firstBracket !== false) {
+            $startPos = min($firstChar, $firstBracket);
+        } elseif ($firstChar !== false) {
+            $startPos = $firstChar;
+        } elseif ($firstBracket !== false) {
+            $startPos = $firstBracket;
+        }
+
+        if ($startPos !== false) {
+            $endChar = strrpos($content, '}');
+            $endBracket = strrpos($content, ']');
+            
+            $endPos = false;
+            if ($endChar !== false && $endBracket !== false) {
+                $endPos = max($endChar, $endBracket);
+            } elseif ($endChar !== false) {
+                $endPos = $endChar;
+            } elseif ($endBracket !== false) {
+                $endPos = $endBracket;
+            }
+
+            if ($endPos !== false && $endPos > $startPos) {
+                $content = substr($content, $startPos, $endPos - $startPos + 1);
+            }
+        }
+
         $decoded = json_decode($content, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('JSON Parsing Error: ' . json_last_error_msg() . ' Content: ' . $content);
+            return [];
+        }
+
         return is_array($decoded) ? $decoded : [];
     }
 
@@ -74,7 +269,7 @@ class AIService
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash-lite');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-        $response = Http::post($url, [
+        $response = Http::timeout(45)->post($url, [
             'contents' => [
                 [
                     'parts' => [
@@ -97,7 +292,7 @@ class AIService
         $apiKey = env('COHERE_API_KEY');
         $model = env('COHERE_MODEL', 'command-r7b-12-2024');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.cohere.ai/v1/generate', [
@@ -120,7 +315,7 @@ class AIService
         $apiKey = env('GROQ_API_KEY');
         $model = env('GROQ_MODEL', 'llama3-8b-8192');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
@@ -143,7 +338,7 @@ class AIService
         $apiKey = env('OPENROUTER_API_KEY');
         $model = env('OPENROUTER_MODEL', 'openrouter/free');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
@@ -167,7 +362,7 @@ class AIService
         $model = env('ANTHROPIC_MODEL', 'claude-3-haiku-20240307');
         $version = env('ANTHROPIC_VERSION', '2023-06-01');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => $version,
             'content-type' => 'application/json',
@@ -193,7 +388,7 @@ class AIService
         $model = env('WISDOMGATE_MODEL', 'gpt-5-nano');
 
         // Assuming WisdomGate is an OpenAI-compatible endpoint
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [
@@ -232,7 +427,7 @@ class AIService
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash-lite');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-        $response = Http::post($url, [
+        $response = Http::timeout(45)->post($url, [
             'contents' => self::formatHistoryForGemini($message, $history),
             'systemInstruction' => [
                 'parts' => [['text' => 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.']]
@@ -276,7 +471,7 @@ class AIService
             ];
         }
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.cohere.ai/v1/chat', [
@@ -299,7 +494,7 @@ class AIService
         $apiKey = env('GROQ_API_KEY');
         $model = env('GROQ_MODEL', 'llama3-8b-8192');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
@@ -319,7 +514,7 @@ class AIService
         $apiKey = env('OPENROUTER_API_KEY');
         $model = env('OPENROUTER_MODEL', 'openrouter/free');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
@@ -352,7 +547,7 @@ class AIService
             'content' => $message
         ];
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => $version,
             'content-type' => 'application/json',
@@ -375,7 +570,7 @@ class AIService
         $apiKey = env('WISDOMGATE_API_KEY');
         $model = env('WISDOMGATE_MODEL', 'gpt-5-nano');
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [

@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI - AI-Based Interview Practice System</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -61,6 +61,9 @@
                <a href="{{ route('user.progress') }}" class="db-nl {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress Tracking</a>
                <a href="{{ route('user.feedback') }}" class="db-nl {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Center</a>
                <a href="{{ route('user.reports') }}" class="db-nl {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-file-invoice"></i> Reports</a>
+
+               <div class="db-nav-section">Community</div>
+               <a href="{{ route('user.leaderboard') }}" class="db-nl {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
             </div>
             <div class="db-bottom">
                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
@@ -85,12 +88,52 @@
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
                   </button>
+                  
+                  <!-- Notifications -->
+                  <div style="position:relative" id="notifWrap">
+                     <button class="boc d-flex align-items-center justify-content-center" id="bellBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleNotif(event)">
+                        <i class="fa-regular fa-bell"></i>
+                     </button>
+                     <span id="notifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
+                     
+                     <!-- Notification Dropdown -->
+                     <div class="db-dropdown" id="notifDropdown" style="right:0;width:360px;max-width:calc(100vw - 30px);">
+                        <div class="dd-header d-flex flex-wrap align-items-center justify-content-between gap-2" style="border-bottom:1px solid var(--bd);padding-bottom:12px;margin-bottom:12px;">
+                           <div class="dd-header-title d-flex align-items-center mb-0">
+                              <i class="fa-regular fa-bell me-2" style="color:var(--pur)"></i>Notifications 
+                              <span id="unreadCountBadge" style="background:rgba(248,113,113,.15);color:#f87171;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;display:none;">0 new</span>
+                           </div>
+                           <div class="d-flex align-items-center gap-1 flex-wrap">
+                              <button class="dd-close" onclick="markAllNotificationsRead()" title="Mark all read" style="width:auto;padding:4px 8px;font-size:.7rem;color:var(--pur);border-color:rgba(59,130,246,.3)"><i class="fa-solid fa-check me-1"></i><span class="d-none d-sm-inline">Read All</span></button>
+                              <button class="dd-close text-danger" onclick="clearAllNotificationsDD()" title="Clear all" style="width:auto;padding:4px 8px;font-size:.7rem;border-color:rgba(248,113,113,.3)"><i class="fa-solid fa-trash me-1"></i><span class="d-none d-sm-inline">Clear All</span></button>
+                              <button class="dd-close" onclick="toggleNotif(event)" style="padding:4px 8px;width:auto;"><i class="fa-solid fa-xmark"></i></button>
+                           </div>
+                        </div>
+                        <div class="dd-body" id="notifListContainer" style="max-height: 350px; overflow-y: auto;">
+                           <div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;" id="noNotifMsg">Loading notifications...</div>
+                        </div>
+                        <div style="padding:12px 14px;border-top:1px solid var(--bd);text-align:center">
+                           <a href="{{ route('user.notifications') }}" class="boc btn w-100 py-2" style="font-size:.82rem;border-radius:10px;text-decoration:none;"><i class="fa-solid fa-list me-1"></i>View All Notifications</a>
+                        </div>
+                     </div>
+                  </div>
+
                   <div style="position:relative" id="profileWrap">
                      <div class="db-user-pill" id="userPill" onclick="toggleProfile(event)">
+                    @if(Auth::check() && Auth::user()->profile_photo_path)
+                        @php
+                            $photoPath = Auth::user()->profile_photo_path;
+                            $photoUrl = str_starts_with($photoPath, 'http') ? $photoPath : asset('storage/' . $photoPath);
+                        @endphp
+                        <div class="db-avatar" id="userAvatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+                            <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                    @else
                         <div class="db-avatar" id="userAvatar">{{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}</div>
+                    @endif
                         <div class="d-none d-md-block">
                            <div style="font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ Auth::user()->name ?? 'User' }}</div>
-                           <div style="font-size:.72rem;color:var(--tx3)" id="userPlan">Pro Plan</div>
+                           <div style="font-size:.72rem;color:var(--tx3)" id="userPlan">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
                         </div>
                         <i class="fa-solid fa-chevron-down fa-xs" id="profileChevron" style="color:var(--tx3);margin-left:2px;transition:.3s"></i>
                      </div>
@@ -140,6 +183,164 @@
                });
             });
          }
+         
+         function toggleNotif(e) {
+            e.stopPropagation();
+            const dd = document.getElementById('notifDropdown');
+            if (dd.classList.contains('open')) {
+               dd.classList.remove('open');
+            } else {
+               // Close profile dropdown if open
+               const pd = document.getElementById('profileDropdown');
+               if(pd && pd.classList.contains('open')) pd.classList.remove('open');
+               
+               const ch = document.getElementById('profileChevron');
+               if (ch) ch.style.transform = 'rotate(0deg)';
+               
+               dd.classList.add('open');
+               if (dd.getAttribute('data-loaded') !== 'true') {
+                  fetchNotifications();
+               }
+            }
+         }
+
+         function fetchNotifications() {
+            fetch('/notifications/fetch')
+               .then(res => res.json())
+               .then(data => {
+                  updateNotifUI(data);
+                  document.getElementById('notifDropdown').setAttribute('data-loaded', 'true');
+               })
+               .catch(err => console.error('Error fetching notifications:', err));
+         }
+
+         function updateNotifUI(data) {
+            const badge = document.getElementById('notifBadge');
+            const unreadBadge = document.getElementById('unreadCountBadge');
+            const listContainer = document.getElementById('notifListContainer');
+
+            if (data.unreadCount > 0) {
+               badge.style.display = 'block';
+               unreadBadge.style.display = 'inline-block';
+               unreadBadge.textContent = data.unreadCount + ' new';
+            } else {
+               badge.style.display = 'none';
+               unreadBadge.style.display = 'none';
+            }
+
+            if (data.notifications.length === 0) {
+               listContainer.innerHTML = '<div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;">No notifications to show.</div>';
+               return;
+            }
+
+            let html = '';
+            data.notifications.forEach(n => {
+               const isRead = n.read_at ? 'read' : '';
+               const unreadClass = n.read_at ? '' : 'notif-unread';
+               const icon = n.data.icon || 'fa-bell';
+               const typeClass = n.data.type || 'info'; // Use for colors later if needed
+               
+               // Formatting date
+               const date = new Date(n.created_at).toLocaleString();
+
+               html += `
+                  <div class="notif-item ${unreadClass} d-flex gap-3 mb-2" style="position:relative">
+                     <div class="notif-ico flex-shrink-0" style="background:rgba(59,130,246,.12);cursor:pointer" onclick="window.location.href='/notifications'"><i class="fa-solid ${icon}" style="color:#60a5fa;font-size:.9rem"></i></div>
+                     <div style="flex:1;min-width:0;">
+                        <div style="cursor:pointer" onclick="window.location.href='/notifications'">
+                           <div style="font-size:.85rem;font-weight:600;margin-bottom:3px;word-wrap:break-word;white-space:normal;">${n.data.title || 'Notification'}</div>
+                           <div style="font-size:.78rem;color:var(--tx2);word-wrap:break-word;white-space:normal;">${n.data.message || ''}</div>
+                           <div style="font-size:.7rem;color:var(--tx3);margin-top:5px"><i class="fa-regular fa-clock me-1"></i>${date}</div>
+                        </div>
+                        <div class="d-flex gap-3 mt-2">
+                           ${n.read_at ? '' : `<button class="btn btn-sm btn-link text-decoration-none p-0" onclick="markReadDD('${n.id}', event)" style="font-size:.75rem;color:var(--pur)">Mark as read</button>`}
+                           <button class="btn btn-sm btn-link text-decoration-none text-danger p-0" onclick="deleteNotificationDD('${n.id}', event)" style="font-size:.75rem;">Delete</button>
+                        </div>
+                     </div>
+                  </div>
+               `;
+            });
+
+            listContainer.innerHTML = html;
+         }
+
+         function markAllNotificationsRead() {
+            fetch('/notifications/read-all', {
+               method: 'POST',
+               headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json'
+               }
+            })
+            .then(res => res.json())
+            .then(data => {
+               if(data.success) {
+                  fetchNotifications();
+                  if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
+               }
+            });
+         }
+
+         function clearAllNotificationsDD() {
+            if(confirm('Are you sure you want to clear all notifications?')) {
+               fetch('/notifications/clear-all', {
+                  method: 'DELETE',
+                  headers: {
+                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                     'Content-Type': 'application/json'
+                  }
+               })
+               .then(res => res.json())
+               .then(data => {
+                  if(data.success) {
+                     fetchNotifications();
+                     if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
+                  }
+               });
+            }
+         }
+
+         function markReadDD(id, e) {
+            e.stopPropagation();
+            fetch('/notifications/' + id + '/read', {
+               method: 'POST',
+               headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json'
+               }
+            })
+            .then(res => res.json())
+            .then(data => {
+               if(data.success) {
+                  fetchNotifications();
+               }
+            });
+         }
+
+         function deleteNotificationDD(id, e) {
+            e.stopPropagation();
+            fetch('/notifications/' + id, {
+               method: 'DELETE',
+               headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json'
+               }
+            })
+            .then(res => res.json())
+            .then(data => {
+               if(data.success) {
+                  fetchNotifications();
+               }
+            });
+         }
+
+         // Fetch initially to set badge
+         document.addEventListener('DOMContentLoaded', function() {
+            fetchNotifications();
+            // Poll every minute
+            setInterval(fetchNotifications, 60000);
+         });
       </script>
+      @stack('scripts')
    </body>
 </html>

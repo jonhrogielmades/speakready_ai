@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
 <style>
@@ -34,7 +34,7 @@
     }
     .stat-badge.success { background: rgba(52, 211, 153, 0.15); color: #34d399; }
     .stat-badge.warning { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-    .stat-badge.danger { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+    .stat-badge.danger { background: var(--danger-bg); color: var(--danger-tx); }
     .stat-badge.primary { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
     
     .quick-action-btn {
@@ -56,24 +56,6 @@
         border-color: var(--pur, #3b82f6);
         color: #fff;
     }
-    
-    .custom-table th {
-        color: var(--tx3, #808090);
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-        border-bottom: 1px solid var(--bd);
-        padding: 12px 16px;
-    }
-    .custom-table td {
-        padding: 16px;
-        border-bottom: 1px solid var(--bd);
-        color: var(--tx, #e0e0e0);
-        vertical-align: middle;
-        font-size: 0.9rem;
-    }
-    .custom-table tr:last-child td { border-bottom: none; }
     
     .activity-timeline {
         position: relative;
@@ -110,6 +92,48 @@
         height: 250px;
         width: 100%;
     }
+    
+    /* Mobile Responsive Tables to Cards */
+    @media (max-width: 767.98px) {
+        .dashboard-overview-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+        }
+        .dashboard-overview-grid > .col-6 {
+            width: 100% !important;
+            padding-right: 0 !important;
+            padding-left: 0 !important;
+        }
+        .overview-card {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px !important;
+            width: 100%;
+            max-width: 160px;
+            margin: 0 auto;
+        }
+        .overview-card > div:nth-child(1) {
+            font-size: 1.8rem !important;
+            margin-bottom: 6px !important;
+        }
+        .overview-card > div:nth-child(2) {
+            font-size: 1.4rem !important;
+            margin-bottom: 2px !important;
+        }
+        .overview-card > div:nth-child(3) {
+            font-size: 0.65rem !important;
+            line-height: 1.2;
+            text-align: center;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+    }
 </style>
 
 <div class="db-section active" id="sec-overview">
@@ -125,54 +149,47 @@
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie me-2" style="color:#3b82f6;"></i>Admin Dashboard</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">System overview, user analytics, and platform health.</p>
         </div>
-        <!-- Feature 16: Quick Actions Panel -->
-        <div class="d-flex flex-wrap gap-2">
-            <button class="quick-action-btn"><i class="fa-solid fa-plus text-primary"></i> Add Question</button>
-            <button class="quick-action-btn"><i class="fa-solid fa-plus text-success"></i> Add Module</button>
-            <button class="quick-action-btn"><i class="fa-solid fa-bullhorn text-warning"></i> Create Announcement</button>
-            <button class="quick-action-btn"><i class="fa-solid fa-users text-info"></i> Manage Users</button>
-        </div>
     </div>
 
     <!-- Feature 1: Dashboard Overview Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 dashboard-overview-grid">
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#3b82f6;margin-bottom:8px;"><i class="fa-solid fa-users"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">1,250</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($registeredUsersCount) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Registered Users</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-user-check"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">215</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($activeTodayCount) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Active Today</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#60a5fa;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">4,820</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($mockInterviewsCount) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Mock Interviews</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#fbbf24;margin-bottom:8px;"><i class="fa-solid fa-robot"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">12,430</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($aiFeedbacksCount) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">AI Feedbacks</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#f472b6;margin-bottom:8px;"><i class="fa-solid fa-graduation-cap"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">3,150</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($modulesCompletedCount) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Modules Completed</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(52,211,153,0.1) 100%); border-color: rgba(52,211,153,0.3);">
+            <div class="premium-card overview-card text-center p-3 h-100" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(52,211,153,0.1) 100%); border-color: rgba(52,211,153,0.3);">
                 <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-server"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;color:#34d399;">99.9%</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">System Online</div>
@@ -234,51 +251,26 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @forelse($recentSessions as $session)
                             <tr>
-                                <td>
+                                <td data-label="User">
                                     <div class="d-flex align-items-center gap-2">
-                                        <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">JD</div>
-                                        <span>Juan Dela Cruz</span>
+                                        <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">
+                                            {{ strtoupper(substr($session->user->name ?? 'U', 0, 2)) }}
+                                        </div>
+                                        <span>{{ $session->user->name ?? 'Unknown' }}</span>
                                     </div>
                                 </td>
-                                <td><span class="stat-badge primary">Job Interview</span></td>
-                                <td><span class="fw-bold text-success">88%</span></td>
-                                <td style="color:var(--tx2);">Today, 10:30 AM</td>
-                                <td class="text-end">
+                                <td data-label="Category"><span class="stat-badge primary">{{ $session->category->title ?? 'N/A' }}</span></td>
+                                <td data-label="Score"><span class="fw-bold text-success">{{ $session->score->overall_readiness_score ?? 'N/A' }}%</span></td>
+                                <td data-label="Date" style="color:var(--tx2);">{{ $session->created_at->format('M d, Y') }}</td>
+                                <td data-label="Actions" class="text-end">
                                     <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Session"><i class="fa-solid fa-eye"></i></button>
-                                    <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Export Report"><i class="fa-solid fa-download"></i></button>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">MS</div>
-                                        <span>Maria Santos</span>
-                                    </div>
-                                </td>
-                                <td><span class="stat-badge warning">Scholarship</span></td>
-                                <td><span class="fw-bold text-success">92%</span></td>
-                                <td style="color:var(--tx2);">Yesterday</td>
-                                <td class="text-end">
-                                    <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Session"><i class="fa-solid fa-eye"></i></button>
-                                    <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Export Report"><i class="fa-solid fa-download"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div style="width:32px;height:32px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:0.8rem;">MG</div>
-                                        <span>Mark Garcia</span>
-                                    </div>
-                                </td>
-                                <td><span class="stat-badge" style="background:rgba(168,85,247,0.15);color:#a855f7;">IT Interview</span></td>
-                                <td><span class="fw-bold text-warning">65%</span></td>
-                                <td style="color:var(--tx2);">Oct 12, 2026</td>
-                                <td class="text-end">
-                                    <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Session"><i class="fa-solid fa-eye"></i></button>
-                                    <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Export Report"><i class="fa-solid fa-download"></i></button>
-                                </td>
-                            </tr>
+                            @empty
+                            <tr><td colspan="5" class="text-center text-muted">No recent sessions found.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -290,74 +282,56 @@
                     <div class="premium-card h-100">
                         <h6 class="fw-bold mb-4">Activity Logs</h6>
                         <div class="activity-timeline">
+                            @forelse($recentActivities as $activity)
                             <div class="activity-item">
-                                <div style="font-size:0.85rem;color:var(--tx);"><strong>Admin</strong> added new Question.</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);">10 mins ago</div>
+                                <div style="font-size:0.85rem;color:var(--tx);"><strong>{{ $activity['text'] }}</strong></div>
+                                <div style="font-size:0.75rem;color:var(--tx3);">{{ $activity['time'] }}</div>
                             </div>
+                            @empty
                             <div class="activity-item">
-                                <div style="font-size:0.85rem;color:var(--tx);"><strong>Juan Dela Cruz</strong> completed Mock Interview.</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);">1 hour ago</div>
+                                <div style="font-size:0.85rem;color:var(--tx3);">No recent activity</div>
                             </div>
-                            <div class="activity-item">
-                                <div style="font-size:0.85rem;color:var(--tx);"><strong>Maria Santos</strong> registered.</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);">3 hours ago</div>
-                            </div>
-                            <div class="activity-item">
-                                <div style="font-size:0.85rem;color:var(--tx);"><strong>Admin</strong> updated Settings.</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);">Yesterday</div>
-                            </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="premium-card h-100">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy me-2 text-warning"></i>Leaderboard</h6>
-                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);">
+                        @forelse($leaderboard as $index => $score)
+                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:{{ $index === 0 ? 'rgba(251,191,36,0.1)' : 'var(--bg3)' }};border:1px solid {{ $index === 0 ? 'rgba(251,191,36,0.3)' : 'transparent' }};">
                             <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold" style="color:#fbbf24;width:20px;">1</span>
-                                <div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">JO</div>
-                                <span style="font-size:0.9rem;">John</span>
+                                <span class="fw-bold" style="color:{{ $index === 0 ? '#fbbf24' : 'var(--tx3)' }};width:20px;">{{ $index + 1 }}</span>
+                                <div style="width:30px;height:30px;border-radius:50%;background:#{{ $index === 0 ? '3b82f6' : ($index === 1 ? '3b82f6' : '10b981') }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">
+                                    {{ strtoupper(substr($score->user_name, 0, 2)) }}
+                                </div>
+                                <span style="font-size:0.9rem;">{{ $score->user_name }}</span>
                             </div>
-                            <span class="fw-bold text-success">96%</span>
+                            <span class="fw-bold text-success">{{ $score->overall_readiness_score }}%</span>
                         </div>
-                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:var(--bg3);">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold" style="color:var(--tx3);width:20px;">2</span>
-                                <div style="width:30px;height:30px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">MA</div>
-                                <span style="font-size:0.9rem;">Maria</span>
-                            </div>
-                            <span class="fw-bold text-success">94%</span>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background:var(--bg3);">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold" style="color:var(--tx3);width:20px;">3</span>
-                                <div style="width:30px;height:30px;border-radius:50%;background:#10b981;color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">MK</div>
-                                <span style="font-size:0.9rem;">Mark</span>
-                            </div>
-                            <span class="fw-bold text-success">93%</span>
-                        </div>
+                        @empty
+                        <div class="text-center text-muted mt-4">No scores available yet.</div>
+                        @endforelse
                     </div>
                 </div>
             </div>
 
             <!-- Feature 11: Users Needing Improvement -->
-            <div class="premium-card mb-4" style="border-left: 4px solid #f87171;">
-                <h6 class="fw-bold mb-3 text-danger"><i class="fa-solid fa-triangle-exclamation me-2"></i>Users Needing Support</h6>
+            <div class="premium-card mb-4" style="border-left: 4px solid var(--danger-tx); background: var(--danger-bg);">
+                <h6 class="fw-bold mb-3" style="color: var(--danger-tx);"><i class="fa-solid fa-triangle-exclamation me-2"></i>Users Needing Support</h6>
                 <div class="table-responsive">
                     <table class="table custom-table mb-0 w-100">
                         <tbody>
+                            @forelse($usersNeedingSupport as $score)
                             <tr>
-                                <td>Peter Parker</td>
-                                <td><span class="stat-badge danger">Low Readiness (45%)</span></td>
-                                <td>Incomplete Modules</td>
-                                <td class="text-end"><button class="btn btn-sm" style="border-radius:8px;border:1px solid #f87171;color:#f87171;background:rgba(248,113,113,0.1);">Message</button></td>
+                                <td data-label="User">{{ $score->user_name }}</td>
+                                <td data-label="Status"><span class="stat-badge danger">Low Readiness ({{ $score->overall_readiness_score }}%)</span></td>
+                                <td data-label="Note">Needs more practice</td>
+                                <td data-label="Actions" class="text-end"><button class="btn btn-sm" style="border-radius:8px;border:1px solid #f87171;color:#f87171;background:rgba(248,113,113,0.1);">Message</button></td>
                             </tr>
-                            <tr>
-                                <td>Bruce Wayne</td>
-                                <td><span class="stat-badge warning">Low Activity</span></td>
-                                <td>No sessions in 30 days</td>
-                                <td class="text-end"><button class="btn btn-sm" style="border-radius:8px;border:1px solid #f87171;color:#f87171;background:rgba(248,113,113,0.1);">Message</button></td>
-                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="text-center text-muted">No users currently needing urgent support.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -439,20 +413,20 @@
                 <h6 class="fw-bold mb-4">Avg Performance Metrics</h6>
                 
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Clarity</span><span class="fw-bold">85%</span></div>
-                    <div class="progress-track"><div class="progress-fill" style="width:85%;background:#34d399;"></div></div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Clarity</span><span class="fw-bold">{{ $avgClarity }}%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width:{{ $avgClarity }}%;background:#34d399;"></div></div>
                 </div>
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Relevance</span><span class="fw-bold">82%</span></div>
-                    <div class="progress-track"><div class="progress-fill" style="width:82%;background:#60a5fa;"></div></div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Relevance</span><span class="fw-bold">{{ $avgRelevance }}%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width:{{ $avgRelevance }}%;background:#60a5fa;"></div></div>
                 </div>
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Grammar</span><span class="fw-bold">90%</span></div>
-                    <div class="progress-track"><div class="progress-fill" style="width:90%;background:#3b82f6;"></div></div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Grammar</span><span class="fw-bold">{{ $avgGrammar }}%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width:{{ $avgGrammar }}%;background:#3b82f6;"></div></div>
                 </div>
                 <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Professionalism</span><span class="fw-bold">80%</span></div>
-                    <div class="progress-track"><div class="progress-fill" style="width:80%;background:#fbbf24;"></div></div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Professionalism</span><span class="fw-bold">{{ $avgProfessionalism }}%</span></div>
+                    <div class="progress-track"><div class="progress-fill" style="width:{{ $avgProfessionalism }}%;background:#fbbf24;"></div></div>
                 </div>
             </div>
 
@@ -538,13 +512,16 @@ document.addEventListener("DOMContentLoaded", function() {
     gradientLine.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
     gradientLine.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
 
+    const userGrowthLabels = {!! json_encode($userGrowthLabels) !!};
+    const userGrowthDataValues = {!! json_encode($userGrowthData) !!};
+
     new Chart(userCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: userGrowthLabels,
             datasets: [{
                 label: 'New Registrations',
-                data: [120, 190, 300, 450, 600, 850],
+                data: userGrowthDataValues,
                 borderColor: '#3b82f6',
                 backgroundColor: gradientLine,
                 borderWidth: 3,
@@ -568,13 +545,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Feature 3: Interview Analytics (Donut Chart)
     const catCtx = document.getElementById('categoryDonutChart').getContext('2d');
+    const chartLabels = {!! json_encode($chartLabels) !!};
+    const chartDataValues = {!! json_encode($chartData) !!};
+
     new Chart(catCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Job', 'Scholarship', 'College', 'IT'],
+            labels: chartLabels.length > 0 ? chartLabels : ['No Data'],
             datasets: [{
-                data: [1250, 820, 670, 2080],
-                backgroundColor: ['#3b82f6', '#34d399', '#fbbf24', '#60a5fa'],
+                data: chartDataValues.length > 0 ? chartDataValues : [1],
+                backgroundColor: ['#3b82f6', '#34d399', '#fbbf24', '#60a5fa', '#f472b6', '#a855f7'],
                 borderWidth: 0,
                 hoverOffset: 4
             }]
@@ -591,13 +571,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Feature 5: Readiness Score Analytics (Bar Chart)
     const readCtx = document.getElementById('readinessBarChart').getContext('2d');
+    const readinessDataValues = {!! json_encode($readinessData) !!};
+
     new Chart(readCtx, {
         type: 'bar',
         data: {
             labels: ['Highly Acc.', 'Acceptable', 'Needs Imp.', 'Poor'],
             datasets: [{
                 label: 'Users',
-                data: [450, 520, 180, 80],
+                data: readinessDataValues,
                 backgroundColor: ['#34d399', '#60a5fa', '#fbbf24', '#f87171'],
                 borderRadius: 4
             }]

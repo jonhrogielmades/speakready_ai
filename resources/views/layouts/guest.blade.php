@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI - Practice Smarter. Interview Better.</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -40,6 +40,32 @@
             color: var(--pur); font-weight: bold;
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 15px; font-size: 1.2rem;
+         }
+         
+         /* --- PWA Install Prompt --- */
+         #pwa-install-prompt {
+            display: none; position: fixed;
+            bottom: 20px;
+            left: 16px; right: 16px; z-index: 9999;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid #e5e7eb; border-radius: 16px;
+            padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center; animation: mobFadeIn 0.3s ease;
+         }
+         html:not(.lm) #pwa-install-prompt { background: rgba(8, 8, 15, 0.95); box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-color: #333; }
+         #pwa-install-prompt h5 { color: #111; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
+         html:not(.lm) #pwa-install-prompt h5 { color: #fff; }
+         #pwa-install-prompt p { color: #555; font-size: 0.85rem; margin-bottom: 16px; }
+         html:not(.lm) #pwa-install-prompt p { color: #aaa; }
+         .pwa-btn-wrap { display: flex; gap: 12px; justify-content: center; }
+         .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: transparent; color: #333; font-weight: 600; cursor: pointer; }
+         html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
+         .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
+         
+         @keyframes mobFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
          }
       </style>
    </head>
@@ -102,10 +128,10 @@
             <div class="aur aur-b" style="top:180px;right:-180px"></div>
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
             <div class="container position-relative" style="z-index:2">
-               <div class="text-center">
+               <div class="text-center mt-3 pt-3">
                   <div class="afu" style="animation-delay:.05s">
                       <span class="hbadge">
-                          <span class="bdot"></span>AI-Powered Learning | Real-Time Feedback | Interactive Training
+                   AI-Powered Learning | Real-Time Feedback | Interactive Training
                       </span>
                   </div>
                   <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
@@ -128,7 +154,7 @@
                   </div>
                </div>
                
-               <div class="row justify-content-center mt-5">
+               <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-11 adi">
                      <div class="dwrap">
                         <div class="dtbar"><span class="dd" style="background:#ff5f57"></span><span class="dd" style="background:#ffbd2e"></span><span class="dd" style="background:#28c840"></span><span class="ms-auto me-auto" style="font-size:.76rem;color:var(--tx3)">SpeakReady AI Dashboard</span></div>
@@ -746,9 +772,24 @@
             <div class="tab-switch"><button class="tab-sw-btn on" id="tabLogin" onclick="swTab('login')">Log In</button><button class="tab-sw-btn" id="tabSignup" onclick="swTab('signup')">Register</button></div>
             <!-- Login -->
             <div id="fLogin">
+               @if(session('success'))
+                  <div style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;font-size:0.85rem;margin-bottom:15px;">
+                     <i class="fa-solid fa-check-circle me-1"></i> {{ session('success') }}
+                  </div>
+               @endif
+               @if($errors->has('account_inactive'))
+                  <div class="err-msg" style="display:block; padding:12px; margin-bottom:15px; text-align:left; line-height: 1.4;">
+                     <div class="mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first('account_inactive') }}</span></div>
+                     <form action="{{ route('request.reactivation') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="email" value="{{ old('email') }}">
+                        <button type="submit" class="btn btn-sm btn-warning w-100 fw-bold" style="border-radius:8px; background: #f59e0b; border: none; color: #fff;">Request Reactivation</button>
+                     </form>
+                  </div>
+               @endif
                <form action="{{ route('login') }}" method="POST">
                   @csrf
-                  @if($errors->any())
+                  @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
                      <div class="err-msg" style="display:block;"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first() }}</span></div>
                   @endif
                   <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
@@ -792,6 +833,16 @@
          </div>
       </div>
       
+      <!-- ===== PWA INSTALL PROMPT ===== -->
+      <div id="pwa-install-prompt">
+         <h5>Install SpeakReady AI</h5>
+         <p>Do you want to install this app for a better and faster experience?</p>
+         <div class="pwa-btn-wrap">
+            <button id="pwa-btn-no" class="pwa-btn-no">No</button>
+            <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+         </div>
+      </div>
+
 <!-- ======================== SCRIPTS ======================== -->
       <!-- jQuery -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
@@ -864,6 +915,31 @@
                });
             });
          }
+
+         // PWA Install Prompt Logic
+         let deferredPrompt;
+         window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (!localStorage.getItem('pwa_prompt_dismissed')) {
+               document.getElementById('pwa-install-prompt').style.display = 'block';
+            }
+         });
+
+         document.getElementById('pwa-btn-yes')?.addEventListener('click', async () => {
+            document.getElementById('pwa-install-prompt').style.display = 'none';
+            if (deferredPrompt) {
+               deferredPrompt.prompt();
+               const { outcome } = await deferredPrompt.userChoice;
+               console.log(`User response to the install prompt: ${outcome}`);
+               deferredPrompt = null;
+            }
+         });
+
+         document.getElementById('pwa-btn-no')?.addEventListener('click', () => {
+            document.getElementById('pwa-install-prompt').style.display = 'none';
+            localStorage.setItem('pwa_prompt_dismissed', 'true');
+         });
       </script>
    </body>
 </html>

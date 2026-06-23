@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class AdminAiController extends Controller
 {
-    public function dashboard()
+    public function providers()
     {
         $activeProvider = AiProvider::where('is_primary', true)->first();
         $totalRequests = AiProviderLog::whereDate('created_at', today())->count();
@@ -22,26 +22,21 @@ class AdminAiController extends Controller
         
         $successRate = $totalRequests > 0 ? round(($successfulRequests / $totalRequests) * 100, 2) : 100;
         
-        // Mock data for charts
         $monthlyCost = AiProviderLog::whereMonth('created_at', now()->month)->sum('cost') ?? 0;
         
         $moduleUsage = AiProviderLog::selectRaw('module, count(*) as count')
             ->groupBy('module')
             ->get();
 
-        return view('admin.ai.dashboard', compact(
-            'activeProvider', 'totalRequests', 'successfulRequests', 'failedRequests', 
-            'avgResponseTime', 'successRate', 'monthlyCost', 'moduleUsage'
-        ));
-    }
-
-    public function providers()
-    {
         $providers = AiProvider::all();
         $primary = AiProvider::where('is_primary', true)->first();
         $fallback = AiProvider::where('is_fallback', true)->first();
         
-        return view('admin.ai.providers', compact('providers', 'primary', 'fallback'));
+        return view('admin.ai.providers', compact(
+            'providers', 'primary', 'fallback',
+            'activeProvider', 'totalRequests', 'successfulRequests', 'failedRequests', 
+            'avgResponseTime', 'successRate', 'monthlyCost', 'moduleUsage'
+        ));
     }
 
     public function storeProvider(Request $request)
@@ -86,6 +81,21 @@ class AdminAiController extends Controller
         return redirect()->route('admin.ai.providers')->with('message', 'Provider updated successfully.');
     }
 
+    public function destroyProvider(AiProvider $provider)
+    {
+        if ($provider->is_primary) {
+            return redirect()->route('admin.ai.providers')->with('error', 'Cannot delete the primary provider. Please set another provider as primary first.');
+        }
+        
+        if ($provider->is_fallback) {
+            return redirect()->route('admin.ai.providers')->with('error', 'Cannot delete the fallback provider. Please set another provider as fallback first.');
+        }
+
+        $provider->delete();
+
+        return redirect()->route('admin.ai.providers')->with('message', 'Provider deleted successfully.');
+    }
+
     public function setPrimaryProvider(AiProvider $provider)
     {
         AiProvider::where('id', '!=', 0)->update(['is_primary' => false]);
@@ -100,69 +110,4 @@ class AdminAiController extends Controller
         return redirect()->back()->with('message', 'Fallback provider updated.');
     }
 
-    public function prompts()
-    {
-        $prompts = AiPrompt::all();
-        return view('admin.ai.prompts', compact('prompts'));
-    }
-
-    public function storePrompt(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string',
-            'module' => 'required|string',
-            'prompt_text' => 'required|string',
-        ]);
-
-        AiPrompt::updateOrCreate(
-            ['module' => $request->module],
-            ['name' => $request->name, 'prompt_text' => $request->prompt_text]
-        );
-
-        return redirect()->back()->with('message', 'Prompt updated successfully.');
-    }
-
-    public function settings()
-    {
-        $settings = AiSetting::pluck('value', 'key')->toArray();
-        $providers = AiProvider::all();
-        return view('admin.ai.settings', compact('settings', 'providers'));
-    }
-
-    public function storeSettings(Request $request)
-    {
-        foreach ($request->except('_token') as $key => $value) {
-            AiSetting::updateOrCreate(['key' => $key], ['value' => $value]);
-        }
-        return redirect()->back()->with('message', 'Settings saved successfully.');
-    }
-
-    public function testing()
-    {
-        $providers = AiProvider::all();
-        return view('admin.ai.testing', compact('providers'));
-    }
-
-    public function testAiResponse(Request $request)
-    {
-        $request->validate([
-            'prompt' => 'required|string',
-            'provider_id' => 'required|exists:ai_providers,id'
-        ]);
-
-        // Simulating AI Response for testing purposes
-        $response = "This is a simulated AI response from the selected provider for prompt: " . $request->prompt;
-        
-        return response()->json([
-            'success' => true,
-            'response' => $response,
-            'time_ms' => rand(500, 2500)
-        ]);
-    }
-
-    public function logs()
-    {
-        $logs = AiProviderLog::orderBy('created_at', 'desc')->paginate(50);
-        return view('admin.ai.logs', compact('logs'));
-    }
 }

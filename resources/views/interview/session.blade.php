@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('content')
 <style>
     .pulse-anim { animation: pulse 1.5s infinite; }
@@ -18,6 +18,19 @@
     .progress-bar-fill { background:#60a5fa;height:100%;transition:width 0.3s; }
     .star-item { display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:8px;font-size:.85rem; }
     .star-item i { font-size:1rem; }
+    @keyframes scanAnim { 0% { top: 0%; opacity: 0.5; } 50% { top: 100%; opacity: 1; } 100% { top: 0%; opacity: 0.5; } }
+    @keyframes avatarPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+    .sound-wave { position:absolute;border-radius:50%;width:100%;height:100%;display:none; }
+
+    /* Circular Audio Spectrum */
+    .circular-spectrum { position: absolute; top: 50%; left: 50%; width: 0; height: 0; display: none; z-index: 5; }
+    .circular-spectrum .spectrum-bar { position: absolute; bottom: 0; left: -4px; width: 8px; background: linear-gradient(to top, #8b5cf6, #34d399); border-radius: 4px; transform-origin: bottom center; height: 6px; transition: height 0.05s ease-out; box-shadow: 0 0 12px rgba(52,211,153,0.6); }
+    
+    /* Responsive overrides */
+    @media (max-width: 768px) {
+        .avatar-wrapper { transform: scale(0.8); }
+        .ai-avatar-panel { height: 280px !important; }
+    }
 </style>
 
 <div class="db-section active" id="sec-interview-session">
@@ -31,7 +44,18 @@
                 
                 // Fallback to local category questions if none were specifically generated
                 if ($questions->isEmpty()) {
-                    $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)->inRandomOrder()->limit($num)->get();
+                    // Try to match exact difficulty and active status first
+                    $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
+                        ->where('status', 'active')
+                        ->where('difficulty', $sessionRecord->difficulty)
+                        ->inRandomOrder()->limit($num)->get();
+                        
+                    // If no questions match the difficulty, fallback to any active questions in category
+                    if ($questions->isEmpty()) {
+                        $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
+                            ->where('status', 'active')
+                            ->inRandomOrder()->limit($num)->get();
+                    }
                 }
             } else {
                 $questions = collect([]);
@@ -49,52 +73,63 @@
                     <span><i class="fa-solid fa-briefcase me-1"></i> {{ $sessionRecord->target_position ?? 'Standard' }}</span>
                 </div>
             </div>
-            <div class="text-end">
-                <div style="font-size:.8rem;color:var(--tx3);margin-bottom:4px">Time Elapsed</div>
-                <span class="db-badge" style="background:#f87171;font-size:1.1rem;padding:6px 14px" id="interviewTimer">00:00</span>
+            
+            <!-- Desktop Buttons (Visible only when workspace is active) -->
+            <div class="d-none d-lg-flex gap-2" id="headerButtons" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+                <button type="button" class="btn btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
+                <button type="button" class="btn btn-outline-secondary prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left me-2"></i>Previous</button>
+                <button type="button" class="btn btn-outline-warning skip-btn-class" onclick="skipQuestion()"><i class="fa-solid fa-forward-step me-2"></i>Skip</button>
+                <button type="button" class="bgrd btn px-4 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
             </div>
         </div>
 
-        <div class="row g-4" id="workspaceRow" style="display:none;">
+        <div id="workspaceWrapper" style="display:none;">
+        <div class="row g-4" id="workspaceRow">
             <!-- Main Content Area -->
             <div class="col-lg-8">
-                <!-- Progress Tracker -->
-                <div class="panel py-3 px-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span style="font-size:.85rem;font-weight:600;color:var(--tx2)">Question <span id="currentQNum">1</span> of {{ $questions->count() }}</span>
-                        <span style="font-size:.85rem;font-weight:600;color:var(--tx2)" id="progressPct">0% Completed</span>
-                    </div>
-                    <div class="progress-bar-bg mb-0">
-                        <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
-                    </div>
-                </div>
+                <!-- Progress Tracker Removed by User -->
 
-                <!-- Question Panel -->
-                <div class="panel">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <span class="db-badge" style="background:var(--pur)" id="qTypeBadge">Behavioral</span>
-                        <span style="font-size:.8rem;color:var(--tx3)" id="qDiffBadge">Medium</span>
+                <!-- Simulated AI Video Avatar Panel -->
+                <div class="panel p-0 ai-avatar-panel" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:250px;border-radius:18px;margin-bottom:20px;">
+                    <!-- Mobile Picture-in-Picture Camera -->
+                    <div class="d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+                        <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                     </div>
-                    
-                    <div id="aiVoiceVisualizer" style="display: none; align-items: center; margin-bottom: 15px;">
-                        <div style="background:rgba(59,130,246,.1); padding:8px 12px; border-radius:12px; display:flex; align-items:center;">
-                            <i class="fa-solid fa-robot" style="color:var(--pur); font-size:1.2rem; margin-right:10px;"></i>
-                            <div class="d-flex align-items-center" style="height:24px;">
-                                <div class="ai-wave-bar"></div>
-                                <div class="ai-wave-bar"></div>
-                                <div class="ai-wave-bar"></div>
-                                <div class="ai-wave-bar"></div>
-                                <div class="ai-wave-bar"></div>
+
+                    <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #1e1b4b, #312e81);">
+                        <div class="avatar-wrapper" id="aiAvatarHead" style="width:100px;height:100px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.3s;">
+                            <!-- The Image Container (with border, glow, and clipping for the image itself) -->
+                            <div style="width:100%;height:100%;background:rgba(255,255,255,0.1);border-radius:50%;border:3px solid #8b5cf6;overflow:hidden;position:relative;z-index:10;box-shadow: 0 0 15px rgba(139,92,246,0.3);">
+                                <img src="{{ asset('img/ai_avatar.jpg') }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
                             </div>
-                            <span style="font-size: 0.8rem; color:var(--pur); margin-left: 10px; font-weight: 600;">AI Interviewer speaking...</span>
+                        </div>
+                        
+                        <!-- Circular Audio Spectrum Waveform -->
+                        <div class="circular-spectrum sound-wave">
+                            @for ($i = 0; $i < 36; $i++)
+                                @php 
+                                    // Use a pseudo-random sequence so it looks dynamic but is consistent
+                                    $animClass = 'sb' . (($i * 7) % 10 + 1); 
+                                    $rot = $i * 10;
+                                @endphp
+                                <div class="spectrum-bar {{ $animClass }}" style="transform: rotate({{ $rot }}deg) translateY(-65px);"></div>
+                            @endfor
                         </div>
                     </div>
-
-                    <h4 style="line-height:1.5;color:var(--tx);font-weight:600;margin-bottom:0" id="qTextDisplay">Loading question...</h4>
+                    <!-- Overlay Text -->
+                    <div style="position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px;">
+                        <div class="d-flex justify-content-between align-items-end gap-3">
+                            <div>
+                                <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
+                                <div id="aiQuestionText" style="color:white;font-size:1.1rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
+                            </div>
+                            <span class="badge bg-white text-dark" style="font-size:0.8rem;white-space:nowrap;" id="qCounter">1/10</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Answer Response System -->
-                <div class="panel">
+                <div class="panel mb-4">
                     <div class="panel-title"><i class="fa-solid fa-pen-nib me-2"></i> Your Response</div>
                     
                     <form id="answerForm">
@@ -119,12 +154,14 @@
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between border-top pt-4" style="border-color:var(--bd) !important">
-                            <div>
-                                <button type="button" class="btn btn-outline-secondary me-2" onclick="prevQuestion()" id="prevBtn" disabled><i class="fa-solid fa-arrow-left me-2"></i>Previous</button>
-                                <button type="button" class="btn btn-outline-warning" onclick="skipQuestion()"><i class="fa-solid fa-forward-step me-2"></i>Skip</button>
+                        <!-- Mobile Buttons (Hidden on Desktop) -->
+                        <div class="d-flex d-lg-none flex-column flex-sm-row justify-content-between border-top pt-4 gap-3" style="border-color:var(--bd) !important">
+                            <div class="d-flex flex-wrap gap-2 w-100">
+                                <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
+                                <button type="button" class="btn btn-outline-secondary flex-fill prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left"></i></button>
+                                <button type="button" class="btn btn-outline-warning flex-fill skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
                             </div>
-                            <button type="button" class="bgrd btn px-4" onclick="submitAnswer()" id="nextBtn">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                            <button type="button" class="bgrd btn px-4 w-100 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
                         </div>
                     </form>
                 </div>
@@ -133,15 +170,18 @@
             <!-- Side Panels -->
             <div class="col-lg-4">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
-                <!-- Camera Presence -->
-                <div class="panel">
+                <!-- Camera Presence (Hidden on mobile since it's inside the AI panel now) -->
+                <div class="panel d-none d-lg-block" id="cameraPanel">
                     <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Camera Presence</div>
                     <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
                         <video id="userCamera" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
-                        <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#34d399"><i class="fa-solid fa-circle text-success pulse-anim" style="font-size:.5rem;margin-right:4px"></i> Live</div>
+                        <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
+                            <div class="scan-line" style="width:100%;height:2px;background:#34d399;position:absolute;top:0;animation: scanAnim 2s infinite linear;box-shadow:0 0 8px #34d399;"></div>
+                        </div>
+                        <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#34d399"><i class="fa-solid fa-circle text-success pulse-anim" style="font-size:.5rem;margin-right:4px"></i> AI Track</div>
                     </div>
-                    <div class="stat-row"><span>Eye Contact</span><span class="text-success"><i class="fa-solid fa-check me-1"></i>Good</span></div>
-                    <div class="stat-row mb-0"><span>Posture</span><span class="text-success"><i class="fa-solid fa-check me-1"></i>Good</span></div>
+                    <div class="stat-row"><span>Eye Contact</span><span id="stEyeContact" class="text-success"><i class="fa-solid fa-check me-1"></i>Good</span></div>
+                    <div class="stat-row mb-0"><span>Posture</span><span id="stPosture" class="text-success"><i class="fa-solid fa-check me-1"></i>Good</span></div>
                 </div>
 
                 <!-- AI Visualizer Panel -->
@@ -184,8 +224,9 @@
                 </div>
             </div>
         </div>
+        </div>
 
-        <div id="introContainer" class="text-center p-5 panel" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;">
+        <div id="introContainer" class="text-center p-4 p-md-5 panel" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;">
             <div style="width:60px;height:60px;border-radius:15px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
                 <i class="fa-solid fa-robot" style="font-size:1.8rem;color:#60a5fa"></i>
             </div>
@@ -218,10 +259,13 @@
                 is_skipped: false,
                 wpm: 0,
                 voice_duration: 0,
-                filler_words: 0
+                filler_words: 0,
+                confidence_score: 85,
+                eye_contact_score: 90,
+                posture_score: 90
             }));
 
-            // Voice state
+            // Voice and Body Language state
             let recognition = null;
             let isRecording = false;
             let recTimerSeconds = 0;
@@ -253,6 +297,11 @@
                                 video.srcObject = stream;
                                 video.play();
                             }
+                            let mobileVideo = document.getElementById('userCameraMobile');
+                            if (mobileVideo) {
+                                mobileVideo.srcObject = stream;
+                                mobileVideo.play();
+                            }
                         })
                         .catch(function(err) {
                             console.error("Error accessing camera: ", err);
@@ -262,27 +311,41 @@
                 }
             }
 
+            let visualizerInterval = null;
+            let currentAmplitude = 0.2;
+
             function speakQuestion(text) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     let utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 1.0;
+                    utterance.rate = 0.95;
                     utterance.pitch = 1.0;
 
-                    const vis = document.getElementById('aiVoiceVisualizer');
-                    
+                    // Spike the amplitude every time a new word is spoken!
+                    utterance.onboundary = function(e) {
+                        if(e.name === 'word') currentAmplitude = 1.0;
+                    };
+
                     utterance.onstart = function() {
-                        if(vis) {
-                            vis.style.display = 'flex';
-                            vis.classList.add('ai-speaking');
-                        }
+                        document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
+                        document.getElementById('aiAvatarHead').style.borderColor = '#34d399';
+                        
+                        // Start dynamic JS visualizer
+                        const bars = document.querySelectorAll('.spectrum-bar');
+                        visualizerInterval = setInterval(() => {
+                            currentAmplitude = Math.max(0.15, currentAmplitude - 0.1); // Decay slowly between words
+                            bars.forEach(bar => {
+                                // Calculate random jitter scaled by current word amplitude
+                                let h = 6 + (Math.random() * 80 * currentAmplitude);
+                                bar.style.height = h + 'px';
+                            });
+                        }, 50); // 20 FPS jitter
                     };
                     
                     utterance.onend = function() {
-                        if(vis) {
-                            vis.classList.remove('ai-speaking');
-                            vis.style.display = 'none';
-                        }
+                        document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
+                        document.getElementById('aiAvatarHead').style.borderColor = '#8b5cf6';
+                        if(visualizerInterval) clearInterval(visualizerInterval);
                     };
 
                     window.speechSynthesis.speak(utterance);
@@ -291,7 +354,9 @@
 
             function startInterviewSession() {
                 document.getElementById('introContainer').style.display = 'none';
-                document.getElementById('workspaceRow').style.display = 'flex';
+                document.getElementById('workspaceWrapper').style.display = 'block';
+                document.getElementById('headerButtons').style.opacity = '1';
+                document.getElementById('headerButtons').style.pointerEvents = 'auto';
                 
                 initCamera();
                 
@@ -319,31 +384,44 @@
                 currentQIdx = idx;
                 const q = questions[idx];
                 
-                document.getElementById('currentQNum').innerText = idx + 1;
-                document.getElementById('qTextDisplay').innerText = q.question_text;
-                document.getElementById('qTypeBadge').innerText = q.type || 'General';
-                document.getElementById('qDiffBadge').innerText = ucfirst(q.difficulty);
-                
-                let pct = Math.round((idx / questions.length) * 100);
-                document.getElementById('progressBar').style.width = pct + '%';
-                document.getElementById('progressPct').innerText = pct + '% Completed';
+                document.getElementById('aiQuestionText').innerText = q.question_text;
+                document.getElementById('qCounter').innerText = (idx + 1) + '/' + questions.length;
 
                 // Restore answer state if navigated back
                 document.getElementById('answerTextarea').value = answersData[idx].text;
                 
                 speakQuestion(q.question_text);
                 
-                document.getElementById('prevBtn').disabled = (idx === 0);
+                document.querySelectorAll('.prev-btn-class').forEach(el => el.disabled = (idx === 0));
                 
                 if (idx === questions.length - 1) {
-                    document.getElementById('nextBtn').innerHTML = 'Finish Interview <i class="fa-solid fa-flag-checkered ms-2"></i>';
-                    document.getElementById('nextBtn').classList.replace('btn-primary', 'btn-success');
+                    document.querySelectorAll('.next-btn-class').forEach(el => {
+                        el.innerHTML = 'Finish Interview <i class="fa-solid fa-flag-checkered ms-2"></i>';
+                        el.classList.add('btn-success');
+                        el.classList.remove('bgrd', 'btn-primary');
+                    });
                 } else {
-                    document.getElementById('nextBtn').innerHTML = 'Next Question <i class="fa-solid fa-arrow-right ms-2"></i>';
-                    document.getElementById('nextBtn').classList.replace('btn-success', 'btn-primary');
+                    document.querySelectorAll('.next-btn-class').forEach(el => {
+                        el.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right ms-2"></i>';
+                        el.classList.add('bgrd');
+                        el.classList.remove('btn-success');
+                    });
                 }
                 
                 triggerAnalysis();
+            }
+
+            function repeatQuestion() {
+                if(questions && questions[currentQIdx]) {
+                    speakQuestion(questions[currentQIdx].question_text);
+                }
+            }
+
+            function prevQuestion() {
+                if(isRecording) stopRecording();
+                if (currentQIdx > 0) {
+                    loadQuestion(currentQIdx - 1);
+                }
             }
 
             function triggerAnalysis() {
@@ -418,7 +496,29 @@
                     const wpm = recTimerSeconds > 0 ? Math.round((wordCount / recTimerSeconds) * 60) : 0;
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
+
+                    // Mock Body Language Tracking Logic
+                    if (recTimerSeconds % 3 === 0) {
+                        const eyeGood = Math.random() > 0.15; // 85% chance good
+                        const postGood = Math.random() > 0.10; // 90% chance good
+                        document.getElementById('stEyeContact').innerHTML = eyeGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Distracted';
+                        document.getElementById('stEyeContact').className = eyeGood ? 'text-success' : 'text-warning';
+                        document.getElementById('stPosture').innerHTML = postGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Slouching';
+                        document.getElementById('stPosture').className = postGood ? 'text-success' : 'text-warning';
+                        
+                        if(!eyeGood) answersData[currentQIdx].eye_contact_score = Math.max(40, answersData[currentQIdx].eye_contact_score - 2);
+                        if(!postGood) answersData[currentQIdx].posture_score = Math.max(40, answersData[currentQIdx].posture_score - 2);
+                    }
+                    
+                    // Confidence Score Calc
+                    let conf = 100 - (answersData[currentQIdx].filler_words * 2);
+                    if(wpm < 100) conf -= 10;
+                    else if(wpm > 160) conf -= 5;
+                    answersData[currentQIdx].confidence_score = Math.max(50, Math.min(100, conf));
+
                 }, 1000);
+
+                document.getElementById('faceScannerBox').style.display = 'block';
             }
 
             function pauseRecording() {
@@ -428,6 +528,7 @@
                 document.getElementById('micStartBtn').style.display = 'block';
                 document.getElementById('micStartBtn').innerText = 'Resume';
                 document.getElementById('micPauseBtn').style.display = 'none';
+                document.getElementById('faceScannerBox').style.display = 'none';
             }
 
             function stopRecording() {
@@ -448,6 +549,9 @@
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
+                formData.append('confidence_score', answersData[currentQIdx].confidence_score);
+                formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
+                formData.append('posture_score', answersData[currentQIdx].posture_score);
                 formData.append('notes', document.getElementById('sessionNotes').value);
 
                 return fetch('{{ route("interview.answer") }}', {

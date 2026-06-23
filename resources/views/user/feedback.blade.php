@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
 <div class="db-section active">
@@ -29,7 +29,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table align-middle" style="color:var(--tx);" id="feedbackTable">
+            <table class="table custom-table align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent;" id="feedbackTable">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
                         <th class="border-0">Date</th>
@@ -41,9 +41,9 @@
                 </thead>
                 <tbody>
                     @foreach($sessions as $session)
-                    <tr style="border-bottom: 1px solid var(--bd);" data-category="{{ $session->category ? $session->category->name : 'Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
+                    <tr style="border-bottom: 1px solid var(--bd);" data-category="{{ $session->category ? $session->category->title : 'Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
                         <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
-                        <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->name : 'Job Interview' }}</td>
+                        <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->title : 'Job Interview' }}</td>
                         <td class="border-0 py-3 fw-bold">{{ $session->score ? $session->score->overall_readiness_score : 0 }}%</td>
                         <td class="border-0 py-3">
                             @php $sc = $session->score ? $session->score->overall_readiness_score : 0; @endphp
