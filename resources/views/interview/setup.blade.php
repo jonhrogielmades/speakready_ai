@@ -25,9 +25,14 @@
 </style>
 
 <div class="db-section active" id="sec-interview-setup">
-    <div class="mb-4">
-        <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Setup</h4>
-        <p style="font-size:.875rem;color:var(--tx3);margin:0">Configure your mock interview session to match your goals.</p>
+    <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Setup</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Configure your mock interview session to match your goals.</p>
+        </div>
+        <div>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+        </div>
     </div>
 
     @if($errors->any())
@@ -40,10 +45,10 @@
         @csrf
         <div class="row g-4">
             <!-- Left Column: Form Settings -->
-            <div class="col-lg-8">
+            <div class="col-lg-8" id="setup-left-col">
                 
                 <!-- Basic Info -->
-                <div class="setup-panel">
+                <div class="setup-panel" id="panel-basic">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-briefcase me-2" style="color:#60a5fa"></i> Basic Information</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -80,7 +85,7 @@
                 </div>
 
                 <!-- Advanced Personalization -->
-                <div class="setup-panel">
+                <div class="setup-panel" id="panel-advanced">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-file-lines me-2" style="color:#a78bfa"></i> Advanced Personalization <span class="badge bg-primary" style="font-size:0.7rem;vertical-align:middle;margin-left:5px">New</span></h5>
                     <p style="font-size:.85rem;color:var(--tx3);margin-bottom:15px">Provide your resume and the target job description to get highly tailored, role-specific questions.</p>
                     <div class="row g-3">
@@ -96,7 +101,7 @@
                 </div>
 
                 <!-- Interview Structure -->
-                <div class="setup-panel">
+                <div class="setup-panel" id="panel-structure">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-layer-group me-2" style="color:#60a5fa"></i> Interview Structure</h5>
                     
                     <label class="olbl mb-3">Difficulty Level</label>
@@ -153,7 +158,7 @@
                 </div>
 
                 <!-- Content & Assistance -->
-                <div class="setup-panel">
+                <div class="setup-panel" id="panel-content">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-brain me-2" style="color:#f87171"></i> Content & Assistance</h5>
                     
                     <div class="row g-4 mb-4">
@@ -203,7 +208,7 @@
                 </div>
 
                 <!-- Response Mode -->
-                <div class="setup-panel">
+                <div class="setup-panel" id="panel-response">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-microphone me-2" style="color:#34d399"></i> Response Mode</h5>
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -241,7 +246,7 @@
             <!-- Right Column: Live Summary -->
             <div class="col-lg-4">
                 <div style="position:sticky;top:20px;">
-                    <div class="setup-panel" style="background:linear-gradient(145deg, rgba(59,130,246,0.05) 0%, rgba(59,130,246,0.05) 100%); border:1px solid rgba(59,130,246,0.2);">
+                    <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.05) 0%, rgba(59,130,246,0.05) 100%); border:1px solid rgba(59,130,246,0.2);">
                         <h5 style="font-weight:700;margin-bottom:20px;color:var(--pur);text-align:center"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
                         
                         <div class="summary-row">
@@ -282,7 +287,7 @@
                         </div>
                         
                         <div style="margin-top:30px;">
-                            <button type="submit" class="bgrd btn w-100 py-3" style="font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)">
+                            <button type="submit" id="btn-start-interview" class="bgrd btn w-100 py-3" style="font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)">
                                 Start Mock Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
                         </div>
@@ -357,4 +362,56 @@
         updateSummary();
     };
 </script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#setup-left-col', popover: { title: 'Interview Setup', description: 'Here you can customize every aspect of your mock interview before you begin.', side: "bottom", align: 'start' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Set the target role, experience level, and industry to tailor the questions.', side: "bottom", align: 'start' }},
+            { element: '#panel-advanced', popover: { title: 'Advanced Personalization', description: 'Provide a job description or your resume to generate highly specific questions.', side: "bottom", align: 'start' }},
+            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose the difficulty, number of questions, and the specific categories you want to be tested on.', side: "top", align: 'start' }},
+            { element: '#panel-content', popover: { title: 'Content Assistance', description: 'Enable hints, language checking, or strict timing depending on how much support you want.', side: "top", align: 'start' }},
+            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose between standard Voice responses or Video tracking to analyze your expressions and confidence.', side: "top", align: 'start' }},
+            { element: '#btn-start-interview', popover: { title: 'Ready to Begin', description: 'Click here to generate your customized mock interview and start practicing!', side: "top", align: 'center' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#setup-left-col', popover: { title: 'Interview Setup', description: 'Here you can customize every aspect of your mock interview before you begin.', side: "bottom", align: 'start' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Set the target role, experience level, and industry to tailor the questions.', side: "bottom", align: 'start' }},
+            { element: '#panel-advanced', popover: { title: 'Advanced Personalization', description: 'Provide a job description or your resume to generate highly specific questions.', side: "bottom", align: 'start' }},
+            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose the difficulty, number of questions, and the specific categories you want to be tested on.', side: "top", align: 'start' }},
+            { element: '#panel-content', popover: { title: 'Content Assistance', description: 'Enable hints, language checking, or strict timing depending on how much support you want.', side: "top", align: 'start' }},
+            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose between standard Voice responses or Video tracking to analyze your expressions and confidence.', side: "top", align: 'start' }},
+            { element: '#btn-start-interview', popover: { title: 'Ready to Begin', description: 'Click here to generate your customized mock interview and start practicing!', side: "top", align: 'center' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_interview_setup', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_interview_setup')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection

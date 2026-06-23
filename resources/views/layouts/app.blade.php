@@ -30,6 +30,8 @@
              document.documentElement.classList.add('lm');
          }
       </script>
+      <!-- Driver.js -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
    </head>
    <body>
       <div id="dashboard">
@@ -341,6 +343,8 @@
             setInterval(fetchNotifications, 60000);
          });
       </script>
+      <!-- Driver.js -->
+      <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @stack('scripts')
    </body>
 </html>

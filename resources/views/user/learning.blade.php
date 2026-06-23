@@ -132,14 +132,17 @@
             <h3 style="font-weight:700;color:var(--tx);margin:0">Learning Lab <i class="fa-solid fa-flask" style="color:var(--pur);font-size:1.2rem"></i></h3>
             <p style="color:var(--tx3);margin-top:5px;">Master your interview skills with structured, AI-powered learning.</p>
         </div>
-        <div class="db-top-search" style="width:300px;background:var(--sf);border:1px solid var(--bd);">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Search lessons, quizzes, topics...">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="db-top-search" style="width:300px;background:var(--sf);border:1px solid var(--bd); margin:0;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search lessons, quizzes, topics...">
+            </div>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:var(--pur)"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
         </div>
     </div>
 
     <!-- Sub-Navigation -->
-    <div class="mb-4 pb-2" style="overflow-x:auto;white-space:nowrap;">
+    <div id="nav-pills-container" class="mb-4 pb-2" style="overflow-x:auto;white-space:nowrap;">
         <a href="{{ route('user.learning') }}" class="ll-nav-pill active"><i class="fa-solid fa-border-all"></i> Dashboard</a>
         <a href="{{ route('user.learning.star') }}" class="ll-nav-pill"><i class="fa-solid fa-star"></i> STAR Method Training</a>
         <a href="{{ route('user.learning.library') }}" class="ll-nav-pill"><i class="fa-solid fa-book-bookmark"></i> Answer Library</a>
@@ -147,7 +150,7 @@
     </div>
 
     <!-- Dashboard Stats -->
-    <div class="row g-4 mb-4">
+    <div id="dashboard-stats" class="row g-4 mb-4">
         <div class="col-6 col-md-3">
             <div class="ll-stat-card">
                 <i class="fa-solid fa-layer-group" style="font-size:1.5rem;color:var(--tx3)"></i>
@@ -181,7 +184,7 @@
     <div class="row g-4">
         <!-- Categories Sidebar -->
         <div class="col-lg-3">
-            <div class="ll-category-list">
+            <div id="categories-sidebar" class="ll-category-list">
                 <h6 style="font-weight:700;color:var(--tx);margin-bottom:15px;text-transform:uppercase;font-size:0.85rem;letter-spacing:1px">Categories</h6>
                 @if(isset($categories))
                     @foreach($categories as $index => $cat)
@@ -222,7 +225,7 @@
                 </select>
             </div>
 
-            <div class="row g-4">
+            <div id="modules-list" class="row g-4">
                 <!-- Mock Module 1: Interactive -->
                 <div class="col-md-6 col-xl-4">
                     <div class="ll-module-card">
@@ -313,8 +316,55 @@
 </div>
 
 <!-- AI Learning Assistant Floating Button -->
-<a href="{{ route('user.learning.assistant') }}" class="ll-ai-fab" title="Chat with AI Learning Assistant">
+<a href="{{ route('user.learning.assistant') }}" id="ai-fab" class="ll-ai-fab" title="Chat with AI Learning Assistant">
     <i class="fa-solid fa-robot"></i>
 </a>
 
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#nav-pills-container', popover: { title: 'Learning Hubs', description: 'Navigate between the main Dashboard, STAR Method Training, Answer Library, and Mini Quizzes.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Your Progress', description: 'Track your completed lessons, current learning streak, and badges earned.', side: "top", align: 'start' }},
+            { element: '#categories-sidebar', popover: { title: 'Categories & Filters', description: 'Filter learning materials by topic and format (video, interactive, or PDF).', side: "bottom", align: 'start' }},
+            { element: '#modules-list', popover: { title: 'Learning Modules', description: 'Browse and start your recommended lessons here. Pick up right where you left off!', side: "top", align: 'start' }},
+            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a concept? Click here anytime to ask the AI Learning Assistant for help.', side: "top", align: 'end' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#nav-pills-container', popover: { title: 'Learning Hubs', description: 'Navigate between the main Dashboard, STAR Method Training, Answer Library, and Mini Quizzes.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Your Progress', description: 'Track your completed lessons, current learning streak, and badges earned.', side: "bottom", align: 'start' }},
+            { element: '#categories-sidebar', popover: { title: 'Categories & Filters', description: 'Filter learning materials by topic and format (video, interactive, or PDF).', side: "right", align: 'start' }},
+            { element: '#modules-list', popover: { title: 'Learning Modules', description: 'Browse and start your recommended lessons here. Pick up right where you left off!', side: "top", align: 'start' }},
+            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a concept? Click here anytime to ask the AI Learning Assistant for help.', side: "left", align: 'end' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_learning', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_learning')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection

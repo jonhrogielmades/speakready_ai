@@ -18,6 +18,7 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       <style>
          /* ===== MOBILE LAYOUT SHELL ===== */
          :root {
@@ -547,6 +548,7 @@
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js') }}"></script>
+      <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 
       <script>
          function openMobDrawer() {

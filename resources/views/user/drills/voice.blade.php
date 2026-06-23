@@ -60,10 +60,13 @@
             <h4 style="color:var(--tx);font-weight:700;margin:0;"><i class="fa-solid fa-ear-listen" style="color:#60a5fa;margin-right:8px;"></i> Voice Rehearsal Studio</h4>
             <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;">Master your delivery, pacing, and tone with AI analysis.</p>
         </div>
-        <ul class="nav nav-pills" id="moduleTabs">
-            <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice">Practice</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics">History & Analytics</a></li>
-        </ul>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <ul class="nav nav-pills" id="moduleTabs" style="margin-bottom:0;">
+                <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice">Practice</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics">History & Analytics</a></li>
+            </ul>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+        </div>
     </div>
 
     <!-- TAB: PRACTICE -->
@@ -670,4 +673,58 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a question category to generate a random prompt for your practice.', side: "bottom", align: 'start' }},
+            { element: '#btnStart', popover: { title: 'Start Recording', description: 'Click here to start speaking. The system will track your WPM, filler words, and generate a transcript.', side: "bottom", align: 'center' }},
+            { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech will appear here in real-time. Filler words and keywords will be highlighted automatically.', side: "top", align: 'start' }},
+            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'Once you stop recording, AI will analyze your pacing, clarity, and provide instant actionable feedback.', side: "top", align: 'start' }},
+            { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Switch to this tab later to review your past sessions, charts, and long-term improvement.', side: "bottom", align: 'end' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a question category to generate a random prompt for your practice.', side: "bottom", align: 'start' }},
+            { element: '#btnStart', popover: { title: 'Start Recording', description: 'Click here to start speaking. The system will track your WPM, filler words, and generate a transcript.', side: "bottom", align: 'center' }},
+            { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech will appear here in real-time. Filler words and keywords will be highlighted automatically.', side: "top", align: 'start' }},
+            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'Once you stop recording, AI will analyze your pacing, clarity, and provide instant actionable feedback.', side: "bottom", align: 'start' }},
+            { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Switch to this tab later to review your past sessions, charts, and long-term improvement.', side: "bottom", align: 'end' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_drills_voice', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            // Make sure we are on the Practice tab for the tour
+            const practiceTab = document.querySelector('a[data-target="tab-practice"]');
+            if(practiceTab) practiceTab.click();
+            
+            setTimeout(() => {
+                driverObj.drive();
+            }, 300);
+        };
+
+        if (!localStorage.getItem('onboarding_completed_drills_voice')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection

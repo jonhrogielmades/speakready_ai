@@ -222,6 +222,9 @@
                 <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Your interview readiness score is <strong style="color:var(--dash-success)">{{ $profile->readiness_score ?? $avgScore ?? 0 }}%</strong>.</p>
             </div>
         </div>
+        <div>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:var(--dash-primary)"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+        </div>
     </div>
 
 
@@ -280,7 +283,7 @@
             </div>
 
             <!-- Feature 4: Interview Progress Chart -->
-            <div class="premium-card mb-4 card-grad-primary animate-fade-up delay-200">
+            <div id="card-progress-chart" class="premium-card mb-4 card-grad-primary animate-fade-up delay-200">
                 <div class="d-flex justify-content-between mb-4 flex-col-mobile">
                     <h5 class="fw-bold m-0"><i class="fa-solid fa-chart-line me-2" style="color:var(--dash-primary)"></i> Interview Progress</h5>
                     <div>
@@ -383,7 +386,7 @@
                 
                 <!-- Feature 8: AI Recommendations -->
                 <div class="col-md-6">
-                    <div class="premium-card h-100 card-grad-primary animate-fade-up delay-500">
+                    <div id="card-ai-recommendations" class="premium-card h-100 card-grad-primary animate-fade-up delay-500">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-lightbulb me-2" style="color:var(--dash-warning)"></i> AI Recommendations</h6>
                         <p style="font-size:0.85rem;color:var(--tx3);margin-bottom:15px;">Based on your recent performance, AI suggests:</p>
                         
@@ -404,7 +407,7 @@
             </div>
 
             <!-- Feature 6: Recent Interview Sessions -->
-            <div class="premium-card mb-4 animate-fade-up delay-600" style="background-color: var(--sf); color: var(--tx);">
+            <div id="card-recent-sessions" class="premium-card mb-4 animate-fade-up delay-600" style="background-color: var(--sf); color: var(--tx);">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold m-0" style="color: var(--tx);">Recent Sessions</h5>
                     <a href="{{ route('user.reports') }}" class="btn btn-sm btn-link text-decoration-none" style="color:var(--dash-primary);font-weight:600;">View All</a>
@@ -462,7 +465,7 @@
             </div>
 
             <!-- Feature 9: Daily Practice Challenge -->
-            <div class="premium-card mb-4 animate-fade-up delay-300" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.08) 100%); border: 1px solid rgba(59,130,246,0.3);">
+            <div id="card-daily-challenge" class="premium-card mb-4 animate-fade-up delay-300" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.08) 100%); border: 1px solid rgba(59,130,246,0.3);">
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <i class="fa-solid fa-calendar-day" style="color:var(--dash-primary);font-size:1.2rem;"></i>
                     <h6 class="fw-bold m-0" style="color:var(--dash-primary);text-transform:uppercase;letter-spacing:1px;font-size:0.8rem;">Today's Challenge</h6>
@@ -646,5 +649,61 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Access Mock Interviews, Learning Lab, and Progress Tracking right from the bottom bar.', side: "top", align: 'center' }},
+            { element: '.card-grad-success', popover: { title: 'Overall Readiness', description: 'This score represents your overall readiness based on recent interview performances.', side: "bottom", align: 'start' }},
+            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of your total sessions, average rating, and daily streak.', side: "top", align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview progress and score trends over time.', side: "top", align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "top", align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak!', side: "top", align: 'start' }},
+            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review your past mock interviews and see detailed feedback for each.', side: "top", align: 'start' }},
+            { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode.', side: "bottom", align: 'end' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Access all features including Mock Interviews, Learning Lab, and Progress Tracking from here.', side: "right", align: 'start' }},
+            { element: '.card-grad-success', popover: { title: 'Overall Readiness', description: 'This score represents your overall readiness based on recent interview performances.', side: "bottom", align: 'start' }},
+            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of your total sessions, average rating, and daily streak.', side: "top", align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview progress and score trends over time.', side: "top", align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "bottom", align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak!', side: "bottom", align: 'start' }},
+            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review your past mock interviews and see detailed feedback for each.', side: "top", align: 'start' }},
+            { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: "bottom", align: 'center' }},
+            { element: '#notifWrap', popover: { title: 'Notifications', description: 'Stay updated with feedback on your interviews and platform announcements.', side: "bottom", align: 'center' }},
+            { element: '#profileWrap', popover: { title: 'Your Profile', description: 'Manage your account settings and preferences.', side: "bottom", align: 'end' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 
 @endsection

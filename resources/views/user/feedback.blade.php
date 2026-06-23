@@ -7,12 +7,15 @@
             <h4 style="color:var(--tx);font-weight:700">Feedback Center</h4>
             <p style="color:var(--tx3)">Review your past interviews and AI-generated insights.</p>
         </div>
+        <div>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+        </div>
     </div>
 
     <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <h5 style="color:var(--tx);margin:0;font-weight:bold;">Feedback History</h5>
-            <div class="d-flex gap-2 flex-wrap">
+            <div id="feedback-filters" class="d-flex gap-2 flex-wrap">
                 <select id="categoryFilter" class="form-select border-0" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
                     <option value="">All Categories</option>
                     <option value="Job Interview">Job Interview</option>
@@ -130,4 +133,48 @@
         }
     });
 </script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Quickly find past feedback by filtering by category or searching for specific keywords.', side: "bottom", align: 'start' }},
+            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review your past mock interviews, scores, and overall ratings.', side: "top", align: 'center' }},
+            { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Navigate through your older interview records here.', side: "top", align: 'center' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Quickly find past feedback by filtering by category or searching for specific keywords.', side: "bottom", align: 'end' }},
+            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review your past mock interviews, scores, and overall ratings.', side: "top", align: 'center' }},
+            { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Navigate through your older interview records here.', side: "top", align: 'end' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_feedback', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_feedback')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection

@@ -42,7 +42,7 @@
     <div class="chat-container">
         
         <!-- Sidebar History -->
-        <div class="chat-sidebar d-none d-md-flex">
+        <div class="chat-sidebar d-none d-md-flex" id="coach-sidebar">
             <div style="padding:20px; border-bottom:1px solid var(--bd);">
                 <button class="btn btn-outline-primary w-100" style="border-radius:12px;font-weight:600" onclick="newConversation()">
                     <i class="fa-solid fa-plus me-2"></i> New Conversation
@@ -94,7 +94,10 @@
                         <span style="font-size:.75rem;color:#34d399"><i class="fa-solid fa-circle text-success" style="font-size:.5rem;margin-right:4px"></i>Online</span>
                     </div>
                 </div>
-                <button class="btn btn-link text-muted"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:var(--pur)"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+                    <button class="btn btn-link text-muted"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
             </div>
 
             <!-- Messages -->
@@ -125,7 +128,7 @@
             </div>
 
             <!-- Input Area -->
-            <div class="chat-input-area">
+            <div class="chat-input-area" id="coach-input-area">
                 <div class="chat-input-wrapper">
                     <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI Coach anything..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     <button class="chat-send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
@@ -414,4 +417,48 @@
         });
     </script>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#chatBox', popover: { title: 'AI Coach Messages', description: 'Your AI Coach will provide personalized advice, resume tips, and answer interview questions here.', side: "bottom", align: 'center' }},
+            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type your questions or prompts here and press Enter to chat with the AI.', side: "top", align: 'center' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new conversation or revisit previous chats with your AI Coach.', side: "right", align: 'start' }},
+            { element: '#chatBox', popover: { title: 'AI Coach Messages', description: 'Your AI Coach will provide personalized advice, resume tips, and answer interview questions here.', side: "bottom", align: 'center' }},
+            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type your questions or prompts here and press Enter to chat with the AI.', side: "top", align: 'center' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_coach', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            // If on mobile, sidebar might be hidden, so we skip the sidebar step by just driving
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_coach')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection

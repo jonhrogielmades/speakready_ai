@@ -27,7 +27,8 @@
             <h4 style="color:var(--tx);font-weight:800;margin-bottom:4px;">Interview Portfolio Report</h4>
             <p style="color:var(--tx3);margin:0;">A complete summary of your preparation journey and analytics.</p>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i>Print Report</button>
             <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
             <button class="btn btn-success"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
@@ -56,7 +57,7 @@
         elseif($currentReadiness >= 50) { $rRating = 'Fair'; $rColor = '#f59e0b'; }
         else { $rRating = 'Needs Improvement'; $rColor = '#ef4444'; }
     @endphp
-    <div class="print-card mb-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border:1px solid rgba(59, 130, 246, 0.2); border-radius:18px; padding:32px;">
+    <div id="report-readiness" class="print-card mb-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border:1px solid rgba(59, 130, 246, 0.2); border-radius:18px; padding:32px;">
         <div class="row align-items-center text-center text-md-start">
             <div class="col-md-3 border-end" style="border-color:rgba(59, 130, 246, 0.2) !important;">
                 <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Readiness Score</h6>
@@ -128,7 +129,7 @@
 
         <!-- Feature 8: Performance Comparison Report -->
         <div class="col-lg-5">
-            <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+            <div id="report-comparison" class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
                 
@@ -175,7 +176,7 @@
     <!-- Feature 2: Feedback Summary Report -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div id="report-feedback" class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-comment-dots text-info me-2"></i>Feedback Summary Report</h5>
                 <div class="row g-4">
                     <div class="col-md-4">
@@ -283,7 +284,7 @@
             </div>
             
             <!-- Feature 5: Learning Progress Report -->
-            <div class="print-card flex-grow-1" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div id="report-learning" class="print-card flex-grow-1" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-graduation-cap text-info me-2"></i>Learning Progress Report</h5>
                 <div class="row align-items-center h-100">
                     <div class="col-md-6">
@@ -379,4 +380,50 @@
         });
     });
 </script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your current readiness score and how much you have improved since your first interview.', side: "bottom", align: 'start' }},
+            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Track specific metric improvements between your first and latest mock interviews.', side: "bottom", align: 'start' }},
+            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review your core strengths, areas for improvement, and AI recommendations.', side: "top", align: 'start' }},
+            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track your completion rate across the Learning Lab and Voice Rehearsal modules.', side: "top", align: 'start' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your current readiness score and how much you have improved since your first interview.', side: "bottom", align: 'start' }},
+            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Track specific metric improvements between your first and latest mock interviews.', side: "bottom", align: 'start' }},
+            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review your core strengths, areas for improvement, and AI recommendations.', side: "top", align: 'start' }},
+            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track your completion rate across the Learning Lab and Voice Rehearsal modules.', side: "top", align: 'end' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_reports', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_reports')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection

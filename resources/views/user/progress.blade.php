@@ -7,7 +7,8 @@
             <h4 style="color:var(--tx);font-weight:700">Progress Tracking</h4>
             <p style="color:var(--tx3)">Visualize your interview readiness improvement over time.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <!-- Feature 15: Progress Reports -->
             <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
             <button class="btn btn-outline-success"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
@@ -15,7 +16,7 @@
     </div>
 
     <!-- Feature 9, 14: Top Stats (Streaks, Comparison) -->
-    <div class="row g-4 mb-4">
+    <div id="progress-stats" class="row g-4 mb-4">
         <div class="col-md-3 col-sm-6">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;text-align:center;">
                 <i class="fa-solid fa-fire text-warning fs-1 mb-2"></i>
@@ -47,7 +48,7 @@
     </div>
 
     <!-- Feature 13: AI Progress Insights -->
-    <div class="alert border-0 mb-4" style="border-radius:18px; background: rgba(59, 130, 246, 0.1); color: var(--tx);">
+    <div id="ai-insights" class="alert border-0 mb-4" style="border-radius:18px; background: rgba(59, 130, 246, 0.1); color: var(--tx);">
         <div class="d-flex align-items-center">
             <div class="flex-shrink-0">
                 <i class="fa-solid fa-robot fs-2 me-3 text-primary"></i>
@@ -62,7 +63,7 @@
 
     <div class="row g-4 mb-4">
         <!-- Feature 1: Readiness Score Trend -->
-        <div class="col-md-8">
+        <div class="col-md-8" id="readiness-trend">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Overall Readiness Trend</h5>
                 <div style="height: 250px;">
@@ -71,7 +72,7 @@
             </div>
         </div>
         <!-- Feature 3: Category Performance Analysis -->
-        <div class="col-md-4">
+        <div class="col-md-4" id="category-perf">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Category Performance</h5>
                 <div style="height: 250px;">
@@ -150,7 +151,7 @@
     </div>
 
     <!-- Feature 2: Interview Performance History -->
-    <div class="row mb-4">
+    <div class="row mb-4" id="history-table">
         <div class="col-12">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -468,4 +469,52 @@
         });
     </script>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '#progress-stats', popover: { title: 'At a Glance', description: 'Quickly see your current streak, total practice days, and month-over-month readiness improvement.', side: "bottom", align: 'start' }},
+            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Get actionable, dynamic advice from AI based on your recent performance trends.', side: "bottom", align: 'start' }},
+            { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Visualize your overall interview readiness score over time.', side: "bottom", align: 'start' }},
+            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'See which interview categories are your strongest and which need more practice.', side: "top", align: 'start' }},
+            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#progress-stats', popover: { title: 'At a Glance', description: 'Quickly see your current streak, total practice days, and month-over-month readiness improvement.', side: "bottom", align: 'start' }},
+            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Get actionable, dynamic advice from AI based on your recent performance trends.', side: "bottom", align: 'start' }},
+            { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Visualize your overall interview readiness score over time.', side: "bottom", align: 'start' }},
+            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'See which interview categories are your strongest and which need more practice.', side: "bottom", align: 'start' }},
+            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_progress', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_progress')) {
+            setTimeout(() => {
+                startOnboardingTour();
+            }, 500);
+        }
+    });
+</script>
+@endpush
 @endsection
