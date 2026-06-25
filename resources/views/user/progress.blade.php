@@ -84,7 +84,7 @@
 
     <div class="row g-4 mb-4">
         <!-- Feature 4: Skill Improvement Tracker -->
-        <div class="col-md-6">
+        <div class="col-md-6" id="skill-tracker">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Skill Improvement Tracker</h5>
                 
@@ -109,7 +109,7 @@
         </div>
 
         <!-- Feature 12: Strengths & Areas for Improvement -->
-        <div class="col-md-6">
+        <div class="col-md-6" id="strengths-tracker">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Strengths & Areas for Improvement</h5>
                 
@@ -215,7 +215,7 @@
 
     <div class="row g-4 mb-4">
         <!-- Feature 5: Learning Progress Tracking -->
-        <div class="col-md-6">
+        <div class="col-md-6" id="learning-progress">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Learning Progress</h5>
                 @foreach($learningProgress as $lp)
@@ -242,7 +242,7 @@
         </div>
 
         <!-- Feature 6: Voice Rehearsal Progress -->
-        <div class="col-md-6">
+        <div class="col-md-6" id="voice-progress">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Voice Rehearsal Progress</h5>
                 @if($voiceSessions->count() > 0)
@@ -282,7 +282,7 @@
     </div>
 
     <!-- Feature 8: Practice Activity Calendar -->
-    <div class="row mb-4">
+    <div class="row mb-4" id="activity-calendar">
         <div class="col-12">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Practice Activity Calendar</h5>
@@ -323,7 +323,7 @@
 
     <div class="row g-4">
         <!-- Feature 10: Goals & Milestones -->
-        <div class="col-md-6">
+        <div class="col-md-6" id="goals-milestones">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Goals & Milestones</h5>
                 @foreach($goals as $goal)
@@ -341,7 +341,7 @@
         </div>
 
         <!-- Feature 11: Achievements & Badges -->
-        <div class="col-md-6">
+        <div class="col-md-6" id="achievements-badges">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Achievements & Badges</h5>
                 <div class="row g-3">
@@ -481,7 +481,14 @@
             { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Get actionable, dynamic advice from AI based on your recent performance trends.', side: "bottom", align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Visualize your overall interview readiness score over time.', side: "bottom", align: 'start' }},
             { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'See which interview categories are your strongest and which need more practice.', side: "top", align: 'start' }},
-            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }}
+            { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Track your skill improvements over time.', side: "top", align: 'start' }},
+            { element: '#strengths-tracker', popover: { title: 'Strengths & Areas', description: 'Analyze your strengths and view your STAR method progress.', side: "top", align: 'start' }},
+            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }},
+            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Keep track of modules you have completed.', side: "top", align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check your speaking pace, clarity, and confidence from voice drills.', side: "top", align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Your daily practice activity visually represented.', side: "top", align: 'start' }},
+            { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track your progress towards specific platform goals.', side: "top", align: 'start' }},
+            { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards you have earned from consistent practice.', side: "top", align: 'start' }}
         ];
 
         const stepsDesktop = [
@@ -489,7 +496,14 @@
             { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Get actionable, dynamic advice from AI based on your recent performance trends.', side: "bottom", align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Visualize your overall interview readiness score over time.', side: "bottom", align: 'start' }},
             { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'See which interview categories are your strongest and which need more practice.', side: "bottom", align: 'start' }},
-            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }}
+            { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Track your skill improvements over time.', side: "right", align: 'start' }},
+            { element: '#strengths-tracker', popover: { title: 'Strengths & Areas', description: 'Analyze your strengths and view your STAR method progress.', side: "left", align: 'start' }},
+            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }},
+            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Keep track of modules you have completed.', side: "right", align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check your speaking pace, clarity, and confidence from voice drills.', side: "left", align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Your daily practice activity visually represented.', side: "top", align: 'start' }},
+            { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track your progress towards specific platform goals.', side: "right", align: 'start' }},
+            { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards you have earned from consistent practice.', side: "left", align: 'start' }}
         ];
 
         const driverObj = driver({

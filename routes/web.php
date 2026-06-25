@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\AdminSessionController;
+use App\Http\Controllers\ContactController;
 
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminUserController;
@@ -35,6 +36,9 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 
 // Public Shared Session Route
 Route::get('/shared/{token}', [InterviewController::class, 'sharedReview'])->name('shared.review');
+
+// Contact Form Route
+Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
 
 // User Routes
 Route::middleware(['auth', 'user'])->group(function () {

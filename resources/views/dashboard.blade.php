@@ -599,7 +599,25 @@ document.addEventListener("DOMContentLoaded", function() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+            plugins: { 
+                legend: { display: false }, 
+                tooltip: { 
+                    mode: 'index', 
+                    intersect: false,
+                    backgroundColor: 'rgba(30, 30, 45, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#34d399',
+                    borderColor: '#60a5fa',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: false,
+                    callbacks: {
+                        label: function(context) {
+                            return ' Readiness Score: ' + context.parsed.y + '%';
+                        }
+                    }
+                } 
+            },
             scales: {
                 y: { beginAtZero: true, max: 100, grid: { color: gridColor, drawBorder: false } },
                 x: { grid: { display: false, drawBorder: false } }
@@ -648,6 +666,25 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+</script>
+
+<!-- Gamification Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Trigger confetti if they have a streak > 2 or just earned a badge
+        const streak = {{ $currentStreak ?? 0 }};
+        if(streak >= 3) {
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#60a5fa', '#34d399', '#fbbf24', '#a78bfa']
+                });
+            }, 1000);
+        }
+    });
 </script>
 
 @push('scripts')

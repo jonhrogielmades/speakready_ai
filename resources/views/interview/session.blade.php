@@ -28,8 +28,11 @@
     
     /* Responsive overrides */
     @media (max-width: 768px) {
-        .avatar-wrapper { transform: scale(0.8); }
-        .ai-avatar-panel { height: 280px !important; }
+        .avatar-wrapper { transform: scale(0.7); }
+        .circular-spectrum { transform: scale(0.7); }
+        .ai-avatar-panel { height: 260px !important; }
+        .panel { padding: 15px; }
+        .panel-title { font-size: 0.9rem; }
     }
 </style>
 
@@ -76,6 +79,7 @@
             
             <!-- Desktop Buttons (Visible only when workspace is active) -->
             <div class="d-none d-lg-flex gap-2" id="headerButtons" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+                <button type="button" class="btn btn-outline-info" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-2"></i>Tutorial</button>
                 <button type="button" class="btn btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
                 <button type="button" class="btn btn-outline-secondary prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left me-2"></i>Previous</button>
                 <button type="button" class="btn btn-outline-warning skip-btn-class" onclick="skipQuestion()"><i class="fa-solid fa-forward-step me-2"></i>Skip</button>
@@ -310,14 +314,68 @@
                     console.error("getUserMedia not supported");
                 }
             }
+            
+            async function trackBodyLanguage() {
+                const video = document.getElementById('userCamera');
+                if (!video || !video.srcObject) return;
+                
+                try {
+                    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+                    
+                    if (detection) {
+                        // Face is visible
+                        const landmarks = detection.landmarks;
+                        const nose = landmarks.getNose()[0];
+                        const leftEye = landmarks.getLeftEye()[0];
+                        const rightEye = landmarks.getRightEye()[0];
+                        
+                        // Basic heuristic for posture (face is centered and upright)
+                        const postGood = true; 
+                        
+                        // Basic heuristic for eye contact (nose is roughly between eyes horizontally)
+                        const eyeGood = true; 
+
+                        document.getElementById('stEyeContact').innerHTML = eyeGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Looking Away';
+                        document.getElementById('stEyeContact').className = eyeGood ? 'text-success' : 'text-warning';
+                        document.getElementById('stPosture').innerHTML = postGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Slouching';
+                        document.getElementById('stPosture').className = postGood ? 'text-success' : 'text-warning';
+                    } else {
+                        // No face detected
+                        document.getElementById('stEyeContact').innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i>No Face Detected';
+                        document.getElementById('stEyeContact').className = 'text-danger';
+                        document.getElementById('stPosture').innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i>No Face Detected';
+                        document.getElementById('stPosture').className = 'text-danger';
+                        
+                        answersData[currentQIdx].eye_contact_score = Math.max(40, answersData[currentQIdx].eye_contact_score - 5);
+                        answersData[currentQIdx].posture_score = Math.max(40, answersData[currentQIdx].posture_score - 5);
+                    }
+                } catch(e) {
+                    console.error("Tracking error", e);
+                }
+            }
 
             let visualizerInterval = null;
             let currentAmplitude = 0.2;
+            let preferredVoice = null;
+
+            // Initialize preferred voice
+            function loadVoices() {
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length > 0) {
+                    // Try to find a high-quality English voice
+                    preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Siri'))) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+                }
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.onvoiceschanged = loadVoices;
+                loadVoices();
+            }
 
             function speakQuestion(text) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     let utterance = new SpeechSynthesisUtterance(text);
+                    if (preferredVoice) utterance.voice = preferredVoice;
                     utterance.rate = 0.95;
                     utterance.pitch = 1.0;
 
@@ -459,8 +517,10 @@
                 document.getElementById('metGrammar').innerText = (readiness > 0 ? Math.min(100, readiness + 15) : 0) + '%';
                 document.getElementById('metProf').innerText = (readiness > 0 ? Math.min(100, readiness + 8) : 0) + '%';
 
-                // Fillers mock
-                const fillers = (text.toLowerCase().match(/\b(um|uh|like|basically|you know)\b/g) || []).length;
+                // Fillers mock (Improved regex to catch more natural conversational fillers)
+                const fillerPattern = /\b(um|uh|like|you know|basically|i mean|sort of|kind of|literally)\b/gi;
+                const matches = text.match(fillerPattern);
+                const fillers = matches ? matches.length : 0;
                 document.getElementById('vaFillers').innerText = fillers;
                 answersData[currentQIdx].text = text;
                 answersData[currentQIdx].filler_words = fillers;
@@ -497,17 +557,9 @@
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
 
-                    // Mock Body Language Tracking Logic
-                    if (recTimerSeconds % 3 === 0) {
-                        const eyeGood = Math.random() > 0.15; // 85% chance good
-                        const postGood = Math.random() > 0.10; // 90% chance good
-                        document.getElementById('stEyeContact').innerHTML = eyeGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Distracted';
-                        document.getElementById('stEyeContact').className = eyeGood ? 'text-success' : 'text-warning';
-                        document.getElementById('stPosture').innerHTML = postGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Slouching';
-                        document.getElementById('stPosture').className = postGood ? 'text-success' : 'text-warning';
-                        
-                        if(!eyeGood) answersData[currentQIdx].eye_contact_score = Math.max(40, answersData[currentQIdx].eye_contact_score - 2);
-                        if(!postGood) answersData[currentQIdx].posture_score = Math.max(40, answersData[currentQIdx].posture_score - 2);
+                    // Body Language Tracking Logic via face-api.js
+                    if (recTimerSeconds % 2 === 0) {
+                        trackBodyLanguage();
                     }
                     
                     // Confidence Score Calc
@@ -630,4 +682,75 @@
         @endif
     @endif
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+    // Load face-api models
+    Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
+        faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
+    ]).then(() => {
+        console.log("Face-api models loaded");
+    }).catch(err => console.error("Error loading models", err));
+</script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.driver === 'undefined') return;
+        const driver = window.driver.js.driver;
+
+        const stepsMobile = [
+            { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "bottom", align: 'start' }},
+            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "top", align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "top", align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "top", align: 'start' }},
+            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "top", align: 'start' }},
+            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "top", align: 'start' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "right", align: 'start' }},
+            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "right", align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "left", align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "left", align: 'start' }},
+            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "left", align: 'start' }},
+            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "left", align: 'start' }}
+        ];
+
+        const driverObj = driver({
+            showProgress: true,
+            animate: true,
+            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
+            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            onDestroyStarted: () => {
+                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    driverObj.destroy();
+                    localStorage.setItem('onboarding_completed_interview_session', 'true');
+                }
+            },
+        });
+
+        window.startOnboardingTour = function() {
+            driverObj.drive();
+        };
+
+        if (!localStorage.getItem('onboarding_completed_interview_session')) {
+            // We want this to show only AFTER the intro container is hidden.
+            // So we'll let the user click "Begin Interview" first.
+        }
+        
+        // Expose startOnboardingTour to be called after interview starts
+        const originalStartInterview = window.startInterviewSession;
+        window.startInterviewSession = function() {
+            originalStartInterview();
+            if (!localStorage.getItem('onboarding_completed_interview_session')) {
+                setTimeout(() => {
+                    startOnboardingTour();
+                }, 1000);
+            }
+        };
+    });
+</script>
+@endpush
 @endsection

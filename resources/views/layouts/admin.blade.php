@@ -279,5 +279,6 @@
       </script>
 
       @stack('scripts')
+      @include('layouts.logout-transition')
    </body>
 </html>

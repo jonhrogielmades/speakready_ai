@@ -22,7 +22,27 @@
     .summary-row:last-child { border-bottom:none; }
     .summary-label { color:var(--tx3);font-weight:600; }
     .summary-val { color:var(--tx);font-weight:700;text-align:right; }
+
+    /* Drag and Drop Zone */
+    .drop-zone { border: 2px dashed var(--bd); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--bg3); }
+    .drop-zone.dragover { border-color: #60a5fa; background: rgba(96,165,250,0.1); }
+    .drop-zone-icon { font-size: 2rem; color: #60a5fa; margin-bottom: 10px; }
+    .drop-zone-text { font-size: 0.9rem; color: var(--tx2); font-weight: 500; }
+    
+    /* Persona Cards */
+    .persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
+    .persona-card { border: 1px solid var(--bd); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; background: var(--bg3); transition: all 0.2s; position: relative; overflow: hidden; }
+    .persona-card:hover { border-color: #a78bfa; transform: translateY(-2px); }
+    .persona-card.selected { border-color: #8b5cf6; background: rgba(139,92,246,0.1); box-shadow: 0 4px 15px rgba(139,92,246,0.2); }
+    .persona-icon { font-size: 1.8rem; margin-bottom: 8px; color: var(--tx); }
+    .persona-card.selected .persona-icon { color: #8b5cf6; }
+    .persona-title { font-weight: 700; font-size: 0.85rem; color: var(--tx); }
+    .persona-desc { font-size: 0.7rem; color: var(--tx3); margin-top: 4px; }
+    .persona-check { position: absolute; top: 8px; right: 8px; color: #8b5cf6; font-size: 0.9rem; opacity: 0; transition: opacity 0.2s; }
+    .persona-card.selected .persona-check { opacity: 1; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 
 <div class="db-section active" id="sec-interview-setup">
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
@@ -90,12 +110,18 @@
                     <p style="font-size:.85rem;color:var(--tx3);margin-bottom:15px">Provide your resume and the target job description to get highly tailored, role-specific questions.</p>
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="olbl">Paste Resume / CV (Optional)</label>
-                            <textarea class="oinp setup-input" name="resume_text" rows="4" placeholder="Paste your resume text here so the AI can ask about your specific past experiences..."></textarea>
+                            <label class="olbl">Upload Resume (PDF)</label>
+                            <div class="drop-zone" id="resumeDropZone" onclick="document.getElementById('resumeFileInput').click()">
+                                <i class="fa-solid fa-cloud-arrow-up drop-zone-icon"></i>
+                                <div class="drop-zone-text" id="dropZoneText">Drag & Drop your PDF resume here<br><span style="font-size:0.75rem;opacity:0.7">or click to browse</span></div>
+                                <input type="file" id="resumeFileInput" accept=".pdf" style="display:none;" onchange="handleResumeUpload(event)">
+                            </div>
+                            <textarea class="oinp setup-input mt-2" name="resume_text" id="valResume" rows="3" placeholder="Or paste your resume text manually here..." style="font-size:0.8rem;"></textarea>
+                            <div id="pdfParsingIndicator" style="display:none; color:#60a5fa; font-size:0.8rem; margin-top:5px;"><i class="fa-solid fa-circle-notch fa-spin me-1"></i> Extracting text from PDF...</div>
                         </div>
                         <div class="col-md-12">
                             <label class="olbl">Paste Job Description (Optional)</label>
-                            <textarea class="oinp setup-input" name="job_description" rows="4" placeholder="Paste the exact job description you are applying for to tailor the questions to those specific requirements..."></textarea>
+                            <textarea class="oinp setup-input" name="job_description" rows="3" placeholder="Paste the exact job description you are applying for to tailor the questions to those specific requirements..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -188,13 +214,39 @@
                         <div class="col-md-12">
                             <label class="olbl">Company Persona Simulator</label>
                             <p style="font-size:.75rem;color:var(--tx3);margin-top:-4px;margin-bottom:8px;">Have the AI simulate the specific interview style of top companies.</p>
-                            <select class="oinp setup-input" name="company_persona" id="valPersona">
-                                <option value="" selected>Standard (General Industry)</option>
-                                <option value="Amazon">Amazon (Leadership Principles)</option>
-                                <option value="Google">Google (Googlyness & Technical)</option>
-                                <option value="McKinsey">McKinsey (Consulting & Case)</option>
-                                <option value="Goldman Sachs">Goldman Sachs (Finance & High Pressure)</option>
-                            </select>
+                            <input type="hidden" name="company_persona" id="valPersona" value="" class="setup-input">
+                            <div class="persona-grid">
+                                <div class="persona-card selected" onclick="selectPersona(this, '')">
+                                    <i class="fa-solid fa-circle-check persona-check"></i>
+                                    <i class="fa-solid fa-building persona-icon" style="color:#60a5fa"></i>
+                                    <div class="persona-title">Standard</div>
+                                    <div class="persona-desc">General Industry</div>
+                                </div>
+                                <div class="persona-card" onclick="selectPersona(this, 'Amazon')">
+                                    <i class="fa-solid fa-circle-check persona-check"></i>
+                                    <i class="fa-brands fa-amazon persona-icon" style="color:#f97316"></i>
+                                    <div class="persona-title">Amazon</div>
+                                    <div class="persona-desc">Leadership Principles</div>
+                                </div>
+                                <div class="persona-card" onclick="selectPersona(this, 'Google')">
+                                    <i class="fa-solid fa-circle-check persona-check"></i>
+                                    <i class="fa-brands fa-google persona-icon" style="color:#ef4444"></i>
+                                    <div class="persona-title">Google</div>
+                                    <div class="persona-desc">Googlyness & Scaling</div>
+                                </div>
+                                <div class="persona-card" onclick="selectPersona(this, 'McKinsey')">
+                                    <i class="fa-solid fa-circle-check persona-check"></i>
+                                    <i class="fa-solid fa-chart-pie persona-icon" style="color:#3b82f6"></i>
+                                    <div class="persona-title">McKinsey</div>
+                                    <div class="persona-desc">Consulting & Case</div>
+                                </div>
+                                <div class="persona-card" onclick="selectPersona(this, 'Goldman Sachs')">
+                                    <i class="fa-solid fa-circle-check persona-check"></i>
+                                    <i class="fa-solid fa-vault persona-icon" style="color:#eab308"></i>
+                                    <div class="persona-title">Goldman Sachs</div>
+                                    <div class="persona-desc">Finance & Pressure</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -328,9 +380,9 @@
         document.getElementById('sumFocus').innerText = focus;
 
         // Persona
-        const persona = document.getElementById('valPersona');
-        if (persona) {
-            document.getElementById('sumPersona').innerText = persona.options[persona.selectedIndex].text.split(' (')[0];
+        const personaInput = document.getElementById('valPersona');
+        if (personaInput) {
+            document.getElementById('sumPersona').innerText = personaInput.value || 'Standard';
         }
 
         // Provider
@@ -356,6 +408,68 @@
         el.addEventListener('change', updateSummary);
         el.addEventListener('keyup', updateSummary);
     });
+
+    function selectPersona(cardEl, value) {
+        document.querySelectorAll('.persona-card').forEach(el => el.classList.remove('selected'));
+        cardEl.classList.add('selected');
+        document.getElementById('valPersona').value = value;
+        updateSummary();
+    }
+
+    // PDF Drag and Drop Handling
+    const dropZone = document.getElementById('resumeDropZone');
+    const valResume = document.getElementById('valResume');
+    const pdfIndicator = document.getElementById('pdfParsingIndicator');
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            processPdfFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    function handleResumeUpload(e) {
+        if (e.target.files && e.target.files[0]) {
+            processPdfFile(e.target.files[0]);
+        }
+    }
+
+    async function processPdfFile(file) {
+        if (file.type !== 'application/pdf') {
+            alert('Please upload a valid PDF file.');
+            return;
+        }
+        document.getElementById('dropZoneText').innerHTML = `<i class="fa-solid fa-file-pdf me-2"></i> ${file.name}`;
+        pdfIndicator.style.display = 'block';
+        valResume.value = '';
+
+        try {
+            const fileReader = new FileReader();
+            fileReader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let fullText = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n\n';
+                }
+                
+                valResume.value = fullText.trim();
+                pdfIndicator.style.display = 'none';
+                updateSummary();
+            };
+            fileReader.readAsArrayBuffer(file);
+        } catch (err) {
+            console.error(err);
+            pdfIndicator.innerHTML = '<i class="fa-solid fa-circle-exclamation text-danger me-1"></i> Error extracting text.';
+        }
+    }
 
     // Initial update
     window.onload = () => {

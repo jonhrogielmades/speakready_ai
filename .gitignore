@@ -17,3 +17,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+*.sql
+*.zip
+*.log
+_static_backup/

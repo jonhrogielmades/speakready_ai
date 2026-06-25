@@ -346,5 +346,6 @@
       <!-- Driver.js -->
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @stack('scripts')
+      @include('layouts.logout-transition')
    </body>
 </html>

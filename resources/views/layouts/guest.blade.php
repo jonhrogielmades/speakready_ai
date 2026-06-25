@@ -651,45 +651,55 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">support@speakready.ai</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">jonhrogielmades@gmail.com</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-phone" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Contact Number</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">+1 (555) 123-4567</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">09066544727</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-location-dot" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Location</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">123 AI Boulevard, Tech City, 10010</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">Pinut-an, San Ricardo, Southern Leyte, Philippines</p>
                              </div>
                          </div>
                      </div>
                   </div>
                   <div class="col-lg-5 rv" style="transition-delay:.1s">
                      <div class="gc p-4 p-md-5 h-100">
-                         <form action="#" method="POST">
+                         @if(session('contact_success'))
+                             <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); color: #059669; border-radius: 12px; padding: 15px;">
+                                 <i class="fa-solid fa-circle-check fs-5 me-3"></i>
+                                 <div>
+                                     <strong>Success!</strong> {{ session('contact_success') }}
+                                 </div>
+                                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0.5);"></button>
+                             </div>
+                         @endif
+                         <form action="{{ route('contact.send') }}" method="POST">
+                             @csrf
                              <div class="mb-3">
                                  <label class="form-label" style="font-size:0.85rem;font-weight:600;color:var(--tx)">Name</label>
-                                 <input type="text" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="Your Full Name" required>
+                                 <input type="text" name="name" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="Your Full Name" required>
                              </div>
                              <div class="mb-3">
                                  <label class="form-label" style="font-size:0.85rem;font-weight:600;color:var(--tx)">Email</label>
-                                 <input type="email" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="you@example.com" required>
+                                 <input type="email" name="email" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="you@example.com" required>
                              </div>
                              <div class="mb-3">
                                  <label class="form-label" style="font-size:0.85rem;font-weight:600;color:var(--tx)">Subject</label>
-                                 <input type="text" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="How can we help?" required>
+                                 <input type="text" name="subject" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="How can we help?" required>
                              </div>
                              <div class="mb-4">
                                  <label class="form-label" style="font-size:0.85rem;font-weight:600;color:var(--tx)">Message</label>
-                                 <textarea class="form-control" rows="4" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="Your message here..." required></textarea>
+                                 <textarea name="message" class="form-control" rows="4" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:10px 15px;" placeholder="Your message here..." required></textarea>
                              </div>
-                             <button type="button" class="bgrd btn w-100 py-3 fw-semibold">Send Message</button>
+                             <button type="submit" class="bgrd btn w-100 py-3 fw-semibold">Send Message</button>
                          </form>
                      </div>
                   </div>
@@ -787,7 +797,7 @@
                      </form>
                   </div>
                @endif
-               <form action="{{ route('login') }}" method="POST">
+               <form id="loginForm" action="{{ route('login') }}" method="POST">
                   @csrf
                   @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
                      <div class="err-msg" style="display:block;"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first() }}</span></div>
@@ -800,7 +810,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or continue with</div>
-               <button type="button" class="oauth" onclick="window.location.href='{{ route('auth.google') }}'"><i class="fa-brands fa-google me-2"></i>Continue with Google</button>
+               <button type="button" class="oauth" onclick="showLoginTransition(); window.location.href='{{ route('auth.google') }}'"><i class="fa-brands fa-google me-2"></i>Continue with Google</button>
 
                <p class="text-center mt-4" style="font-size:.82rem;color:var(--tx3)">Don't have an account? <a href="#" style="color:var(--pur)" onclick="swTab('signup');return false">Register for free</a></p>
             </div>
@@ -820,7 +830,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or sign up with</div>
-               <button type="button" class="oauth" onclick="window.location.href='{{ route('auth.google') }}'"><i class="fa-brands fa-google me-2"></i>Continue with Google</button>
+               <button type="button" class="oauth" onclick="showLoginTransition(); window.location.href='{{ route('auth.google') }}'"><i class="fa-brands fa-google me-2"></i>Continue with Google</button>
 
                <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">By signing up, you agree to our <a href="#" style="color:var(--pur)">Terms</a> &amp; <a href="#" style="color:var(--pur)">Privacy Policy</a></p>
             </div>
@@ -940,6 +950,90 @@
             document.getElementById('pwa-install-prompt').style.display = 'none';
             localStorage.setItem('pwa_prompt_dismissed', 'true');
          });
+      </script>
+
+      <!-- LOGIN TRANSITION OVERLAY -->
+      <style>
+      #loginTransitionOverlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background: var(--bg, #ffffff);
+          z-index: 999999;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      #loginTransitionOverlay.active {
+          opacity: 1;
+          visibility: visible;
+      }
+      .logo-loading-wrapper {
+          position: relative;
+          width: 120px;
+          height: 120px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+      .logo-loading-circle {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
+          border: 4px solid var(--bd, #e2e8f0);
+          border-top: 4px solid var(--pur, #7c3aed);
+          animation: spin 1s linear infinite;
+      }
+      .logo-loading-wrapper img {
+          width: 70px;
+          height: 70px;
+          object-fit: contain;
+          animation: pulse 1.5s ease-in-out infinite;
+      }
+      @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+      }
+      @keyframes pulse {
+          0% { transform: scale(0.9); opacity: 0.8; }
+          50% { transform: scale(1.1); opacity: 1; }
+          100% { transform: scale(0.9); opacity: 0.8; }
+      }
+      </style>
+
+      <div id="loginTransitionOverlay">
+          <div class="logo-loading-wrapper">
+              <div class="logo-loading-circle"></div>
+              <img src="{{ asset('img/logo.png') }}" alt="Loading...">
+          </div>
+          <h4 style="color:var(--tx); font-weight:600; font-size:1.2rem; letter-spacing:0.5px;">Authenticating...</h4>
+          <p style="color:var(--tx3); font-size:0.9rem;">Please wait while we log you in</p>
+      </div>
+
+      <script>
+          function showLoginTransition() {
+              const overlay = document.getElementById('loginTransitionOverlay');
+              if (overlay) overlay.classList.add('active');
+          }
+
+          document.addEventListener('DOMContentLoaded', function() {
+              const loginForm = document.getElementById('loginForm');
+              if (loginForm) {
+                  loginForm.addEventListener('submit', function(e) {
+                      if (this.checkValidity()) {
+                          showLoginTransition();
+                      }
+                  });
+              }
+          });
       </script>
    </body>
 </html>
