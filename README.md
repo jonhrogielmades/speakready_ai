@@ -1,6 +1,6 @@
 # SpeakReady AI
 
-SpeakReady AI is a comprehensive web application. Follow these instructions to clone, configure, and run the project locally.
+SpeakReady AI is a comprehensive web application for interview preparation. Follow these instructions to clone, configure, and run the project locally.
 
 ## Requirements
 
@@ -11,6 +11,8 @@ Before you begin, ensure you have the following installed on your machine:
 - **MySQL** (or any preferred database)
 - **Git**
 
+---
+
 ## 🚀 Full Configuration & Setup Guide
 
 ### 1. Clone the Repository
@@ -20,75 +22,94 @@ git clone https://github.com/jonhrogielmades/speakready_ai.git
 cd speakready_ai
 ```
 
-### 2. Install PHP Dependencies
-Install all the required PHP packages using Composer:
+### 2. Install Dependencies
+Install all the required PHP and front-end dependencies:
 ```bash
+# Install PHP dependencies
 composer install
-```
 
-### 3. Install NPM Dependencies
-Install all the required front-end dependencies using npm:
-```bash
+# Install JavaScript/CSS dependencies
 npm install
 ```
 
-### 4. Configure Environment Variables
+### 3. Configure Environment Variables
 Copy the example environment file and create your own `.env` file:
 ```bash
 cp .env.example .env
 ```
 *(On Windows Command Prompt, use `copy .env.example .env`)*
 
-### 5. Generate Application Key
-Generate a new application key. This will automatically update your `.env` file:
-```bash
-php artisan key:generate
-```
+Open the `.env` file in your editor and update the following key configurations:
 
-### 6. Database Configuration
-1. Open your database manager (e.g., phpMyAdmin, TablePlus, or MySQL CLI) and create a new empty database (for example, `speakready_ai`).
-2. Open the `.env` file in the root of your project and update the database credentials to match your local setup:
-
+**Application & Database:**
 ```env
+APP_NAME="SpeakReady AI"
+APP_URL=http://localhost:8000
+
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=speakready_ai   # Your database name
+DB_DATABASE=speakready_ai   # Create this database in your SQL manager
 DB_USERNAME=root            # Your database username
 DB_PASSWORD=                # Your database password
 ```
 
-### 7. Run Database Migrations or Import Database Dump
-You can either run the migrations to create the necessary tables or import the provided database dump.
+**Mail Configuration (SMTP):**
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=capstonespeakreadyai@gmail.com
+MAIL_PASSWORD=your_app_password
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS="capstonespeakreadyai@gmail.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
 
-**Option A: Run Migrations**
+### 4. Generate Application Key
+Generate a new application key. This will automatically update your `.env` file securely:
+```bash
+php artisan key:generate
+```
+
+### 5. Run Database Migrations & Seeders
+Make sure your database server is running and you have created the `speakready_ai` database. Then run the migrations to create the tables:
 ```bash
 php artisan migrate
 ```
+*(If you have sample data seeders available, you can run `php artisan migrate --seed`)*
 
-**Option B: Import SQL Dump (Recommended if you need initial data)**
-Import the provided `database_dump.sql` file directly into your newly created database using your database manager (e.g., phpMyAdmin or MySQL CLI).
+### 6. Link Storage
+Create a symbolic link for the storage folder so that public assets (like uploaded images) are accessible:
+```bash
+php artisan storage:link
+```
 
-### 8. Build Front-End Assets
+### 7. Build Front-End Assets
 Compile the front-end assets (using Vite):
 ```bash
+# For local development (keeps watching for changes):
 npm run dev
-```
-*(Keep this terminal running in the background)*
 
-### 9. Run the Local Development Server
+# Or compile for production:
+# npm run build
+```
+*(Keep this terminal running in the background if using `npm run dev`)*
+
+### 8. Run the Local Development Server
 Open a **new terminal window**, navigate to your project directory, and start the Laravel development server:
 ```bash
-php artisan serve --host=0.0.0.0 --port=8000
+php artisan serve
 ```
 
-### 10. Access the Application
+### 9. Access the Application
 Your application should now be accessible in your web browser at:
 [http://localhost:8000](http://localhost:8000)
 
 ---
 
-## Troubleshooting
-- If you encounter a `500 Server Error`, ensure your `.env` file is properly configured and the database is running.
-- Make sure your local MySQL server is running before executing migrations.
-# speakready_ai
+## 🛠 Troubleshooting
+- **500 Server Error**: Ensure your `.env` file is properly configured, the `APP_KEY` has been generated, and the database is running.
+- **Vite/CSS not loading**: Ensure you are running `npm run dev` in a separate terminal.
+- **Images not loading**: Run `php artisan storage:link`.
+- **View not found or cache issues**: Run `php artisan optimize:clear`.
