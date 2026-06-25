@@ -113,3 +113,4 @@ Your application should now be accessible in your web browser at:
 - **Vite/CSS not loading**: Ensure you are running `npm run dev` in a separate terminal.
 - **Images not loading**: Run `php artisan storage:link`.
 - **View not found or cache issues**: Run `php artisan optimize:clear`.
+# speakready_ai
