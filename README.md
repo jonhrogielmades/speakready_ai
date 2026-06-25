@@ -91,3 +91,4 @@ Your application should now be accessible in your web browser at:
 ## Troubleshooting
 - If you encounter a `500 Server Error`, ensure your `.env` file is properly configured and the database is running.
 - Make sure your local MySQL server is running before executing migrations.
+# speakready_ai
