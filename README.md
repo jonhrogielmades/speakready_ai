@@ -99,7 +99,7 @@ npm run dev
 ### 8. Run the Local Development Server
 Open a **new terminal window**, navigate to your project directory, and start the Laravel development server:
 ```bash
-php artisan serve
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
 ### 9. Access the Application
