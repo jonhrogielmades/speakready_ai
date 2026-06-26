@@ -438,7 +438,7 @@
                                     </span>
                                 </td>
                                 <td class="text-end" style="padding-right:24px;">
-                                    <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm" style="font-size:0.8rem;border-radius:8px;background:var(--bg3);color:var(--tx);border:1px solid var(--bd);font-weight:600;">Review</a>
+                                    <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm" style="font-size:0.8rem;border-radius:8px;background-color:#3b82f6 !important;color:#ffffff !important;border:none !important;font-weight:600;">Review</a>
                                 </td>
                             </tr>
                             @empty

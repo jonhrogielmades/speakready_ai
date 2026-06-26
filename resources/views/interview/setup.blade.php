@@ -1,7 +1,8 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('content')
 <style>
-    .setup-panel { background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;margin-bottom:20px; }
+    .setup-panel { background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;margin-bottom:20px; scroll-margin-top: 120px; }
+    #btn-start-interview { scroll-margin-top: 120px; }
     .olbl { font-weight:600;color:var(--tx);font-size:.9rem;margin-bottom:8px;display:block; }
     .oinp { width:100%;padding:10px 14px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);color:var(--tx);font-size:.9rem;transition:border-color 0.2s; }
     .oinp:focus { outline:none;border-color:var(--pur); }
@@ -40,6 +41,14 @@
     .persona-desc { font-size: 0.7rem; color: var(--tx3); margin-top: 4px; }
     .persona-check { position: absolute; top: 8px; right: 8px; color: #8b5cf6; font-size: 0.9rem; opacity: 0; transition: opacity 0.2s; }
     .persona-card.selected .persona-check { opacity: 1; }
+
+    /* Driver.js Dark Theme Customization */
+    .driverjs-theme-dark.driver-popover { background-color: var(--bg3); color: var(--tx); border: 1px solid var(--bd); }
+    .driverjs-theme-dark .driver-popover-title { color: var(--tx); }
+    .driverjs-theme-dark .driver-popover-description { color: var(--tx2); }
+    .driverjs-theme-dark .driver-popover-footer button { background-color: var(--bg); color: var(--tx); border: 1px solid var(--bd); text-shadow: none; }
+    .driverjs-theme-dark .driver-popover-progress-text { color: var(--tx3); }
+    .driverjs-theme-dark .driver-popover-arrow::before { border-color: var(--bg3) !important; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
@@ -484,22 +493,22 @@
         const driver = window.driver.js.driver;
 
         const stepsMobile = [
-            { element: '#setup-left-col', popover: { title: 'Interview Setup', description: 'Here you can customize every aspect of your mock interview before you begin.', side: "bottom", align: 'start' }},
-            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Set the target role, experience level, and industry to tailor the questions.', side: "bottom", align: 'start' }},
-            { element: '#panel-advanced', popover: { title: 'Advanced Personalization', description: 'Provide a job description or your resume to generate highly specific questions.', side: "bottom", align: 'start' }},
-            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose the difficulty, number of questions, and the specific categories you want to be tested on.', side: "top", align: 'start' }},
-            { element: '#panel-content', popover: { title: 'Content Assistance', description: 'Enable hints, language checking, or strict timing depending on how much support you want.', side: "top", align: 'start' }},
-            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose between standard Voice responses or Video tracking to analyze your expressions and confidence.', side: "top", align: 'start' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Set the interview category, your target position, and choose the AI provider to power your mock interview.', side: "top", align: 'center' }},
+            { element: '#panel-advanced', popover: { title: 'Advanced Personalization', description: 'Upload your resume or paste a job description to get highly tailored, role-specific questions.', side: "top", align: 'center' }},
+            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose the difficulty level, number of questions, and set an optional time limit for each response.', side: "top", align: 'center' }},
+            { element: '#panel-content', popover: { title: 'Content & Assistance', description: 'Select your interview focus, AI assistance level, and specific question types. You can even simulate the interview style of top companies!', side: "top", align: 'center' }},
+            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose how you want to answer questions: by typing, speaking through your microphone, or a hybrid of both.', side: "top", align: 'center' }},
+            { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Review your customized interview settings here before starting.', side: "top", align: 'center' }},
             { element: '#btn-start-interview', popover: { title: 'Ready to Begin', description: 'Click here to generate your customized mock interview and start practicing!', side: "top", align: 'center' }}
         ];
 
         const stepsDesktop = [
-            { element: '#setup-left-col', popover: { title: 'Interview Setup', description: 'Here you can customize every aspect of your mock interview before you begin.', side: "bottom", align: 'start' }},
-            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Set the target role, experience level, and industry to tailor the questions.', side: "bottom", align: 'start' }},
-            { element: '#panel-advanced', popover: { title: 'Advanced Personalization', description: 'Provide a job description or your resume to generate highly specific questions.', side: "bottom", align: 'start' }},
-            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose the difficulty, number of questions, and the specific categories you want to be tested on.', side: "top", align: 'start' }},
-            { element: '#panel-content', popover: { title: 'Content Assistance', description: 'Enable hints, language checking, or strict timing depending on how much support you want.', side: "top", align: 'start' }},
-            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose between standard Voice responses or Video tracking to analyze your expressions and confidence.', side: "top", align: 'start' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Set the interview category, your target position, and choose the AI provider to power your mock interview.', side: "top", align: 'center' }},
+            { element: '#panel-advanced', popover: { title: 'Advanced Personalization', description: 'Upload your resume or paste a job description to get highly tailored, role-specific questions.', side: "top", align: 'center' }},
+            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose the difficulty level, number of questions, and set an optional time limit for each response.', side: "top", align: 'center' }},
+            { element: '#panel-content', popover: { title: 'Content & Assistance', description: 'Select your interview focus, AI assistance level, and specific question types. You can even simulate the interview style of top companies!', side: "top", align: 'center' }},
+            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose how you want to answer questions: by typing, speaking through your microphone, or a hybrid of both.', side: "top", align: 'center' }},
+            { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Review your customized interview settings here before starting.', side: "top", align: 'center' }},
             { element: '#btn-start-interview', popover: { title: 'Ready to Begin', description: 'Click here to generate your customized mock interview and start practicing!', side: "top", align: 'center' }}
         ];
 
@@ -510,6 +519,7 @@
             steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
             onDestroyStarted: () => {
                 if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
+                    document.documentElement.style.removeProperty('scroll-behavior');
                     driverObj.destroy();
                     localStorage.setItem('onboarding_completed_interview_setup', 'true');
                 }
@@ -517,6 +527,7 @@
         });
 
         window.startOnboardingTour = function() {
+            document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
             driverObj.drive();
         };
 

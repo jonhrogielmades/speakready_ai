@@ -85,7 +85,7 @@
                      <a href="#features" class="nav-link">Features</a>
                      <a href="#how" class="nav-link">How It Works</a>
                      <a href="#benefits" class="nav-link">Benefits</a>
-                     <a href="#testimonials" class="nav-link">Testimonials</a>
+                     <a href="#developers" class="nav-link">Developers</a>
                      <a href="#faq" class="nav-link">FAQ</a>
                      <a href="#contact" class="nav-link">Contact Us</a>
                   </div>
@@ -113,7 +113,7 @@
             <a href="#features" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Features</a>
             <a href="#how" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">How It Works</a>
             <a href="#benefits" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Benefits</a>
-            <a href="#testimonials" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Testimonials</a>
+            <a href="#developers" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Developers</a>
             <a href="#faq" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">FAQ</a>
             <a href="#contact" class="nav-link d-block py-3">Contact Us</a>
             <div class="d-flex gap-2 mt-3">
@@ -127,37 +127,79 @@
             <div class="aur aur-a" style="top:-80px;left:-120px"></div>
             <div class="aur aur-b" style="top:180px;right:-180px"></div>
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
-            <div class="container position-relative" style="z-index:2">
-               <div class="text-center mt-3 pt-3">
-                  <div class="afu" style="animation-delay:.05s">
-                      <span class="hbadge">
-                   AI-Powered Learning | Real-Time Feedback | Interactive Training
-                      </span>
+             <div class="container position-relative" style="z-index:2">
+                <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
+                    <span class="hbadge">
+                 AI-Powered Learning | Real-Time Feedback | Interactive Training
+                    </span>
+                </div>
+                <div class="row align-items-center mt-4">
+                  <div class="col-lg-5 col-md-6 mb-4 mb-lg-0 text-center position-relative order-1 order-lg-2">
+                     <style>
+                        .mic-3d-anim {
+                           animation: float3d 4s ease-in-out infinite;
+                           filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
+                           transform-style: preserve-3d;
+                           transition: transform 0.5s ease;
+                        }
+                        .mic-3d-anim:hover {
+                           transform: scale(1.05) rotateY(10deg) rotateX(5deg);
+                        }
+                        @keyframes float3d {
+                           0% { transform: translateY(0px) rotateY(0deg); }
+                           50% { transform: translateY(-15px) rotateY(5deg); }
+                           100% { transform: translateY(0px) rotateY(0deg); }
+                        }
+                     </style>
+                     <img src="{{ asset('img/hero_boy.png') }}" class="img-fluid mic-3d-anim afu" alt="SpeakReady AI Interview Practice" style="max-height: 450px; animation-delay: .1s; mix-blend-mode: multiply;">
                   </div>
-                  <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
-                  <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
-                  <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                     <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
-                     <button class="boc btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#demoModal"><i class="fa-solid fa-play me-2" style="color:var(--pur)"></i>Live Demo</button>
-                     <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
-                  </div>
-                  
-                  <div class="mt-5 afu" style="animation-delay:.4s">
-                     <p style="font-size:.71rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
-                     <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap" style="color:var(--tx2); font-size:1.5rem;">
-                        <i class="fa-brands fa-laravel" title="Laravel"></i>
-                        <i class="fa-brands fa-php" title="PHP"></i>
-                        <i class="fa-solid fa-database" title="MySQL"></i>
-                        <span style="font-weight:700; font-size:1.2rem;">OpenAI/Gemini AI</span>
-                        <i class="fa-solid fa-microphone" title="Web Speech API"></i>
+                  <div class="col-lg-7 col-md-6 text-center order-2 order-lg-1">
+                     <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
+                     <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
+                     <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
+                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
+                        <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
+                        <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
-                  </div>
-               </div>
-               
-               <div class="row justify-content-center mt-3 mb-3">
+                     
+                   </div>
+                </div>
+                
+                <div class="mt-3 mb-3 afu text-center" style="animation-delay:.4s">
+                   <p style="font-size:.71rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
+                   <style>
+                       .tech-icons a { color: inherit; text-decoration: none; display: flex; align-items: center; transition: all 0.2s ease; }
+                       .tech-icons a:hover { transform: translateY(-3px) scale(1.1); color: var(--pur); }
+                   </style>
+                   <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap tech-icons" style="color:var(--tx2); font-size:1.5rem;">
+                      <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
+                      <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
+                      <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
+                      @php
+                          $primaryAi = \App\Models\AiProvider::where('is_primary', true)->first() ?? \App\Models\AiProvider::where('status', 'active')->first();
+                          $slug = 'openai';
+                          $title = 'OpenAI';
+                          $link = 'https://openai.com';
+                          if ($primaryAi) {
+                              $name = strtolower($primaryAi->name);
+                              if (str_contains($name, 'openai')) { $slug = 'openai'; $title = 'OpenAI'; $link = 'https://openai.com'; }
+                              elseif (str_contains($name, 'gemini')) { $slug = 'googlegemini'; $title = 'Gemini'; $link = 'https://deepmind.google/technologies/gemini/'; }
+                              elseif (str_contains($name, 'cohere')) { $slug = 'cohere'; $title = 'Cohere'; $link = 'https://cohere.com'; }
+                              elseif (str_contains($name, 'anthropic')) { $slug = 'anthropic'; $title = 'Anthropic'; $link = 'https://anthropic.com'; }
+                              elseif (str_contains($name, 'groq')) { $slug = 'groq'; $title = 'Groq'; $link = 'https://groq.com'; }
+                          }
+                      @endphp
+                      <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
+                          <img src="https://cdn.simpleicons.org/{{ $slug }}/a1a1aa" alt="{{ $title }}" style="height:26px;">
+                      </a>
+                      <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
+                   </div>
+                </div>
+                
+                <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-11 adi">
                      <div class="dwrap">
-                        <div class="dtbar"><span class="dd" style="background:#ff5f57"></span><span class="dd" style="background:#ffbd2e"></span><span class="dd" style="background:#28c840"></span><span class="ms-auto me-auto" style="font-size:.76rem;color:var(--tx3)">SpeakReady AI Dashboard</span></div>
+                        <div class="dtbar"><span class="dd" style="background:#ff5f57"></span><span class="dd" style="background:#ffbd2e"></span><span class="dd" style="background:#28c840"></span><span class="ms-auto me-auto" style="font-size:.76rem;color:var(--tx3)"></span></div>
                         <div class="dgrid">
                            <div class="dside">
                               <div style="font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);padding:0 10px 10px;font-weight:700">Interview Hub</div>
@@ -170,27 +212,27 @@
                               <div class="row g-2 mb-3">
                                  <div class="col-6 col-sm-3">
                                     <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700" class="gt">85%</div>
+                                       <div style="font-size:1.4rem;font-weight:700" class="gt">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0) }}%</div>
                                        <div style="font-size:.67rem;color:var(--tx3)">Readiness Score</div>
-                                       <div style="font-size:.67rem;color:#34d399;font-weight:600"><i class="fa-solid fa-caret-up me-1"></i>12%</div>
+                                       <div style="font-size:.67rem;color:#34d399;font-weight:600"><i class="fa-solid fa-caret-up me-1"></i>Avg</div>
                                     </div>
                                  </div>
                                  <div class="col-6 col-sm-3">
                                     <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700">12</div>
+                                       <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\InterviewSession::count() ?? 12) }}</div>
                                        <div style="font-size:.67rem;color:var(--tx3)">Interviews Done</div>
                                     </div>
                                  </div>
                                  <div class="col-6 col-sm-3">
                                     <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700">92%</div>
-                                       <div style="font-size:.67rem;color:var(--tx3)">Eye Contact</div>
+                                       <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0) }}%</div>
+                                       <div style="font-size:.67rem;color:var(--tx3)">Clarity Score</div>
                                     </div>
                                  </div>
                                  <div class="col-6 col-sm-3">
                                     <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700">Good</div>
-                                       <div style="font-size:.67rem;color:var(--tx3)">Posture Check</div>
+                                       <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0) }}%</div>
+                                       <div style="font-size:.67rem;color:var(--tx3)">Grammar Score</div>
                                     </div>
                                  </div>
                               </div>
@@ -249,32 +291,32 @@
                      <div class="row g-3 text-center">
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">15000</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ \App\Models\User::count() }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">45000</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ \App\Models\InterviewSession::count() }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">5000</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ \App\Models\Question::count() }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">125000</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ \App\Models\Feedback::count() }}</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
                            </div>
                         </div>
                         <div class="col-12 mt-3">
                            <div class="gc p-4">
                               <div class="d-flex justify-content-center align-items-center gap-2">
-                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">98</span>%</div>
+                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 0, 0) }}</span>%</div>
                                 <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
                               </div>
                            </div>
@@ -295,58 +337,58 @@
                <div class="row g-4">
                   <div class="col-md-3 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:var(--pur)"><i class="fa-solid fa-chalkboard-user fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Mock Interview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Simulated interview sessions tailored to your chosen field.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:var(--pur)"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Track all your interview sessions and overall readiness in one place.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-comment-medical fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Feedback</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Instant evaluation and suggestions after every response.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Mock Interview</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Interactive AI avatar asking real-world questions tailored to you.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-user-tie fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Interview Coach</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Personalized interview guidance and strategic advice.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Practice your enunciation and pacing with real-time feedback.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.15s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:#3b82f6"><i class="fa-solid fa-star fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">STAR Response Drill</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Behavioral training using the Situation, Task, Action, Result method.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(239,68,68,.15);color:#ef4444"><i class="fa-solid fa-book-open fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Learning Lab</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Access curated resources and tutorials to master any interview.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(239,68,68,.15);color:#ef4444"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Speaking practice with speech clarity and tone analysis.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Get personalized advice and strategies from your AI mentor.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-video fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Camera Presence</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Posture, lighting, and eye contact guidance via webcam analysis.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:#3b82f6"><i class="fa-solid fa-chart-line fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Visual charts tracking your improvement and score over time.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(14,165,233,.15);color:#0ea5e9"><i class="fa-solid fa-chart-line fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Readiness score and performance monitoring over time.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(16,185,129,.15);color:#10b981"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Actionable insights on content, tone, and delivery.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(244,63,94,.15);color:#f43f5e"><i class="fa-solid fa-laptop-file fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Learning Lab</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Extensive tutorials and learning resources for interview prep.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(234,179,8,.15);color:#eab308"><i class="fa-solid fa-trophy fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Leaderboard</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Compete with peers and track your ranking in the community.</p>
                      </div>
                   </div>
                </div>
@@ -366,42 +408,42 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">1</div>
                         <h3 class="fs-5 fw-semibold mb-2">Create an Account</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Sign up to access personalized tracking and interview resources.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Join the community and access your personalized dashboard.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Choose Category</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Select your focus: Job, Scholarship, College Admission, or IT.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Configure Your Setup</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose your target role, difficulty, and interview type.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Answer Questions</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Respond to AI-generated questions tailored to your field.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Take a Mock Interview</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Face our interactive AI avatar with real-world questions.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">4</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Receive AI Feedback</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Get instant evaluations on your response structure and tone.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Review AI Feedback</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Get instant, actionable evaluations on your performance.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">5</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Improve Through Practice</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Use insights to refine your answers and body language.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Train & Rehearse</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Refine your skills using Voice Rehearsal and the AI Coach.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Track Progress</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Monitor your readiness and performance score over time.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Track Your Progress</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Monitor your growth, earn achievements, and climb the leaderboard.</p>
                      </div>
                   </div>
                </div>
@@ -483,51 +525,36 @@
             </div>
          </section>
 
-         <!-- TESTIMONIALS -->
-         <section id="testimonials" class="sp" style="background:var(--bg2)">
+         <!-- DEVELOPERS -->
+         <section id="developers" class="sp" style="background:var(--bg2)">
             <div class="container">
                <div class="text-center mb-5 rv">
-                  <span class="slbl">Testimonials</span>
-                  <h2 class="stitle">Success <span class="gt">Stories</span></h2>
+                  <span class="slbl">Developers</span>
+                  <h2 class="stitle">Meet Our <span class="gt">Team</span></h2>
                </div>
-               <div class="row g-3">
+               <div class="row g-3 justify-content-center">
                   <div class="col-md-4 rv">
-                     <div class="gc p-4 h-100">
-                        <div class="d-flex gap-1 mb-3"><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i></div>
-                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;font-style:italic;margin-bottom:18px">"SpeakReady AI helped me conquer my nervousness. The STAR response drill completely changed how I answer behavioral questions. I just landed my first software engineering job!"</p>
-                        <div class="d-flex align-items-center gap-2 mt-auto">
-                           <div style="width:40px;height:40px;border-radius:50%;background:var(--pur);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;">AJ</div>
-                           <div>
-                              <div style="font-size:.88rem;font-weight:600">Alex J.</div>
-                              <div style="font-size:.76rem;color:var(--tx3)">Fresh Graduate, IT</div>
-                           </div>
-                        </div>
+                     <div class="gc p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
+                        <img src="{{ asset('img/dev1.png') }}" alt="Developer" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--pur);">
+                        <h6 class="fw-bold mb-1">Jonh Rogiel M. Tumanda</h6>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Lead Programmer</p>
+                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Core Code, Databases, and APIs.</p>
                      </div>
                   </div>
                   <div class="col-md-4 rv" style="transition-delay:.1s">
-                     <div class="gc p-4 h-100">
-                        <div class="d-flex gap-1 mb-3"><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i></div>
-                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;font-style:italic;margin-bottom:18px">"The camera presence check pointed out that I rarely made eye contact. Fixing that alone gave me so much more confidence during my college admission interview."</p>
-                        <div class="d-flex align-items-center gap-2 mt-auto">
-                           <div style="width:40px;height:40px;border-radius:50%;background:#34d399;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;">MR</div>
-                           <div>
-                              <div style="font-size:.88rem;font-weight:600">Maria R.</div>
-                              <div style="font-size:.76rem;color:var(--tx3)">College Applicant</div>
-                           </div>
-                        </div>
+                     <div class="gc p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
+                        <img src="{{ asset('img/dev2.png') }}" alt="Developer" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #34d399;">
+                        <h6 class="fw-bold mb-1">Karyl G. Gesto</h6>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Manuscript Editor</p>
+                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Technical Writing, Documentation, and Compliance.</p>
                      </div>
                   </div>
                   <div class="col-md-4 rv" style="transition-delay:.2s">
-                     <div class="gc p-4 h-100">
-                        <div class="d-flex gap-1 mb-3"><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i><i class="fa-solid fa-star text-warning"></i></div>
-                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;font-style:italic;margin-bottom:18px">"Getting instant AI feedback on my responses allowed me to iterate quickly. I practiced for my scholarship interview every night and ended up winning it!"</p>
-                        <div class="d-flex align-items-center gap-2 mt-auto">
-                           <div style="width:40px;height:40px;border-radius:50%;background:#f59e0b;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;">DL</div>
-                           <div>
-                              <div style="font-size:.88rem;font-weight:600">David L.</div>
-                              <div style="font-size:.76rem;color:var(--tx3)">Scholarship Applicant</div>
-                           </div>
-                        </div>
+                     <div class="gc p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
+                        <img src="{{ asset('img/dev3.png') }}" alt="Developer" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f59e0b;">
+                        <h6 class="fw-bold mb-1">Eva Mae C. Cabilic</h6>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">QA Tester</p>
+                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Bug Hunting, Test Cases, and UX Stability.</p>
                      </div>
                   </div>
                </div>
@@ -548,36 +575,76 @@
                        <div class="gc p-2">
                            <div class="swiper demoSwiper rounded" style="overflow:hidden">
                                <div class="swiper-wrapper">
-                                   <!-- Slide 1 -->
+                                   <!-- Slide 1: Overview -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-gauge-high fa-4x mb-4" style="color:var(--pur)"></i>
-                                           <h3 class="fs-3 fw-bold">Dashboard Screenshot</h3>
-                                           <p class="text-muted" style="max-width:400px">Track all your interview sessions and overall readiness.</p>
+                                           <h3 class="fs-3 fw-bold">Overview</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your interview sessions and overall readiness.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 2 -->
+                                   <!-- Slide 2: Mock Interview -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-video fa-4x mb-4" style="color:#34d399"></i>
-                                           <h3 class="fs-3 fw-bold">Interview Session Screenshot</h3>
-                                           <p class="text-muted" style="max-width:400px">Interactive AI avatar asking real-world questions.</p>
+                                           <i class="fa-solid fa-microphone-lines fa-4x mb-4" style="color:#34d399"></i>
+                                           <h3 class="fs-3 fw-bold">Mock Interview</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking real-world questions.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 3 -->
+                                   <!-- Slide 3: Voice Rehearsal -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-comment-medical fa-4x mb-4" style="color:#f59e0b"></i>
-                                           <h3 class="fs-3 fw-bold">AI Feedback Screenshot</h3>
-                                           <p class="text-muted" style="max-width:400px">Actionable insights on content, tone, and delivery.</p>
+                                           <i class="fa-solid fa-ear-listen fa-4x mb-4" style="color:#a855f7"></i>
+                                           <h3 class="fs-3 fw-bold">Voice Rehearsal</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Practice your enunciation and pacing with real-time feedback.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 4 -->
+                                   <!-- Slide 4: Learning Lab -->
+                                   <div class="swiper-slide text-center">
+                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                           <i class="fa-solid fa-book-open fa-4x mb-4" style="color:#ef4444"></i>
+                                           <h3 class="fs-3 fw-bold">Learning Lab</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials to master any interview.</p>
+                                       </div>
+                                   </div>
+                                   <!-- Slide 5: AI Coach -->
+                                   <div class="swiper-slide text-center">
+                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                           <i class="fa-solid fa-robot fa-4x mb-4" style="color:#f59e0b"></i>
+                                           <h3 class="fs-3 fw-bold">AI Coach</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Get personalized advice and strategies from your AI mentor.</p>
+                                       </div>
+                                   </div>
+                                   <!-- Slide 6: Progress Tracking -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-chart-line fa-4x mb-4" style="color:#3b82f6"></i>
-                                           <h3 class="fs-3 fw-bold">Progress Analytics Screenshot</h3>
-                                           <p class="text-muted" style="max-width:400px">Visual charts tracking your improvement over time.</p>
+                                           <h3 class="fs-3 fw-bold">Progress Tracking</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Visual charts tracking your improvement over time.</p>
+                                       </div>
+                                   </div>
+                                   <!-- Slide 7: Feedback Center -->
+                                   <div class="swiper-slide text-center">
+                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                           <i class="fa-solid fa-clipboard-check fa-4x mb-4" style="color:#10b981"></i>
+                                           <h3 class="fs-3 fw-bold">Feedback Center</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Actionable insights on content, tone, and delivery.</p>
+                                       </div>
+                                   </div>
+                                   <!-- Slide 8: Reports -->
+                                   <div class="swiper-slide text-center">
+                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                           <i class="fa-solid fa-file-invoice fa-4x mb-4" style="color:#6366f1"></i>
+                                           <h3 class="fs-3 fw-bold">Reports</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Detailed summaries and exportable reports of your performance.</p>
+                                       </div>
+                                   </div>
+                                   <!-- Slide 9: Leaderboard -->
+                                   <div class="swiper-slide text-center">
+                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                           <i class="fa-solid fa-trophy fa-4x mb-4" style="color:#eab308"></i>
+                                           <h3 class="fs-3 fw-bold">Leaderboard</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Compete with peers and track your ranking in the community.</p>
                                        </div>
                                    </div>
                                </div>
@@ -651,7 +718,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">jonhrogielmades@gmail.com</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">capstonespeakreadyai@gmail.com</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
@@ -708,36 +775,139 @@
          </section>
 
          <!-- FOOTER -->
-         <footer id="foot" style="background:var(--bg2)">
+         <style>
+            #foot {
+                background: linear-gradient(to bottom, var(--bg2), var(--bg3));
+                position: relative;
+                overflow: hidden;
+            }
+            #foot::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 0; right: 0;
+                height: 1px;
+                background: linear-gradient(90deg, transparent, var(--pur), transparent);
+                opacity: 0.3;
+            }
+            .footer-heading {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: var(--tx);
+                margin-bottom: 1.25rem;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+            .footer-links {
+                margin: 0;
+                padding: 0;
+            }
+            .footer-links li {
+                margin-bottom: 0.75rem;
+            }
+            .footer-links a {
+                color: var(--tx2);
+                text-decoration: none;
+                font-size: 0.9rem;
+                transition: all 0.2s ease;
+                display: inline-block;
+            }
+            .footer-links a:hover {
+                color: var(--pur);
+                transform: translateX(4px);
+            }
+            .footer-social-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                background: var(--bg);
+                border: 1px solid var(--bd);
+                border-radius: 50%;
+                color: var(--tx2);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                text-decoration: none;
+                font-size: 1rem;
+            }
+            .footer-social-link:hover {
+                background: var(--pur);
+                color: #fff;
+                border-color: var(--pur);
+                transform: translateY(-4px);
+                box-shadow: 0 6px 15px rgba(124, 58, 237, 0.35);
+            }
+            .footer-bottom {
+                border-top: 1px solid var(--bd);
+                padding-top: 1.5rem;
+                padding-bottom: 1.5rem;
+                margin-top: 2rem;
+            }
+            .footer-newsletter input:focus {
+                border-color: var(--pur) !important;
+                box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+            }
+            .footer-newsletter-btn {
+                background: linear-gradient(135deg, var(--pur), #9333ea);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                transition: all 0.2s;
+            }
+            .footer-newsletter-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+                color: #fff;
+            }
+         </style>
+         <footer id="foot">
             <div class="container pt-5">
                <div class="row g-5 mb-5">
-                  <div class="col-lg-4">
-                     <a class="d-flex align-items-center gap-2 mb-3" href="#" style="font-size:1.15rem;font-weight:700;color:var(--tx)">
-                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
-                        SpeakReady AI
+                  <div class="col-lg-4 pe-lg-5">
+                     <a class="d-flex align-items-center gap-2 mb-3 text-decoration-none" href="#">
+                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:32px; height:32px; background:transparent; padding:0;">
+                        <span style="font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;color:var(--tx)">SpeakReady AI</span>
                      </a>
-                     <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Your personal AI interview coach. Practice smarter, interview better, and secure your dream opportunity.</p>
+                     <p style="font-size:.95rem;color:var(--tx2);line-height:1.7;margin-bottom:1.75rem">Your personal AI interview coach. Practice smarter, interview better, and secure your dream opportunity with confidence.</p>
+                     <div class="d-flex gap-3">
+                         <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                         <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="Twitter"><i class="fa-brands fa-twitter"></i></a>
+                         <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                         <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="GitHub"><i class="fa-brands fa-github"></i></a>
+                     </div>
                   </div>
-                  <div class="col-6 col-md-3 fcol">
-                     <h5>Quick Links</h5>
-                     <a href="#">Home</a><a href="#features">Features</a><a href="#about">About</a><a href="#contact">Contact</a>
+                  <div class="col-6 col-md-2 col-lg-2">
+                     <h5 class="footer-heading">Company</h5>
+                     <ul class="list-unstyled footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#how">How It Works</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                     </ul>
                   </div>
-                  <div class="col-6 col-md-2 fcol">
-                     <h5>User Links</h5>
-                     <a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Login</a>
-                     <a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</a>
+                  <div class="col-6 col-md-3 col-lg-2">
+                     <h5 class="footer-heading">Platform</h5>
+                     <ul class="list-unstyled footer-links">
+                        <li><a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
+                        <li><a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                     </ul>
                   </div>
-                  <div class="col-6 col-md-3 fcol">
-                     <h5>Legal Links</h5>
-                     <a href="#">Privacy Policy</a><a href="#">Terms and Conditions</a>
+                  <div class="col-12 col-md-7 col-lg-4">
+                     <h5 class="footer-heading">Stay Updated</h5>
+                     <p style="font-size:.9rem;color:var(--tx2);line-height:1.6;margin-bottom:1.25rem">Get the latest interview tips and platform updates directly in your inbox.</p>
+                     <form class="footer-newsletter d-flex gap-2" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
+                         <input type="email" placeholder="Enter your email" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:12px 15px;border-radius:10px;font-size:0.95rem;box-shadow:none;" required>
+                         <button type="submit" class="btn footer-newsletter-btn fw-semibold px-3"><i class="fa-solid fa-paper-plane"></i></button>
+                     </form>
                   </div>
                </div>
-               <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-4 pb-4" style="border-top:1px solid var(--bd)">
-                  <p style="font-size:.8rem;color:var(--tx3);margin:0"> &copy; 2026 SpeakReady AI. All rights reserved.</p>
-                  <div class="d-flex gap-2">
-                      <a href="#" class="sico" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                      <a href="#" class="sico" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
-                      <a href="#" class="sico" title="GitHub"><i class="fa-brands fa-github"></i></a>
+               <div class="footer-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+                  <p style="font-size:.85rem;color:var(--tx3);margin:0">&copy; {{ date('Y') }} SpeakReady AI. All rights reserved.</p>
+                  <div class="d-flex gap-3" style="font-size:.85rem;">
+                      <a href="#" style="color:var(--tx3);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--pur)'" onmouseout="this.style.color='var(--tx3)'">Security</a>
+                      <span style="color:var(--bd)">|</span>
+                      <a href="#" style="color:var(--tx3);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--pur)'" onmouseout="this.style.color='var(--tx3)'">Cookie Preferences</a>
                   </div>
                </div>
             </div>
@@ -745,29 +915,7 @@
       </div>
       <!-- /landing -->
       
-      <!-- ======================== LIVE DEMO MODAL (BONUS) ======================== -->
-      <div class="modal fade" id="demoModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content" style="background:var(--bg);border:1px solid var(--bd);border-radius:16px;">
-            <div class="modal-header border-0">
-              <h5 class="modal-title fw-bold">Live AI Readiness Checker</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:invert(1)"></button>
-            </div>
-            <div class="modal-body text-center p-4">
-               <i class="fa-solid fa-robot fa-3x mb-3" style="color:var(--pur)"></i>
-               <h4 class="mb-3">Test Your Readiness!</h4>
-               <p style="color:var(--tx2);font-size:0.9rem;">Answer 3 quick sample questions without registering to see your estimated readiness score.</p>
-               
-               <div class="gc p-3 mt-4 text-start">
-                   <p class="mb-2 fw-bold" style="font-size:0.9rem;"><i class="fa-solid fa-q me-2 text-primary"></i> Question 1:</p>
-                   <p style="font-size:0.95rem;">"Tell me about a time you had to overcome a significant challenge."</p>
-               </div>
-               
-               <button class="btn bgrd w-100 py-3 mt-4" data-bs-dismiss="modal" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register to Start Demo</button>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       <!-- ======================== LOGIN OFFCANVAS ======================== -->
       <div class="offcanvas offcanvas-end" tabindex="-1" id="lofc">
@@ -805,7 +953,12 @@
                   <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
                   <input class="oinp" type="email" name="email" id="loginEmail" placeholder="you@example.com" required value="{{ old('email') }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
-                  <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required>
+                  <div class="position-relative mb-3">
+                     <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required style="padding-right: 40px; margin-bottom: 0;">
+                     <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('loginPass', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                        <i class="fa-solid fa-eye-slash"></i>
+                     </span>
+                  </div>
                   <div class="text-end mb-3" style="margin-top:-8px"><a href="#" style="font-size:.8rem;color:var(--pur)">Forgot password?</a></div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
@@ -826,7 +979,19 @@
                   <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
                   <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required>
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
-                  <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required>
+                  <div class="position-relative mb-3">
+                     <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required style="padding-right: 40px; margin-bottom: 0;">
+                     <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('signupPass', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                        <i class="fa-solid fa-eye-slash"></i>
+                     </span>
+                  </div>
+                  <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Confirm Password</label>
+                  <div class="position-relative mb-3">
+                     <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required style="padding-right: 40px; margin-bottom: 0;">
+                     <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('signupPassConfirm', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                        <i class="fa-solid fa-eye-slash"></i>
+                     </span>
+                  </div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or sign up with</div>
@@ -936,15 +1101,32 @@
             }
          });
 
-         document.getElementById('pwa-btn-yes')?.addEventListener('click', async () => {
-            document.getElementById('pwa-install-prompt').style.display = 'none';
+         async function triggerInstall() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+            if (isStandalone) {
+                alert("This app has already been installed on your device.");
+                return;
+            }
+
             if (deferredPrompt) {
                deferredPrompt.prompt();
                const { outcome } = await deferredPrompt.userChoice;
                console.log(`User response to the install prompt: ${outcome}`);
                deferredPrompt = null;
+               document.getElementById('pwa-install-prompt').style.display = 'none';
+            } else {
+               if (isIos) {
+                   alert("To install on iOS, tap the 'Share' icon at the bottom of Safari and select 'Add to Home Screen'.");
+               } else {
+                   alert("This app has already been installed on your device.");
+               }
             }
-         });
+         }
+
+         document.getElementById('pwa-btn-yes')?.addEventListener('click', triggerInstall);
+         document.getElementById('heroInstallBtn')?.addEventListener('click', triggerInstall);
 
          document.getElementById('pwa-btn-no')?.addEventListener('click', () => {
             document.getElementById('pwa-install-prompt').style.display = 'none';
@@ -1034,6 +1216,20 @@
                   });
               }
           });
+          
+          function togglePasswordVisibility(inputId, btn) {
+             const input = document.getElementById(inputId);
+             const icon = btn.querySelector('i');
+             if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+             } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+             }
+          }
       </script>
    </body>
 </html>

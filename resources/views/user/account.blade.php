@@ -83,15 +83,30 @@
                     @csrf
                     <div class="mb-3">
                         <label class="olbl">Current Password</label>
-                        <input type="password" class="oinp" name="current_password" placeholder="••••••••" required>
+                        <div class="position-relative">
+                           <input type="password" class="oinp" name="current_password" id="currentPassword" placeholder="••••••••" required style="padding-right: 40px; margin-bottom: 0;">
+                           <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('currentPassword', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                              <i class="fa-solid fa-eye-slash"></i>
+                           </span>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="olbl">New Password</label>
-                        <input type="password" class="oinp" name="new_password" placeholder="••••••••" required minlength="8">
+                        <div class="position-relative">
+                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="••••••••" required minlength="8" style="padding-right: 40px; margin-bottom: 0;">
+                           <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('newPassword', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                              <i class="fa-solid fa-eye-slash"></i>
+                           </span>
+                        </div>
                     </div>
                     <div class="mb-4">
                         <label class="olbl">Confirm New Password</label>
-                        <input type="password" class="oinp" name="confirm_password" placeholder="••••••••" required minlength="8">
+                        <div class="position-relative">
+                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="••••••••" required minlength="8" style="padding-right: 40px; margin-bottom: 0;">
+                           <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                              <i class="fa-solid fa-eye-slash"></i>
+                           </span>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-outline-primary w-100 py-2">Update Password</button>
                 </form>
@@ -108,4 +123,20 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        }
+    }
+</script>
 @endsection
