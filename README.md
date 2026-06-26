@@ -23,7 +23,7 @@ cd speakready_ai
 ```
 
 ### 2. Install Dependencies
-Install all the required PHP and front-end dependencies:
+Install all the required PHP and front-end dependencies. Make sure you are in the project root directory.
 ```bash
 # Install PHP dependencies
 composer install
@@ -33,13 +33,13 @@ npm install
 ```
 
 ### 3. Configure Environment Variables
-Copy the example environment file and create your own `.env` file:
+Copy the example environment file to create your active `.env` file:
 ```bash
 cp .env.example .env
 ```
-*(On Windows Command Prompt, use `copy .env.example .env`)*
+*(On Windows Command Prompt, use `copy .env.example .env`, or simply copy and rename it in File Explorer)*
 
-Open the `.env` file in your editor and update the following key configurations:
+Open the `.env` file in your code editor and update the following essential configurations:
 
 **Application & Database:**
 ```env
@@ -49,69 +49,77 @@ APP_URL=http://localhost:8000
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=speakready_ai   # Create this database in your SQL manager
-DB_USERNAME=root            # Your database username
-DB_PASSWORD=                # Your database password
+DB_DATABASE=speakready_ai   # Create this empty database in your SQL manager first
+DB_USERNAME=root            # Your database username (usually 'root' locally)
+DB_PASSWORD=                # Your database password (leave blank if none)
 ```
 
 **Mail Configuration (SMTP):**
+*(If you are using Gmail, you MUST use a Google "App Password" instead of your regular password)*
 ```env
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=465
 MAIL_USERNAME=capstonespeakreadyai@gmail.com
-MAIL_PASSWORD=your_app_password
+MAIL_PASSWORD=your_app_password   # Generate a 16-character App Password in Google Account settings
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS="capstonespeakreadyai@gmail.com"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
 ### 4. Generate Application Key
-Generate a new application key. This will automatically update your `.env` file securely:
+Generate a new cryptographic key for the application. This will automatically update your `.env` file securely:
 ```bash
 php artisan key:generate
 ```
 
-### 5. Run Database Migrations & Seeders
-Make sure your database server is running and you have created the `speakready_ai` database. Then run the migrations to create the tables:
+### 5. Setup the Database
+Make sure your database server (e.g., MySQL via XAMPP, Laragon, or Docker) is running and you have created an empty database named `speakready_ai`.
+
+**Option A: Import Database Dump (Recommended)**
+Since a `database_dump.sql` file is included in the root folder, you can import it directly using your preferred MySQL client (phpMyAdmin, HeidiSQL, Laragon's default database client, etc.) or via terminal:
+```bash
+mysql -u root -p speakready_ai < database_dump.sql
+```
+
+**Option B: Run Migrations**
+Alternatively, if you prefer to build the schema from scratch, run the Laravel migrations:
 ```bash
 php artisan migrate
 ```
-*(If you have sample data seeders available, you can run `php artisan migrate --seed`)*
+*(If you have seeders to populate initial data, run: `php artisan migrate --seed`)*
 
 ### 6. Link Storage
-Create a symbolic link for the storage folder so that public assets (like uploaded images) are accessible:
+Create a symbolic link for the storage folder so that public assets (like uploaded images or audio files) are accessible to the browser:
 ```bash
 php artisan storage:link
 ```
 
 ### 7. Build Front-End Assets
-Compile the front-end assets (using Vite):
-```bash
-# For local development (keeps watching for changes):
-npm run dev
+Compile the front-end assets using Vite.
 
-# Or compile for production:
-# npm run build
+For local development (this command will keep running and watch for changes):
+```bash
+npm run dev
 ```
-*(Keep this terminal running in the background if using `npm run dev`)*
+
+*(Keep this terminal running in the background. Open a new terminal tab/window for the next step.)*
 
 ### 8. Run the Local Development Server
-Open a **new terminal window**, navigate to your project directory, and start the Laravel development server:
+In a **new terminal window** inside your project directory, start the Laravel development server:
 ```bash
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
 ### 9. Access the Application
-Your application should now be accessible in your web browser at:
+Your application should now be fully functional and accessible in your web browser at:
 [http://localhost:8000](http://localhost:8000)
 
 ---
 
 ## 🛠 Troubleshooting
-- **500 Server Error**: Ensure your `.env` file is properly configured, the `APP_KEY` has been generated, and the database is running.
-- **Vite/CSS not loading**: Ensure you are running `npm run dev` in a separate terminal.
-- **Images not loading**: Run `php artisan storage:link`.
-- **View not found or cache issues**: Run `php artisan optimize:clear`.
-# speakready_ai
-# speakready_ai
+- **500 Server Error**: Ensure your `.env` file is properly configured, the `APP_KEY` has been generated, and your MySQL database is actively running.
+- **Vite or CSS not loading**: Ensure you are running `npm run dev` in a separate terminal and haven't closed it.
+- **Images/Media not loading**: Run `php artisan storage:link` to ensure the symbolic link is created correctly.
+- **View not found or cache issues**: Run `php artisan optimize:clear` to clear all compiled caches.
+- **Email not sending**: Double-check your Google App Password and ensure your Gmail account has 2-Step Verification enabled to allow App Passwords.
