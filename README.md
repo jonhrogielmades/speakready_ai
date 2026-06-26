@@ -114,3 +114,4 @@ Your application should now be accessible in your web browser at:
 - **Images not loading**: Run `php artisan storage:link`.
 - **View not found or cache issues**: Run `php artisan optimize:clear`.
 # speakready_ai
+# speakready_ai
