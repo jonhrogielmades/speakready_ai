@@ -963,7 +963,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or continue with</div>
-               <button type="button" class="oauth" onclick="showLoginTransition(); window.location.href='{{ route('auth.google') }}'"><i class="fa-brands fa-google me-2"></i>Continue with Google</button>
+               <button type="button" class="oauth" disabled style="opacity: 0.5; cursor: not-allowed;" title="Temporarily Locked"><i class="fa-solid fa-lock me-2"></i>Continue with Google (Locked)</button>
 
                <p class="text-center mt-4" style="font-size:.82rem;color:var(--tx3)">Don't have an account? <a href="#" style="color:var(--pur)" onclick="swTab('signup');return false">Register for free</a></p>
             </div>
@@ -995,7 +995,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or sign up with</div>
-               <button type="button" class="oauth" onclick="showLoginTransition(); window.location.href='{{ route('auth.google') }}'"><i class="fa-brands fa-google me-2"></i>Continue with Google</button>
+               <button type="button" class="oauth" disabled style="opacity: 0.5; cursor: not-allowed;" title="Temporarily Locked"><i class="fa-solid fa-lock me-2"></i>Continue with Google (Locked)</button>
 
                <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">By signing up, you agree to our <a href="#" style="color:var(--pur)">Terms</a> &amp; <a href="#" style="color:var(--pur)">Privacy Policy</a></p>
             </div>
