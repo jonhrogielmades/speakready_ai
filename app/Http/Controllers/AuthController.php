@@ -107,10 +107,23 @@ class AuthController extends Controller
     {
         try {
             $driver = \Laravel\Socialite\Facades\Socialite::driver('google')->stateless();
+            
+            // Fix for Render 504 Gateway Timeout: Force IPv4 and add connection timeouts
+            $guzzleOptions = [
+                'timeout' => 15,
+                'connect_timeout' => 5,
+                'curl' => [
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                ]
+            ];
+            
             // Disable SSL verification for local development (Laragon)
             if (app()->environment('local')) {
-                $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+                $guzzleOptions['verify'] = false;
             }
+            
+            $driver->setHttpClient(new \GuzzleHttp\Client($guzzleOptions));
+            
             $googleUser = $driver->user();
             
             $user = User::withTrashed()
