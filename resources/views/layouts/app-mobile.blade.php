@@ -305,41 +305,11 @@
             #answerTextarea { min-height: 100px !important; }
          }
 
-         /* --- Global Header & Button Responsiveness (Progress, Feedback, Reports, Leaderboard) --- */
-         @media (max-width: 767px) {
-            .mb-4.d-flex.justify-content-between {
-               flex-direction: column !important;
-               align-items: stretch !important;
-               gap: 15px !important;
-            }
-            .mb-4.d-flex.justify-content-between > div.d-flex.gap-2 {
-               flex-direction: column !important;
-               width: 100% !important;
-            }
+         /* --- Progress page export buttons --- */
+         @media (max-width: 575px) {
+            .mb-4.d-flex.justify-content-between .d-flex.gap-2 { flex-wrap: wrap; }
             .mb-4.d-flex.justify-content-between .btn {
-               width: 100% !important;
-               justify-content: center !important;
-               margin: 0 !important;
-            }
-            
-            /* Filters in Feedback and Reports */
-            #feedback-filters, .filters-container {
-               flex-direction: column !important;
-               width: 100% !important;
-            }
-            #feedback-filters > *, .filters-container > * {
-               width: 100% !important;
-               max-width: 100% !important;
-               margin-bottom: 8px !important;
-            }
-            .input-group, .form-select {
-               width: 100% !important;
-            }
-            
-            /* Make sure charts don't cause horizontal scroll */
-            canvas {
-               max-width: 100% !important;
-               height: auto !important;
+               font-size: 0.75rem; padding: 6px 10px;
             }
          }
 
