@@ -32,7 +32,8 @@ COPY . /var/www
 # Install dependencies without memory limits
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_MEMORY_LIMIT=-1
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --no-progress
+RUN dos2unix composer.json composer.lock && \
+    php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --no-progress -v
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
