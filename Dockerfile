@@ -28,7 +28,9 @@ WORKDIR /var/www
 # Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies
+# Install dependencies without memory limits
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_MEMORY_LIMIT=-1
 RUN composer install --optimize-autoloader --no-dev
 
 
