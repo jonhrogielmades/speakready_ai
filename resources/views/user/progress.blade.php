@@ -10,8 +10,8 @@
         <div class="d-flex gap-2 flex-wrap align-items-center">
             <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <!-- Feature 15: Progress Reports -->
-            <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
-            <button class="btn btn-outline-success"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
+            <button class="btn btn-outline-primary" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
+            <button class="btn btn-outline-success" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
         </div>
     </div>
 
@@ -196,14 +196,14 @@
                                 <td class="border-0 py-3 fw-bold">IT Interview</td>
                                 <td class="border-0 py-3">89%</td>
                                 <td class="border-0 py-3"><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span></td>
-                                <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">View Feedback</button></td>
+                                <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Feedback</button></td>
                             </tr>
                             <tr style="border-bottom: 1px solid var(--bd);">
                                 <td class="border-0 py-3">June 10, 2026</td>
                                 <td class="border-0 py-3 fw-bold">Job Interview</td>
                                 <td class="border-0 py-3">82%</td>
                                 <td class="border-0 py-3"><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span></td>
-                                <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">View Feedback</button></td>
+                                <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Feedback</button></td>
                             </tr>
                             @endif
                         </tbody>
@@ -361,6 +361,8 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Enable tooltips
@@ -464,6 +466,69 @@
                             row.style.display = 'none';
                         }
                     });
+                });
+            }
+
+            // Export PDF
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', function() {
+                    const element = document.querySelector('.db-section');
+                    const opt = {
+                        margin:       [0.5, 0.5, 0.5, 0.5],
+                        filename:     'progress_report.pdf',
+                        image:        { type: 'jpeg', quality: 0.98 },
+                        html2canvas:  { scale: 2, useCORS: true },
+                        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
+                    
+                    // Hide buttons during export
+                    const buttons = element.querySelectorAll('button');
+                    const originalDisplays = [];
+                    buttons.forEach(btn => {
+                        originalDisplays.push(btn.style.display);
+                        btn.style.display = 'none';
+                    });
+
+                    // Hide inputs like search during export
+                    const inputs = element.querySelectorAll('input');
+                    const originalInputDisplays = [];
+                    inputs.forEach(input => {
+                        originalInputDisplays.push(input.style.display);
+                        input.style.display = 'none';
+                    });
+                    
+                    html2pdf().set(opt).from(element).save().then(() => {
+                        buttons.forEach((btn, index) => {
+                            btn.style.display = originalDisplays[index];
+                        });
+                        inputs.forEach((input, index) => {
+                            input.style.display = originalInputDisplays[index];
+                        });
+                    });
+                });
+            }
+
+            // Export Excel
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', function() {
+                    const table = document.querySelector('#history-table table');
+                    if (table) {
+                        const clonedTable = table.cloneNode(true);
+                        const ths = clonedTable.querySelectorAll('th');
+                        if (ths.length > 0) ths[ths.length - 1].remove();
+                        const trs = clonedTable.querySelectorAll('tbody tr');
+                        trs.forEach(tr => {
+                            const tds = tr.querySelectorAll('td');
+                            if (tds.length > 0) tds[tds.length - 1].remove();
+                        });
+
+                        const wb = XLSX.utils.table_to_book(clonedTable, {sheet: "History"});
+                        XLSX.writeFile(wb, 'interview_history.xlsx');
+                    } else {
+                        alert("No history table found to export.");
+                    }
                 });
             }
         });

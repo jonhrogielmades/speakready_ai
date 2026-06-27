@@ -190,7 +190,7 @@
                           }
                       @endphp
                       <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
-                          <img src="https://cdn.simpleicons.org/{{ $slug }}/a1a1aa" alt="{{ $title }}" style="height:26px;">
+                          <i class="fa-solid fa-robot"></i>
                       </a>
                       <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
                    </div>

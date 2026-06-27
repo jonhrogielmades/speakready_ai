@@ -66,7 +66,7 @@
                         <td class="border-0 py-3 fw-bold">Job Interview</td>
                         <td class="border-0 py-3 fw-bold">88%</td>
                         <td class="border-0 py-3"><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span></td>
-                        <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-primary" style="border-radius: 8px;">View Details</button></td>
+                        <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-primary" style="border-radius: 8px;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Details</button></td>
                     </tr>
                     @endif
                 </tbody>

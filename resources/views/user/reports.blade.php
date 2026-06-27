@@ -30,8 +30,8 @@
         <div class="d-flex gap-2 flex-wrap align-items-center">
             <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i>Print Report</button>
-            <button class="btn btn-primary" onclick="window.print()"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
-            <button class="btn btn-success"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
+            <button class="btn btn-primary" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
+            <button class="btn btn-success" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
         </div>
     </div>
 
@@ -326,6 +326,8 @@
 
 <!-- Scripts for Charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const labels = ['Month 1', 'Month 2', 'Month 3', 'Current'];
@@ -378,6 +380,49 @@
                 }
             }
         });
+
+        // Export PDF
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', function() {
+                const element = document.getElementById('portfolioReport');
+                const opt = {
+                    margin:       [0.5, 0.5, 0.5, 0.5],
+                    filename:     'portfolio_report.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                
+                // Hide header actions during export
+                const headerActions = element.querySelector('.btn-no-print');
+                let originalDisplay = '';
+                if (headerActions) {
+                    originalDisplay = headerActions.style.display;
+                    headerActions.style.display = 'none';
+                }
+                
+                html2pdf().set(opt).from(element).save().then(() => {
+                    if (headerActions) {
+                        headerActions.style.display = originalDisplay;
+                    }
+                });
+            });
+        }
+
+        // Export Excel
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        if (exportExcelBtn) {
+            exportExcelBtn.addEventListener('click', function() {
+                const table = document.querySelector('#report-comparison table');
+                if (table) {
+                    const wb = XLSX.utils.table_to_book(table, {sheet: "Comparison"});
+                    XLSX.writeFile(wb, 'performance_comparison.xlsx');
+                } else {
+                    alert("No data available to export.");
+                }
+            });
+        }
     });
 </script>
 

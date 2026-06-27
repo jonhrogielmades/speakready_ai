@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin
         \App\Models\User::firstOrCreate(
-            ['email' => 'admin@nexusai.com'],
+            ['email' => 'admin@speakreadyai.com'],
             [
                 'name' => 'System Admin',
                 'password' => bcrypt('password'),
@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
 
         // Create Regular User
         \App\Models\User::firstOrCreate(
-            ['email' => 'user@nexusai.com'],
+            ['email' => 'user@speakreadyai.com'],
             [
                 'name' => 'Test User',
                 'password' => bcrypt('password'),
