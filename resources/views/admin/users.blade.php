@@ -93,6 +93,61 @@
         background: var(--pur);
         border: 2px solid var(--sf);
     }
+
+    /* Mobile Card-based Table Layout for Main User Table */
+    @media (max-width: 767px) {
+        #mainUsersTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #mainUsersTable thead {
+            display: none;
+        }
+        #mainUsersTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd);
+            padding: 12px;
+        }
+        #mainUsersTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        #mainUsersTable tbody td:last-child {
+            border-bottom: none;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainUsersTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3);
+            font-weight: 600;
+        }
+        #mainUsersTable tbody td:nth-child(2)::before { content: "Email"; }
+        #mainUsersTable tbody td:nth-child(3)::before { content: "Role"; }
+        #mainUsersTable tbody td:nth-child(4)::before { content: "Status"; }
+        #mainUsersTable tbody td:nth-child(5)::before { content: "Date Registered"; }
+        
+        #mainUsersTable tbody td:first-child {
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd);
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+        }
+        #mainUsersTable tbody td:first-child .d-flex {
+            width: 100%;
+        }
+        #mainUsersTable tbody td.text-end {
+            text-align: right;
+        }
+    }
 </style>
 
 <div class="db-section active" id="sec-admin-users">
@@ -210,8 +265,8 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="table custom-table mb-0 w-100">
+        <div class="table-responsive" id="mainUsersTableWrapper">
+            <table class="table custom-table mb-0 w-100" id="mainUsersTable">
                 <thead>
                     <tr>
                         <th>Profile & Name</th>
