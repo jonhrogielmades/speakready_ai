@@ -183,27 +183,35 @@ EOT;
 
     public static function chatMessage($message, $history = [], $provider = 'gemini')
     {
-        try {
-            switch ($provider) {
-                case 'gemini':
-                    return self::chatGemini($message, $history);
-                case 'cohere':
-                    return self::chatCohere($message, $history);
-                case 'groq':
-                    return self::chatGroq($message, $history);
-                case 'openrouter':
-                    return self::chatOpenRouter($message, $history);
-                case 'claude':
-                    return self::chatClaude($message, $history);
-                case 'wisdomgate':
-                    return self::chatWisdomGate($message, $history);
-                default:
-                    return self::chatGemini($message, $history);
-            }
-        } catch (\Exception $e) {
-            Log::error('AI Chat Error: ' . $e->getMessage());
-            return "I'm sorry, I encountered an error processing your request.";
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', $provider);
+        $providers = array_filter(array_map('trim', explode(',', $priorityString)));
+        if (empty($providers)) {
+            $providers = [$provider];
         }
+
+        $fallbackError = "Sorry, I am having trouble connecting to my brain right now.";
+
+        foreach ($providers as $currentProvider) {
+            try {
+                $response = null;
+                switch ($currentProvider) {
+                    case 'gemini': $response = self::chatGemini($message, $history); break;
+                    case 'cohere': $response = self::chatCohere($message, $history); break;
+                    case 'groq': $response = self::chatGroq($message, $history); break;
+                    case 'openrouter': $response = self::chatOpenRouter($message, $history); break;
+                    case 'claude': $response = self::chatClaude($message, $history); break;
+                    case 'wisdomgate': $response = self::chatWisdomGate($message, $history); break;
+                }
+
+                if ($response !== null && $response !== $fallbackError && $response !== "I'm sorry, I encountered an error processing your request.") {
+                    return $response;
+                }
+            } catch (\Exception $e) {
+                Log::error("AI Chat Error ({$currentProvider}): " . $e->getMessage());
+            }
+        }
+
+        return $fallbackError;
     }
 
     private static function truncateText($text, $maxWords = 800)
