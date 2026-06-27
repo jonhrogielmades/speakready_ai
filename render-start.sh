@@ -8,6 +8,9 @@ php artisan view:cache
 # Run database migrations (forces it in production)
 php artisan migrate --force
 
+# Seed the database automatically (uses firstOrCreate so it's safe to run multiple times)
+php artisan db:seed --force
+
 # Start PHP-FPM in the background
 php-fpm -D
 
