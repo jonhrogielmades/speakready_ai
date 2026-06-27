@@ -26,6 +26,65 @@
     .stat-badge.primary { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
     .stat-badge.secondary { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
     .chart-container { position: relative; height: 250px; width: 100%; }
+
+    /* Mobile Card-based Table Layout for Main Sessions Table */
+    @media (max-width: 767px) {
+        #mainSessionsTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #mainSessionsTable thead {
+            display: none;
+        }
+        #mainSessionsTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd);
+            padding: 12px;
+        }
+        #mainSessionsTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        #mainSessionsTable tbody td:last-child {
+            border-bottom: none;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainSessionsTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3);
+            font-weight: 600;
+        }
+        #mainSessionsTable tbody td:nth-child(1)::before { content: "ID"; }
+        #mainSessionsTable tbody td:nth-child(3)::before { content: "Category"; }
+        #mainSessionsTable tbody td:nth-child(4)::before { content: "Status"; }
+        #mainSessionsTable tbody td:nth-child(5)::before { content: "Score"; }
+        #mainSessionsTable tbody td:nth-child(6)::before { content: "Duration"; }
+        #mainSessionsTable tbody td:nth-child(7)::before { content: "Date"; }
+        
+        #mainSessionsTable tbody td:nth-child(2) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd);
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+        }
+        #mainSessionsTable tbody td:nth-child(2)::before { content: none; }
+        #mainSessionsTable tbody td:nth-child(2) .d-flex {
+            width: 100%;
+        }
+        #mainSessionsTable tbody td.text-end {
+            text-align: right;
+        }
+    }
 </style>
 
 <div class="db-section active">
@@ -161,8 +220,8 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="table custom-table mb-0 w-100">
+        <div class="table-responsive" id="mainSessionsTableWrapper">
+            <table class="table custom-table mb-0 w-100" id="mainSessionsTable">
                 <thead>
                     <tr>
                         <th>ID</th>
