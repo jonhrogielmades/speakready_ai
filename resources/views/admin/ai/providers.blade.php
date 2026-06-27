@@ -2,6 +2,116 @@
 
 @section('content')
 <style>
+    /* Mobile Card-based Table Layout for Module Usage Table */
+    @media (max-width: 767px) {
+        #moduleUsageTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #moduleUsageTable thead {
+            display: none;
+        }
+        #moduleUsageTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #moduleUsageTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #moduleUsageTable tbody td:last-child {
+            border-bottom: none !important;
+        }
+        #moduleUsageTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #moduleUsageTable tbody td:nth-child(1)::before { content: "Module Name"; }
+        #moduleUsageTable tbody td:nth-child(2)::before { content: "Requests"; }
+        
+        #moduleUsageTable tbody td:nth-child(1) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #moduleUsageTable tbody td:nth-child(1)::before { content: none; }
+    }
+
+    /* Mobile Card-based Table Layout for Main Providers Table */
+    @media (max-width: 767px) {
+        #mainProvidersTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #mainProvidersTable thead {
+            display: none;
+        }
+        #mainProvidersTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #mainProvidersTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #mainProvidersTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainProvidersTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #mainProvidersTable tbody td:nth-child(1)::before { content: "Provider Name"; }
+        #mainProvidersTable tbody td:nth-child(2)::before { content: "Status"; }
+        #mainProvidersTable tbody td:nth-child(3)::before { content: "API Key"; }
+        #mainProvidersTable tbody td:nth-child(4)::before { content: "Role"; }
+        
+        #mainProvidersTable tbody td:nth-child(1) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+        #mainProvidersTable tbody td:nth-child(1)::before { content: none; }
+    }
     .premium-card {
         background: var(--sf, #1e1e2d);
         border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
@@ -110,8 +220,8 @@
             <!-- Feature 7: Module Requests Breakdown -->
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-4">Requests by Module</h6>
-                <div class="table-responsive">
-                    <table class="table custom-table mb-0 w-100">
+                <div class="table-responsive" id="moduleUsageTableWrapper">
+                    <table class="table custom-table mb-0 w-100" id="moduleUsageTable">
                         <thead>
                             <tr>
                                 <th>Module Name</th>
@@ -201,8 +311,8 @@
 
     <!-- Providers Table -->
     <div class="premium-card mb-4">
-        <div class="table-responsive">
-            <table class="table custom-table mb-0 w-100">
+        <div class="table-responsive" id="mainProvidersTableWrapper">
+            <table class="table custom-table mb-0 w-100" id="mainProvidersTable">
                 <thead>
                     <tr>
                         <th>Provider Name</th>

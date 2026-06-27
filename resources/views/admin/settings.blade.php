@@ -2,6 +2,62 @@
 
 @section('content')
 <style>
+    /* Mobile Card-based Table Layout for Main Audit Logs Table */
+    @media (max-width: 767px) {
+        #mainAuditLogsTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #mainAuditLogsTable thead {
+            display: none;
+        }
+        #mainAuditLogsTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #mainAuditLogsTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #mainAuditLogsTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainAuditLogsTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #mainAuditLogsTable tbody td:nth-child(1)::before { content: "Date"; }
+        #mainAuditLogsTable tbody td:nth-child(2)::before { content: "Action"; }
+        #mainAuditLogsTable tbody td:nth-child(3)::before { content: "User"; }
+        
+        #mainAuditLogsTable tbody td:nth-child(2) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+        #mainAuditLogsTable tbody td:nth-child(2)::before { content: none; }
+    }
+
     /* Admin Premium Styles */
     .premium-card {
         background: var(--sf, #1e1e2d);
@@ -508,8 +564,9 @@
                         <div class="premium-card">
                             <h5 class="fw-bold mb-4">15. Audit Logs ⭐</h5>
                             <p class="text-muted">Recent system changes tracked by the audit system.</p>
-                            <table class="table table-dark table-hover text-white">
-                                <thead>
+                            <div class="table-responsive" id="mainAuditLogsTableWrapper">
+                                <table class="table table-dark table-hover text-white" id="mainAuditLogsTable">
+                                    <thead>
                                     <tr>
                                         <th>Date</th>
                                         <th>Action</th>
@@ -522,7 +579,8 @@
                                     <tr><td>{{ now()->subDays(2)->format('Y-m-d H:i') }}</td><td>Question Added</td><td>Admin</td></tr>
                                     <tr><td>{{ now()->subDays(3)->format('Y-m-d H:i') }}</td><td>Module Updated</td><td>Admin</td></tr>
                                 </tbody>
-                            </table>
+                                </table>
+                            </div>
                         </div>
                     </div>
 

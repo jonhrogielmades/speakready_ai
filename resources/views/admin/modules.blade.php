@@ -1,5 +1,66 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
+<style>
+    /* Mobile Card-based Table Layout for Main Modules Table */
+    @media (max-width: 767px) {
+        #mainModulesTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+            padding: 12px !important;
+        }
+        #modulesTable thead {
+            display: none;
+        }
+        #modulesTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #modulesTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #modulesTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #modulesTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #modulesTable tbody td:nth-child(2)::before { content: "Category"; }
+        #modulesTable tbody td:nth-child(3)::before { content: "Difficulty"; }
+        #modulesTable tbody td:nth-child(4)::before { content: "Status"; }
+        #modulesTable tbody td:nth-child(5)::before { content: "Views"; }
+        
+        #modulesTable tbody td:nth-child(1) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #modulesTable tbody td:nth-child(1)::before { content: none; }
+    }
+</style>
 <div class="db-section active" id="sec-admin-modules">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
@@ -40,7 +101,7 @@
     </div>
 
     <!-- Module List Table -->
-    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
+    <div id="mainModulesTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <div class="d-flex justify-content-between mb-3 align-items-center">
             <h6 style="margin:0;font-weight:600;">Module List</h6>
             <div class="d-flex gap-2">

@@ -9,6 +9,64 @@
         padding: 24px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
+
+    /* Mobile Card-based Table Layout for Main Archive Table */
+    @media (max-width: 767px) {
+        #mainArchiveTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #mainArchiveTable thead {
+            display: none;
+        }
+        #mainArchiveTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #mainArchiveTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #mainArchiveTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainArchiveTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #mainArchiveTable tbody td:nth-child(1)::before { content: "ID"; }
+        #mainArchiveTable tbody td:nth-child(3)::before { content: "Category"; }
+        #mainArchiveTable tbody td:nth-child(4)::before { content: "Archived Date"; }
+        
+        #mainArchiveTable tbody td:nth-child(2) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #mainArchiveTable tbody td:nth-child(2)::before { content: none; }
+    }
 </style>
 
 <div class="db-section active">
@@ -39,8 +97,8 @@
             </div>
         </form>
 
-        <div class="table-responsive">
-            <table class="table custom-table mb-0 w-100">
+        <div class="table-responsive" id="mainArchiveTableWrapper">
+            <table class="table custom-table mb-0 w-100" id="mainArchiveTable">
                 <thead>
                     <tr>
                         <th>ID</th>

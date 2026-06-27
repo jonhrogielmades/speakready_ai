@@ -1,6 +1,75 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
+<style>
+    /* Mobile Card-based Table Layout for Main Complaints Table */
+    @media (max-width: 767px) {
+        #mainComplaintsTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+        }
+        #mainComplaintsTable thead {
+            display: none;
+        }
+        #mainComplaintsTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #mainComplaintsTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #mainComplaintsTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainComplaintsTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #mainComplaintsTable tbody td:nth-child(1)::before { content: "Complaint ID"; }
+        #mainComplaintsTable tbody td:nth-child(3)::before { content: "Reason"; }
+        #mainComplaintsTable tbody td:nth-child(4)::before { content: "Notes"; }
+        #mainComplaintsTable tbody td:nth-child(5)::before { content: "Reported Date"; }
+        #mainComplaintsTable tbody td:nth-child(6)::before { content: "Status"; }
+        
+        #mainComplaintsTable tbody td:nth-child(2) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+        #mainComplaintsTable tbody td:nth-child(2)::before { content: none; }
+        
+        #mainComplaintsTable tbody td:nth-child(4) {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #mainComplaintsTable tbody td:nth-child(4) .text-truncate {
+            max-width: 100% !important;
+            white-space: normal;
+            text-align: left;
+        }
+    }
+</style>
 <div class="container-fluid py-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -20,8 +89,8 @@
 
     <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
         <div class="card-body p-4">
-            <div class="table-responsive">
-                <table class="table align-middle" style="color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
+            <div class="table-responsive" id="mainComplaintsTableWrapper">
+                <table class="table align-middle" id="mainComplaintsTable" style="color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                     <thead style="background: transparent;">
                         <tr>
                             <th style="color: var(--tx3); border-bottom: 1px solid var(--bd);">Complaint ID</th>
