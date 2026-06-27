@@ -465,7 +465,7 @@
                            <div><h4 class="fs-6 fw-bold mb-1">Improve Communication Skills</h4><p style="font-size:.85rem;color:var(--tx2)">Enhance how you articulate your thoughts and experiences.</p></div>
                         </li>
                         <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-shield-halved"></i></div>
+                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i></div>
                            <div><h4 class="fs-6 fw-bold mb-1">Build Interview Confidence</h4><p style="font-size:.85rem;color:var(--tx2)">Overcome anxiety through repeated, low-stakes practice.</p></div>
                         </li>
                         <li class="d-flex align-items-start gap-3">
