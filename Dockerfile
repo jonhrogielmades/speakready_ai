@@ -32,7 +32,7 @@ COPY . /var/www
 # Install dependencies without memory limits
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_MEMORY_LIMIT=-1
-RUN composer install --optimize-autoloader --no-dev
+RUN composer install --optimize-autoloader --no-dev --no-scripts
 
 
 # Copy Nginx config

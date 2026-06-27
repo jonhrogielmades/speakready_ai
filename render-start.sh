@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Run skipped composer scripts
+php artisan package:discover --ansi
+
 # Clear and cache configurations
 php artisan config:cache
 php artisan route:cache
