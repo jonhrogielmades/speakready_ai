@@ -123,19 +123,53 @@
         transform: scale(1.1);
         box-shadow: 0 15px 35px rgba(59,130,246,0.5);
     }
+    
+    /* Mobile Responsiveness */
+    @media (max-width: 767px) {
+        .db-top-search {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .d-flex.align-items-center.gap-3.flex-wrap {
+            width: 100%;
+        }
+        .d-flex.align-items-center.gap-3.flex-wrap > button {
+            width: 100%;
+            justify-content: center;
+        }
+        .ll-stat-val {
+            font-size: 1.5rem;
+        }
+        .ll-stat-card {
+            padding: 15px;
+        }
+        .ll-ai-fab {
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+        #nav-pills-container {
+            padding-bottom: 10px;
+        }
+        #nav-pills-container::-webkit-scrollbar {
+            display: none;
+        }
+    }
 </style>
 
 <div class="db-section active">
     <!-- Header & Navigation -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <h3 style="font-weight:700;color:var(--tx);margin:0">Learning Lab <i class="fa-solid fa-flask" style="color:var(--pur);font-size:1.2rem"></i></h3>
             <p style="color:var(--tx3);margin-top:5px;">Master your interview skills with structured, AI-powered learning.</p>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="db-top-search" style="width:300px;background:var(--sf);border:1px solid var(--bd); margin:0;">
+        <div class="d-flex align-items-center gap-3 flex-wrap" style="flex: 1; min-width: 250px; justify-content: flex-end;">
+            <div class="db-top-search" style="width:100%; max-width:300px; background:var(--sf);border:1px solid var(--bd); margin:0;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Search lessons, quizzes, topics...">
+                <input type="text" placeholder="Search lessons, quizzes, topics..." style="width:100%;">
             </div>
             <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:var(--pur)"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
         </div>
@@ -151,28 +185,28 @@
 
     <!-- Dashboard Stats -->
     <div id="dashboard-stats" class="row g-4 mb-4">
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-sm-6 col-md-3">
             <div class="ll-stat-card">
                 <i class="fa-solid fa-layer-group" style="font-size:1.5rem;color:var(--tx3)"></i>
                 <div class="ll-stat-val">24</div>
                 <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Total Lessons</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-sm-6 col-md-3">
             <div class="ll-stat-card">
                 <i class="fa-solid fa-circle-check" style="font-size:1.5rem;color:#34d399"></i>
                 <div class="ll-stat-val">8</div>
                 <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Completed (33%)</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-sm-6 col-md-3">
             <div class="ll-stat-card">
                 <i class="fa-solid fa-fire" style="font-size:1.5rem;color:#f59e0b"></i>
                 <div class="ll-stat-val">5 <span style="font-size:1rem;color:var(--tx3)">Days</span></div>
                 <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Current Streak</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-12 col-sm-6 col-md-3">
             <div class="ll-stat-card">
                 <i class="fa-solid fa-medal" style="font-size:1.5rem;color:#eab308"></i>
                 <div class="ll-stat-val">3</div>
