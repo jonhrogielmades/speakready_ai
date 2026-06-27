@@ -531,6 +531,19 @@
          </form>
       </div>
 
+      <!-- ===== EXIT APP CONFIRMATION MODAL ===== -->
+      <div id="exitAppModal" style="display:none; position:fixed; inset:0; z-index:1060; background:rgba(0,0,0,0.6); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); align-items:center; justify-content:center; animation: mobFadeIn 0.2s ease;">
+         <div style="background:var(--bg2); width:85%; max-width:320px; border-radius:20px; padding:24px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.5); border:1px solid var(--bd);">
+            <i class="fa-solid fa-person-walking-arrow-right mb-3" style="font-size:2.5rem; color:#f87171;"></i>
+            <h4 style="color:var(--tx); font-weight:700; margin-bottom:10px; font-size:1.25rem;">Exit App?</h4>
+            <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:24px;">Are you sure you want to exit SpeakReady AI?</p>
+            <div class="d-flex gap-3">
+               <button class="btn w-100" style="border-radius:12px; font-weight:600; background:transparent; border:1px solid var(--bd2); color:var(--tx2);" onclick="confirmExitApp('no')">No</button>
+               <button class="btn btn-danger w-100" style="border-radius:12px; font-weight:600; background:#f87171; border:none; color:#fff;" onclick="confirmExitApp('yes')">Yes, Exit</button>
+            </div>
+         </div>
+      </div>
+
       <!-- ===== PWA INSTALL PROMPT ===== -->
       <div id="pwa-install-prompt">
          <h5>Install SpeakReady AI</h5>
@@ -596,6 +609,37 @@
                document.getElementById('mobSunI').style.display = '';
             }
          })();
+
+         // Exit App Confirmation Logic for Physical Back Button
+         let allowAppExit = false;
+         window.addEventListener('load', function() {
+            if (window.location.pathname === '/dashboard') {
+               window.history.pushState('fake_exit_state', null, '');
+               
+               window.addEventListener('popstate', function(event) {
+                  if (allowAppExit) return;
+                  
+                  const exitModal = document.getElementById('exitAppModal');
+                  if (exitModal) {
+                     exitModal.style.display = 'flex';
+                  }
+                  
+                  // Trap the user again
+                  window.history.pushState('fake_exit_state', null, '');
+               });
+            }
+         });
+
+         function confirmExitApp(choice) {
+            const exitModal = document.getElementById('exitAppModal');
+            if (exitModal) exitModal.style.display = 'none';
+            
+            if (choice === 'yes') {
+               allowAppExit = true;
+               window.history.go(-2);
+               setTimeout(() => { window.close(); }, 300);
+            }
+         }
 
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
