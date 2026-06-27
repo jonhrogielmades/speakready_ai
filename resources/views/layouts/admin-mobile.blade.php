@@ -11,7 +11,7 @@
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/logo.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <link href="{{ asset('css/aos.css') }}" rel="stylesheet"/>
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>

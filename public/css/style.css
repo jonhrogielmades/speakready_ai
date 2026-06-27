@@ -43,7 +43,7 @@ html {
 }
 
 body {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   background: var(--bg);
   color: var(--tx);
   overflow-x: hidden;
@@ -136,7 +136,7 @@ a {
   background: var(--grad);
   border: none;
   color: #fff;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 600;
   border-radius: 12px;
   transition: transform 0.25s, box-shadow 0.25s, background-color 0.25s, color 0.25s;
@@ -153,7 +153,7 @@ a {
   background: transparent;
   border: 1px solid var(--bd2);
   color: var(--tx);
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 500;
   border-radius: 12px;
   transition: border-color 0.25s, background-color 0.25s, color 0.25s;
@@ -371,7 +371,7 @@ a {
   background: transparent;
   border: none;
   width: 100%;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   text-align: left;
   transition: background-color 0.2s, color 0.2s;
 }
@@ -605,7 +605,7 @@ a {
   background: transparent;
   border: none;
   width: 100%;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   text-align: left;
   transition: background-color 0.2s, color 0.2s;
 }
@@ -966,7 +966,7 @@ a {
 .acco .accordion-button {
   background: var(--sf);
   color: var(--tx);
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 600;
   font-size: 0.94rem;
   box-shadow: none;
@@ -1038,7 +1038,7 @@ a {
   background: var(--sf);
   color: var(--tx);
   font-size: 0.83rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   outline: none;
   flex: 1;
 }
@@ -1082,7 +1082,7 @@ a {
 }
 
 .offcanvas-title {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-weight: 700;
   color: var(--tx);
 }
@@ -1103,7 +1103,7 @@ a {
   background: var(--sf);
   color: var(--tx);
   font-size: 0.9rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   outline: none;
   transition: 0.2s;
   margin-bottom: 14px;
@@ -1142,7 +1142,7 @@ a {
   border: 1px solid var(--bd2);
   background: var(--sf);
   color: var(--tx2);
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   font-size: 0.88rem;
   font-weight: 500;
   transition: 0.2s;
@@ -1171,7 +1171,7 @@ a {
   border-radius: 9px;
   font-size: 0.88rem;
   font-weight: 600;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   cursor: pointer;
   transition: 0.2s;
   background: transparent;
@@ -1247,7 +1247,7 @@ a {
   background: var(--sf);
   color: var(--tx);
   font-size: 0.85rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   outline: none;
 }
 
@@ -1351,7 +1351,7 @@ a {
   border: none;
   width: 100%;
   background: transparent;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   text-align: left;
   transition: 0.2s;
   position: relative;
@@ -1610,7 +1610,7 @@ a {
   background: var(--bg3);
   color: var(--tx);
   font-size: 0.875rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   outline: none;
   resize: none;
   max-height: 100px;
@@ -1909,7 +1909,7 @@ a {
   border: none;
   background: transparent;
   width: calc(100% - 16px);
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Poppins", sans-serif;
   text-align: left;
 }
 
