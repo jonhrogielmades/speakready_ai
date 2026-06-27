@@ -168,7 +168,8 @@ class AuthController extends Controller
             Auth::login($user);
 
             // Send an email notification for the Google login
-            $user->notify(new \App\Notifications\GoogleLoginAlert());
+            // Temporarily disabled to prevent 504 Gateway Timeout if SMTP is not configured or blocked on Render
+            // $user->notify(new \App\Notifications\GoogleLoginAlert());
 
             if (in_array($user->status, ['inactive', 'suspended'])) {
                 Auth::logout();
