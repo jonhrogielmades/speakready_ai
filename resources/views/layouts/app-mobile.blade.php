@@ -369,68 +369,14 @@
          .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #444; background: transparent; color: #fff; font-weight: 600; cursor: pointer; }
          .lm .pwa-btn-no { border-color: #ccc; color: #333; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
-
-         #custom-splash {
-            position: fixed; inset: 0; z-index: 99999;
-            background: var(--bg, #08080f);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-         }
-         #custom-splash.fade-out { opacity: 0; visibility: hidden; }
-         .splash-logo-container {
-            position: relative; width: 120px; height: 120px;
-            display: flex; align-items: center; justify-content: center;
-            margin-bottom: 30px;
-         }
-         .splash-circle {
-            position: absolute; width: 100%; height: 100%;
-            border-radius: 50%;
-            border: 4px solid var(--bd, #1e293b);
-            border-top-color: #60a5fa; border-left-color: #60a5fa;
-            animation: mobSpin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-         }
-         .splash-logo {
-            width: 70px; height: 70px; object-fit: contain;
-            animation: mobPulse 1.5s ease-in-out infinite;
-         }
-         .splash-text {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem; font-weight: 700; color: var(--tx, #fff);
-            opacity: 0; transform: translateY(10px);
-            animation: splashFadeInUp 0.5s ease forwards 0.3s;
-         }
-         .splash-subtext {
-            font-size: 0.95rem; color: var(--tx3, #aaa);
-            opacity: 0; transform: translateY(10px);
-            animation: splashFadeInUp 0.5s ease forwards 0.5s;
-         }
-         @keyframes splashFadeInUp { to { opacity: 1; transform: translateY(0); } }
-         @keyframes mobSpin { 100% { transform: rotate(360deg); } }
-         @keyframes mobPulse { 0%, 100% { transform: scale(0.9); opacity: 0.9; } 50% { transform: scale(1.1); opacity: 1; } }
       </style>
       <script>
          if (localStorage.getItem('theme') === 'light') {
              document.documentElement.classList.add('lm');
          }
-         window.addEventListener('load', function() {
-            setTimeout(() => {
-               const splash = document.getElementById('custom-splash');
-               if (splash) splash.classList.add('fade-out');
-            }, 800);
-         });
       </script>
    </head>
    <body>
-
-      <!-- ===== CUSTOM SPLASH SCREEN ===== -->
-      <div id="custom-splash">
-         <div class="splash-logo-container">
-            <div class="splash-circle"></div>
-            <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="splash-logo">
-         </div>
-         <h1 class="splash-text">SpeakReady AI</h1>
-         <p class="splash-subtext">Welcome back, {{ Auth::user()->name ?? 'Guest' }}!</p>
-      </div>
 
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">
