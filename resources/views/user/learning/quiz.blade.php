@@ -129,46 +129,47 @@
         <a href="{{ route('user.learning.quiz') }}" class="ll-nav-pill active"><i class="fa-solid fa-brain"></i> Mini Quizzes</a>
     </div>
 
-    <div class="quiz-container">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <span style="color:var(--tx3);font-size:0.9rem;font-weight:600;text-transform:uppercase">Question 2 of 5</span>
-            <span style="color:var(--pur);font-size:0.9rem;font-weight:700">Topic: Body Language</span>
-        </div>
-        
-        <div class="quiz-progress-bar">
-            <div class="quiz-progress-fill"></div>
-        </div>
+    <div class="quiz-container" id="quiz-wrapper">
+        @if(count($questions) > 0)
+            <div id="quiz-content">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span id="question-progress" style="color:var(--tx3);font-size:0.9rem;font-weight:600;text-transform:uppercase">Question 1 of {{ count($questions) }}</span>
+                    <span id="question-topic" style="color:var(--pur);font-size:0.9rem;font-weight:700">Mini Quiz</span>
+                </div>
+                
+                <div class="quiz-progress-bar">
+                    <div id="quiz-progress-fill" class="quiz-progress-fill" style="width: 0%;"></div>
+                </div>
 
-        <h4 style="color:var(--tx);font-weight:700;margin-bottom:30px;line-height:1.4">
-            During an in-person interview, what is the best approach regarding eye contact with a panel of three interviewers?
-        </h4>
+                <h4 id="question-text" style="color:var(--tx);font-weight:700;margin-bottom:30px;line-height:1.4">
+                    <!-- Question text injected here -->
+                </h4>
 
-        <div class="options-container mb-5">
-            <div class="option-card" onclick="selectOption(this)">
-                <div class="option-letter">A</div>
-                <div class="option-text">Stare continuously at the person who asked the question.</div>
-            </div>
-            
-            <div class="option-card selected" onclick="selectOption(this)">
-                <div class="option-letter">B</div>
-                <div class="option-text">Start by looking at the person who asked the question, then periodically sweep your eyes to the other panelists.</div>
-            </div>
-            
-            <div class="option-card" onclick="selectOption(this)">
-                <div class="option-letter">C</div>
-                <div class="option-text">Look slightly above their heads so you don't get intimidated.</div>
-            </div>
-            
-            <div class="option-card" onclick="selectOption(this)">
-                <div class="option-letter">D</div>
-                <div class="option-text">Only look at the most senior person in the room to show respect.</div>
-            </div>
-        </div>
+                <div id="options-container" class="options-container mb-5">
+                    <!-- Options injected here -->
+                </div>
 
-        <div class="d-flex justify-content-between">
-            <button class="btn btn-outline-secondary px-4" style="border-radius:10px">Previous</button>
-            <button class="btn bgrd px-5" style="border-radius:10px">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
-        </div>
+                <div class="d-flex justify-content-between">
+                    <div></div> <!-- Spacer for alignment -->
+                    <button class="btn bgrd px-5" style="border-radius:10px" id="next-btn" onclick="nextQuestion()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                </div>
+            </div>
+
+            <div id="quiz-results" style="display: none; text-align: center;">
+                <h3 style="font-weight:700;color:var(--tx);margin-bottom:20px;">Quiz Complete! 🎉</h3>
+                <div style="font-size: 3rem; font-weight: 800; color: var(--pur); margin-bottom: 20px;">
+                    <span id="final-score">0</span> / <span id="total-questions">0</span>
+                </div>
+                <p id="score-message" style="color:var(--tx2);font-size:1.1rem;margin-bottom:30px;"></p>
+                <button class="btn bgrd px-5 py-2" style="border-radius:10px; font-size:1.1rem" onclick="window.location.reload()">Take Another Quiz</button>
+            </div>
+        @else
+            <div style="text-align: center; padding: 40px 0;">
+                <i class="fa-solid fa-brain mb-3" style="font-size: 3rem; color: var(--bd);"></i>
+                <h4 style="color:var(--tx);font-weight:600">No quizzes available yet.</h4>
+                <p style="color:var(--tx3);">Check back later once more learning modules and questions are added!</p>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -177,13 +178,119 @@
 </a>
 
 <script>
-    function selectOption(element) {
+    const questions = @json($questions ?? []);
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedAnswer = null;
+
+    if (questions.length > 0) {
+        loadQuestion(0);
+    }
+
+    function loadQuestion(index) {
+        const question = questions[index];
+        selectedAnswer = null;
+        
+        document.getElementById('question-progress').innerText = `Question ${index + 1} of ${questions.length}`;
+        const progressPercentage = ((index) / questions.length) * 100;
+        document.getElementById('quiz-progress-fill').style.width = `${progressPercentage}%`;
+        
+        document.getElementById('question-text').innerText = question.question_text;
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        // Handle options (safely parse if string)
+        let options = [];
+        try {
+            options = typeof question.options === 'string' ? JSON.parse(question.options) : question.options;
+        } catch(e) {
+            options = [];
+        }
+        
+        if (!Array.isArray(options)) options = Object.values(options || {});
+
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        
+        options.forEach((opt, i) => {
+            const letter = letters[i] || '-';
+            const optDiv = document.createElement('div');
+            optDiv.className = 'option-card';
+            
+            // Escape single quotes for inline onclick handler
+            const safeOpt = String(opt).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+            optDiv.setAttribute('onclick', `selectOption(this, '${safeOpt}')`);
+            
+            optDiv.innerHTML = `
+                <div class="option-letter">${letter}</div>
+                <div class="option-text">${opt}</div>
+            `;
+            optionsContainer.appendChild(optDiv);
+        });
+
+        // Update button text on last question
+        const nextBtn = document.getElementById('next-btn');
+        if (index === questions.length - 1) {
+            nextBtn.innerHTML = 'Finish Quiz <i class="fa-solid fa-check ms-2"></i>';
+        } else {
+            nextBtn.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right ms-2"></i>';
+        }
+    }
+
+    function selectOption(element, answer) {
         // Remove selected class from all options
-        const options = document.querySelectorAll('.option-card');
-        options.forEach(opt => opt.classList.remove('selected'));
+        const optionsNodes = document.querySelectorAll('.option-card');
+        optionsNodes.forEach(opt => opt.classList.remove('selected'));
         
         // Add selected class to clicked option
         element.classList.add('selected');
+        // Unescape the safe HTML entities to match exact string
+        selectedAnswer = answer.replace(/&quot;/g, '"');
+    }
+
+    function nextQuestion() {
+        if (!selectedAnswer) {
+            alert('Please select an answer before proceeding.');
+            return;
+        }
+
+        // Check if correct
+        const currentQuestion = questions[currentQuestionIndex];
+        // Exact string match check
+        if (selectedAnswer === currentQuestion.correct_answer) {
+            score++;
+        }
+
+        currentQuestionIndex++;
+
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion(currentQuestionIndex);
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById('quiz-content').style.display = 'none';
+        document.getElementById('quiz-results').style.display = 'block';
+        
+        // Final progress bar fill
+        document.getElementById('quiz-progress-fill').style.width = '100%';
+        
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('total-questions').innerText = questions.length;
+        
+        const percentage = (score / questions.length) * 100;
+        const messageEl = document.getElementById('score-message');
+        
+        if (percentage >= 80) {
+            messageEl.innerText = "Excellent work! You've mastered this topic.";
+            messageEl.style.color = "#34d399";
+        } else if (percentage >= 50) {
+            messageEl.innerText = "Good job! Keep practicing to get a perfect score.";
+        } else {
+            messageEl.innerText = "Don't give up! Review the study materials and try again.";
+        }
     }
 </script>
 

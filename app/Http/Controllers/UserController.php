@@ -267,7 +267,8 @@ class UserController extends Controller
     }
 
     public function learningQuiz() {
-        return view('user.learning.quiz');
+        $questions = \App\Models\ModuleQuizQuestion::inRandomOrder()->limit(5)->get();
+        return view('user.learning.quiz', compact('questions'));
     }
 
     public function learningAssistant() {
