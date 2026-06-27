@@ -1,5 +1,64 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
+<style>
+    /* Mobile Card-based Table Layout for Main Categories Table */
+    @media (max-width: 767px) {
+        #mainCategoriesTableWrapper {
+            overflow-x: visible !important;
+            -webkit-overflow-scrolling: auto !important;
+            padding: 12px !important;
+        }
+        #mainCategoriesTable thead {
+            display: none;
+        }
+        #mainCategoriesTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #mainCategoriesTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+        }
+        #mainCategoriesTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+        }
+        #mainCategoriesTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #mainCategoriesTable tbody td:nth-child(1)::before { content: "ID"; }
+        #mainCategoriesTable tbody td:nth-child(3)::before { content: "Description"; }
+        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Questions"; }
+        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Status"; }
+        
+        #mainCategoriesTable tbody td:nth-child(2) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+        }
+        #mainCategoriesTable tbody td:nth-child(2)::before { content: none; }
+    }
+</style>
 <div class="db-section active" id="sec-admin-categories">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
@@ -16,8 +75,8 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
-        <table class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
+    <div id="mainCategoriesTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
+        <table id="mainCategoriesTable" class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">ID</th>
