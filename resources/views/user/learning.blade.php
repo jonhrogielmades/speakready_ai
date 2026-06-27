@@ -133,10 +133,7 @@
         .d-flex.align-items-center.gap-3.flex-wrap {
             width: 100%;
         }
-        .d-flex.align-items-center.gap-3.flex-wrap > button {
-            width: 100%;
-            justify-content: center;
-        }
+
         .ll-stat-val {
             font-size: 1.5rem;
         }
@@ -171,7 +168,7 @@
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" placeholder="Search lessons, quizzes, topics..." style="width:100%;">
             </div>
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:var(--pur)"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
         </div>
     </div>
 
