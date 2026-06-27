@@ -103,6 +103,7 @@ class AdminUserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,user',
             'status' => 'required|in:active,inactive,suspended',
         ]);
@@ -113,6 +114,10 @@ class AdminUserController extends Controller
             'is_admin' => $request->role === 'admin',
             'status' => $request->status,
         ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
 
         if ($request->status === 'active') {
             $data['reactivation_requested_at'] = null;

@@ -646,6 +646,15 @@
                         <label class="form-label text-muted">Email</label>
                         <input type="email" name="email" id="editUserEmail" class="form-control" required>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Password (Leave blank to keep current)</label>
+                        <div class="input-group">
+                            <input type="password" name="password" id="editUserPassword" class="form-control" minlength="8">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editUserPassword', this)">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-6 mb-3">
                             <label class="form-label text-muted">Role</label>
@@ -780,11 +789,26 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
     function editUser(id, name, email, role, status) {
         const form = document.getElementById('editUserForm');
         form.action = `/admin/users/${id}`;
         document.getElementById('editUserName').value = name;
         document.getElementById('editUserEmail').value = email;
+        document.getElementById('editUserPassword').value = ''; // Clear password field
         document.getElementById('editUserRole').value = role;
         document.getElementById('editUserStatus').value = status;
         
