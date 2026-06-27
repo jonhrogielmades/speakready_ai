@@ -131,7 +131,7 @@
                         @if($tUser->profile_photo_path)
                             @php
                                 $photoPath = $tUser->profile_photo_path;
-                                $photoUrl = str_starts_with($photoPath, 'http') ? $photoPath : asset('storage/' . $photoPath);
+                                $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                             @endphp
                             <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;">
                                 <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
@@ -159,7 +159,7 @@
                         @if($nUser->profile_photo_path)
                             @php
                                 $photoPath = $nUser->profile_photo_path;
-                                $photoUrl = str_starts_with($photoPath, 'http') ? $photoPath : asset('storage/' . $photoPath);
+                                $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                             @endphp
                             <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;">
                                 <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
@@ -230,7 +230,7 @@
                                 @if($user->profile_photo_path)
                                     @php
                                         $photoPath = $user->profile_photo_path;
-                                        $photoUrl = str_starts_with($photoPath, 'http') ? $photoPath : asset('storage/' . $photoPath);
+                                        $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                                     @endphp
                                     <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;">
                                         <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
@@ -769,3 +769,4 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 </script>
 @endsection
+

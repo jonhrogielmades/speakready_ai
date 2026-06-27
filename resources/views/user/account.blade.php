@@ -37,7 +37,7 @@
                     <div class="d-flex align-items-center mb-4">
                         @if(Auth::user()->profile_photo_path)
                             <div style="width:80px;height:80px;border-radius:24px;overflow:hidden;margin-right:24px;border:1px solid var(--bd)">
-                                @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://']))
+                                @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
                                     <img src="{{ Auth::user()->profile_photo_path }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
                                 @else
                                     <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
@@ -140,3 +140,5 @@
     }
 </script>
 @endsection
+
+

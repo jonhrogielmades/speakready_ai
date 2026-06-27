@@ -153,7 +153,7 @@
             // Add user message
             const initialHtml = `
                 @if(Auth::check() && Auth::user()->profile_photo_path)
-                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://']))
+                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
                         <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
                     @else
                         <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
@@ -350,7 +350,7 @@
                                 <div class="chat-bubble bubble-user">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>
                                 <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700;padding:0;overflow:hidden;border:1px solid var(--bd);">
                                     @if(Auth::check() && Auth::user()->profile_photo_path)
-                                        @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://']))
+                                        @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
                                             <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
                                         @else
                                             <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
@@ -462,3 +462,5 @@
 </script>
 @endpush
 @endsection
+
+

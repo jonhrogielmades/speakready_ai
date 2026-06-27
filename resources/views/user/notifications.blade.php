@@ -143,3 +143,4 @@ function deleteNotification(id) {
 </script>
 @endpush
 @endsection
+

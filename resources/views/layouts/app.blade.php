@@ -125,7 +125,7 @@
                     @if(Auth::check() && Auth::user()->profile_photo_path)
                         @php
                             $photoPath = Auth::user()->profile_photo_path;
-                            $photoUrl = str_starts_with($photoPath, 'http') ? $photoPath : asset('storage/' . $photoPath);
+                            $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                         @endphp
                         <div class="db-avatar" id="userAvatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
                             <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
@@ -349,3 +349,6 @@
       @include('layouts.logout-transition')
    </body>
 </html>
+
+
+

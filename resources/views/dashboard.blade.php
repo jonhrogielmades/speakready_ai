@@ -208,7 +208,7 @@
         <div class="d-flex align-items-center gap-3">
             <div class="avatar-lg" style="padding:0;overflow:hidden;border:2px solid rgba(255,255,255,0.1);">
                 @if(Auth::check() && Auth::user()->profile_photo_path)
-                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://']))
+                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
                         <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
                     @else
                         <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
@@ -744,3 +744,4 @@ document.addEventListener("DOMContentLoaded", function() {
 @endpush
 
 @endsection
+

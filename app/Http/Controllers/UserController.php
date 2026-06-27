@@ -375,8 +375,10 @@ class UserController extends Controller
         $user->target_position = $request->target_position;
 
         if ($request->hasFile('profile_photo')) {
-            $path = $request->file('profile_photo')->store('profile-photos', 'public');
-            $user->profile_photo_path = $path;
+            $image = $request->file('profile_photo');
+            $imageData = base64_encode(file_get_contents($image->getRealPath()));
+            $mimeType = $image->getClientMimeType();
+            $user->profile_photo_path = 'data:' . $mimeType . ';base64,' . $imageData;
         }
 
         $user->save();

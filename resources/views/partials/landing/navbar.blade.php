@@ -47,3 +47,4 @@
                <button class="bgrd flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</button>
             </div>
          </div>
+
