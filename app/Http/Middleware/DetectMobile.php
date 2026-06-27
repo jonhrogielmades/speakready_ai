@@ -12,7 +12,7 @@ class DetectMobile
     /**
      * Mobile User-Agent patterns.
      */
-    protected string $mobilePattern = '/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i';
+    protected string $mobilePattern = '/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone|Silk\/|Kindle|Opera Mobi|Fennec|Minimo|Dolfin|Skyfire|wv|Macintosh.*Touch|SM-|Pixel|Nexus|FBAN|FBAV|Instagram|Line|Snapchat/i';
 
     /**
      * Handle an incoming request.
