@@ -169,125 +169,249 @@
 <div class="col-12 mb-4">
     <div class="row g-3">
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-1">
-                <i class="fa-solid fa-globe fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">General</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#3b82f640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-1">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #3b82f6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #3b82f615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #3b82f630;">
+                <i class="fa-solid fa-globe fa-fw fa-2x" style="color: #3b82f6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">General</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-2">
-                <i class="fa-solid fa-user-gear fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Account</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#10b98140';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-2">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #10b981; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #10b98115; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #10b98130;">
+                <i class="fa-solid fa-user-gear fa-fw fa-2x" style="color: #10b981;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Account</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-3">
-                <i class="fa-solid fa-users-gear fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Roles</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#f59e0b40';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-3">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #f59e0b; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #f59e0b15; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #f59e0b30;">
+                <i class="fa-solid fa-users-gear fa-fw fa-2x" style="color: #f59e0b;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Roles</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-4">
-                <i class="fa-solid fa-microphone-lines fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Interview</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#ec489940';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-4">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #ec4899; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #ec489915; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #ec489930;">
+                <i class="fa-solid fa-microphone-lines fa-fw fa-2x" style="color: #ec4899;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Interview</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-5">
-                <i class="fa-solid fa-podcast fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Voice Rehearsal</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#8b5cf640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-5">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #8b5cf6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #8b5cf615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #8b5cf630;">
+                <i class="fa-solid fa-podcast fa-fw fa-2x" style="color: #8b5cf6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Voice Rehearsal</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-6">
-                <i class="fa-solid fa-robot fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">AI Coach</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#14b8a640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-6">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #14b8a6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #14b8a615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #14b8a630;">
+                <i class="fa-solid fa-robot fa-fw fa-2x" style="color: #14b8a6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">AI Coach</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-7">
-                <i class="fa-solid fa-flask fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Learning Lab</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#f43f5e40';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-7">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #f43f5e; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #f43f5e15; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #f43f5e30;">
+                <i class="fa-solid fa-flask fa-fw fa-2x" style="color: #f43f5e;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Learning Lab</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-8">
-                <i class="fa-solid fa-star fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Readiness Score</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#0ea5e940';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-8">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #0ea5e9; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #0ea5e915; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #0ea5e930;">
+                <i class="fa-solid fa-star fa-fw fa-2x" style="color: #0ea5e9;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Readiness Score</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-9">
-                <i class="fa-solid fa-bell fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Notifications</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#3b82f640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-9">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #3b82f6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #3b82f615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #3b82f630;">
+                <i class="fa-solid fa-bell fa-fw fa-2x" style="color: #3b82f6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Notifications</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-10">
-                <i class="fa-solid fa-envelope fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Email</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#10b98140';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-10">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #10b981; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #10b98115; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #10b98130;">
+                <i class="fa-solid fa-envelope fa-fw fa-2x" style="color: #10b981;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Email</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-11">
-                <i class="fa-solid fa-shield fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Security</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#f59e0b40';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-11">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #f59e0b; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #f59e0b15; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #f59e0b30;">
+                <i class="fa-solid fa-shield fa-fw fa-2x" style="color: #f59e0b;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Security</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-12">
-                <i class="fa-solid fa-database fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Backup</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#ec489940';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-12">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #ec4899; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #ec489915; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #ec489930;">
+                <i class="fa-solid fa-database fa-fw fa-2x" style="color: #ec4899;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Backup</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-13">
-                <i class="fa-solid fa-folder-open fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Files</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#8b5cf640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-13">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #8b5cf6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #8b5cf615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #8b5cf630;">
+                <i class="fa-solid fa-folder-open fa-fw fa-2x" style="color: #8b5cf6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Files</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-14">
-                <i class="fa-solid fa-person-digging fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Maintenance</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#14b8a640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-14">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #14b8a6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #14b8a615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #14b8a630;">
+                <i class="fa-solid fa-person-digging fa-fw fa-2x" style="color: #14b8a6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Maintenance</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-15">
-                <i class="fa-solid fa-clipboard-list fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Audit Logs</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#f43f5e40';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-15">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #f43f5e; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #f43f5e15; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #f43f5e30;">
+                <i class="fa-solid fa-clipboard-list fa-fw fa-2x" style="color: #f43f5e;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Audit Logs</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-16">
-                <i class="fa-solid fa-palette fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Appearance</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#0ea5e940';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-16">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #0ea5e9; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #0ea5e915; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #0ea5e930;">
+                <i class="fa-solid fa-palette fa-fw fa-2x" style="color: #0ea5e9;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Appearance</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-17">
-                <i class="fa-solid fa-language fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Language</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#3b82f640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-17">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #3b82f6; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #3b82f615; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #3b82f630;">
+                <i class="fa-solid fa-language fa-fw fa-2x" style="color: #3b82f6;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Language</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-18">
-                <i class="fa-solid fa-clock-rotate-left fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Retention</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#10b98140';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-18">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #10b981; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #10b98115; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #10b98130;">
+                <i class="fa-solid fa-clock-rotate-left fa-fw fa-2x" style="color: #10b981;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Retention</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-19">
-                <i class="fa-solid fa-file-pdf fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">Reports</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#f59e0b40';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-19">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #f59e0b; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #f59e0b15; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #f59e0b30;">
+                <i class="fa-solid fa-file-pdf fa-fw fa-2x" style="color: #f59e0b;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Reports</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
         <div class="col-6 col-md-4 col-lg-3">
-            <button type="button" class="btn w-100 p-4 premium-card text-center text-white h-100" style="transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='var(--pur, #3b82f6)'" onmouseout="this.style.background='var(--sf, #1e1e2d)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.1))'" data-bs-toggle="modal" data-bs-target="#modal-20">
-                <i class="fa-solid fa-circle-info fa-fw fa-2x mb-3" style="color: #3b82f6;"></i><br>
-                <span class="fw-semibold">System Info</span>
-            </button>
-        </div>
+        <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#ec489940';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-20">
+            <!-- Background glow -->
+            <div style="position: absolute; top: -50px; right: -50px; width: 100px; height: 100px; background: #ec4899; filter: blur(50px); opacity: 0.2; border-radius: 50%;"></div>
+            
+            <div style="width: 64px; height: 64px; border-radius: 18px; background: #ec489915; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #ec489930;">
+                <i class="fa-solid fa-circle-info fa-fw fa-2x" style="color: #ec4899;"></i>
+            </div>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">System Info</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
+        </button>
+    </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
             </div>
         </div>
     </div>
@@ -300,7 +424,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">General</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3">
@@ -326,6 +450,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -337,7 +465,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Account</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             
@@ -369,6 +497,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -380,7 +512,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Roles</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="alert alert-info" style="background:rgba(59,130,246,0.1); border-color:rgba(59,130,246,0.2); color:#60a5fa;">
@@ -411,6 +543,10 @@
                                 @endforeach
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -422,7 +558,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Interview</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3 mb-4">
@@ -453,6 +589,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -464,7 +604,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Voice Rehearsal</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             
@@ -485,6 +625,10 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_filler" value="true" checked></div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -496,7 +640,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">AI Coach</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
@@ -516,6 +660,10 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_recommend" value="true" checked></div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -527,7 +675,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Learning Lab</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
@@ -547,6 +695,10 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_achievements" value="true" checked></div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -558,7 +710,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Readiness Score</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <p class="text-muted mb-4">Adjust the weight distribution for calculating the overall readiness score. Ensure total equals 100%.</p>
@@ -586,6 +738,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -597,7 +753,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Notifications</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
@@ -617,6 +773,10 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_achieve" value="true" checked></div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -628,7 +788,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Email</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3">
@@ -650,6 +810,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -661,7 +825,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Security</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
@@ -683,6 +847,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -694,7 +862,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Backup</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="d-flex gap-3 mb-4">
@@ -711,6 +879,10 @@
                                 </select>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -722,7 +894,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Files</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3">
@@ -737,6 +909,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -748,7 +924,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Audit Logs</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <p class="text-muted">Recent system changes tracked by the audit system.</p>
@@ -770,6 +946,10 @@
                                 </table>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -781,7 +961,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Appearance</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3">
@@ -812,6 +992,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -823,7 +1007,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Language</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="col-md-6">
@@ -834,6 +1018,10 @@
                                 </select>
                                 <small class="text-muted mt-2 d-block">Future-ready for multilingual support.</small>
                             </div>
+            </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
             </div>
         </div>
     </div>
@@ -846,7 +1034,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Retention</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3">
@@ -864,6 +1052,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -875,7 +1067,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">Reports</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <div class="row g-3">
@@ -900,6 +1092,10 @@
                                 </div>
                             </div>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
@@ -911,7 +1107,7 @@
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
                 <h5 class="modal-title text-white fw-bold">System Info</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
                             <ul class="list-group list-group-flush rounded" style="background:var(--bg3);">
@@ -932,21 +1128,15 @@
                                 </li>
                             </ul>
             </div>
+            <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
+                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
+                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Save Button Sticky -->
-            <div class="col-12">
-                <div class="btn-save-fixed shadow w-100">
-                    <div class="text-muted">
-                        <i class="fa-solid fa-circle-info me-1"></i> Make sure to save your changes before leaving this page.
-                    </div>
-                    <button type="submit" class="btn text-white px-4 py-2" style="background:#3b82f6; border-radius:10px; font-weight:600;">
-                        <i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings
-                    </button>
-                </div>
-            </div>
+
             
         </div>
     </form>
