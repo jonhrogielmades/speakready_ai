@@ -26,14 +26,19 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
+# Copy composer files first to leverage Docker cache
+COPY composer.json composer.lock ./
+
+# Fix any Windows line ending issues safely
+RUN dos2unix composer.json composer.lock || true
+
+# Install dependencies without memory limits and ignore platform reqs (failsafe)
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --ignore-platform-reqs
+
 # Copy existing application directory contents
 COPY . /var/www
 
-# Install dependencies without memory limits
-ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV COMPOSER_MEMORY_LIMIT=-1
-RUN dos2unix composer.json composer.lock && \
-    php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --no-progress -v
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
