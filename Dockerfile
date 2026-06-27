@@ -31,9 +31,6 @@ COPY . /var/www
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Install node modules and build assets
-RUN npm install
-RUN npm run build
 
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/sites-enabled/default
