@@ -165,6 +165,20 @@ class InterviewController extends Controller
             'difficulty' => $session->difficulty,
         ];
 
+        // Arena Level specific modifiers
+        $arenaLevel = null;
+        if (session('arena_level_id')) {
+            $arenaLevel = \App\Models\ArenaLevel::find(session('arena_level_id'));
+            if ($arenaLevel) {
+                if ($arenaLevel->banned_words) {
+                    $sessionData['banned_words'] = $arenaLevel->banned_words;
+                }
+                if ($arenaLevel->target_tone) {
+                    $sessionData['target_tone'] = $arenaLevel->target_tone;
+                }
+            }
+        }
+
         // Call the AI Service to generate 100% accurate feedback based on the actual answers
         $aiFeedback = \App\Services\AIService::generateFeedback($sessionData, $answersData, 'gemini');
 
@@ -250,36 +264,49 @@ class InterviewController extends Controller
         // Update profile
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
         
+        $badges = [];
+        if (!empty($profile->badges_earned)) {
+            $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
+        }
+
         $xpEarned = 50;
         $arenaStatus = null;
-        if (session('arena_level_id')) {
-            $arenaLevel = \App\Models\ArenaLevel::find(session('arena_level_id'));
-            if ($arenaLevel) {
-                $xpEarned = $arenaLevel->xp_reward;
-                $progress = \App\Models\ArenaProgress::where('user_id', Auth::id())
-                                ->where('arena_level_id', $arenaLevel->id)->first();
-                                
-                if ($progress) {
-                    if ($overall >= $arenaLevel->required_score) {
-                        $progress->status = 'completed';
-                        $arenaStatus = 'victory';
-                        
-                        // Unlock next level
-                        $nextLevel = \App\Models\ArenaLevel::where('level_number', $arenaLevel->level_number + 1)->first();
-                        if ($nextLevel) {
-                            \App\Models\ArenaProgress::firstOrCreate(
-                                ['user_id' => Auth::id(), 'arena_level_id' => $nextLevel->id],
-                                ['status' => 'active', 'best_score' => 0]
-                            );
-                        }
-                    } else {
-                        $arenaStatus = 'defeat';
+        if ($arenaLevel) {
+            $xpEarned = $arenaLevel->xp_reward;
+            $progress = \App\Models\ArenaProgress::where('user_id', Auth::id())
+                            ->where('arena_level_id', $arenaLevel->id)->first();
+                            
+            if ($progress) {
+                if ($overall >= $arenaLevel->required_score) {
+                    $progress->status = 'completed';
+                    $arenaStatus = 'victory';
+                    
+                    // Unlock next level
+                    $nextLevel = \App\Models\ArenaLevel::where('level_number', $arenaLevel->level_number + 1)->first();
+                    if ($nextLevel) {
+                        \App\Models\ArenaProgress::firstOrCreate(
+                            ['user_id' => Auth::id(), 'arena_level_id' => $nextLevel->id],
+                            ['status' => 'active', 'best_score' => 0]
+                        );
                     }
-                    if ($overall > $progress->best_score) {
-                        $progress->best_score = $overall;
+
+                    // Add Custom Badge and Skill XP if victorious
+                    if ($arenaLevel->custom_badge_name && !in_array($arenaLevel->custom_badge_name, $badges)) {
+                        $badges[] = $arenaLevel->custom_badge_name;
                     }
-                    $progress->save();
+                    if ($arenaLevel->skill_xp_amount > 0) {
+                        // Right now we only have general XP, but we could add skill-specific XP columns later.
+                        // For now we just add it to general XP to make sure it's awarded
+                        $xpEarned += $arenaLevel->skill_xp_amount; 
+                    }
+
+                } else {
+                    $arenaStatus = 'defeat';
                 }
+                if ($overall > $progress->best_score) {
+                    $progress->best_score = $overall;
+                }
+                $progress->save();
             }
         }
 

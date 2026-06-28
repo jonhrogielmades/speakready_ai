@@ -408,7 +408,23 @@
                     @foreach($arenaLevels as $level)
                         @php
                             $prog = $arenaProgress ? $arenaProgress->get($level->id) : null;
-                            $status = $prog ? $prog->status : ($level->level_number === 1 ? 'active' : 'locked');
+                            $status = $prog ? $prog->status : 'locked';
+                            if (!$prog) {
+                                if (!$level->prerequisite_level_id) {
+                                    $status = 'active';
+                                } else {
+                                    $prereqProg = $arenaProgress->get($level->prerequisite_level_id);
+                                    $prereqLevel = $arenaLevels->where('id', $level->prerequisite_level_id)->first();
+                                    if ($prereqProg && $prereqProg->best_score >= ($prereqLevel ? $prereqLevel->required_score : 80)) {
+                                        $status = 'active';
+                                    }
+                                }
+                            }
+
+                            if ($level->is_hidden && $status === 'locked') {
+                                continue;
+                            }
+                            
                             $score = $prog ? $prog->best_score : 0;
                             
                             $nodeClass = '';
@@ -444,8 +460,28 @@
                                     @endif
                                 </div>
                                 
-                                <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:{{ $status==='active' ? '20px' : '0' }};line-height:1.5">{{ $level->description }}</p>
+                                <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:10px;line-height:1.5">{{ $level->description }}</p>
                                 
+                                @if($status === 'active' || $status === 'completed')
+                                    <div class="d-flex flex-wrap gap-2 mb-{{ $status==='active' ? '20' : '0' }}px">
+                                        @if($level->time_limit_seconds)
+                                            <span class="badge bg-dark border" style="color:var(--tx2)"><i class="fa-solid fa-clock text-danger me-1"></i> {{ $level->time_limit_seconds }}s</span>
+                                        @endif
+                                        @if($level->banned_words)
+                                            <span class="badge bg-dark border" style="color:var(--tx2)" title="{{ $level->banned_words }}"><i class="fa-solid fa-ban text-danger me-1"></i> Banned Words</span>
+                                        @endif
+                                        @if($level->target_tone)
+                                            <span class="badge bg-dark border" style="color:var(--tx2)"><i class="fa-solid fa-face-smile text-success me-1"></i> {{ $level->target_tone }}</span>
+                                        @endif
+                                        @if($level->custom_badge_name)
+                                            <span class="badge bg-dark border" style="color:var(--pur)"><i class="fa-solid fa-medal me-1"></i> {{ $level->custom_badge_name }}</span>
+                                        @endif
+                                        @if($level->skill_xp_amount > 0)
+                                            <span class="badge bg-dark border" style="color:#34d399"><i class="fa-solid fa-bolt me-1"></i> +{{ $level->skill_xp_amount }} {{ $level->skill_xp_type }}</span>
+                                        @endif
+                                    </div>
+                                @endif
+
                                 @if($status === 'active')
                                     <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
                                         <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-flask me-1 text-info"></i> Your Mission:</div>
@@ -458,13 +494,16 @@
                                     </form>
                                 @elseif($status === 'completed')
                                     <div style="margin-top:15px;">
-                                        <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Level</button>
+                                        <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-check text-success me-1"></i> Completed</button>
                                     </div>
                                 @elseif($status === 'locked')
-                                    @if($level->level_number > 1)
-                                    <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
-                                        <i class="fa-solid fa-circle-info text-info"></i> Reach {{ $level->required_score }}% in Level {{ $level->level_number - 1 }} to unlock.
-                                    </div>
+                                    @if($level->prerequisite_level_id)
+                                        @php $prereq = $arenaLevels->where('id', $level->prerequisite_level_id)->first(); @endphp
+                                        @if($prereq)
+                                            <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
+                                                <i class="fa-solid fa-circle-info text-info"></i> Reach {{ $prereq->required_score }}% in Level {{ $prereq->level_number }} to unlock.
+                                            </div>
+                                        @endif
                                     @endif
                                 @endif
                             </div>

@@ -84,7 +84,16 @@ class AIService
         $prompt = "You are an expert Interview Coach evaluating a candidate's interview session. Evaluate the following interview answers and provide highly accurate feedback and scores.\n";
         $prompt .= "Target Position: " . ($sessionData['target_position'] ?? 'General') . "\n";
         $prompt .= "Difficulty: " . ($sessionData['difficulty'] ?? 'Medium') . "\n\n";
-        $prompt .= "Here is the transcript:\n";
+
+        if (isset($sessionData['banned_words']) && !empty($sessionData['banned_words'])) {
+            $prompt .= "CRITICAL MODIFIER - BANNED WORDS: The user was strictly forbidden from using the following words or phrases: " . $sessionData['banned_words'] . ". If you detect ANY of these words in their answers, you MUST heavily penalize their professionalism_score and mention it explicitly in their ai_feedback.\n";
+        }
+        
+        if (isset($sessionData['target_tone']) && !empty($sessionData['target_tone'])) {
+            $prompt .= "CRITICAL MODIFIER - TARGET TONE: The user was instructed to answer with a '" . $sessionData['target_tone'] . "' tone. Evaluate if they achieved this tone. If they did not, lower their score and advise them in the feedback.\n";
+        }
+
+        $prompt .= "\nHere is the transcript:\n";
         
         foreach ($answersData as $index => $ans) {
             $prompt .= "Index ID: " . $ans['id'] . "\n";
@@ -179,6 +188,64 @@ EOT;
         
         Log::error("AI Feedback Generation Failed after {$maxRetries} attempts.");
         return [];
+    }
+
+    public static function generateArenaGame($topic, $provider = 'gemini')
+    {
+        $prompt = "You are an expert Gamification and Interview Design AI. Create a highly engaging, gamified Interview Arena Game based on the topic: '$topic'.\n";
+        $prompt .= <<<EOT
+Return ONLY a valid JSON object describing the level. Do not include markdown formatting or explanations.
+The JSON structure MUST be exactly like this:
+{
+  "title": "String, a catchy gamified title",
+  "description": "String, 1-2 sentences setting the scene",
+  "mission_text": "String, instructions for the user",
+  "target_position": "String, e.g., 'Sales Manager', 'Software Engineer'",
+  "difficulty": "String, either 'beginner', 'intermediate', or 'advanced'",
+  "required_score": 80, // Integer between 50 and 100
+  "xp_reward": 500, // Integer
+  "energy_cost": 1, // Integer, usually 1 or 2
+  "ai_persona": "String, the persona of the interviewer (e.g., 'Strict Technical Lead')",
+  "ai_custom_prompt": "String, hidden prompt instructions for the AI on how to act",
+  "time_limit_seconds": 120, // Integer, e.g., 60, 120, or null
+  "banned_words": "String, comma separated words user shouldn't say, e.g., 'um, like, basically', or null",
+  "target_tone": "String, desired tone e.g., 'Confident', 'Empathetic', or null",
+  "custom_badge_name": "String, a badge name e.g., 'Master Negotiator', or null",
+  "skill_xp_type": "String, e.g., 'Leadership', 'Technical', 'Communication', or null",
+  "skill_xp_amount": 50 // Integer, e.g., 50
+}
+EOT;
+
+        $maxRetries = 3;
+        $attempt = 0;
+
+        while ($attempt < $maxRetries) {
+            try {
+                $response = [];
+                switch ($provider) {
+                    case 'gemini': $response = self::callGemini($prompt); break;
+                    case 'cohere': $response = self::callCohere($prompt); break;
+                    case 'groq': $response = self::callGroq($prompt); break;
+                    case 'openrouter': $response = self::callOpenRouter($prompt); break;
+                    case 'claude': $response = self::callClaude($prompt); break;
+                    case 'wisdomgate': $response = self::callWisdomGate($prompt); break;
+                    default: $response = self::callGemini($prompt); break;
+                }
+                
+                if (is_string($response)) {
+                    $decoded = json_decode($response, true);
+                    if ($decoded) return $decoded;
+                } elseif (is_array($response)) {
+                    return $response;
+                }
+            } catch (\Exception $e) {
+                Log::error("Arena Game Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
+            }
+            $attempt++;
+            if ($attempt < $maxRetries) sleep(1);
+        }
+        
+        return null;
     }
 
     public static function chatMessage($message, $history = [], $provider = 'gemini')

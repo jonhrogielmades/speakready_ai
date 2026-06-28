@@ -17,13 +17,29 @@ class ArenaController extends Controller
         $profile = $user->profile;
 
         // Check if level is locked
+        $status = 'locked';
+        if (!$level->prerequisite_level_id) {
+            $status = 'active';
+        } else {
+            $prereqProgress = ArenaProgress::where('user_id', $user->id)
+                ->where('arena_level_id', $level->prerequisite_level_id)
+                ->first();
+                
+            $prereqLevel = ArenaLevel::find($level->prerequisite_level_id);
+            if ($prereqProgress && $prereqProgress->best_score >= ($prereqLevel ? $prereqLevel->required_score : 80)) {
+                $status = 'active';
+            }
+        }
+
         $progress = ArenaProgress::firstOrCreate(
             ['user_id' => $user->id, 'arena_level_id' => $level->id],
-            ['status' => $level->level_number === 1 ? 'active' : 'locked', 'best_score' => 0]
+            ['status' => $status, 'best_score' => 0]
         );
 
-        if ($progress->status === 'locked') {
-            return back()->with('error', 'This level is locked! Complete previous levels with an 80% score to unlock it.');
+        if ($progress->status === 'locked' && $status === 'locked') {
+            return back()->with('error', 'This level is locked! Complete the prerequisite level with the required score to unlock it.');
+        } else if ($status === 'active' && $progress->status === 'locked') {
+            $progress->update(['status' => 'active']);
         }
 
         // Check Energy
@@ -35,6 +51,12 @@ class ArenaController extends Controller
         $profile->energy -= $level->energy_cost;
         $profile->save();
 
+        // Combine mission text and custom prompt
+        $interviewFocus = $level->mission_text;
+        if ($level->ai_custom_prompt) {
+            $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: " . $level->ai_custom_prompt;
+        }
+
         // Create Interview Session specifically for Arena Mode
         $session = InterviewSession::create([
             'user_id' => $user->id,
@@ -43,11 +65,10 @@ class ArenaController extends Controller
             'target_position' => $level->target_position,
             'num_questions' => 1, // Gamified Arena uses 1 question per level for rapid play
             'response_mode' => 'voice_and_text',
-            'interview_focus' => $level->mission_text,
+            'interview_focus' => $interviewFocus,
+            'company_persona' => $level->ai_persona, // Inject persona
+            'time_limit' => $level->time_limit_seconds ?? 0, // Inject time limit
             'status' => 'in_progress',
-            // Store the arena level ID in JSON settings or a new column if we added one. 
-            // For now we can use target_position or resume_text to store the arena flag temporarily,
-            // but let's use the DB properly:
         ]);
 
         // Save arena context in session

@@ -145,6 +145,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Routes - Arena Games
     Route::get('/admin/arena', [\App\Http\Controllers\AdminArenaController::class, 'index'])->name('admin.arena');
     Route::post('/admin/arena', [\App\Http\Controllers\AdminArenaController::class, 'store'])->name('admin.arena.store');
+    Route::post('/admin/arena/generate', [\App\Http\Controllers\AdminArenaController::class, 'generate'])->name('admin.arena.generate');
     Route::put('/admin/arena/{arena_level}', [\App\Http\Controllers\AdminArenaController::class, 'update'])->name('admin.arena.update');
     Route::delete('/admin/arena/{arena_level}', [\App\Http\Controllers\AdminArenaController::class, 'destroy'])->name('admin.arena.destroy');
 
