@@ -99,6 +99,128 @@
         border-radius: 4px;
         background: linear-gradient(90deg, var(--pur) 0%, #34d399 100%);
     }
+    /* Gamified Path Styles */
+    .level-path-container {
+        position: relative;
+        padding: 20px 0;
+        margin-top: 20px;
+    }
+    .level-path-line {
+        position: absolute;
+        left: 40px;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: var(--bd);
+        border-radius: 4px;
+        z-index: 1;
+    }
+    .level-path-line-progress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: linear-gradient(180deg, #34d399 0%, var(--pur) 100%);
+        border-radius: 4px;
+        z-index: 2;
+    }
+    .level-node {
+        position: relative;
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 40px;
+        z-index: 3;
+    }
+    .level-icon-wrapper {
+        width: 80px;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+        position: relative;
+    }
+    .level-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: 0.3s;
+        border: 4px solid var(--sf);
+    }
+    .level-node.completed .level-icon {
+        background: #34d399;
+        color: #fff;
+    }
+    .level-node.active .level-icon {
+        background: var(--pur);
+        color: #fff;
+        box-shadow: 0 0 0 6px rgba(59,130,246,0.2), 0 10px 20px rgba(59,130,246,0.4);
+        animation: pulse-ring 2s infinite;
+    }
+    .level-node.locked .level-icon {
+        background: var(--bg3);
+        color: var(--tx3);
+        border-color: var(--bd);
+    }
+    .level-card {
+        flex-grow: 1;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        padding: 20px;
+        margin-left: 20px;
+        transition: 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    .level-node.active .level-card {
+        border-color: rgba(59,130,246,0.4);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    .level-node.locked .level-card {
+        opacity: 0.7;
+        pointer-events: none;
+        user-select: none;
+    }
+    .level-node.locked .level-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(45deg, rgba(0,0,0,0.02), rgba(0,0,0,0.02) 10px, transparent 10px, transparent 20px);
+        z-index: 10;
+    }
+    .score-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: rgba(52,211,153,0.1);
+        color: #34d399;
+    }
+    .requirement-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        background: rgba(245,158,11,0.1);
+        color: #f59e0b;
+    }
+    @keyframes pulse-ring {
+        0% { box-shadow: 0 0 0 0 rgba(59,130,246, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(59,130,246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59,130,246, 0); }
+    }
+
     /* AI Assistant FAB */
     .ll-ai-fab {
         position: fixed;
@@ -126,6 +248,22 @@
     
     /* Mobile Responsiveness */
     @media (max-width: 767px) {
+        .level-path-line {
+            left: 25px;
+        }
+        .level-icon-wrapper {
+            width: 50px;
+        }
+        .level-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            border-width: 3px;
+        }
+        .level-card {
+            margin-left: 15px;
+            padding: 15px;
+        }
         .db-top-search {
             width: 100% !important;
             max-width: 100% !important;
@@ -160,153 +298,177 @@
     <!-- Header & Navigation -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 style="font-weight:700;color:var(--tx);margin:0">Learning Lab</h3>
-            <p style="color:var(--tx3);margin-top:5px;">Master your interview skills with structured, AI-powered learning.</p>
+            <div class="d-flex align-items-center gap-2">
+                <h3 style="font-weight:800;color:var(--tx);margin:0; font-style:italic; text-transform:uppercase;">Interview Arena</h3>
+                <span class="badge" style="background:linear-gradient(135deg, var(--pur) 0%, #34d399 100%); color:#fff; border-radius:8px; font-weight:800;">SEASON 1</span>
+            </div>
+            <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap" style="flex: 1; min-width: 250px; justify-content: flex-end;">
             <div class="db-top-search" style="width:100%; max-width:300px; background:var(--sf);border:1px solid var(--bd); margin:0;">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Search lessons, quizzes, topics..." style="width:100%;">
+                <input type="text" placeholder="Search quests, skills, topics..." style="width:100%;">
             </div>
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
+            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-gamepad me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">How to Play</span></button>
         </div>
     </div>
 
     <!-- Sub-Navigation -->
     <div id="nav-pills-container" class="mb-4 pb-2" style="overflow-x:auto;white-space:nowrap;">
-        <a href="{{ route('user.learning') }}" class="ll-nav-pill active"><i class="fa-solid fa-border-all"></i> Dashboard</a>
-        <a href="{{ route('user.learning.star') }}" class="ll-nav-pill"><i class="fa-solid fa-star"></i> STAR Method Training</a>
-        <a href="{{ route('user.learning.library') }}" class="ll-nav-pill"><i class="fa-solid fa-book-bookmark"></i> Answer Library</a>
-        <a href="{{ route('user.learning.quiz') }}" class="ll-nav-pill"><i class="fa-solid fa-brain"></i> Mini Quizzes</a>
+        <a href="{{ route('user.learning') }}" class="ll-nav-pill active"><i class="fa-solid fa-map-location-dot"></i> Journey Map</a>
+        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-microphone-lines"></i> AI Mock Simulator</a>
+        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-video"></i> Video Analysis</a>
+        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-briefcase"></i> Career Paths</a>
+        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-file-invoice"></i> Resume-to-Question</a>
+        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
     </div>
 
-    <!-- Dashboard Stats -->
+    <!-- Gamified HUD Stats -->
     <div id="dashboard-stats" class="row g-4 mb-4">
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="ll-stat-card">
-                <i class="fa-solid fa-layer-group" style="font-size:1.5rem;color:var(--tx3)"></i>
-                <div class="ll-stat-val">24</div>
-                <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Total Lessons</div>
+        <!-- Player Level & XP -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="ll-stat-card" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL 4</span>
+                    <span style="font-size:0.75rem; color:var(--tx3); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px;">SILVER</span>
+                </div>
+                <div class="ll-progress-bar" style="height:12px; background:var(--bd); border-radius:6px; margin:5px 0;">
+                    <div class="ll-progress-fill" style="width:75%; background:linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);"></div>
+                </div>
+                <div style="font-size:0.75rem; color:var(--tx3); font-weight:700; text-align:right;">1,500 / 2,000 XP</div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="ll-stat-card">
-                <i class="fa-solid fa-circle-check" style="font-size:1.5rem;color:#34d399"></i>
-                <div class="ll-stat-val">8</div>
-                <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Completed (33%)</div>
+        
+        <!-- Energy/Lives -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
+                <div style="width:55px; height:55px; border-radius:15px; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div style="text-align:left;">
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">3 <span style="font-size:1rem; color:var(--tx3);">/ 3</span></div>
+                    <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Energy</div>
+                </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="ll-stat-card">
-                <i class="fa-solid fa-fire" style="font-size:1.5rem;color:#f59e0b"></i>
-                <div class="ll-stat-val">5 <span style="font-size:1rem;color:var(--tx3)">Days</span></div>
-                <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Current Streak</div>
+
+        <!-- Streak -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
+                <div style="width:55px; height:55px; border-radius:15px; background:rgba(245,158,11,0.1); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+                <div style="text-align:left;">
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">5 <span style="font-size:1rem; color:var(--tx3);">Days</span></div>
+                    <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Combo Streak</div>
+                </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-md-3">
-            <div class="ll-stat-card">
-                <i class="fa-solid fa-medal" style="font-size:1.5rem;color:#eab308"></i>
-                <div class="ll-stat-val">3</div>
-                <div style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase">Badges Earned</div>
+
+        <!-- Score/Accuracy -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
+                <div style="width:55px; height:55px; border-radius:15px; background:rgba(52,211,153,0.1); color:#34d399; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <div style="text-align:left;">
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">85%</div>
+                    <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Accuracy</div>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Modules List -->
         <div class="col-lg-12">
             
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 style="font-weight:700;color:var(--tx);margin:0">Recommended For You</h5>
-                <select class="form-select" style="width:auto;background:var(--sf);border-color:var(--bd);color:var(--tx2);border-radius:10px">
-                    <option>Sort by Relevance</option>
-                    <option>Newest First</option>
-                    <option>Difficulty: Low to High</option>
-                </select>
+                <h5 style="font-weight:700;color:var(--tx);margin:0">Your Interview Journey</h5>
+                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> 3 / 3 Lives</span>
             </div>
 
-            <div id="modules-list" class="row g-4">
-                <!-- Mock Module 1: Interactive -->
-                <div class="col-md-6 col-xl-4">
-                    <div class="ll-module-card">
-                        <div style="height:140px;background:url('https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&q=80&w=400') center/cover;position:relative">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.8), transparent)"></div>
-                            <span class="badge" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2)"><i class="fa-solid fa-gamepad me-1 text-info"></i> Interactive</span>
-                            <span style="position:absolute;bottom:12px;left:12px;color:#fff;font-size:0.8rem;font-weight:600"><i class="fa-regular fa-clock me-1"></i> 15 mins</span>
-                        </div>
-                        <div style="padding:20px;flex-grow:1;display:flex;flex-direction:column">
-                            <div style="font-size:0.75rem;color:var(--pur);font-weight:700;margin-bottom:5px;text-transform:uppercase">STAR Method</div>
-                            <h6 style="color:var(--tx);font-weight:600;margin-bottom:10px">Mastering the STAR Framework</h6>
-                            <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:20px;flex-grow:1;line-height:1.5">Learn how to structure your behavioral interview answers effectively using Situation, Task, Action, and Result.</p>
-                            
-                            <div style="margin-bottom:15px">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span style="font-size:0.75rem;color:var(--tx3);font-weight:600">IN PROGRESS</span>
-                                    <span style="font-size:0.75rem;color:var(--tx);font-weight:700">65%</span>
-                                </div>
-                                <div class="ll-progress-bar">
-                                    <div class="ll-progress-fill" style="width:65%"></div>
-                                </div>
+            <div class="level-path-container" id="modules-list">
+                <!-- Path Line -->
+                <div class="level-path-line">
+                    <div class="level-path-line-progress" style="height: 35%;"></div>
+                </div>
+
+                <!-- Level 1: Completed -->
+                <div class="level-node completed">
+                    <div class="level-icon-wrapper">
+                        <div class="level-icon"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                    <div class="level-card">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <div style="font-size:0.75rem;color:#34d399;font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 1</div>
+                                <h5 style="color:var(--tx);font-weight:700;margin:0">The Basics: "Tell Me About Yourself"</h5>
                             </div>
-                            
-                            <a href="{{ route('user.learning.star') }}" class="btn btn-outline-primary w-100" style="border-radius:10px;font-weight:600">Resume Module</a>
+                            <div class="score-badge"><i class="fa-solid fa-star"></i> Score: 92%</div>
+                        </div>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px;line-height:1.5">You mastered the perfect elevator pitch. Your pacing and structure were excellent!</p>
+                        <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Level</button>
+                    </div>
+                </div>
+
+                <!-- Level 2: Active -->
+                <div class="level-node active">
+                    <div class="level-icon-wrapper">
+                        <div class="level-icon">2</div>
+                    </div>
+                    <div class="level-card">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <div style="font-size:0.75rem;color:var(--pur);font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 2</div>
+                                <h5 style="color:var(--tx);font-weight:700;margin:0">Behavioral Mastery: STAR Method</h5>
+                            </div>
+                            <div class="requirement-badge"><i class="fa-solid fa-bullseye"></i> Goal: 80%+</div>
+                        </div>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:20px;line-height:1.5">Learn how to structure your behavioral interview answers effectively using Situation, Task, Action, and Result.</p>
+                        
+                        <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
+                            <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-flask me-1 text-info"></i> Your Mission:</div>
+                            <div style="color:var(--tx3);font-size:0.85rem">Answer the prompt: <em>"Tell me about a time you had to work with a difficult team member."</em> You must score at least 80% on clarity and STAR structure to unlock Level 3.</div>
+                        </div>
+
+                        <a href="{{ route('user.learning.star') }}" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</a>
+                    </div>
+                </div>
+
+                <!-- Level 3: Locked -->
+                <div class="level-node locked">
+                    <div class="level-icon-wrapper">
+                        <div class="level-icon"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <div class="level-card">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <div style="font-size:0.75rem;color:var(--tx3);font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 3</div>
+                                <h5 style="color:var(--tx);font-weight:700;margin:0">The Curveballs</h5>
+                            </div>
+                            <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
+                        </div>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:0;line-height:1.5">Master tricky questions like "What is your biggest weakness?" and handle high-pressure scenarios.</p>
+                        <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
+                            <i class="fa-solid fa-circle-info text-info"></i> Reach 80% in Level 2 to unlock.
                         </div>
                     </div>
                 </div>
 
-                <!-- Mock Module 2: Video -->
-                <div class="col-md-6 col-xl-4">
-                    <div class="ll-module-card">
-                        <div style="height:140px;background:url('https://images.unsplash.com/photo-1552581234-26160f608093?auto=format&fit=crop&q=80&w=400') center/cover;position:relative">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.8), transparent)"></div>
-                            <span class="badge" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2)"><i class="fa-solid fa-video me-1" style="color:#f43f5e"></i> Video</span>
-                            <span style="position:absolute;bottom:12px;left:12px;color:#fff;font-size:0.8rem;font-weight:600"><i class="fa-regular fa-clock me-1"></i> 8 mins</span>
-                        </div>
-                        <div style="padding:20px;flex-grow:1;display:flex;flex-direction:column">
-                            <div style="font-size:0.75rem;color:var(--pur);font-weight:700;margin-bottom:5px;text-transform:uppercase">Interview Basics</div>
-                            <h6 style="color:var(--tx);font-weight:600;margin-bottom:10px">How to Answer "Tell Me About Yourself"</h6>
-                            <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:20px;flex-grow:1;line-height:1.5">A comprehensive guide on tackling the most common and critical opening interview question.</p>
-                            
-                            <div style="margin-bottom:15px">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span style="font-size:0.75rem;color:var(--tx3);font-weight:600">STATUS</span>
-                                    <span style="font-size:0.75rem;color:#34d399;font-weight:700">COMPLETED <i class="fa-solid fa-check"></i></span>
-                                </div>
-                                <div class="ll-progress-bar">
-                                    <div class="ll-progress-fill" style="width:100%;background:#34d399"></div>
-                                </div>
-                            </div>
-                            
-                            <a href="{{ route('user.learning.module', ['id' => 2]) }}" class="btn btn-outline-success w-100" style="border-radius:10px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Video</a>
-                        </div>
+                <!-- Level 4: Locked -->
+                <div class="level-node locked">
+                    <div class="level-icon-wrapper">
+                        <div class="level-icon"><i class="fa-solid fa-lock"></i></div>
                     </div>
-                </div>
-
-                <!-- Mock Module 3: PDF -->
-                <div class="col-md-6 col-xl-4">
-                    <div class="ll-module-card">
-                        <div style="height:140px;background:url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=400') center/cover;position:relative">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.8), transparent)"></div>
-                            <span class="badge" style="position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.2)"><i class="fa-solid fa-file-pdf me-1" style="color:#ef4444"></i> PDF Guide</span>
-                            <span style="position:absolute;bottom:12px;left:12px;color:#fff;font-size:0.8rem;font-weight:600"><i class="fa-solid fa-download me-1"></i> 2.4 MB</span>
-                        </div>
-                        <div style="padding:20px;flex-grow:1;display:flex;flex-direction:column">
-                            <div style="font-size:0.75rem;color:var(--pur);font-weight:700;margin-bottom:5px;text-transform:uppercase">Cheat Sheets</div>
-                            <h6 style="color:var(--tx);font-weight:600;margin-bottom:10px">Top 50 Behavioral Questions</h6>
-                            <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:20px;flex-grow:1;line-height:1.5">Download our comprehensive cheat sheet containing the top 50 behavioral questions and analysis.</p>
-                            
-                            <div style="margin-bottom:15px">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span style="font-size:0.75rem;color:var(--tx3);font-weight:600">STATUS</span>
-                                    <span style="font-size:0.75rem;color:var(--tx);font-weight:700">NOT STARTED</span>
-                                </div>
-                                <div class="ll-progress-bar">
-                                    <div class="ll-progress-fill" style="width:0%"></div>
-                                </div>
+                    <div class="level-card">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                            <div>
+                                <div style="font-size:0.75rem;color:var(--tx3);font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 4</div>
+                                <h5 style="color:var(--tx);font-weight:700;margin:0">Final Boss: 15-Min Mock Interview</h5>
                             </div>
-                            
-                            <a href="{{ route('user.learning.module', ['id' => 3]) }}" class="btn bgrd w-100" style="border-radius:10px;font-weight:600"><i class="fa-solid fa-download me-1"></i> Download PDF</a>
+                            <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
                         </div>
+                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:0;line-height:1.5">Put everything you've learned to the test in a full, simulated interview environment.</p>
                     </div>
                 </div>
 
