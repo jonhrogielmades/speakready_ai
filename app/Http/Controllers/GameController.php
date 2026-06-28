@@ -84,25 +84,7 @@ class GameController extends Controller
             ['status' => 'active']
         );
 
-        // Handle literal '\n' characters that the AI sometimes returns inside JSON strings
-        $normalizedMissionText = str_replace(['\n', '\r\n', '\r'], "\n", $level->mission_text);
-        
-        // Force newlines before numbered list items if they are stuck on the same line (e.g., " 2. ", " 3) ")
-        $normalizedMissionText = preg_replace('/\s+(\d+[\.\)])\s+/', "\n$1 ", $normalizedMissionText);
-        
-        $lines = array_filter(array_map('trim', explode("\n", $normalizedMissionText)));
-        $questions = [];
-        foreach ($lines as $line) {
-            // Remove leading numbers (e.g. "1. ", "2) ")
-            $cleanLine = trim(preg_replace('/^\d+[\.\)]\s*/', '', $line));
-            if (!empty($cleanLine)) {
-                $questions[] = $cleanLine;
-            }
-        }
-        
-        if (empty($questions)) {
-            $questions = ["Please begin your response."];
-        }
+        $questions = $level->parsed_questions;
 
         // Create Interview Session specifically for Game Mode
         $session = InterviewSession::create([

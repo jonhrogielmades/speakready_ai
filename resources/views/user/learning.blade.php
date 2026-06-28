@@ -504,7 +504,7 @@
 
                                 @if($status === 'active')
                                     <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
-                                        <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count(array_filter(explode("\n", str_replace(['\n', '\r\n', '\r'], "\n", trim($level->mission_text))))) }} Questions</div>
+                                        <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count($level->parsed_questions) }} Questions</div>
                                         <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
                                     </div>
                                     <form action="{{ route('user.game.start', $level->id) }}" method="POST">

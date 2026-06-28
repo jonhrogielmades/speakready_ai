@@ -51,4 +51,29 @@ class GameLevel extends Model
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
+
+    public function getParsedQuestionsAttribute()
+    {
+        if (!$this->mission_text) {
+            return ["Please begin your response."];
+        }
+        
+        $normalizedMissionText = str_replace(['\n', '\r\n', '\r'], "\n", $this->mission_text);
+        $normalizedMissionText = preg_replace('/\s+(\d+[\.\)])\s+/', "\n$1 ", $normalizedMissionText);
+        
+        $lines = array_filter(array_map('trim', explode("\n", $normalizedMissionText)));
+        $questions = [];
+        foreach ($lines as $line) {
+            $cleanLine = trim(preg_replace('/^\d+[\.\)]\s*/', '', $line));
+            if (!empty($cleanLine)) {
+                $questions[] = $cleanLine;
+            }
+        }
+        
+        if (empty($questions)) {
+            $questions = ["Please begin your response."];
+        }
+        
+        return $questions;
+    }
 }
