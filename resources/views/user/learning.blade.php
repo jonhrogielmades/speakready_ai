@@ -410,19 +410,35 @@
                 </div>
 
                 @if($arenaLevels && $arenaLevels->count() > 0)
+                    @php $catPassed = []; @endphp
                     @foreach($arenaLevels as $level)
                         @php
+                            if (!isset($catPassed[$level->category_id])) {
+                                $catPassed[$level->category_id] = true; // First level in any category is unlocked
+                            }
+                            
                             $prog = $arenaProgress ? $arenaProgress->get($level->id) : null;
-                            $status = $prog ? $prog->status : 'locked';
-                            if (!$prog) {
-                                if (!$level->prerequisite_level_id) {
+                            $isCompleted = $prog && $prog->best_score >= $level->required_score;
+                            
+                            if ($isCompleted) {
+                                $status = 'completed';
+                                $catPassed[$level->category_id] = true; // Next level in this category will be unlocked
+                            } else {
+                                if ($catPassed[$level->category_id]) {
                                     $status = 'active';
+                                    $catPassed[$level->category_id] = false; // Next ones in this category will be locked
                                 } else {
-                                    $prereqProg = $arenaProgress->get($level->prerequisite_level_id);
-                                    $prereqLevel = $arenaLevels->where('id', $level->prerequisite_level_id)->first();
-                                    if ($prereqProg && $prereqProg->best_score >= ($prereqLevel ? $prereqLevel->required_score : 80)) {
-                                        $status = 'active';
-                                    }
+                                    $status = 'locked';
+                                }
+                            }
+
+                            // Explicit prerequisite overrides (if set)
+                            if ($level->prerequisite_level_id && $status === 'active') {
+                                $prereqProg = $arenaProgress->get($level->prerequisite_level_id);
+                                $prereqLevel = $arenaLevels->where('id', $level->prerequisite_level_id)->first();
+                                if (!$prereqProg || $prereqProg->best_score < ($prereqLevel ? $prereqLevel->required_score : 80)) {
+                                    $status = 'locked';
+                                    $catPassed[$level->category_id] = false;
                                 }
                             }
 

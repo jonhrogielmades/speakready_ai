@@ -16,18 +16,36 @@ class ArenaController extends Controller
         $user = Auth::user();
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
 
-        // Check if level is locked
+        // Check if level is locked (Sequential Locking by Category)
         $status = 'locked';
-        if (!$level->prerequisite_level_id) {
-            $status = 'active';
+        
+        // Find the previous level in the same category
+        $previousLevel = ArenaLevel::where('category_id', $level->category_id)
+                                   ->where('level_number', '<', $level->level_number)
+                                   ->orderBy('level_number', 'desc')
+                                   ->first();
+                                   
+        if (!$previousLevel) {
+            $status = 'active'; // First level in category is always active
         } else {
+            $prevProgress = ArenaProgress::where('user_id', $user->id)
+                ->where('arena_level_id', $previousLevel->id)
+                ->first();
+                
+            if ($prevProgress && $prevProgress->best_score >= $previousLevel->required_score) {
+                $status = 'active'; // Previous level passed, so this one is active
+            }
+        }
+        
+        // Explicit prerequisite overrides (if set)
+        if ($level->prerequisite_level_id) {
             $prereqProgress = ArenaProgress::where('user_id', $user->id)
                 ->where('arena_level_id', $level->prerequisite_level_id)
                 ->first();
                 
             $prereqLevel = ArenaLevel::find($level->prerequisite_level_id);
-            if ($prereqProgress && $prereqProgress->best_score >= ($prereqLevel ? $prereqLevel->required_score : 80)) {
-                $status = 'active';
+            if (!$prereqProgress || $prereqProgress->best_score < ($prereqLevel ? $prereqLevel->required_score : 80)) {
+                $status = 'locked'; // Failed explicit prereq
             }
         }
 
