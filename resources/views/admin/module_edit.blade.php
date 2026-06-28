@@ -26,7 +26,10 @@
             <button class="nav-link oinp" id="resources-tab" data-bs-toggle="pill" data-bs-target="#resources" type="button" role="tab" style="width:auto;margin-right:10px;">Resources</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button" role="tab" style="width:auto;">Quizzes</button>
+            <button class="nav-link oinp" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button" role="tab" style="width:auto;margin-right:10px;">Quizzes</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link oinp" id="arena-tab" data-bs-toggle="pill" data-bs-target="#arena" type="button" role="tab" style="width:auto;">Arena Games</button>
         </li>
     </ul>
 
@@ -234,6 +237,50 @@
                 </div>
                 @endforeach
             @endif
+        </div>
+        </div>
+
+        <!-- Arena Games Tab -->
+        <div class="tab-pane fade" id="arena" role="tabpanel">
+            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+                <form action="{{ route('admin.modules.arena-levels.store', $module->id) }}" method="POST" class="mb-4 pb-4" style="border-bottom:1px solid var(--bd)">
+                    @csrf
+                    <h6 class="mb-3" style="color:var(--tx)">Attach Arena Game</h6>
+                    <div class="row align-items-end">
+                        <div class="col-md-8">
+                            <label class="olbl">Select Arena Game</label>
+                            <select class="oinp w-100" name="arena_level_id" required>
+                                <option value="">-- Choose Game --</option>
+                                @foreach($allArenaLevels as $al)
+                                    <option value="{{ $al->id }}">Level {{ $al->level_number }}: {{ $al->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="bgrd btn w-100">Attach Game</button>
+                        </div>
+                    </div>
+                </form>
+
+                <h6 class="mb-3" style="color:var(--tx)">Attached Arena Games</h6>
+                @if($module->arenaLevels->isEmpty())
+                    <p style="color:var(--tx3)">No games attached to this module.</p>
+                @else
+                    <ul class="list-group list-group-flush" style="border-radius:8px;">
+                        @foreach($module->arenaLevels as $al)
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;border-color:var(--bd);color:var(--tx3)">
+                            <div>
+                                <i class="fa-solid fa-gamepad me-2 text-primary"></i> <strong>Level {{ $al->level_number }}:</strong> {{ $al->title }}
+                            </div>
+                            <form action="{{ route('admin.modules.arena-levels.destroy', [$module->id, $al->id]) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Remove this game from the module?')"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
         </div>
     </div>
 </div>

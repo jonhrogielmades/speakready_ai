@@ -451,8 +451,9 @@ class AdminController extends Controller
 
     public function editModule(LearningModule $module)
     {
-        $module->load(['chapters', 'resources', 'quizzes.questions', 'activities']);
-        return view('admin.module_edit', compact('module'));
+        $module->load(['chapters', 'resources', 'quizzes.questions', 'activities', 'arenaLevels']);
+        $allArenaLevels = \App\Models\ArenaLevel::orderBy('level_number', 'asc')->get();
+        return view('admin.module_edit', compact('module', 'allArenaLevels'));
     }
 
     public function updateModule(Request $request, LearningModule $module)
@@ -649,5 +650,25 @@ class AdminController extends Controller
             $log->delete();
         }
         return response()->json(['success' => true]);
+    }
+
+    public function attachArenaLevel(Request $request, LearningModule $module)
+    {
+        $request->validate([
+            'arena_level_id' => 'required|exists:arena_levels,id',
+        ]);
+
+        if (!$module->arenaLevels->contains($request->arena_level_id)) {
+            $module->arenaLevels()->attach($request->arena_level_id);
+            return redirect()->back()->with('success', 'Arena Game attached successfully.');
+        }
+
+        return redirect()->back()->with('warning', 'Arena Game is already attached.');
+    }
+
+    public function detachArenaLevel(LearningModule $module, \App\Models\ArenaLevel $arenaLevel)
+    {
+        $module->arenaLevels()->detach($arenaLevel->id);
+        return redirect()->back()->with('success', 'Arena Game detached successfully.');
     }
 }

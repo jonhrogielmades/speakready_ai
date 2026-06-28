@@ -25,4 +25,9 @@ class ArenaLevel extends Model
     {
         return $this->hasMany(ArenaProgress::class);
     }
+
+    public function learningModules()
+    {
+        return $this->belongsToMany(LearningModule::class, 'learning_module_arena_level');
+    }
 }

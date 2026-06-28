@@ -139,6 +139,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules', [AdminController::class, 'storeModule'])->name('admin.modules.store');
     Route::put('/admin/modules/{module}', [AdminController::class, 'updateModule'])->name('admin.modules.update');
     Route::delete('/admin/modules/{module}', [AdminController::class, 'destroyModule'])->name('admin.modules.destroy');
+    Route::post('/admin/modules/{module}/arena-levels', [AdminController::class, 'attachArenaLevel'])->name('admin.modules.arena-levels.store');
+    Route::delete('/admin/modules/{module}/arena-levels/{arenaLevel}', [AdminController::class, 'detachArenaLevel'])->name('admin.modules.arena-levels.destroy');
 
     // Admin Routes - Module Chapters
     Route::post('/admin/modules/{module}/chapters', [AdminController::class, 'storeModuleChapter'])->name('admin.modules.chapters.store');

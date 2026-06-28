@@ -44,4 +44,9 @@ class LearningModule extends Model
     {
         return $this->hasMany(ModulePracticeActivity::class);
     }
+
+    public function arenaLevels()
+    {
+        return $this->belongsToMany(ArenaLevel::class, 'learning_module_arena_level');
+    }
 }
