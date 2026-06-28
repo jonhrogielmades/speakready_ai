@@ -91,7 +91,8 @@
             }
             .game-table tbody tr {
                 display: flex;
-                flex-direction: column;
+                flex-direction: row;
+                flex-wrap: wrap;
                 background: var(--bg3, rgba(255,255,255,0.02));
                 border-radius: 12px;
                 margin-bottom: 15px;
@@ -99,6 +100,7 @@
                 padding: 12px;
             }
             .game-table tbody td {
+                width: 100%;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -121,18 +123,28 @@
                 flex-shrink: 0;
                 text-align: left;
             }
-            .game-table tbody td:nth-child(1) { order: -2; justify-content: flex-start; padding-bottom: 4px !important; border-bottom: none !important; }
+            .game-table tbody td:nth-child(1) { 
+                order: -2; 
+                width: auto; 
+                flex-shrink: 0; 
+                justify-content: flex-start; 
+                padding-bottom: 12px !important; 
+                border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important; 
+                margin-right: 10px;
+            }
             .game-table tbody td:nth-child(1)::before { content: "Level:"; margin-right: 10px; }
             
             .game-table tbody td:nth-child(2) {
                 order: -1;
+                width: 0;
+                flex-grow: 1;
                 justify-content: flex-start;
                 border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
                 padding-bottom: 12px !important;
                 margin-bottom: 4px;
-                text-align: left;
+                text-align: right;
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: flex-end;
             }
             .game-table tbody td:nth-child(2)::before { content: none; }
             
