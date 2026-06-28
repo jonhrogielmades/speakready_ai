@@ -394,6 +394,13 @@
             </div>
 
             <div class="level-path-container" id="modules-list">
+                @if(session('error'))
+                    <div class="alert alert-danger mb-4" style="border-radius:12px; font-weight:600;"><i class="fa-solid fa-triangle-exclamation me-2"></i> {{ session('error') }}</div>
+                @endif
+                @if(session('success'))
+                    <div class="alert alert-success mb-4" style="border-radius:12px; font-weight:600;"><i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}</div>
+                @endif
+                
                 <!-- Path Line -->
                 <div class="level-path-line">
                     @php 
@@ -465,19 +472,19 @@
                                 @if($status === 'active' || $status === 'completed')
                                     <div class="d-flex flex-wrap gap-2 mb-{{ $status==='active' ? '20' : '0' }}px">
                                         @if($level->time_limit_seconds)
-                                            <span class="badge bg-dark border" style="color:var(--tx2)"><i class="fa-solid fa-clock text-danger me-1"></i> {{ $level->time_limit_seconds }}s</span>
+                                            <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-clock text-danger me-1"></i> {{ $level->time_limit_seconds }}s</span>
                                         @endif
                                         @if($level->banned_words)
-                                            <span class="badge bg-dark border" style="color:var(--tx2)" title="{{ $level->banned_words }}"><i class="fa-solid fa-ban text-danger me-1"></i> Banned Words</span>
+                                            <span class="badge border" style="background:var(--bg3); color:var(--tx);" title="{{ $level->banned_words }}"><i class="fa-solid fa-ban text-danger me-1"></i> Banned Words</span>
                                         @endif
                                         @if($level->target_tone)
-                                            <span class="badge bg-dark border" style="color:var(--tx2)"><i class="fa-solid fa-face-smile text-success me-1"></i> {{ $level->target_tone }}</span>
+                                            <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-face-smile text-success me-1"></i> {{ $level->target_tone }}</span>
                                         @endif
                                         @if($level->custom_badge_name)
-                                            <span class="badge bg-dark border" style="color:var(--pur)"><i class="fa-solid fa-medal me-1"></i> {{ $level->custom_badge_name }}</span>
+                                            <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-medal text-primary me-1"></i> {{ $level->custom_badge_name }}</span>
                                         @endif
                                         @if($level->skill_xp_amount > 0)
-                                            <span class="badge bg-dark border" style="color:#34d399"><i class="fa-solid fa-bolt me-1"></i> +{{ $level->skill_xp_amount }} {{ $level->skill_xp_type }}</span>
+                                            <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-bolt text-warning me-1"></i> +{{ $level->skill_xp_amount }} {{ $level->skill_xp_type }}</span>
                                         @endif
                                     </div>
                                 @endif
