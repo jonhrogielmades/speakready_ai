@@ -248,6 +248,10 @@ class UserController extends Controller
         
         $categories = \App\Models\Category::where('status', 'active')->get();
         
+        if (!$request->has('category_id') && $categories->count() > 0) {
+            return redirect()->route('user.learning', ['category_id' => $categories->first()->id]);
+        }
+        
         $query = \App\Models\ArenaLevel::orderBy('level_number', 'asc');
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);

@@ -299,7 +299,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <h3 style="font-weight:800;color:var(--tx);margin:0; font-style:italic; text-transform:uppercase;">Interview Arena</h3>
+                <h3 style="font-weight:800;color:var(--tx);margin:0; font-family:'Poppins', sans-serif; text-transform:uppercase;">Interview Arena</h3>
                 <span class="badge" style="background:linear-gradient(135deg, var(--pur) 0%, #34d399 100%); color:#fff; border-radius:8px; font-weight:800;">SEASON 1</span>
             </div>
             <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
@@ -315,7 +315,6 @@
 
     <!-- Sub-Navigation -->
     <div id="nav-pills-container" class="mb-4 pb-2" style="overflow-x:auto;white-space:nowrap;">
-        <a href="{{ route('user.learning') }}" class="ll-nav-pill {{ !request('category_id') ? 'active' : '' }}"><i class="fa-solid fa-map-location-dot"></i> All Categories</a>
         @foreach($categories as $category)
             <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
         @endforeach
