@@ -30,6 +30,20 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="background:rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius:12px;">
+            <div class="d-flex align-items-center mb-2">
+                <i class="fa-solid fa-circle-exclamation me-2"></i> <strong>Validation Errors</strong>
+            </div>
+            <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="filter:invert(1) grayscale(1) brightness(2);"></button>
+        </div>
+    @endif
+
     @php
         $groupedLevels = $levels->groupBy('category_id');
     @endphp

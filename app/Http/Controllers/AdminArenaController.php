@@ -29,7 +29,7 @@ class AdminArenaController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate($this->validationRules());
+        $request->validate($this->validationRules(null, $request->category_id));
         $data = $request->all();
         $data['is_hidden'] = $request->has('is_hidden');
 
@@ -40,7 +40,7 @@ class AdminArenaController extends Controller
 
     public function update(Request $request, ArenaLevel $arena_level)
     {
-        $request->validate($this->validationRules($arena_level->id));
+        $request->validate($this->validationRules($arena_level->id, $request->category_id));
         $data = $request->all();
         $data['is_hidden'] = $request->has('is_hidden');
 
@@ -77,8 +77,8 @@ class AdminArenaController extends Controller
         for ($i = 0; $i < $numLevels; $i++) {
             $currentLevelNum = $startLevel + $i;
             
-            // Skip if level number already exists to avoid unique constraint violation
-            if (ArenaLevel::where('level_number', $currentLevelNum)->exists()) {
+            // Skip if level number already exists in this category to avoid unique constraint violation
+            if (ArenaLevel::where('level_number', $currentLevelNum)->where('category_id', $request->category_id)->exists()) {
                 continue;
             }
 
@@ -112,11 +112,18 @@ class AdminArenaController extends Controller
         return redirect()->route('admin.arena')->with('success', "Successfully generated {$generatedCount} Arena Game(s)!");
     }
 
-    private function validationRules($id = null)
+    private function validationRules($id = null, $categoryId = null)
     {
-        $levelRule = $id ? 'required|integer|unique:arena_levels,level_number,' . $id : 'required|integer|unique:arena_levels';
+        $uniqueRule = \Illuminate\Validation\Rule::unique('arena_levels', 'level_number');
+        if ($categoryId) {
+            $uniqueRule->where('category_id', $categoryId);
+        }
+        if ($id) {
+            $uniqueRule->ignore($id);
+        }
+
         return [
-            'level_number' => $levelRule,
+            'level_number' => ['required', 'integer', $uniqueRule],
             'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
