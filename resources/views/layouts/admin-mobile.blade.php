@@ -93,6 +93,9 @@
             padding-top: calc(var(--mob-top-h) + var(--mob-safe-top));
             padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 16px);
             min-height: 100dvh;
+            overflow-x: hidden !important;
+            width: 100vw;
+            max-width: 100%;
          }
          .db-content { padding: 14px !important; }
 

@@ -68,9 +68,19 @@
             border-color: var(--pur) !important;
             box-shadow: 0 4px 15px rgba(59,130,246,0.3);
         }
+        .arena-categories-scroll {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 10px;
+        }
+        .arena-categories-scroll::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 
-    <ul class="nav nav-pills mb-4" id="arena-categories-tab" role="tablist" style="gap:10px;">
+    <ul class="nav nav-pills mb-4 arena-categories-scroll" id="arena-categories-tab" role="tablist" style="gap:10px;">
         @foreach($categories as $index => $categoryRow)
             <li class="nav-item" role="presentation">
                 <button class="nav-link arena-cat-pill {{ $index === 0 ? 'active' : '' }}" 
