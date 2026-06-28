@@ -98,6 +98,15 @@ class ArenaController extends Controller
             'status' => 'in_progress',
         ]);
 
+        // Explicitly create the one Arena Question based on the mission text
+        \App\Models\Question::create([
+            'interview_session_id' => $session->id,
+            'category_id' => $session->category_id,
+            'question_text' => "Your mission: " . $level->mission_text . "\n\nPlease begin your response.",
+            'difficulty' => $level->difficulty,
+            'status' => 'active'
+        ]);
+
         // Save arena context in session
         session(['arena_level_id' => $level->id]);
         session(['active_interview_id' => $session->id]);
