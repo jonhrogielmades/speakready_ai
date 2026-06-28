@@ -315,12 +315,10 @@
 
     <!-- Sub-Navigation -->
     <div id="nav-pills-container" class="mb-4 pb-2" style="overflow-x:auto;white-space:nowrap;">
-        <a href="{{ route('user.learning') }}" class="ll-nav-pill active"><i class="fa-solid fa-map-location-dot"></i> Journey Map</a>
-        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-microphone-lines"></i> AI Mock Simulator</a>
-        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-video"></i> Video Analysis</a>
-        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-briefcase"></i> Career Paths</a>
-        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-file-invoice"></i> Resume-to-Question</a>
-        <a href="#" class="ll-nav-pill"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
+        <a href="{{ route('user.learning') }}" class="ll-nav-pill {{ !request('category_id') ? 'active' : '' }}"><i class="fa-solid fa-map-location-dot"></i> All Categories</a>
+        @foreach($categories as $category)
+            <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
+        @endforeach
     </div>
 
     <!-- Gamified HUD Stats -->

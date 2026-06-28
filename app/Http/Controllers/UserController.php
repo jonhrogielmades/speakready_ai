@@ -242,14 +242,21 @@ class UserController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function learning() { 
+    public function learning(Request $request) { 
         $user = \Illuminate\Support\Facades\Auth::user();
         $profile = $user->profile;
         
-        $arenaLevels = \App\Models\ArenaLevel::orderBy('level_number', 'asc')->get();
+        $categories = \App\Models\Category::where('status', 'active')->get();
+        
+        $query = \App\Models\ArenaLevel::orderBy('level_number', 'asc');
+        if ($request->has('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+        $arenaLevels = $query->get();
+        
         $arenaProgress = \App\Models\ArenaProgress::where('user_id', $user->id)->get()->keyBy('arena_level_id');
         
-        return view('user.learning', compact('profile', 'arenaLevels', 'arenaProgress')); 
+        return view('user.learning', compact('profile', 'arenaLevels', 'arenaProgress', 'categories')); 
     }
 
     public function voiceRehearsal() { return view('user.drills.voice'); }
