@@ -134,9 +134,9 @@
         </div>
 
         <div id="workspaceWrapper" style="display:none;">
-        <div class="row g-4" id="workspaceRow">
+        <div class="row g-4 m-0" id="workspaceRow">
             <!-- Main Content Area -->
-            <div class="col-lg-8">
+            <div class="col-lg-8 px-0 pe-lg-3">
                 <!-- Progress Tracker Removed by User -->
 
                 <!-- Simulated AI Video Avatar Panel -->
@@ -234,7 +234,7 @@
             </div>
 
             <!-- Side Panels -->
-            <div class="col-lg-4">
+            <div class="col-lg-4 px-0 ps-lg-3">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
                 <!-- Camera Presence (Hidden on mobile since it's inside the AI panel now) -->
                 <div class="panel d-none d-lg-block" id="cameraPanel">
