@@ -14,7 +14,7 @@ class ArenaController extends Controller
     {
         $level = ArenaLevel::findOrFail($id);
         $user = Auth::user();
-        $profile = $user->profile;
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
 
         // Check if level is locked
         $status = 'locked';
