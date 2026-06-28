@@ -123,3 +123,4 @@ Your application should now be fully functional and accessible in your web brows
 - **Images/Media not loading**: Run `php artisan storage:link` to ensure the symbolic link is created correctly.
 - **View not found or cache issues**: Run `php artisan optimize:clear` to clear all compiled caches.
 - **Email not sending**: Double-check your Google App Password and ensure your Gmail account has 2-Step Verification enabled to allow App Passwords.
+# speakready_ai
