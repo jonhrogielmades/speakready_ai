@@ -87,6 +87,9 @@ class GameController extends Controller
         // Handle literal '\n' characters that the AI sometimes returns inside JSON strings
         $normalizedMissionText = str_replace(['\n', '\r\n', '\r'], "\n", $level->mission_text);
         
+        // Force newlines before numbered list items if they are stuck on the same line (e.g., " 2. ", " 3) ")
+        $normalizedMissionText = preg_replace('/\s+(\d+[\.\)])\s+/', "\n$1 ", $normalizedMissionText);
+        
         $lines = array_filter(array_map('trim', explode("\n", $normalizedMissionText)));
         $questions = [];
         foreach ($lines as $line) {
