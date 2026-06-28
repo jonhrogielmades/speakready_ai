@@ -56,7 +56,10 @@
                             </td>
                             <td style="padding:16px;vertical-align:middle;">
                                 <div style="font-weight:700;color:var(--tx)">{{ $level->title }}</div>
-                                <div style="font-size:0.75rem;color:var(--tx2);">{{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}</div>
+                                <div style="font-size:0.75rem;color:var(--tx2); margin-top:2px;">
+                                    <span class="badge bg-secondary" style="font-size:0.65rem; margin-right:4px;">{{ $level->category ? $level->category->title : 'No Category' }}</span> 
+                                    {{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}
+                                </div>
                                 @if($level->prerequisiteLevel)
                                     <div style="font-size:0.7rem;color:#f59e0b;margin-top:4px;"><i class="fa-solid fa-lock text-warning"></i> Prereq: Lvl {{ $level->prerequisiteLevel->level_number }}</div>
                                 @endif
@@ -110,11 +113,19 @@
                                                     <label class="olbl">Level #</label>
                                                     <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" required>
                                                 </div>
-                                                <div class="col-md-5">
+                                                <div class="col-md-3">
+                                                    <label class="olbl">Category</label>
+                                                    <select class="oinp w-100" name="category_id" required>
+                                                        @foreach($categories as $cat)
+                                                            <option value="{{ $cat->id }}" {{ $level->category_id == $cat->id ? 'selected' : '' }}>{{ $cat->title }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
                                                     <label class="olbl">Title</label>
                                                     <input class="oinp w-100" type="text" name="title" value="{{ $level->title }}" required>
                                                 </div>
-                                                <div class="col-md-5">
+                                                <div class="col-md-3">
                                                     <label class="olbl">Target Position</label>
                                                     <input class="oinp w-100" type="text" name="target_position" value="{{ $level->target_position }}" required>
                                                 </div>
@@ -254,9 +265,19 @@
                 <div class="modal-body">
                     <p style="color:var(--tx3); font-size:0.85rem;">Let our AI instantly craft a unique, fully-configured gamified level complete with instructions, a persona, modifiers, and rewards.</p>
                     
-                    <div class="mb-3">
-                        <label class="olbl">Level #</label>
-                        <input class="oinp w-100" type="number" name="level_number" required placeholder="e.g. {{ count($levels) + 1 }}">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="olbl">Level #</label>
+                            <input class="oinp w-100" type="number" name="level_number" required placeholder="e.g. {{ count($levels) + 1 }}">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="olbl">Category</label>
+                            <select class="oinp w-100" name="category_id" required>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -290,11 +311,19 @@
                             <label class="olbl">Level #</label>
                             <input class="oinp w-100" type="number" name="level_number" required>
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-3">
+                            <label class="olbl">Category</label>
+                            <select class="oinp w-100" name="category_id" required>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="olbl">Title</label>
                             <input class="oinp w-100" type="text" name="title" required placeholder="e.g. Sales Pitch Challenge">
                         </div>
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <label class="olbl">Target Position</label>
                             <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. Sales Manager">
                         </div>

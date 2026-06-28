@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ArenaLevel;
+use App\Models\Category;
 use App\Services\AIService;
 use Illuminate\Http\Request;
 
@@ -10,7 +11,7 @@ class AdminArenaController extends Controller
 {
     public function index()
     {
-        $levels = ArenaLevel::with('progress')->orderBy('level_number', 'asc')->get();
+        $levels = ArenaLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
         
         // Calculate analytics
         foreach ($levels as $level) {
@@ -21,8 +22,9 @@ class AdminArenaController extends Controller
         }
 
         $allLevels = ArenaLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
+        $categories = Category::where('status', 'active')->get(); // For category dropdown
 
-        return view('admin.arena', compact('levels', 'allLevels'));
+        return view('admin.arena', compact('levels', 'allLevels', 'categories'));
     }
 
     public function store(Request $request)
@@ -58,6 +60,7 @@ class AdminArenaController extends Controller
         $request->validate([
             'topic' => 'required|string|max:255',
             'level_number' => 'required|integer|unique:arena_levels',
+            'category_id' => 'required|exists:categories,id',
         ]);
 
         $gameData = AIService::generateArenaGame($request->topic);
@@ -67,6 +70,7 @@ class AdminArenaController extends Controller
         }
 
         $gameData['level_number'] = $request->level_number;
+        $gameData['category_id'] = $request->category_id;
         ArenaLevel::create($gameData);
 
         return redirect()->route('admin.arena')->with('success', 'Arena Game automatically generated and saved!');
@@ -77,6 +81,7 @@ class AdminArenaController extends Controller
         $levelRule = $id ? 'required|integer|unique:arena_levels,level_number,' . $id : 'required|integer|unique:arena_levels';
         return [
             'level_number' => $levelRule,
+            'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'mission_text' => 'nullable|string',

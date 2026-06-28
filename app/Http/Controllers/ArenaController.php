@@ -69,7 +69,7 @@ class ArenaController extends Controller
         // Create Interview Session specifically for Arena Mode
         $session = InterviewSession::create([
             'user_id' => $user->id,
-            'category_id' => $defaultCategory->id,
+            'category_id' => $level->category_id ?? $defaultCategory->id,
             'difficulty' => $level->difficulty,
             'target_position' => $level->target_position,
             'num_questions' => 1, // Gamified Arena uses 1 question per level for rapid play

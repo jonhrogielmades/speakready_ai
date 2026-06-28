@@ -10,6 +10,7 @@ class ArenaLevel extends Model
     use HasFactory;
 
     protected $fillable = [
+        'category_id',
         'level_number',
         'title',
         'description',
