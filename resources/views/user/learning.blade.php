@@ -213,39 +213,8 @@
     </div>
 
     <div class="row g-4">
-        <!-- Categories Sidebar -->
-        <div class="col-lg-3">
-            <div id="categories-sidebar" class="ll-category-list">
-                <h6 style="font-weight:700;color:var(--tx);margin-bottom:15px;text-transform:uppercase;font-size:0.85rem;letter-spacing:1px">Categories</h6>
-                @if(isset($categories))
-                    @foreach($categories as $index => $cat)
-                    <a href="#" class="ll-category-item {{ $index === 0 ? 'active' : '' }}">
-                        <i class="fa-solid fa-folder-open me-2" style="font-size:0.9rem"></i> {{ $cat }}
-                    </a>
-                    @endforeach
-                @else
-                    <a href="#" class="ll-category-item active"><i class="fa-solid fa-folder-open me-2"></i> Interview Basics</a>
-                    <a href="#" class="ll-category-item"><i class="fa-solid fa-folder-open me-2"></i> STAR Method</a>
-                @endif
-                
-                <h6 style="font-weight:700;color:var(--tx);margin-top:25px;margin-bottom:15px;text-transform:uppercase;font-size:0.85rem;letter-spacing:1px">Resource Type</h6>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" value="" id="typeVideo" checked>
-                    <label class="form-check-label" for="typeVideo" style="color:var(--tx2);font-size:0.9rem">Video Lessons</label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" value="" id="typePdf" checked>
-                    <label class="form-check-label" for="typePdf" style="color:var(--tx2);font-size:0.9rem">PDF & Worksheets</label>
-                </div>
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" value="" id="typeInteractive" checked>
-                    <label class="form-check-label" for="typeInteractive" style="color:var(--tx2);font-size:0.9rem">Interactive Modules</label>
-                </div>
-            </div>
-        </div>
-
         <!-- Modules List -->
-        <div class="col-lg-9">
+        <div class="col-lg-12">
             
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 style="font-weight:700;color:var(--tx);margin:0">Recommended For You</h5>
@@ -280,7 +249,7 @@
                                 </div>
                             </div>
                             
-                            <a href="#" class="btn btn-outline-primary w-100" style="border-radius:10px;font-weight:600">Resume Module</a>
+                            <a href="{{ route('user.learning.star') }}" class="btn btn-outline-primary w-100" style="border-radius:10px;font-weight:600">Resume Module</a>
                         </div>
                     </div>
                 </div>
@@ -308,7 +277,7 @@
                                 </div>
                             </div>
                             
-                            <a href="#" class="btn btn-outline-success w-100" style="border-radius:10px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Video</a>
+                            <a href="{{ route('user.learning.module', ['id' => 2]) }}" class="btn btn-outline-success w-100" style="border-radius:10px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Video</a>
                         </div>
                     </div>
                 </div>
@@ -336,7 +305,7 @@
                                 </div>
                             </div>
                             
-                            <a href="#" class="btn bgrd w-100" style="border-radius:10px;font-weight:600"><i class="fa-solid fa-download me-1"></i> Download PDF</a>
+                            <a href="{{ route('user.learning.module', ['id' => 3]) }}" class="btn bgrd w-100" style="border-radius:10px;font-weight:600"><i class="fa-solid fa-download me-1"></i> Download PDF</a>
                         </div>
                     </div>
                 </div>
@@ -360,7 +329,7 @@
         const stepsMobile = [
             { element: '#nav-pills-container', popover: { title: 'Learning Hubs', description: 'Navigate between the main Dashboard, STAR Method Training, Answer Library, and Mini Quizzes.', side: "bottom", align: 'start' }},
             { element: '#dashboard-stats', popover: { title: 'Your Progress', description: 'Track your completed lessons, current learning streak, and badges earned.', side: "top", align: 'start' }},
-            { element: '#categories-sidebar', popover: { title: 'Categories & Filters', description: 'Filter learning materials by topic and format (video, interactive, or PDF).', side: "bottom", align: 'start' }},
+
             { element: '#modules-list', popover: { title: 'Learning Modules', description: 'Browse and start your recommended lessons here. Pick up right where you left off!', side: "top", align: 'start' }},
             { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a concept? Click here anytime to ask the AI Learning Assistant for help.', side: "top", align: 'end' }}
         ];
@@ -368,7 +337,7 @@
         const stepsDesktop = [
             { element: '#nav-pills-container', popover: { title: 'Learning Hubs', description: 'Navigate between the main Dashboard, STAR Method Training, Answer Library, and Mini Quizzes.', side: "bottom", align: 'start' }},
             { element: '#dashboard-stats', popover: { title: 'Your Progress', description: 'Track your completed lessons, current learning streak, and badges earned.', side: "bottom", align: 'start' }},
-            { element: '#categories-sidebar', popover: { title: 'Categories & Filters', description: 'Filter learning materials by topic and format (video, interactive, or PDF).', side: "right", align: 'start' }},
+
             { element: '#modules-list', popover: { title: 'Learning Modules', description: 'Browse and start your recommended lessons here. Pick up right where you left off!', side: "top", align: 'start' }},
             { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a concept? Click here anytime to ask the AI Learning Assistant for help.', side: "left", align: 'end' }}
         ];
