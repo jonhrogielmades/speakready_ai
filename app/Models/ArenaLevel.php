@@ -46,4 +46,9 @@ class ArenaLevel extends Model
     {
         return $this->belongsTo(ArenaLevel::class, 'prerequisite_level_id');
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
 }
