@@ -81,6 +81,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     
     // Arena Gamification Routes
     Route::post('/arena/level/{id}/start', [\App\Http\Controllers\ArenaController::class, 'startLevel'])->name('user.arena.start');
+    Route::get('/arena/match', [\App\Http\Controllers\ArenaController::class, 'arenaSession'])->name('user.arena.match');
     
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');

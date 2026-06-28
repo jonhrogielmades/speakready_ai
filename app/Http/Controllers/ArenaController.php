@@ -102,6 +102,32 @@ class ArenaController extends Controller
         session(['arena_level_id' => $level->id]);
         session(['active_interview_id' => $session->id]);
 
-        return redirect()->route('interview.session')->with('success', 'Arena Match Started! Good luck!');
+        return redirect()->route('user.arena.match')->with('success', 'Arena Match Started! Good luck!');
+    }
+
+    public function arenaSession(Request $request)
+    {
+        $session_id = session('active_interview_id');
+        $level_id = session('arena_level_id');
+        
+        if (!$session_id || !$level_id) {
+            return redirect()->route('user.learning')->with('error', 'No active Arena Match found.');
+        }
+
+        $arenaLevel = ArenaLevel::find($level_id);
+        $interviewSession = InterviewSession::with('category')->find($session_id);
+
+        if (!$arenaLevel || !$interviewSession) {
+            return redirect()->route('user.learning')->with('error', 'Arena Match data is missing.');
+        }
+
+        // Determine if mobile view
+        $isMobile = false;
+        $userAgent = $request->header('User-Agent');
+        if (preg_match('/Mobile|Android|BlackBerry|IEMobile|Silk/i', $userAgent)) {
+            $isMobile = true;
+        }
+
+        return view('user.arena-session', compact('arenaLevel', 'interviewSession', 'isMobile'));
     }
 }
