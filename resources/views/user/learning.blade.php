@@ -481,10 +481,7 @@
     </div>
 </div>
 
-<!-- AI Learning Assistant Floating Button -->
-<a href="{{ route('user.learning.assistant') }}" id="ai-fab" class="ll-ai-fab" title="Chat with AI Learning Assistant">
-    <i class="fa-solid fa-robot"></i>
-</a>
+
 
 @push('scripts')
 <script>
