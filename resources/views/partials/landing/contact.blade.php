@@ -42,6 +42,15 @@
                                  <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0.5);"></button>
                              </div>
                          @endif
+                         @if(session('contact_error'))
+                             <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 12px; padding: 15px;">
+                                 <i class="fa-solid fa-circle-xmark fs-5 me-3"></i>
+                                 <div>
+                                     <strong>Error:</strong> {{ session('contact_error') }}
+                                 </div>
+                                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0.5);"></button>
+                             </div>
+                         @endif
                          <form action="{{ route('contact.send') }}" method="POST">
                              @csrf
                              <div class="mb-3">
