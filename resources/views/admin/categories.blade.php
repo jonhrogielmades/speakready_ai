@@ -82,6 +82,7 @@
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">ID</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Title</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Description</th>
+                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Type</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Questions</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Status</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Actions</th>
@@ -97,6 +98,13 @@
                         <a href="{{ route('admin.categories.details', $c->id) }}" style="color:var(--tx);text-decoration:none;font-weight:600;">{{ $c->title }}</a>
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ Str::limit($c->description, 50) }}</td>
+                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                        @if($c->type == 'game')
+                            <span class="badge bg-info text-dark">Game</span>
+                        @else
+                            <span class="badge bg-primary">Core</span>
+                        @endif
+                    </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->questions()->count() }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->status == 'active')
@@ -131,6 +139,12 @@
                                     
                                     <label class="olbl">Description</label>
                                     <textarea class="oinp mb-3" name="description" rows="3">{{ $c->description }}</textarea>
+                                    
+                                    <label class="olbl">Type</label>
+                                    <select class="oinp mb-3" name="type" required>
+                                        <option value="core" {{ $c->type == 'core' ? 'selected' : '' }}>Core</option>
+                                        <option value="game" {{ $c->type == 'game' ? 'selected' : '' }}>Game</option>
+                                    </select>
                                     
                                     <label class="olbl">Icon Class (FontAwesome)</label>
                                     <input class="oinp mb-3" type="text" name="icon" value="{{ $c->icon }}" placeholder="e.g. fa-solid fa-briefcase">
@@ -203,6 +217,12 @@
                     
                     <label class="olbl">Description</label>
                     <textarea class="oinp mb-3" name="description" rows="3"></textarea>
+                    
+                    <label class="olbl">Type</label>
+                    <select class="oinp mb-3" name="type" required>
+                        <option value="core">Core</option>
+                        <option value="game">Game</option>
+                    </select>
                     
                     <label class="olbl">Icon Class (FontAwesome)</label>
                     <input class="oinp mb-3" type="text" name="icon" placeholder="e.g. fa-solid fa-briefcase">

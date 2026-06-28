@@ -568,9 +568,9 @@
                class="drawer-item {{ request()->routeIs('admin.modules') ? 'active' : '' }}">
                <i class="fa-solid fa-book-open"></i><span>Modules</span>
             </a>
-            <a href="{{ route('admin.arena') }}"
-               class="drawer-item {{ request()->routeIs('admin.arena') || request()->routeIs('admin.arena.*') ? 'active' : '' }}">
-               <i class="fa-solid fa-gamepad"></i><span>Arena</span>
+            <a href="{{ route('admin.game') }}"
+               class="drawer-item {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}">
+               <i class="fa-solid fa-gamepad"></i><span>Learning Games</span>
             </a>
          </div>
 

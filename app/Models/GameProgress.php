@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ArenaProgress extends Model
+class GameProgress extends Model
 {
     use HasFactory;
 
-    protected $table = 'arena_progress';
+    protected $table = 'game_progress';
 
     protected $fillable = [
         'user_id',
-        'arena_level_id',
+        'game_level_id',
         'status',
         'best_score',
     ];
@@ -25,6 +25,6 @@ class ArenaProgress extends Model
 
     public function level()
     {
-        return $this->belongsTo(ArenaLevel::class, 'arena_level_id');
+        return $this->belongsTo(GameLevel::class, 'game_level_id');
     }
 }

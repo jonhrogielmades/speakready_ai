@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ArenaLevel;
+use App\Models\GameLevel;
 
-class ArenaLevelSeeder extends Seeder
+class GameLevelSeeder extends Seeder
 {
     public function run()
     {
@@ -57,7 +57,7 @@ class ArenaLevelSeeder extends Seeder
         ];
 
         foreach ($levels as $level) {
-            ArenaLevel::updateOrCreate(
+            GameLevel::updateOrCreate(
                 ['level_number' => $level['level_number']],
                 $level
             );

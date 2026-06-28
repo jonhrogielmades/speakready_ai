@@ -246,21 +246,21 @@ class UserController extends Controller
         $user = \Illuminate\Support\Facades\Auth::user();
         $profile = $user->profile;
         
-        $categories = \App\Models\Category::where('status', 'active')->get();
+        $categories = \App\Models\Category::where('status', 'active')->where('type', 'game')->get();
         
         if (!$request->has('category_id') && $categories->count() > 0) {
             return redirect()->route('user.learning', ['category_id' => $categories->first()->id]);
         }
         
-        $query = \App\Models\ArenaLevel::orderBy('level_number', 'asc');
+        $query = \App\Models\GameLevel::orderBy('level_number', 'asc');
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-        $arenaLevels = $query->get();
+        $gameLevels = $query->get();
         
-        $arenaProgress = \App\Models\ArenaProgress::where('user_id', $user->id)->get()->keyBy('arena_level_id');
+        $gameProgress = \App\Models\GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
         
-        return view('user.learning', compact('profile', 'arenaLevels', 'arenaProgress', 'categories')); 
+        return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories')); 
     }
 
     public function voiceRehearsal() { return view('user.drills.voice'); }

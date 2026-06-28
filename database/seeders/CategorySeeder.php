@@ -12,11 +12,19 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = ['Job Interview', 'Scholarship Interview', 'College Admission', 'IT/Programming'];
-        foreach ($categories as $category) {
+        $coreCategories = ['Job Interview', 'Scholarship Interview', 'College Admission', 'IT/Programming'];
+        foreach ($coreCategories as $category) {
             \App\Models\Category::firstOrCreate(
                 ['title' => $category],
-                ['status' => 'active']
+                ['status' => 'active', 'type' => 'core']
+            );
+        }
+
+        $arenaCategories = ['Communication', 'Public Speaking', 'Emotional Intelligence', 'Leadership', 'Conflict Resolution'];
+        foreach ($arenaCategories as $category) {
+            \App\Models\Category::firstOrCreate(
+                ['title' => $category],
+                ['status' => 'active', 'type' => 'arena']
             );
         }
     }

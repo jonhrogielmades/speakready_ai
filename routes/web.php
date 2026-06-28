@@ -45,7 +45,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
-        $categories = \App\Models\Category::where('status', 'active')->get();
+        $categories = \App\Models\Category::where('status', 'active')->where('type', 'core')->get();
         return view('interview.setup', compact('categories'));
     })->name('interview.setup');
 
@@ -80,8 +80,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     
     // Arena Gamification Routes
-    Route::post('/arena/level/{id}/start', [\App\Http\Controllers\ArenaController::class, 'startLevel'])->name('user.arena.start');
-    Route::get('/arena/match', [\App\Http\Controllers\ArenaController::class, 'arenaSession'])->name('user.arena.match');
+    Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
+    Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
     
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
@@ -140,15 +140,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/modules', [AdminController::class, 'storeModule'])->name('admin.modules.store');
     Route::put('/admin/modules/{module}', [AdminController::class, 'updateModule'])->name('admin.modules.update');
     Route::delete('/admin/modules/{module}', [AdminController::class, 'destroyModule'])->name('admin.modules.destroy');
-    Route::post('/admin/modules/{module}/arena-levels', [AdminController::class, 'attachArenaLevel'])->name('admin.modules.arena-levels.store');
-    Route::delete('/admin/modules/{module}/arena-levels/{arenaLevel}', [AdminController::class, 'detachArenaLevel'])->name('admin.modules.arena-levels.destroy');
+    Route::post('/admin/modules/{module}/arena-levels', [AdminController::class, 'attachGameLevel'])->name('admin.modules.arena-levels.store');
+    Route::delete('/admin/modules/{module}/arena-levels/{gameLevel}', [AdminController::class, 'detachGameLevel'])->name('admin.modules.arena-levels.destroy');
 
-    // Admin Routes - Arena Games
-    Route::get('/admin/arena', [\App\Http\Controllers\AdminArenaController::class, 'index'])->name('admin.arena');
-    Route::post('/admin/arena', [\App\Http\Controllers\AdminArenaController::class, 'store'])->name('admin.arena.store');
-    Route::post('/admin/arena/generate', [\App\Http\Controllers\AdminArenaController::class, 'generate'])->name('admin.arena.generate');
-    Route::put('/admin/arena/{arena_level}', [\App\Http\Controllers\AdminArenaController::class, 'update'])->name('admin.arena.update');
-    Route::delete('/admin/arena/{arena_level}', [\App\Http\Controllers\AdminArenaController::class, 'destroy'])->name('admin.arena.destroy');
+    // Admin Routes - Learning Games
+    Route::get('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'index'])->name('admin.game');
+    Route::post('/admin/game', [\App\Http\Controllers\AdminGameController::class, 'store'])->name('admin.game.store');
+    Route::post('/admin/game/generate', [\App\Http\Controllers\AdminGameController::class, 'generate'])->name('admin.game.generate');
+    Route::put('/admin/game/{arena_level}', [\App\Http\Controllers\AdminGameController::class, 'update'])->name('admin.game.update');
+    Route::delete('/admin/game/{arena_level}', [\App\Http\Controllers\AdminGameController::class, 'destroy'])->name('admin.game.destroy');
 
     // Admin Routes - Module Chapters
     Route::post('/admin/modules/{module}/chapters', [AdminController::class, 'storeModuleChapter'])->name('admin.modules.chapters.store');
@@ -209,6 +209,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 Route::get('/setup-db', function() {
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'ArenaLevelSeeder', '--force' => true]);
+    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'GameLevelSeeder', '--force' => true]);
     return 'Database Migrated and Seeded Successfully!';
 });

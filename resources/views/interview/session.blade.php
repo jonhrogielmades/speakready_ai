@@ -136,8 +136,8 @@
                 <div class="panel mb-4">
                     <div class="panel-title">
                         <i class="fa-solid fa-pen-nib me-2"></i> Your Response
-                        @if(session('arena_level_id'))
-                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> ARENA MODE</span>
+                        @if(session('game_level_id'))
+                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
                         @endif
                     </div>
                     
@@ -148,7 +148,7 @@
                                 <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;">00:00</span>
                             </div>
                             
-                            @if(session('arena_level_id'))
+                            @if(session('game_level_id'))
                             <!-- Gamified Hold-to-Talk Button -->
                             <div class="d-flex justify-content-center py-3">
                                 <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="width:120px; height:120px; border-radius:50%; font-weight:800; border:4px solid #b91c1c; box-shadow: 0 10px 20px rgba(239,68,68,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; touch-action:manipulation;">

@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\ArenaLevel;
-use App\Models\ArenaProgress;
+use App\Models\GameLevel;
+use App\Models\GameProgress;
 use App\Models\InterviewSession;
 use Illuminate\Support\Facades\Auth;
 
-class ArenaController extends Controller
+class GameController extends Controller
 {
     public function startLevel(Request $request, $id)
     {
-        $level = ArenaLevel::findOrFail($id);
+        $level = GameLevel::findOrFail($id);
         $user = Auth::user();
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
 
@@ -20,7 +20,7 @@ class ArenaController extends Controller
         $status = 'locked';
         
         // Find the previous level in the same category
-        $previousLevel = ArenaLevel::where('category_id', $level->category_id)
+        $previousLevel = GameLevel::where('category_id', $level->category_id)
                                    ->where('level_number', '<', $level->level_number)
                                    ->orderBy('level_number', 'desc')
                                    ->first();
@@ -28,8 +28,8 @@ class ArenaController extends Controller
         if (!$previousLevel) {
             $status = 'active'; // First level in category is always active
         } else {
-            $prevProgress = ArenaProgress::where('user_id', $user->id)
-                ->where('arena_level_id', $previousLevel->id)
+            $prevProgress = GameProgress::where('user_id', $user->id)
+                ->where('game_level_id', $previousLevel->id)
                 ->first();
                 
             if ($prevProgress && $prevProgress->best_score >= $previousLevel->required_score) {
@@ -39,18 +39,18 @@ class ArenaController extends Controller
         
         // Explicit prerequisite overrides (if set)
         if ($level->prerequisite_level_id) {
-            $prereqProgress = ArenaProgress::where('user_id', $user->id)
-                ->where('arena_level_id', $level->prerequisite_level_id)
+            $prereqProgress = GameProgress::where('user_id', $user->id)
+                ->where('game_level_id', $level->prerequisite_level_id)
                 ->first();
                 
-            $prereqLevel = ArenaLevel::find($level->prerequisite_level_id);
+            $prereqLevel = GameLevel::find($level->prerequisite_level_id);
             if (!$prereqProgress || $prereqProgress->best_score < ($prereqLevel ? $prereqLevel->required_score : 80)) {
                 $status = 'locked'; // Failed explicit prereq
             }
         }
 
-        $progress = ArenaProgress::firstOrCreate(
-            ['user_id' => $user->id, 'arena_level_id' => $level->id],
+        $progress = GameProgress::firstOrCreate(
+            ['user_id' => $user->id, 'game_level_id' => $level->id],
             ['status' => $status, 'best_score' => 0]
         );
 
@@ -84,13 +84,30 @@ class ArenaController extends Controller
             ['status' => 'active']
         );
 
-        // Create Interview Session specifically for Arena Mode
+        // Handle literal '\n' characters that the AI sometimes returns inside JSON strings
+        $normalizedMissionText = str_replace(['\n', '\r\n', '\r'], "\n", $level->mission_text);
+        
+        $lines = array_filter(array_map('trim', explode("\n", $normalizedMissionText)));
+        $questions = [];
+        foreach ($lines as $line) {
+            // Remove leading numbers (e.g. "1. ", "2) ")
+            $cleanLine = trim(preg_replace('/^\d+[\.\)]\s*/', '', $line));
+            if (!empty($cleanLine)) {
+                $questions[] = $cleanLine;
+            }
+        }
+        
+        if (empty($questions)) {
+            $questions = ["Please begin your response."];
+        }
+
+        // Create Interview Session specifically for Game Mode
         $session = InterviewSession::create([
             'user_id' => $user->id,
             'category_id' => $level->category_id ?? $defaultCategory->id,
             'difficulty' => $level->difficulty,
             'target_position' => $level->target_position,
-            'num_questions' => 1, // Gamified Arena uses 1 question per level for rapid play
+            'num_questions' => count($questions), // Dynamic based on challenge
             'response_mode' => 'voice_and_text',
             'interview_focus' => $interviewFocus,
             'company_persona' => $level->ai_persona, // Inject persona
@@ -98,50 +115,37 @@ class ArenaController extends Controller
             'status' => 'in_progress',
         ]);
 
-        // Generate a dynamic question based on the mission text using AI
-        $generated = \App\Services\AIService::generateQuestions(
-            1, // num_questions
-            $level->target_position ?? 'General', // position
-            $level->difficulty ?? 'Medium', // difficulty
-            $level->mission_text, // focus
-            'gemini', // provider
-            null, // resume_text
-            null, // job_description
-            $level->ai_persona // company_persona
-        );
-
-        $questionText = (is_array($generated) && count($generated) > 0) ? $generated[0] : "Your mission: " . $level->mission_text . "\n\nPlease begin your response.";
-
-        // Explicitly create the one Arena Question based on the mission text
-        \App\Models\Question::create([
-            'interview_session_id' => $session->id,
-            'category_id' => $session->category_id,
-            'question_text' => $questionText,
-            'difficulty' => $level->difficulty,
-            'status' => 'active'
-        ]);
+        foreach ($questions as $qText) {
+            \App\Models\Question::create([
+                'interview_session_id' => $session->id,
+                'category_id' => $session->category_id,
+                'question_text' => $qText,
+                'difficulty' => $level->difficulty,
+                'status' => 'active'
+            ]);
+        }
 
         // Save arena context in session
-        session(['arena_level_id' => $level->id]);
+        session(['game_level_id' => $level->id]);
         session(['active_interview_id' => $session->id]);
 
-        return redirect()->route('user.arena.match')->with('success', 'Arena Match Started! Good luck!');
+        return redirect()->route('user.game.match')->with('success', 'Learning Game Started! Good luck!');
     }
 
     public function arenaSession(Request $request)
     {
         $session_id = session('active_interview_id');
-        $level_id = session('arena_level_id');
+        $level_id = session('game_level_id');
         
         if (!$session_id || !$level_id) {
-            return redirect()->route('user.learning')->with('error', 'No active Arena Match found.');
+            return redirect()->route('user.learning')->with('error', 'No active Learning Game found.');
         }
 
-        $arenaLevel = ArenaLevel::find($level_id);
+        $gameLevel = GameLevel::find($level_id);
         $interviewSession = InterviewSession::with('category')->find($session_id);
 
-        if (!$arenaLevel || !$interviewSession) {
-            return redirect()->route('user.learning')->with('error', 'Arena Match data is missing.');
+        if (!$gameLevel || !$interviewSession) {
+            return redirect()->route('user.learning')->with('error', 'Learning Game data is missing.');
         }
 
         // Determine if mobile view
@@ -151,6 +155,6 @@ class ArenaController extends Controller
             $isMobile = true;
         }
 
-        return view('user.arena-session', compact('arenaLevel', 'interviewSession', 'isMobile'));
+        return view('user.game-session', compact('gameLevel', 'interviewSession', 'isMobile'));
     }
 }

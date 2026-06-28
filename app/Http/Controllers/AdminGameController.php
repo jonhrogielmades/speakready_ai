@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ArenaLevel;
+use App\Models\GameLevel;
 use App\Models\Category;
 use App\Services\AIService;
 use Illuminate\Http\Request;
 
-class AdminArenaController extends Controller
+class AdminGameController extends Controller
 {
     public function index()
     {
-        $levels = ArenaLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
+        $levels = GameLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
         
         // Calculate analytics
         foreach ($levels as $level) {
@@ -21,10 +21,10 @@ class AdminArenaController extends Controller
             $level->avg_score = $totalAttempts > 0 ? round($level->progress->avg('best_score')) : 0;
         }
 
-        $allLevels = ArenaLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
-        $categories = Category::where('status', 'active')->get(); // For category dropdown
+        $allLevels = GameLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
+        $categories = Category::where('status', 'active')->where('type', 'game')->get(); // For category dropdown
 
-        return view('admin.arena', compact('levels', 'allLevels', 'categories'));
+        return view('admin.game', compact('levels', 'allLevels', 'categories'));
     }
 
     public function store(Request $request)
@@ -33,12 +33,12 @@ class AdminArenaController extends Controller
         $data = $request->all();
         $data['is_hidden'] = $request->has('is_hidden');
 
-        ArenaLevel::create($data);
+        GameLevel::create($data);
 
-        return redirect()->route('admin.arena')->with('success', 'Arena Game created successfully.');
+        return redirect()->route('admin.game')->with('success', 'Learning Game created successfully.');
     }
 
-    public function update(Request $request, ArenaLevel $arena_level)
+    public function update(Request $request, GameLevel $arena_level)
     {
         $request->validate($this->validationRules($arena_level->id, $request->category_id));
         $data = $request->all();
@@ -46,13 +46,13 @@ class AdminArenaController extends Controller
 
         $arena_level->update($data);
 
-        return redirect()->route('admin.arena')->with('success', 'Arena Game updated successfully.');
+        return redirect()->route('admin.game')->with('success', 'Learning Game updated successfully.');
     }
 
-    public function destroy(ArenaLevel $arena_level)
+    public function destroy(GameLevel $arena_level)
     {
         $arena_level->delete();
-        return redirect()->route('admin.arena')->with('success', 'Arena Game deleted successfully.');
+        return redirect()->route('admin.game')->with('success', 'Learning Game deleted successfully.');
     }
 
     public function generate(Request $request)
@@ -78,7 +78,7 @@ class AdminArenaController extends Controller
             $currentLevelNum = $startLevel + $i;
             
             // Skip if level number already exists in this category to avoid unique constraint violation
-            if (ArenaLevel::where('level_number', $currentLevelNum)->where('category_id', $request->category_id)->exists()) {
+            if (GameLevel::where('level_number', $currentLevelNum)->where('category_id', $request->category_id)->exists()) {
                 continue;
             }
 
@@ -88,7 +88,7 @@ class AdminArenaController extends Controller
             // Modify topic slightly to inform AI of difficulty
             $promptTopic = "{$topic}. Design this specifically for {$difficulty} difficulty level.";
             
-            $gameData = AIService::generateArenaGame($promptTopic);
+            $gameData = AIService::generateGame($promptTopic);
 
             if ($gameData) {
                 $gameData['level_number'] = $currentLevelNum;
@@ -100,21 +100,21 @@ class AdminArenaController extends Controller
                 if ($difficulty == 'intermediate') $gameData['required_score'] = max(70, min(85, $gameData['required_score']));
                 if ($difficulty == 'advanced') $gameData['required_score'] = max(85, min(100, $gameData['required_score']));
 
-                ArenaLevel::create($gameData);
+                GameLevel::create($gameData);
                 $generatedCount++;
             }
         }
 
         if ($generatedCount === 0) {
-            return redirect()->route('admin.arena')->with('error', 'Failed to generate games. Maybe the level numbers already exist or the AI timed out.');
+            return redirect()->route('admin.game')->with('error', 'Failed to generate games. Maybe the level numbers already exist or the AI timed out.');
         }
 
-        return redirect()->route('admin.arena')->with('success', "Successfully generated {$generatedCount} Arena Game(s)!");
+        return redirect()->route('admin.game')->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
     }
 
     private function validationRules($id = null, $categoryId = null)
     {
-        $uniqueRule = \Illuminate\Validation\Rule::unique('arena_levels', 'level_number');
+        $uniqueRule = \Illuminate\Validation\Rule::unique('game_levels', 'level_number');
         if ($categoryId) {
             $uniqueRule->where('category_id', $categoryId);
         }
@@ -141,7 +141,7 @@ class AdminArenaController extends Controller
             'custom_badge_name' => 'nullable|string|max:255',
             'skill_xp_type' => 'nullable|string|max:255',
             'skill_xp_amount' => 'nullable|integer|min:0',
-            'prerequisite_level_id' => 'nullable|exists:arena_levels,id',
+            'prerequisite_level_id' => 'nullable|exists:game_levels,id',
         ];
     }
 }

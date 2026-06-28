@@ -190,17 +190,17 @@ EOT;
         return [];
     }
 
-    public static function generateArenaGame($topic, $provider = 'gemini')
+    public static function generateGame($topic, $provider = 'gemini')
     {
-        $prompt = "You are an expert Gamification and Interview Design AI. Create a highly engaging, gamified Interview Arena Game based on the topic: '$topic'.\n";
+        $prompt = "You are an expert Gamification and Interview Design AI. Create a highly engaging, gamified Interview Learning Game based on the topic: '$topic'.\n";
         $prompt .= <<<EOT
 Return ONLY a valid JSON object describing the level. Do not include markdown formatting or explanations.
 The JSON structure MUST be exactly like this:
 {
   "title": "String, a catchy gamified title",
   "description": "String, 1-2 sentences setting the scene",
-  "mission_text": "String, instructions for the user",
-  "target_position": "String, e.g., 'Sales Manager', 'Software Engineer'",
+  "mission_text": "String, 5-10 specific questions the user needs to answer in this challenge. Format them as a numbered list. DO NOT write this as a mission, just list the questions.",
+  "target_position": "String, the personal improvement goal e.g., 'Better Communication', 'Public Speaking'",
   "difficulty": "String, either 'beginner', 'intermediate', or 'advanced'",
   "required_score": 80, // Integer between 50 and 100
   "xp_reward": 500, // Integer
@@ -216,33 +216,35 @@ The JSON structure MUST be exactly like this:
 }
 EOT;
 
-        $maxRetries = 3;
-        $attempt = 0;
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere');
+        $providers = array_filter(array_map('trim', explode(',', $priorityString)));
+        if (empty($providers)) {
+            $providers = [$provider, 'gemini', 'groq', 'claude', 'openrouter', 'wisdomgate', 'cohere'];
+        }
 
-        while ($attempt < $maxRetries) {
+        foreach ($providers as $currentProvider) {
             try {
                 $response = [];
-                switch ($provider) {
+                switch ($currentProvider) {
                     case 'gemini': $response = self::callGemini($prompt); break;
                     case 'cohere': $response = self::callCohere($prompt); break;
                     case 'groq': $response = self::callGroq($prompt); break;
                     case 'openrouter': $response = self::callOpenRouter($prompt); break;
                     case 'claude': $response = self::callClaude($prompt); break;
                     case 'wisdomgate': $response = self::callWisdomGate($prompt); break;
-                    default: $response = self::callGemini($prompt); break;
+                    default: continue 2;
                 }
                 
                 if (is_string($response)) {
-                    $decoded = json_decode($response, true);
-                    if ($decoded) return $decoded;
+                    $cleanResponse = trim(str_replace(['```json', '```'], '', $response));
+                    $decoded = json_decode($cleanResponse, true);
+                    if ($decoded && isset($decoded['title'])) return $decoded;
                 } elseif (is_array($response)) {
-                    return $response;
+                    if (isset($response['title'])) return $response;
                 }
             } catch (\Exception $e) {
-                Log::error("Arena Game Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
+                Log::error("Learning Game Generation Error ($currentProvider): " . $e->getMessage());
             }
-            $attempt++;
-            if ($attempt < $maxRetries) sleep(1);
         }
         
         return null;

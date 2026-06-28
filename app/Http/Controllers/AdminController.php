@@ -110,6 +110,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'type' => 'required|in:core,game',
             'description' => 'nullable|string',
             'icon' => 'nullable|string',
             'status' => 'nullable|string',
@@ -118,6 +119,7 @@ class AdminController extends Controller
 
         Category::create([
             'title' => $request->title,
+            'type' => $request->type,
             'description' => $request->description,
             'icon' => $request->icon,
             'status' => $request->status ?? 'active',
@@ -132,6 +134,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
+            'type' => 'required|in:core,game',
             'description' => 'nullable|string',
             'icon' => 'nullable|string',
             'status' => 'required|string',
@@ -140,6 +143,7 @@ class AdminController extends Controller
 
         $category->update([
             'title' => $request->title,
+            'type' => $request->type,
             'description' => $request->description,
             'icon' => $request->icon,
             'status' => $request->status,
@@ -451,9 +455,9 @@ class AdminController extends Controller
 
     public function editModule(LearningModule $module)
     {
-        $module->load(['chapters', 'resources', 'quizzes.questions', 'activities', 'arenaLevels']);
-        $allArenaLevels = \App\Models\ArenaLevel::orderBy('level_number', 'asc')->get();
-        return view('admin.module_edit', compact('module', 'allArenaLevels'));
+        $module->load(['chapters', 'resources', 'quizzes.questions', 'activities', 'gameLevels']);
+        $allGameLevels = \App\Models\GameLevel::orderBy('level_number', 'asc')->get();
+        return view('admin.module_edit', compact('module', 'allGameLevels'));
     }
 
     public function updateModule(Request $request, LearningModule $module)
@@ -652,23 +656,23 @@ class AdminController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function attachArenaLevel(Request $request, LearningModule $module)
+    public function attachGameLevel(Request $request, LearningModule $module)
     {
         $request->validate([
-            'arena_level_id' => 'required|exists:arena_levels,id',
+            'game_level_id' => 'required|exists:game_levels,id',
         ]);
 
-        if (!$module->arenaLevels->contains($request->arena_level_id)) {
-            $module->arenaLevels()->attach($request->arena_level_id);
-            return redirect()->back()->with('success', 'Arena Game attached successfully.');
+        if (!$module->gameLevels->contains($request->game_level_id)) {
+            $module->gameLevels()->attach($request->game_level_id);
+            return redirect()->back()->with('success', 'Learning Game attached successfully.');
         }
 
-        return redirect()->back()->with('warning', 'Arena Game is already attached.');
+        return redirect()->back()->with('warning', 'Learning Game is already attached.');
     }
 
-    public function detachArenaLevel(LearningModule $module, \App\Models\ArenaLevel $arenaLevel)
+    public function detachGameLevel(LearningModule $module, \App\Models\GameLevel $gameLevel)
     {
-        $module->arenaLevels()->detach($arenaLevel->id);
-        return redirect()->back()->with('success', 'Arena Game detached successfully.');
+        $module->gameLevels()->detach($gameLevel->id);
+        return redirect()->back()->with('success', 'Learning Game detached successfully.');
     }
 }

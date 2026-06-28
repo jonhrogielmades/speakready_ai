@@ -299,7 +299,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <h3 style="font-weight:800;color:var(--tx);margin:0; font-family:'Poppins', sans-serif; text-transform:uppercase;">Interview Arena</h3>
+                <h3 style="font-weight:800;color:var(--tx);margin:0; font-family:'Poppins', sans-serif; text-transform:uppercase;">Learning Games</h3>
                 <span class="badge" style="background:linear-gradient(135deg, var(--pur) 0%, #34d399 100%); color:#fff; border-radius:8px; font-weight:800;">SEASON 1</span>
             </div>
             <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
@@ -374,7 +374,7 @@
                     <i class="fa-solid fa-bullseye"></i>
                 </div>
                 <div style="text-align:left;">
-                    @php $avgScore = $arenaProgress && $arenaProgress->count() > 0 ? round($arenaProgress->avg('best_score')) : 0; @endphp
+                    @php $avgScore = $gameProgress && $gameProgress->count() > 0 ? round($gameProgress->avg('best_score')) : 0; @endphp
                     <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $avgScore }}%</div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Accuracy</div>
                 </div>
@@ -401,22 +401,22 @@
                 <!-- Path Line -->
                 <div class="level-path-line">
                     @php 
-                        $completedCount = $arenaProgress ? $arenaProgress->where('status', 'completed')->count() : 0;
-                        $totalLevels = $arenaLevels ? $arenaLevels->count() : 1;
+                        $completedCount = $gameProgress ? $gameProgress->where('status', 'completed')->count() : 0;
+                        $totalLevels = $gameLevels ? $gameLevels->count() : 1;
                         $pathPercent = min(100, ($completedCount / max(1, $totalLevels)) * 100);
                     @endphp
                     <div class="level-path-line-progress" style="height: {{ $pathPercent }}%;"></div>
                 </div>
 
-                @if($arenaLevels && $arenaLevels->count() > 0)
+                @if($gameLevels && $gameLevels->count() > 0)
                     @php $catPassed = []; @endphp
-                    @foreach($arenaLevels as $level)
+                    @foreach($gameLevels as $level)
                         @php
                             if (!isset($catPassed[$level->category_id])) {
                                 $catPassed[$level->category_id] = true; // First level in any category is unlocked
                             }
                             
-                            $prog = $arenaProgress ? $arenaProgress->get($level->id) : null;
+                            $prog = $gameProgress ? $gameProgress->get($level->id) : null;
                             $isCompleted = $prog && $prog->best_score >= $level->required_score;
                             
                             if ($isCompleted) {
@@ -433,8 +433,8 @@
 
                             // Explicit prerequisite overrides (if set)
                             if ($level->prerequisite_level_id && $status === 'active') {
-                                $prereqProg = $arenaProgress->get($level->prerequisite_level_id);
-                                $prereqLevel = $arenaLevels->where('id', $level->prerequisite_level_id)->first();
+                                $prereqProg = $gameProgress->get($level->prerequisite_level_id);
+                                $prereqLevel = $gameLevels->where('id', $level->prerequisite_level_id)->first();
                                 if (!$prereqProg || $prereqProg->best_score < ($prereqLevel ? $prereqLevel->required_score : 80)) {
                                     $status = 'locked';
                                     $catPassed[$level->category_id] = false;
@@ -504,11 +504,10 @@
 
                                 @if($status === 'active')
                                     <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
-                                        <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-flask me-1 text-info"></i> Your Mission:</div>
-                                        <div style="color:var(--tx3);font-size:0.85rem">{{ $level->mission_text }}</div>
+                                        <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count(array_filter(explode("\n", str_replace(['\n', '\r\n', '\r'], "\n", trim($level->mission_text))))) }} Questions</div>
                                         <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
                                     </div>
-                                    <form action="{{ route('user.arena.start', $level->id) }}" method="POST">
+                                    <form action="{{ route('user.game.start', $level->id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
                                     </form>
@@ -518,7 +517,7 @@
                                     </div>
                                 @elseif($status === 'locked')
                                     @if($level->prerequisite_level_id)
-                                        @php $prereq = $arenaLevels->where('id', $level->prerequisite_level_id)->first(); @endphp
+                                        @php $prereq = $gameLevels->where('id', $level->prerequisite_level_id)->first(); @endphp
                                         @if($prereq)
                                             <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
                                                 <i class="fa-solid fa-circle-info text-info"></i> Reach {{ $prereq->required_score }}% in Level {{ $prereq->level_number }} to unlock.
@@ -532,7 +531,7 @@
                 @else
                     <div class="text-center py-5">
                         <i class="fa-solid fa-ghost fa-3x mb-3" style="color:var(--bd)"></i>
-                        <h5 style="color:var(--tx3)">No Arena Levels loaded yet.</h5>
+                        <h5 style="color:var(--tx3)">No Game Levels loaded yet.</h5>
                     </div>
                 @endif
             </div>
@@ -549,7 +548,7 @@
         const driver = window.driver.js.driver;
 
         const stepsMobile = [
-            { element: '#nav-pills-container', popover: { title: 'Arena Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
+            { element: '#nav-pills-container', popover: { title: 'Game Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
             { element: '#dashboard-stats', popover: { title: 'Your Player Stats', description: 'Track your Level, Energy, Combo Streak, and overall AI Accuracy.', side: "top", align: 'start' }},
 
             { element: '#modules-list', popover: { title: 'Interview Journey', description: 'Complete levels to earn XP and unlock tougher challenges. Master the levels to rank up!', side: "top", align: 'start' }},
@@ -557,7 +556,7 @@
         ];
 
         const stepsDesktop = [
-            { element: '#nav-pills-container', popover: { title: 'Arena Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
+            { element: '#nav-pills-container', popover: { title: 'Game Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
             { element: '#dashboard-stats', popover: { title: 'Your Player Stats', description: 'Track your Level, Energy, Combo Streak, and overall AI Accuracy.', side: "bottom", align: 'start' }},
 
             { element: '#modules-list', popover: { title: 'Interview Journey', description: 'Complete levels to earn XP and unlock tougher challenges. Master the levels to rank up!', side: "top", align: 'start' }},

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ArenaLevel extends Model
+class GameLevel extends Model
 {
     use HasFactory;
 
@@ -34,17 +34,17 @@ class ArenaLevel extends Model
 
     public function progress()
     {
-        return $this->hasMany(ArenaProgress::class);
+        return $this->hasMany(GameProgress::class);
     }
 
     public function learningModules()
     {
-        return $this->belongsToMany(LearningModule::class, 'learning_module_arena_level');
+        return $this->belongsToMany(LearningModule::class, 'learning_module_game_level');
     }
 
     public function prerequisiteLevel()
     {
-        return $this->belongsTo(ArenaLevel::class, 'prerequisite_level_id');
+        return $this->belongsTo(GameLevel::class, 'prerequisite_level_id');
     }
 
     public function category()

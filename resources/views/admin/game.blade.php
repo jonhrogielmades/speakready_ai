@@ -1,16 +1,16 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
-<div class="db-section active" id="sec-admin-arena">
+<div class="db-section active" id="sec-admin-game">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Arena Games</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified interview levels, modifiers, and missions.</p>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Learning Games</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage personal improvement challenges, modifiers, and missions.</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateArenaModal">
+            <button class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">
                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Auto-Generate
             </button>
-            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addArenaModal">
+            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addGameModal">
                 <i class="fa-solid fa-plus me-1"></i> Add Game
             </button>
         </div>
@@ -49,7 +49,7 @@
     @endphp
 
     <style>
-        .arena-cat-pill {
+        .game-cat-pill {
             border-radius: 20px;
             font-weight: 600;
             padding: 8px 20px;
@@ -58,32 +58,32 @@
             background: var(--sf);
             transition: 0.3s;
         }
-        .arena-cat-pill:hover {
+        .game-cat-pill:hover {
             background: rgba(59,130,246,0.1);
             color: var(--pur);
         }
-        .arena-cat-pill.active {
+        .game-cat-pill.active {
             background: var(--pur) !important;
             color: #fff !important;
             border-color: var(--pur) !important;
             box-shadow: 0 4px 15px rgba(59,130,246,0.3);
         }
-        .arena-categories-scroll {
+        .game-categories-scroll {
             flex-wrap: nowrap;
             overflow-x: auto;
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
             padding-bottom: 10px;
         }
-        .arena-categories-scroll::-webkit-scrollbar {
+        .game-categories-scroll::-webkit-scrollbar {
             display: none;
         }
     </style>
 
-    <ul class="nav nav-pills mb-4 arena-categories-scroll" id="arena-categories-tab" role="tablist" style="gap:10px;">
+    <ul class="nav nav-pills mb-4 game-categories-scroll" id="game-categories-tab" role="tablist" style="gap:10px;">
         @foreach($categories as $index => $categoryRow)
             <li class="nav-item" role="presentation">
-                <button class="nav-link arena-cat-pill {{ $index === 0 ? 'active' : '' }}" 
+                <button class="nav-link game-cat-pill {{ $index === 0 ? 'active' : '' }}" 
                     id="cat-tab-{{ $categoryRow->id }}" 
                     data-bs-toggle="pill" 
                     data-bs-target="#cat-pane-{{ $categoryRow->id }}" 
@@ -94,7 +94,7 @@
         @endforeach
     </ul>
 
-    <div class="tab-content" id="arena-categories-tabContent">
+    <div class="tab-content" id="game-categories-tabContent">
         @foreach($categories as $index => $categoryRow)
             @php
                 $catLevels = $groupedLevels->get($categoryRow->id, collect());
@@ -129,7 +129,7 @@
                             <td style="padding:16px;vertical-align:middle;">
                                 <div style="font-weight:700;color:var(--tx)">{{ $level->title }}</div>
                                 <div style="font-size:0.75rem;color:var(--tx2); margin-top:2px;">
-                                    <span class="badge bg-secondary" style="font-size:0.65rem; margin-right:4px;">{{ $level->category ? $level->category->title : 'No Category' }}</span> 
+                                    <span class="badge bg-secondary" style="font-size:0.65rem; margin-right:4px;">{{ $level->category ? $level->category->title : 'No Personal Improvement' }}</span> 
                                     {{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}
                                 </div>
                                 @if($level->prerequisiteLevel)
@@ -156,10 +156,10 @@
                                 <div style="font-size:0.8rem;color:var(--tx3);">Avg Score: {{ $level->avg_score }}%</div>
                             </td>
                             <td style="padding:16px;vertical-align:middle;text-align:right;">
-                                <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editArenaModal{{ $level->id }}" title="Edit">
+                                <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
-                                <form action="{{ route('admin.arena.destroy', $level->id) }}" method="POST" style="display:inline-block;">
+                                <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" style="display:inline-block;">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete" onclick="return confirm('Are you sure you want to delete this game?');">
                                         <i class="fa-solid fa-trash"></i>
@@ -168,14 +168,14 @@
                             </td>
                         </tr>
 
-                        <!-- Edit Arena Game Modal -->
-                        <div class="modal fade" id="editArenaModal{{ $level->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+                        <!-- Edit Learning Game Modal -->
+                        <div class="modal fade" id="editGameModal{{ $level->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
                             <div class="modal-dialog modal-xl">
                                 <div class="modal-content" style="border:1px solid var(--bd)">
-                                    <form action="{{ route('admin.arena.update', $level->id) }}" method="POST">
+                                    <form action="{{ route('admin.game.update', $level->id) }}" method="POST">
                                         @csrf @method('PUT')
                                         <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                                            <h5 class="modal-title" style="color:var(--tx)">Edit Arena Game: Lvl {{ $level->level_number }}</h5>
+                                            <h5 class="modal-title" style="color:var(--tx)">Edit Learning Game: Lvl {{ $level->level_number }}</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                                         </div>
                                         <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
@@ -186,7 +186,7 @@
                                                     <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" required>
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <label class="olbl">Category</label>
+                                                    <label class="olbl">Personal Improvement</label>
                                                     <select class="oinp w-100" name="category_id" required>
                                                         @foreach($categories as $cat)
                                                             <option value="{{ $cat->id }}" {{ $level->category_id == $cat->id ? 'selected' : '' }}>{{ $cat->title }}</option>
@@ -198,7 +198,7 @@
                                                     <input class="oinp w-100" type="text" name="title" value="{{ $level->title }}" required>
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <label class="olbl">Target Position</label>
+                                                    <label class="olbl">Improvement Goal</label>
                                                     <input class="oinp w-100" type="text" name="target_position" value="{{ $level->target_position }}" required>
                                                 </div>
                                             </div>
@@ -242,14 +242,14 @@
                                                 <textarea class="oinp w-100" name="description" rows="2">{{ $level->description }}</textarea>
                                             </div>
                                             <div class="mb-4">
-                                                <label class="olbl">Mission Text (User Instructions)</label>
+                                                <label class="olbl">Questions (For the user to answer)</label>
                                                 <textarea class="oinp w-100" name="mission_text" rows="2">{{ $level->mission_text }}</textarea>
                                             </div>
 
                                             <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>
                                             <div class="row g-3 mb-3">
                                                 <div class="col-md-4">
-                                                    <label class="olbl">AI Persona (e.g. Strict Technical Lead)</label>
+                                                    <label class="olbl">AI Persona (e.g. Supportive Coach)</label>
                                                     <input class="oinp w-100" type="text" name="ai_persona" value="{{ $level->ai_persona }}">
                                                 </div>
                                                 <div class="col-md-4">
@@ -313,7 +313,7 @@
                         <tr>
                             <td colspan="6" class="text-center py-5" style="color:var(--tx3);">
                                 <i class="fa-solid fa-gamepad fa-3x mb-3" style="color:var(--bd);"></i>
-                                <h5>No Arena Games Found</h5>
+                                <h5>No Learning Games Found</h5>
                                 <p>Click "Add Game" or "Auto-Generate" to create your first level.</p>
                             </td>
                         </tr>
@@ -328,10 +328,10 @@
 </div>
 
 <!-- Auto-Generate Game Modal -->
-<div class="modal fade" id="generateArenaModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+<div class="modal fade" id="generateGameModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
     <div class="modal-dialog">
         <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.arena.generate') }}" method="POST" id="generateGameForm">
+            <form action="{{ route('admin.game.generate') }}" method="POST" id="generateGameForm">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
                     <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-info me-2"></i> Auto-Generate AI Game</h5>
@@ -350,7 +350,7 @@
                             <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="30" required>
                         </div>
                         <div class="col-md-5">
-                            <label class="olbl">Category</label>
+                            <label class="olbl">Personal Improvement</label>
                             <select class="oinp w-100" name="category_id" required>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->title }}</option>
@@ -361,7 +361,7 @@
 
                     <div class="mb-3">
                         <label class="olbl">Topic / Challenge Focus</label>
-                        <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. Dealing with a hostile client, High stress technical test, Salary negotiation">
+                        <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. Overcoming shyness, Expressing thoughts clearly, Managing anger">
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
@@ -373,14 +373,14 @@
     </div>
 </div>
 
-<!-- Add Arena Game Modal -->
-<div class="modal fade" id="addArenaModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+<!-- Add Learning Game Modal -->
+<div class="modal fade" id="addGameModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
     <div class="modal-dialog modal-xl">
         <div class="modal-content" style="border:1px solid var(--bd)">
-            <form action="{{ route('admin.arena.store') }}" method="POST">
+            <form action="{{ route('admin.game.store') }}" method="POST">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Arena Game</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Learning Game</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
@@ -391,7 +391,7 @@
                             <input class="oinp w-100" type="number" name="level_number" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="olbl">Category</label>
+                            <label class="olbl">Personal Improvement</label>
                             <select class="oinp w-100" name="category_id" required>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat->id }}">{{ $cat->title }}</option>
@@ -400,11 +400,11 @@
                         </div>
                         <div class="col-md-4">
                             <label class="olbl">Title</label>
-                            <input class="oinp w-100" type="text" name="title" required placeholder="e.g. Sales Pitch Challenge">
+                            <input class="oinp w-100" type="text" name="title" required placeholder="e.g. Public Speaking Practice">
                         </div>
                         <div class="col-md-3">
-                            <label class="olbl">Target Position</label>
-                            <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. Sales Manager">
+                            <label class="olbl">Improvement Goal</label>
+                            <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. Better Communication">
                         </div>
                     </div>
 
@@ -445,15 +445,15 @@
                         <textarea class="oinp w-100" name="description" rows="2" placeholder="Brief description of the game/level"></textarea>
                     </div>
                     <div class="mb-4">
-                        <label class="olbl">Mission Text (Instructions)</label>
-                        <textarea class="oinp w-100" name="mission_text" rows="2" placeholder="Specific instructions for the user"></textarea>
+                        <label class="olbl">Questions (For the user to answer)</label>
+                        <textarea class="oinp w-100" name="mission_text" rows="2" placeholder="List the questions for the user..."></textarea>
                     </div>
 
                     <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="olbl">AI Persona</label>
-                            <input class="oinp w-100" type="text" name="ai_persona" placeholder="e.g. Strict HR Director">
+                            <input class="oinp w-100" type="text" name="ai_persona" placeholder="e.g. Supportive Therapist">
                         </div>
                         <div class="col-md-4">
                             <label class="olbl">Time Limit (Seconds)</label>

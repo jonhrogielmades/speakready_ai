@@ -99,7 +99,7 @@
 
         <!-- Get Ready Overlay -->
         <div id="get-ready-overlay">
-            <h2 style="font-weight:800;text-transform:uppercase;margin-bottom:10px;color:var(--tx)">Level {{ $arenaLevel->level_number }}</h2>
+            <h2 style="font-weight:800;text-transform:uppercase;margin-bottom:10px;color:var(--tx)">Level {{ $gameLevel->level_number }}</h2>
             <h1 id="countdown-text">3</h1>
             <p style="font-weight:600;color:var(--tx3);margin-top:20px;">Prepare your mic...</p>
         </div>
@@ -108,28 +108,22 @@
         <div class="hud-banner d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="badge" style="background:var(--pur);color:#fff;font-size:0.8rem;"><i class="fa-solid fa-gamepad me-1"></i> ARENA MATCH</span>
-                    <h4 style="font-size:1.4rem;font-weight:800;margin:0;color:var(--tx)">Level {{ $arenaLevel->level_number }}: {{ $arenaLevel->title }}</h4>
+                    <span class="badge" style="background:var(--pur);color:#fff;font-size:0.8rem;"><i class="fa-solid fa-gamepad me-1"></i> LEARNING GAME</span>
+                    <h4 style="font-size:1.4rem;font-weight:800;margin:0;color:var(--tx)">Level {{ $gameLevel->level_number }}: {{ $gameLevel->title }}</h4>
                 </div>
-                <div style="font-size:0.9rem;color:var(--tx2);">
-                    <strong>Mission:</strong> {{ $arenaLevel->mission_text }}
-                </div>
+
             </div>
             
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                @if($arenaLevel->time_limit_seconds)
+                @if($gameLevel->time_limit_seconds)
                     <div class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;padding:8px 12px;font-size:0.9rem;">
-                        <i class="fa-solid fa-stopwatch me-1"></i> <span id="arena-timer">{{ $arenaLevel->time_limit_seconds }}s</span>
+                        <i class="fa-solid fa-stopwatch me-1"></i> <span id="game-timer">{{ $gameLevel->time_limit_seconds }}s</span>
                     </div>
                 @endif
                 <div class="badge" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid #34d399;padding:8px 12px;font-size:0.9rem;">
-                    <i class="fa-solid fa-bullseye me-1"></i> Goal: {{ $arenaLevel->required_score }}%+
+                    <i class="fa-solid fa-bullseye me-1"></i> Goal: {{ $gameLevel->required_score }}%+
                 </div>
-                <!-- Desktop Buttons -->
-                <div class="d-none d-lg-flex gap-2" id="headerButtons" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
-                    <button type="button" class="btn btn-sm btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
-                    <button type="button" class="bgrd btn btn-sm px-3 next-btn-class text-white" onclick="submitAnswer()">Next <i class="fa-solid fa-arrow-right"></i></button>
-                </div>
+
             </div>
         </div>
 
@@ -180,10 +174,22 @@
 
                 <!-- Answer Response System -->
                 <div class="panel mb-4">
+                    <!-- Navigation Buttons -->
+                    <div class="row g-2 pb-3 mb-3 border-bottom align-items-center" style="border-color:var(--bd) !important">
+                        <div class="col-12 col-sm-auto d-flex gap-2">
+                            <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
+                            <button type="button" class="btn btn-outline-secondary flex-fill prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left"></i></button>
+                            <button type="button" class="btn btn-outline-warning flex-fill skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
+                        </div>
+                        <div class="col-12 col-sm-auto ms-sm-auto d-flex">
+                            <button type="button" class="bgrd btn px-4 w-100 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                        </div>
+                    </div>
+
                     <div class="panel-title">
                         <i class="fa-solid fa-pen-nib me-2"></i> Your Response
-                        @if(session('arena_level_id'))
-                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> ARENA MODE</span>
+                        @if(session('game_level_id'))
+                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
                         @endif
                     </div>
                     
@@ -194,7 +200,7 @@
                                 <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;">00:00</span>
                             </div>
                             
-                            @if(session('arena_level_id'))
+                            @if(session('game_level_id'))
                             <!-- Gamified Hold-to-Talk Button -->
                             <div class="d-flex justify-content-center py-3">
                                 <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="width:120px; height:120px; border-radius:50%; font-weight:800; border:4px solid #b91c1c; box-shadow: 0 10px 20px rgba(239,68,68,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; touch-action:manipulation;">
@@ -220,15 +226,6 @@
                             </div>
                         </div>
 
-                        <!-- Mobile Buttons (Hidden on Desktop) -->
-                        <div class="d-flex d-lg-none flex-column flex-sm-row justify-content-between border-top pt-4 gap-3" style="border-color:var(--bd) !important">
-                            <div class="d-flex flex-wrap gap-2 w-100">
-                                <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
-                                <button type="button" class="btn btn-outline-secondary flex-fill prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left"></i></button>
-                                <button type="button" class="btn btn-outline-warning flex-fill skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
-                            </div>
-                            <button type="button" class="bgrd btn px-4 w-100 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -463,9 +460,6 @@
 
             function startInterviewSession() {
                 document.getElementById('workspaceWrapper').style.display = 'block';
-                document.getElementById('headerButtons').style.opacity = '1';
-                document.getElementById('headerButtons').style.pointerEvents = 'auto';
-                
                 initCamera();
                 
                 if(responseMode === 'voice' || responseMode === 'hybrid') {

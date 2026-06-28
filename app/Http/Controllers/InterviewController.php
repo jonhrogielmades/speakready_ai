@@ -165,16 +165,16 @@ class InterviewController extends Controller
             'difficulty' => $session->difficulty,
         ];
 
-        // Arena Level specific modifiers
-        $arenaLevel = null;
-        if (session('arena_level_id')) {
-            $arenaLevel = \App\Models\ArenaLevel::find(session('arena_level_id'));
-            if ($arenaLevel) {
-                if ($arenaLevel->banned_words) {
-                    $sessionData['banned_words'] = $arenaLevel->banned_words;
+        // Game Level specific modifiers
+        $gameLevel = null;
+        if (session('game_level_id')) {
+            $gameLevel = \App\Models\GameLevel::find(session('game_level_id'));
+            if ($gameLevel) {
+                if ($gameLevel->banned_words) {
+                    $sessionData['banned_words'] = $gameLevel->banned_words;
                 }
-                if ($arenaLevel->target_tone) {
-                    $sessionData['target_tone'] = $arenaLevel->target_tone;
+                if ($gameLevel->target_tone) {
+                    $sessionData['target_tone'] = $gameLevel->target_tone;
                 }
             }
         }
@@ -270,38 +270,38 @@ class InterviewController extends Controller
         }
 
         $xpEarned = 50;
-        $arenaStatus = null;
-        if ($arenaLevel) {
-            $xpEarned = $arenaLevel->xp_reward;
-            $progress = \App\Models\ArenaProgress::where('user_id', Auth::id())
-                            ->where('arena_level_id', $arenaLevel->id)->first();
+        $gameStatus = null;
+        if ($gameLevel) {
+            $xpEarned = $gameLevel->xp_reward;
+            $progress = \App\Models\GameProgress::where('user_id', Auth::id())
+                            ->where('game_level_id', $gameLevel->id)->first();
                             
             if ($progress) {
-                if ($overall >= $arenaLevel->required_score) {
+                if ($overall >= $gameLevel->required_score) {
                     $progress->status = 'completed';
-                    $arenaStatus = 'victory';
+                    $gameStatus = 'victory';
                     
                     // Unlock next level
-                    $nextLevel = \App\Models\ArenaLevel::where('level_number', $arenaLevel->level_number + 1)->first();
+                    $nextLevel = \App\Models\GameLevel::where('level_number', $gameLevel->level_number + 1)->first();
                     if ($nextLevel) {
-                        \App\Models\ArenaProgress::firstOrCreate(
-                            ['user_id' => Auth::id(), 'arena_level_id' => $nextLevel->id],
+                        \App\Models\GameProgress::firstOrCreate(
+                            ['user_id' => Auth::id(), 'game_level_id' => $nextLevel->id],
                             ['status' => 'active', 'best_score' => 0]
                         );
                     }
 
                     // Add Custom Badge and Skill XP if victorious
-                    if ($arenaLevel->custom_badge_name && !in_array($arenaLevel->custom_badge_name, $badges)) {
-                        $badges[] = $arenaLevel->custom_badge_name;
+                    if ($gameLevel->custom_badge_name && !in_array($gameLevel->custom_badge_name, $badges)) {
+                        $badges[] = $gameLevel->custom_badge_name;
                     }
-                    if ($arenaLevel->skill_xp_amount > 0) {
+                    if ($gameLevel->skill_xp_amount > 0) {
                         // Right now we only have general XP, but we could add skill-specific XP columns later.
                         // For now we just add it to general XP to make sure it's awarded
-                        $xpEarned += $arenaLevel->skill_xp_amount; 
+                        $xpEarned += $gameLevel->skill_xp_amount; 
                     }
 
                 } else {
-                    $arenaStatus = 'defeat';
+                    $gameStatus = 'defeat';
                 }
                 if ($overall > $progress->best_score) {
                     $progress->best_score = $overall;
@@ -352,8 +352,8 @@ class InterviewController extends Controller
         $profile->save();
 
         session()->forget('active_interview_id');
-        $arenaLevelId = session('arena_level_id');
-        session()->forget('arena_level_id');
+        $gameLevelId = session('game_level_id');
+        session()->forget('game_level_id');
 
         ActivityLogger::log(
             Auth::user(),
@@ -364,9 +364,9 @@ class InterviewController extends Controller
             ['title' => 'Interview Completed', 'icon' => 'fa-flag-checkered', 'type' => 'success']
         );
 
-        if ($arenaLevelId) {
-            $msg = $arenaStatus === 'victory' ? 'Victory! You cleared the Arena Level!' : 'Defeat! You did not reach the required score. Try again!';
-            return redirect()->route('user.learning')->with($arenaStatus === 'victory' ? 'success' : 'error', $msg);
+        if ($gameLevelId) {
+            $msg = $gameStatus === 'victory' ? 'Victory! You cleared the Game Level!' : 'Defeat! You did not reach the required score. Try again!';
+            return redirect()->route('user.learning')->with($gameStatus === 'victory' ? 'success' : 'error', $msg);
         }
 
         return redirect()->route('interview.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
