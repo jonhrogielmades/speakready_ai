@@ -548,19 +548,15 @@
         const driver = window.driver.js.driver;
 
         const stepsMobile = [
-            { element: '#nav-pills-container', popover: { title: 'Game Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: 'Your Player Stats', description: 'Track your Level, Energy, Combo Streak, and overall AI Accuracy.', side: "top", align: 'start' }},
-
-            { element: '#modules-list', popover: { title: 'Interview Journey', description: 'Complete levels to earn XP and unlock tougher challenges. Master the levels to rank up!', side: "top", align: 'start' }},
-            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a challenge? Click here anytime to ask the AI Coach for a hint.', side: "top", align: 'end' }}
+            { element: '#nav-pills-container', popover: { title: 'Categories', description: 'Switch between different learning categories to discover new challenges.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy.', side: "top", align: 'start' }},
+            { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs.', side: "top", align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '#nav-pills-container', popover: { title: 'Game Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: 'Your Player Stats', description: 'Track your Level, Energy, Combo Streak, and overall AI Accuracy.', side: "bottom", align: 'start' }},
-
-            { element: '#modules-list', popover: { title: 'Interview Journey', description: 'Complete levels to earn XP and unlock tougher challenges. Master the levels to rank up!', side: "top", align: 'start' }},
-            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a challenge? Click here anytime to ask the AI Coach for a hint.', side: "left", align: 'end' }}
+            { element: '#nav-pills-container', popover: { title: 'Categories', description: 'Switch between different learning categories to discover new challenges.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy.', side: "bottom", align: 'start' }},
+            { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs.', side: "top", align: 'start' }}
         ];
 
         const driverObj = driver({
