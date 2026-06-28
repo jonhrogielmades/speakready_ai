@@ -483,8 +483,8 @@
             </a>
             <a href="{{ route('user.learning') }}"
                class="drawer-item {{ request()->routeIs('user.learning*') ? 'active' : '' }}">
-               <i class="fa-solid fa-book-open"></i>
-               <span>Learning Lab</span>
+               <i class="fa-solid fa-gamepad"></i>
+               <span>Interview Arena</span>
             </a>
             <a href="{{ route('user.feedback') }}"
                class="drawer-item {{ request()->routeIs('user.feedback') ? 'active' : '' }}">
