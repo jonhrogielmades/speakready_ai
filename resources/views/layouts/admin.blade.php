@@ -52,7 +52,8 @@
                <a href="{{ route('admin.users.index') }}" class="db-nl {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i> User Management</a>
                <a href="{{ route('admin.categories') }}" class="db-nl {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> Categories</a>
                <a href="{{ route('admin.questions') }}" class="db-nl {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> Question Bank</a>
-               <a href="{{ route('admin.modules') }}" class="db-nl {{ request()->routeIs('admin.modules') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Learning Content</a>
+               <a href="{{ route('admin.modules') }}" class="db-nl {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Learning Content</a>
+               <a href="{{ route('admin.arena') }}" class="db-nl {{ request()->routeIs('admin.arena') || request()->routeIs('admin.arena.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Arena Games</a>
                
                <div class="db-nav-section">Monitoring</div>
                <a href="{{ route('admin.sessions.index') }}" class="db-nl {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> Session Monitoring</a>
