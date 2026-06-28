@@ -34,12 +34,50 @@
         $groupedLevels = $levels->groupBy('category_id');
     @endphp
 
-    @foreach($categories as $categoryRow)
-        @php
-            $catLevels = $groupedLevels->get($categoryRow->id, collect());
-        @endphp
+    <style>
+        .arena-cat-pill {
+            border-radius: 20px;
+            font-weight: 600;
+            padding: 8px 20px;
+            border: 1px solid var(--bd);
+            color: var(--tx2);
+            background: var(--sf);
+            transition: 0.3s;
+        }
+        .arena-cat-pill:hover {
+            background: rgba(59,130,246,0.1);
+            color: var(--pur);
+        }
+        .arena-cat-pill.active {
+            background: var(--pur) !important;
+            color: #fff !important;
+            border-color: var(--pur) !important;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        }
+    </style>
 
-        <div class="mb-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden;">
+    <ul class="nav nav-pills mb-4" id="arena-categories-tab" role="tablist" style="gap:10px;">
+        @foreach($categories as $index => $categoryRow)
+            <li class="nav-item" role="presentation">
+                <button class="nav-link arena-cat-pill {{ $index === 0 ? 'active' : '' }}" 
+                    id="cat-tab-{{ $categoryRow->id }}" 
+                    data-bs-toggle="pill" 
+                    data-bs-target="#cat-pane-{{ $categoryRow->id }}" 
+                    type="button" role="tab">
+                    <i class="fa-solid fa-folder me-1"></i> {{ $categoryRow->title }}
+                </button>
+            </li>
+        @endforeach
+    </ul>
+
+    <div class="tab-content" id="arena-categories-tabContent">
+        @foreach($categories as $index => $categoryRow)
+            @php
+                $catLevels = $groupedLevels->get($categoryRow->id, collect());
+            @endphp
+
+            <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="cat-pane-{{ $categoryRow->id }}" role="tabpanel">
+                <div class="mb-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden;">
             <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--bd);background:var(--bg3)">
                 <h6 style="color:var(--tx);margin:0;font-size:1.05rem;font-weight:700;"><i class="fa-solid fa-layer-group text-info me-2"></i>{{ $categoryRow->title }}</h6>
                 <span class="badge bg-secondary">{{ $catLevels->count() }} Levels</span>
@@ -260,7 +298,9 @@
             </table>
         </div>
     </div>
+    </div>
     @endforeach
+</div>
 </div>
 
 <!-- Auto-Generate Game Modal -->
