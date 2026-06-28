@@ -60,10 +60,16 @@ class ArenaController extends Controller
             $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: " . $level->ai_custom_prompt;
         }
 
+        // Get or create a default category for Arena levels
+        $defaultCategory = \App\Models\Category::firstOrCreate(
+            ['title' => 'General Behavioral'],
+            ['status' => 'active']
+        );
+
         // Create Interview Session specifically for Arena Mode
         $session = InterviewSession::create([
             'user_id' => $user->id,
-            'category_id' => 1, // Defaulting to 1 for General Behavioral
+            'category_id' => $defaultCategory->id,
             'difficulty' => $level->difficulty,
             'target_position' => $level->target_position,
             'num_questions' => 1, // Gamified Arena uses 1 question per level for rapid play
