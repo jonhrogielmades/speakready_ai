@@ -128,11 +128,13 @@
                 width: auto; 
                 flex-shrink: 0; 
                 justify-content: flex-start; 
+                align-items: flex-start;
                 padding-bottom: 12px !important; 
+                padding-top: 12px !important;
                 border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important; 
-                margin-right: 10px;
+                margin-right: 15px;
             }
-            .game-table tbody td:nth-child(1)::before { content: "Level:"; margin-right: 10px; }
+            .game-table tbody td:nth-child(1)::before { content: none; }
             
             .game-table tbody td:nth-child(2) {
                 order: -1;
@@ -141,10 +143,15 @@
                 justify-content: flex-start;
                 border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
                 padding-bottom: 12px !important;
+                padding-top: 12px !important;
                 margin-bottom: 4px;
-                text-align: right;
+                text-align: left;
                 flex-direction: column;
-                align-items: flex-end;
+                align-items: flex-start;
+            }
+            .game-table tbody td:nth-child(2) > div:first-child {
+                font-size: 1.15rem !important;
+                line-height: 1.25;
             }
             .game-table tbody td:nth-child(2)::before { content: none; }
             
