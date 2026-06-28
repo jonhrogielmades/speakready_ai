@@ -252,9 +252,6 @@ class UserController extends Controller
         return view('user.learning', compact('profile', 'arenaLevels', 'arenaProgress')); 
     }
 
-    public function learningAssistant() {
-        return view('user.learning.assistant');
-    }
     public function voiceRehearsal() { return view('user.drills.voice'); }
     public function reports() { 
         $user = Auth::user();
