@@ -266,11 +266,15 @@
                     <p style="color:var(--tx3); font-size:0.85rem;">Let our AI instantly craft a unique, fully-configured gamified level complete with instructions, a persona, modifiers, and rewards.</p>
                     
                     <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="olbl">Level #</label>
+                        <div class="col-md-3">
+                            <label class="olbl">Start Level #</label>
                             <input class="oinp w-100" type="number" name="level_number" required placeholder="e.g. {{ count($levels) + 1 }}">
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-4">
+                            <label class="olbl">Levels to Generate</label>
+                            <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="10" required>
+                        </div>
+                        <div class="col-md-5">
                             <label class="olbl">Category</label>
                             <select class="oinp w-100" name="category_id" required>
                                 @foreach($categories as $cat)

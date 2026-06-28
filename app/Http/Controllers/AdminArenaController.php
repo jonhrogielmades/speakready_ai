@@ -59,21 +59,54 @@ class AdminArenaController extends Controller
     {
         $request->validate([
             'topic' => 'required|string|max:255',
-            'level_number' => 'required|integer|unique:arena_levels',
+            'level_number' => 'required|integer',
+            'num_levels' => 'required|integer|min:1|max:10',
             'category_id' => 'required|exists:categories,id',
         ]);
 
-        $gameData = AIService::generateArenaGame($request->topic);
+        $startLevel = $request->level_number;
+        $numLevels = $request->num_levels;
+        $topic = $request->topic;
+        
+        $difficulties = ['beginner', 'intermediate', 'advanced'];
+        $generatedCount = 0;
 
-        if (!$gameData) {
-            return redirect()->route('admin.arena')->with('error', 'Failed to generate game with AI. Please try again.');
+        for ($i = 0; $i < $numLevels; $i++) {
+            $currentLevelNum = $startLevel + $i;
+            
+            // Skip if level number already exists to avoid unique constraint violation
+            if (ArenaLevel::where('level_number', $currentLevelNum)->exists()) {
+                continue;
+            }
+
+            // Cycle through difficulties to ensure variation
+            $difficulty = $difficulties[$i % 3];
+            
+            // Modify topic slightly to inform AI of difficulty
+            $promptTopic = "{$topic}. Design this specifically for {$difficulty} difficulty level.";
+            
+            $gameData = AIService::generateArenaGame($promptTopic);
+
+            if ($gameData) {
+                $gameData['level_number'] = $currentLevelNum;
+                $gameData['category_id'] = $request->category_id;
+                $gameData['difficulty'] = $difficulty; // Force the difficulty
+                
+                // Adjust score based on difficulty
+                if ($difficulty == 'beginner') $gameData['required_score'] = max(50, min(70, $gameData['required_score']));
+                if ($difficulty == 'intermediate') $gameData['required_score'] = max(70, min(85, $gameData['required_score']));
+                if ($difficulty == 'advanced') $gameData['required_score'] = max(85, min(100, $gameData['required_score']));
+
+                ArenaLevel::create($gameData);
+                $generatedCount++;
+            }
         }
 
-        $gameData['level_number'] = $request->level_number;
-        $gameData['category_id'] = $request->category_id;
-        ArenaLevel::create($gameData);
+        if ($generatedCount === 0) {
+            return redirect()->route('admin.arena')->with('error', 'Failed to generate games. Maybe the level numbers already exist or the AI timed out.');
+        }
 
-        return redirect()->route('admin.arena')->with('success', 'Arena Game automatically generated and saved!');
+        return redirect()->route('admin.arena')->with('success', "Successfully generated {$generatedCount} Arena Game(s)!");
     }
 
     private function validationRules($id = null)
