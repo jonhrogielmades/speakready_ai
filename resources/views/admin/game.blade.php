@@ -191,43 +191,51 @@
                             </td>
                             <td style="padding:16px;vertical-align:middle;">
                                 <div style="font-weight:700;color:var(--tx)">{{ $level->title }}</div>
-                                <div style="font-size:0.75rem;color:var(--tx2); margin-top:2px;">
-                                    <span class="badge bg-secondary" style="font-size:0.65rem; margin-right:4px;">{{ $level->category ? $level->category->title : 'No Personal Improvement' }}</span> 
-                                    {{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}
+                                <div class="d-flex flex-wrap align-items-center gap-2 mt-2" style="font-size:0.75rem;color:var(--tx2);">
+                                    <span class="badge bg-secondary" style="font-size:0.65rem;">{{ $level->category ? $level->category->title : 'No Personal Improvement' }}</span> 
+                                    <span>{{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}</span>
                                 </div>
                                 @if($level->prerequisiteLevel)
                                     <div style="font-size:0.7rem;color:#f59e0b;margin-top:4px;"><i class="fa-solid fa-lock text-warning"></i> Prereq: Lvl {{ $level->prerequisiteLevel->level_number }}</div>
                                 @endif
                             </td>
                             <td style="padding:16px;vertical-align:middle;">
-                                @if($level->ai_persona) <div style="font-size:0.75rem;color:var(--tx2)"><i class="fa-solid fa-robot text-info w-15px"></i> {{ Str::limit($level->ai_persona, 20) }}</div> @endif
-                                @if($level->time_limit_seconds) <div style="font-size:0.75rem;color:var(--tx2)"><i class="fa-solid fa-clock text-danger w-15px"></i> {{ $level->time_limit_seconds }}s limit</div> @endif
-                                @if($level->banned_words) <div style="font-size:0.75rem;color:var(--tx2)" title="{{ $level->banned_words }}"><i class="fa-solid fa-ban text-danger w-15px"></i> Banned Words</div> @endif
-                                @if($level->target_tone) <div style="font-size:0.75rem;color:var(--tx2)"><i class="fa-solid fa-face-smile text-success w-15px"></i> {{ $level->target_tone }}</div> @endif
-                                @if(!$level->ai_persona && !$level->time_limit_seconds && !$level->banned_words && !$level->target_tone)
-                                    <span style="font-size:0.75rem;color:var(--tx3)">Standard</span>
-                                @endif
+                                <div class="d-flex flex-column align-items-md-start align-items-end text-end text-md-start gap-1">
+                                    @if($level->ai_persona) <div style="font-size:0.75rem;color:var(--tx2)"><i class="fa-solid fa-robot text-info w-15px"></i> {{ Str::limit($level->ai_persona, 20) }}</div> @endif
+                                    @if($level->time_limit_seconds) <div style="font-size:0.75rem;color:var(--tx2)"><i class="fa-solid fa-clock text-danger w-15px"></i> {{ $level->time_limit_seconds }}s limit</div> @endif
+                                    @if($level->banned_words) <div style="font-size:0.75rem;color:var(--tx2)" title="{{ $level->banned_words }}"><i class="fa-solid fa-ban text-danger w-15px"></i> Banned Words</div> @endif
+                                    @if($level->target_tone) <div style="font-size:0.75rem;color:var(--tx2)"><i class="fa-solid fa-face-smile text-success w-15px"></i> {{ $level->target_tone }}</div> @endif
+                                    @if(!$level->ai_persona && !$level->time_limit_seconds && !$level->banned_words && !$level->target_tone)
+                                        <span style="font-size:0.75rem;color:var(--tx3)">Standard</span>
+                                    @endif
+                                </div>
                             </td>
                             <td style="padding:16px;vertical-align:middle;">
-                                <div style="font-size:0.8rem;color:var(--tx2);"><i class="fa-solid fa-star text-warning w-15px"></i> {{ $level->xp_reward }} XP</div>
-                                <div style="font-size:0.8rem;color:var(--tx2);"><i class="fa-solid fa-heart text-danger w-15px"></i> {{ $level->energy_cost }} Cost</div>
-                                @if($level->custom_badge_name) <div style="font-size:0.75rem;color:var(--pur);font-weight:600;"><i class="fa-solid fa-medal"></i> {{ $level->custom_badge_name }}</div> @endif
-                                @if($level->skill_xp_amount > 0) <div style="font-size:0.75rem;color:#34d399;"><i class="fa-solid fa-bolt"></i> +{{ $level->skill_xp_amount }} {{ $level->skill_xp_type }}</div> @endif
+                                <div class="d-flex flex-column align-items-md-start align-items-end text-end text-md-start gap-1">
+                                    <div style="font-size:0.8rem;color:var(--tx2);"><i class="fa-solid fa-star text-warning w-15px"></i> {{ $level->xp_reward }} XP</div>
+                                    <div style="font-size:0.8rem;color:var(--tx2);"><i class="fa-solid fa-heart text-danger w-15px"></i> {{ $level->energy_cost }} Cost</div>
+                                    @if($level->custom_badge_name) <div style="font-size:0.75rem;color:var(--pur);font-weight:600;"><i class="fa-solid fa-medal"></i> {{ $level->custom_badge_name }}</div> @endif
+                                    @if($level->skill_xp_amount > 0) <div style="font-size:0.75rem;color:#34d399;"><i class="fa-solid fa-bolt"></i> +{{ $level->skill_xp_amount }} {{ $level->skill_xp_type }}</div> @endif
+                                </div>
                             </td>
                             <td style="padding:16px;vertical-align:middle;">
-                                <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;">Pass Rate: <span style="color:{{ $level->pass_rate > 70 ? '#34d399' : ($level->pass_rate < 30 ? '#ef4444' : 'var(--tx)') }}">{{ $level->pass_rate }}%</span></div>
-                                <div style="font-size:0.8rem;color:var(--tx3);">Avg Score: {{ $level->avg_score }}%</div>
+                                <div class="d-flex flex-column align-items-md-start align-items-end text-end text-md-start gap-1">
+                                    <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;">Pass Rate: <span style="color:{{ $level->pass_rate > 70 ? '#34d399' : ($level->pass_rate < 30 ? '#ef4444' : 'var(--tx)') }}">{{ $level->pass_rate }}%</span></div>
+                                    <div style="font-size:0.8rem;color:var(--tx3);">Avg Score: {{ $level->avg_score }}%</div>
+                                </div>
                             </td>
                             <td style="padding:16px;vertical-align:middle;text-align:right;">
-                                <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" style="display:inline-block;">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete" onclick="return confirm('Are you sure you want to delete this game?');">
-                                        <i class="fa-solid fa-trash"></i>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="modal" data-bs-target="#editGameModal{{ $level->id }}" title="Edit">
+                                        <i class="fa-solid fa-pen"></i>
                                     </button>
-                                </form>
+                                    <form action="{{ route('admin.game.destroy', $level->id) }}" method="POST" style="margin:0;">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Delete" onclick="return confirm('Are you sure you want to delete this game?');">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
 
