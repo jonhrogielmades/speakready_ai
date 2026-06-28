@@ -30,25 +30,35 @@
         </div>
     @endif
 
-    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden;">
-        <div class="p-3" style="border-bottom:1px solid var(--bd);background:var(--bg3)">
-            <h6 style="color:var(--tx);margin:0;font-size:0.95rem">Game Levels & Analytics</h6>
-        </div>
-        
-        <div class="table-responsive">
-            <table class="table mb-0" style="color:var(--tx);--bs-table-bg:transparent;--bs-table-color:var(--tx);">
-                <thead style="background:var(--bg3);">
-                    <tr>
-                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;width:80px;">Level</th>
-                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Details</th>
-                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Modifiers</th>
-                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Rewards</th>
-                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Analytics</th>
-                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;text-align:right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($levels as $level)
+    @php
+        $groupedLevels = $levels->groupBy('category_id');
+    @endphp
+
+    @foreach($categories as $categoryRow)
+        @php
+            $catLevels = $groupedLevels->get($categoryRow->id, collect());
+        @endphp
+
+        <div class="mb-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden;">
+            <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--bd);background:var(--bg3)">
+                <h6 style="color:var(--tx);margin:0;font-size:1.05rem;font-weight:700;"><i class="fa-solid fa-layer-group text-info me-2"></i>{{ $categoryRow->title }}</h6>
+                <span class="badge bg-secondary">{{ $catLevels->count() }} Levels</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table mb-0" style="color:var(--tx);--bs-table-bg:transparent;--bs-table-color:var(--tx);">
+                    <thead style="background:var(--bg3);">
+                        <tr>
+                            <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;width:80px;">Level</th>
+                            <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Details</th>
+                            <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Modifiers</th>
+                            <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Rewards</th>
+                            <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;">Analytics</th>
+                            <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($catLevels as $level)
                         <tr style="border-bottom:1px solid var(--bd); {{ $level->is_hidden ? 'opacity: 0.6;' : '' }}">
                             <td style="padding:16px;vertical-align:middle;">
                                 <span class="badge bg-primary rounded-pill mb-1">Lvl {{ $level->level_number }}</span>
@@ -250,6 +260,7 @@
             </table>
         </div>
     </div>
+    @endforeach
 </div>
 
 <!-- Auto-Generate Game Modal -->
