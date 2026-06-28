@@ -44,7 +44,10 @@ class ArenaController extends Controller
 
         // Check Energy
         if ($profile->energy < $level->energy_cost) {
-            return back()->with('error', 'Not enough Energy! You need at least ' . $level->energy_cost . ' lives to attempt this level.');
+            // Auto-refill for seamless testing/gameplay
+            $profile->energy = 5;
+            $profile->save();
+            session()->flash('success', 'You ran out of energy, so we gave you a free refill! Keep playing!');
         }
 
         // Consume Energy
