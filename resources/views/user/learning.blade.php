@@ -431,7 +431,7 @@
                             <div style="color:var(--tx3);font-size:0.85rem">Answer the prompt: <em>"Tell me about a time you had to work with a difficult team member."</em> You must score at least 80% on clarity and STAR structure to unlock Level 3.</div>
                         </div>
 
-                        <a href="{{ route('user.learning.star') }}" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</a>
+                        <a href="#" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</a>
                     </div>
                 </div>
 
@@ -489,19 +489,19 @@
         const driver = window.driver.js.driver;
 
         const stepsMobile = [
-            { element: '#nav-pills-container', popover: { title: 'Learning Hubs', description: 'Navigate between the main Dashboard, STAR Method Training, Answer Library, and Mini Quizzes.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: 'Your Progress', description: 'Track your completed lessons, current learning streak, and badges earned.', side: "top", align: 'start' }},
+            { element: '#nav-pills-container', popover: { title: 'Arena Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Your Player Stats', description: 'Track your Level, Energy, Combo Streak, and overall AI Accuracy.', side: "top", align: 'start' }},
 
-            { element: '#modules-list', popover: { title: 'Learning Modules', description: 'Browse and start your recommended lessons here. Pick up right where you left off!', side: "top", align: 'start' }},
-            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a concept? Click here anytime to ask the AI Learning Assistant for help.', side: "top", align: 'end' }}
+            { element: '#modules-list', popover: { title: 'Interview Journey', description: 'Complete levels to earn XP and unlock tougher challenges. Master the levels to rank up!', side: "top", align: 'start' }},
+            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a challenge? Click here anytime to ask the AI Coach for a hint.', side: "top", align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#nav-pills-container', popover: { title: 'Learning Hubs', description: 'Navigate between the main Dashboard, STAR Method Training, Answer Library, and Mini Quizzes.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: 'Your Progress', description: 'Track your completed lessons, current learning streak, and badges earned.', side: "bottom", align: 'start' }},
+            { element: '#nav-pills-container', popover: { title: 'Arena Navigation', description: 'Navigate between your Journey Map, AI Mock Simulator, Video Analysis, and more.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Your Player Stats', description: 'Track your Level, Energy, Combo Streak, and overall AI Accuracy.', side: "bottom", align: 'start' }},
 
-            { element: '#modules-list', popover: { title: 'Learning Modules', description: 'Browse and start your recommended lessons here. Pick up right where you left off!', side: "top", align: 'start' }},
-            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a concept? Click here anytime to ask the AI Learning Assistant for help.', side: "left", align: 'end' }}
+            { element: '#modules-list', popover: { title: 'Interview Journey', description: 'Complete levels to earn XP and unlock tougher challenges. Master the levels to rank up!', side: "top", align: 'start' }},
+            { element: '#ai-fab', popover: { title: 'AI Assistant', description: 'Stuck on a challenge? Click here anytime to ask the AI Coach for a hint.', side: "left", align: 'end' }}
         ];
 
         const driverObj = driver({
