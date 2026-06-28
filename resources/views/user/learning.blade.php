@@ -329,13 +329,13 @@
         <div class="col-12 col-sm-6 col-lg-3">
             <div class="ll-stat-card" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL {{ $profile->player_level ?? 1 }}</span>
-                    <span style="font-size:0.75rem; color:var(--tx3); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px;">{{ ($profile->player_level ?? 1) >= 5 ? 'GOLD' : (($profile->player_level ?? 1) >= 3 ? 'SILVER' : 'BRONZE') }}</span>
+                    <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL {{ $profile?->player_level ?? 1 }}</span>
+                    <span style="font-size:0.75rem; color:var(--tx3); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px;">{{ ($profile?->player_level ?? 1) >= 5 ? 'GOLD' : (($profile?->player_level ?? 1) >= 3 ? 'SILVER' : 'BRONZE') }}</span>
                 </div>
                 <div class="ll-progress-bar" style="height:12px; background:var(--bd); border-radius:6px; margin:5px 0;">
                     @php 
-                        $xp = $profile->experience_points ?? 0;
-                        $nextLevelXp = ($profile->player_level ?? 1) * 1000;
+                        $xp = $profile?->experience_points ?? 0;
+                        $nextLevelXp = ($profile?->player_level ?? 1) * 1000;
                         $percent = min(100, ($xp / $nextLevelXp) * 100);
                     @endphp
                     <div class="ll-progress-fill" style="width:{{ $percent }}%; background:linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);"></div>
@@ -351,7 +351,7 @@
                     <i class="fa-solid fa-heart"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile->energy ?? 3 }} <span style="font-size:1rem; color:var(--tx3);">/ 3</span></div>
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile?->energy ?? 3 }} <span style="font-size:1rem; color:var(--tx3);">/ 3</span></div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Energy</div>
                 </div>
             </div>
@@ -364,7 +364,7 @@
                     <i class="fa-solid fa-fire"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile->current_streak ?? 0 }} <span style="font-size:1rem; color:var(--tx3);">Days</span></div>
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile?->current_streak ?? 0 }} <span style="font-size:1rem; color:var(--tx3);">Days</span></div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Combo Streak</div>
                 </div>
             </div>
@@ -390,7 +390,7 @@
             
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 style="font-weight:700;color:var(--tx);margin:0">Your Interview Journey</h5>
-                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile->energy ?? 3 }} / 3 Lives</span>
+                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile?->energy ?? 3 }} / 3 Lives</span>
             </div>
 
             <div class="level-path-container" id="modules-list">
