@@ -161,13 +161,13 @@
                         </div>
                     </div>
                     <!-- Overlay Text -->
-                    <div style="position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px;">
+                    <div style="position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 70%, transparent 100%);padding:40px 20px 20px 20px;">
                         <div class="d-flex justify-content-between align-items-end gap-3">
-                            <div>
+                            <div style="width: 100%;">
                                 <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
-                                <div id="aiQuestionText" style="color:white;font-size:1.1rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
+                                <div id="aiQuestionText" class="custom-scrollbar" style="color:white;font-size:1.1rem;font-weight:600;line-height:1.4; max-height: 90px; overflow-y: auto; padding-right: 10px;">Loading your first question...</div>
                             </div>
-                            <span class="badge bg-white text-dark" style="font-size:0.8rem;white-space:nowrap;" id="qCounter">1/10</span>
+                            <span class="badge bg-white text-dark" style="font-size:0.8rem;white-space:nowrap;margin-bottom: auto;" id="qCounter">1/10</span>
                         </div>
                     </div>
                 </div>
