@@ -98,11 +98,25 @@ class ArenaController extends Controller
             'status' => 'in_progress',
         ]);
 
+        // Generate a dynamic question based on the mission text using AI
+        $generated = \App\Services\AIService::generateQuestions(
+            1, // num_questions
+            $level->target_position ?? 'General', // position
+            $level->difficulty ?? 'Medium', // difficulty
+            $level->mission_text, // focus
+            'gemini', // provider
+            null, // resume_text
+            null, // job_description
+            $level->ai_persona // company_persona
+        );
+
+        $questionText = (is_array($generated) && count($generated) > 0) ? $generated[0] : "Your mission: " . $level->mission_text . "\n\nPlease begin your response.";
+
         // Explicitly create the one Arena Question based on the mission text
         \App\Models\Question::create([
             'interview_session_id' => $session->id,
             'category_id' => $session->category_id,
-            'question_text' => "Your mission: " . $level->mission_text . "\n\nPlease begin your response.",
+            'question_text' => $questionText,
             'difficulty' => $level->difficulty,
             'status' => 'active'
         ]);
