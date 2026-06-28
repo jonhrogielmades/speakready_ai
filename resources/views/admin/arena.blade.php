@@ -272,7 +272,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="olbl">Levels to Generate</label>
-                            <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="10" required>
+                            <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="30" required>
                         </div>
                         <div class="col-md-5">
                             <label class="olbl">Category</label>

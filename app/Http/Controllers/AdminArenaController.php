@@ -57,10 +57,13 @@ class AdminArenaController extends Controller
 
     public function generate(Request $request)
     {
+        // Extend max execution time since generating 30 levels could take 1-2 minutes
+        set_time_limit(300);
+
         $request->validate([
             'topic' => 'required|string|max:255',
             'level_number' => 'required|integer',
-            'num_levels' => 'required|integer|min:1|max:10',
+            'num_levels' => 'required|integer|min:1|max:30',
             'category_id' => 'required|exists:categories,id',
         ]);
 
