@@ -140,6 +140,14 @@
     </div>
 
     <div id="mainTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
+        <div class="d-md-none mb-3 pb-2" style="border-bottom: 1px solid var(--bd);">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="selectAllMobile" onclick="document.getElementById('selectAllQuestions').click();">
+                <label class="form-check-label" for="selectAllMobile" style="color:var(--tx3); font-size:0.85rem; font-weight:600;">
+                    Select All
+                </label>
+            </div>
+        </div>
         <table id="mainTable" class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
@@ -538,6 +546,8 @@ function toggleBulkDeleteBtn() {
     } else {
         btn.style.display = 'none';
         document.getElementById('selectAllQuestions').checked = false;
+        let mobileSelect = document.getElementById('selectAllMobile');
+        if (mobileSelect) mobileSelect.checked = false;
     }
 }
 
