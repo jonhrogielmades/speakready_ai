@@ -78,6 +78,69 @@
         .game-categories-scroll::-webkit-scrollbar {
             display: none;
         }
+        
+        /* Mobile Card-based Table Layout for Learning Games */
+        @media (max-width: 767px) {
+            .game-table-wrapper {
+                overflow-x: visible !important;
+                -webkit-overflow-scrolling: auto !important;
+                padding: 12px !important;
+            }
+            .game-table thead {
+                display: none;
+            }
+            .game-table tbody tr {
+                display: flex;
+                flex-direction: column;
+                background: var(--bg3, rgba(255,255,255,0.02));
+                border-radius: 12px;
+                margin-bottom: 15px;
+                border: 1px solid var(--bd, rgba(255,255,255,0.1));
+                padding: 12px;
+            }
+            .game-table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0 !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                border-top: none !important;
+                text-align: right;
+            }
+            .game-table tbody td:last-child {
+                border-bottom: none !important;
+                justify-content: flex-end;
+                gap: 10px;
+                padding-top: 12px !important;
+            }
+            .game-table tbody td::before {
+                font-size: 0.8rem;
+                color: var(--tx3, #888);
+                font-weight: 600;
+                margin-right: 15px;
+                flex-shrink: 0;
+                text-align: left;
+            }
+            .game-table tbody td:nth-child(1) { order: -2; justify-content: flex-start; padding-bottom: 4px !important; border-bottom: none !important; }
+            .game-table tbody td:nth-child(1)::before { content: "Level:"; margin-right: 10px; }
+            
+            .game-table tbody td:nth-child(2) {
+                order: -1;
+                justify-content: flex-start;
+                border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+                padding-bottom: 12px !important;
+                margin-bottom: 4px;
+                text-align: left;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .game-table tbody td:nth-child(2)::before { content: none; }
+            
+            .game-table tbody td:nth-child(3)::before { content: "Modifiers"; }
+            .game-table tbody td:nth-child(4)::before { content: "Rewards"; }
+            .game-table tbody td:nth-child(5)::before { content: "Analytics"; }
+            .game-table tbody td:nth-child(6)::before { content: "Actions"; }
+        }
     </style>
 
     <ul class="nav nav-pills mb-4 game-categories-scroll" id="game-categories-tab" role="tablist" style="gap:10px;">
@@ -107,8 +170,8 @@
                 <span class="badge bg-secondary">{{ $catLevels->count() }} Levels</span>
             </div>
             
-            <div class="table-responsive">
-                <table class="table mb-0" style="color:var(--tx);--bs-table-bg:transparent;--bs-table-color:var(--tx);">
+            <div class="table-responsive game-table-wrapper">
+                <table class="table mb-0 game-table" style="color:var(--tx);--bs-table-bg:transparent;--bs-table-color:var(--tx);">
                     <thead style="background:var(--bg3);">
                         <tr>
                             <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:0.8rem;font-weight:600;padding:12px 16px;width:80px;">Level</th>
