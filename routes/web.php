@@ -208,7 +208,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 Route::get('/setup-db', function() {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
     \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
     \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'GameLevelSeeder', '--force' => true]);
-    return 'Database Migrated and Seeded Successfully!';
+    return 'Cache Cleared, Database Migrated, and Seeded Successfully!';
 });
