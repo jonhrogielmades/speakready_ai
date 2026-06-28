@@ -329,13 +329,18 @@
         <div class="col-12 col-sm-6 col-lg-3">
             <div class="ll-stat-card" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL 4</span>
-                    <span style="font-size:0.75rem; color:var(--tx3); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px;">SILVER</span>
+                    <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL {{ $profile->player_level ?? 1 }}</span>
+                    <span style="font-size:0.75rem; color:var(--tx3); font-weight:700; background:var(--bg3); padding:3px 8px; border-radius:6px;">{{ ($profile->player_level ?? 1) >= 5 ? 'GOLD' : (($profile->player_level ?? 1) >= 3 ? 'SILVER' : 'BRONZE') }}</span>
                 </div>
                 <div class="ll-progress-bar" style="height:12px; background:var(--bd); border-radius:6px; margin:5px 0;">
-                    <div class="ll-progress-fill" style="width:75%; background:linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);"></div>
+                    @php 
+                        $xp = $profile->experience_points ?? 0;
+                        $nextLevelXp = ($profile->player_level ?? 1) * 1000;
+                        $percent = min(100, ($xp / $nextLevelXp) * 100);
+                    @endphp
+                    <div class="ll-progress-fill" style="width:{{ $percent }}%; background:linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);"></div>
                 </div>
-                <div style="font-size:0.75rem; color:var(--tx3); font-weight:700; text-align:right;">1,500 / 2,000 XP</div>
+                <div style="font-size:0.75rem; color:var(--tx3); font-weight:700; text-align:right;">{{ number_format($xp) }} / {{ number_format($nextLevelXp) }} XP</div>
             </div>
         </div>
         
@@ -346,7 +351,7 @@
                     <i class="fa-solid fa-heart"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">3 <span style="font-size:1rem; color:var(--tx3);">/ 3</span></div>
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile->energy ?? 3 }} <span style="font-size:1rem; color:var(--tx3);">/ 3</span></div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Energy</div>
                 </div>
             </div>
@@ -359,7 +364,7 @@
                     <i class="fa-solid fa-fire"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">5 <span style="font-size:1rem; color:var(--tx3);">Days</span></div>
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile->current_streak ?? 0 }} <span style="font-size:1rem; color:var(--tx3);">Days</span></div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Combo Streak</div>
                 </div>
             </div>
@@ -372,7 +377,8 @@
                     <i class="fa-solid fa-bullseye"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">85%</div>
+                    @php $avgScore = $arenaProgress && $arenaProgress->count() > 0 ? round($arenaProgress->avg('best_score')) : 0; @endphp
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $avgScore }}%</div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Accuracy</div>
                 </div>
             </div>
@@ -384,94 +390,92 @@
             
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 style="font-weight:700;color:var(--tx);margin:0">Your Interview Journey</h5>
-                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> 3 / 3 Lives</span>
+                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile->energy ?? 3 }} / 3 Lives</span>
             </div>
 
             <div class="level-path-container" id="modules-list">
                 <!-- Path Line -->
                 <div class="level-path-line">
-                    <div class="level-path-line-progress" style="height: 35%;"></div>
+                    @php 
+                        $completedCount = $arenaProgress ? $arenaProgress->where('status', 'completed')->count() : 0;
+                        $totalLevels = $arenaLevels ? $arenaLevels->count() : 1;
+                        $pathPercent = min(100, ($completedCount / max(1, $totalLevels)) * 100);
+                    @endphp
+                    <div class="level-path-line-progress" style="height: {{ $pathPercent }}%;"></div>
                 </div>
 
-                <!-- Level 1: Completed -->
-                <div class="level-node completed">
-                    <div class="level-icon-wrapper">
-                        <div class="level-icon"><i class="fa-solid fa-check"></i></div>
-                    </div>
-                    <div class="level-card">
-                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                            <div>
-                                <div style="font-size:0.75rem;color:#34d399;font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 1</div>
-                                <h5 style="color:var(--tx);font-weight:700;margin:0">The Basics: "Tell Me About Yourself"</h5>
+                @if($arenaLevels && $arenaLevels->count() > 0)
+                    @foreach($arenaLevels as $level)
+                        @php
+                            $prog = $arenaProgress ? $arenaProgress->get($level->id) : null;
+                            $status = $prog ? $prog->status : ($level->level_number === 1 ? 'active' : 'locked');
+                            $score = $prog ? $prog->best_score : 0;
+                            
+                            $nodeClass = '';
+                            $iconHtml = '';
+                            if($status === 'completed') {
+                                $nodeClass = 'completed';
+                                $iconHtml = '<i class="fa-solid fa-check"></i>';
+                            } elseif ($status === 'active') {
+                                $nodeClass = 'active';
+                                $iconHtml = $level->level_number;
+                            } else {
+                                $nodeClass = 'locked';
+                                $iconHtml = '<i class="fa-solid fa-lock"></i>';
+                            }
+                        @endphp
+
+                        <div class="level-node {{ $nodeClass }}">
+                            <div class="level-icon-wrapper">
+                                <div class="level-icon">{!! $iconHtml !!}</div>
                             </div>
-                            <div class="score-badge"><i class="fa-solid fa-star"></i> Score: 92%</div>
-                        </div>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px;line-height:1.5">You mastered the perfect elevator pitch. Your pacing and structure were excellent!</p>
-                        <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Level</button>
-                    </div>
-                </div>
-
-                <!-- Level 2: Active -->
-                <div class="level-node active">
-                    <div class="level-icon-wrapper">
-                        <div class="level-icon">2</div>
-                    </div>
-                    <div class="level-card">
-                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                            <div>
-                                <div style="font-size:0.75rem;color:var(--pur);font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 2</div>
-                                <h5 style="color:var(--tx);font-weight:700;margin:0">Behavioral Mastery: STAR Method</h5>
+                            <div class="level-card">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                    <div>
+                                        <div style="font-size:0.75rem;color:{{ $status === 'completed' ? '#34d399' : ($status === 'active' ? 'var(--pur)' : 'var(--tx3)') }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Level {{ $level->level_number }}</div>
+                                        <h5 style="color:var(--tx);font-weight:700;margin:0">{{ $level->title }}</h5>
+                                    </div>
+                                    @if($status === 'completed')
+                                        <div class="score-badge"><i class="fa-solid fa-star"></i> Score: {{ $score }}%</div>
+                                    @elseif($status === 'active')
+                                        <div class="requirement-badge"><i class="fa-solid fa-bullseye"></i> Goal: {{ $level->required_score }}%+</div>
+                                    @else
+                                        <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
+                                    @endif
+                                </div>
+                                
+                                <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:{{ $status==='active' ? '20px' : '0' }};line-height:1.5">{{ $level->description }}</p>
+                                
+                                @if($status === 'active')
+                                    <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
+                                        <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-flask me-1 text-info"></i> Your Mission:</div>
+                                        <div style="color:var(--tx3);font-size:0.85rem">{{ $level->mission_text }}</div>
+                                        <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
+                                    </div>
+                                    <form action="{{ route('user.arena.start', $level->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
+                                    </form>
+                                @elseif($status === 'completed')
+                                    <div style="margin-top:15px;">
+                                        <button class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-weight:600"><i class="fa-solid fa-rotate-left me-1"></i> Review Level</button>
+                                    </div>
+                                @elseif($status === 'locked')
+                                    @if($level->level_number > 1)
+                                    <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
+                                        <i class="fa-solid fa-circle-info text-info"></i> Reach {{ $level->required_score }}% in Level {{ $level->level_number - 1 }} to unlock.
+                                    </div>
+                                    @endif
+                                @endif
                             </div>
-                            <div class="requirement-badge"><i class="fa-solid fa-bullseye"></i> Goal: 80%+</div>
                         </div>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:20px;line-height:1.5">Learn how to structure your behavioral interview answers effectively using Situation, Task, Action, and Result.</p>
-                        
-                        <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
-                            <div style="font-size:0.8rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-flask me-1 text-info"></i> Your Mission:</div>
-                            <div style="color:var(--tx3);font-size:0.85rem">Answer the prompt: <em>"Tell me about a time you had to work with a difficult team member."</em> You must score at least 80% on clarity and STAR structure to unlock Level 3.</div>
-                        </div>
-
-                        <a href="#" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</a>
+                    @endforeach
+                @else
+                    <div class="text-center py-5">
+                        <i class="fa-solid fa-ghost fa-3x mb-3" style="color:var(--bd)"></i>
+                        <h5 style="color:var(--tx3)">No Arena Levels loaded yet.</h5>
                     </div>
-                </div>
-
-                <!-- Level 3: Locked -->
-                <div class="level-node locked">
-                    <div class="level-icon-wrapper">
-                        <div class="level-icon"><i class="fa-solid fa-lock"></i></div>
-                    </div>
-                    <div class="level-card">
-                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                            <div>
-                                <div style="font-size:0.75rem;color:var(--tx3);font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 3</div>
-                                <h5 style="color:var(--tx);font-weight:700;margin:0">The Curveballs</h5>
-                            </div>
-                            <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
-                        </div>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:0;line-height:1.5">Master tricky questions like "What is your biggest weakness?" and handle high-pressure scenarios.</p>
-                        <div style="margin-top:15px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:5px;">
-                            <i class="fa-solid fa-circle-info text-info"></i> Reach 80% in Level 2 to unlock.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Level 4: Locked -->
-                <div class="level-node locked">
-                    <div class="level-icon-wrapper">
-                        <div class="level-icon"><i class="fa-solid fa-lock"></i></div>
-                    </div>
-                    <div class="level-card">
-                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                            <div>
-                                <div style="font-size:0.75rem;color:var(--tx3);font-weight:700;margin-bottom:5px;text-transform:uppercase">Level 4</div>
-                                <h5 style="color:var(--tx);font-weight:700;margin:0">Final Boss: 15-Min Mock Interview</h5>
-                            </div>
-                            <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
-                        </div>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:0;line-height:1.5">Put everything you've learned to the test in a full, simulated interview environment.</p>
-                    </div>
-                </div>
-
+                @endif
             </div>
         </div>
     </div>

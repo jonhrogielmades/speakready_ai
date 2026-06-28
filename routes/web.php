@@ -78,7 +78,10 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
-
+    
+    // Arena Gamification Routes
+    Route::post('/arena/level/{id}/start', [\App\Http\Controllers\ArenaController::class, 'startLevel'])->name('user.arena.start');
+    
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');

@@ -134,7 +134,12 @@
 
                 <!-- Answer Response System -->
                 <div class="panel mb-4">
-                    <div class="panel-title"><i class="fa-solid fa-pen-nib me-2"></i> Your Response</div>
+                    <div class="panel-title">
+                        <i class="fa-solid fa-pen-nib me-2"></i> Your Response
+                        @if(session('arena_level_id'))
+                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> ARENA MODE</span>
+                        @endif
+                    </div>
                     
                     <form id="answerForm">
                         <div id="voiceControls" style="display:none;margin-bottom:20px;background:rgba(59,130,246,.05);padding:15px;border-radius:12px;border:1px solid rgba(59,130,246,.2)">
@@ -142,11 +147,22 @@
                                 <div style="font-weight:600;font-size:.9rem;color:#60a5fa"><i class="fa-solid fa-waveform me-2"></i>Voice Recording</div>
                                 <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;">00:00</span>
                             </div>
+                            
+                            @if(session('arena_level_id'))
+                            <!-- Gamified Hold-to-Talk Button -->
+                            <div class="d-flex justify-content-center py-3">
+                                <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="width:120px; height:120px; border-radius:50%; font-weight:800; border:4px solid #b91c1c; box-shadow: 0 10px 20px rgba(239,68,68,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; touch-action:manipulation;">
+                                    <i class="fa-solid fa-microphone fa-2x mb-2"></i>
+                                    HOLD
+                                </button>
+                            </div>
+                            @else
                             <div class="d-flex gap-2">
                                 <button type="button" id="micStartBtn" class="btn btn-primary" onclick="startRecording()"><i class="fa-solid fa-microphone me-2"></i>Start</button>
                                 <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="pauseRecording()" style="display:none;"><i class="fa-solid fa-pause me-2"></i>Pause</button>
                                 <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:none;"><i class="fa-solid fa-stop me-2"></i>Stop</button>
                             </div>
+                            @endif
                         </div>
 
                         <textarea id="answerTextarea" class="oinp mb-2" style="min-height:200px;font-size:.95rem" placeholder="Type your answer here, or use voice to auto-transcribe..."></textarea>
@@ -431,6 +447,21 @@
                     
                     if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
                 }, 1000);
+
+                // Hold-to-Talk Gamified Logic
+                const holdBtn = document.getElementById('holdToTalkBtn');
+                if (holdBtn) {
+                    const startHold = (e) => { e.preventDefault(); holdBtn.style.transform = 'scale(0.95)'; holdBtn.style.background = '#991b1b'; startRecording(); };
+                    const endHold = (e) => { e.preventDefault(); holdBtn.style.transform = 'scale(1)'; holdBtn.style.background = ''; stopRecording(); };
+                    
+                    holdBtn.addEventListener('mousedown', startHold);
+                    holdBtn.addEventListener('mouseup', endHold);
+                    holdBtn.addEventListener('mouseleave', (e) => { if(isRecording) endHold(e); });
+                    
+                    holdBtn.addEventListener('touchstart', startHold, {passive: false});
+                    holdBtn.addEventListener('touchend', endHold, {passive: false});
+                    holdBtn.addEventListener('touchcancel', (e) => { if(isRecording) endHold(e); });
+                }
 
                 loadQuestion(0);
                 

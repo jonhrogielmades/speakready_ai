@@ -243,32 +243,13 @@ class UserController extends Controller
     }
 
     public function learning() { 
-        $modules = \App\Models\LearningModule::all();
-        $categories = [
-            'Interview Basics', 'Communication Skills', 'STAR Method', 
-            'Body Language', 'Resume & CV Tips', 'Job Interview Preparation', 
-            'Scholarship Interview Preparation', 'College Admission Interview Preparation', 
-            'Technical Interview Preparation', 'Professional Etiquette'
-        ];
-        return view('user.learning', compact('modules', 'categories')); 
-    }
-
-    public function learningModule($id) {
-        $module = \App\Models\LearningModule::findOrFail($id);
-        return view('user.learning.module', compact('module'));
-    }
-
-    public function learningStar() {
-        return view('user.learning.star-method');
-    }
-
-    public function learningLibrary() {
-        return view('user.learning.library');
-    }
-
-    public function learningQuiz() {
-        $questions = \App\Models\ModuleQuizQuestion::inRandomOrder()->limit(5)->get();
-        return view('user.learning.quiz', compact('questions'));
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $profile = $user->profile;
+        
+        $arenaLevels = \App\Models\ArenaLevel::orderBy('level_number', 'asc')->get();
+        $arenaProgress = \App\Models\ArenaProgress::where('user_id', $user->id)->get()->keyBy('arena_level_id');
+        
+        return view('user.learning', compact('profile', 'arenaLevels', 'arenaProgress')); 
     }
 
     public function learningAssistant() {

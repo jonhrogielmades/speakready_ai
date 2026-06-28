@@ -251,6 +251,38 @@ class InterviewController extends Controller
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
         
         $xpEarned = 50;
+        $arenaStatus = null;
+        if (session('arena_level_id')) {
+            $arenaLevel = \App\Models\ArenaLevel::find(session('arena_level_id'));
+            if ($arenaLevel) {
+                $xpEarned = $arenaLevel->xp_reward;
+                $progress = \App\Models\ArenaProgress::where('user_id', Auth::id())
+                                ->where('arena_level_id', $arenaLevel->id)->first();
+                                
+                if ($progress) {
+                    if ($overall >= $arenaLevel->required_score) {
+                        $progress->status = 'completed';
+                        $arenaStatus = 'victory';
+                        
+                        // Unlock next level
+                        $nextLevel = \App\Models\ArenaLevel::where('level_number', $arenaLevel->level_number + 1)->first();
+                        if ($nextLevel) {
+                            \App\Models\ArenaProgress::firstOrCreate(
+                                ['user_id' => Auth::id(), 'arena_level_id' => $nextLevel->id],
+                                ['status' => 'active', 'best_score' => 0]
+                            );
+                        }
+                    } else {
+                        $arenaStatus = 'defeat';
+                    }
+                    if ($overall > $progress->best_score) {
+                        $progress->best_score = $overall;
+                    }
+                    $progress->save();
+                }
+            }
+        }
+
         $badges = [];
         if (!empty($profile->badges_earned)) {
             $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
@@ -280,12 +312,21 @@ class InterviewController extends Controller
         }
 
         $profile->experience_points += $xpEarned;
+        
+        // Level up logic (every 1000 XP = 1 Level)
+        $newLevel = max(1, floor($profile->experience_points / 1000) + 1);
+        if ($newLevel > ($profile->player_level ?? 1)) {
+            $profile->player_level = $newLevel;
+        }
+
         $profile->badges_earned = json_encode($badges);
         $profile->total_sessions += 1;
         $profile->readiness_score = $overall;
         $profile->save();
 
         session()->forget('active_interview_id');
+        $arenaLevelId = session('arena_level_id');
+        session()->forget('arena_level_id');
 
         ActivityLogger::log(
             Auth::user(),
@@ -295,6 +336,11 @@ class InterviewController extends Controller
             true,
             ['title' => 'Interview Completed', 'icon' => 'fa-flag-checkered', 'type' => 'success']
         );
+
+        if ($arenaLevelId) {
+            $msg = $arenaStatus === 'victory' ? 'Victory! You cleared the Arena Level!' : 'Defeat! You did not reach the required score. Try again!';
+            return redirect()->route('user.learning')->with($arenaStatus === 'victory' ? 'success' : 'error', $msg);
+        }
 
         return redirect()->route('interview.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
     }
