@@ -76,7 +76,7 @@
     <!-- Header & Navigation -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <div>
-            <h3 style="font-weight:700;color:var(--tx);margin:0">Learning Lab <i class="fa-solid fa-flask" style="color:var(--pur);font-size:1.2rem"></i></h3>
+            <h3 style="font-weight:700;color:var(--tx);margin:0">Learning Lab</h3>
             <p style="color:var(--tx3);margin-top:5px;">Master your interview skills with structured, AI-powered learning.</p>
         </div>
     </div>

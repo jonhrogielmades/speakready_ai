@@ -57,7 +57,7 @@
 <div class="db-section active">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700;margin:0;"><i class="fa-solid fa-ear-listen" style="color:#60a5fa;margin-right:8px;"></i> Voice Rehearsal Studio</h4>
+            <h4 style="color:var(--tx);font-weight:700;margin:0;"> Voice Rehearsal Studio</h4>
             <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;">Master your delivery, pacing, and tone with AI analysis.</p>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap">
