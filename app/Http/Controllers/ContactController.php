@@ -24,7 +24,7 @@ class ContactController extends Controller
             return redirect()->back()->with('contact_success', 'Your message has been sent successfully. We will get back to you soon!');
         } catch (\Exception $e) {
             \Log::error('Contact form email failed: ' . $e->getMessage());
-            return redirect()->back()->with('contact_error', 'Sorry, there was a problem sending your message. Please try again later.');
+            return redirect()->back()->with('contact_error', 'Error details: ' . $e->getMessage());
         }
     }
 }
