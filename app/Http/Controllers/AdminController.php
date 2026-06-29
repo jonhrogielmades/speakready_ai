@@ -614,7 +614,7 @@ class AdminController extends Controller
             'is_featured' => $request->has('is_featured'),
         ]);
 
-        return redirect()->back()->with('success', 'Module updated successfully');
+        return redirect()->route('admin.modules')->with('success', 'Module updated successfully');
     }
 
     public function destroyModule(LearningModule $module)
