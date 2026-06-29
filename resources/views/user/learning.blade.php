@@ -43,8 +43,13 @@
         text-decoration: none;
         font-weight: 500;
         transition: 0.3s;
-        margin-right: 10px;
-        margin-bottom: 10px;
+    }
+    @media (max-width: 576px) {
+        .ll-nav-pill {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            gap: 5px;
+        }
     }
     .ll-nav-pill:hover, .ll-nav-pill.active {
         background: var(--pur);
