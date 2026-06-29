@@ -107,6 +107,9 @@ Provide your evaluation STRICTLY as a JSON object with the following structure. 
 CRITICAL INSTRUCTION FOR SKIPPED ANSWERS:
 If the Candidate Answer is '(Skipped or no answer)', you MUST set score, clarity_score, relevance_score, grammar_score, and professionalism_score strictly to 0. The ai_feedback should advise them not to skip questions.
 
+CRITICAL INSTRUCTION FOR STAR METHOD VALIDATION:
+For behavioral questions, strictly validate if the answer contains a clear Situation, Task, Action, and Result (STAR). If the user completely misses the "Result" (metrics, numbers, or a clear outcome), you MUST explicitly penalize their score and deduct points from the `star_method_score`.
+
 EXAMPLE OUTPUT FORMAT:
 {
   "per_question_feedback": [
@@ -135,6 +138,7 @@ EXAMPLE OUTPUT FORMAT:
   ],
   "session_feedback": {
     "overall_readiness_score": 75,
+    "star_method_score": 60,
     "strengths": "Strong communication and clear articulation of past technical achievements.",
     "weaknesses": "Tendency to skip behavioral questions or provide brief answers without the STAR method.",
     "improvement_suggestions": "Practice using the STAR method (Situation, Task, Action, Result) to structure your behavioral answers more effectively."

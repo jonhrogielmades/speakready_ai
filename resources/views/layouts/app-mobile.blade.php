@@ -21,6 +21,11 @@
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       <style>
          /* ===== MOBILE LAYOUT SHELL ===== */
+         html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+         }
          :root {
             --mob-nav-h: 64px;
             --mob-top-h: 56px;

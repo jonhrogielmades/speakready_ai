@@ -29,6 +29,11 @@
          }
       </script>
       <style>
+         html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+         }
          .feature-card:hover {
             transform: translateY(-5px);
             transition: transform 0.3s ease;

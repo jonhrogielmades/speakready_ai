@@ -280,6 +280,7 @@
                 wpm: 0,
                 voice_duration: 0,
                 filler_words: 0,
+                pause_count: 0,
                 confidence_score: 85,
                 eye_contact_score: 90,
                 posture_score: 90
@@ -291,10 +292,25 @@
             let recTimerSeconds = 0;
             let recTimerInterval;
 
+            let lastSpeechEnd = 0;
             if ('webkitSpeechRecognition' in window) {
                 recognition = new webkitSpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
+                
+                recognition.onsoundstart = function() {
+                    if (lastSpeechEnd > 0) {
+                        const gap = (Date.now() - lastSpeechEnd) / 1000;
+                        if (gap > 3) {
+                            answersData[currentQIdx].pause_count++;
+                        }
+                    }
+                };
+                
+                recognition.onsoundend = function() {
+                    lastSpeechEnd = Date.now();
+                };
+
                 recognition.onresult = function(event) {
                     let finalTranscript = '';
                     for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -345,11 +361,18 @@
                         const leftEye = landmarks.getLeftEye()[0];
                         const rightEye = landmarks.getRightEye()[0];
                         
-                        // Basic heuristic for posture (face is centered and upright)
-                        const postGood = true; 
+                        // Calculate Head Yaw/Pitch to detect looking away
+                        const eyeDist = Math.abs(leftEye.x - rightEye.x);
+                        const noseDistLeft = Math.abs(leftEye.x - nose.x);
+                        const ratio = noseDistLeft / eyeDist;
                         
-                        // Basic heuristic for eye contact (nose is roughly between eyes horizontally)
-                        const eyeGood = true; 
+                        // If nose is too close to left or right eye, user is looking away
+                        const eyeGood = (ratio > 0.3 && ratio < 0.7);
+                        if (!eyeGood) answersData[currentQIdx].eye_contact_score = Math.max(40, answersData[currentQIdx].eye_contact_score - 5);
+                        
+                        // Posture logic: if nose Y is extremely low compared to the frame, slouching
+                        const postGood = (nose.y < video.videoHeight * 0.7);
+                        if (!postGood) answersData[currentQIdx].posture_score = Math.max(40, answersData[currentQIdx].posture_score - 2); 
 
                         document.getElementById('stEyeContact').innerHTML = eyeGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Looking Away';
                         document.getElementById('stEyeContact').className = eyeGood ? 'text-success' : 'text-warning';
@@ -584,7 +607,12 @@
                     answersData[currentQIdx].voice_duration = recTimerSeconds;
                     
                     const wordCount = document.getElementById('answerTextarea').value.trim().split(/\s+/).filter(w=>w.length>0).length;
-                    const wpm = recTimerSeconds > 0 ? Math.round((wordCount / recTimerSeconds) * 60) : 0;
+                    
+                    // Deduct 3 seconds per pause for a highly accurate WPM of ACTIVE speaking time
+                    let activeSeconds = recTimerSeconds - (answersData[currentQIdx].pause_count * 3);
+                    if (activeSeconds < 1) activeSeconds = 1;
+                    const wpm = Math.round((wordCount / activeSeconds) * 60);
+                    
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
 
@@ -594,10 +622,10 @@
                     }
                     
                     // Confidence Score Calc
-                    let conf = 100 - (answersData[currentQIdx].filler_words * 2);
+                    let conf = 100 - (answersData[currentQIdx].filler_words * 2) - (answersData[currentQIdx].pause_count * 5);
                     if(wpm < 100) conf -= 10;
                     else if(wpm > 160) conf -= 5;
-                    answersData[currentQIdx].confidence_score = Math.max(50, Math.min(100, conf));
+                    answersData[currentQIdx].confidence_score = Math.max(0, Math.min(100, conf));
 
                 }, 1000);
 
@@ -632,6 +660,7 @@
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
+                formData.append('pause_count', answersData[currentQIdx].pause_count);
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);

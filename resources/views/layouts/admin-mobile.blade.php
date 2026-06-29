@@ -20,6 +20,11 @@
       <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
+         html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+         }
          :root {
             --mob-nav-h: 64px;
             --mob-top-h: 56px;

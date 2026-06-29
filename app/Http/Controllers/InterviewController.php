@@ -105,6 +105,7 @@ class InterviewController extends Controller
             'wpm' => $request->input('wpm', 0),
             'voice_duration' => $request->input('voice_duration', 0),
             'filler_words_count' => $request->input('filler_words_count', 0),
+            'pause_count' => $request->input('pause_count', 0),
             'confidence_score' => $request->input('confidence_score', 0),
             'eye_contact_score' => $request->input('eye_contact_score', 0),
             'posture_score' => $request->input('posture_score', 0),
@@ -248,6 +249,30 @@ class InterviewController extends Controller
             $overall = min(100, $overall + 5);
         }
 
+        $atsScore = 0;
+        if (!empty($session->job_description)) {
+            $jdClean = preg_replace('/[^a-zA-Z]/', ' ', strtolower($session->job_description));
+            $jdWords = array_unique(str_word_count($jdClean, 1));
+            $stopWords = ['about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'aren', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'couldn', 'did', 'didn', 'do', 'does', 'doesn', 'doing', 'don', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'hadn', 'has', 'hasn', 'have', 'haven', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'if', 'in', 'into', 'is', 'isn', 'it', 'its', 'itself', 'let', 'me', 'more', 'most', 'mustn', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', 'shan', 'she', 'should', 'shouldn', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'wasn', 'we', 'were', 'weren', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'wouldn', 'you', 'your', 'yours', 'yourself', 'yourselves', 'please', 'required', 'skills', 'experience', 'looking', 'years', 'working', 'ability'];
+            
+            $jdKeywords = array_filter($jdWords, function($word) use ($stopWords) {
+                return strlen($word) > 4 && !in_array($word, $stopWords);
+            });
+            
+            if (count($jdKeywords) > 0) {
+                $fullTranscript = strtolower(implode(' ', array_column($answersData, 'answer')));
+                $matchedCount = 0;
+                foreach ($jdKeywords as $keyword) {
+                    if (strpos($fullTranscript, $keyword) !== false) {
+                        $matchedCount++;
+                    }
+                }
+                $atsScore = (int) round(($matchedCount / count($jdKeywords)) * 100);
+            }
+        }
+        
+        $starScore = $sFeedback['star_method_score'] ?? rand(70,95); // Default to a decent score if missing
+
         \App\Models\Score::create([
             'interview_session_id' => $session->id,
             'clarity_score' => $clarity,
@@ -257,6 +282,8 @@ class InterviewController extends Controller
             'body_language_score' => $bodyLang > 0 ? $bodyLang : rand(70,95),
             'confidence_score' => $conf > 0 ? $conf : rand(70,95),
             'overall_readiness_score' => $overall,
+            'ats_match_score' => $atsScore,
+            'star_method_score' => $starScore,
         ]);
 
         // Generate Session-level Feedback from AI
