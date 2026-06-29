@@ -502,6 +502,60 @@ class AdminController extends Controller
         }
     }
 
+    public function autofillModule(LearningModule $module)
+    {
+        $prompt = "Create comprehensive content for an educational learning module titled: '" . $module->title . "'. 
+        The category is '" . $module->category . "' and difficulty is '" . $module->difficulty . "'.
+        Return ONLY a JSON object with the following structure:
+        {
+            \"description\": \"A professional, detailed summary of the module (3-4 sentences)\",
+            \"chapters\": [
+                {
+                    \"title\": \"Chapter 1: ...\",
+                    \"content\": \"Detailed reading material for this chapter (at least 3 paragraphs)\"
+                },
+                {
+                    \"title\": \"Chapter 2: ...\",
+                    \"content\": \"Detailed reading material for this chapter...\"
+                }
+            ]
+        }";
+
+        try {
+            $jsonResponse = \App\Services\AIService::generateJson($prompt);
+            $data = json_decode($jsonResponse, true);
+            
+            if (!$data) {
+                return redirect()->back()->with('error', 'AI failed to generate valid content.');
+            }
+
+            // Update description if it's currently empty or short
+            if (empty($module->description) || strlen($module->description) < 20) {
+                $module->update([
+                    'description' => $data['description'] ?? $module->description,
+                ]);
+            }
+
+            if (isset($data['chapters']) && is_array($data['chapters'])) {
+                // Delete existing chapters to prevent duplication, or just append? Append is safer, but autofill implies filling it out. Let's just append.
+                $startOrder = $module->chapters()->count();
+                foreach ($data['chapters'] as $index => $chapterData) {
+                    $module->chapters()->create([
+                        'title' => $chapterData['title'],
+                        'content' => $chapterData['content'],
+                        'order' => $startOrder + $index + 1,
+                    ]);
+                }
+            }
+
+            return redirect()->back()->with('success', 'Module successfully autofilled by AI!');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('AI Module Autofill Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to autofill module: ' . $e->getMessage());
+        }
+    }
+
     public function modulesDashboard()
     {
         $modules = LearningModule::all();

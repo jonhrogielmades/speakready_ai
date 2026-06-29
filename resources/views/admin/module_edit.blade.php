@@ -3,33 +3,39 @@
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 
 <div class="db-section active" id="sec-admin-module-edit">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="fa-solid fa-arrow-left me-1"></i> Back to Modules</a>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Edit Module: {{ $module->title }}</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage content, resources, and assessments.</p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <form action="{{ route('admin.modules.autofill', $module->id) }}" method="POST" id="aiAutofillForm" style="margin:0;">
+                @csrf
+                <button type="submit" class="btn px-3 py-2" id="aiAutofillBtn" style="font-size:0.9rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" onclick="this.innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin me-1\'></i> Generating...'; this.style.pointerEvents='none';">
+                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Auto-Fill Content
+                </button>
+            </form>
             <span class="badge bg-primary px-3 py-2" style="font-size:0.9rem">Status: {{ ucfirst($module->status) }}</span>
         </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <ul class="nav nav-pills mb-4" id="moduleEditTabs" role="tablist">
+    <ul class="nav nav-pills mb-4 d-flex flex-wrap gap-2" id="moduleEditTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active oinp" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic" type="button" role="tab" style="width:auto;margin-right:10px;">Basic Info</button>
+            <button class="nav-link active oinp" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic" type="button" role="tab" style="width:auto;margin:0;">Basic Info</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin-right:10px;">Chapters & Lessons</button>
+            <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin:0;">Chapters & Lessons</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="resources-tab" data-bs-toggle="pill" data-bs-target="#resources" type="button" role="tab" style="width:auto;margin-right:10px;">Resources</button>
+            <button class="nav-link oinp" id="resources-tab" data-bs-toggle="pill" data-bs-target="#resources" type="button" role="tab" style="width:auto;margin:0;">Resources</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button" role="tab" style="width:auto;margin-right:10px;">Quizzes</button>
+            <button class="nav-link oinp" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button" role="tab" style="width:auto;margin:0;">Quizzes</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="game-tab" data-bs-toggle="pill" data-bs-target="#game" type="button" role="tab" style="width:auto;">Learning Games</button>
+            <button class="nav-link oinp" id="game-tab" data-bs-toggle="pill" data-bs-target="#game" type="button" role="tab" style="width:auto;margin:0;">Learning Games</button>
         </li>
     </ul>
 
