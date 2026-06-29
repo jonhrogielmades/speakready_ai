@@ -291,6 +291,7 @@
             let isRecording = false;
             let recTimerSeconds = 0;
             let recTimerInterval;
+            let preRecordingText = ''; // Prevents duplicate word bugs
 
             let lastSpeechEnd = 0;
             if ('webkitSpeechRecognition' in window) {
@@ -312,13 +313,14 @@
                 };
 
                 recognition.onresult = function(event) {
-                    let finalTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
+                    let currentTranscript = '';
+                    for (let i = 0; i < event.results.length; ++i) {
+                        currentTranscript += event.results[i][0].transcript;
                     }
-                    if(finalTranscript) {
+                    if(currentTranscript) {
                         const ta = document.getElementById('answerTextarea');
-                        ta.value = ta.value + " " + finalTranscript.trim();
+                        let newText = preRecordingText + (preRecordingText ? " " : "") + currentTranscript.trim();
+                        ta.value = newText.trim();
                         triggerAnalysis();
                     }
                 };
@@ -591,6 +593,7 @@
 
             function startRecording() {
                 if(!recognition) return alert("Speech recognition not supported in this browser.");
+                preRecordingText = document.getElementById('answerTextarea').value.trim();
                 recognition.start();
                 isRecording = true;
                 document.getElementById('micStartBtn').style.display = 'none';
