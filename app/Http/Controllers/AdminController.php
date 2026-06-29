@@ -429,6 +429,13 @@ class AdminController extends Controller
             'is_featured' => 'nullable|boolean',
         ]);
 
+        if ($request->filled('category')) {
+            \App\Models\Category::firstOrCreate(
+                ['title' => $request->category],
+                ['type' => 'Learning', 'status' => 'active']
+            );
+        }
+
         LearningModule::create([
             'title' => $request->title,
             'category' => $request->category,
@@ -590,6 +597,13 @@ class AdminController extends Controller
             'description' => 'nullable|string',
             'status' => 'nullable|string',
         ]);
+
+        if ($request->filled('category')) {
+            \App\Models\Category::firstOrCreate(
+                ['title' => $request->category],
+                ['type' => 'Learning', 'status' => 'active']
+            );
+        }
 
         $module->update([
             'title' => $request->title,

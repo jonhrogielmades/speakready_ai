@@ -10,12 +10,6 @@
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage content, resources, and assessments.</p>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <form action="{{ route('admin.modules.autofill', $module->id) }}" method="POST" id="aiAutofillForm" style="margin:0;">
-                @csrf
-                <button type="submit" class="btn px-3 py-2" id="aiAutofillBtn" style="font-size:0.9rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" onclick="this.innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin me-1\'></i> Generating...'; this.style.pointerEvents='none';">
-                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Auto-Fill Content
-                </button>
-            </form>
             <span class="badge bg-primary px-3 py-2" style="font-size:0.9rem">Status: {{ ucfirst($module->status) }}</span>
         </div>
     </div>
