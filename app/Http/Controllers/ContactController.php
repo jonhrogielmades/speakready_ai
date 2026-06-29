@@ -21,7 +21,7 @@ class ContactController extends Controller
         \App\Models\Contact::create($validated);
 
         try {
-            $destinationEmail = env('MAIL_FROM_ADDRESS', 'capstonespeakreadyai@gmail.com');
+            $destinationEmail = \App\Models\User::where('is_admin', 1)->value('email') ?? env('MAIL_FROM_ADDRESS', 'admin@speakready.ai');
             Mail::to($destinationEmail)->send(new ContactMessage($validated));
         } catch (\Exception $e) {
             \Log::error('Contact form email failed (but saved to DB): ' . $e->getMessage());

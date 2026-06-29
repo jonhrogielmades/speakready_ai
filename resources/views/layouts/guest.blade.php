@@ -718,7 +718,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">capstonespeakreadyai@gmail.com</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">{{ \App\Models\User::where('is_admin', 1)->value('email') ?? 'admin@speakready.ai' }}</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">
