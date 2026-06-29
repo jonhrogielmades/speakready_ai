@@ -7,8 +7,11 @@
             <h4 style="color:var(--tx);font-weight:700"><i class="fa-solid fa-tree me-2"></i>Skill Trees</h4>
             <p style="color:var(--tx3)">Unlock powerful perks by earning Skill XP in Learning Games.</p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-md-0">
             <span class="badge bg-primary" style="font-size:14px;padding:10px 15px;border-radius:12px;">Level {{ $profile->player_level ?? 1 }}</span>
+            <a href="{{ route('user.learning') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;">
+                <i class="fa-solid fa-arrow-left me-sm-1"></i> <span class="d-none d-sm-inline">Learning Games</span>
+            </a>
         </div>
     </div>
 

@@ -304,20 +304,20 @@
             </div>
             <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap" style="flex: 1; min-width: 250px; justify-content: flex-end;">
-            <div class="db-top-search" style="width:100%; max-width:300px; background:var(--sf);border:1px solid var(--bd); margin:0;">
+        <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-sm-0" style="flex: 1; min-width: 250px; justify-content: flex-end;">
+            <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--sf);border:1px solid var(--bd); margin:0;">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" placeholder="Search quests, skills, topics..." style="width:100%;">
             </div>
-            <a href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;"><i class="fa-solid fa-tree me-sm-1" style="color:#10b981"></i> <span class="d-none d-sm-inline">Skill Tree</span></a>
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-gamepad me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">How to Play</span></button>
+            <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;"><i class="fa-solid fa-tree me-sm-1" style="color:#10b981"></i> <span class="d-none d-sm-inline">Skill Tree</span></a>
+            <button id="btn-how-to-play" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-gamepad me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">How to Play</span></button>
         </div>
     </div>
 
     <!-- Sub-Navigation -->
-    <div id="nav-pills-container" class="mb-4 pb-2" style="overflow-x:auto;white-space:nowrap;">
+    <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
         @foreach($categories as $category)
-            <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
+            <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
         @endforeach
     </div>
 
@@ -549,15 +549,17 @@
         const driver = window.driver.js.driver;
 
         const stepsMobile = [
-            { element: '#nav-pills-container', popover: { title: 'Categories', description: 'Switch between different learning categories to discover new challenges.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy.', side: "top", align: 'start' }},
-            { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs.', side: "top", align: 'start' }}
+            { element: '#nav-pills-container', popover: { title: '1. Categories', description: 'Switch between different learning categories to discover new challenges and topics.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: '2. Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy as you play.', side: "top", align: 'start' }},
+            { element: '#modules-list', popover: { title: '3. Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs. Complete them sequentially to unlock more.', side: "top", align: 'start' }},
+            { element: '#btn-skill-tree', popover: { title: '4. Skill Tree', description: 'Click here to view your complete Skill Tree and spend your earned XP on valuable perks!', side: "bottom", align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#nav-pills-container', popover: { title: 'Categories', description: 'Switch between different learning categories to discover new challenges.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy.', side: "bottom", align: 'start' }},
-            { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs.', side: "top", align: 'start' }}
+            { element: '#nav-pills-container', popover: { title: '1. Categories', description: 'Switch between different learning categories to discover new challenges and topics.', side: "bottom", align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: '2. Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy as you play.', side: "bottom", align: 'start' }},
+            { element: '#modules-list', popover: { title: '3. Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs. Complete them sequentially to unlock more.', side: "top", align: 'start' }},
+            { element: '#btn-skill-tree', popover: { title: '4. Skill Tree', description: 'Click here to view your complete Skill Tree and spend your earned XP on valuable perks!', side: "bottom", align: 'end' }}
         ];
 
         const driverObj = driver({
