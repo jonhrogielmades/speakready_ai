@@ -668,51 +668,34 @@ EOT;
 
     public static function generateJson($prompt, $provider = 'gemini')
     {
-        $maxRetries = 3;
-        $attempt = 0;
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere');
+        $providers = array_filter(array_map('trim', explode(',', $priorityString)));
+        if (empty($providers)) {
+            $providers = [$provider, 'gemini', 'groq', 'claude', 'openrouter', 'wisdomgate', 'cohere'];
+        }
 
-        while ($attempt < $maxRetries) {
+        foreach ($providers as $currentProvider) {
             try {
                 $response = [];
-                switch ($provider) {
-                    case 'gemini':
-                        $response = self::callGemini($prompt);
-                        break;
-                    case 'cohere':
-                        $response = self::callCohere($prompt);
-                        break;
-                    case 'groq':
-                        $response = self::callGroq($prompt);
-                        break;
-                    case 'openrouter':
-                        $response = self::callOpenRouter($prompt);
-                        break;
-                    case 'claude':
-                        $response = self::callClaude($prompt);
-                        break;
-                    case 'wisdomgate':
-                        $response = self::callWisdomGate($prompt);
-                        break;
-                    default:
-                        $response = self::callGemini($prompt);
-                        break;
+                switch ($currentProvider) {
+                    case 'gemini': $response = self::callGemini($prompt); break;
+                    case 'cohere': $response = self::callCohere($prompt); break;
+                    case 'groq': $response = self::callGroq($prompt); break;
+                    case 'openrouter': $response = self::callOpenRouter($prompt); break;
+                    case 'claude': $response = self::callClaude($prompt); break;
+                    case 'wisdomgate': $response = self::callWisdomGate($prompt); break;
+                    default: continue 2;
                 }
+                
                 if (!empty($response)) {
-                    // Since callGemini etc. parse JSON and return array, we encode it back to string
-                    // because AdminController's generateModule expects a JSON string.
                     return json_encode($response);
                 }
             } catch (\Exception $e) {
-                Log::error("AI JSON Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
-            }
-
-            $attempt++;
-            if ($attempt < $maxRetries) {
-                sleep(1);
+                Log::error("AI JSON Generation Error ($currentProvider): " . $e->getMessage());
             }
         }
         
-        Log::error("AI JSON Generation Failed after {$maxRetries} attempts.");
+        Log::error("AI JSON Generation Failed on all providers.");
         return json_encode([]);
     }
 }
