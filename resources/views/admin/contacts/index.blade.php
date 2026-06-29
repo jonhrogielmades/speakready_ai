@@ -20,10 +20,10 @@
             <table class="table mb-0" style="color:var(--tx);">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--bd);">
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Date</th>
+                        <th class="d-none d-md-table-cell" style="padding:15px; border-bottom:none; color:var(--tx2);">Date</th>
                         <th style="padding:15px; border-bottom:none; color:var(--tx2);">Name</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Email</th>
-                        <th style="padding:15px; border-bottom:none; color:var(--tx2);">Subject</th>
+                        <th class="d-none d-md-table-cell" style="padding:15px; border-bottom:none; color:var(--tx2);">Email</th>
+                        <th class="d-none d-sm-table-cell" style="padding:15px; border-bottom:none; color:var(--tx2);">Subject</th>
                         <th style="padding:15px; border-bottom:none; color:var(--tx2);">Status</th>
                         <th style="padding:15px; border-bottom:none; color:var(--tx2); text-align:right;">Action</th>
                     </tr>
@@ -31,16 +31,16 @@
                 <tbody>
                     @forelse($contacts as $contact)
                         <tr style="border-bottom: 1px solid var(--bd); {{ $contact->status === 'unread' ? 'background:rgba(59,130,246,0.05);' : '' }}">
-                            <td style="padding:15px; border:none; vertical-align:middle;">
+                            <td class="d-none d-md-table-cell" style="padding:15px; border:none; vertical-align:middle;">
                                 {{ $contact->created_at->format('M d, Y h:i A') }}
                             </td>
                             <td style="padding:15px; border:none; vertical-align:middle; font-weight:{{ $contact->status === 'unread' ? 'bold' : 'normal' }};">
                                 {{ $contact->name }}
                             </td>
-                            <td style="padding:15px; border:none; vertical-align:middle;">
+                            <td class="d-none d-md-table-cell" style="padding:15px; border:none; vertical-align:middle;">
                                 {{ $contact->email }}
                             </td>
-                            <td style="padding:15px; border:none; vertical-align:middle; font-weight:{{ $contact->status === 'unread' ? 'bold' : 'normal' }};">
+                            <td class="d-none d-sm-table-cell" style="padding:15px; border:none; vertical-align:middle; font-weight:{{ $contact->status === 'unread' ? 'bold' : 'normal' }};">
                                 {{ \Illuminate\Support\Str::limit($contact->subject, 30) }}
                             </td>
                             <td style="padding:15px; border:none; vertical-align:middle;">
