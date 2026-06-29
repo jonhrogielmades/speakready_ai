@@ -168,6 +168,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/modules/resources/{resource}', [AdminController::class, 'destroyModuleResource'])->name('admin.modules.resources.destroy');
 
     // Admin Routes - Module Quizzes
+    Route::post('/admin/modules/{module}/quizzes/generate', [AdminController::class, 'generateModuleQuiz'])->name('admin.modules.quizzes.generate');
     Route::post('/admin/modules/{module}/quizzes', [AdminController::class, 'storeModuleQuiz'])->name('admin.modules.quizzes.store');
     Route::delete('/admin/modules/quizzes/{quiz}', [AdminController::class, 'destroyModuleQuiz'])->name('admin.modules.quizzes.destroy');
 

@@ -447,13 +447,16 @@ class AdminController extends Controller
             'prompt' => 'required|string',
         ]);
 
+        $categories = \App\Models\Category::pluck('title')->implode(', ');
+        $categoryInstruction = $categories ? "Choose one of: $categories" : "General";
+
         $prompt = "Create a comprehensive educational learning module about: " . $request->prompt . ". 
         Return ONLY a JSON object with the following structure:
         {
             \"title\": \"Module Title\",
             \"description\": \"Short summary of the module\",
             \"difficulty\": \"Beginner\",
-            \"category\": \"General\",
+            \"category\": \"$categoryInstruction\",
             \"chapters\": [
                 {
                     \"title\": \"Chapter 1: Intro\",
@@ -564,15 +567,18 @@ class AdminController extends Controller
         $draftModules = $modules->where('status', 'draft')->count();
         $totalResources = \App\Models\ModuleResource::count();
         $mostViewedModule = LearningModule::orderBy('views', 'desc')->first();
+        
+        $categories = \App\Models\Category::pluck('title')->filter()->unique()->values();
 
-        return view('admin.modules', compact('modules', 'totalModules', 'publishedModules', 'draftModules', 'totalResources', 'mostViewedModule'));
+        return view('admin.modules', compact('modules', 'totalModules', 'publishedModules', 'draftModules', 'totalResources', 'mostViewedModule', 'categories'));
     }
 
     public function editModule(LearningModule $module)
     {
         $module->load(['chapters', 'resources', 'quizzes.questions', 'activities', 'gameLevels']);
         $allGameLevels = \App\Models\GameLevel::orderBy('level_number', 'asc')->get();
-        return view('admin.module_edit', compact('module', 'allGameLevels'));
+        $categories = \App\Models\Category::pluck('title')->filter()->unique()->values();
+        return view('admin.module_edit', compact('module', 'allGameLevels', 'categories'));
     }
 
     public function updateModule(Request $request, LearningModule $module)
@@ -629,6 +635,60 @@ class AdminController extends Controller
     }
 
     // Quizzes
+    public function generateModuleQuiz(Request $request, LearningModule $module)
+    {
+        $prompt = "Create a 5-question multiple choice quiz based on the following learning module content.\n";
+        $prompt .= "Module Title: " . $module->title . "\n";
+        $prompt .= "Module Description: " . $module->description . "\n";
+        foreach($module->chapters as $chapter) {
+            $prompt .= "Chapter '" . $chapter->title . "' Content: " . strip_tags($chapter->content) . "\n";
+        }
+        
+        $prompt .= <<<EOT
+Return ONLY a valid JSON object strictly matching this format. Do not include markdown.
+{
+  "title": "Module Assessment Quiz",
+  "passing_score": 80,
+  "questions": [
+    {
+      "question_text": "What is the main topic?",
+      "options": "Option A, Option B, Option C, Option D",
+      "correct_answer": "Option A"
+    }
+  ]
+}
+EOT;
+
+        try {
+            $jsonResponse = \App\Services\AIService::generateJson($prompt);
+            $data = json_decode($jsonResponse, true);
+            
+            if (!$data || !isset($data['questions'])) {
+                return redirect()->back()->with('error', 'AI failed to generate a valid quiz.');
+            }
+
+            $quiz = $module->quizzes()->create([
+                'title' => $data['title'] ?? 'AI Generated Quiz',
+                'passing_score' => $data['passing_score'] ?? 75,
+            ]);
+
+            foreach ($data['questions'] as $q) {
+                $quiz->questions()->create([
+                    'type' => 'multiple_choice',
+                    'question_text' => $q['question_text'],
+                    'options' => $q['options'] ?? '',
+                    'correct_answer' => $q['correct_answer'],
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'AI generated the quiz successfully!');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('AI Quiz Gen Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate quiz: ' . $e->getMessage());
+        }
+    }
+
     public function storeModuleQuiz(Request $request, LearningModule $module)
     {
         $request->validate([

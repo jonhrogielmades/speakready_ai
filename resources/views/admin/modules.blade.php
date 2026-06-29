@@ -106,11 +106,19 @@
     </div>
 
     <!-- Module List Table -->
-    <div id="mainModulesTableWrapper" class="table-responsive" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+    <div id="mainModulesTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
         <div class="d-flex justify-content-between mb-3 align-items-center flex-wrap gap-2">
             <h6 style="margin:0;font-weight:600;">Module List</h6>
             <div class="d-flex gap-2 flex-wrap">
                 <input type="text" id="moduleSearch" class="oinp" placeholder="Search Modules..." style="max-width:200px;">
+                <select id="categoryFilter" class="oinp" style="max-width:150px;">
+                    <option value="">All Categories</option>
+                    @if(isset($categories))
+                        @foreach($categories as $cat)
+                            <option value="{{ strtolower($cat) }}">{{ $cat }}</option>
+                        @endforeach
+                    @endif
+                </select>
                 <select id="moduleFilter" class="oinp" style="max-width:150px;">
                     <option value="">All Status</option>
                     <option value="published">Published</option>
@@ -120,48 +128,50 @@
             </div>
         </div>
 
-        <table class="table table-dark table-hover mb-0" id="modulesTable" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
-            <thead>
-                <tr>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Module Title</th>
-                    <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
-                    <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Status</th>
-                    <th class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Views</th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($modules as $m)
-                <tr data-status="{{ $m->status }}">
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        {{ $m->title }}
-                        @if($m->is_featured) <span class="badge bg-warning ms-1 text-dark" style="font-size:0.6rem">⭐ Featured</span> @endif
-                    </td>
-                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->category ?? 'None' }}</td>
-                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        @if($m->difficulty == 'Beginner') <span class="badge bg-success">Beginner</span>
-                        @elseif($m->difficulty == 'Intermediate') <span class="badge bg-warning text-dark">Intermediate</span>
-                        @elseif($m->difficulty == 'Advanced') <span class="badge bg-danger">Advanced</span>
-                        @else <span class="badge bg-secondary">Unknown</span> @endif
-                    </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        @if($m->status == 'published') 🟢 Published
-                        @elseif($m->status == 'draft') 🟡 Draft
-                        @else 🔴 Archived @endif
-                    </td>
-                    <td class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px; white-space:nowrap;">
-                        <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem">Manage Content</a>
-                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this module?');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.7rem">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0" id="modulesTable" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
+                <thead>
+                    <tr>
+                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Module Title</th>
+                        <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
+                        <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
+                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Status</th>
+                        <th class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Views</th>
+                        <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($modules as $m)
+                    <tr data-status="{{ $m->status }}" data-category="{{ strtolower($m->category ?? '') }}">
+                        <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                            {{ $m->title }}
+                            @if($m->is_featured) <span class="badge bg-warning ms-1 text-dark" style="font-size:0.6rem">⭐ Featured</span> @endif
+                        </td>
+                        <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->category ?? 'None' }}</td>
+                        <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                            @if($m->difficulty == 'Beginner') <span class="badge bg-success">Beginner</span>
+                            @elseif($m->difficulty == 'Intermediate') <span class="badge bg-warning text-dark">Intermediate</span>
+                            @elseif($m->difficulty == 'Advanced') <span class="badge bg-danger">Advanced</span>
+                            @else <span class="badge bg-secondary">Unknown</span> @endif
+                        </td>
+                        <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                            @if($m->status == 'published') 🟢 Published
+                            @elseif($m->status == 'draft') 🟡 Draft
+                            @else 🔴 Archived @endif
+                        </td>
+                        <td class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
+                        <td style="border-bottom:1px solid var(--bd);padding:12px 8px; white-space:nowrap;">
+                            <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem">Manage Content</a>
+                            <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this module?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.7rem">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -180,7 +190,18 @@
                     <input class="oinp mb-3" type="text" name="title" placeholder="e.g. Mastering the STAR Method" required>
                     
                     <label class="olbl">Category</label>
-                    <input class="oinp mb-3" type="text" name="category" placeholder="e.g. Interview Basics" required>
+                    <select class="oinp mb-3" name="category" id="categorySelect" required onchange="if(this.value === 'new_category') { document.getElementById('newCategoryInput').style.display='block'; document.getElementById('newCategoryInput').name='category'; document.getElementById('newCategoryInput').required=true; this.name=''; } else { document.getElementById('newCategoryInput').style.display='none'; document.getElementById('newCategoryInput').name=''; document.getElementById('newCategoryInput').required=false; this.name='category'; }">
+                        <option value="" disabled selected>Select a Category...</option>
+                        @if(isset($categories) && count($categories) > 0)
+                            @foreach($categories as $cat)
+                                @if(!empty($cat))
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endif
+                            @endforeach
+                        @endif
+                        <option value="new_category">+ Add New Category</option>
+                    </select>
+                    <input type="text" id="newCategoryInput" class="oinp mb-3" placeholder="Enter new category name" style="display: none;">
                     
                     <label class="olbl">Difficulty Level</label>
                     <select class="oinp mb-3" name="difficulty" required>
@@ -254,21 +275,25 @@
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('moduleSearch');
     const filterSelect = document.getElementById('moduleFilter');
+    const categorySelect = document.getElementById('categoryFilter');
     const table = document.getElementById('modulesTable');
     const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
 
     function filterTable() {
         const query = searchInput.value.toLowerCase();
         const status = filterSelect.value.toLowerCase();
+        const category = categorySelect.value.toLowerCase();
 
         for (let i = 0; i < rows.length; i++) {
             const title = rows[i].cells[0].innerText.toLowerCase();
             const rowStatus = rows[i].getAttribute('data-status').toLowerCase();
+            const rowCategory = rows[i].getAttribute('data-category').toLowerCase();
             
             const matchSearch = title.includes(query);
             const matchStatus = status === "" || rowStatus === status;
+            const matchCategory = category === "" || rowCategory === category;
 
-            if (matchSearch && matchStatus) {
+            if (matchSearch && matchStatus && matchCategory) {
                 rows[i].style.display = '';
             } else {
                 rows[i].style.display = 'none';
@@ -278,6 +303,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     searchInput.addEventListener('keyup', filterTable);
     filterSelect.addEventListener('change', filterTable);
+    categorySelect.addEventListener('change', filterTable);
 });
 </script>
 @endsection
