@@ -93,7 +93,7 @@ class GameController extends Controller
             'difficulty' => $level->difficulty,
             'target_position' => $level->target_position,
             'num_questions' => count($questions), // Dynamic based on challenge
-            'response_mode' => 'voice_and_text',
+            'response_mode' => 'hybrid',
             'interview_focus' => $interviewFocus,
             'company_persona' => $level->ai_persona, // Inject persona
             'time_limit' => $level->time_limit_seconds ?? 0, // Inject time limit

@@ -462,7 +462,7 @@
                 document.getElementById('workspaceWrapper').style.display = 'block';
                 initCamera();
                 
-                if(responseMode === 'voice' || responseMode === 'hybrid') {
+                if(responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text') {
                     document.getElementById('voiceControls').style.display = 'block';
                     document.getElementById('voiceAnalyticsPanel').style.display = 'block';
                 }

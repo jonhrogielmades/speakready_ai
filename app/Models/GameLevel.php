@@ -58,7 +58,7 @@ class GameLevel extends Model
             return ["Please begin your response."];
         }
         
-        $normalizedMissionText = str_replace(['\n', '\r\n', '\r'], "\n", $this->mission_text);
+        $normalizedMissionText = str_replace(["\r\n", "\r", '\n'], "\n", $this->mission_text);
         $normalizedMissionText = preg_replace('/\s+(\d+[\.\)])\s+/', "\n$1 ", $normalizedMissionText);
         
         $lines = array_filter(array_map('trim', explode("\n", $normalizedMissionText)));
