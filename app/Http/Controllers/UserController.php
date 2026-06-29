@@ -498,4 +498,32 @@ class UserController extends Controller
             
         return view('user.leaderboard', compact('topUsers'));
     }
+
+    public function modules(Request $request) {
+        $categories = \App\Models\Category::where('status', 'active')->where('type', 'core')->get();
+        
+        $query = \App\Models\LearningModule::where('status', 'published');
+        
+        if ($request->has('category_id') && $request->category_id != '') {
+            $query->where('category_id', $request->category_id);
+        }
+        
+        if ($request->has('search') && $request->search != '') {
+            $query->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        $modules = $query->orderBy('created_at', 'desc')->paginate(12);
+
+        return view('user.modules.index', compact('modules', 'categories'));
+    }
+
+    public function moduleShow($id) {
+        $module = \App\Models\LearningModule::with(['chapters', 'resources', 'quizzes', 'activities'])->where('status', 'published')->findOrFail($id);
+        
+        // Track view
+        $module->increment('views');
+
+        return view('user.modules.show', compact('module'));
+    }
 }

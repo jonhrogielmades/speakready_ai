@@ -81,6 +81,10 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
     
+    // User Learning Modules
+    Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
+    Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
+    
     // Arena Gamification Routes
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');

@@ -55,6 +55,7 @@
                <a href="{{ route('interview.setup') }}" class="db-nl {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> Mock Interview</a>
                
                <div class="db-nav-section">Specialized Training</div>
+               <a href="{{ route('user.modules.index') }}" class="db-nl {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Interview Modules</a>
                <a href="{{ route('user.drills.voice') }}" class="db-nl {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
                <a href="{{ route('user.learning') }}" class="db-nl {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Learning Games</a>
                <a href="{{ route('user.coach') }}" class="db-nl {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> AI Coach</a>

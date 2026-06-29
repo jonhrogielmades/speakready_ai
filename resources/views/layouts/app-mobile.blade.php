@@ -484,6 +484,11 @@
 
          <div class="drawer-title">Training & Performance</div>
          <div class="drawer-grid">
+            <a href="{{ route('user.modules.index') }}"
+               class="drawer-item {{ request()->routeIs('user.modules.*') ? 'active' : '' }}">
+               <i class="fa-solid fa-book-open-reader"></i>
+               <span>Interview Modules</span>
+            </a>
             <a href="{{ route('user.drills.voice') }}"
                class="drawer-item {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}">
                <i class="fa-solid fa-ear-listen"></i>
