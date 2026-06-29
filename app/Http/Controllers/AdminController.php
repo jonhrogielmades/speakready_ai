@@ -441,6 +441,67 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Module created successfully');
     }
 
+    public function generateModule(Request $request)
+    {
+        $request->validate([
+            'prompt' => 'required|string',
+        ]);
+
+        $prompt = "Create a comprehensive educational learning module about: " . $request->prompt . ". 
+        Return ONLY a JSON object with the following structure:
+        {
+            \"title\": \"Module Title\",
+            \"description\": \"Short summary of the module\",
+            \"difficulty\": \"Beginner\",
+            \"category\": \"General\",
+            \"chapters\": [
+                {
+                    \"title\": \"Chapter 1: Intro\",
+                    \"content\": \"Detailed reading material for chapter 1 (at least 3 paragraphs)\"
+                },
+                {
+                    \"title\": \"Chapter 2: Deep Dive\",
+                    \"content\": \"Detailed reading material for chapter 2...\"
+                }
+            ]
+        }";
+
+        try {
+            $jsonResponse = \App\Services\AIService::generateJson($prompt);
+            $data = json_decode($jsonResponse, true);
+            
+            if (!$data || !isset($data['title'])) {
+                return redirect()->back()->with('error', 'AI failed to generate a valid module format.');
+            }
+
+            $module = LearningModule::create([
+                'title' => $data['title'],
+                'category' => $data['category'] ?? 'General',
+                'difficulty' => $data['difficulty'] ?? 'Beginner',
+                'description' => $data['description'] ?? '',
+                'status' => 'draft',
+                'type' => 'article',
+                'is_featured' => false,
+            ]);
+
+            if (isset($data['chapters']) && is_array($data['chapters'])) {
+                foreach ($data['chapters'] as $index => $chapterData) {
+                    $module->chapters()->create([
+                        'title' => $chapterData['title'],
+                        'content' => $chapterData['content'],
+                        'order' => $index + 1,
+                    ]);
+                }
+            }
+
+            return redirect()->route('admin.modules.edit', $module->id)->with('success', 'AI Module generated successfully! You can now review and publish it.');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('AI Module Generation Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to generate module: ' . $e->getMessage());
+        }
+    }
+
     public function modulesDashboard()
     {
         $modules = LearningModule::all();

@@ -143,6 +143,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     
     // Admin Routes - Modules
     Route::get('/admin/modules/{module}/edit', [AdminController::class, 'editModule'])->name('admin.modules.edit');
+    Route::post('/admin/modules/generate', [AdminController::class, 'generateModule'])->name('admin.modules.generate');
     Route::post('/admin/modules', [AdminController::class, 'storeModule'])->name('admin.modules.store');
     Route::put('/admin/modules/{module}', [AdminController::class, 'updateModule'])->name('admin.modules.update');
     Route::delete('/admin/modules/{module}', [AdminController::class, 'destroyModule'])->name('admin.modules.destroy');

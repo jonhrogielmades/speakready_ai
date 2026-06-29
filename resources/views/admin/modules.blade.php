@@ -62,14 +62,19 @@
     }
 </style>
 <div class="db-section active" id="sec-admin-modules">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Learning Modules</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage your learning content.</p>
         </div>
-        <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-            <i class="fa-solid fa-plus me-1"></i> Add Learning Module
-        </button>
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate
+            </button>
+            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addModuleModal">
+                <i class="fa-solid fa-plus me-1"></i> Add Module
+            </button>
+        </div>
     </div>
 
     <!-- Overview Cards -->
@@ -101,10 +106,10 @@
     </div>
 
     <!-- Module List Table -->
-    <div id="mainModulesTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
-        <div class="d-flex justify-content-between mb-3 align-items-center">
+    <div id="mainModulesTableWrapper" class="table-responsive" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+        <div class="d-flex justify-content-between mb-3 align-items-center flex-wrap gap-2">
             <h6 style="margin:0;font-weight:600;">Module List</h6>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 <input type="text" id="moduleSearch" class="oinp" placeholder="Search Modules..." style="max-width:200px;">
                 <select id="moduleFilter" class="oinp" style="max-width:150px;">
                     <option value="">All Status</option>
@@ -119,10 +124,10 @@
             <thead>
                 <tr>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Module Title</th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
+                    <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Category</th>
+                    <th class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Status</th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Views</th>
+                    <th class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Views</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Actions</th>
                 </tr>
             </thead>
@@ -133,8 +138,8 @@
                         {{ $m->title }}
                         @if($m->is_featured) <span class="badge bg-warning ms-1 text-dark" style="font-size:0.6rem">⭐ Featured</span> @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->category ?? 'None' }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->category ?? 'None' }}</td>
+                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($m->difficulty == 'Beginner') <span class="badge bg-success">Beginner</span>
                         @elseif($m->difficulty == 'Intermediate') <span class="badge bg-warning text-dark">Intermediate</span>
                         @elseif($m->difficulty == 'Advanced') <span class="badge bg-danger">Advanced</span>
@@ -145,8 +150,8 @@
                         @elseif($m->status == 'draft') 🟡 Draft
                         @else 🔴 Archived @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
+                    <td class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
+                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px; white-space:nowrap;">
                         <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem">Manage Content</a>
                         <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this module?');">
                             @csrf @method('DELETE')
@@ -200,6 +205,50 @@
         </div>
     </div>
 </div>
+
+<!-- AI Generate Module Modal -->
+<div class="modal fade" id="aiGenerateModuleModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border:1px solid var(--bd)">
+            <form action="{{ route('admin.modules.generate') }}" method="POST" id="aiGenerateForm">
+                @csrf
+                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
+                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>AI Generate Module</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                </div>
+                <div class="modal-body">
+                    <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:20px;">
+                        Enter a topic or prompt, and the AI will automatically generate a complete Learning Module with chapters, category, and description.
+                    </p>
+                    <label class="olbl">Topic Prompt</label>
+                    <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. A comprehensive guide on leadership in remote technical teams." required></textarea>
+                    
+                    <div id="aiLoadingIndicator" style="display:none; text-align:center; padding:15px; border-radius:10px; background:rgba(59,130,246,0.1);">
+                        <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size:1.5rem; margin-bottom:10px;"></i>
+                        <h6 style="color:var(--tx); margin:0;">Generating Content...</h6>
+                        <p style="color:var(--tx3); font-size:0.8rem; margin:0;">This may take up to 30 seconds.</p>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--bd)" id="aiModalFooter">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="bgrd btn px-4" id="aiGenerateBtn">Generate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const aiForm = document.getElementById('aiGenerateForm');
+        if(aiForm) {
+            aiForm.addEventListener('submit', function() {
+                document.getElementById('aiLoadingIndicator').style.display = 'block';
+                document.getElementById('aiModalFooter').style.display = 'none';
+            });
+        }
+    });
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
