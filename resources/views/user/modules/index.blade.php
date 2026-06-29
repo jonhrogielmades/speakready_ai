@@ -57,8 +57,8 @@
             <form action="{{ route('user.modules.index') }}" method="GET" class="db-top-search" style="width:100%; max-width:300px; background:var(--sf);border:1px solid var(--bd); margin:0;">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Search modules..." style="width:100%;">
-                @if(request('category_id'))
-                    <input type="hidden" name="category_id" value="{{ request('category_id') }}">
+                @if(request('category'))
+                    <input type="hidden" name="category" value="{{ request('category') }}">
                 @endif
             </form>
         </div>
@@ -66,9 +66,9 @@
 
     <!-- Sub-Navigation -->
     <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
-        <a href="{{ route('user.modules.index') }}" class="ll-nav-pill {{ !request('category_id') ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-layer-group"></i> All Topics</a>
+        <a href="{{ route('user.modules.index') }}" class="ll-nav-pill {{ !request('category') ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-layer-group"></i> All Topics</a>
         @foreach($categories as $category)
-            <a href="{{ route('user.modules.index', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
+            <a href="{{ route('user.modules.index', ['category' => $category]) }}" class="ll-nav-pill {{ request('category') == $category ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category }}</a>
         @endforeach
     </div>
 

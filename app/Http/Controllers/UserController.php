@@ -500,17 +500,24 @@ class UserController extends Controller
     }
 
     public function modules(Request $request) {
-        $categories = \App\Models\Category::where('status', 'active')->where('type', 'core')->get();
+        $categories = \App\Models\LearningModule::where('status', 'published')
+            ->select('category')
+            ->distinct()
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->pluck('category');
         
         $query = \App\Models\LearningModule::where('status', 'published');
         
-        if ($request->has('category_id') && $request->category_id != '') {
-            $query->where('category_id', $request->category_id);
+        if ($request->has('category') && $request->category != '') {
+            $query->where('category', $request->category);
         }
         
         if ($request->has('search') && $request->search != '') {
-            $query->where('title', 'like', '%' . $request->search . '%')
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
                   ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
         }
 
         $modules = $query->orderBy('created_at', 'desc')->paginate(12);
