@@ -414,6 +414,80 @@ class UserController extends Controller
 
         return redirect('/')->with('success', 'Your account has been deleted.');
     }
+    public function skills() {
+        $user = Auth::user();
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
+        
+        $perks = [
+            'energy_efficiency' => [
+                'name' => 'Energy Efficiency',
+                'description' => 'Reduces the energy cost of all Learning Games by 1.',
+                'cost' => 500,
+                'type' => 'leadership',
+                'icon' => 'fa-bolt'
+            ],
+            'first_impressions' => [
+                'name' => 'First Impressions',
+                'description' => 'Starts every game with a +5 baseline score buffer.',
+                'cost' => 500,
+                'type' => 'communication',
+                'icon' => 'fa-handshake'
+            ],
+            'time_extension' => [
+                'name' => 'Time Extension',
+                'description' => 'Grants an extra 30 seconds on all timed game levels.',
+                'cost' => 500,
+                'type' => 'problem_solving',
+                'icon' => 'fa-hourglass-half'
+            ],
+            'xp_boost' => [
+                'name' => 'XP Boost',
+                'description' => 'Permanently increases general XP earned from games by 20%.',
+                'cost' => 500,
+                'type' => 'technical',
+                'icon' => 'fa-arrow-up-right-dots'
+            ]
+        ];
+
+        return view('user.skills', compact('profile', 'perks'));
+    }
+
+    public function unlockPerk(Request $request) {
+        $request->validate([
+            'perk_id' => 'required|string',
+            'perk_type' => 'required|string',
+            'cost' => 'required|integer'
+        ]);
+
+        $profile = \App\Models\Profile::where('user_id', Auth::id())->firstOrFail();
+        
+        if ($profile->hasPerk($request->perk_id)) {
+            return response()->json(['success' => false, 'message' => 'Perk already unlocked.'], 400);
+        }
+
+        $col = $request->perk_type . '_xp';
+        if ($profile->$col < $request->cost) {
+            return response()->json(['success' => false, 'message' => 'Not enough Skill XP.'], 400);
+        }
+
+        $profile->$col -= $request->cost;
+        
+        $unlocked = $profile->unlocked_perks ?? [];
+        $unlocked[] = $request->perk_id;
+        $profile->unlocked_perks = $unlocked;
+        $profile->save();
+
+        ActivityLogger::log(
+            Auth::user(),
+            'perk_unlocked',
+            "You unlocked a new skill perk!",
+            $request->ip(),
+            true,
+            ['title' => 'Perk Unlocked', 'icon' => 'fa-unlock', 'type' => 'success']
+        );
+
+        return response()->json(['success' => true, 'message' => 'Perk successfully unlocked!']);
+    }
 
     public function leaderboard() {
         $topUsers = \App\Models\Profile::with('user')

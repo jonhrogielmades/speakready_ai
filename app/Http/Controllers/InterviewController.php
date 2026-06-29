@@ -242,6 +242,12 @@ class InterviewController extends Controller
         $sFeedback = $aiFeedback['session_feedback'] ?? null;
         $overall = $sFeedback['overall_readiness_score'] ?? round(($clarity + $relevance + $grammar + $prof + $bodyLang + $conf) / 6);
 
+        // Fetch Profile early for perk calculations
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+        if ($profile->hasPerk('first_impressions')) {
+            $overall = min(100, $overall + 5);
+        }
+
         \App\Models\Score::create([
             'interview_session_id' => $session->id,
             'clarity_score' => $clarity,
@@ -260,9 +266,6 @@ class InterviewController extends Controller
             'weaknesses' => $sFeedback['weaknesses'] ?? 'Some answers lacked specific metrics and concrete examples of your past work.',
             'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Focus on the "Result" part of the STAR method. Always quantify your impact when possible.',
         ]);
-
-        // Update profile
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
         
         $badges = [];
         if (!empty($profile->badges_earned)) {
@@ -270,9 +273,16 @@ class InterviewController extends Controller
         }
 
         $xpEarned = 50;
+        if ($profile->hasPerk('xp_boost')) {
+            $xpEarned = round($xpEarned * 1.2);
+        }
         $gameStatus = null;
         if ($gameLevel) {
-            $xpEarned = $gameLevel->xp_reward;
+            $baseReward = $gameLevel->xp_reward;
+            if ($profile->hasPerk('xp_boost')) {
+                $baseReward = round($baseReward * 1.2);
+            }
+            $xpEarned = $baseReward;
             $progress = \App\Models\GameProgress::where('user_id', Auth::id())
                             ->where('game_level_id', $gameLevel->id)->first();
                             
@@ -295,9 +305,13 @@ class InterviewController extends Controller
                         $badges[] = $gameLevel->custom_badge_name;
                     }
                     if ($gameLevel->skill_xp_amount > 0) {
-                        // Right now we only have general XP, but we could add skill-specific XP columns later.
-                        // For now we just add it to general XP to make sure it's awarded
-                        $xpEarned += $gameLevel->skill_xp_amount; 
+                        $skillType = strtolower(str_replace(' ', '_', $gameLevel->skill_xp_type));
+                        if (in_array($skillType, ['leadership', 'communication', 'technical', 'problem_solving'])) {
+                            $col = $skillType . '_xp';
+                            $profile->$col += $gameLevel->skill_xp_amount;
+                        } else {
+                            $xpEarned += $gameLevel->skill_xp_amount; 
+                        }
                     }
 
                 } else {

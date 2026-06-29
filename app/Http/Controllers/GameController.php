@@ -61,7 +61,12 @@ class GameController extends Controller
         }
 
         // Check Energy
-        if ($profile->energy < $level->energy_cost) {
+        $energyCost = $level->energy_cost;
+        if ($profile->hasPerk('energy_efficiency')) {
+            $energyCost = max(0, $energyCost - 1);
+        }
+
+        if ($profile->energy < $energyCost) {
             // Auto-refill for seamless testing/gameplay
             $profile->energy = 5;
             $profile->save();
@@ -69,7 +74,7 @@ class GameController extends Controller
         }
 
         // Consume Energy
-        $profile->energy -= $level->energy_cost;
+        $profile->energy -= $energyCost;
         $profile->save();
 
         // Combine mission text and custom prompt
@@ -86,6 +91,11 @@ class GameController extends Controller
 
         $questions = $level->parsed_questions;
 
+        $timeLimit = $level->time_limit_seconds ?? 0;
+        if ($timeLimit > 0 && $profile->hasPerk('time_extension')) {
+            $timeLimit += 30;
+        }
+
         // Create Interview Session specifically for Game Mode
         $session = InterviewSession::create([
             'user_id' => $user->id,
@@ -96,7 +106,7 @@ class GameController extends Controller
             'response_mode' => 'hybrid',
             'interview_focus' => $interviewFocus,
             'company_persona' => $level->ai_persona, // Inject persona
-            'time_limit' => $level->time_limit_seconds ?? 0, // Inject time limit
+            'time_limit' => $timeLimit, // Inject time limit
             'status' => 'in_progress',
         ]);
 
