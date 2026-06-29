@@ -34,13 +34,11 @@
                   <div class="col-lg-5 rv" style="transition-delay:.1s">
                      <div class="gc p-4 p-md-5 h-100">
                          @if(session('contact_success'))
-                             <div class="alert alert-success d-flex align-items-center mb-4" role="alert" style="background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.2); color: #059669; border-radius: 12px; padding: 15px;">
-                                 <i class="fa-solid fa-circle-check fs-5 me-3"></i>
-                                 <div>
-                                     <strong>Success!</strong> {{ session('contact_success') }}
-                                 </div>
-                                 <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close" style="filter: brightness(0.5);"></button>
-                             </div>
+                             <script>
+                                 window.onload = function() {
+                                     alert("Success! " + "{{ session('contact_success') }}");
+                                 };
+                             </script>
                          @endif
                          @if(session('contact_error'))
                              <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 12px; padding: 15px;">
