@@ -642,6 +642,53 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Chapter added successfully');
     }
 
+    public function updateModuleChapter(Request $request, \App\Models\ModuleChapter $chapter)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'nullable|string',
+            'video_url' => 'nullable|string',
+        ]);
+
+        $chapter->update([
+            'title' => $request->title,
+            'content' => $request->content,
+            'video_url' => $request->video_url,
+        ]);
+
+        return redirect()->back()->with('success', 'Chapter updated successfully');
+    }
+
+    public function generateModuleChapter(Request $request, LearningModule $module)
+    {
+        $existingChapters = $module->chapters()->orderBy('order')->pluck('title')->implode(', ');
+        
+        $prompt = "Generate exactly 1 new chapter for a learning module.
+        Module Title: {$module->title}
+        Module Description: {$module->description}
+        Existing Chapters: " . ($existingChapters ?: "None yet.") . "
+        Generate the next logical chapter. Provide a JSON response with the following exact keys:
+        {
+            \"title\": \"Chapter Title\",
+            \"content\": \"Comprehensive HTML formatted lesson content (use h3, p, ul, li). Be detailed.\"
+        }";
+
+        $jsonResponse = \App\Services\AIService::generateJson($prompt);
+        $data = json_decode($jsonResponse, true);
+
+        if (!$data || !isset($data['title'])) {
+            return redirect()->back()->with('error', 'AI failed to generate a chapter.');
+        }
+
+        $module->chapters()->create([
+            'title' => $data['title'],
+            'content' => $data['content'] ?? '',
+            'order' => $module->chapters()->max('order') + 1,
+        ]);
+
+        return redirect()->back()->with('success', 'AI Chapter generated successfully!');
+    }
+
     public function destroyModuleChapter(\App\Models\ModuleChapter $chapter)
     {
         $chapter->delete();

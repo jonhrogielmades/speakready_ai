@@ -91,7 +91,13 @@
 
         <!-- Chapters Tab -->
         <div class="tab-pane fade" id="chapters" role="tabpanel">
-            <div class="mb-3 text-end">
+            <div class="mb-3 d-flex justify-content-end gap-2 flex-wrap">
+                <form action="{{ route('admin.modules.chapters.generate', $module->id) }}" method="POST" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn btn-sm" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" onclick="this.innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin me-1\'></i> Generating...'; this.style.pointerEvents='none';">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate Chapter
+                    </button>
+                </form>
                 <button class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addChapterModal"><i class="fa-solid fa-plus me-1"></i> Add Chapter</button>
             </div>
             
@@ -122,10 +128,13 @@
                                         {!! $chapter->content ?? '<em>No text content provided.</em>' !!}
                                     </div>
                                 </div>
-                                <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" class="mt-3 text-end">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onsubmit="return confirm('Delete this chapter?');">Delete Chapter</button>
-                                </form>
+                                <div class="d-flex justify-content-end gap-2 mt-3 flex-wrap">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editChapterModal{{ $chapter->id }}">Edit Chapter</button>
+                                    <form action="{{ route('admin.modules.chapters.destroy', $chapter->id) }}" method="POST" onsubmit="return confirm('Delete this chapter?');">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete Chapter</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,7 +171,7 @@
 
                     <label class="olbl">Rich Text Lesson Content</label>
                     <!-- Quill Editor Container -->
-                    <div id="editor-container" style="height: 250px; background: white; color: black; border-radius: 0 0 8px 8px;"></div>
+                    <div id="editor-container" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
                     <input type="hidden" name="content" id="chapterContent">
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
@@ -174,30 +183,100 @@
     </div>
 </div>
 
+<!-- Edit Chapter Modals -->
+@foreach($module->chapters as $chapter)
+<div class="modal fade" id="editChapterModal{{ $chapter->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border:1px solid var(--bd)">
+            <form action="{{ route('admin.modules.chapters.update', $chapter->id) }}" method="POST" id="editChapterForm-{{ $chapter->id }}">
+                @csrf @method('PUT')
+                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
+                    <h5 class="modal-title" style="color:var(--tx)">Edit Chapter {{ $chapter->order }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="olbl">Chapter Title</label>
+                    <input class="oinp mb-3 w-100" type="text" name="title" value="{{ $chapter->title }}" required>
+
+                    <label class="olbl">Video URL (Optional YouTube Embed link)</label>
+                    <input class="oinp mb-3 w-100" type="text" name="video_url" value="{{ $chapter->video_url }}" placeholder="https://www.youtube.com/embed/...">
+
+                    <label class="olbl">Rich Text Lesson Content</label>
+                    <!-- Quill Editor Container -->
+                    <div id="edit-editor-container-{{ $chapter->id }}" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
+                    <input type="hidden" name="content" id="editChapterContent-{{ $chapter->id }}" value="{{ $chapter->content }}">
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--bd)">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="bgrd btn px-4">Update Chapter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
 
 
 <!-- Quill JS -->
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+    /* Responsive & Theme Fixes for Quill Editor */
+    .ql-toolbar { background: var(--bg3, #f1f1f1); border-color: var(--bd) !important; border-radius: 8px 8px 0 0; }
+    .ql-container { border-color: var(--bd) !important; }
+    body.dark-mode .ql-snow .ql-stroke { stroke: #e0e0e0; }
+    body.dark-mode .ql-snow .ql-fill { fill: #e0e0e0; }
+    body.dark-mode .ql-snow .ql-picker { color: #e0e0e0; }
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var toolbarOptions = [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        ['link', 'image'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['clean']
+    ];
+
     var quill = new Quill('#editor-container', {
         theme: 'snow',
         modules: {
-            toolbar: [
-                [{ 'header': [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['image', 'code-block'],
-                ['clean']
-            ]
+            toolbar: toolbarOptions
         }
     });
 
     var form = document.getElementById('chapterForm');
-    form.onsubmit = function() {
-        var content = document.querySelector('input[name=content]');
-        content.value = quill.root.innerHTML;
-    };
+    if(form) {
+        form.onsubmit = function() {
+            var content = document.getElementById('chapterContent');
+            content.value = quill.root.innerHTML;
+        };
+    }
+
+    // Initialize Quill for Edit Modals
+    var chapters = @json($module->chapters);
+    chapters.forEach(function(chapter) {
+        var containerId = '#edit-editor-container-' + chapter.id;
+        var editQuill = new Quill(containerId, {
+            theme: 'snow',
+            modules: {
+                toolbar: toolbarOptions
+            }
+        });
+        
+        // Load initial content
+        var initialContent = document.getElementById('editChapterContent-' + chapter.id).value;
+        editQuill.root.innerHTML = initialContent;
+
+        var editForm = document.getElementById('editChapterForm-' + chapter.id);
+        if(editForm) {
+            editForm.onsubmit = function() {
+                var contentInput = document.getElementById('editChapterContent-' + chapter.id);
+                contentInput.value = editQuill.root.innerHTML;
+            };
+        }
+    });
 
     // Tab persistence logic
     var activeTab = localStorage.getItem('activeModuleTab_' + {{ $module->id }});

@@ -159,6 +159,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/game/{arena_level}', [\App\Http\Controllers\AdminGameController::class, 'destroy'])->name('admin.game.destroy');
 
     // Admin Routes - Module Chapters
+    Route::post('/admin/modules/{module}/chapters/generate', [AdminController::class, 'generateModuleChapter'])->name('admin.modules.chapters.generate');
     Route::post('/admin/modules/{module}/chapters', [AdminController::class, 'storeModuleChapter'])->name('admin.modules.chapters.store');
     Route::put('/admin/modules/chapters/{chapter}', [AdminController::class, 'updateModuleChapter'])->name('admin.modules.chapters.update');
     Route::delete('/admin/modules/chapters/{chapter}', [AdminController::class, 'destroyModuleChapter'])->name('admin.modules.chapters.destroy');
