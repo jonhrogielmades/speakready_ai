@@ -665,4 +665,54 @@ EOT;
         Log::error('WisdomGate Chat Error: ' . $response->body());
         return "Sorry, I am having trouble connecting to my brain right now.";
     }
+
+    public static function generateJson($prompt, $provider = 'gemini')
+    {
+        $maxRetries = 3;
+        $attempt = 0;
+
+        while ($attempt < $maxRetries) {
+            try {
+                $response = [];
+                switch ($provider) {
+                    case 'gemini':
+                        $response = self::callGemini($prompt);
+                        break;
+                    case 'cohere':
+                        $response = self::callCohere($prompt);
+                        break;
+                    case 'groq':
+                        $response = self::callGroq($prompt);
+                        break;
+                    case 'openrouter':
+                        $response = self::callOpenRouter($prompt);
+                        break;
+                    case 'claude':
+                        $response = self::callClaude($prompt);
+                        break;
+                    case 'wisdomgate':
+                        $response = self::callWisdomGate($prompt);
+                        break;
+                    default:
+                        $response = self::callGemini($prompt);
+                        break;
+                }
+                if (!empty($response)) {
+                    // Since callGemini etc. parse JSON and return array, we encode it back to string
+                    // because AdminController's generateModule expects a JSON string.
+                    return json_encode($response);
+                }
+            } catch (\Exception $e) {
+                Log::error("AI JSON Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
+            }
+
+            $attempt++;
+            if ($attempt < $maxRetries) {
+                sleep(1);
+            }
+        }
+        
+        Log::error("AI JSON Generation Failed after {$maxRetries} attempts.");
+        return json_encode([]);
+    }
 }
