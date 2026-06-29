@@ -17,14 +17,17 @@ class ContactController extends Controller
             'message' => 'required|string',
         ]);
 
+        // Save to Database
+        \App\Models\Contact::create($validated);
+
         try {
             $destinationEmail = env('MAIL_FROM_ADDRESS', 'capstonespeakreadyai@gmail.com');
             Mail::to($destinationEmail)->send(new ContactMessage($validated));
-
-            return redirect()->back()->with('contact_success', 'Your message has been sent successfully. We will get back to you soon!');
         } catch (\Exception $e) {
-            \Log::error('Contact form email failed: ' . $e->getMessage());
-            return redirect()->back()->with('contact_error', 'Error details: ' . $e->getMessage());
+            \Log::error('Contact form email failed (but saved to DB): ' . $e->getMessage());
+            // We do not throw or show error because the DB save succeeded
         }
+
+        return redirect()->back()->with('contact_success', 'Your message has been sent successfully. We will get back to you soon!');
     }
 }

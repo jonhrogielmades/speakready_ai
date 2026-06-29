@@ -179,6 +179,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/sessions/{session}/restore', [AdminSessionController::class, 'restore'])->name('admin.sessions.restore');
     Route::get('/admin/reports/sessions/export', [AdminSessionController::class, 'export'])->name('admin.sessions.export');
 
+    // Admin Contacts
+    Route::get('/admin/contacts', [App\Http\Controllers\AdminContactController::class, 'index'])->name('admin.contacts.index');
+    Route::get('/admin/contacts/{contact}', [App\Http\Controllers\AdminContactController::class, 'show'])->name('admin.contacts.show');
+    Route::delete('/admin/contacts/{contact}', [App\Http\Controllers\AdminContactController::class, 'destroy'])->name('admin.contacts.destroy');
+
     // Admin Feedback Audit Features
     Route::get('/admin/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'index'])->name('admin.feedback.index');
     Route::get('/admin/feedback/complaints', [App\Http\Controllers\AdminFeedbackController::class, 'complaints'])->name('admin.feedback.complaints');

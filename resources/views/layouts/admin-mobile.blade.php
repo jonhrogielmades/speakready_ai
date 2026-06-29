@@ -593,6 +593,10 @@
                class="drawer-item {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}">
                <i class="fa-solid fa-clipboard-list"></i><span>Complaints</span>
             </a>
+            <a href="{{ route('admin.contacts.index') }}"
+               class="drawer-item {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}">
+               <i class="fa-solid fa-envelope"></i><span>Contacts</span>
+            </a>
          </div>
 
          <!-- System -->
