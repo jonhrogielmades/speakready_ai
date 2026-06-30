@@ -1,4 +1,4 @@
-@extends('layouts.guest')
+@extends(Auth::check() ? (isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app') : 'layouts.guest')
 
 @section('content')
 <div class="db-section active">

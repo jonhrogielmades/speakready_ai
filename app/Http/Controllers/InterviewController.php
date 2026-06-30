@@ -410,7 +410,7 @@ class InterviewController extends Controller
             return redirect()->route('user.learning')->with($gameStatus === 'victory' ? 'success' : 'error', $msg);
         }
 
-        return redirect()->route('interview.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
+        return redirect()->route('user.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
     }
 
     public function review($id)
