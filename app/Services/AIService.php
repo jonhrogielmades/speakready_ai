@@ -104,6 +104,9 @@ class AIService
         $prompt .= <<<EOT
 Provide your evaluation STRICTLY as a JSON object with the following structure. Do not include any markdown formatting or explanations outside the JSON object.
 
+CRITICAL INSTRUCTION FOR ACCURACY AND SPECIFICITY:
+Your feedback MUST be 100% based on the candidate's exact answer. Do NOT provide generic interview advice. You MUST explicitly reference the content of their response. If the candidate's answer is nonsensical, completely off-topic, or just a few words (e.g., "I don't know", "yes"), you MUST heavily penalize all scores (below 30) and strictly point out that the answer was inadequate or irrelevant.
+
 CRITICAL INSTRUCTION FOR SKIPPED ANSWERS:
 If the Candidate Answer is '(Skipped or no answer)', you MUST set score, clarity_score, relevance_score, grammar_score, and professionalism_score strictly to 0. The ai_feedback should advise them not to skip questions.
 
