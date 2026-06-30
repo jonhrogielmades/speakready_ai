@@ -102,55 +102,274 @@ class AIService
         }
 
         $prompt .= <<<EOT
-Provide your evaluation STRICTLY as a JSON object with the following structure. Do not include any markdown formatting or explanations outside the JSON object.
+Provide your evaluation STRICTLY as a valid JSON object only.
 
-CRITICAL INSTRUCTION FOR ACCURACY AND SPECIFICITY:
-Your feedback MUST be 100% based on the candidate's exact answer. Do NOT provide generic interview advice. You MUST explicitly reference the content of their response. 
-If the candidate's answer is extremely short (under 10 words) and lacks substance (e.g., "okay", "yes", "no", "I don't know"), you MUST score them between 0-10 on ALL metrics (score, clarity_score, relevance_score, grammar_score, professionalism_score) and explicitly call out that the answer was too short to evaluate properly.
+DO NOT include:
 
-CRITICAL INSTRUCTION FOR SKIPPED ANSWERS:
-If the Candidate Answer is '(Skipped or no answer)', you MUST set score, clarity_score, relevance_score, grammar_score, and professionalism_score strictly to 0. The ai_feedback should advise them not to skip questions.
+* Markdown
+* Code blocks
+* Explanations outside JSON
+* Introductory or concluding text
 
-CRITICAL INSTRUCTION FOR STAR METHOD VALIDATION:
-For behavioral questions, strictly validate if the answer contains a clear Situation, Task, Action, and Result (STAR). If the user completely misses the "Result" (metrics, numbers, or a clear outcome), you MUST explicitly penalize their score and deduct points from the `star_method_score`.
+ACCURACY REQUIREMENTS (HIGHEST PRIORITY):
+You MUST evaluate ONLY the Candidate Answer provided.
+You MUST NOT invent information, assumptions, achievements, skills, experiences, results, or intentions that were not explicitly stated by the candidate.
 
-EXAMPLE OUTPUT FORMAT:
+Every feedback statement MUST be supported by evidence found in the candidate's exact answer.
+
+If the candidate did not mention something, explicitly state that it was missing instead of assuming it existed.
+
+FORBIDDEN GENERIC FEEDBACK:
+Do NOT use generic comments such as:
+
+* "Good answer."
+* "Well explained."
+* "Could provide more details."
+* "Try to be more specific."
+
+Instead, reference the candidate's exact response and explain:
+
+* What was mentioned
+* What was missing
+* Why it affected the score
+
+EXAMPLE:
+Bad:
+"You should provide more details."
+
+Good:
+"You mentioned collaborating with your team to complete the project, but you did not explain your specific responsibilities, challenges encountered, or measurable outcomes."
+
+STRICT SCORING RULES:
+
+Score every category independently from 0-100.
+
+1. score
+   Overall answer quality.
+
+2. clarity_score
+   Measures:
+
+* Organization
+* Understandability
+* Logical flow
+
+3. relevance_score
+   Measures:
+
+* How directly the answer addresses the question
+
+4. grammar_score
+   Measures:
+
+* Grammar
+* Sentence structure
+* Word usage
+
+5. professionalism_score
+   Measures:
+
+* Professional tone
+* Interview appropriateness
+* Confidence
+
+SCORING CALIBRATION:
+
+95-100:
+Exceptional answer with clear evidence, strong relevance, professional communication, and measurable outcomes.
+
+85-94:
+Strong answer with minor weaknesses.
+
+70-84:
+Good answer but missing some supporting details or examples.
+
+50-69:
+Partially answers the question but lacks depth, examples, or clarity.
+
+20-49:
+Weak answer with significant gaps.
+
+1-19:
+Very poor answer with minimal useful information.
+
+0:
+Skipped, blank, irrelevant, nonsense, or unable to evaluate.
+
+SHORT ANSWER DETECTION:
+
+If Candidate Answer:
+
+* Contains fewer than 10 meaningful words
+* Is a single phrase
+* Is only "yes", "no", "okay", "maybe", "I don't know", "not sure", etc.
+
+Then:
+
+Set:
+
+* score = 0-10
+* clarity_score = 0-10
+* relevance_score = 0-10
+* grammar_score = 0-10
+* professionalism_score = 0-10
+
+Feedback MUST explicitly state:
+
+"The answer was too short to properly evaluate communication skills, knowledge, and interview readiness."
+
+SKIPPED ANSWER RULE:
+
+If answer equals:
+"(Skipped or no answer)"
+or is empty
+
+Then set:
+
 {
-  "per_question_feedback": [
-    {
-      "id": 1,
-      "score": 85,
-      "clarity_score": 90,
-      "relevance_score": 80,
-      "grammar_score": 95,
-      "professionalism_score": 90,
-      "ai_feedback": "You clearly explained your role, but could have focused more on the specific outcome.",
-      "better_sample_answer": "In my previous role, I led a team of 5 to redesign the checkout flow. Using the STAR method, the situation was...",
-      "follow_up_question": "What metrics did you use to measure the success of that redesign?"
-    },
-    {
-      "id": 2,
-      "score": 0,
-      "clarity_score": 0,
-      "relevance_score": 0,
-      "grammar_score": 0,
-      "professionalism_score": 0,
-      "ai_feedback": "You skipped this question. In a real interview, skipping a question can be detrimental. Always try to provide at least a partial answer.",
-      "better_sample_answer": "Even if you haven't faced this exact scenario, you could say: 'While I haven't directly encountered X, in a similar situation Y, I did Z...'",
-      "follow_up_question": "Can you think of any parallel experience you could draw from to answer this?"
-    }
-  ],
-  "session_feedback": {
-    "overall_readiness_score": 75,
-    "star_method_score": 60,
-    "strengths": "Strong communication and clear articulation of past technical achievements.",
-    "weaknesses": "Tendency to skip behavioral questions or provide brief answers without the STAR method.",
-    "improvement_suggestions": "Practice using the STAR method (Situation, Task, Action, Result) to structure your behavioral answers more effectively."
-  }
+"score": 0,
+"clarity_score": 0,
+"relevance_score": 0,
+"grammar_score": 0,
+"professionalism_score": 0
 }
 
-Now, provide the JSON evaluation for the transcript provided above using this exact schema.
+Feedback MUST explain why skipping interview questions is harmful.
+
+STAR METHOD VALIDATION (BEHAVIORAL QUESTIONS):
+
+For behavioral and situational questions:
+
+Explicitly evaluate:
+
+Situation:
+Was context provided?
+
+Task:
+Was responsibility or objective explained?
+
+Action:
+Were specific actions described?
+
+Result:
+Was outcome clearly stated?
+
+STAR SCORING:
+
+0:
+No STAR structure.
+
+25:
+Only one STAR component present.
+
+50:
+Two STAR components present.
+
+75:
+Three STAR components present.
+
+100:
+All four components clearly present.
+
+RESULT REQUIREMENT:
+
+If the candidate does NOT provide:
+
+* Outcome
+* Achievement
+* Impact
+* Metrics
+* Lessons learned
+* Final result
+
+Then deduct at least 20 points from:
+
+* score
+* star_method_score
+
+Feedback MUST explicitly state:
+
+"The answer described actions taken but did not explain the final result or impact."
+
+FACTUAL EVIDENCE REQUIREMENT:
+
+For each feedback item:
+
+Reference specific evidence from the answer.
+
+Examples:
+
+Good:
+"You stated that you resolved customer complaints by communicating with stakeholders, which demonstrates problem-solving skills."
+
+Bad:
+"You appear to have strong problem-solving skills."
+
+BETTER SAMPLE ANSWER REQUIREMENTS:
+
+The better_sample_answer MUST:
+
+* Directly answer the same question
+* Demonstrate an ideal response
+* Be realistic
+* Be professional
+* Use STAR format when applicable
+* Include measurable outcomes whenever possible
+
+FOLLOW-UP QUESTION REQUIREMENTS:
+
+Generate a relevant interviewer follow-up question that explores:
+
+* Missing details
+* Missing results
+* Missing technical depth
+* Missing decision-making process
+
+SESSION ANALYSIS RULES:
+
+overall_readiness_score:
+Must be calculated from the actual answer quality across all questions.
+
+star_method_score:
+Must reflect STAR usage across all behavioral questions.
+
+strengths:
+Must only include strengths actually demonstrated.
+
+weaknesses:
+Must only include weaknesses actually observed.
+
+improvement_suggestions:
+Must be personalized based on observed deficiencies.
+
+OUTPUT SCHEMA:
+
+{
+"per_question_feedback": [
+{
+"id": 1,
+"score": 0,
+"clarity_score": 0,
+"relevance_score": 0,
+"grammar_score": 0,
+"professionalism_score": 0,
+"ai_feedback": "",
+"better_sample_answer": "",
+"follow_up_question": ""
+}
+],
+"session_feedback": {
+"overall_readiness_score": 0,
+"star_method_score": 0,
+"strengths": "",
+"weaknesses": "",
+"improvement_suggestions": ""
+}
+}
+
+Return ONLY the JSON object.
 EOT;
+
 
         $maxRetries = 3;
         $attempt = 0;
