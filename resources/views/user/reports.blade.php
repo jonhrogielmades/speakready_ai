@@ -167,6 +167,17 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
                 
+                @if($latestSession && $firstSession && $latestSession->id !== $firstSession->id)
+                @php
+                    $latestS = $latestSession->score;
+                    $firstS = $firstSession->score;
+                    $metricsComp = [
+                        'Overall Score' => [$firstS->overall_readiness_score ?? 0, $latestS->overall_readiness_score ?? 0],
+                        'Clarity' => [$firstS->clarity_score ?? 0, $latestS->clarity_score ?? 0],
+                        'Confidence' => [$firstS->confidence_score ?? 0, $latestS->confidence_score ?? 0],
+                        'Relevance' => [$firstS->relevance_score ?? 0, $latestS->relevance_score ?? 0]
+                    ];
+                @endphp
                 <div class="table-responsive">
                     <table class="table table-borderless table-sm align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                       <thead style="border-bottom:1px solid var(--bd);">
@@ -178,33 +189,25 @@
                           </tr>
                       </thead>
                     <tbody>
+                        @foreach($metricsComp as $metricName => $scores)
+                        @php $diff = $scores[1] - $scores[0]; @endphp
                         <tr>
-                            <td class="fw-bold">Overall Score</td>
-                            <td class="text-center">65%</td>
-                            <td class="text-center text-primary fw-bold">{{ $currentReadiness }}%</td>
-                            <td class="text-end text-success"><i class="fa-solid fa-arrow-up me-1"></i>23%</td>
+                            <td class="fw-bold">{{ $metricName }}</td>
+                            <td class="text-center">{{ $scores[0] }}%</td>
+                            <td class="text-center text-primary fw-bold">{{ $scores[1] }}%</td>
+                            <td class="text-end {{ $diff >= 0 ? 'text-success' : 'text-danger' }}">
+                                <i class="fa-solid {{ $diff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} me-1"></i>{{ abs($diff) }}%
+                            </td>
                         </tr>
-                        <tr>
-                            <td class="fw-bold">Clarity</td>
-                            <td class="text-center">70%</td>
-                            <td class="text-center text-primary fw-bold">{{ $metrics['Clarity'] }}%</td>
-                            <td class="text-end text-success"><i class="fa-solid fa-arrow-up me-1"></i>20%</td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Confidence</td>
-                            <td class="text-center">50%</td>
-                            <td class="text-center text-primary fw-bold">{{ $metrics['Confidence'] }}%</td>
-                            <td class="text-end text-success"><i class="fa-solid fa-arrow-up me-1"></i>30%</td>
-                        </tr>
-                        <tr>
-                            <td class="fw-bold">Relevance</td>
-                            <td class="text-center">80%</td>
-                            <td class="text-center text-primary fw-bold">{{ $metrics['Relevance'] }}%</td>
-                            <td class="text-end text-success"><i class="fa-solid fa-arrow-up me-1"></i>5%</td>
-                        </tr>
+                        @endforeach
                       </tbody>
                   </table>
                 </div>
+                @else
+                <div class="text-center py-4" style="color:var(--tx3);">
+                    <p>Complete at least 2 mock interviews to view performance comparison.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -214,14 +217,33 @@
         <div class="col-12">
             <div id="report-feedback" class="print-card" style="padding:32px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-comment-dots text-info me-2"></i>Feedback Summary Report</h5>
+                @if($latestSession && $latestSession->score)
+                @php
+                    $sc = $latestSession->score;
+                    $skillsList = [
+                        'Clarity' => $sc->clarity_score ?? 0, 
+                        'Relevance' => $sc->relevance_score ?? 0, 
+                        'Grammar' => $sc->grammar_score ?? 0, 
+                        'Professionalism' => $sc->professionalism_score ?? 0, 
+                        'Confidence' => $sc->confidence_score ?? 0
+                    ];
+                    $strengths = [];
+                    $weaknesses = [];
+                    foreach($skillsList as $sName => $sVal) {
+                        if($sVal >= 80) $strengths[] = $sName;
+                        else $weaknesses[] = $sName;
+                    }
+                    if(empty($strengths)) $strengths[] = 'Keep practicing!';
+                    if(empty($weaknesses)) $weaknesses[] = 'Doing great!';
+                @endphp
                 <div class="row g-4">
                     <div class="col-md-4">
                         <div class="p-3" style="background:rgba(16,185,129,0.05);border-radius:12px;border:1px solid rgba(16,185,129,0.2);height:100%;">
                             <h6 style="color:#10b981;font-weight:bold;"><i class="fa-solid fa-check-circle me-2"></i>Strengths</h6>
                             <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
-                                <li>Clear Communication</li>
-                                <li>Strong Technical Knowledge</li>
-                                <li>Professional Vocabulary</li>
+                                @foreach($strengths as $s)
+                                <li>{{ $s }}</li>
+                                @endforeach
                             </ul>
                         </div>
                     </div>
@@ -229,9 +251,9 @@
                         <div class="p-3" style="background:rgba(239,68,68,0.05);border-radius:12px;border:1px solid rgba(239,68,68,0.2);height:100%;">
                             <h6 style="color:#ef4444;font-weight:bold;"><i class="fa-solid fa-circle-xmark me-2"></i>Areas for Improvement</h6>
                             <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
-                                <li>Confidence in delivery</li>
-                                <li>Leadership Examples</li>
-                                <li>Using the STAR method fully</li>
+                                @foreach($weaknesses as $w)
+                                <li>{{ $w }}</li>
+                                @endforeach
                             </ul>
                         </div>
                     </div>
@@ -239,13 +261,18 @@
                         <div class="p-3" style="background:rgba(59,130,246,0.05);border-radius:12px;border:1px solid rgba(59,130,246,0.2);height:100%;">
                             <h6 style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>AI Recommendations</h6>
                             <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
-                                <li>Practice Behavioral Questions</li>
-                                <li>Improve STAR Responses</li>
-                                <li>Try Voice Rehearsal Drills</li>
+                                <li>Focus on your {{ strtolower($weaknesses[0] ?? 'skills') }}</li>
+                                <li>Review your past AI Feedback</li>
+                                <li>Complete Voice Drills</li>
                             </ul>
                         </div>
                     </div>
                 </div>
+                @else
+                <div class="text-center py-4" style="color:var(--tx3);">
+                    <p>Complete an interview to see your AI feedback summary.</p>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -275,27 +302,34 @@
         <div class="col-md-6">
             <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-crosshairs text-danger me-2"></i>Skill Analysis Report</h5>
+                @if($latestSession && $latestSession->score && $firstSession && $firstSession->score)
                 @php
+                    $latS = $latestSession->score;
+                    $firS = $firstSession->score;
                     $skillSet = [
-                        ['name'=>'Communication', 'score'=>88, 'rate'=>'+15%'],
-                        ['name'=>'Confidence', 'score'=>80, 'rate'=>'+10%'],
-                        ['name'=>'Leadership', 'score'=>75, 'rate'=>'+5%'],
-                        ['name'=>'Teamwork', 'score'=>90, 'rate'=>'+12%'],
-                        ['name'=>'Problem Solving', 'score'=>85, 'rate'=>'+8%'],
-                        ['name'=>'Technical Knowledge', 'score'=>95, 'rate'=>'+20%'],
+                        ['name'=>'Clarity', 'score'=>$latS->clarity_score ?? 0, 'diff'=>($latS->clarity_score ?? 0) - ($firS->clarity_score ?? 0)],
+                        ['name'=>'Confidence', 'score'=>$latS->confidence_score ?? 0, 'diff'=>($latS->confidence_score ?? 0) - ($firS->confidence_score ?? 0)],
+                        ['name'=>'Relevance', 'score'=>$latS->relevance_score ?? 0, 'diff'=>($latS->relevance_score ?? 0) - ($firS->relevance_score ?? 0)],
+                        ['name'=>'Grammar', 'score'=>$latS->grammar_score ?? 0, 'diff'=>($latS->grammar_score ?? 0) - ($firS->grammar_score ?? 0)],
+                        ['name'=>'Professionalism', 'score'=>$latS->professionalism_score ?? 0, 'diff'=>($latS->professionalism_score ?? 0) - ($firS->professionalism_score ?? 0)],
                     ];
                 @endphp
                 @foreach($skillSet as $sk)
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.9rem;">
                         <span style="color:var(--tx);font-weight:600;">{{ $sk['name'] }}</span>
-                        <span style="color:var(--tx3)">{{ $sk['score'] }}% <span class="text-success ms-2">({{ $sk['rate'] }})</span></span>
+                        <span style="color:var(--tx3)">{{ $sk['score'] }}% <span class="{{ $sk['diff'] >= 0 ? 'text-success' : 'text-danger' }} ms-2">({{ $sk['diff'] >= 0 ? '+' : '' }}{{ $sk['diff'] }}%)</span></span>
                     </div>
                     <div class="progress" style="height:8px;background:var(--bd);border-radius:4px;">
                         <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $sk['score'] }}%;border-radius:4px;"></div>
                     </div>
                 </div>
                 @endforeach
+                @else
+                <div class="text-center py-4" style="color:var(--tx3);">
+                    <p>Complete at least 2 mock interviews to track your specific skill improvements.</p>
+                </div>
+                @endif
             </div>
         </div>
 
@@ -374,8 +408,9 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         @if($sessions->count() > 0)
-        const labels = ['Month 1', 'Month 2', 'Month 3', 'Current'];
-        const scores = [65, 72, 80, {{ $currentReadiness ?? 0 }}];
+        const trendData = {!! json_encode($scoreTrend) !!};
+        const labels = trendData.map(d => d.date);
+        const scores = trendData.map(d => d.score);
 
         new Chart(document.getElementById('trendChart'), {
             type: 'line',
@@ -404,13 +439,15 @@
             }
         });
 
+        const catPerf = {!! json_encode($categoryPerf) !!};
+        
         new Chart(document.getElementById('catChart'), {
             type: 'bar',
             data: {
-                labels: ['Job', 'Schol.', 'Tech'],
+                labels: Object.keys(catPerf),
                 datasets: [{
-                    data: [88, 75, 92],
-                    backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6'],
+                    data: Object.values(catPerf),
+                    backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
                     borderRadius: 6
                 }]
             },

@@ -364,34 +364,66 @@ class UserController extends Controller
                         ->get();
 
         $latestSession = $sessions->last();
+        $firstSession = $sessions->first();
         $previousSession = $sessions->count() > 1 ? $sessions[$sessions->count() - 2] : null;
+        
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
 
-        // Mock data for UI demonstration
+        // Dynamic Voice Data
+        $latestVoice = \App\Models\VoiceSession::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
         $voiceData = (object)[
-            'wpm' => 125,
-            'confidence' => 87,
-            'clarity' => 92,
-            'duration' => '4m 30s',
-            'filler_words' => 3
+            'wpm' => $latestVoice ? $latestVoice->speaking_pace : 0,
+            'confidence' => $latestVoice ? $latestVoice->confidence_score : 0,
+            'clarity' => $latestVoice ? $latestVoice->clarity_score : 0,
+            'duration' => $latestVoice ? 'Complete' : 'N/A',
+            'filler_words' => $latestVoice ? $latestVoice->filler_words : 0
         ];
 
+        // Dynamic Learning Data
+        $learningProgress = \App\Models\LearningProgress::where('user_id', Auth::id())->get();
         $learningData = (object)[
-            'lessons_completed' => 12,
-            'lessons_total' => 15,
-            'videos_watched' => 8,
-            'quiz_average' => 90,
-            'completion_rate' => 80
+            'lessons_completed' => $learningProgress->where('progress_percentage', 100)->count(),
+            'lessons_total' => \App\Models\LearningModule::count() ?: 1,
+            'videos_watched' => $learningProgress->where('progress_percentage', '>', 0)->count(),
+            'quiz_average' => round($learningProgress->avg('quiz_score') ?? 0),
+            'completion_rate' => round($learningProgress->avg('progress_percentage') ?? 0)
         ];
 
+        // Dynamic Achievements
+        $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         $achievements = [
-            (object)['title' => 'First Interview', 'icon' => 'fa-medal', 'color' => '#f59e0b'],
-            (object)['title' => 'STAR Master', 'icon' => 'fa-star', 'color' => '#10b981'],
-            (object)['title' => 'Comm. Expert', 'icon' => 'fa-comments', 'color' => '#3b82f6'],
-            (object)['title' => '30-Day Streak', 'icon' => 'fa-fire', 'color' => '#ef4444'],
-            (object)['title' => 'Champion', 'icon' => 'fa-trophy', 'color' => '#8b5cf6'],
+            (object)['title' => 'First Interview', 'icon' => 'fa-medal', 'color' => '#f59e0b', 'unlocked' => in_array('First Interview', $badgesEarned)],
+            (object)['title' => 'STAR Master', 'icon' => 'fa-star', 'color' => '#10b981', 'unlocked' => in_array('STAR Master', $badgesEarned)],
+            (object)['title' => 'Comm. Expert', 'icon' => 'fa-comments', 'color' => '#3b82f6', 'unlocked' => in_array('Comm. Expert', $badgesEarned)],
+            (object)['title' => '30-Day Streak', 'icon' => 'fa-fire', 'color' => '#ef4444', 'unlocked' => in_array('30-Day Streak', $badgesEarned)],
+            (object)['title' => 'Champion', 'icon' => 'fa-trophy', 'color' => '#8b5cf6', 'unlocked' => in_array('Champion', $badgesEarned)],
         ];
+        $achievements = collect($achievements)->filter(fn($ach) => $ach->unlocked)->values()->all();
+        
+        // Data for Chart JS
+        $scoreTrend = $sessions->map(function ($s) {
+            return [
+                'date' => $s->created_at->format('M d'),
+                'score' => $s->score ? $s->score->overall_readiness_score : 0
+            ];
+        });
+        
+        // Category Averages
+        $categoryAverages = [];
+        foreach($sessions as $s) {
+            $catName = $s->category ? $s->category->title : 'General';
+            if(!isset($categoryAverages[$catName])) {
+                $categoryAverages[$catName] = ['total' => 0, 'count' => 0];
+            }
+            $categoryAverages[$catName]['total'] += ($s->score ? $s->score->overall_readiness_score : 0);
+            $categoryAverages[$catName]['count']++;
+        }
+        $categoryPerf = [];
+        foreach($categoryAverages as $cat => $data) {
+            $categoryPerf[$cat] = round($data['total'] / $data['count']);
+        }
 
-        return view('user.reports', compact('user', 'sessions', 'latestSession', 'previousSession', 'voiceData', 'learningData', 'achievements')); 
+        return view('user.reports', compact('user', 'sessions', 'latestSession', 'firstSession', 'previousSession', 'voiceData', 'learningData', 'achievements', 'scoreTrend', 'categoryPerf')); 
     }
     public function notifications() { 
         $notifications = Auth::user()->notifications()->paginate(15);
