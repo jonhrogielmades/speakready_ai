@@ -34,7 +34,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-Progress Tracking</h4>
+<i class="fa-solid fa-chart-line me-2"></i>Progress Tracking</h4>
             <p style="color:var(--tx3)">Visualize your interview readiness improvement over time.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap align-items-center">

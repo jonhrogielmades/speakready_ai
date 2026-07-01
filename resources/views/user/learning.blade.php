@@ -339,7 +339,7 @@
         <div>
             <div class="d-flex align-items-center gap-2">
                 <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-Learning Games</h4>
+<i class="fa-solid fa-gamepad me-2"></i>Learning Games</h4>
             </div>
             <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
         </div>

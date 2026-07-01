@@ -31,7 +31,7 @@
 <div class="db-section active animate-fade-up">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;">Notifications</h4>
+            <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;"><i class="fa-regular fa-bell me-2"></i>Notifications</h4>
             <p style="color:var(--tx3)">Stay updated on your progress, system updates, and activities.</p>
         </div>
         @if(count($notifications) > 0)

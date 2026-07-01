@@ -80,7 +80,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div>
 <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
- Voice Rehearsal Studio</h4>
+ <i class="fa-solid fa-ear-listen me-2"></i>Voice Rehearsal Studio</h4>
             <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;font-weight:500;">Master your delivery, pacing, and tone with AI analysis.</p>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap">

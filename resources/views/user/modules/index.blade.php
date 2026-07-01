@@ -81,7 +81,7 @@
         <div>
             <div class="d-flex align-items-center gap-2">
                 <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-Interview Modules</h4>
+<i class="fa-solid fa-book-open-reader me-2"></i>Interview Modules</h4>
             </div>
             <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Learn key concepts, review study materials, and prepare for your interviews.</p>
         </div>

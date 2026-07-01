@@ -107,7 +107,7 @@
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div>
-                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">SpeakReady AI Coach</h6>
+                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;"><i class="fa-solid fa-robot me-2"></i>SpeakReady AI Coach</h6>
                         <span style="font-size:.75rem;color:#34d399"><i class="fa-solid fa-circle text-success" style="font-size:.5rem;margin-right:4px"></i>Online</span>
                     </div>
                 </div>

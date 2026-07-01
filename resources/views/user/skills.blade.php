@@ -32,7 +32,7 @@
 <div class="db-section active animate-fade-up">
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;">Skill Trees</h4>
+            <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;"><i class="fa-solid fa-network-wired me-2"></i>Skill Trees</h4>
             <p style="color:var(--tx3)">Unlock powerful perks by earning Skill XP in Learning Games.</p>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-md-0">

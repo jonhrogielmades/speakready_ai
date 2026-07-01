@@ -35,7 +35,7 @@
         <div>
             <a href="{{ route('user.feedback') }}" class="btn btn-link text-decoration-none p-0 mb-2" style="color:#3b82f6;"><i class="fa-solid fa-arrow-left me-2"></i>Back to Feedback Center</a>
             <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-Detailed Feedback Report</h4>
+<i class="fa-solid fa-file-invoice me-2"></i>Detailed Feedback Report</h4>
             <div class="d-flex gap-3 mt-2" style="font-size:0.9rem;color:var(--tx3)">
                 <span><i class="fa-regular fa-calendar me-1"></i> {{ $sessionRecord->created_at->format('M d, Y') }}</span>
                 <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'Job Interview' }}</span>

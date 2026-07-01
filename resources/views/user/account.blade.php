@@ -31,7 +31,7 @@
 
 <div class="db-section active animate-fade-up">
     <div class="mb-4">
-        <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;">Account Management</h4>
+        <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</h4>
         <p style="color:var(--tx3)">Update your personal information and security settings.</p>
     </div>
 

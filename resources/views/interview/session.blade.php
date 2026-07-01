@@ -105,7 +105,7 @@
         <!-- Header Info -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 class="text-gradient-primary" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;">Interview Workspace</h4>
+                <h4 class="text-gradient-primary" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;"><i class="fa-solid fa-chalkboard-user me-2"></i>Interview Workspace</h4>
                 <div style="font-size:.85rem;color:var(--tx3);display:flex;gap:15px;">
                     <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
                     <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>

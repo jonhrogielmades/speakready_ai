@@ -117,7 +117,7 @@
 <div class="db-section active" id="sec-interview-setup">
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">Interview Setup</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;"><i class="fa-solid fa-sliders me-2"></i>Interview Setup</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Configure your mock interview session to match your goals.</p>
         </div>
         <div>

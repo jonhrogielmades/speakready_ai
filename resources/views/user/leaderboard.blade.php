@@ -29,7 +29,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-Global Leaderboard</h4>
+<i class="fa-solid fa-trophy me-2"></i>Global Leaderboard</h4>
             <p style="color:var(--tx3);margin:0;">See how you stack up against the community! Keep practicing to climb the ranks.</p>
         </div>
         <div>
