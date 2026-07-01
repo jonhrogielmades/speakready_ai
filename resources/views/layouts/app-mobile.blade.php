@@ -527,7 +527,7 @@
             </a>
             <a href="{{ route('user.reports') }}"
                class="drawer-item {{ request()->routeIs('user.reports') ? 'active' : '' }}">
-               <i class="fa-solid fa-file-invoice"></i>
+               <i class="fa-solid fa-folder-open"></i>
                <span>Reports</span>
             </a>
          </div>

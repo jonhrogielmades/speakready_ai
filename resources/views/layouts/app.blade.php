@@ -86,7 +86,7 @@
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress Tracking</a>
                <a href="{{ route('user.feedback') }}" class="db-nl {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Center</a>
-               <a href="{{ route('user.reports') }}" class="db-nl {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-file-invoice"></i> Reports</a>
+               <a href="{{ route('user.reports') }}" class="db-nl {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> Reports</a>
 
                <div class="db-nav-section">Community</div>
                <a href="{{ route('user.leaderboard') }}" class="db-nl {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
