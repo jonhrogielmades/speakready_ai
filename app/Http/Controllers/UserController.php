@@ -102,11 +102,74 @@ class UserController extends Controller
             $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         }
 
-        // Modules and Progress
-        $modules = \App\Models\LearningModule::limit(3)->get();
-        
-        // Mock Learning Progress for dashboard removed
+        // Modules and Progress (Dynamic)
+        $learningProgress = \App\Models\LearningProgress::with('learningModule')
+            ->where('user_id', $user_id)
+            ->orderBy('updated_at', 'desc')
+            ->take(3)
+            ->get();
+            
         $learningLabProgress = collect([]);
+        foreach($learningProgress as $prog) {
+            if($prog->learningModule) {
+                // Map status to a color or use progress percentage
+                $color = $prog->progress_percentage == 100 ? '#34d399' : '#3b82f6';
+                $learningLabProgress->push((object)[
+                    'title' => $prog->learningModule->title,
+                    'icon' => 'fa-book-open',
+                    'color' => $color,
+                    'progress' => $prog->progress_percentage ?? 0
+                ]);
+            }
+        }
+        
+        // Notifications
+        $userObj = Auth::user();
+        $recentNotifications = $userObj->notifications ? $userObj->notifications()->take(3)->get() : collect([]);
+
+        // Dynamic Upcoming Goal
+        $currentGoalScore = (ceil($avgScore / 10) * 10);
+        if ($currentGoalScore == $avgScore) $currentGoalScore += 10;
+        if ($currentGoalScore > 100) $currentGoalScore = 100;
+        if ($currentGoalScore < 50) $currentGoalScore = 50;
+        
+        $upcomingGoal = (object)[
+            'title' => 'Reach ' . $currentGoalScore . '% Readiness',
+            'current' => round($avgScore),
+            'target' => $currentGoalScore,
+            'percent' => $currentGoalScore > 0 ? (round($avgScore) / $currentGoalScore) * 100 : 0
+        ];
+
+        // Dynamic AI Recommendations
+        $aiRecommendations = collect([]);
+        if ($totalSessions > 0) {
+            // Find weakest category
+            if ($categoryPerformance->count() > 0) {
+                $weakestCat = $categoryPerformance->sortBy('score')->first();
+                if ($weakestCat) {
+                    $aiRecommendations->push((object)[
+                        'icon' => 'fa-bullseye',
+                        'color' => 'var(--dash-primary)',
+                        'text' => 'Practice more "' . $weakestCat->name . '" interviews'
+                    ]);
+                }
+            }
+            // Find weakest radar skill
+            $radarScores = [
+                'Clarity' => $radarData['clarity'],
+                'Relevance' => $radarData['relevance'],
+                'Grammar' => $radarData['grammar'],
+                'Professionalism' => $radarData['professionalism']
+            ];
+            asort($radarScores);
+            $weakestSkill = key($radarScores);
+            
+            $aiRecommendations->push((object)[
+                'icon' => 'fa-star',
+                'color' => 'var(--dash-success)',
+                'text' => 'Focus on improving your ' . $weakestSkill
+            ]);
+        }
 
         // Get past scores for chart
         $scoreTrend = (clone $completedSessions)
@@ -123,7 +186,8 @@ class UserController extends Controller
 
         return view('dashboard', compact(
             'profile', 'totalSessions', 'avgScore', 'recentSessions', 'modules', 'scoreTrend',
-            'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned', 'learningLabProgress'
+            'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned', 
+            'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations'
         ));
     }
     public function progress() { 

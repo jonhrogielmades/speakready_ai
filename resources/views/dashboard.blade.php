@@ -474,16 +474,14 @@
                     <div id="card-ai-recommendations" class="premium-card h-100 card-grad-primary animate-fade-up delay-500">
                         <h6 class="fw-bold mb-3"><i class="fa-solid fa-lightbulb me-2" style="color:var(--dash-warning)"></i> AI Recommendations</h6>
                         
-                        @if($totalSessions > 0)
+                        @if(isset($aiRecommendations) && count($aiRecommendations) > 0)
                         <p style="font-size:0.85rem;color:var(--tx3);margin-bottom:15px;">Based on your recent performance, AI suggests:</p>
+                        @foreach($aiRecommendations as $rec)
                         <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded" style="background:var(--bg3); border: 1px solid var(--bd); border-radius: 12px;">
-                            <div style="color:var(--dash-primary); font-size: 1.2rem;"><i class="fa-solid fa-bullseye"></i></div>
-                            <div style="font-size:0.9rem; font-weight: 500;">Practice specific interview categories</div>
+                            <div style="color:{{ $rec->color }}; font-size: 1.2rem;"><i class="fa-solid {{ $rec->icon }}"></i></div>
+                            <div style="font-size:0.9rem; font-weight: 500;">{{ $rec->text }}</div>
                         </div>
-                        <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded" style="background:var(--bg3); border: 1px solid var(--bd); border-radius: 12px;">
-                            <div style="color:var(--dash-success); font-size: 1.2rem;"><i class="fa-solid fa-star"></i></div>
-                            <div style="font-size:0.9rem; font-weight: 500;">Work on your weakest skill</div>
-                        </div>
+                        @endforeach
                         @else
                         <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
                             <i class="fa-solid fa-lightbulb mb-2" style="font-size:2rem;opacity:0.5;"></i>
@@ -570,10 +568,23 @@
             <!-- Feature 13: Upcoming Goals -->
             <div class="premium-card mb-4 animate-fade-up delay-400">
                 <h6 class="fw-bold mb-3">Upcoming Goals</h6>
+                @if(isset($upcomingGoal))
+                <div class="p-3 mb-3" style="background:var(--bg3);border-radius:16px;border:1px solid var(--bd);">
+                    <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;margin-bottom:5px;letter-spacing:0.5px;font-weight:600;">Current Goal</div>
+                    <div class="fw-bold" style="color:var(--dash-success);font-size:1.1rem;">{{ $upcomingGoal->title }}</div>
+                    <div class="progress-track mt-2" style="height:6px;"><div class="progress-fill" style="width:{{ $upcomingGoal->percent }}%;background:var(--dash-success);"></div></div>
+                </div>
+                <div style="font-size:0.9rem;color:var(--tx2);font-weight:500;">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="fa-regular fa-circle text-muted"></i> Keep practicing to reach your goal
+                    </div>
+                </div>
+                @else
                 <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
                     <i class="fa-solid fa-bullseye mb-2" style="font-size:2rem;opacity:0.5;"></i>
                     <p class="m-0">No specific goals set yet.</p>
                 </div>
+                @endif
             </div>
 
             <!-- Feature 14: Achievement & Badges System -->
@@ -602,10 +613,22 @@
             <!-- Feature 15: Notifications Panel -->
             <div class="premium-card mb-4 animate-fade-up delay-600">
                 <h6 class="fw-bold mb-3">Recent Notifications</h6>
+                @if(isset($recentNotifications) && count($recentNotifications) > 0)
+                    @foreach($recentNotifications as $notif)
+                    <div class="notif-item">
+                        <div class="notif-dot" style="background:var(--dash-primary);"></div>
+                        <div>
+                            <div style="font-size:0.9rem;color:var(--tx);font-weight:600;">{{ $notif->data['title'] ?? 'Notification' }}</div>
+                            <div style="font-size:0.8rem;color:var(--tx3);margin-top:2px;">{{ $notif->data['message'] ?? '' }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                @else
                 <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
                     <i class="fa-solid fa-bell-slash mb-2" style="font-size:2rem;opacity:0.5;"></i>
                     <p class="m-0">No new notifications.</p>
                 </div>
+                @endif
             </div>
 
         </div>
