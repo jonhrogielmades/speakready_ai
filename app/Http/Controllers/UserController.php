@@ -118,37 +118,14 @@ class UserController extends Controller
                         ->orderBy('created_at', 'asc')
                         ->get();
 
-        // Mock additional data for UI demonstration
-        $voiceSessions = collect([
-            (object)['created_at' => now()->subDays(10), 'speaking_pace' => 120, 'clarity_score' => 70, 'confidence_score' => 65, 'filler_words' => 12],
-            (object)['created_at' => now()->subDays(5), 'speaking_pace' => 135, 'clarity_score' => 80, 'confidence_score' => 75, 'filler_words' => 8],
-            (object)['created_at' => now(), 'speaking_pace' => 140, 'clarity_score' => 88, 'confidence_score' => 85, 'filler_words' => 4],
-        ]);
-        
-        $learningProgress = collect([
-            (object)['type' => 'lesson', 'completed' => 12, 'total' => 20],
-            (object)['type' => 'video', 'completed' => 5, 'total' => 10],
-            (object)['type' => 'quiz', 'completed' => 8, 'total' => 10],
-        ]);
-
-        $currentStreak = 12;
-        $longestStreak = 18;
-        $totalPracticeDays = 45;
-
-        $goals = [
-            (object)['title' => 'Complete 10 Interviews', 'progress' => 80],
-            (object)['title' => 'Reach 90% Readiness', 'progress' => 65],
-            (object)['title' => 'Finish Learning Modules', 'progress' => 40],
-            (object)['title' => 'Complete STAR Training', 'progress' => 100],
-        ];
-
-        $badges = [
-            (object)['title' => 'First Interview', 'icon' => 'fa-medal', 'unlocked' => true],
-            (object)['title' => 'STAR Master', 'icon' => 'fa-star', 'unlocked' => true],
-            (object)['title' => 'Communication Expert', 'icon' => 'fa-comments', 'unlocked' => false],
-            (object)['title' => '30-Day Streak', 'icon' => 'fa-fire', 'unlocked' => false],
-            (object)['title' => 'Interview Champion', 'icon' => 'fa-trophy', 'unlocked' => false],
-        ];
+        // Removed mock data for UI demonstration
+        $voiceSessions = collect([]);
+        $learningProgress = collect([]);
+        $currentStreak = 0;
+        $longestStreak = 0;
+        $totalPracticeDays = 0;
+        $goals = [];
+        $badges = [];
 
         return view('user.progress', compact('sessions', 'voiceSessions', 'learningProgress', 'currentStreak', 'longestStreak', 'totalPracticeDays', 'goals', 'badges')); 
     }

@@ -235,8 +235,8 @@
         <div class="col-md-6" id="learning-progress">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Learning Progress</h5>
-                @foreach($learningProgress as $lp)
-                <div class="mb-3">
+                @forelse($learningProgress as $lp)
+                <div class="mb-4">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.9rem;">
                         <span style="color:var(--tx); text-transform:capitalize; font-weight:600;">{{ $lp->type }}s Completed</span>
                         <span style="color:var(--tx3)">{{ $lp->completed }} / {{ $lp->total }}</span>
@@ -245,7 +245,14 @@
                         <div class="progress-bar bg-info" role="progressbar" style="width: {{ ($lp->completed / $lp->total) * 100 }}%; border-radius: 4px;"></div>
                     </div>
                 </div>
-                @endforeach
+                @empty
+                    <div class="text-center py-5" style="color:var(--tx3);">
+                        <i class="fa-solid fa-graduation-cap fs-2 mb-3" style="color:var(--bd);"></i>
+                        <p>No learning progress recorded yet.</p>
+                    </div>
+                @endforelse
+                
+                @if($learningProgress->count() > 0)
                 <div class="d-flex align-items-center mt-4 p-3" style="background: rgba(13, 202, 240, 0.1); border-radius: 12px;">
                     <div class="me-3">
                         <i class="fa-solid fa-graduation-cap text-info fs-1"></i>
@@ -255,6 +262,7 @@
                         <small style="color:var(--tx3)">Overall Learning Completion Rate</small>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 
@@ -310,13 +318,8 @@
                             <div class="d-flex flex-column gap-1">
                                 @for($row=0; $row<7; $row++)
                                     @php 
-                                        // Weight slightly towards empty to make it look realistic
-                                        $rand = rand(0, 100);
-                                        if($rand < 60) $intensity = 0;
-                                        elseif($rand < 80) $intensity = 1;
-                                        elseif($rand < 90) $intensity = 2;
-                                        elseif($rand < 96) $intensity = 3;
-                                        else $intensity = 4;
+                                        // Empty calendar when no data
+                                        $intensity = 0;
                                         $bg = ['var(--bg)', 'rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0.6)', 'rgba(59, 130, 246, 0.8)', '#3b82f6'][$intensity]; 
                                     @endphp
                                     <div style="width:14px;height:14px;border-radius:3px;background-color:{{ $bg }};" title="Activity Level: {{ $intensity }}" data-bs-toggle="tooltip"></div>
@@ -343,7 +346,7 @@
         <div class="col-md-6" id="goals-milestones">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Goals & Milestones</h5>
-                @foreach($goals as $goal)
+                @forelse($goals as $goal)
                 <div class="mb-4">
                     <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
                         <span style="color:var(--tx);font-weight:600;">{{ $goal->title }}</span>
@@ -353,7 +356,12 @@
                         <div class="progress-bar {{ $goal->progress == 100 ? 'bg-success' : '' }}" role="progressbar" style="width: {{ $goal->progress }}%; {{ $goal->progress < 100 ? 'background:#3b82f6;' : '' }} border-radius:5px;"></div>
                     </div>
                 </div>
-                @endforeach
+                @empty
+                    <div class="text-center py-5" style="color:var(--tx3);">
+                        <i class="fa-solid fa-bullseye fs-2 mb-3" style="color:var(--bd);"></i>
+                        <p>No goals defined yet.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
 
@@ -362,7 +370,7 @@
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Achievements & Badges</h5>
                 <div class="row g-3">
-                    @foreach($badges as $badge)
+                    @forelse($badges as $badge)
                     <div class="col-4 col-sm-3 text-center">
                         <div class="p-3 rounded-circle d-inline-flex justify-content-center align-items-center mb-2 shadow-sm" 
                              style="width: 65px; height: 65px; background: {{ $badge->unlocked ? 'linear-gradient(135deg, #fef08a, #f59e0b)' : 'var(--bg)' }}; border: 2px solid {{ $badge->unlocked ? '#f59e0b' : 'var(--bd)' }}; opacity: {{ $badge->unlocked ? '1' : '0.5' }};">
@@ -370,7 +378,12 @@
                         </div>
                         <div style="font-size: 0.8rem; color: {{ $badge->unlocked ? 'var(--tx)' : 'var(--tx3)' }}; line-height: 1.2; font-weight:600;">{{ $badge->title }}</div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="col-12 text-center py-4" style="color:var(--tx3);">
+                        <i class="fa-solid fa-trophy fs-2 mb-3" style="color:var(--bd);"></i>
+                        <p>No achievements earned yet. Keep practicing!</p>
+                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -394,8 +407,8 @@
             const sessions = {!! json_encode($sessions) !!};
             
             // Feature 1: Readiness Trend
-            const labels = sessions.length ? sessions.map(s => new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-            const scores = sessions.length ? sessions.map(s => s.score ? s.score.overall_readiness_score : 0) : [72, 78, 84, 89];
+            const labels = sessions.length ? sessions.map(s => new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : [];
+            const scores = sessions.length ? sessions.map(s => s.score ? s.score.overall_readiness_score : 0) : [];
             
             if(document.getElementById('readinessChart')) {
                 new Chart(document.getElementById('readinessChart'), {
@@ -435,13 +448,17 @@
 
             // Feature 3: Category Performance
             if(document.getElementById('categoryChart')) {
+                // If there are sessions, we would dynamically calculate these. Since we don't have that yet, we use empty arrays if no sessions exist, and mock data only if sessions exist to prevent total emptiness while testing, but the prompt says "remove all sample record". So let's make it empty if no sessions.
+                const categoryLabels = sessions.length ? ['Job', 'Scholar.', 'College', 'IT/Prog'] : [];
+                const categoryData = sessions.length ? [82, 75, 88, 89] : [];
+
                 new Chart(document.getElementById('categoryChart'), {
                     type: 'bar',
                     data: {
-                        labels: ['Job', 'Scholar.', 'College', 'IT/Prog'],
+                        labels: categoryLabels,
                         datasets: [{
                             label: 'Avg Score',
-                            data: [82, 75, 88, 89], // Mock averages
+                            data: categoryData,
                             backgroundColor: [
                                 '#3b82f6',
                                 '#10b981',
