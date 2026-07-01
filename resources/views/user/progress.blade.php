@@ -307,11 +307,11 @@
                 @forelse($learningProgress as $lp)
                 <div class="mb-4">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.9rem;">
-                        <span style="color:var(--tx); text-transform:capitalize; font-weight:600;">{{ $lp->type }}s Completed</span>
-                        <span style="color:var(--tx3)">{{ $lp->completed }} / {{ $lp->total }}</span>
+                        <span style="color:var(--tx); text-transform:capitalize; font-weight:600;">{{ $lp->learningModule ? $lp->learningModule->title : 'Module' }}</span>
+                        <span style="color:var(--tx3)">{{ $lp->progress_percentage }}%</span>
                     </div>
                     <div class="progress" style="height: 8px; background:var(--bd); border-radius: 4px;">
-                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ ($lp->completed / $lp->total) * 100 }}%; border-radius: 4px;"></div>
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ $lp->progress_percentage }}%; border-radius: 4px;"></div>
                     </div>
                 </div>
                 @empty
@@ -327,7 +327,7 @@
                         <i class="fa-solid fa-graduation-cap text-info fs-1"></i>
                     </div>
                     <div>
-                        <h3 class="text-info mb-0 fw-bold">62%</h3>
+                        <h3 class="text-info mb-0 fw-bold">{{ round($learningProgress->avg('progress_percentage') ?? 0) }}%</h3>
                         <small style="color:var(--tx3)">Overall Learning Completion Rate</small>
                     </div>
                 </div>
@@ -380,31 +380,9 @@
         <div class="col-12">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Practice Activity Calendar</h5>
-                <div class="d-flex overflow-auto pb-2" style="scrollbar-width: thin;">
-                    <div class="activity-calendar d-flex gap-1" style="min-width: 800px;">
-                        <!-- Mock GitHub style calendar -->
-                        @for($col=0; $col<50; $col++)
-                            <div class="d-flex flex-column gap-1">
-                                @for($row=0; $row<7; $row++)
-                                    @php 
-                                        // Empty calendar when no data
-                                        $intensity = 0;
-                                        $bg = ['var(--bg)', 'rgba(59, 130, 246, 0.3)', 'rgba(59, 130, 246, 0.6)', 'rgba(59, 130, 246, 0.8)', '#3b82f6'][$intensity]; 
-                                    @endphp
-                                    <div style="width:14px;height:14px;border-radius:3px;background-color:{{ $bg }};" title="Activity Level: {{ $intensity }}" data-bs-toggle="tooltip"></div>
-                                @endfor
-                            </div>
-                        @endfor
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end align-items-center mt-3 gap-2">
-                    <small style="color:var(--tx3)">Less</small>
-                    <div style="width:14px;height:14px;border-radius:3px;background-color:var(--bg);"></div>
-                    <div style="width:14px;height:14px;border-radius:3px;background-color:rgba(59, 130, 246, 0.3);"></div>
-                    <div style="width:14px;height:14px;border-radius:3px;background-color:rgba(59, 130, 246, 0.6);"></div>
-                    <div style="width:14px;height:14px;border-radius:3px;background-color:rgba(59, 130, 246, 0.8);"></div>
-                    <div style="width:14px;height:14px;border-radius:3px;background-color:#3b82f6;"></div>
-                    <small style="color:var(--tx3)">More</small>
+                <div class="text-center py-5" style="color:var(--tx3);">
+                    <i class="fa-solid fa-calendar-days fs-2 mb-3" style="color:var(--bd);"></i>
+                    <p>Complete your first mock interview to start tracking your daily practice activity!</p>
                 </div>
             </div>
         </div>

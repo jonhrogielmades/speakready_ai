@@ -197,14 +197,48 @@ class UserController extends Controller
                         ->orderBy('created_at', 'asc')
                         ->get();
 
-        // Removed mock data for UI demonstration
-        $voiceSessions = collect([]);
-        $learningProgress = collect([]);
-        $currentStreak = 0;
-        $longestStreak = 0;
-        $totalPracticeDays = 0;
-        $goals = [];
-        $badges = [];
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+        
+        $voiceSessions = \App\Models\VoiceSession::where('user_id', Auth::id())
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+                            
+        $learningProgress = \App\Models\LearningProgress::with('learningModule')
+                            ->where('user_id', Auth::id())
+                            ->orderBy('updated_at', 'desc')
+                            ->get();
+                            
+        $currentStreak = $profile->current_streak ?? 0;
+        $longestStreak = max($currentStreak, 0); // No dedicated field yet, fallback to current
+        $totalPracticeDays = \App\Models\InterviewSession::where('user_id', Auth::id())
+                            ->where('status', 'completed')
+                            ->selectRaw('DATE(created_at) as date')
+                            ->distinct()
+                            ->get()
+                            ->count();
+                            
+        $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
+        $badges = [
+            (object)['title' => 'First Interview', 'icon' => 'fa-medal', 'unlocked' => in_array('First Interview', $badgesEarned)],
+            (object)['title' => '3-Day Streak', 'icon' => 'fa-fire', 'unlocked' => in_array('3-Day Streak', $badgesEarned)],
+            (object)['title' => 'STAR Master', 'icon' => 'fa-star', 'unlocked' => in_array('STAR Master', $badgesEarned)],
+            (object)['title' => 'Top Comm', 'icon' => 'fa-bullhorn', 'unlocked' => in_array('Top Comm', $badgesEarned)],
+        ];
+        
+        // Calculate dynamic upcoming goals based on profile readiness score
+        $currentScore = $profile->readiness_score ?? 0;
+        $goalTarget = (ceil($currentScore / 10) * 10);
+        if ($goalTarget == $currentScore) $goalTarget += 10;
+        if ($goalTarget > 100) $goalTarget = 100;
+        if ($goalTarget < 50) $goalTarget = 50;
+        
+        $goals = [
+            (object)[
+                'title' => 'Reach ' . $goalTarget . '% Readiness',
+                'description' => 'Complete interviews to boost your average score',
+                'progress' => $goalTarget > 0 ? (round($currentScore) / $goalTarget) * 100 : 0
+            ]
+        ];
 
         return view('user.progress', compact('sessions', 'voiceSessions', 'learningProgress', 'currentStreak', 'longestStreak', 'totalPracticeDays', 'goals', 'badges')); 
     }
