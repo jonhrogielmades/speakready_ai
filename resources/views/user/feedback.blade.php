@@ -1,10 +1,40 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
-<div class="db-section active">
+<style>
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .premium-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    
+    .db-filter-input { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .db-filter-input:focus, .db-filter-input:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15) !important; background: var(--sf) !important; }
+    .input-group.db-filter-input:focus-within { border-radius: 8px; border: 1px solid var(--pur) !important; }
+</style>
+
+<div class="db-section active animate-fade-up">
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700">Feedback Center</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+Feedback Center</h4>
             <p style="color:var(--tx3)">Review your past interviews and AI-generated insights.</p>
         </div>
         <div>
@@ -12,11 +42,11 @@
         </div>
     </div>
 
-    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+    <div class="premium-panel">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <h5 style="color:var(--tx);margin:0;font-weight:bold;">Feedback History</h5>
             <div id="feedback-filters" class="d-flex gap-2 flex-wrap">
-                <select id="categoryFilter" class="form-select border-0" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
+                <select id="categoryFilter" class="form-select border-0 db-filter-input" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
                     <option value="">All Categories</option>
                     <option value="Job Interview">Job Interview</option>
                     <option value="Scholarship Interview">Scholarship Interview</option>
@@ -24,9 +54,9 @@
                     <option value="College Admission">College Admission</option>
                 </select>
                 <button class="btn btn-outline-secondary" id="sortDateBtn" style="border-radius:8px;"><i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date</button>
-                <div class="input-group" style="width:250px;">
-                    <span class="input-group-text border-0" style="background:var(--bg);color:var(--tx3);border-radius:8px 0 0 8px;"><i class="fa-solid fa-search"></i></span>
-                    <input type="text" id="feedbackSearch" class="form-control border-0" placeholder="Search Feedback..." style="background:var(--bg);color:var(--tx);border-radius:0 8px 8px 0;">
+                <div class="input-group db-filter-input" style="width:250px; background:var(--bg); border-radius:8px;">
+                    <span class="input-group-text border-0" style="background:transparent;color:var(--tx3);border-radius:8px 0 0 8px;"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="feedbackSearch" class="form-control border-0 db-filter-input" placeholder="Search Feedback..." style="background:transparent;color:var(--tx);border-radius:0 8px 8px 0; outline:none; box-shadow:none !important;">
                 </div>
             </div>
         </div>
@@ -56,7 +86,7 @@
                             @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Improvement</span>
                             @endif
                         </td>
-                        <td class="border-0 py-3 text-end"><a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary" style="border-radius: 8px;">View Details</a></td>
+                        <td class="border-0 py-3 text-end"><a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;">View Details</a></td>
                     </tr>
                     @endforeach
                     @if($sessions->count() == 0)
@@ -66,7 +96,7 @@
                         <td class="border-0 py-3 fw-bold">Job Interview</td>
                         <td class="border-0 py-3 fw-bold">88%</td>
                         <td class="border-0 py-3"><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span></td>
-                        <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-primary" style="border-radius: 8px;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Details</button></td>
+                        <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Details</button></td>
                     </tr>
                     @endif
                 </tbody>
@@ -178,4 +208,5 @@
 </script>
 @endpush
 @endsection
+
 

@@ -18,25 +18,35 @@
     .premium-card {
         background: var(--sf, #1e1e2d);
         border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 24px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         position: relative;
         overflow: hidden;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
     }
     .lm .premium-card {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
     }
     @media (max-width: 575px) {
         .premium-card {
-            padding: 16px;
-            border-radius: 16px;
+            padding: 20px;
+            border-radius: 20px;
         }
     }
     .premium-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+    
+    .text-gradient-primary {
+        background: linear-gradient(135deg, var(--dash-primary) 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
     }
     
     /* Elegant gradients for premium cards */
@@ -127,20 +137,38 @@
     }
     
     .stat-card {
-        padding: 20px 16px;
+        padding: 24px 16px;
         text-align: center;
-        border-radius: 16px;
+        border-radius: 20px;
         background: var(--sf);
         border: 1px solid var(--bd);
-        transition: 0.3s;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 70%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
     }
     @media (max-width: 575px) {
-        .stat-card { padding: 16px 12px; }
+        .stat-card { padding: 16px 12px; border-radius: 16px; }
     }
-    .stat-card:hover { border-color: rgba(96,165,250,0.5); }
-    .stat-val { font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin-bottom: 6px; }
-    .stat-label { font-size: 0.7rem; color: var(--tx3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-    .stat-icon { font-size: 1.6rem; margin-bottom: 12px; }
+    .stat-card:hover { 
+        border-color: rgba(96,165,250,0.4); 
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-card:hover .stat-icon { transform: scale(1.15) rotate(5deg); }
+    .stat-val { font-size: 1.9rem; font-weight: 800; line-height: 1.1; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .stat-label { font-size: 0.75rem; color: var(--tx3); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
+    .stat-icon { font-size: 1.8rem; margin-bottom: 16px; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: inline-block; }
     
     .chart-container-mobile {
         position: relative; height: 250px; width: 100%;
@@ -170,7 +198,7 @@
         .avatar-lg { width: 56px; height: 56px; font-size: 1.4rem; border-radius: 16px; }
     }
 
-    /* Animations */
+    /* Animations & Dynamic Effects */
     @keyframes fadeInUp {
         from { opacity: 0; transform: translateY(30px); }
         to { opacity: 1; transform: translateY(0); }
@@ -179,6 +207,49 @@
     @keyframes scaleIn {
         from { opacity: 0; transform: scale(0.9); }
         to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes ambientFloat {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0, 0) scale(1); }
+    }
+    
+    @keyframes pulseGlow {
+        0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    }
+
+    @keyframes shineEffect {
+        0% { left: -100%; }
+        20% { left: 100%; }
+        100% { left: 100%; }
+    }
+    
+    .btn-shine {
+        position: relative;
+        overflow: hidden;
+    }
+    .btn-shine::after {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 50%; height: 100%;
+        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+        transform: skewX(-20deg);
+        animation: shineEffect 4s infinite;
+    }
+    
+    .ambient-bg-element {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.15;
+        z-index: -1;
+        pointer-events: none;
+        animation: ambientFloat 20s infinite ease-in-out;
     }
 
     .animate-fade-up {
@@ -201,7 +272,10 @@
     .delay-800 { animation-delay: 0.8s; }
 </style>
 
-<div class="db-section active" id="sec-overview">
+<div class="db-section active" id="sec-overview" style="position: relative; z-index: 1;">
+    <!-- Ambient Background -->
+    <div class="ambient-bg-element" style="top: -5%; left: -10%; width: 40vw; height: 40vw; background: var(--dash-primary);"></div>
+    <div class="ambient-bg-element" style="bottom: 20%; right: -5%; width: 35vw; height: 35vw; background: #06b6d4; animation-delay: -10s;"></div>
 
     <!-- Feature 1: Welcome Section -->
     <div class="d-flex align-items-center justify-content-between mb-4 mt-2 animate-fade-up">
@@ -218,7 +292,7 @@
                 @endif
             </div>
             <div>
-                <h4 class="fw-bold mb-1" style="font-size: clamp(1.4rem, 4vw, 1.8rem); letter-spacing: -0.5px;">Welcome back, <span id="greetName">{{ explode(' ', Auth::user()->name)[0] ?? 'User' }}</span>!</h4>
+                <h4 class="fw-bold mb-1" style="font-size: clamp(1.4rem, 4vw, 1.8rem); letter-spacing: -0.5px;">Welcome back, <span id="greetName" class="text-gradient-primary">{{ explode(' ', Auth::user()->name)[0] ?? 'User' }}</span>!</h4>
                 <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Your interview readiness score is <strong style="color:var(--dash-success)">{{ $profile->readiness_score ?? $avgScore ?? 0 }}%</strong>.</p>
             </div>
         </div>
@@ -246,7 +320,7 @@
                 
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="fw-bold m-0"><i class="fa-solid fa-star me-2" style="color:var(--dash-warning)"></i> Overall Readiness</h5>
-                    <span class="score-badge {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
+                    <span class="score-badge {{ $scoreClass }}" style="animation: pulseGlow 2s infinite;"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
                 </div>
                 <div class="d-flex align-items-end gap-3 mb-2">
                     <div style="font-size: clamp(3rem, 8vw, 4rem); font-weight: 800; line-height: 1; color: var(--tx); letter-spacing: -1px;">
@@ -476,7 +550,7 @@
                     <span class="badge" style="background:rgba(251,191,36,0.15);color:var(--dash-warning);border:1px solid rgba(251,191,36,0.3);padding:6px 10px;border-radius:8px;">+50 XP</span>
                     <span class="badge" style="background:rgba(52,211,153,0.15);color:var(--dash-success);border:1px solid rgba(52,211,153,0.3);padding:6px 10px;border-radius:8px;">+1 Streak</span>
                 </div>
-                <a href="{{ route('interview.setup') }}" class="btn w-100 py-2" style="background:var(--dash-primary);color:white;font-weight:600;border-radius:12px;">Start Challenge</a>
+                <a href="{{ route('interview.setup') }}" class="btn w-100 py-2 btn-shine" style="background:var(--dash-primary);color:white;font-weight:600;border-radius:12px;border:none;box-shadow: 0 4px 15px rgba(96,165,250,0.4);transition: 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(96,165,250,0.4)'">Start Challenge</a>
             </div>
 
             <!-- Feature 13: Upcoming Goals -->

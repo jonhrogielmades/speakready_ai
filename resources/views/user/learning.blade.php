@@ -15,15 +15,18 @@
     .ll-stat-card {
         background: var(--sf);
         border: 1px solid var(--bd);
-        border-radius: 16px;
+        border-radius: 24px;
         padding: 20px;
         text-align: center;
-        transition: 0.3s;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s;
     }
     .ll-stat-card:hover {
         transform: translateY(-5px);
-        border-color: rgba(59,130,246,0.3);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: rgba(139,92,246,0.5);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08);
     }
     .ll-stat-val {
         font-size: 2rem;
@@ -35,27 +38,36 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 20px;
+        padding: 10px 24px;
         border-radius: 30px;
-        background: var(--sf);
-        color: var(--tx2);
+        background: var(--bg3);
+        color: var(--tx);
         border: 1px solid var(--bd);
         text-decoration: none;
-        font-weight: 500;
-        transition: 0.3s;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
     }
     @media (max-width: 576px) {
         .ll-nav-pill {
-            padding: 6px 14px;
+            padding: 8px 16px;
             font-size: 0.85rem;
-            gap: 5px;
+            gap: 6px;
         }
     }
-    .ll-nav-pill:hover, .ll-nav-pill.active {
+    .ll-nav-pill:hover {
+        background: var(--sf);
+        border-color: var(--pur);
+        color: var(--pur);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139,92,246,0.15);
+    }
+    .ll-nav-pill.active {
         background: var(--pur);
         color: #fff;
         border-color: var(--pur);
-        box-shadow: 0 4px 15px rgba(59,130,246,0.3);
+        box-shadow: 0 8px 25px rgba(139,92,246,0.3);
     }
     .ll-category-list {
         background: var(--sf);
@@ -175,17 +187,39 @@
         flex-grow: 1;
         background: var(--sf);
         border: 1px solid var(--bd);
-        border-radius: 16px;
+        border-radius: 24px;
         padding: 20px;
         margin-left: 20px;
-        transition: 0.3s;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s;
         position: relative;
         overflow: hidden;
     }
     .level-node.active .level-card {
-        border-color: rgba(59,130,246,0.4);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        border-color: rgba(139,92,246,0.5);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08);
     }
+    
+    .db-top-search { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .db-top-search:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf) !important; }
+
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
     .level-node.locked .level-card {
         opacity: 0.7;
         pointer-events: none;
@@ -304,15 +338,15 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
             <div class="d-flex align-items-center gap-2">
-                <h3 style="font-weight:800;color:var(--tx);margin:0; font-family:'Poppins', sans-serif; text-transform:uppercase;">Learning Games</h3>
-                <span class="badge" style="background:linear-gradient(135deg, var(--pur) 0%, #34d399 100%); color:#fff; border-radius:8px; font-weight:800;">SEASON 1</span>
+                <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+Learning Games</h4>
             </div>
             <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-sm-0" style="flex: 1; min-width: 250px; justify-content: flex-end;">
-            <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--sf);border:1px solid var(--bd); margin:0;">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" placeholder="Search quests, skills, topics..." style="width:100%;">
+            <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
+                <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
+                <input type="text" placeholder="Search quests, skills, topics..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
             </div>
             <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;"><i class="fa-solid fa-tree me-sm-1" style="color:#10b981"></i> <span class="d-none d-sm-inline">Skill Tree</span></a>
             <button id="btn-how-to-play" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-gamepad me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">How to Play</span></button>
@@ -329,7 +363,7 @@
     <!-- Gamified HUD Stats -->
     <div id="dashboard-stats" class="row g-4 mb-4">
         <!-- Player Level & XP -->
-        <div class="col-12 col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.1s">
             <div class="ll-stat-card" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <span style="font-weight:800; color:var(--tx); font-size:1.1rem;"><i class="fa-solid fa-crown text-warning me-2"></i> LEVEL {{ $profile?->player_level ?? 1 }}</span>
@@ -348,7 +382,7 @@
         </div>
         
         <!-- Energy/Lives -->
-        <div class="col-12 col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.2s">
             <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
                 <div style="width:55px; height:55px; border-radius:15px; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
                     <i class="fa-solid fa-heart"></i>
@@ -361,7 +395,7 @@
         </div>
 
         <!-- Streak -->
-        <div class="col-12 col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.3s">
             <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
                 <div style="width:55px; height:55px; border-radius:15px; background:rgba(245,158,11,0.1); color:#f59e0b; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
                     <i class="fa-solid fa-fire"></i>
@@ -374,7 +408,7 @@
         </div>
 
         <!-- Score/Accuracy -->
-        <div class="col-12 col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.4s">
             <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
                 <div style="width:55px; height:55px; border-radius:15px; background:rgba(52,211,153,0.1); color:#34d399; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
                     <i class="fa-solid fa-bullseye"></i>
@@ -467,7 +501,7 @@
                             }
                         @endphp
 
-                        <div class="level-node {{ $nodeClass }}">
+                        <div class="level-node {{ $nodeClass }} animate-fade-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
                             <div class="level-icon-wrapper">
                                 <div class="level-icon">{!! $iconHtml !!}</div>
                             </div>
@@ -515,7 +549,7 @@
                                     </div>
                                     <form action="{{ route('user.game.start', $level->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="btn bgrd" style="border-radius:10px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
+                                        <button type="submit" class="btn btn-shine" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
                                     </form>
                                 @elseif($status === 'completed')
                                     <div style="margin-top:15px;">
@@ -593,4 +627,5 @@
 </script>
 @endpush
 @endsection
+
 

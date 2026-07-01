@@ -3,21 +3,26 @@
 @section('content')
 <style>
     /* Chat specific styles */
-    .chat-container { display: flex; height: calc(100vh - 140px); background: var(--sf); border: 1px solid var(--bd); border-radius: 18px; overflow: hidden; }
-    .chat-sidebar { width: 280px; border-right: 1px solid var(--bd); display: flex; flex-direction: column; }
+    .chat-container { 
+        display: flex; height: calc(100vh - 140px); background: var(--sf); border: 1px solid var(--bd); border-radius: 24px; overflow: hidden; 
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    .chat-sidebar { width: 280px; border-right: 1px solid var(--bd); display: flex; flex-direction: column; background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%); }
     .chat-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
     .chat-messages { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
 
-    .chat-bubble { max-width: 80%; padding: 16px 20px; border-radius: 18px; font-size: .95rem; line-height: 1.5; }
-    .bubble-ai { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-bottom-left-radius: 4px; color: var(--tx); align-self: flex-start; }
-    .bubble-user { background: var(--pur); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; }
+    .chat-bubble { max-width: 80%; padding: 16px 20px; border-radius: 20px; font-size: .95rem; line-height: 1.5; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .bubble-ai { background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.05) 100%); border: 1px solid rgba(139,92,246,0.2); border-bottom-left-radius: 4px; color: var(--tx); align-self: flex-start; box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); }
+    .bubble-user { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; border: none; }
 
-    .chat-input-area { padding: 20px; border-top: 1px solid var(--bd); background: rgba(0,0,0,0.2); flex-shrink: 0; }
-    .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--bg); border: 1px solid var(--bd); border-radius: 16px; padding: 8px 16px; transition: border-color 0.3s; }
-    .chat-input-wrapper:focus-within { border-color: var(--pur); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    .chat-textarea { flex-grow: 1; background: transparent; border: none; color: var(--tx); resize: none; max-height: 120px; padding: 8px 0; outline: none; font-family: "Space Grotesk", sans-serif; font-size: 0.9rem; }
-    .chat-send-btn { background: var(--pur); color: #fff; border: none; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-left: 12px; margin-bottom: 4px; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
-    .chat-send-btn:hover { opacity: 0.9; transform: scale(1.05); }
+    .chat-input-area { padding: 20px; border-top: 1px solid var(--bd); background: rgba(255,255,255,0.02); flex-shrink: 0; }
+    .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--bg3); border: 1px solid var(--bd); border-radius: 16px; padding: 8px 16px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .chat-input-wrapper:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf); }
+    .chat-textarea { flex-grow: 1; background: transparent; border: none; color: var(--tx); resize: none; max-height: 120px; padding: 8px 0; outline: none; font-family: "Space Grotesk", sans-serif; font-size: 0.95rem; }
+    .chat-send-btn { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #fff; border: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-left: 12px; margin-bottom: 4px; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
+    .chat-send-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
 
     .history-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; color: var(--tx3); font-size: .9rem; display: flex; align-items: center; }
     .history-item:hover, .history-item.active { background: rgba(255,255,255,0.05); color: var(--tx); }
@@ -36,10 +41,22 @@
         .chat-input-area { padding: 10px 12px; }
         .chat-bubble { max-width: 90%; padding: 10px 14px; font-size: 0.875rem; }
     }
+    
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 </style>
 
 <div class="db-section active p-0" style="height:100%">
-    <div class="chat-container">
+    <div class="chat-container animate-fade-up">
         
         <!-- Sidebar History -->
         <div class="chat-sidebar d-none d-md-flex" id="coach-sidebar">
@@ -90,7 +107,7 @@
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div>
-                        <h6 style="color:var(--tx);margin:0;font-weight:700">SpeakReady AI Coach</h6>
+                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">SpeakReady AI Coach</h6>
                         <span style="font-size:.75rem;color:#34d399"><i class="fa-solid fa-circle text-success" style="font-size:.5rem;margin-right:4px"></i>Online</span>
                     </div>
                 </div>
@@ -462,5 +479,6 @@
 </script>
 @endpush
 @endsection
+
 
 

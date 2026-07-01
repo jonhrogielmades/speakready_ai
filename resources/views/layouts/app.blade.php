@@ -24,6 +24,29 @@
       <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
+          
+          /* Global Mobile Responsiveness for Premium UI Updates */
+          @media (max-width: 768px) {
+              .premium-panel, .panel, .setup-panel {
+                  border-radius: 16px !important;
+                  padding: 16px !important;
+              }
+              .stat-card.premium-panel, .perk-card.premium-panel, .module-card.premium-panel, .print-card {
+                  padding: 16px !important;
+              }
+              h4.text-gradient-primary, .text-gradient-primary {
+                  font-size: 1.25rem !important;
+              }
+              .db-section {
+                  padding: 15px !important;
+              }
+              .accordion-item.premium-panel {
+                  padding: 0 !important;
+              }
+              .accordion-button {
+                  padding: 16px !important;
+              }
+          }
       </style>
       <script>
          if (localStorage.getItem('theme') === 'light') {

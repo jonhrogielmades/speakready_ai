@@ -1,10 +1,35 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
-<div class="db-section active">
+<style>
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .premium-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    
+    .leaderboard-row { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .leaderboard-row:hover { background-color: rgba(255,255,255,0.03) !important; transform: scale(1.01); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+</style>
+
+<div class="db-section active animate-fade-up">
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700;margin-bottom:4px;">Global Leaderboard</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+Global Leaderboard</h4>
             <p style="color:var(--tx3);margin:0;">See how you stack up against the community! Keep practicing to climb the ranks.</p>
         </div>
         <div>
@@ -12,7 +37,7 @@
         </div>
     </div>
 
-    <div class="premium-card" id="leaderboard-container">
+    <div class="premium-panel" id="leaderboard-container">
         <div class="table-responsive">
             <table class="table table-borderless" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                 <thead style="border-bottom: 2px solid var(--bd);">
@@ -26,7 +51,7 @@
                 </thead>
                 <tbody>
                     @forelse($topUsers as $index => $profile)
-                    <tr style="border-bottom: 1px solid var(--bd); background-color: {{ Auth::id() == $profile->user_id ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}">
+                    <tr class="leaderboard-row animate-fade-up" style="border-bottom: 1px solid var(--bd); background-color: {{ Auth::id() == $profile->user_id ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}; animation-delay: {{ $index * 0.1 }}s">
                         <td class="py-4 align-middle">
                             @if($index == 0)
                                 <div style="width:35px;height:35px;background:#f59e0b;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;box-shadow:0 0 10px rgba(245, 158, 11, 0.5)"><i class="fa-solid fa-trophy"></i></div>
@@ -126,4 +151,5 @@
 </script>
 @endpush
 @endsection
+
 

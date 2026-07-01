@@ -4,16 +4,18 @@
 <style>
     /* Premium Dashboard Styles inherited/adapted */
     .premium-card {
-        background: var(--sf, #1e1e2d);
-        border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
-        border-radius: 16px;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
         padding: 24px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .premium-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.08);
     }
     /* Wave animation */
     @keyframes wave { 0%, 100% { height: 20px; } 50% { height: 80px; } }
@@ -52,13 +54,34 @@
     .tab-pane { display: none; }
     .tab-pane.active { display: block; animation: fadeIn 0.4s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
 </style>
 
 <div class="db-section active">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700;margin:0;"> Voice Rehearsal Studio</h4>
-            <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;">Master your delivery, pacing, and tone with AI analysis.</p>
+<h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+ Voice Rehearsal Studio</h4>
+            <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;font-weight:500;">Master your delivery, pacing, and tone with AI analysis.</p>
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap">
             <ul class="nav nav-pills" id="moduleTabs" style="margin-bottom:0;">
@@ -73,7 +96,7 @@
     <div id="tab-practice" class="tab-pane active">
         <div class="row g-4">
             <!-- Left: Controls & Recording -->
-            <div class="col-lg-8">
+            <div class="col-lg-8 animate-fade-up delay-100">
                 <div class="premium-card mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
@@ -93,7 +116,7 @@
                     </div>
 
                     <!-- Mic Visualization -->
-                    <div style="margin-bottom:40px;position:relative;height:140px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:24px;border:1px solid var(--bd);">
+                    <div style="margin-bottom:40px;position:relative;height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(139,92,246,0.05) 100%);border-radius:24px;border:1px solid rgba(139,92,246,0.2);box-shadow:inset 0 4px 20px rgba(0,0,0,0.1), 0 10px 30px rgba(59,130,246,0.1);">
                         <!-- Idle State -->
                         <div id="micIdle" class="text-center">
                             <div style="width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#60a5fa;font-size:1.8rem;transition:all 0.3s;">
@@ -116,7 +139,7 @@
 
                     <!-- Controls -->
                     <div class="d-flex justify-content-center gap-3 mb-4">
-                        <button id="btnStart" class="btn" style="background:#3b82f6;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="startRec()"><i class="fa-solid fa-play me-2"></i> Start</button>
+                        <button id="btnStart" class="btn btn-shine" style="background:var(--dash-primary, #60a5fa);color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);" onclick="startRec()"><i class="fa-solid fa-play me-2"></i> Start</button>
                         <button id="btnPause" class="btn btn-warning" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="pauseRec()"><i class="fa-solid fa-pause me-2"></i> Pause</button>
                         <button id="btnResume" class="btn btn-info" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="resumeRec()"><i class="fa-solid fa-play me-2"></i> Resume</button>
                         <button id="btnStop" class="btn btn-danger" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="stopRec()"><i class="fa-solid fa-stop me-2"></i> Stop & Analyze</button>
@@ -158,7 +181,7 @@
             </div>
 
             <!-- Right: Post-Analysis Dashboard -->
-            <div class="col-lg-4">
+            <div class="col-lg-4 animate-fade-up delay-200">
                 <div id="analysisPanel" style="opacity:0.5;pointer-events:none;transition:opacity 0.4s;">
                     <div class="premium-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
                         <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> AI Assessment</h6>
@@ -214,7 +237,7 @@
                             <audio id="audioPlayback" controls style="width:100%;height:40px;outline:none;" class="mb-2"></audio>
                         </div>
 
-                        <button id="btnSave" class="btn w-100" style="background:#34d399;color:#fff;font-weight:600;border-radius:10px;" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
+                        <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:600;border-radius:12px;border:none;box-shadow:0 4px 15px rgba(52,211,153,0.4);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
                     </div>
                 </div>
             </div>
@@ -239,7 +262,7 @@
     <!-- TAB: HISTORY & ANALYTICS -->
     <div id="tab-analytics" class="tab-pane">
         <div class="row g-4">
-            <div class="col-lg-8">
+            <div class="col-lg-8 animate-fade-up delay-100">
                 <!-- Progress Charts -->
                 <div class="premium-card mb-4">
                     <h5 class="fw-bold mb-4">Progress Analytics</h5>
@@ -273,7 +296,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-4">
+            <div class="col-lg-4 animate-fade-up delay-200">
                 <!-- AI Practice Suggestions -->
                 <div class="premium-card" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(251,191,36,0.05) 100%);">
                     <h6 class="fw-bold mb-4"><i class="fa-solid fa-lightbulb me-2" style="color:#fbbf24;"></i> AI Practice Suggestions</h6>
@@ -728,4 +751,5 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 @endpush
 @endsection
+
 

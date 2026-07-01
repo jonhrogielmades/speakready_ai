@@ -1,45 +1,75 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
+<style>
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .premium-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-panel:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+</style>
+
 <div class="db-section active">
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700">Progress Tracking</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+Progress Tracking</h4>
             <p style="color:var(--tx3)">Visualize your interview readiness improvement over time.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap align-items-center">
             <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <!-- Feature 15: Progress Reports -->
-            <button class="btn btn-outline-primary" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
-            <button class="btn btn-outline-success" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
+            <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
+            <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
         </div>
     </div>
 
     <!-- Feature 9, 14: Top Stats (Streaks, Comparison) -->
     <div id="progress-stats" class="row g-4 mb-4">
-        <div class="col-md-3 col-sm-6">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;text-align:center;">
+        <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.1s;">
+            <div class="premium-panel text-center">
                 <i class="fa-solid fa-fire text-warning fs-1 mb-2"></i>
                 <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $currentStreak }} Days</h3>
                 <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Current Streak</p>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;text-align:center;">
+        <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.2s;">
+            <div class="premium-panel text-center">
                 <i class="fa-solid fa-fire-flame-curved text-danger fs-1 mb-2"></i>
                 <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $longestStreak }} Days</h3>
                 <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Longest Streak</p>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;text-align:center;">
+        <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.3s;">
+            <div class="premium-panel text-center">
                 <i class="fa-solid fa-calendar-check text-success fs-1 mb-2"></i>
                 <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $totalPracticeDays }}</h3>
                 <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Total Practice Days</p>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;text-align:center;">
+        <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.4s;">
+            <div class="premium-panel text-center">
                 <i class="fa-solid fa-arrow-trend-up text-primary fs-1 mb-2"></i>
                 <h3 style="color:var(--tx);margin:0;font-weight:bold;">+12%</h3>
                 <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Readiness vs Last Month</p>
@@ -48,10 +78,10 @@
     </div>
 
     <!-- Feature 13: AI Progress Insights -->
-    <div id="ai-insights" class="alert border-0 mb-4" style="border-radius:18px; background: rgba(59, 130, 246, 0.1); color: var(--tx);">
+    <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up" style="animation-delay: 0.5s; border-radius:24px; background: rgba(59, 130, 246, 0.1); color: var(--tx); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); padding: 20px;">
         <div class="d-flex align-items-center">
             <div class="flex-shrink-0">
-                <i class="fa-solid fa-robot fs-2 me-3 text-primary"></i>
+                <i class="fa-solid fa-robot fs-2 me-3 text-primary" style="background: var(--bg); border-radius: 12px; padding: 12px; box-shadow: 0 4px 15px rgba(59,130,246,0.1);"></i>
             </div>
             <div>
                 <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
@@ -63,8 +93,8 @@
 
     <div class="row g-4 mb-4">
         <!-- Feature 1: Readiness Score Trend -->
-        <div class="col-md-8" id="readiness-trend">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
+        <div class="col-md-8 animate-fade-up" id="readiness-trend" style="animation-delay: 0.6s;">
+            <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Overall Readiness Trend</h5>
                 <div style="height: 250px;">
                     <canvas id="readinessChart"></canvas>
@@ -72,8 +102,8 @@
             </div>
         </div>
         <!-- Feature 3: Category Performance Analysis -->
-        <div class="col-md-4" id="category-perf">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
+        <div class="col-md-4 animate-fade-up" id="category-perf" style="animation-delay: 0.7s;">
+            <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Category Performance</h5>
                 <div style="height: 250px;">
                     <canvas id="categoryChart"></canvas>
@@ -84,8 +114,8 @@
 
     <div class="row g-4 mb-4">
         <!-- Feature 4: Skill Improvement Tracker -->
-        <div class="col-md-6" id="skill-tracker">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
+        <div class="col-md-6 animate-fade-up" id="skill-tracker" style="animation-delay: 0.8s;">
+            <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Skill Improvement Tracker</h5>
                 
                 @php
@@ -109,8 +139,8 @@
         </div>
 
         <!-- Feature 12: Strengths & Areas for Improvement -->
-        <div class="col-md-6" id="strengths-tracker">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
+        <div class="col-md-6 animate-fade-up" id="strengths-tracker" style="animation-delay: 0.9s;">
+            <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Strengths & Areas for Improvement</h5>
                 
                 <div class="row mb-4">
@@ -151,9 +181,9 @@
     </div>
 
     <!-- Feature 2: Interview Performance History -->
-    <div class="row mb-4" id="history-table">
+    <div class="row mb-4 animate-fade-up" id="history-table" style="animation-delay: 1s;">
         <div class="col-12">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div class="premium-panel">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                     <h5 style="color:var(--tx);margin:0;font-weight:bold;">Interview Performance History</h5>
                     <div class="input-group" style="width:250px;">
@@ -597,4 +627,5 @@
 </script>
 @endpush
 @endsection
+
 

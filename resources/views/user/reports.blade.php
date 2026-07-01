@@ -18,20 +18,54 @@
         canvas { max-width: 100% !important; height: auto !important; }
         h4, h5, h6 { color: #000 !important; }
     }
+    
+    @media screen {
+        .print-card {
+            background: var(--sf) !important;
+            border: 1px solid var(--bd) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .print-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+        }
+        #report-readiness {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)) !important; 
+            border: 1px solid rgba(59, 130, 246, 0.2) !important;
+        }
+    }
+
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
 </style>
 
-<div class="db-section active" id="portfolioReport">
+<div class="db-section active animate-fade-up" id="portfolioReport">
     <!-- Feature 10: Interview Portfolio Report Header & Actions -->
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 border-bottom btn-no-print" style="border-color:var(--bd) !important;">
         <div>
-            <h4 style="color:var(--tx);font-weight:800;margin-bottom:4px;">Interview Portfolio Report</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+Interview Portfolio Report</h4>
             <p style="color:var(--tx3);margin:0;">A complete summary of your preparation journey and analytics.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap align-items-center">
             <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
-            <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i>Print Report</button>
-            <button class="btn btn-primary" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
-            <button class="btn btn-success" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
+            <button class="btn btn-outline-primary btn-shine" onclick="window.print()" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-print me-2"></i>Print Report</button>
+            <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
+            <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
         </div>
     </div>
 
@@ -41,7 +75,7 @@
             <i class="fa-solid fa-user-graduate text-white fs-3"></i>
         </div>
         <div>
-            <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $user->name ?? 'Candidate' }}</h3>
+            <h3 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">{{ $user->name ?? 'Candidate' }}</h3>
             <p style="color:var(--tx3);margin:0;">SpeakReady AI Preparation Portfolio &bull; Generated on {{ now()->format('F j, Y') }}</p>
         </div>
     </div>
@@ -57,7 +91,7 @@
         elseif($currentReadiness >= 50) { $rRating = 'Fair'; $rColor = '#f59e0b'; }
         else { $rRating = 'Needs Improvement'; $rColor = '#ef4444'; }
     @endphp
-    <div id="report-readiness" class="print-card mb-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)); border:1px solid rgba(59, 130, 246, 0.2); border-radius:18px; padding:32px;">
+    <div id="report-readiness" class="print-card mb-4" style="border-radius:24px; padding:32px;">
         <div class="row align-items-center text-center text-md-start">
             <div class="col-md-3 border-end" style="border-color:rgba(59, 130, 246, 0.2) !important;">
                 <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Readiness Score</h6>
@@ -82,7 +116,7 @@
     <div class="row g-4 mb-4">
         <!-- Feature 1: Interview Performance Report -->
         <div class="col-lg-7">
-            <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+            <div class="print-card" style="padding:32px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-clipboard-check text-primary me-2"></i>Latest Interview Performance</h5>
                 
                 <div class="row mb-4 bg-light bg-opacity-10 rounded p-3" style="background:var(--bg);">
@@ -129,7 +163,7 @@
 
         <!-- Feature 8: Performance Comparison Report -->
         <div class="col-lg-5">
-            <div id="report-comparison" class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+            <div id="report-comparison" class="print-card" style="padding:32px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
                 
@@ -176,7 +210,7 @@
     <!-- Feature 2: Feedback Summary Report -->
     <div class="row mb-4">
         <div class="col-12">
-            <div id="report-feedback" class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
+            <div id="report-feedback" class="print-card" style="padding:32px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-comment-dots text-info me-2"></i>Feedback Summary Report</h5>
                 <div class="row g-4">
                     <div class="col-md-4">
@@ -472,4 +506,5 @@
 </script>
 @endpush
 @endsection
+
 

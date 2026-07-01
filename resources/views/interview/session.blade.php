@@ -11,15 +11,51 @@
     .ai-speaking .ai-wave-bar:nth-child(3) { animation-delay: 200ms; }
     .ai-speaking .ai-wave-bar:nth-child(4) { animation-delay: 300ms; }
     .ai-speaking .ai-wave-bar:nth-child(5) { animation-delay: 400ms; }
-    .panel { background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;margin-bottom:20px; }
-    .panel-title { font-weight:700;margin-bottom:15px;display:flex;align-items:center;font-size:1rem;color:var(--tx); }
-    .stat-row { display:flex;justify-content:space-between;margin-bottom:10px;font-size:.85rem;color:var(--tx2); }
+    .panel { 
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        padding: 24px;
+        margin-bottom: 24px; 
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .panel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+    .panel-title { font-weight:800;margin-bottom:20px;display:flex;align-items:center;font-size:1.1rem;color:var(--tx); letter-spacing: -0.3px; }
+    .stat-row { display:flex;justify-content:space-between;margin-bottom:12px;font-size:.9rem;color:var(--tx2); font-weight: 500; }
     .progress-bar-bg { background:var(--bg3);height:8px;border-radius:4px;overflow:hidden;margin-bottom:15px; }
     .progress-bar-fill { background:#60a5fa;height:100%;transition:width 0.3s; }
-    .star-item { display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:8px;font-size:.85rem; }
-    .star-item i { font-size:1rem; }
+    .star-item { display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg3);border-radius:12px;margin-bottom:10px;font-size:.9rem; font-weight: 500; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .star-item:hover { transform: translateY(-1px); background: var(--sf); box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--bd); }
+    .star-item i { font-size:1.1rem; transition: transform 0.3s, text-shadow 0.3s; }
+    .star-item i.fa-circle-check { text-shadow: 0 0 10px rgba(52, 211, 153, 0.5); }
     @keyframes scanAnim { 0% { top: 0%; opacity: 0.5; } 50% { top: 100%; opacity: 1; } 100% { top: 0%; opacity: 0.5; } }
     @keyframes avatarPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(3.5); opacity: 0; } }
+    
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
     .sound-wave { position:absolute;border-radius:50%;width:100%;height:100%;display:none; }
 
     /* Circular Audio Spectrum */
@@ -69,7 +105,7 @@
         <!-- Header Info -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Workspace</h4>
+                <h4 class="text-gradient-primary" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;">Interview Workspace</h4>
                 <div style="font-size:.85rem;color:var(--tx3);display:flex;gap:15px;">
                     <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
                     <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
@@ -83,7 +119,7 @@
                 <button type="button" class="btn btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
                 <button type="button" class="btn btn-outline-secondary prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left me-2"></i>Previous</button>
                 <button type="button" class="btn btn-outline-warning skip-btn-class" onclick="skipQuestion()"><i class="fa-solid fa-forward-step me-2"></i>Skip</button>
-                <button type="button" class="bgrd btn px-4 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                <button type="button" class="btn px-4 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
             </div>
         </div>
 
@@ -94,16 +130,17 @@
                 <!-- Progress Tracker Removed by User -->
 
                 <!-- Simulated AI Video Avatar Panel -->
-                <div class="panel p-0 ai-avatar-panel" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:250px;border-radius:18px;margin-bottom:20px;">
+                <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
+                    <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
                     <!-- Mobile Picture-in-Picture Camera -->
                     <div class="d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                     </div>
 
-                    <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #1e1b4b, #312e81);">
-                        <div class="avatar-wrapper" id="aiAvatarHead" style="width:100px;height:100px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.3s;">
+                    <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
+                        <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.4s;">
                             <!-- The Image Container (with border, glow, and clipping for the image itself) -->
-                            <div style="width:100%;height:100%;background:rgba(255,255,255,0.1);border-radius:50%;border:3px solid #8b5cf6;overflow:hidden;position:relative;z-index:10;box-shadow: 0 0 15px rgba(139,92,246,0.3);">
+                            <div style="width:100%;height:100%;background:rgba(255,255,255,0.1);border-radius:50%;border:4px solid #8b5cf6;overflow:hidden;position:relative;z-index:10;box-shadow: 0 0 25px rgba(139,92,246,0.5);">
                                 <img src="{{ asset('img/ai_avatar.jpg') }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
                             </div>
                         </div>
@@ -133,7 +170,7 @@
                 </div>
 
                 <!-- Answer Response System -->
-                <div class="panel mb-4">
+                <div class="panel mb-4 animate-fade-up delay-200">
                     <div class="panel-title">
                         <i class="fa-solid fa-pen-nib me-2"></i> Your Response
                         @if(session('game_level_id'))
@@ -181,7 +218,7 @@
                                 <button type="button" class="btn btn-outline-secondary flex-fill prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left"></i></button>
                                 <button type="button" class="btn btn-outline-warning flex-fill skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
                             </div>
-                            <button type="button" class="bgrd btn px-4 w-100 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                            <button type="button" class="btn px-4 w-100 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
                         </div>
                     </form>
                 </div>
@@ -191,7 +228,7 @@
             <div class="col-lg-4">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
                 <!-- Camera Presence (Hidden on mobile since it's inside the AI panel now) -->
-                <div class="panel d-none d-lg-block" id="cameraPanel">
+                <div class="panel d-none d-lg-block animate-fade-up delay-100" id="cameraPanel">
                     <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Camera Presence</div>
                     <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
                         <video id="userCamera" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
@@ -205,7 +242,7 @@
                 </div>
 
                 <!-- AI Visualizer Panel -->
-                <div class="panel">
+                <div class="panel animate-fade-up delay-200">
                     <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> AI Visualizer</div>
                     <div class="text-center mb-3">
                         <div style="font-size:2rem;font-weight:700;color:#34d399" id="overallReadiness">--%</div>
@@ -218,7 +255,7 @@
                 </div>
 
                 <!-- STAR Framework Analyzer -->
-                <div class="panel">
+                <div class="panel animate-fade-up delay-300">
                     <div class="panel-title"><i class="fa-solid fa-star me-2" style="color:#fbbf24"></i> STAR Analyzer</div>
                     <div class="star-item"><span>Situation</span><i class="fa-solid fa-circle-xmark text-danger" id="starS"></i></div>
                     <div class="star-item"><span>Task</span><i class="fa-solid fa-circle-xmark text-danger" id="starT"></i></div>
@@ -230,7 +267,7 @@
                 </div>
 
                 <!-- Voice Analytics Module -->
-                <div class="panel" id="voiceAnalyticsPanel" style="display:none;">
+                <div class="panel animate-fade-up delay-400" id="voiceAnalyticsPanel" style="display:none;">
                     <div class="panel-title"><i class="fa-solid fa-wave-square me-2"></i> Voice Analytics</div>
                     <div class="stat-row"><span>Speaking Duration</span><span id="vaDuration">0s</span></div>
                     <div class="stat-row"><span>Speed (WPM)</span><span id="vaWpm">0</span></div>
@@ -238,7 +275,7 @@
                 </div>
 
                 <!-- Interview Notes -->
-                <div class="panel">
+                <div class="panel animate-fade-up delay-400">
                     <div class="panel-title"><i class="fa-solid fa-clipboard me-2"></i> Session Notes</div>
                     <textarea id="sessionNotes" class="oinp" style="min-height:100px;font-size:.85rem;padding:10px" placeholder="Private notes, key reminders, etc..."></textarea>
                 </div>
@@ -246,8 +283,8 @@
         </div>
         </div>
 
-        <div id="introContainer" class="text-center p-4 p-md-5 panel" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;">
-            <div style="width:60px;height:60px;border-radius:15px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+        <div id="introContainer" class="text-center p-4 p-md-5 panel animate-fade-up" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;border: 1px solid rgba(139,92,246,0.3);box-shadow: 0 20px 50px rgba(139,92,246,0.15);">
+            <div style="width:70px;height:70px;border-radius:20px;background:linear-gradient(135deg, rgba(59,130,246,.15), rgba(139,92,246,.15));display:flex;align-items:center;justify-content:center;margin:0 auto 24px;border: 1px solid rgba(139,92,246,0.2);">
                 <i class="fa-solid fa-robot" style="font-size:1.8rem;color:#60a5fa"></i>
             </div>
             <h4 style="color:var(--tx);font-weight:700">Interview Workspace Ready</h4>
@@ -256,7 +293,7 @@
                 <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
                 <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-bullseye me-1"></i> {{ ucfirst($sessionRecord->coach_focus_mode) }} Focus</span>
             </div>
-            <button class="bgrd btn px-4 py-3 w-100" style="font-size:1.1rem;font-weight:600" onclick="startInterviewSession()">Begin Interview <i class="fa-solid fa-play ms-2"></i></button>
+            <button class="btn px-4 py-3 w-100 btn-shine" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">Begin Interview <i class="fa-solid fa-play ms-2"></i></button>
         </div>
 
         <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">
@@ -817,3 +854,4 @@
 </script>
 @endpush
 @endsection
+

@@ -20,6 +20,27 @@
       <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       <style>
+         /* Global Mobile Responsiveness for Premium UI Updates */
+         .premium-panel, .panel, .setup-panel {
+             border-radius: 16px !important;
+             padding: 16px !important;
+         }
+         .stat-card.premium-panel, .perk-card.premium-panel, .module-card.premium-panel, .print-card {
+             padding: 16px !important;
+         }
+         h4.text-gradient-primary, .text-gradient-primary {
+             font-size: 1.25rem !important;
+         }
+         .db-section {
+             padding: 15px !important;
+         }
+         .accordion-item.premium-panel {
+             padding: 0 !important;
+         }
+         .accordion-button {
+             padding: 16px !important;
+         }
+         
          /* ===== MOBILE LAYOUT SHELL ===== */
          html, body {
             overflow-x: hidden;

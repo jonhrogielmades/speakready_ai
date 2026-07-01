@@ -1,22 +1,47 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('content')
 <style>
-    .setup-panel { background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;margin-bottom:20px; scroll-margin-top: 120px; }
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .setup-panel { 
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        padding: 24px;
+        margin-bottom: 24px; 
+        scroll-margin-top: 120px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .setup-panel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
     #btn-start-interview { scroll-margin-top: 120px; }
-    .olbl { font-weight:600;color:var(--tx);font-size:.9rem;margin-bottom:8px;display:block; }
-    .oinp { width:100%;padding:10px 14px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);color:var(--tx);font-size:.9rem;transition:border-color 0.2s; }
-    .oinp:focus { outline:none;border-color:var(--pur); }
+    .olbl { font-weight:600;color:var(--tx);font-size:.9rem;margin-bottom:8px;display:block; letter-spacing: 0.3px; }
+    .oinp { width:100%;padding:12px 16px;border:1px solid var(--bd);border-radius:12px;background:var(--bg3);color:var(--tx);font-size:.9rem;transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .oinp:focus { outline:none;border-color:var(--pur);box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf); }
     .desc-text { font-size:.75rem;color:var(--tx3);margin-top:4px; }
     
-    .custom-radio { position:relative;display:flex;align-items:flex-start;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);cursor:pointer;margin-bottom:10px;transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s, transform 0.2s; }
-    .custom-radio:hover { border-color:#60a5fa; }
+    .custom-radio { position:relative;display:flex;align-items:flex-start;padding:16px;border:1px solid var(--bd);border-radius:12px;background:var(--bg3);cursor:pointer;margin-bottom:10px;transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .custom-radio:hover { border-color:#60a5fa; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(96, 165, 250, 0.1); background: var(--sf); }
+    .custom-radio input[type="radio"]:checked + div { color: #60a5fa; }
+    .custom-radio:has(input[type="radio"]:checked) { border-color: #60a5fa; background: rgba(96, 165, 250, 0.05); box-shadow: 0 4px 20px rgba(96, 165, 250, 0.15); }
     .custom-radio input[type="radio"] { margin-top:4px;margin-right:12px;accent-color:var(--pur); }
-    .custom-radio .r-title { font-weight:600;font-size:.9rem;color:var(--tx);display:block; }
-    .custom-radio .r-desc { font-size:.75rem;color:var(--tx3);display:block; }
+    .custom-radio .r-title { font-weight:700;font-size:.95rem;color:var(--tx);display:block; }
+    .custom-radio .r-desc { font-size:.8rem;color:var(--tx3);display:block; margin-top:2px; }
     
-    .cbx-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
-    .custom-cbx { display:flex;align-items:center;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg3);cursor:pointer;font-size:.85rem;color:var(--tx);transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s, transform 0.2s; }
-    .custom-cbx:hover { border-color:#60a5fa; }
+    .cbx-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+    .custom-cbx { display:flex;align-items:center;padding:12px 16px;border:1px solid var(--bd);border-radius:10px;background:var(--bg3);cursor:pointer;font-size:.9rem;font-weight:500;color:var(--tx);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .custom-cbx:hover { border-color:#60a5fa; transform: translateY(-1px); background: var(--sf); }
+    .custom-cbx:has(input[type="checkbox"]:checked) { border-color: #60a5fa; background: rgba(96, 165, 250, 0.05); }
     .custom-cbx input[type="checkbox"] { margin-right:10px;accent-color:#60a5fa; }
 
     .summary-row { display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);font-size:.85rem; }
@@ -25,22 +50,58 @@
     .summary-val { color:var(--tx);font-weight:700;text-align:right; }
 
     /* Drag and Drop Zone */
-    .drop-zone { border: 2px dashed var(--bd); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--bg3); }
-    .drop-zone.dragover { border-color: #60a5fa; background: rgba(96,165,250,0.1); }
-    .drop-zone-icon { font-size: 2rem; color: #60a5fa; margin-bottom: 10px; }
-    .drop-zone-text { font-size: 0.9rem; color: var(--tx2); font-weight: 500; }
+    @keyframes dashBorder { to { background-position: 100% 0, 0 100%, 0 0, 100% 100%; } }
+    .drop-zone { 
+        border: 2px dashed var(--bd); 
+        border-radius: 16px; 
+        padding: 40px 20px; 
+        text-align: center; 
+        cursor: pointer; 
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        background: var(--bg3); 
+        position: relative;
+    }
+    .drop-zone:hover { border-color: rgba(96,165,250,0.5); background: var(--sf); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+    .drop-zone.dragover { border-color: #60a5fa; background: rgba(96,165,250,0.1); transform: scale(1.02); }
+    .drop-zone-icon { font-size: 2.5rem; color: #60a5fa; margin-bottom: 12px; transition: transform 0.4s; }
+    .drop-zone:hover .drop-zone-icon { transform: scale(1.1) translateY(-5px); }
+    .drop-zone-text { font-size: 0.95rem; color: var(--tx); font-weight: 600; }
     
     /* Persona Cards */
-    .persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
-    .persona-card { border: 1px solid var(--bd); border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; background: var(--bg3); transition: all 0.2s; position: relative; overflow: hidden; }
-    .persona-card:hover { border-color: #a78bfa; transform: translateY(-2px); }
-    .persona-card.selected { border-color: #8b5cf6; background: rgba(139,92,246,0.1); box-shadow: 0 4px 15px rgba(139,92,246,0.2); }
-    .persona-icon { font-size: 1.8rem; margin-bottom: 8px; color: var(--tx); }
-    .persona-card.selected .persona-icon { color: #8b5cf6; }
-    .persona-title { font-weight: 700; font-size: 0.85rem; color: var(--tx); }
-    .persona-desc { font-size: 0.7rem; color: var(--tx3); margin-top: 4px; }
-    .persona-check { position: absolute; top: 8px; right: 8px; color: #8b5cf6; font-size: 0.9rem; opacity: 0; transition: opacity 0.2s; }
-    .persona-card.selected .persona-check { opacity: 1; }
+    .persona-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 12px; }
+    .persona-card { 
+        border: 1px solid var(--bd); 
+        border-radius: 16px; 
+        padding: 16px; 
+        text-align: center; 
+        cursor: pointer; 
+        background: var(--bg3); 
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+        position: relative; 
+        overflow: hidden; 
+    }
+    .persona-card:hover { border-color: rgba(167,139,250,0.6); transform: translateY(-4px); background: var(--sf); box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    .persona-card.selected { border-color: #8b5cf6; background: rgba(139,92,246,0.08); box-shadow: 0 8px 25px rgba(139,92,246,0.25); }
+    .persona-card.selected::after { content:''; position:absolute; inset:0; border-radius:16px; box-shadow: inset 0 0 0 1px rgba(139,92,246,0.5); pointer-events:none; }
+    .persona-icon { font-size: 2rem; margin-bottom: 10px; color: var(--tx); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: inline-block; }
+    .persona-card:hover .persona-icon { transform: scale(1.15) rotate(5deg); }
+    .persona-card.selected .persona-icon { color: #8b5cf6; transform: scale(1.1); }
+    .persona-title { font-weight: 700; font-size: 0.9rem; color: var(--tx); letter-spacing: 0.3px; }
+    .persona-desc { font-size: 0.75rem; color: var(--tx3); margin-top: 6px; }
+    .persona-check { position: absolute; top: 12px; right: 12px; color: #8b5cf6; font-size: 1rem; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: scale(0.5); }
+    .persona-card.selected .persona-check { opacity: 1; transform: scale(1); }
+
+    /* Animations */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
+    .delay-400 { animation-delay: 0.4s; }
+
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
 
     /* Driver.js Dark Theme Customization */
     .driverjs-theme-dark.driver-popover { background-color: var(--bg3); color: var(--tx); border: 1px solid var(--bd); }
@@ -56,7 +117,7 @@
 <div class="db-section active" id="sec-interview-setup">
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Interview Setup</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">Interview Setup</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Configure your mock interview session to match your goals.</p>
         </div>
         <div>
@@ -77,7 +138,7 @@
             <div class="col-lg-8" id="setup-left-col">
                 
                 <!-- Basic Info -->
-                <div class="setup-panel" id="panel-basic">
+                <div class="setup-panel animate-fade-up delay-100" id="panel-basic">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-briefcase me-2" style="color:#60a5fa"></i> Basic Information</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -114,7 +175,7 @@
                 </div>
 
                 <!-- Advanced Personalization -->
-                <div class="setup-panel" id="panel-advanced">
+                <div class="setup-panel animate-fade-up delay-200" id="panel-advanced">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-file-lines me-2" style="color:#a78bfa"></i> Advanced Personalization <span class="badge bg-primary" style="font-size:0.7rem;vertical-align:middle;margin-left:5px">New</span></h5>
                     <p style="font-size:.85rem;color:var(--tx3);margin-bottom:15px">Provide your resume and the target job description to get highly tailored, role-specific questions.</p>
                     <div class="row g-3">
@@ -136,7 +197,7 @@
                 </div>
 
                 <!-- Interview Structure -->
-                <div class="setup-panel" id="panel-structure">
+                <div class="setup-panel animate-fade-up delay-300" id="panel-structure">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-layer-group me-2" style="color:#60a5fa"></i> Interview Structure</h5>
                     
                     <label class="olbl mb-3">Difficulty Level</label>
@@ -193,7 +254,7 @@
                 </div>
 
                 <!-- Content & Assistance -->
-                <div class="setup-panel" id="panel-content">
+                <div class="setup-panel animate-fade-up delay-400" id="panel-content">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-brain me-2" style="color:#f87171"></i> Content & Assistance</h5>
                     
                     <div class="row g-4 mb-4">
@@ -269,7 +330,7 @@
                 </div>
 
                 <!-- Response Mode -->
-                <div class="setup-panel" id="panel-response">
+                <div class="setup-panel animate-fade-up delay-400" id="panel-response">
                     <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-microphone me-2" style="color:#34d399"></i> Response Mode</h5>
                     <div class="row g-3">
                         <div class="col-md-4">
@@ -305,10 +366,10 @@
             </div>
 
             <!-- Right Column: Live Summary -->
-            <div class="col-lg-4">
+            <div class="col-lg-4 animate-fade-up delay-200">
                 <div style="position:sticky;top:20px;">
-                    <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.05) 0%, rgba(59,130,246,0.05) 100%); border:1px solid rgba(59,130,246,0.2);">
-                        <h5 style="font-weight:700;margin-bottom:20px;color:var(--pur);text-align:center"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
+                    <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%); border:1px solid rgba(59,130,246,0.25); box-shadow: 0 15px 35px rgba(59,130,246,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
+                        <h5 style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
                         
                         <div class="summary-row">
                             <span class="summary-label">Category:</span>
@@ -348,7 +409,7 @@
                         </div>
                         
                         <div style="margin-top:30px;">
-                            <button type="submit" id="btn-start-interview" class="bgrd btn w-100 py-3" style="font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 15px rgba(59,130,246,0.3)">
+                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine" style="font-size:1.1rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'">
                                 Start Mock Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
                         </div>
@@ -540,3 +601,4 @@
 </script>
 @endpush
 @endsection
+

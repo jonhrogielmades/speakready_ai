@@ -1,12 +1,41 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
-<div class="db-section active">
+<style>
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .premium-panel {
+        background: var(--sf) !important;
+        border: 1px solid var(--bd) !important;
+        border-radius: 24px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-panel:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+</style>
+
+<div class="db-section active animate-fade-up">
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
             <a href="{{ route('user.feedback') }}" class="btn btn-link text-decoration-none p-0 mb-2" style="color:#3b82f6;"><i class="fa-solid fa-arrow-left me-2"></i>Back to Feedback Center</a>
-            <h4 style="color:var(--tx);font-weight:700">Detailed Feedback Report</h4>
+            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
+Detailed Feedback Report</h4>
             <div class="d-flex gap-3 mt-2" style="font-size:0.9rem;color:var(--tx3)">
                 <span><i class="fa-regular fa-calendar me-1"></i> {{ $sessionRecord->created_at->format('M d, Y') }}</span>
                 <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'Job Interview' }}</span>
@@ -30,10 +59,10 @@
                 </div>
             </div>
             <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto">
-                <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0" id="btnShareSession" type="button" style="border-radius:8px;" onclick="toggleShare()">
+                <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0 btn-shine" id="btnShareSession" type="button" style="border-radius:12px;font-weight:600;" onclick="toggleShare()">
                     <i class="fa-solid fa-share-nodes me-2"></i>{{ $sessionRecord->is_public ? 'Shared Link' : 'Share Session' }}
                 </button>
-                <button class="btn btn-outline-secondary dropdown-toggle flex-grow-1 flex-md-grow-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:8px;">
+                <button class="btn btn-outline-secondary dropdown-toggle flex-grow-1 flex-md-grow-0 btn-shine" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:12px;font-weight:600;">
                     <i class="fa-solid fa-download me-2"></i>Export
                 </button>
                 <ul class="dropdown-menu shadow-sm" style="background:var(--sf);border-color:var(--bd)">
@@ -46,8 +75,8 @@
 
     <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
     <div class="row mb-4">
-        <div class="col-12">
-            <div style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border:1px solid rgba(59, 130, 246, 0.2); border-radius:18px; padding:32px;">
+        <div class="col-12 animate-fade-up" style="animation-delay: 0.1s;">
+            <div class="premium-panel" style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important; border:1px solid rgba(59, 130, 246, 0.2) !important; padding:32px;">
                 <div class="d-flex align-items-start gap-4">
                     <div style="background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                         <i class="fa-solid fa-robot text-white fs-3"></i>
@@ -75,8 +104,8 @@
 
     <!-- Feature 5 & 6: Strengths and Areas for Improvement -->
     <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div style="background:rgba(16, 185, 129, 0.05);border:1px solid rgba(16, 185, 129, 0.2);border-radius:18px;padding:24px;height:100%">
+        <div class="col-md-6 animate-fade-up" style="animation-delay: 0.2s;">
+            <div class="premium-panel" style="background:rgba(16, 185, 129, 0.05) !important;border:1px solid rgba(16, 185, 129, 0.2) !important;padding:24px;height:100%">
                 <h5 style="color:#10b981;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-thumbs-up me-2"></i>Strengths</h5>
                 <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
                     <li><i class="fa-solid fa-check text-success me-3"></i>Clear Communication</li>
@@ -85,8 +114,8 @@
                 </ul>
             </div>
         </div>
-        <div class="col-md-6">
-            <div style="background:rgba(239, 68, 68, 0.05);border:1px solid rgba(239, 68, 68, 0.2);border-radius:18px;padding:24px;height:100%">
+        <div class="col-md-6 animate-fade-up" style="animation-delay: 0.3s;">
+            <div class="premium-panel" style="background:rgba(239, 68, 68, 0.05) !important;border:1px solid rgba(239, 68, 68, 0.2) !important;padding:24px;height:100%">
                 <h5 style="color:#ef4444;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-triangle-exclamation me-2"></i>Needs Improvement</h5>
                 <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Add more real-world examples</li>
@@ -99,8 +128,8 @@
 
     <!-- Feature 4, 12, 13: Skills, Breakdown, and Comparison -->
     <div class="row g-4 mb-4">
-        <div class="col-lg-8">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+        <div class="col-lg-8 animate-fade-up" style="animation-delay: 0.4s;">
+            <div class="premium-panel" style="padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Skill Performance Summary</h5>
                 @php
                     $skills = [
@@ -127,8 +156,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+        <div class="col-lg-4 animate-fade-up" style="animation-delay: 0.5s;">
+            <div class="premium-panel" style="padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Feedback Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Comparing to your last Job Interview session.</p>
                 
@@ -170,7 +199,7 @@
     <h4 style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Detailed Answers Review</h4>
     <div class="accordion" id="answersAccordion">
         @foreach($sessionRecord->answers as $index => $answer)
-        <div class="accordion-item" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;margin-bottom:20px;overflow:hidden;box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div class="accordion-item premium-panel animate-fade-up" style="margin-bottom:20px;overflow:hidden; animation-delay: {{ 0.5 + ($loop->index * 0.1) }}s; transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
                     <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3">
@@ -333,4 +362,5 @@ function toggleShare() {
 }
 </script>
 @endsection
+
 

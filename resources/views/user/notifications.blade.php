@@ -1,21 +1,48 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
-<div class="db-section active">
+<style>
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .premium-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        overflow: hidden;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    
+    .notification-row { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .notification-row:hover { background-color: rgba(255,255,255,0.03) !important; transform: translateX(5px); }
+</style>
+
+<div class="db-section active animate-fade-up">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h4 style="color:var(--tx);font-weight:700">Notifications</h4>
+            <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;">Notifications</h4>
             <p style="color:var(--tx3)">Stay updated on your progress, system updates, and activities.</p>
         </div>
         @if(count($notifications) > 0)
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary btn-sm" style="border-radius:8px" onclick="markAllReadPage()">Mark all as read</button>
-            <button class="btn btn-outline-danger btn-sm" style="border-radius:8px" onclick="clearAllNotificationsPage()">Clear all</button>
+            <button class="btn btn-outline-primary btn-sm btn-shine" style="border-radius:12px;font-weight:600;" onclick="markAllReadPage()">Mark all as read</button>
+            <button class="btn btn-outline-danger btn-sm btn-shine" style="border-radius:12px;font-weight:600;" onclick="clearAllNotificationsPage()">Clear all</button>
         </div>
         @endif
     </div>
 
-    <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden" id="notificationsPageList">
+    <div class="premium-panel animate-fade-up" style="animation-delay: 0.2s;" id="notificationsPageList">
         @forelse($notifications as $notification)
         @php
             $isRead = !is_null($notification->read_at);
@@ -143,4 +170,5 @@ function deleteNotification(id) {
 </script>
 @endpush
 @endsection
+
 
