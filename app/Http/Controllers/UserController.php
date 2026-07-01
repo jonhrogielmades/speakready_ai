@@ -248,7 +248,7 @@ class UserController extends Controller
                         ->where('interview_sessions.status', 'completed')
                         ->with(['category', 'score', 'feedback'])
                         ->orderBy('created_at', 'desc')
-                        ->get();
+                        ->paginate(10);
         return view('user.feedback', compact('sessions')); 
     }
 

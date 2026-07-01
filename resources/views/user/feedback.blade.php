@@ -98,14 +98,9 @@
         </div>
         
         <!-- Pagination UI -->
-        <nav aria-label="Feedback pagination" class="mt-4">
-            <ul class="pagination justify-content-end mb-0" id="feedbackPagination">
-                <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" style="background:var(--bg);color:var(--tx3);border-color:var(--bd);">Previous</a></li>
-                <li class="page-item active"><a class="page-link" href="#" style="background:#3b82f6;border-color:#3b82f6;color:#fff;">1</a></li>
-                <li class="page-item"><a class="page-link" href="#" style="background:var(--sf);color:var(--tx);border-color:var(--bd);">2</a></li>
-                <li class="page-item"><a class="page-link" href="#" style="background:var(--sf);color:var(--tx);border-color:var(--bd);">Next</a></li>
-            </ul>
-        </nav>
+        <div class="mt-4 d-flex justify-content-end" id="feedbackPagination">
+            {{ $sessions->links('pagination::bootstrap-5') }}
+        </div>
     </div>
 </div>
 
