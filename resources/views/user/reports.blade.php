@@ -302,18 +302,18 @@
             <!-- Feature 4: Voice Rehearsal Report -->
             <div class="print-card flex-grow-1" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-microphone-lines text-warning me-2"></i>Voice Rehearsal Report</h5>
-                <div class="row text-center align-items-center h-100">
-                    <div class="col-4 border-end" style="border-color:var(--bd)!important;">
-                        <div style="font-size:1.8rem;font-weight:bold;color:var(--tx);">{{ $voiceData->wpm }}</div>
-                        <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;font-weight:600;">Pace (WPM)</div>
+                <div class="row text-center align-items-center h-100 gy-3">
+                    <div class="col-4 border-end px-1 px-sm-3" style="border-color:var(--bd)!important;">
+                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->wpm }}</div>
+                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Pace (WPM)</div>
                     </div>
-                    <div class="col-4 border-end" style="border-color:var(--bd)!important;">
-                        <div style="font-size:1.8rem;font-weight:bold;color:var(--tx);">{{ $voiceData->confidence }}%</div>
-                        <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;font-weight:600;">Confidence</div>
+                    <div class="col-4 border-end px-1 px-sm-3" style="border-color:var(--bd)!important;">
+                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->confidence }}%</div>
+                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Confidence</div>
                     </div>
-                    <div class="col-4">
-                        <div style="font-size:1.8rem;font-weight:bold;color:#ef4444;">{{ $voiceData->filler_words }}</div>
-                        <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;font-weight:600;">Filler Words</div>
+                    <div class="col-4 px-1 px-sm-3">
+                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:#ef4444;">{{ $voiceData->filler_words }}</div>
+                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Filler Words</div>
                     </div>
                 </div>
             </div>
@@ -321,16 +321,16 @@
             <!-- Feature 5: Learning Progress Report -->
             <div id="report-learning" class="print-card flex-grow-1" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-graduation-cap text-info me-2"></i>Learning Progress Report</h5>
-                <div class="row align-items-center h-100">
-                    <div class="col-md-6">
-                        <div style="font-size:2.5rem;font-weight:bold;color:#0dcaf0;line-height:1;">{{ $learningData->completion_rate }}%</div>
+                <div class="row align-items-center h-100 gy-3">
+                    <div class="col-md-6 text-center text-md-start">
+                        <div style="font-size:clamp(2rem, 8vw, 2.5rem);font-weight:bold;color:#0dcaf0;line-height:1;">{{ $learningData->completion_rate }}%</div>
                         <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:12px;">Overall Completion</div>
                     </div>
                     <div class="col-md-6">
                         <ul class="list-unstyled mb-0" style="color:var(--tx);font-size:0.9rem;">
-                            <li class="mb-2 d-flex justify-content-between"><span>Lessons:</span> <strong>{{ $learningData->lessons_completed }}/{{ $learningData->lessons_total }}</strong></li>
-                            <li class="mb-2 d-flex justify-content-between"><span>Videos:</span> <strong>{{ $learningData->videos_watched }}</strong></li>
-                            <li class="d-flex justify-content-between"><span>Quiz Avg:</span> <strong>{{ $learningData->quiz_average }}%</strong></li>
+                            <li class="mb-2 d-flex justify-content-between align-items-center"><span>Lessons:</span> <strong>{{ $learningData->lessons_completed }}/{{ $learningData->lessons_total }}</strong></li>
+                            <li class="mb-2 d-flex justify-content-between align-items-center"><span>Videos:</span> <strong>{{ $learningData->videos_watched }}</strong></li>
+                            <li class="d-flex justify-content-between align-items-center"><span>Quiz Avg:</span> <strong>{{ $learningData->quiz_average }}%</strong></li>
                         </ul>
                     </div>
                 </div>
