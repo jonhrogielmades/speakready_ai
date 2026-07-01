@@ -79,6 +79,7 @@
         </div>
     </div>
 
+    @if($sessions->count() > 0)
     <!-- Feature 6: Readiness Assessment Report -->
     @php 
         $currentReadiness = $latestSession ? ($latestSession->score->overall_readiness_score ?? 88) : 88;
@@ -355,8 +356,15 @@
                 </div>
             </div>
         </div>
+    @else
+    <!-- Empty State -->
+    <div class="print-card text-center py-5 mb-4" style="border-radius:24px; padding:32px;">
+        <i class="fa-solid fa-folder-open text-primary mb-3" style="font-size: 4rem; opacity: 0.8;"></i>
+        <h4 style="color:var(--tx);font-weight:bold;">No Portfolio Data Available</h4>
+        <p style="color:var(--tx3); margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto;">Your portfolio report is generated automatically based on your interview performance. Complete your first mock interview to unlock detailed analytics, performance comparisons, and personalized AI feedback.</p>
+        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine px-4 py-2" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-play me-2"></i>Start Mock Interview</a>
     </div>
-
+    @endif
 </div>
 
 <!-- Scripts for Charts -->
@@ -365,8 +373,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        @if($sessions->count() > 0)
         const labels = ['Month 1', 'Month 2', 'Month 3', 'Current'];
-        const scores = [65, 72, 80, {{ $currentReadiness }}];
+        const scores = [65, 72, 80, {{ $currentReadiness ?? 0 }}];
 
         new Chart(document.getElementById('trendChart'), {
             type: 'line',
@@ -415,6 +424,7 @@
                 }
             }
         });
+        @endif
 
         // Export PDF
         const exportPdfBtn = document.getElementById('exportPdfBtn');
