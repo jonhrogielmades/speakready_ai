@@ -89,13 +89,8 @@
                     </tr>
                     @endforeach
                     @if($sessions->count() == 0)
-                    <!-- Mock data for demonstration if DB is empty -->
-                    <tr style="border-bottom: 1px solid var(--bd);" data-category="Job Interview" data-date="1718668800">
-                        <td class="border-0 py-3">June 18, 2026</td>
-                        <td class="border-0 py-3 fw-bold">Job Interview</td>
-                        <td class="border-0 py-3 fw-bold">88%</td>
-                        <td class="border-0 py-3"><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span></td>
-                        <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Details</button></td>
+                    <tr>
+                        <td colspan="5" class="text-center py-4" style="color:var(--tx3);font-style:italic;">No feedback available yet. Complete a mock interview to generate detailed feedback!</td>
                     </tr>
                     @endif
                 </tbody>

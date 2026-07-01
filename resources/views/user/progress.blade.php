@@ -219,20 +219,8 @@
                             </tr>
                             @endforeach
                             @if($sessions->count() == 0)
-                            <!-- Mock Data for Demonstration if no real data -->
-                            <tr style="border-bottom: 1px solid var(--bd);">
-                                <td class="border-0 py-3">June 15, 2026</td>
-                                <td class="border-0 py-3 fw-bold">IT Interview</td>
-                                <td class="border-0 py-3">89%</td>
-                                <td class="border-0 py-3"><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span></td>
-                                <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Feedback</button></td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--bd);">
-                                <td class="border-0 py-3">June 10, 2026</td>
-                                <td class="border-0 py-3 fw-bold">Job Interview</td>
-                                <td class="border-0 py-3">82%</td>
-                                <td class="border-0 py-3"><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span></td>
-                                <td class="border-0 py-3 text-end"><button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;" onclick="alert('This is a sample record. Please complete a mock interview to view real feedback details.')">View Feedback</button></td>
+                            <tr>
+                                <td colspan="5" class="text-center py-4" style="color:var(--tx3);font-style:italic;">No interview records found. Start a mock interview to track your progress!</td>
                             </tr>
                             @endif
                         </tbody>
