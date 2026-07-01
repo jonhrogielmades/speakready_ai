@@ -414,6 +414,9 @@
             <span>SpeakReady AI</span>
          </a>
          <div class="mob-header-right">
+            <button class="mob-icon-btn" id="mobTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
+               <i class="fa-solid fa-circle-play"></i>
+            </button>
             <button class="mob-icon-btn" id="mobThBtn" onclick="toggleTheme()" title="Toggle theme">
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
@@ -678,10 +681,20 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js')
-                  .then(reg => console.log('SW registered:', reg.scope))
-                  .catch(err => console.log('SW failed:', err));
+               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful');
+               }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+               });
             });
+         }
+         
+         function triggerMobTutorial() {
+             if (typeof window.startOnboardingTour === 'function') {
+                 window.startOnboardingTour();
+             } else {
+                 alert('A tutorial is not available for this specific page.');
+             }
          }
 
          // PWA Install Prompt Logic
