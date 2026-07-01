@@ -185,7 +185,7 @@ class UserController extends Controller
                             });
 
         return view('dashboard', compact(
-            'profile', 'totalSessions', 'avgScore', 'recentSessions', 'modules', 'scoreTrend',
+            'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
             'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned', 
             'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations'
         ));
