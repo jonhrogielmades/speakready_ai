@@ -349,7 +349,6 @@
                 <input type="text" placeholder="Search quests, skills, topics..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
             </div>
             <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;"><i class="fa-solid fa-tree me-sm-1" style="color:#10b981"></i> <span class="d-none d-sm-inline">Skill Tree</span></a>
-            <button id="btn-how-to-play" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-gamepad me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">How to Play</span></button>
         </div>
     </div>
 

@@ -88,7 +88,6 @@
                 <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice">Practice</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics">History & Analytics</a></li>
             </ul>
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
         </div>
     </div>
 

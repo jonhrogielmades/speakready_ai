@@ -110,6 +110,9 @@
                   <input type="text" placeholder="Search...">
                </div>
                <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
+                  <button class="boc d-flex align-items-center justify-content-center" id="dbTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="width:38px;height:38px;padding:0;border-radius:12px;color:#60a5fa;border-color:rgba(96,165,250,0.3)">
+                     <i class="fa-solid fa-circle-play"></i>
+                  </button>
                   <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleTheme()">
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
@@ -208,6 +211,14 @@
                   console.log('ServiceWorker registration failed: ', err);
                });
             });
+         }
+         
+         function triggerMobTutorial() {
+             if (typeof window.startOnboardingTour === 'function') {
+                 window.startOnboardingTour();
+             } else {
+                 alert('A tutorial is not available for this specific page.');
+             }
          }
          
          function toggleNotif(e) {

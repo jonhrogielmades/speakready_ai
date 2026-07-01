@@ -38,7 +38,6 @@
             <p style="color:var(--tx3)">Visualize your interview readiness improvement over time.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap align-items-center">
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <!-- Feature 15: Progress Reports -->
             <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
             <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>

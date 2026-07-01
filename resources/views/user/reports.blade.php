@@ -62,7 +62,6 @@
             <p style="color:var(--tx3);margin:0;">A complete summary of your preparation journey and analytics.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap align-items-center">
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
             <button class="btn btn-outline-primary btn-shine" onclick="window.print()" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-print me-2"></i>Print Report</button>
             <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
             <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>

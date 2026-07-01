@@ -33,7 +33,6 @@
             <p style="color:var(--tx3);margin:0;">See how you stack up against the community! Keep practicing to climb the ranks.</p>
         </div>
         <div>
-            <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:#60a5fa"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
         </div>
     </div>
 

@@ -112,7 +112,6 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-sm-1" style="color:var(--pur)"></i> <span class="d-none d-sm-inline">Replay Tutorial</span></button>
                     <button class="btn btn-link text-muted"><i class="fa-solid fa-ellipsis-vertical"></i></button>
                 </div>
             </div>

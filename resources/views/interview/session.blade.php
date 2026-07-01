@@ -115,7 +115,6 @@
             
             <!-- Desktop Buttons (Visible only when workspace is active) -->
             <div class="d-none d-lg-flex gap-2" id="headerButtons" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
-                <button type="button" class="btn btn-outline-info" onclick="startOnboardingTour()"><i class="fa-solid fa-play me-2"></i>Tutorial</button>
                 <button type="button" class="btn btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
                 <button type="button" class="btn btn-outline-secondary prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left me-2"></i>Previous</button>
                 <button type="button" class="btn btn-outline-warning skip-btn-class" onclick="skipQuestion()"><i class="fa-solid fa-forward-step me-2"></i>Skip</button>
