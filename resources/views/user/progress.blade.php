@@ -70,25 +70,54 @@
         <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.4s;">
             <div class="premium-panel text-center">
                 <i class="fa-solid fa-arrow-trend-up text-primary fs-1 mb-2"></i>
-                <h3 style="color:var(--tx);margin:0;font-weight:bold;">+12%</h3>
-                <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Readiness vs Last Month</p>
+                @php
+                    $readinessChange = 'N/A';
+                    if ($sessions->count() >= 2) {
+                        $latest = $sessions->last()->score->overall_readiness_score ?? 0;
+                        $prev = $sessions[$sessions->count()-2]->score->overall_readiness_score ?? 0;
+                        $diff = $latest - $prev;
+                        $readinessChange = ($diff > 0 ? '+' : '') . $diff . '%';
+                    }
+                @endphp
+                <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $readinessChange }}</h3>
+                <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Readiness vs Last</p>
             </div>
         </div>
     </div>
 
     <!-- Feature 13: AI Progress Insights -->
-    <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up" style="animation-delay: 0.5s; border-radius:24px; background: rgba(59, 130, 246, 0.1); color: var(--tx); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); padding: 20px;">
-        <div class="d-flex align-items-center">
-            <div class="flex-shrink-0">
-                <i class="fa-solid fa-robot fs-2 me-3 text-primary" style="background: var(--bg); border-radius: 12px; padding: 12px; box-shadow: 0 4px 15px rgba(59,130,246,0.1);"></i>
-            </div>
-            <div>
-                <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
-                <p class="mb-0">Your communication score improved by <strong class="text-primary">15%</strong> recently. <br>
-                <strong>Recommended Next Step:</strong> Practice leadership and situational questions.</p>
+    @if($sessions->count() >= 2)
+        @php
+            $latestScore = $sessions->last()->score->overall_readiness_score ?? 0;
+            $prevScore = $sessions[$sessions->count()-2]->score->overall_readiness_score ?? 0;
+            $diff = $latestScore - $prevScore;
+            $trend = $diff >= 0 ? "improved by <strong class='text-primary'>" . $diff . "%</strong>" : "dropped by <strong class='text-danger'>" . abs($diff) . "%</strong>";
+        @endphp
+        <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up" style="animation-delay: 0.5s; border-radius:24px; background: rgba(59, 130, 246, 0.1); color: var(--tx); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); padding: 20px;">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fa-solid fa-robot fs-2 me-3 text-primary" style="background: var(--bg); border-radius: 12px; padding: 12px; box-shadow: 0 4px 15px rgba(59,130,246,0.1);"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
+                    <p class="mb-0">Your overall readiness score {{ $trend }} recently. <br>
+                    <strong>Recommended Next Step:</strong> Review your recent feedback to identify specific improvement areas.</p>
+                </div>
             </div>
         </div>
-    </div>
+    @else
+        <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up" style="animation-delay: 0.5s; border-radius:24px; background: rgba(59, 130, 246, 0.1); color: var(--tx); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); padding: 20px;">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fa-solid fa-robot fs-2 me-3 text-primary" style="background: var(--bg); border-radius: 12px; padding: 12px; box-shadow: 0 4px 15px rgba(59,130,246,0.1);"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
+                    <p class="mb-0">Complete at least 2 mock interviews to generate personalized AI progress insights.</p>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="row g-4 mb-4">
         <!-- Feature 1: Readiness Score Trend -->
@@ -117,23 +146,49 @@
             <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Skill Improvement Tracker</h5>
                 
+                @if($sessions->count() >= 2)
                 @php
-                    $skills = ['Communication' => 85, 'Confidence' => 70, 'Problem Solving' => 90, 'Technical Knowledge' => 80, 'Leadership' => 60, 'Teamwork' => 88];
-                    $prevSkills = ['Communication' => 70, 'Confidence' => 60, 'Problem Solving' => 85, 'Technical Knowledge' => 75, 'Leadership' => 50, 'Teamwork' => 80];
+                    $latestS = $sessions->last()->score;
+                    $prevS = $sessions[$sessions->count()-2]->score;
+                    $skills = [
+                        'Clarity' => $latestS->clarity_score ?? 0, 
+                        'Relevance' => $latestS->relevance_score ?? 0, 
+                        'Grammar' => $latestS->grammar_score ?? 0, 
+                        'Professionalism' => $latestS->professionalism_score ?? 0, 
+                        'Confidence' => $latestS->confidence_score ?? 0
+                    ];
+                    $prevSkills = [
+                        'Clarity' => $prevS->clarity_score ?? 0, 
+                        'Relevance' => $prevS->relevance_score ?? 0, 
+                        'Grammar' => $prevS->grammar_score ?? 0, 
+                        'Professionalism' => $prevS->professionalism_score ?? 0, 
+                        'Confidence' => $prevS->confidence_score ?? 0
+                    ];
                 @endphp
-                
                 @foreach($skills as $skill => $score)
                 @php $improvement = $score - $prevSkills[$skill]; @endphp
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.9rem;">
                         <span style="color:var(--tx);font-weight:600;">{{ $skill }}</span>
-                        <span style="color:var(--tx3)">{{ $prevSkills[$skill] }}% <i class="fa-solid fa-arrow-right mx-1" style="font-size:0.8em"></i> {{ $score }}% <span class="text-success ms-1">(+{{ $improvement }}%)</span></span>
+                        <span style="color:var(--tx3)">{{ $prevSkills[$skill] }}% <i class="fa-solid fa-arrow-right mx-1" style="font-size:0.8em"></i> {{ $score }}% 
+                        @if($improvement >= 0)
+                            <span class="text-success ms-1">(+{{ $improvement }}%)</span>
+                        @else
+                            <span class="text-danger ms-1">({{ $improvement }}%)</span>
+                        @endif
+                        </span>
                     </div>
                     <div class="progress" style="height: 8px; background:var(--bd); border-radius: 4px;">
                         <div class="progress-bar" role="progressbar" style="width: {{ $score }}%; background: #3b82f6; border-radius: 4px;"></div>
                     </div>
                 </div>
                 @endforeach
+                @else
+                    <div class="text-center py-5" style="color:var(--tx3);">
+                        <i class="fa-solid fa-chart-bar fs-2 mb-3" style="color:var(--bd);"></i>
+                        <p>Complete multiple mock interviews to track your specific skill improvements.</p>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -141,40 +196,54 @@
         <div class="col-md-6 animate-fade-up" id="strengths-tracker" style="animation-delay: 0.9s;">
             <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Strengths & Areas for Improvement</h5>
-                
+                @if($sessions->count() > 0)
+                @php
+                    $latestS = $sessions->last()->score;
+                    $skillsList = [
+                        'Clarity' => $latestS->clarity_score ?? 0, 
+                        'Relevance' => $latestS->relevance_score ?? 0, 
+                        'Grammar' => $latestS->grammar_score ?? 0, 
+                        'Professionalism' => $latestS->professionalism_score ?? 0, 
+                        'Confidence' => $latestS->confidence_score ?? 0
+                    ];
+                    $strengths = [];
+                    $weaknesses = [];
+                    foreach($skillsList as $sName => $sVal) {
+                        if($sVal >= 80) $strengths[] = $sName;
+                        else $weaknesses[] = $sName;
+                    }
+                    if(empty($strengths)) $strengths[] = 'None identified yet';
+                    if(empty($weaknesses)) $weaknesses[] = 'None identified yet';
+                @endphp
                 <div class="row mb-4">
                     <div class="col-6">
                         <h6 class="text-success fw-bold"><i class="fa-solid fa-arrow-trend-up me-2"></i>Strengths</h6>
                         <ul class="list-group list-group-flush bg-transparent" style="font-size:0.9rem;">
-                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-check text-success me-2"></i>Communication</li>
-                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-check text-success me-2"></i>Problem Solving</li>
-                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-check text-success me-2"></i>Technical Knowledge</li>
+                            @foreach(array_slice($strengths, 0, 3) as $str)
+                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-check text-success me-2"></i>{{ $str }}</li>
+                            @endforeach
                         </ul>
                     </div>
                     <div class="col-6">
                         <h6 class="text-warning fw-bold"><i class="fa-solid fa-arrow-trend-down me-2"></i>Needs Work</h6>
                         <ul class="list-group list-group-flush bg-transparent" style="font-size:0.9rem;">
-                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-xmark text-warning me-2"></i>Confidence</li>
-                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-xmark text-warning me-2"></i>Leadership Examples</li>
+                            @foreach(array_slice($weaknesses, 0, 3) as $wk)
+                            <li class="list-group-item bg-transparent px-0 py-1" style="color:var(--tx);border:none;"><i class="fa-solid fa-xmark text-warning me-2"></i>{{ $wk }}</li>
+                            @endforeach
                         </ul>
                     </div>
                 </div>
+                @else
+                <div class="text-center py-4 mb-4" style="color:var(--tx3);">
+                    <p>Complete an interview to see strengths and areas for improvement.</p>
+                </div>
+                @endif
 
                 <!-- Feature 7: STAR Method Progress -->
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">STAR Method Progress</h5>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="text-center w-25"><div class="badge rounded-pill mb-1" style="background:#3b82f6;width:24px;height:24px;line-height:16px;">S</div><br><small style="color:var(--tx3)">Situation</small></div>
-                    <div class="text-center w-25"><div class="badge rounded-pill mb-1" style="background:#10b981;width:24px;height:24px;line-height:16px;">T</div><br><small style="color:var(--tx3)">Task</small></div>
-                    <div class="text-center w-25"><div class="badge rounded-pill mb-1 text-dark" style="background:#f59e0b;width:24px;height:24px;line-height:16px;">A</div><br><small style="color:var(--tx3)">Action</small></div>
-                    <div class="text-center w-25"><div class="badge rounded-pill mb-1" style="background:#ef4444;width:24px;height:24px;line-height:16px;">R</div><br><small style="color:var(--tx3)">Result</small></div>
+                <div class="text-center py-4" style="color:var(--tx3); font-style:italic;">
+                    <p>Insufficient data to analyze your STAR Method usage. Keep practicing behavioral questions!</p>
                 </div>
-                <div class="progress" style="height: 12px; background:var(--bd); border-radius: 6px;">
-                    <div class="progress-bar" role="progressbar" style="width: 25%; background:#3b82f6;"></div>
-                    <div class="progress-bar" role="progressbar" style="width: 25%; background:#10b981;"></div>
-                    <div class="progress-bar" role="progressbar" style="width: 25%; background:#f59e0b;"></div>
-                    <div class="progress-bar" role="progressbar" style="width: 15%; background:#ef4444;"></div>
-                </div>
-                <div class="text-center mt-2"><small class="fw-bold" style="color:var(--tx)">STAR Completion Rate: <span class="text-success">90% (+10%)</span></small></div>
             </div>
         </div>
     </div>
