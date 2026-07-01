@@ -58,7 +58,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 border-bottom btn-no-print" style="border-color:var(--bd) !important;">
         <div>
             <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-Interview Portfolio Report</h4>
+<i class="fa-solid fa-folder-open me-2"></i>Interview Portfolio Report</h4>
             <p style="color:var(--tx3);margin:0;">A complete summary of your preparation journey and analytics.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap align-items-center">
