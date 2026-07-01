@@ -485,8 +485,8 @@
                     <h5 class="fw-bold m-0" style="color: var(--tx);">Recent Sessions</h5>
                     <a href="{{ route('user.reports') }}" class="btn btn-sm btn-link text-decoration-none" style="color:var(--dash-primary);font-weight:600;">View All</a>
                 </div>
-                <div class="table-responsive" style="margin: 0 -16px;">
-                    <table class="table custom-table mb-0 w-100" style="min-width: 400px; background-color: var(--sf); color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
+                <div class="table-responsive">
+                    <table class="table custom-table mb-0 w-100" style="background-color: var(--sf); color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                         <thead>
                             <tr style="background-color: var(--sf);">
                                 <th style="padding-left:24px; color: var(--tx); background-color: var(--sf);">Date</th>

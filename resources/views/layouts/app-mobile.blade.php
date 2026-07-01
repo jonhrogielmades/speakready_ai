@@ -41,6 +41,41 @@
              padding: 16px !important;
          }
          
+         /* STRICT MOBILE OVERFLOW CONTROL (Prevent Horizontal Scrolling) */
+         html, body {
+             max-width: 100vw !important;
+             overflow-x: hidden !important;
+             width: 100%;
+         }
+         #mob-content, .db-content, .db-section {
+             max-width: 100vw !important;
+             overflow-x: hidden !important;
+             box-sizing: border-box !important;
+         }
+         .row {
+             max-width: 100% !important;
+             margin-left: 0 !important;
+             margin-right: 0 !important;
+         }
+         .premium-panel, .panel, .setup-panel, .premium-card, .print-card {
+             max-width: 100% !important;
+             box-sizing: border-box !important;
+         }
+         .table-responsive {
+             max-width: 100% !important;
+             overflow-x: auto !important;
+             margin-left: 0 !important;
+             margin-right: 0 !important;
+             -webkit-overflow-scrolling: touch !important;
+         }
+         canvas {
+             max-width: 100% !important;
+             height: auto !important;
+         }
+         .table {
+             min-width: 100% !important;
+         }
+         
          /* ===== MOBILE LAYOUT SHELL ===== */
          html, body {
             overflow-x: hidden;

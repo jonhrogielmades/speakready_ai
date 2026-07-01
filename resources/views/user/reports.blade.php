@@ -166,15 +166,16 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
                 
-                <table class="table table-borderless table-sm align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
-                    <thead style="border-bottom:1px solid var(--bd);">
-                        <tr>
-                            <th class="text-uppercase" style="font-size:0.8rem;color:var(--tx3);">Metric</th>
-                            <th class="text-center text-uppercase" style="font-size:0.8rem;color:var(--tx3);">First</th>
-                            <th class="text-center text-uppercase" style="font-size:0.8rem;color:var(--tx3);">Latest</th>
-                            <th class="text-end text-uppercase" style="font-size:0.8rem;color:var(--tx3);">Diff</th>
-                        </tr>
-                    </thead>
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
+                      <thead style="border-bottom:1px solid var(--bd);">
+                          <tr>
+                              <th class="text-uppercase" style="font-size:0.8rem;color:var(--tx3);">Metric</th>
+                              <th class="text-uppercase text-center" style="font-size:0.8rem;color:var(--tx3);">First Score</th>
+                              <th class="text-uppercase text-center" style="font-size:0.8rem;color:var(--tx3);">Latest Score</th>
+                              <th class="text-uppercase text-end" style="font-size:0.8rem;color:var(--tx3);">Trend</th>
+                          </tr>
+                      </thead>
                     <tbody>
                         <tr>
                             <td class="fw-bold">Overall Score</td>
@@ -200,8 +201,9 @@
                             <td class="text-center text-primary fw-bold">{{ $metrics['Relevance'] }}%</td>
                             <td class="text-end text-success"><i class="fa-solid fa-arrow-up me-1"></i>5%</td>
                         </tr>
-                    </tbody>
-                </table>
+                      </tbody>
+                  </table>
+                </div>
             </div>
         </div>
     </div>
