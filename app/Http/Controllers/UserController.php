@@ -67,12 +67,31 @@ class UserController extends Controller
             $q->where('user_id', $user_id)->where('status', 'completed');
         })->orderBy('created_at', 'desc')->take(5)->get();
         
-        // Mock feedback summary if not enough real data, otherwise extract from JSON if available
-        // For simplicity and resilience, we'll provide reasonable defaults if empty
+        // Extract AI feedback summary dynamically
         $aiFeedback = [
-            'strengths' => ['Clear Communication', 'Professional Tone', 'Strong Technical Knowledge'],
-            'improvements' => ['Confidence during long answers', 'Conciseness (avoid rambling)', 'Minor Grammar tweaks']
+            'strengths' => [],
+            'improvements' => []
         ];
+        
+        // Loop through recent feedbacks to pick out strengths and improvements
+        // Assuming feedback contains json fields for strengths and improvements if it existed.
+        // For now, since we just have general feedback score metrics, we'll keep it empty unless data exists.
+        if ($recentFeedbacks->count() > 0) {
+            $latestS = $recentFeedbacks->first()->session->score;
+            if($latestS) {
+                $skillsList = [
+                    'Clarity' => $latestS->clarity_score ?? 0, 
+                    'Relevance' => $latestS->relevance_score ?? 0, 
+                    'Grammar' => $latestS->grammar_score ?? 0, 
+                    'Professionalism' => $latestS->professionalism_score ?? 0, 
+                    'Confidence' => $latestS->confidence_score ?? 0
+                ];
+                foreach($skillsList as $sName => $sVal) {
+                    if($sVal >= 80) $aiFeedback['strengths'][] = $sName;
+                    else $aiFeedback['improvements'][] = $sName;
+                }
+            }
+        }
         
         // Gamification Data from Profile
         $currentStreak = $profile->current_streak ?? 0;
@@ -86,12 +105,8 @@ class UserController extends Controller
         // Modules and Progress
         $modules = \App\Models\LearningModule::limit(3)->get();
         
-        // Mock Learning Progress for dashboard
-        $learningLabProgress = collect([
-            (object)['title' => 'Communication Skills', 'icon' => 'fa-comments', 'color' => '#3b82f6', 'progress' => 80],
-            (object)['title' => 'STAR Method', 'icon' => 'fa-star', 'color' => '#34d399', 'progress' => 100],
-            (object)['title' => 'Technical Interview', 'icon' => 'fa-code', 'color' => '#60a5fa', 'progress' => 65],
-        ]);
+        // Mock Learning Progress for dashboard removed
+        $learningLabProgress = collect([]);
 
         // Get past scores for chart
         $scoreTrend = (clone $completedSessions)
