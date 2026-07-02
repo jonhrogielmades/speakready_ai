@@ -309,6 +309,73 @@
         </div>
     </div>
 
+    <!-- Individual Providers Status & Usage -->
+    <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Providers Status & Usage</h5>
+    <div class="row g-4 mb-4">
+        @forelse($providers as $provider)
+        <div class="col-md-6 col-lg-4">
+            <div class="premium-card h-100 position-relative">
+                @if($provider->is_primary)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">Primary</span>
+                @elseif($provider->is_fallback)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">Fallback</span>
+                @endif
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">
+                        @if(stripos($provider->name, 'openai') !== false)
+                            <i class="fa-solid fa-robot text-success me-2"></i>
+                        @elseif(stripos($provider->name, 'anthropic') !== false)
+                            <i class="fa-solid fa-brain text-warning me-2"></i>
+                        @elseif(stripos($provider->name, 'gemini') !== false)
+                            <i class="fa-solid fa-star-of-life text-primary me-2"></i>
+                        @elseif(stripos($provider->name, 'groq') !== false)
+                            <i class="fa-solid fa-bolt text-danger me-2"></i>
+                        @elseif(stripos($provider->name, 'cohere') !== false)
+                            <i class="fa-solid fa-leaf text-success me-2"></i>
+                        @elseif(stripos($provider->name, 'llama') !== false)
+                            <i class="fa-solid fa-paw text-info me-2"></i>
+                        @else
+                            <i class="fa-solid fa-microchip text-secondary me-2"></i>
+                        @endif
+                        {{ $provider->name }}
+                    </h5>
+                    @if($provider->status == 'active')
+                        <span class="stat-badge success">Active</span>
+                    @else
+                        <span class="stat-badge danger">Inactive</span>
+                    @endif
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                    <span style="color:var(--tx2);">Requests Today</span>
+                    <span class="fw-bold">{{ number_format($provider->requests_today) }}</span>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                    <span style="color:var(--tx2);">Avg Latency</span>
+                    <span class="fw-bold">{{ number_format($provider->avg_response_time) }}ms</span>
+                </div>
+                
+                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;">
+                    <span style="color:var(--tx2);">Success Rate</span>
+                    <span class="fw-bold text-success">{{ $provider->success_rate }}%</span>
+                </div>
+                
+                <div class="d-flex justify-content-between" style="font-size:0.9rem;">
+                    <span style="color:var(--tx2);">Monthly Cost</span>
+                    <span class="fw-bold text-warning">${{ number_format($provider->monthly_cost, 2) }}</span>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="col-12">
+            <div class="premium-card text-center text-muted">
+                No providers available to display usage.
+            </div>
+        </div>
+        @endforelse
+    </div>
+
     <!-- Providers Table -->
     <div class="premium-card mb-4">
         <div class="table-responsive" id="mainProvidersTableWrapper">

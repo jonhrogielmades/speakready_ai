@@ -28,7 +28,15 @@ class AdminAiController extends Controller
             ->groupBy('module')
             ->get();
 
-        $providers = AiProvider::all();
+        $providers = AiProvider::all()->map(function($provider) {
+            $provider->requests_today = AiProviderLog::where('provider_id', $provider->id)->whereDate('created_at', today())->count();
+            $provider->successful_requests = AiProviderLog::where('provider_id', $provider->id)->whereDate('created_at', today())->where('status', 'success')->count();
+            $provider->avg_response_time = AiProviderLog::where('provider_id', $provider->id)->whereDate('created_at', today())->avg('response_time_ms') ?? 0;
+            $provider->success_rate = $provider->requests_today > 0 ? round(($provider->successful_requests / $provider->requests_today) * 100, 2) : 100;
+            $provider->monthly_cost = AiProviderLog::where('provider_id', $provider->id)->whereMonth('created_at', now()->month)->sum('cost') ?? 0;
+            return $provider;
+        });
+
         $primary = AiProvider::where('is_primary', true)->first();
         $fallback = AiProvider::where('is_fallback', true)->first();
         
