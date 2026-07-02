@@ -28,20 +28,43 @@ class AdminAiController extends Controller
             ->groupBy('module')
             ->get();
 
-        $providers = AiProvider::all()->map(function($provider) {
-            $provider->requests_today = AiProviderLog::where('provider_id', $provider->id)->whereDate('created_at', today())->count();
-            $provider->successful_requests = AiProviderLog::where('provider_id', $provider->id)->whereDate('created_at', today())->where('status', 'success')->count();
-            $provider->avg_response_time = AiProviderLog::where('provider_id', $provider->id)->whereDate('created_at', today())->avg('response_time_ms') ?? 0;
-            $provider->success_rate = $provider->requests_today > 0 ? round(($provider->successful_requests / $provider->requests_today) * 100, 2) : 100;
-            $provider->monthly_cost = AiProviderLog::where('provider_id', $provider->id)->whereMonth('created_at', now()->month)->sum('cost') ?? 0;
-            return $provider;
+        $defaultProviders = ['OpenAI', 'Anthropic', 'Gemini', 'Groq', 'Cohere', 'Llama'];
+        
+        $providerStats = collect($defaultProviders)->map(function($name) {
+            $dbProvider = AiProvider::where('name', 'like', "%{$name}%")->first();
+            $stats = new \stdClass();
+            $stats->name = $name;
+            
+            if ($dbProvider) {
+                $stats->is_configured = true;
+                $stats->status = $dbProvider->status;
+                $stats->is_primary = $dbProvider->is_primary;
+                $stats->is_fallback = $dbProvider->is_fallback;
+                $stats->requests_today = AiProviderLog::where('provider_id', $dbProvider->id)->whereDate('created_at', today())->count();
+                $stats->successful_requests = AiProviderLog::where('provider_id', $dbProvider->id)->whereDate('created_at', today())->where('status', 'success')->count();
+                $stats->avg_response_time = AiProviderLog::where('provider_id', $dbProvider->id)->whereDate('created_at', today())->avg('response_time_ms') ?? 0;
+                $stats->success_rate = $stats->requests_today > 0 ? round(($stats->successful_requests / $stats->requests_today) * 100, 2) : 100;
+                $stats->monthly_cost = AiProviderLog::where('provider_id', $dbProvider->id)->whereMonth('created_at', now()->month)->sum('cost') ?? 0;
+            } else {
+                $stats->is_configured = false;
+                $stats->status = 'unconfigured';
+                $stats->is_primary = false;
+                $stats->is_fallback = false;
+                $stats->requests_today = 0;
+                $stats->successful_requests = 0;
+                $stats->avg_response_time = 0;
+                $stats->success_rate = 100;
+                $stats->monthly_cost = 0;
+            }
+            return $stats;
         });
 
+        $providers = AiProvider::all(); // For the table below
         $primary = AiProvider::where('is_primary', true)->first();
         $fallback = AiProvider::where('is_fallback', true)->first();
         
         return view('admin.ai.providers', compact(
-            'providers', 'primary', 'fallback',
+            'providers', 'providerStats', 'primary', 'fallback',
             'activeProvider', 'totalRequests', 'successfulRequests', 'failedRequests', 
             'avgResponseTime', 'successRate', 'monthlyCost', 'moduleUsage'
         ));

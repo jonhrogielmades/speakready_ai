@@ -312,7 +312,7 @@
     <!-- Individual Providers Status & Usage -->
     <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Providers Status & Usage</h5>
     <div class="row g-4 mb-4">
-        @forelse($providers as $provider)
+        @foreach($providerStats as $provider)
         <div class="col-md-6 col-lg-4">
             <div class="premium-card h-100 position-relative">
                 @if($provider->is_primary)
@@ -341,6 +341,8 @@
                     </h5>
                     @if($provider->status == 'active')
                         <span class="stat-badge success">Active</span>
+                    @elseif($provider->status == 'unconfigured')
+                        <span class="stat-badge text-muted" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);"><i class="fa-solid fa-circle-xmark me-1"></i>Not Setup</span>
                     @else
                         <span class="stat-badge danger">Inactive</span>
                     @endif
@@ -367,13 +369,7 @@
                 </div>
             </div>
         </div>
-        @empty
-        <div class="col-12">
-            <div class="premium-card text-center text-muted">
-                No providers available to display usage.
-            </div>
-        </div>
-        @endforelse
+        @endforeach
     </div>
 
     <!-- Providers Table -->
