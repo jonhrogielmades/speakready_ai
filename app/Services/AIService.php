@@ -477,6 +477,62 @@ EOT;
         return null;
     }
 
+    public static function analyzeVoiceRehearsal($questionPrompt, $transcript, $provider = 'gemini')
+    {
+        $prompt = "You are an expert Speech and Interview Coach evaluating a candidate's verbal response to an interview question.\n";
+        $prompt .= "Question Prompt: \"$questionPrompt\"\n";
+        $prompt .= "Candidate Transcript: \"$transcript\"\n\n";
+        
+        $prompt .= <<<EOT
+Provide your evaluation STRICTLY as a valid JSON object only. Do not include Markdown, code blocks, or explanations outside JSON.
+
+OUTPUT SCHEMA:
+{
+  "strengths": "String. 1-2 sentences highlighting what the candidate did well in their speech (e.g., clear structure, relevant examples). If the answer is too short to judge, say 'The answer was too brief to evaluate strengths.'",
+  "weaknesses": "String. 1-2 sentences suggesting actionable improvements (e.g., 'Elaborate more on specific examples with STAR method', 'Reduce use of filler words like um and ah'). If the answer is too short, say 'Provide a more detailed and structured response.'",
+  "improved_answer": "String. A rewritten, professional version of their answer that directly addresses the prompt using the STAR method where appropriate. Keep it concise but impactful."
+}
+EOT;
+
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere');
+        $providers = array_filter(array_map('trim', explode(',', $priorityString)));
+        if (empty($providers)) {
+            $providers = [$provider, 'gemini', 'groq', 'claude', 'openrouter', 'wisdomgate', 'cohere'];
+        }
+
+        foreach ($providers as $currentProvider) {
+            try {
+                $response = [];
+                switch ($currentProvider) {
+                    case 'gemini': $response = self::callGemini($prompt); break;
+                    case 'cohere': $response = self::callCohere($prompt); break;
+                    case 'groq': $response = self::callGroq($prompt); break;
+                    case 'openrouter': $response = self::callOpenRouter($prompt); break;
+                    case 'claude': $response = self::callClaude($prompt); break;
+                    case 'wisdomgate': $response = self::callWisdomGate($prompt); break;
+                    default: continue 2;
+                }
+                
+                if (is_string($response)) {
+                    $cleanResponse = trim(str_replace(['```json', '```'], '', $response));
+                    $decoded = json_decode($cleanResponse, true);
+                    if ($decoded && isset($decoded['strengths'])) return $decoded;
+                } elseif (is_array($response)) {
+                    if (isset($response['strengths'])) return $response;
+                }
+            } catch (\Exception $e) {
+                Log::error("Voice Rehearsal Analysis Error ($currentProvider): " . $e->getMessage());
+            }
+        }
+        
+        return [
+            'strengths' => 'Could not generate strengths due to a service error.',
+            'weaknesses' => 'Could not generate weaknesses due to a service error.',
+            'improved_answer' => 'Service error occurred while trying to generate an improved answer.'
+        ];
+    }
+
+
     public static function chatMessage($message, $history = [], $provider = 'gemini')
     {
         $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', $provider);

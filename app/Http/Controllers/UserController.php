@@ -353,7 +353,73 @@ class UserController extends Controller
         return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories')); 
     }
 
-    public function voiceRehearsal() { return view('user.drills.voice'); }
+    public function voiceRehearsal() { 
+        $history = \App\Models\VoiceSession::where('user_id', Auth::id())
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+        return view('user.drills.voice', compact('history')); 
+    }
+
+    public function analyzeVoiceSession(Request $request) {
+        $request->validate([
+            'prompt' => 'required|string',
+            'transcript' => 'required|string',
+        ]);
+
+        $provider = env('AI_PROVIDER', 'gemini');
+        $analysis = \App\Services\AIService::analyzeVoiceRehearsal($request->prompt, $request->transcript, $provider);
+
+        return response()->json($analysis);
+    }
+
+    public function saveVoiceSession(Request $request) {
+        $request->validate([
+            'category' => 'nullable|string',
+            'prompt' => 'nullable|string',
+            'transcript' => 'nullable|string',
+            'duration_seconds' => 'nullable|integer',
+            'wpm' => 'nullable|integer',
+            'filler_words' => 'nullable|integer',
+            'clarity_score' => 'nullable|integer',
+            'confidence_score' => 'nullable|integer',
+            'speaking_pace' => 'nullable|integer',
+            'ai_feedback_strengths' => 'nullable|string',
+            'ai_feedback_weaknesses' => 'nullable|string',
+            'ai_improved_answer' => 'nullable|string',
+        ]);
+
+        $session = \App\Models\VoiceSession::create([
+            'user_id' => Auth::id(),
+            'category' => $request->category,
+            'prompt' => $request->prompt,
+            'transcript' => $request->transcript,
+            'duration_seconds' => $request->duration_seconds,
+            'wpm' => $request->wpm,
+            'filler_words' => $request->filler_words,
+            'clarity_score' => $request->clarity_score,
+            'confidence_score' => $request->confidence_score,
+            'speaking_pace' => $request->speaking_pace,
+            'ai_feedback_strengths' => $request->ai_feedback_strengths,
+            'ai_feedback_weaknesses' => $request->ai_feedback_weaknesses,
+            'ai_improved_answer' => $request->ai_improved_answer,
+        ]);
+
+        // Calculate some basic gamification points
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $profile->experience_points += 10;
+        $profile->save();
+
+        return response()->json([
+            'success' => true,
+            'session' => [
+                'date' => $session->created_at->format('M d'),
+                'category' => $session->category,
+                'clarity' => $session->clarity_score . '%',
+                'wpm' => $session->wpm,
+                'fillers' => $session->filler_words,
+            ]
+        ]);
+    }
     public function reports() { 
         $user = Auth::user();
         

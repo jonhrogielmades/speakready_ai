@@ -569,7 +569,7 @@ function updateUIState() {
     }
 }
 
-function generateAnalysis() {
+async function generateAnalysis() {
     // Unlock analysis panel
     const panel = document.getElementById('analysisPanel');
     panel.style.opacity = '1';
@@ -591,46 +591,122 @@ function generateAnalysis() {
     
     // Mock Clarity & Confidence
     const clarity = Math.max(20, 100 - (fillerCount * 5));
-    document.getElementById('resClarity').innerText = clarity + "%";
+    document.getElementById('resClarity').innerText = clarity;
     
     let conf = "High";
-    if (fillerCount > 5) conf = "Medium";
-    if (fillerCount > 10) conf = "Low";
+    let confScore = 90;
+    if (fillerCount > 5) { conf = "Medium"; confScore = 70; }
+    if (fillerCount > 10) { conf = "Low"; confScore = 40; }
     document.getElementById('resConfidence').innerText = conf;
     
     // Keywords
     const kws = ['Leadership', 'Communication', 'Agile', 'Teamwork'];
     document.getElementById('resKeywords').innerHTML = kws.map(k => `<span class="badge" style="background:rgba(52,211,153,0.15);color:#34d399;font-weight:600;">${k}</span>`).join('');
     
-    // Feedback
-    document.getElementById('resStrengths').innerText = "Good articulation and solid use of action verbs.";
-    document.getElementById('resWeak').innerText = fillerCount > 3 ? `Try to reduce the use of filler words (used ${fillerCount} times).` : "Elaborate more on specific examples with STAR method.";
-
-    // Sample Compare
+    // Set loading state for AI Feedback
+    document.getElementById('resStrengths').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+    document.getElementById('resWeak').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
     document.getElementById('comparisonPanel').style.display = 'block';
     document.getElementById('compUser').innerHTML = document.getElementById('transcriptView').innerHTML || "<em>No speech detected.</em>";
-    document.getElementById('compAI').innerHTML = "<em>(AI Improved Version)</em><br><br>Here is a more professional way to frame your answer:<br><br>'I led a cross-functional team to deliver the project on time, resulting in a 20% increase in efficiency. I communicated regularly with stakeholders to ensure alignment.'";
+    document.getElementById('compAI').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating improved answer...';
+
+    // Fetch AI Analysis
+    try {
+        const promptText = document.getElementById('promptText').innerText.replace(/"/g, '');
+        const transText = transcript;
+        
+        const response = await fetch("{{ route('user.drills.voice.analyze') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ prompt: promptText, transcript: transText })
+        });
+        
+        const data = await response.json();
+        
+        // Populate AI Feedback
+        document.getElementById('resStrengths').innerText = data.strengths || "Good articulation and solid use of action verbs.";
+        document.getElementById('resWeak').innerText = data.weaknesses || `Try to reduce the use of filler words.`;
+        document.getElementById('compAI').innerHTML = "<em>(AI Improved Version)</em><br><br>" + (data.improved_answer || "Keep practicing to refine your answer.");
+        
+        // Store for saving
+        window.currentAnalysis = {
+            ai_feedback_strengths: data.strengths,
+            ai_feedback_weaknesses: data.weaknesses,
+            ai_improved_answer: data.improved_answer,
+            clarity_score: clarity,
+            confidence_score: confScore,
+            speaking_pace: wpm,
+            filler_words: fillerCount,
+            wpm: wpm,
+            duration_seconds: seconds
+        };
+
+    } catch (error) {
+        console.error("Analysis Error:", error);
+        document.getElementById('resStrengths').innerText = "Failed to load analysis.";
+        document.getElementById('resWeak').innerText = "Failed to load analysis.";
+        document.getElementById('compAI').innerHTML = "Failed to load AI improved version.";
+    }
 }
 
-function saveSession() {
-    alert("Session saved successfully to your History!");
-    
-    // Append to history table
-    const cat = document.getElementById('categorySelect').value;
-    const cl = document.getElementById('resClarity').innerText;
-    const w = document.getElementById('wpmDisp').innerText;
-    const f = document.getElementById('fillerDisp').innerText;
-    const d = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td style="color:var(--tx2);font-size:0.9rem;">${d}</td>
-        <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${cat}</span></td>
-        <td style="color:#34d399;font-weight:600;">${cl}</td>
-        <td>${w}</td>
-        <td style="color:#f87171;">${f}</td>
-    `;
-    document.getElementById('historyTable').prepend(tr);
+async function saveSession() {
+    if (!window.currentAnalysis) {
+        alert("Please record and analyze a session first.");
+        return;
+    }
+
+    const btn = document.getElementById('btnSave');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
+    btn.disabled = true;
+
+    try {
+        const payload = {
+            ...window.currentAnalysis,
+            category: document.getElementById('categorySelect').value,
+            transcript: transcript,
+            prompt: document.getElementById('promptText').innerText.replace(/"/g, '')
+        };
+
+        const response = await fetch("{{ route('user.drills.voice.save') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            alert("Session saved successfully to your History!");
+            
+            // Append to history table
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:var(--tx2);font-size:0.9rem;">${data.session.date}</td>
+                <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${data.session.category}</span></td>
+                <td style="color:#34d399;font-weight:600;">${data.session.clarity}</td>
+                <td>${data.session.wpm}</td>
+                <td style="color:#f87171;">${data.session.fillers}</td>
+            `;
+            document.getElementById('historyTable').prepend(tr);
+            
+            // Optionally, update charts dynamically here if desired
+        } else {
+            alert("Failed to save session.");
+        }
+    } catch (error) {
+        console.error("Save Error:", error);
+        alert("An error occurred while saving.");
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
 }
 
 function downloadReport() {
@@ -639,21 +715,34 @@ function downloadReport() {
 
 // Chart.js & History Init
 function loadHistory() {
-    const hist = [
-        { d: 'Jun 17', c: 'Job Interview', cl: '88%', w: 120, f: 3 },
-        { d: 'Jun 18', c: 'Leadership', cl: '92%', w: 135, f: 1 }
-    ];
+    const histData = {!! json_encode($history->map(function($session) {
+        return [
+            'd' => $session->created_at->format('M d'),
+            'c' => $session->category ?? 'General',
+            'cl' => ($session->clarity_score ?? 0) . '%',
+            'w' => $session->wpm ?? 0,
+            'f' => $session->filler_words ?? 0,
+            'score' => $session->clarity_score ?? 0
+        ];
+    })) !!};
+
     let html = '';
-    hist.reverse().forEach(h => {
-        html += `<tr>
-            <td style="color:var(--tx2);font-size:0.9rem;">${h.d}</td>
-            <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${h.c}</span></td>
-            <td style="color:#34d399;font-weight:600;">${h.cl}</td>
-            <td>${h.w}</td>
-            <td style="color:#f87171;">${h.f}</td>
-        </tr>`;
-    });
+    if (histData.length === 0) {
+        html = '<tr><td colspan="5" class="text-center text-muted">No history found. Practice a session to see it here!</td></tr>';
+    } else {
+        histData.forEach(h => {
+            html += `<tr>
+                <td style="color:var(--tx2);font-size:0.9rem;">${h.d}</td>
+                <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${h.c}</span></td>
+                <td style="color:#34d399;font-weight:600;">${h.cl}</td>
+                <td>${h.w}</td>
+                <td style="color:#f87171;">${h.f}</td>
+            </tr>`;
+        });
+    }
     document.getElementById('historyTable').innerHTML = html;
+    
+    return histData;
 }
 
 document.addEventListener("DOMContentLoaded", function() {
