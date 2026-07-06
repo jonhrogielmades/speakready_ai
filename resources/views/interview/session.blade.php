@@ -163,12 +163,34 @@
                 </div>
 
                 <!-- Unified Responsive Interview Controls (Desktop & Mobile) -->
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
-                    <div class="d-flex gap-2 w-100 flex-fill" style="flex: 1;">
-                        <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
-                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="finishInterview()"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+                    <!-- Left: Navigation / Secondary -->
+                    <div class="d-flex gap-2 w-100 flex-fill">
+                        <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
+                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="finishInterview()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
                     </div>
-                    <button type="button" class="btn px-4 w-100 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 220px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
+                    
+                    <!-- Right: Primary Actions (Mic + Send) -->
+                    <div class="d-flex gap-2 w-100 flex-fill justify-content-md-end align-items-center">
+                        <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;margin-right:10px;font-weight:bold;">00:00</span>
+                        
+                        <!-- Voice Recording Controls -->
+                        <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
+                            @if(session('game_level_id'))
+                                <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="border-radius:12px; font-weight:700; box-shadow: 0 4px 15px rgba(239,68,68,0.4); padding: 0.5rem 1rem; user-select:none; touch-action:manipulation;">
+                                    <i class="fa-solid fa-microphone me-2"></i>HOLD
+                                </button>
+                            @else
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="micStartBtn" class="btn btn-primary" onclick="startRecording()" style="border-radius:12px;"><i class="fa-solid fa-microphone me-2"></i>Record</button>
+                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="pauseRecording()" style="display:none; border-radius:12px;"><i class="fa-solid fa-pause"></i></button>
+                                    <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:none; border-radius:12px;"><i class="fa-solid fa-stop"></i></button>
+                                </div>
+                            @endif
+                        </div>
+
+                        <button type="button" class="btn px-4 flex-fill next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 160px; border-radius:12px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
+                    </div>
                 </div>
 
                 <!-- Answer Response System -->
@@ -181,28 +203,7 @@
                     </div>
                     
                     <form id="answerForm">
-                        <div id="voiceControls" style="display:none;margin-bottom:20px;background:rgba(59,130,246,.05);padding:15px;border-radius:12px;border:1px solid rgba(59,130,246,.2)">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <div style="font-weight:600;font-size:.9rem;color:#60a5fa"><i class="fa-solid fa-waveform me-2"></i>Voice Recording</div>
-                                <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;">00:00</span>
-                            </div>
-                            
-                            @if(session('game_level_id'))
-                            <!-- Gamified Hold-to-Talk Button -->
-                            <div class="d-flex justify-content-center py-3">
-                                <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="width:120px; height:120px; border-radius:50%; font-weight:800; border:4px solid #b91c1c; box-shadow: 0 10px 20px rgba(239,68,68,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; touch-action:manipulation;">
-                                    <i class="fa-solid fa-microphone fa-2x mb-2"></i>
-                                    HOLD
-                                </button>
-                            </div>
-                            @else
-                            <div class="d-flex gap-2">
-                                <button type="button" id="micStartBtn" class="btn btn-primary" onclick="startRecording()"><i class="fa-solid fa-microphone me-2"></i>Start</button>
-                                <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="pauseRecording()" style="display:none;"><i class="fa-solid fa-pause me-2"></i>Pause</button>
-                                <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:none;"><i class="fa-solid fa-stop me-2"></i>Stop</button>
-                            </div>
-                            @endif
-                        </div>
+                        <!-- Voice controls moved to interviewControls panel -->
 
                         <div id="chatTranscriptContainer" style="max-height: 350px; overflow-y: auto; padding: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--bd); display: flex; flex-direction: column; gap: 15px;">
                             <!-- Chat bubbles will go here -->
@@ -495,7 +496,7 @@
                 initCamera();
                 
                 if(responseMode === 'voice' || responseMode === 'hybrid') {
-                    document.getElementById('voiceControls').style.display = 'block';
+                    document.getElementById('voiceControls').style.display = 'flex';
                     document.getElementById('voiceAnalyticsPanel').style.display = 'block';
                 }
 
