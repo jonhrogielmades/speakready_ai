@@ -71,6 +71,7 @@ class InterviewController extends Controller
         }
 
         session(['active_interview_id' => $session->id]);
+        session(['active_interview_provider' => $request->input('ai_provider', 'openai')]);
 
         ActivityLogger::log(
             Auth::user(),
@@ -176,7 +177,7 @@ class InterviewController extends Controller
             })->toArray();
 
         // 3. Generate Follow-up via AI
-        $provider = $request->input('ai_provider', 'openai');
+        $provider = $request->input('ai_provider', session('active_interview_provider', 'openai'));
         $isFinal = filter_var($request->input('is_final_question', false), FILTER_VALIDATE_BOOLEAN);
         $followUpText = \App\Services\AIService::generateChatReply($session, $history, $request->answer_text, $provider, $isFinal);
 

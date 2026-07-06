@@ -87,6 +87,15 @@ class AIService
         if (!empty($session->company_persona)) {
             $prompt .= "You must act as an interviewer from '" . $session->company_persona . "'. ";
         }
+        
+        if (!empty($session->resume_text)) {
+            $prompt .= "The candidate's resume/background is: '" . substr(trim(preg_replace('/\s+/', ' ', $session->resume_text)), 0, 1500) . "'. Tailor your questions to their experience. ";
+        }
+
+        if (!empty($session->job_description)) {
+            $prompt .= "The target job description is: '" . substr(trim(preg_replace('/\s+/', ' ', $session->job_description)), 0, 1000) . "'. Ensure questions assess these specific requirements. ";
+        }
+
         $prompt .= "\nHere is the conversation so far:\n";
         
         foreach ($history as $idx => $interaction) {
