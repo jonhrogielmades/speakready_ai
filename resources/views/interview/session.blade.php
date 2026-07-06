@@ -113,12 +113,7 @@
                 </div>
             </div>
             
-            <!-- Desktop Buttons (Visible only when workspace is active) -->
-            <div class="d-none d-lg-flex gap-2" id="headerButtons" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
-                <button type="button" class="btn btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
-                <button type="button" class="btn btn-outline-danger" onclick="finishInterview()"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
-                <button type="button" class="btn px-4 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
-            </div>
+            <!-- Buttons moved below AI panel -->
         </div>
 
         <div id="workspaceWrapper" style="display:none;">
@@ -167,6 +162,15 @@
                     </div>
                 </div>
 
+                <!-- Unified Responsive Interview Controls (Desktop & Mobile) -->
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
+                    <div class="d-flex gap-2 w-100 flex-fill" style="flex: 1;">
+                        <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
+                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="finishInterview()"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+                    </div>
+                    <button type="button" class="btn px-4 w-100 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 220px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
+                </div>
+
                 <!-- Answer Response System -->
                 <div class="panel mb-4 animate-fade-up delay-200">
                     <div class="panel-title">
@@ -212,13 +216,7 @@
                             </div>
                         </div>
 
-                        <div class="d-flex d-lg-none flex-column flex-sm-row justify-content-between border-top pt-4 gap-3" style="border-color:var(--bd) !important">
-                            <div class="d-flex flex-wrap gap-2 w-100">
-                                <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
-                                <button type="button" class="btn btn-outline-danger flex-fill" onclick="finishInterview()"><i class="fa-solid fa-flag-checkered"></i> End</button>
-                            </div>
-                            <button type="button" class="btn px-4 w-100 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
-                        </div>
+                        <!-- Bottom mobile buttons moved to unified control panel above -->
                     </form>
                 </div>
             </div>
@@ -491,8 +489,8 @@
             function startInterviewSession() {
                 document.getElementById('introContainer').style.display = 'none';
                 document.getElementById('workspaceWrapper').style.display = 'block';
-                document.getElementById('headerButtons').style.opacity = '1';
-                document.getElementById('headerButtons').style.pointerEvents = 'auto';
+                document.getElementById('interviewControls').style.opacity = '1';
+                document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
                 initCamera();
                 
