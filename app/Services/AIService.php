@@ -79,10 +79,11 @@ class AIService
         return [];
     }
 
-    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai')
+    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false)
     {
         $prompt = "You are an expert Interviewer conducting a mock interview for a '" . ($session->target_position ?? 'General') . "' role. ";
         $prompt .= "The difficulty is '" . ($session->difficulty ?? 'Medium') . "'. ";
+        
         if (!empty($session->company_persona)) {
             $prompt .= "You must act as an interviewer from '" . $session->company_persona . "'. ";
         }
@@ -93,7 +94,11 @@ class AIService
             $prompt .= "Candidate: " . $interaction['answer'] . "\n";
         }
         
-        $prompt .= "\nYour task: Briefly acknowledge the candidate's latest answer (1-2 sentences), and then ask exactly ONE relevant follow-up question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+        if ($isFinal) {
+            $prompt .= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer, explicitly mention that this is the final question, and ask ONE concluding interview question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+        } else {
+            $prompt .= "\nYour task: Briefly acknowledge the candidate's latest answer (1-2 sentences), and then ask exactly ONE relevant follow-up question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+        }
 
         $maxRetries = 3;
         $attempt = 0;

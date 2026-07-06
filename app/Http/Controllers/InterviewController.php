@@ -177,7 +177,8 @@ class InterviewController extends Controller
 
         // 3. Generate Follow-up via AI
         $provider = $request->input('ai_provider', 'openai');
-        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $request->answer_text, $provider);
+        $isFinal = filter_var($request->input('is_final_question', false), FILTER_VALIDATE_BOOLEAN);
+        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $request->answer_text, $provider, $isFinal);
 
         if (!$followUpText) {
             $followUpText = "Thank you for sharing that. Could you tell me more about your experience in this field?"; // fallback

@@ -304,6 +304,7 @@
 
         <script>
             const questions = {!! json_encode($questions) !!};
+            const totalQuestions = {{ $num }};
             const responseMode = "{{ $sessionRecord->response_mode }}";
             let currentQIdx = 0;
             let timerSeconds = 0;
@@ -774,6 +775,15 @@
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
+
+                if (currentQIdx >= totalQuestions - 1) {
+                    saveCurrentAnswer(false).then(() => {
+                        finishInterview();
+                    });
+                    return;
+                }
+
+                formData.append('is_final_question', (currentQIdx === totalQuestions - 2));
 
                 fetch('{{ route("interview.chatReply") }}', {
                     method: 'POST',
