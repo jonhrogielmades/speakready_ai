@@ -129,6 +129,10 @@
                     <div class="d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                     </div>
+                    <!-- Question Counter (Top Left) -->
+                    <div style="position:absolute; top:15px; left:15px; z-index:50;">
+                        <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
+                    </div>
 
                     <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
                         <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.4s;">
@@ -150,14 +154,13 @@
                             @endfor
                         </div>
                     </div>
-                    <!-- Overlay Text (Hidden per user request, ID retained for JS logic) -->
-                    <div style="display:none;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px;">
-                        <div class="d-flex justify-content-between align-items-end gap-3">
+                    <!-- Overlay Text -->
+                    <div style="display:block;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px; z-index:20;">
+                        <div class="d-flex justify-content-start align-items-end gap-3">
                             <div>
                                 <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
-                                <div id="aiQuestionText" style="color:white;font-size:1.1rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
+                                <div id="aiQuestionText" style="color:white;font-size:0.85rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
                             </div>
-                            <span class="badge bg-white text-dark" style="font-size:0.8rem;white-space:nowrap;" id="qCounter">1/10</span>
                         </div>
                     </div>
                 </div>
@@ -456,14 +459,40 @@
                     utterance.rate = 0.95;
                     utterance.pitch = 1.0;
 
-                    // Spike the amplitude every time a new word is spoken!
+                    let words = text.split(' ');
+                    let currentWordIdx = 0;
+                    let captionInterval = null;
+                    let boundaryFired = false;
+
                     utterance.onboundary = function(e) {
-                        if(e.name === 'word') currentAmplitude = 1.0;
+                        if(e.name === 'word') {
+                            boundaryFired = true;
+                            if (captionInterval) clearInterval(captionInterval);
+                            
+                            currentAmplitude = 1.0;
+                            let end = text.indexOf(' ', e.charIndex);
+                            if (end === -1) end = text.length;
+                            document.getElementById('aiQuestionText').innerText = text.substring(0, end);
+                        }
                     };
 
                     utterance.onstart = function() {
                         document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
                         document.getElementById('aiAvatarHead').style.borderColor = '#34d399';
+                        document.getElementById('aiQuestionText').innerText = '';
+                        
+                        // Hybrid fallback: uses setInterval ONLY if the perfect 'onboundary' event fails to fire
+                        captionInterval = setInterval(() => {
+                            if (!boundaryFired) {
+                                if (currentWordIdx < words.length) {
+                                    currentWordIdx++;
+                                    document.getElementById('aiQuestionText').innerText = words.slice(0, currentWordIdx).join(' ');
+                                    currentAmplitude = 1.0;
+                                } else {
+                                    clearInterval(captionInterval);
+                                }
+                            }
+                        }, 350); // Fallback estimate
                         
                         // Start dynamic JS visualizer
                         const bars = document.querySelectorAll('.spectrum-bar');
@@ -481,6 +510,8 @@
                         document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
                         document.getElementById('aiAvatarHead').style.borderColor = '#8b5cf6';
                         if(visualizerInterval) clearInterval(visualizerInterval);
+                        if(captionInterval) clearInterval(captionInterval);
+                        document.getElementById('aiQuestionText').innerText = text;
                     };
 
                     window.speechSynthesis.speak(utterance);
@@ -534,7 +565,7 @@
                 currentQIdx = idx;
                 const q = questions[idx];
                 
-                document.getElementById('aiQuestionText').innerText = q.question_text;
+                document.getElementById('aiQuestionText').innerText = '...';
                 document.getElementById('qCounter').innerText = (idx + 1);
 
                 // Append AI question to chat log if it's the first time seeing it
@@ -714,11 +745,11 @@
             function appendChatMessage(role, text) {
                 const chatContainer = document.getElementById('chatTranscriptContainer');
                 const bubble = document.createElement('div');
-                bubble.style.padding = '12px 16px';
+                bubble.style.padding = '10px 14px';
                 bubble.style.borderRadius = '16px';
                 bubble.style.maxWidth = '85%';
-                bubble.style.lineHeight = '1.5';
-                bubble.style.fontSize = '0.95rem';
+                bubble.style.lineHeight = '1.4';
+                bubble.style.fontSize = '0.60rem';
                 
                 if (role === 'interviewer') {
                     bubble.style.background = 'rgba(139,92,246,0.15)';
@@ -818,7 +849,7 @@
                         preRecordingText = '';
                         currentQIdx++;
                         
-                        document.getElementById('aiQuestionText').innerText = newQ.question_text;
+                        document.getElementById('aiQuestionText').innerText = '...';
                         document.getElementById('qCounter').innerText = (currentQIdx + 1);
                         
                         appendChatMessage('interviewer', newQ.question_text);

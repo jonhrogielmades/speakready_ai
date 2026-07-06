@@ -55,9 +55,51 @@
         font-size: 1.25rem;
     }
     .chapter-content {
+        color: var(--tx2);
+        font-size: 1rem;
+        line-height: 1.75;
+    }
+    .chapter-content h1, .chapter-content h2, .chapter-content h3, .chapter-content h4, .chapter-content h5, .chapter-content h6 {
+        color: var(--tx);
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        line-height: 1.3;
+    }
+    .chapter-content h1 { font-size: 1.8rem; }
+    .chapter-content h2 { font-size: 1.5rem; }
+    .chapter-content h3 { font-size: 1.3rem; }
+    .chapter-content h4 { font-size: 1.15rem; }
+    
+    .chapter-content p {
+        margin-bottom: 1.25rem;
+    }
+    .chapter-content ul, .chapter-content ol {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+    }
+    .chapter-content li {
+        margin-bottom: 0.5rem;
+    }
+    .chapter-content strong {
+        color: var(--tx);
+        font-weight: 700;
+    }
+    .chapter-content a {
+        color: var(--pur);
+        text-decoration: none;
+    }
+    .chapter-content a:hover {
+        text-decoration: underline;
+    }
+    .chapter-content blockquote {
+        border-left: 4px solid var(--pur);
+        margin: 1.5rem 0;
+        font-style: italic;
         color: var(--tx3);
-        font-size: 0.95rem;
-        line-height: 1.6;
+        background: var(--bg2);
+        padding: 1rem 1.2rem;
+        border-radius: 0 8px 8px 0;
     }
     .resource-item {
         display: flex;
@@ -142,7 +184,7 @@
                             <span class="badge" style="background:var(--bg2); color:var(--tx3); border:1px solid var(--bd);">{{ $chapter->reading_time ?? 5 }} min read</span>
                         </div>
                         <div class="chapter-content">
-                            {!! nl2br(e($chapter->content)) !!}
+                            {!! $chapter->content !!}
                         </div>
                     </div>
                 @endforeach
