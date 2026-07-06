@@ -55,6 +55,7 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::post('/interview/start', [InterviewController::class, 'start'])->name('interview.start');
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
+    Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
     Route::post('/interview/save-state', [InterviewController::class, 'saveSessionState'])->name('interview.saveState');
     Route::post('/interview/finish', [InterviewController::class, 'finish'])->name('interview.finish');
     Route::get('/interview/{id}/review', [InterviewController::class, 'review'])->name('interview.review');

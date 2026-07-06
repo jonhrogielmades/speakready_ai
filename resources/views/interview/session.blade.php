@@ -116,9 +116,8 @@
             <!-- Desktop Buttons (Visible only when workspace is active) -->
             <div class="d-none d-lg-flex gap-2" id="headerButtons" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
                 <button type="button" class="btn btn-outline-info" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
-                <button type="button" class="btn btn-outline-secondary prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left me-2"></i>Previous</button>
-                <button type="button" class="btn btn-outline-warning skip-btn-class" onclick="skipQuestion()"><i class="fa-solid fa-forward-step me-2"></i>Skip</button>
-                <button type="button" class="btn px-4 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                <button type="button" class="btn btn-outline-danger" onclick="finishInterview()"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+                <button type="button" class="btn px-4 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
             </div>
         </div>
 
@@ -201,7 +200,10 @@
                             @endif
                         </div>
 
-                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:200px;font-size:.95rem" placeholder="Type your answer here, or use voice to auto-transcribe..."></textarea>
+                        <div id="chatTranscriptContainer" style="max-height: 350px; overflow-y: auto; padding: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--bd); display: flex; flex-direction: column; gap: 15px;">
+                            <!-- Chat bubbles will go here -->
+                        </div>
+                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:80px;font-size:.95rem" placeholder="Type your answer here, or use voice to auto-transcribe..."></textarea>
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
@@ -210,14 +212,12 @@
                             </div>
                         </div>
 
-                        <!-- Mobile Buttons (Hidden on Desktop) -->
                         <div class="d-flex d-lg-none flex-column flex-sm-row justify-content-between border-top pt-4 gap-3" style="border-color:var(--bd) !important">
                             <div class="d-flex flex-wrap gap-2 w-100">
                                 <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
-                                <button type="button" class="btn btn-outline-secondary flex-fill prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left"></i></button>
-                                <button type="button" class="btn btn-outline-warning flex-fill skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
+                                <button type="button" class="btn btn-outline-danger flex-fill" onclick="finishInterview()"><i class="fa-solid fa-flag-checkered"></i> End</button>
                             </div>
-                            <button type="button" class="btn px-4 w-100 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
+                            <button type="button" class="btn px-4 w-100 next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
                         </div>
                     </form>
                 </div>
@@ -535,28 +535,15 @@
                 const q = questions[idx];
                 
                 document.getElementById('aiQuestionText').innerText = q.question_text;
-                document.getElementById('qCounter').innerText = (idx + 1) + '/' + questions.length;
+                document.getElementById('qCounter').innerText = (idx + 1);
 
-                // Restore answer state if navigated back
-                document.getElementById('answerTextarea').value = answersData[idx].text;
+                // Append AI question to chat log if it's the first time seeing it
+                appendChatMessage('interviewer', q.question_text);
+
+                // Restore answer state if navigated back (though disabled in chat mode)
+                document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
                 
                 speakQuestion(q.question_text);
-                
-                document.querySelectorAll('.prev-btn-class').forEach(el => el.disabled = (idx === 0));
-                
-                if (idx === questions.length - 1) {
-                    document.querySelectorAll('.next-btn-class').forEach(el => {
-                        el.innerHTML = 'Finish Interview <i class="fa-solid fa-flag-checkered ms-2"></i>';
-                        el.classList.add('btn-success');
-                        el.classList.remove('bgrd', 'btn-primary');
-                    });
-                } else {
-                    document.querySelectorAll('.next-btn-class').forEach(el => {
-                        el.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right ms-2"></i>';
-                        el.classList.add('bgrd');
-                        el.classList.remove('btn-success');
-                    });
-                }
                 
                 triggerAnalysis();
             }
@@ -567,12 +554,7 @@
                 }
             }
 
-            function prevQuestion() {
-                if(isRecording) stopRecording();
-                if (currentQIdx > 0) {
-                    loadQuestion(currentQIdx - 1);
-                }
-            }
+
 
             function triggerAnalysis() {
                 const text = document.getElementById('answerTextarea').value;
@@ -729,14 +711,119 @@
                 });
             }
 
+            function appendChatMessage(role, text) {
+                const chatContainer = document.getElementById('chatTranscriptContainer');
+                const bubble = document.createElement('div');
+                bubble.style.padding = '12px 16px';
+                bubble.style.borderRadius = '16px';
+                bubble.style.maxWidth = '85%';
+                bubble.style.lineHeight = '1.5';
+                bubble.style.fontSize = '0.95rem';
+                
+                if (role === 'interviewer') {
+                    bubble.style.background = 'rgba(139,92,246,0.15)';
+                    bubble.style.border = '1px solid rgba(139,92,246,0.3)';
+                    bubble.style.alignSelf = 'flex-start';
+                    bubble.innerHTML = '<strong><i class="fa-solid fa-robot me-1"></i> Interviewer</strong><br>' + text;
+                } else {
+                    bubble.style.background = 'rgba(59,130,246,0.15)';
+                    bubble.style.border = '1px solid rgba(59,130,246,0.3)';
+                    bubble.style.alignSelf = 'flex-end';
+                    bubble.innerHTML = '<strong><i class="fa-solid fa-user me-1"></i> You</strong><br>' + text;
+                }
+                
+                chatContainer.appendChild(bubble);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+
             function submitAnswer() {
                 if(isRecording) stopRecording();
-                saveCurrentAnswer(false).then(() => {
-                    if (currentQIdx < questions.length - 1) {
-                        loadQuestion(currentQIdx + 1);
+                
+                const answerText = document.getElementById('answerTextarea').value.trim();
+                if(!answerText) return alert("Please provide an answer before submitting.");
+
+                // Optimistically append user answer to chat
+                appendChatMessage('user', answerText);
+                
+                // Show thinking indicator
+                const chatContainer = document.getElementById('chatTranscriptContainer');
+                const thinkingBubble = document.createElement('div');
+                thinkingBubble.id = 'thinkingBubble';
+                thinkingBubble.style.padding = '12px 16px';
+                thinkingBubble.style.borderRadius = '16px';
+                thinkingBubble.style.maxWidth = '85%';
+                thinkingBubble.style.alignSelf = 'flex-start';
+                thinkingBubble.style.background = 'rgba(255,255,255,0.05)';
+                thinkingBubble.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted me-2"></i> <em>AI is thinking...</em>';
+                chatContainer.appendChild(thinkingBubble);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Disable buttons
+                document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = true);
+                
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('question_id', questions[currentQIdx].id);
+                formData.append('answer_text', answerText);
+                formData.append('is_skipped', false);
+                formData.append('response_mode', responseMode);
+                formData.append('wpm', answersData[currentQIdx].wpm);
+                formData.append('voice_duration', answersData[currentQIdx].voice_duration);
+                formData.append('filler_words_count', answersData[currentQIdx].filler_words);
+                formData.append('pause_count', answersData[currentQIdx].pause_count);
+                formData.append('confidence_score', answersData[currentQIdx].confidence_score);
+                formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
+                formData.append('posture_score', answersData[currentQIdx].posture_score);
+
+                fetch('{{ route("interview.chatReply") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const tb = document.getElementById('thinkingBubble');
+                    if(tb) tb.remove();
+                    document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
+
+                    if (data.success) {
+                        const newQ = {
+                            id: data.next_question_id,
+                            question_text: data.next_question_text
+                        };
+                        questions.push(newQ);
+                        
+                        answersData.push({
+                            text: '',
+                            is_skipped: false,
+                            wpm: 0,
+                            voice_duration: 0,
+                            filler_words: 0,
+                            pause_count: 0,
+                            confidence_score: 85,
+                            eye_contact_score: 90,
+                            posture_score: 90
+                        });
+
+                        document.getElementById('answerTextarea').value = '';
+                        preRecordingText = '';
+                        currentQIdx++;
+                        
+                        document.getElementById('aiQuestionText').innerText = newQ.question_text;
+                        document.getElementById('qCounter').innerText = (currentQIdx + 1);
+                        
+                        appendChatMessage('interviewer', newQ.question_text);
+                        speakQuestion(newQ.question_text);
                     } else {
-                        finishInterview();
+                        alert(data.error || 'An error occurred.');
                     }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Network error.");
+                    document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
+                    const tb = document.getElementById('thinkingBubble');
+                    if(tb) tb.remove();
                 });
             }
 

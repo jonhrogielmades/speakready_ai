@@ -79,6 +79,80 @@ class AIService
         return [];
     }
 
+    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai')
+    {
+        $prompt = "You are an expert Interviewer conducting a mock interview for a '" . ($session->target_position ?? 'General') . "' role. ";
+        $prompt .= "The difficulty is '" . ($session->difficulty ?? 'Medium') . "'. ";
+        if (!empty($session->company_persona)) {
+            $prompt .= "You must act as an interviewer from '" . $session->company_persona . "'. ";
+        }
+        $prompt .= "\nHere is the conversation so far:\n";
+        
+        foreach ($history as $idx => $interaction) {
+            $prompt .= "Interviewer: " . $interaction['question'] . "\n";
+            $prompt .= "Candidate: " . $interaction['answer'] . "\n";
+        }
+        
+        $prompt .= "\nYour task: Briefly acknowledge the candidate's latest answer (1-2 sentences), and then ask exactly ONE relevant follow-up question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+
+        $maxRetries = 3;
+        $attempt = 0;
+
+        while ($attempt < $maxRetries) {
+            try {
+                $systemPrompt = 'You are an expert interviewer. Respond concisely and professionally without markdown.';
+                
+                // Rely on chatMessage for robust failover
+                $response = self::chatMessage($prompt, [], $provider, $systemPrompt);
+
+                if (!empty($response) && $response !== "Sorry, I am having trouble connecting to my brain right now.") {
+                    return $response;
+                }
+            } catch (\Exception $e) {
+                Log::error("AI Chat Reply Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
+            }
+
+            $attempt++;
+            if ($attempt < $maxRetries) {
+                sleep(1);
+            }
+        }
+        return "Thank you for sharing that. Let's move on to the next question. Can you tell me more about your background?";
+    }
+
+    private static function callOpenAI($prompt, $systemPrompt = null)
+    {
+        // Try fetching key from DB first, then .env
+        $dbProvider = \App\Models\AiProvider::where('name', 'like', '%OpenAI%')->where('status', 'active')->first();
+        if ($dbProvider && !empty($dbProvider->api_key)) {
+            $apiKey = \Illuminate\Support\Facades\Crypt::decryptString($dbProvider->api_key);
+            $endpoint = $dbProvider->api_endpoint ?? 'https://api.openai.com/v1/chat/completions';
+        } else {
+            $apiKey = env('OPENAI_API_KEY');
+            $endpoint = 'https://api.openai.com/v1/chat/completions';
+        }
+
+        $model = env('OPENAI_MODEL', 'gpt-4o-mini');
+        $sysMsg = $systemPrompt ?? 'You are an expert interviewer. Respond concisely and professionally without markdown.';
+
+        $response = Http::timeout(45)->withHeaders([
+            'Authorization' => "Bearer {$apiKey}",
+            'Content-Type' => 'application/json',
+        ])->post($endpoint, [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => $sysMsg],
+                ['role' => 'user', 'content' => $prompt]
+            ]
+        ]);
+
+        if ($response->successful()) {
+            return trim($response->json('choices.0.message.content'));
+        }
+        Log::error('OpenAI Error: ' . $response->body());
+        return "";
+    }
+
     public static function generateFeedback($sessionData, $answersData, $provider)
     {
         $prompt = "You are an expert Interview Coach evaluating a candidate's interview session. Evaluate the following interview answers and provide highly accurate feedback and scores.\n";
@@ -533,12 +607,16 @@ EOT;
     }
 
 
-    public static function chatMessage($message, $history = [], $provider = 'gemini')
+    public static function chatMessage($message, $history = [], $provider = 'gemini', $systemPrompt = null)
     {
-        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', $provider);
-        $providers = array_filter(array_map('trim', explode(',', $priorityString)));
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere,openai');
+        $fallbackProviders = array_filter(array_map('trim', explode(',', $priorityString)));
+        
+        // Put the requested provider first, then the fallback ones
+        $providers = array_values(array_unique(array_merge([$provider], $fallbackProviders)));
+        
         if (empty($providers)) {
-            $providers = [$provider];
+            $providers = [$provider, 'gemini', 'groq', 'claude'];
         }
 
         $fallbackError = "Sorry, I am having trouble connecting to my brain right now.";
@@ -547,12 +625,13 @@ EOT;
             try {
                 $response = null;
                 switch ($currentProvider) {
-                    case 'gemini': $response = self::chatGemini($message, $history); break;
-                    case 'cohere': $response = self::chatCohere($message, $history); break;
-                    case 'groq': $response = self::chatGroq($message, $history); break;
-                    case 'openrouter': $response = self::chatOpenRouter($message, $history); break;
-                    case 'claude': $response = self::chatClaude($message, $history); break;
-                    case 'wisdomgate': $response = self::chatWisdomGate($message, $history); break;
+                    case 'openai': $response = self::chatOpenAI($message, $history, $systemPrompt); break;
+                    case 'gemini': $response = self::chatGemini($message, $history, $systemPrompt); break;
+                    case 'cohere': $response = self::chatCohere($message, $history, $systemPrompt); break;
+                    case 'groq': $response = self::chatGroq($message, $history, $systemPrompt); break;
+                    case 'openrouter': $response = self::chatOpenRouter($message, $history, $systemPrompt); break;
+                    case 'claude': $response = self::chatClaude($message, $history, $systemPrompt); break;
+                    case 'wisdomgate': $response = self::chatWisdomGate($message, $history, $systemPrompt); break;
                 }
 
                 if ($response !== null && $response !== $fallbackError && $response !== "I'm sorry, I encountered an error processing your request.") {
@@ -781,16 +860,18 @@ EOT;
         return $contents;
     }
 
-    private static function chatGemini($message, $history)
+    private static function chatGemini($message, $history, $systemPrompt = null)
     {
         $apiKey = env('GEMINI_API_KEY');
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash-lite');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.';
 
         $response = Http::timeout(45)->post($url, [
             'contents' => self::formatHistoryForGemini($message, $history),
             'systemInstruction' => [
-                'parts' => [['text' => 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.']]
+                'parts' => [['text' => $sysMsg]]
             ]
         ]);
 
@@ -801,9 +882,10 @@ EOT;
         return "Sorry, I am having trouble connecting to my brain right now.";
     }
 
-    private static function formatHistoryForStandard($message, $history) {
+    private static function formatHistoryForStandard($message, $history, $systemPrompt = null) {
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.';
         $messages = [
-            ['role' => 'system', 'content' => 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.']
+            ['role' => 'system', 'content' => $sysMsg]
         ];
         foreach ($history as $msg) {
             $messages[] = [
@@ -818,7 +900,35 @@ EOT;
         return $messages;
     }
 
-    private static function chatCohere($message, $history)
+    private static function chatOpenAI($message, $history, $systemPrompt = null)
+    {
+        $dbProvider = \App\Models\AiProvider::where('name', 'like', '%OpenAI%')->where('status', 'active')->first();
+        if ($dbProvider && !empty($dbProvider->api_key)) {
+            $apiKey = \Illuminate\Support\Facades\Crypt::decryptString($dbProvider->api_key);
+            $endpoint = $dbProvider->api_endpoint ?? 'https://api.openai.com/v1/chat/completions';
+        } else {
+            $apiKey = env('OPENAI_API_KEY');
+            $endpoint = 'https://api.openai.com/v1/chat/completions';
+        }
+
+        $model = env('OPENAI_MODEL', 'gpt-4o-mini');
+
+        $response = Http::timeout(45)->withHeaders([
+            'Authorization' => "Bearer {$apiKey}",
+            'Content-Type' => 'application/json',
+        ])->post($endpoint, [
+            'model' => $model,
+            'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt)
+        ]);
+
+        if ($response->successful()) {
+            return $response->json('choices.0.message.content');
+        }
+        Log::error('OpenAI Chat Error: ' . $response->body());
+        return "Sorry, I am having trouble connecting to my brain right now.";
+    }
+
+    private static function chatCohere($message, $history, $systemPrompt = null)
     {
         $apiKey = env('COHERE_API_KEY');
         $model = env('COHERE_MODEL', 'command-r7b-12-2024');
@@ -831,6 +941,8 @@ EOT;
             ];
         }
 
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Provide concise, helpful, and encouraging responses.';
+
         $response = Http::timeout(45)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
@@ -838,7 +950,7 @@ EOT;
             'model' => $model,
             'message' => $message,
             'chat_history' => $chatHistory,
-            'preamble' => 'You are a dedicated AI Interview Coach for SpeakReady AI. Provide concise, helpful, and encouraging responses.',
+            'preamble' => $sysMsg,
             'temperature' => 0.7,
         ]);
 
@@ -849,7 +961,7 @@ EOT;
         return "Sorry, I am having trouble connecting to my brain right now.";
     }
 
-    private static function chatGroq($message, $history)
+    private static function chatGroq($message, $history, $systemPrompt = null)
     {
         $apiKey = env('GROQ_API_KEY');
         $model = env('GROQ_MODEL', 'llama3-8b-8192');
@@ -859,7 +971,7 @@ EOT;
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
             'model' => $model,
-            'messages' => self::formatHistoryForStandard($message, $history)
+            'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt)
         ]);
 
         if ($response->successful()) {
@@ -869,7 +981,7 @@ EOT;
         return "Sorry, I am having trouble connecting to my brain right now.";
     }
 
-    private static function chatOpenRouter($message, $history)
+    private static function chatOpenRouter($message, $history, $systemPrompt = null)
     {
         $apiKey = env('OPENROUTER_API_KEY');
         $model = env('OPENROUTER_MODEL', 'openrouter/free');
@@ -879,7 +991,7 @@ EOT;
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
             'model' => $model,
-            'messages' => self::formatHistoryForStandard($message, $history)
+            'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt)
         ]);
 
         if ($response->successful()) {
@@ -889,7 +1001,7 @@ EOT;
         return "Sorry, I am having trouble connecting to my brain right now.";
     }
 
-    private static function chatClaude($message, $history)
+    private static function chatClaude($message, $history, $systemPrompt = null)
     {
         $apiKey = env('ANTHROPIC_API_KEY');
         $model = env('ANTHROPIC_MODEL', 'claude-3-haiku-20240307');
@@ -907,13 +1019,15 @@ EOT;
             'content' => $message
         ];
 
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.';
+
         $response = Http::timeout(45)->withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => $version,
             'content-type' => 'application/json',
         ])->post('https://api.anthropic.com/v1/messages', [
             'model' => $model,
-            'system' => 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses.',
+            'system' => $sysMsg,
             'max_tokens' => 1000,
             'messages' => $messages
         ]);
@@ -925,7 +1039,7 @@ EOT;
         return "Sorry, I am having trouble connecting to my brain right now.";
     }
 
-    private static function chatWisdomGate($message, $history)
+    private static function chatWisdomGate($message, $history, $systemPrompt = null)
     {
         $apiKey = env('WISDOMGATE_API_KEY');
         $model = env('WISDOMGATE_MODEL', 'gpt-5-nano');
@@ -935,7 +1049,7 @@ EOT;
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [
             'model' => $model,
-            'messages' => self::formatHistoryForStandard($message, $history)
+            'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt)
         ]);
 
         if ($response->successful()) {

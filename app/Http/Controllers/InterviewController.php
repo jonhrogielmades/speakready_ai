@@ -46,7 +46,7 @@ class InterviewController extends Controller
 
         if ($request->has('ai_provider') && $request->ai_provider !== 'local') {
             $generated = \App\Services\AIService::generateQuestions(
-                $request->num_questions ?? 5,
+                1, // Only generate the first question upfront for the real-time loop
                 $position,
                 $request->difficulty,
                 $request->interview_focus ?? 'General Practice',
@@ -134,6 +134,69 @@ class InterviewController extends Controller
             ]);
         }
         return response()->json(['success' => true]);
+    }
+
+    public function chatReply(Request $request)
+    {
+        $session_id = session('active_interview_id');
+        if (!$session_id) return response()->json(['error' => 'No active session'], 400);
+
+        $request->validate([
+            'answer_text' => 'required|string',
+            'question_id' => 'required|exists:questions,id'
+        ]);
+
+        $session = \App\Models\InterviewSession::with('category')->find($session_id);
+        
+        // 1. Save User's Answer
+        $answer = \App\Models\InterviewAnswer::create([
+            'interview_session_id' => $session_id,
+            'question_id' => $request->question_id,
+            'answer_text' => $request->answer_text,
+            'response_mode' => $request->input('response_mode', 'text'),
+            'wpm' => $request->input('wpm', 0),
+            'voice_duration' => $request->input('voice_duration', 0),
+            'filler_words_count' => $request->input('filler_words_count', 0),
+            'pause_count' => $request->input('pause_count', 0),
+            'confidence_score' => $request->input('confidence_score', 0),
+            'eye_contact_score' => $request->input('eye_contact_score', 0),
+            'posture_score' => $request->input('posture_score', 0),
+        ]);
+
+        // 2. Fetch Conversation History
+        $history = \App\Models\InterviewAnswer::with('question')
+            ->where('interview_session_id', $session_id)
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($ans) {
+                return [
+                    'question' => $ans->question->question_text ?? '',
+                    'answer' => $ans->answer_text
+                ];
+            })->toArray();
+
+        // 3. Generate Follow-up via AI
+        $provider = $request->input('ai_provider', 'openai');
+        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $request->answer_text, $provider);
+
+        if (!$followUpText) {
+            $followUpText = "Thank you for sharing that. Could you tell me more about your experience in this field?"; // fallback
+        }
+
+        // 4. Save new AI Question
+        $newQuestion = \App\Models\Question::create([
+            'category_id' => $session->category_id,
+            'question_text' => trim($followUpText),
+            'difficulty' => $session->difficulty,
+            'interview_session_id' => $session->id,
+            'status' => 'active'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'next_question_id' => $newQuestion->id,
+            'next_question_text' => $newQuestion->question_text
+        ]);
     }
 
     public function finish(Request $request)
