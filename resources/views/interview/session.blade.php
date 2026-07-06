@@ -155,15 +155,11 @@
                             @endfor
                         </div>
                     </div>
-                    <!-- Overlay Text (Hidden per user request, ID retained for JS logic) -->
-                    <div style="display:none;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px;">
-                        <div class="d-flex justify-content-between align-items-end gap-3">
-                            <div>
-                                <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
-                                <div id="aiQuestionText" style="color:white;font-size:1.1rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
-                            </div>
-                            <span class="badge bg-white text-dark" style="font-size:0.8rem;white-space:nowrap;" id="qCounter">1/10</span>
-                        </div>
+                    <!-- Real-Time Caption Overlay -->
+                    <div style="position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);padding:40px 20px 20px 20px;text-align:center;">
+                        <span class="badge mb-2" style="background:rgba(139,92,246,0.3);border:1px solid var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-closed-captioning me-1"></i> Live Caption</span>
+                        <div id="aiQuestionText" style="color:rgba(255,255,255,0.4);font-size:1.15rem;font-weight:600;line-height:1.5;transition:all 0.1s;">Loading...</div>
+                        <span class="badge bg-transparent text-white-50 mt-2" style="font-size:0.75rem;" id="qCounter">1/10</span>
                     </div>
                 </div>
 
@@ -457,9 +453,25 @@
                     utterance.rate = 0.95;
                     utterance.pitch = 1.0;
 
-                    // Spike the amplitude every time a new word is spoken!
+                    let captionEl = document.getElementById('aiQuestionText');
+                    // Reset caption instantly before speaking
+                    captionEl.innerHTML = `<span style="color:rgba(255,255,255,0.4);">${text}</span>`;
+
+                    // Real-time Karaoke Caption Logic
                     utterance.onboundary = function(e) {
-                        if(e.name === 'word') currentAmplitude = 1.0;
+                        if(e.name === 'word') {
+                            currentAmplitude = 1.0; // Spike audio visualizer
+
+                            // Find the end of the current word safely
+                            let nextSpace = text.indexOf(' ', e.charIndex);
+                            if (nextSpace === -1) nextSpace = text.length;
+                            
+                            // Highlight the spoken part and dim the upcoming part
+                            let spoken = text.substring(0, nextSpace);
+                            let upcoming = text.substring(nextSpace);
+                            
+                            captionEl.innerHTML = `<span style="color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.8);">${spoken}</span><span style="color: rgba(255,255,255,0.4);">${upcoming}</span>`;
+                        }
                     };
 
                     utterance.onstart = function() {
@@ -482,6 +494,11 @@
                         document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
                         document.getElementById('aiAvatarHead').style.borderColor = '#8b5cf6';
                         if(visualizerInterval) clearInterval(visualizerInterval);
+                        
+                        // Set full text to white at the end
+                        if (captionEl) {
+                            captionEl.innerHTML = `<span style="color: #fff;">${text}</span>`;
+                        }
                     };
 
                     window.speechSynthesis.speak(utterance);
@@ -535,8 +552,9 @@
                 currentQIdx = idx;
                 const q = questions[idx];
                 
+                // We just set the raw text here; the speakQuestion() function handles the caption animation
                 document.getElementById('aiQuestionText').innerText = q.question_text;
-                document.getElementById('qCounter').innerText = (idx + 1);
+                document.getElementById('qCounter').innerText = "Question " + (idx + 1) + " of " + totalQuestions;
 
                 // Append AI question to chat log if it's the first time seeing it
                 appendChatMessage('interviewer', q.question_text);
