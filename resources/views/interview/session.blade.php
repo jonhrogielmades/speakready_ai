@@ -155,8 +155,8 @@
                             @endfor
                         </div>
                     </div>
-                    <!-- Overlay Text -->
-                    <div style="position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px;">
+                    <!-- Overlay Text (Hidden per user request, ID retained for JS logic) -->
+                    <div style="display:none;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px;">
                         <div class="d-flex justify-content-between align-items-end gap-3">
                             <div>
                                 <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
