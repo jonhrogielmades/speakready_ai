@@ -839,13 +839,8 @@
 
             function skipQuestion() {
                 if(isRecording) stopRecording();
-                saveCurrentAnswer(true).then(() => {
-                    if (currentQIdx < questions.length - 1) {
-                        loadQuestion(currentQIdx + 1);
-                    } else {
-                        finishInterview();
-                    }
-                });
+                document.getElementById('answerTextarea').value = "[User skipped the question]";
+                submitAnswer();
             }
 
             function prevQuestion() {
