@@ -32,7 +32,17 @@
     .sr-dashboard {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 22px;
+        padding-top: 10px !important;
+        padding-bottom: 28px !important;
+    }
+
+    #dashboard .db-content .db-section.active.sr-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        padding-top: 10px !important;
+        padding-bottom: 28px !important;
     }
 
     .sr-dashboard-shell {
@@ -70,6 +80,7 @@
             linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(6, 182, 212, 0.06)),
             var(--sf);
         border-color: rgba(59, 130, 246, 0.2);
+        margin-bottom: 2px;
     }
 
     .sr-hero-card::after {
@@ -274,6 +285,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 16px;
+        margin: 0 0 2px;
     }
 
     .sr-stat-card {
