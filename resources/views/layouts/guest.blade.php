@@ -68,6 +68,56 @@
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
          
+         @media (max-width: 767px) {
+            #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
+               display: grid !important;
+               grid-template-columns: minmax(0, 1.24fr) minmax(0, 1fr) minmax(0, .94fr);
+               align-items: stretch !important;
+               justify-content: center !important;
+               gap: 6px !important;
+               width: min(100%, 430px);
+               margin-left: auto;
+               margin-right: auto;
+               flex-wrap: nowrap !important;
+            }
+
+            #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn {
+               width: 100% !important;
+               max-width: none !important;
+               min-width: 0;
+               min-height: 38px;
+               padding: 8px 6px !important;
+               border-radius: 8px;
+               display: inline-flex;
+               align-items: center;
+               justify-content: center;
+               gap: 4px;
+               font-size: clamp(0.66rem, 2.7vw, 0.78rem) !important;
+               line-height: 1.1;
+               white-space: nowrap;
+            }
+
+            #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row i {
+               margin-right: 0 !important;
+               font-size: 0.75rem;
+               flex: 0 0 auto;
+            }
+         }
+
+         @media (max-width: 360px) {
+            #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
+               gap: 5px !important;
+               grid-template-columns: minmax(0, 1.28fr) minmax(0, 1fr) minmax(0, .92fr);
+            }
+
+            #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn {
+               min-height: 36px;
+               padding-left: 4px !important;
+               padding-right: 4px !important;
+               font-size: 0.6rem !important;
+            }
+         }
+
          @keyframes mobFadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -161,7 +211,7 @@
                   <div class="col-lg-7 col-md-6 text-center order-2 order-lg-1">
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
-                     <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
+                     <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
