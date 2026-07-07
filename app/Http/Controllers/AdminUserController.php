@@ -148,6 +148,14 @@ class AdminUserController extends Controller
             'delete_type' => 'required|in:soft,permanent'
         ]);
 
+        if ($request->user()?->id === $user->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own administrator account while signed in.');
+        }
+
+        if ($user->is_admin && User::where('is_admin', true)->count() <= 1) {
+            return redirect()->back()->with('error', 'You cannot delete the last administrator account.');
+        }
+
         if ($request->delete_type === 'permanent') {
             $user->forceDelete();
         } else {

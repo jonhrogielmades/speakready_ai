@@ -45,8 +45,9 @@
         }
         #mainCategoriesTable tbody td:nth-child(1)::before { content: "ID"; }
         #mainCategoriesTable tbody td:nth-child(3)::before { content: "Description"; }
-        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Questions"; }
-        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Status"; }
+        #mainCategoriesTable tbody td:nth-child(4)::before { content: "Type"; }
+        #mainCategoriesTable tbody td:nth-child(5)::before { content: "Questions"; }
+        #mainCategoriesTable tbody td:nth-child(6)::before { content: "Status"; }
         
         #mainCategoriesTable tbody td:nth-child(2) {
             order: -1;
@@ -101,6 +102,8 @@
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->type == 'game')
                             <span class="badge bg-info text-dark">Game</span>
+                        @elseif($c->type == 'learning')
+                            <span class="badge bg-success">Learning</span>
                         @else
                             <span class="badge bg-primary">Core</span>
                         @endif
@@ -144,6 +147,7 @@
                                     <select class="oinp mb-3" name="type" required>
                                         <option value="core" {{ $c->type == 'core' ? 'selected' : '' }}>Core</option>
                                         <option value="game" {{ $c->type == 'game' ? 'selected' : '' }}>Game</option>
+                                        <option value="learning" {{ $c->type == 'learning' ? 'selected' : '' }}>Learning</option>
                                     </select>
                                     
                                     <label class="olbl">Icon Class (FontAwesome)</label>
@@ -222,6 +226,7 @@
                     <select class="oinp mb-3" name="type" required>
                         <option value="core">Core</option>
                         <option value="game">Game</option>
+                        <option value="learning">Learning</option>
                     </select>
                     
                     <label class="olbl">Icon Class (FontAwesome)</label>

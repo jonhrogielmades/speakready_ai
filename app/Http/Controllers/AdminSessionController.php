@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\InterviewSession;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -46,19 +45,26 @@ class AdminSessionController extends Controller
         // Feature 2: Session List & Search/Filter/Sort
         $query = InterviewSession::with(['user', 'category', 'score'])->where('is_archived', false);
 
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            })->orWhere('id', 'like', "%{$search}%");
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('interview_sessions.id', 'like', "%{$search}%");
+            });
         }
 
-        if ($request->has('status') && $request->status != '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $sort = $request->get('sort', 'created_at');
-        $direction = $request->get('direction', 'desc');
+        $direction = strtolower($request->get('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $allowedSorts = ['id', 'created_at', 'updated_at', 'status', 'duration_seconds', 'score'];
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
         
         // Handle sorting relation columns
         if ($sort == 'score') {
@@ -96,7 +102,7 @@ class AdminSessionController extends Controller
         foreach ($session->answers as $answer) {
             $timeline[] = [
                 'time' => $answer->created_at, 
-                'event' => 'Question Answered: ' . ($answer->question->title ?? 'Unknown'),
+                'event' => 'Question Answered: ' . ($answer->question->question_text ?? 'Unknown'),
                 'icon' => 'fa-comment-dots',
                 'color' => 'info'
             ];
@@ -148,11 +154,14 @@ class AdminSessionController extends Controller
     {
         $query = InterviewSession::with(['user', 'category', 'score'])->where('is_archived', true);
         
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->whereHas('user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            })->orWhere('id', 'like', "%{$search}%");
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('interview_sessions.id', 'like', "%{$search}%");
+            });
         }
         
         $sessions = $query->orderBy('updated_at', 'desc')->paginate(15);

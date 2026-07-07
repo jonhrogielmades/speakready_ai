@@ -23,8 +23,13 @@ class AdminSettingController extends Controller
      */
     public function update(Request $request)
     {
+        $request->validate([
+            'system_logo' => 'nullable|file|mimes:png,jpg,jpeg,webp,svg|max:2048',
+            'system_favicon' => 'nullable|file|mimes:ico,png,jpg,jpeg,webp,svg|max:1024',
+        ]);
+
         // Validate request depending on what's submitted
-        $data = $request->except(['_token', '_method']);
+        $data = $request->except(['_token', '_method', 'system_logo', 'system_favicon']);
 
         foreach ($data as $key => $value) {
             // Group and Type can be determined by the input key prefix or we just default them
