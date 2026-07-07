@@ -455,7 +455,7 @@
             showProgress: true,
             animate: true,
             popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
             onDestroyStarted: () => {
                 if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
                     driverObj.destroy();

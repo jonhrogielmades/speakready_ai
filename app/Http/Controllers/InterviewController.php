@@ -229,7 +229,8 @@ class InterviewController extends Controller
             return [
                 'id' => $answer->id,
                 'question' => $answer->question->question_text ?? '',
-                'answer' => $answer->answer_text ?? ''
+                'answer' => $answer->answer_text ?? '',
+                'is_skipped' => (bool) $answer->is_skipped,
             ];
         })->toArray();
 
@@ -252,8 +253,9 @@ class InterviewController extends Controller
             }
         }
 
-        // Call the AI Service to generate 100% accurate feedback based on the actual answers
-        $aiFeedback = \App\Services\AIService::generateFeedback($sessionData, $answersData, 'gemini');
+        // Generate feedback with the selected provider first, then validated provider fallbacks.
+        $feedbackProvider = $request->input('ai_provider', session('active_interview_provider', env('AI_PROVIDER', 'gemini')));
+        $aiFeedback = \App\Services\AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
 
         $totalClarity = 0; $totalRelevance = 0; $totalGrammar = 0; $totalProf = 0;
         $totalBodyLang = 0; $totalConfidence = 0;
@@ -286,6 +288,9 @@ class InterviewController extends Controller
                     'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
                     'better_sample_answer' => $qFeedback['better_sample_answer'] ?? '',
                     'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
+                    'clarity_score' => $c,
+                    'relevance_score' => $r,
+                    'grammar_score' => $g,
                     'score' => $qScore,
                 ]);
             } else {
@@ -298,6 +303,9 @@ class InterviewController extends Controller
                     'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
                     'better_sample_answer' => '',
                     'follow_up_question' => '',
+                    'clarity_score' => 0,
+                    'relevance_score' => 0,
+                    'grammar_score' => 0,
                     'score' => $qScore
                 ]);
             }

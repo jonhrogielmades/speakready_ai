@@ -2,6 +2,13 @@
 
 @section('content')
 <div class="db-section active">
+    @php
+        $feedback = $sessionRecord->feedback;
+        $strengths = trim($feedback->strengths ?? '');
+        $weaknesses = trim($feedback->weaknesses ?? '');
+        $suggestions = trim($feedback->improvement_suggestions ?? '');
+        $feedbackSummary = $suggestions !== '' ? $suggestions : ($weaknesses !== '' ? $weaknesses : ($strengths !== '' ? $strengths : 'AI feedback was unavailable for this session.'));
+    @endphp
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
@@ -17,7 +24,7 @@
             <!-- Feature 3: Overall Performance Score & Rating -->
             <div class="text-start">
                 @php 
-                    $overall = $sessionRecord->score->overall_readiness_score ?? 88; 
+                    $overall = $sessionRecord->score->overall_readiness_score ?? 0;
                     if($overall >= 90) { $rating = 'Excellent'; $color = '#10b981'; }
                     elseif($overall >= 70) { $rating = 'Good'; $color = '#3b82f6'; }
                     elseif($overall >= 50) { $rating = 'Fair'; $color = '#f59e0b'; }
@@ -43,16 +50,12 @@
                         <div class="col-md-7">
                             <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">AI Personalized Feedback</h5>
                             <p style="color:var(--tx);font-size:1rem;line-height:1.6;">
-                                You communicated your ideas clearly and maintained a professional tone throughout the session. Your technical knowledge is evident. To improve further, provide more measurable results when discussing your past achievements and work on projecting more confidence during behavioral questions.
+                                {!! nl2br(e($feedbackSummary)) !!}
                             </p>
                         </div>
                         <div class="col-md-5" style="border-left: 1px solid rgba(59, 130, 246, 0.2);">
                             <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-location-arrow me-2 text-primary"></i>Recommended Actions</h5>
-                            <ul class="list-unstyled" style="color:var(--tx);font-size:0.95rem;line-height:1.8;">
-                                <li><i class="fa-solid fa-circle text-primary me-2" style="font-size:0.5rem;vertical-align:middle;"></i> Practice leadership questions</li>
-                                <li><i class="fa-solid fa-circle text-primary me-2" style="font-size:0.5rem;vertical-align:middle;"></i> Complete the STAR Method lesson</li>
-                                <li><i class="fa-solid fa-circle text-primary me-2" style="font-size:0.5rem;vertical-align:middle;"></i> Use Voice Rehearsal twice this week</li>
-                            </ul>
+                            <p style="color:var(--tx);font-size:0.95rem;line-height:1.8;margin:0;">{!! nl2br(e($suggestions ?: 'No recommendations were generated for this session.')) !!}</p>
                         </div>
                     </div>
                 </div>
@@ -65,21 +68,18 @@
         <div class="col-md-6">
             <div style="background:rgba(16, 185, 129, 0.05);border:1px solid rgba(16, 185, 129, 0.2);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:#10b981;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-thumbs-up me-2"></i>Strengths</h5>
-                <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
-                    <li><i class="fa-solid fa-check text-success me-3"></i>Clear Communication</li>
-                    <li><i class="fa-solid fa-check text-success me-3"></i>Professional Vocabulary</li>
-                    <li><i class="fa-solid fa-check text-success me-3"></i>Strong Technical Knowledge</li>
-                </ul>
+                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($strengths ?: 'No strengths were generated for this session.')) !!}</p>
             </div>
         </div>
         <div class="col-md-6">
             <div style="background:rgba(239, 68, 68, 0.05);border:1px solid rgba(239, 68, 68, 0.2);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:#ef4444;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-triangle-exclamation me-2"></i>Needs Improvement</h5>
-                <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
+                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($weaknesses ?: 'No weaknesses were generated for this session.')) !!}</p>
+                {{-- <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Add more real-world examples</li>
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Improve confidence in delivery</li>
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Use the STAR Method more effectively</li>
-                </ul>
+                </ul> --}}
             </div>
         </div>
     </div>
@@ -91,12 +91,12 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Skill Performance Summary</h5>
                 @php
                     $skills = [
-                        ['name' => 'Clarity', 'score' => $sessionRecord->score->clarity_score ?? 90, 'color' => '#3b82f6'],
-                        ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 85, 'color' => '#10b981'],
-                        ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 92, 'color' => '#8b5cf6'],
-                        ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 88, 'color' => '#f59e0b'],
-                        ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score ?? 80, 'color' => '#ef4444'],
-                        ['name' => 'Body Language', 'score' => $sessionRecord->score->body_language_score ?? 85, 'color' => '#ec4899']
+                        ['name' => 'Clarity', 'score' => $sessionRecord->score->clarity_score ?? 0, 'color' => '#3b82f6'],
+                        ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
+                        ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 0, 'color' => '#8b5cf6'],
+                        ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
+                        ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score ?? 0, 'color' => '#ef4444'],
+                        ['name' => 'Body Language', 'score' => $sessionRecord->score->body_language_score ?? 0, 'color' => '#ec4899']
                     ];
                 @endphp
                 <div class="row g-4">
@@ -166,7 +166,7 @@
                             @if($answer->is_skipped)
                                 <span class="badge" style="background:rgba(239, 68, 68, 0.1);color:#ef4444;font-size:0.9rem;padding:8px 12px;">Skipped</span>
                             @else
-                                <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score ?? rand(80,95) }}</span>
+                                <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score ?? 0 }}</span>
                             @endif
                         </div>
                     </div>
@@ -177,7 +177,7 @@
                     
                     @if($answer->is_skipped)
                         <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
-                            <i class="fa-solid fa-forward-step me-2"></i> You skipped this question. No feedback available.
+                            <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback ?: 'You skipped this question. No feedback available.' }}
                         </div>
                     @else
                         
@@ -231,6 +231,11 @@
                         </div>
                         @endif
 
+                        <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
+                            <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
+                            <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback ?: 'No AI feedback was generated for this answer.' }}</p>
+                        </div>
+
                         <!-- Feature 9: STAR Framework Analysis (shown randomly or based on question type) -->
                         <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
                             <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">STAR Framework Analysis</h6>
@@ -268,7 +273,7 @@
                             <div class="col-md-6">
                                 <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Improved Answer</label>
                                 <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
-                                    {{ $answer->better_sample_answer ?? 'I organized a team meeting to redistribute the workload, which resulted in us meeting the deadline two days early.' }}
+                                    {{ $answer->better_sample_answer ?: 'No improved answer was generated for this response.' }}
                                 </div>
                             </div>
                         </div>
@@ -281,9 +286,7 @@
                                 @if($answer->follow_up_question)
                                     <li>{{ $answer->follow_up_question }}</li>
                                 @else
-                                    <li>What specific challenges did you face during this task?</li>
-                                    <li>What was the exact numerical outcome of your intervention?</li>
-                                    <li>If you had to do it over again, what would you do differently?</li>
+                                    <li>No follow-up question was generated for this answer.</li>
                                 @endif
                             </ul>
                         </div>

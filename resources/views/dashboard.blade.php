@@ -1222,22 +1222,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const stepsMobile = [
             { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Access Mock Interviews, Learning Lab, and Progress Tracking right from the bottom bar.', side: "top", align: 'center' }},
-            { element: '.card-grad-success', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
+            { element: '.sr-hero-card', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
             { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "top", align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak.', side: "top", align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
             { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode.', side: "bottom", align: 'end' }}
         ];
 
         const stepsDesktop = [
             { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Access all features including Mock Interviews, Learning Lab, and Progress Tracking from here.', side: "right", align: 'start' }},
-            { element: '.card-grad-success', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
+            { element: '.sr-hero-card', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
             { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "bottom", align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak.', side: "bottom", align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: "bottom", align: 'center' }},
             { element: '#notifWrap', popover: { title: 'Notifications', description: 'Stay updated with feedback on your interviews and platform announcements.', side: "bottom", align: 'center' }},
@@ -1248,7 +1246,7 @@ document.addEventListener("DOMContentLoaded", function() {
             showProgress: true,
             animate: true,
             popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: {{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop,
+            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
             onDestroyStarted: () => {
                 if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
                     driverObj.destroy();
@@ -1260,6 +1258,10 @@ document.addEventListener("DOMContentLoaded", function() {
         window.startOnboardingTour = function() {
             driverObj.drive();
         };
+
+        if (!localStorage.getItem('onboarding_completed')) {
+            startOnboardingTour();
+        }
 
     });
 </script>

@@ -7,6 +7,14 @@ use Illuminate\Support\Facades\Log;
 
 class AIService
 {
+    private const FEEDBACK_SCORE_FIELDS = [
+        'score',
+        'clarity_score',
+        'relevance_score',
+        'grammar_score',
+        'professionalism_score',
+    ];
+
     public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null)
     {
         $jobDescription = self::truncateText($jobDescription);
@@ -154,6 +162,9 @@ class AIService
             'Content-Type' => 'application/json',
         ])->post($endpoint, [
             'model' => $model,
+            'temperature' => 0.1,
+            'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+            'response_format' => ['type' => 'json_object'],
             'messages' => [
                 ['role' => 'system', 'content' => $sysMsg],
                 ['role' => 'user', 'content' => $prompt]
@@ -161,10 +172,10 @@ class AIService
         ]);
 
         if ($response->successful()) {
-            return trim($response->json('choices.0.message.content'));
+            return self::parseJsonResponse($response->json('choices.0.message.content'));
         }
         Log::error('OpenAI Error: ' . $response->body());
-        return "";
+        return [];
     }
 
     public static function generateFeedback($sessionData, $answersData, $provider)
@@ -459,50 +470,34 @@ Return ONLY the JSON object.
 EOT;
 
 
-        $maxRetries = 3;
-        $attempt = 0;
+        $prompt .= "\nREQUIRED ANSWER IDS: " . implode(', ', array_column($answersData, 'id')) . "\n";
+        $prompt .= "You must return one per_question_feedback item for every required answer id and no extra ids.\n";
 
-        while ($attempt < $maxRetries) {
-            try {
-                $response = [];
-                switch ($provider) {
-                    case 'gemini':
-                        $response = self::callGemini($prompt);
-                        break;
-                    case 'cohere':
-                        $response = self::callCohere($prompt);
-                        break;
-                    case 'groq':
-                        $response = self::callGroq($prompt);
-                        break;
-                    case 'openrouter':
-                        $response = self::callOpenRouter($prompt);
-                        break;
-                    case 'claude':
-                        $response = self::callClaude($prompt);
-                        break;
-                    case 'wisdomgate':
-                        $response = self::callWisdomGate($prompt);
-                        break;
-                    default:
-                        $response = self::callGemini($prompt);
-                        break;
-                }
-                if (!empty($response)) {
-                    return $response;
-                }
-            } catch (\Exception $e) {
-                Log::error("AI Feedback Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
-            }
+        $maxRetries = 2;
+        $providers = self::feedbackProviderPriority($provider);
 
-            $attempt++;
-            if ($attempt < $maxRetries) {
-                sleep(1);
+        foreach ($providers as $currentProvider) {
+            for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+                try {
+                    $response = self::callStructuredProvider($currentProvider, $prompt);
+
+                    if (self::feedbackResponseIsComplete($response, $answersData)) {
+                        return self::normalizeFeedbackResponse($response, $answersData, $sessionData);
+                    }
+
+                    Log::warning("AI Feedback Generation rejected incomplete response from {$currentProvider} on attempt {$attempt}.");
+                } catch (\Exception $e) {
+                    Log::error("AI Feedback Generation Error ({$currentProvider}, attempt {$attempt}): " . $e->getMessage());
+                }
+
+                if ($attempt < $maxRetries) {
+                    sleep(1);
+                }
             }
         }
         
-        Log::error("AI Feedback Generation Failed after {$maxRetries} attempts.");
-        return [];
+        Log::error('AI Feedback Generation Failed on all configured providers.');
+        return self::normalizeFeedbackResponse([], $answersData, $sessionData);
     }
 
     public static function generateGame($topic, $provider = 'gemini')
@@ -669,8 +664,297 @@ EOT;
         return $text;
     }
 
+    private static function feedbackProviderPriority($provider): array
+    {
+        $priorityString = env(
+            'AI_FEEDBACK_PROVIDER_PRIORITY',
+            env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'openai,gemini,claude,groq,openrouter,wisdomgate,cohere')
+        );
+
+        $providers = array_merge([$provider], array_map('trim', explode(',', $priorityString)));
+        $providers = array_map(fn ($name) => self::normalizeProviderName($name), $providers);
+        $providers = array_filter($providers);
+
+        return array_values(array_unique($providers));
+    }
+
+    private static function normalizeProviderName($provider): string
+    {
+        $provider = strtolower(trim((string) $provider));
+        $provider = str_replace([' ', '_'], '', $provider);
+
+        return match ($provider) {
+            'openai', 'chatgpt', 'gpt' => 'openai',
+            'google', 'googlegemini', 'gemini' => 'gemini',
+            'anthropic', 'claude' => 'claude',
+            'groq' => 'groq',
+            'openrouter' => 'openrouter',
+            'wisdomgate' => 'wisdomgate',
+            'cohere' => 'cohere',
+            default => '',
+        };
+    }
+
+    private static function callStructuredProvider($provider, $prompt): array
+    {
+        return match (self::normalizeProviderName($provider)) {
+            'openai' => self::callOpenAI($prompt, 'Return only one valid JSON object that matches the requested schema.'),
+            'gemini' => self::callGemini($prompt),
+            'cohere' => self::callCohere($prompt),
+            'groq' => self::callGroq($prompt),
+            'openrouter' => self::callOpenRouter($prompt),
+            'claude' => self::callClaude($prompt),
+            'wisdomgate' => self::callWisdomGate($prompt),
+            default => [],
+        };
+    }
+
+    private static function feedbackResponseIsComplete($response, array $answersData): bool
+    {
+        if (!is_array($response) || !isset($response['per_question_feedback']) || !is_array($response['per_question_feedback'])) {
+            return false;
+        }
+
+        $feedbackById = [];
+        foreach ($response['per_question_feedback'] as $item) {
+            if (is_array($item) && isset($item['id'])) {
+                $feedbackById[(string) $item['id']] = $item;
+            }
+        }
+
+        foreach ($answersData as $answer) {
+            $id = (string) ($answer['id'] ?? '');
+            if ($id === '' || !isset($feedbackById[$id])) {
+                return false;
+            }
+
+            foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
+                if (!array_key_exists($field, $feedbackById[$id]) || !is_numeric($feedbackById[$id][$field])) {
+                    return false;
+                }
+            }
+
+            if (trim((string) ($feedbackById[$id]['ai_feedback'] ?? '')) === '') {
+                return false;
+            }
+        }
+
+        $sessionFeedback = $response['session_feedback'] ?? null;
+        if (!is_array($sessionFeedback)) {
+            return false;
+        }
+
+        foreach (['overall_readiness_score', 'star_method_score', 'strengths', 'weaknesses', 'improvement_suggestions'] as $field) {
+            if (!array_key_exists($field, $sessionFeedback)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData): array
+    {
+        $feedbackById = [];
+        foreach (($response['per_question_feedback'] ?? []) as $item) {
+            if (is_array($item) && isset($item['id'])) {
+                $feedbackById[(string) $item['id']] = $item;
+            }
+        }
+
+        $normalizedItems = [];
+        foreach ($answersData as $answer) {
+            $id = (string) ($answer['id'] ?? '');
+            $normalizedItems[] = self::normalizeQuestionFeedback($feedbackById[$id] ?? [], $answer, $sessionData);
+        }
+
+        return [
+            'per_question_feedback' => $normalizedItems,
+            'session_feedback' => self::normalizeSessionFeedback($response['session_feedback'] ?? [], $normalizedItems),
+        ];
+    }
+
+    private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData): array
+    {
+        $id = (int) ($answer['id'] ?? ($feedback['id'] ?? 0));
+        $answerText = self::candidateAnswerText($answer);
+        $questionText = trim((string) ($answer['question'] ?? ''));
+        $isSkipped = self::isSkippedAnswer($answer);
+        $isTooShort = !$isSkipped && self::isTooShortAnswer($answerText);
+
+        $scores = [];
+        foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
+            $scores[$field] = self::normalizeScore($feedback[$field] ?? null);
+        }
+
+        if (!$isSkipped && !$isTooShort && !is_numeric($feedback['score'] ?? null)) {
+            $scores['score'] = (int) round(($scores['clarity_score'] + $scores['relevance_score'] + $scores['grammar_score'] + $scores['professionalism_score']) / 4);
+        }
+
+        if ($isSkipped) {
+            foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
+                $scores[$field] = 0;
+            }
+        } elseif ($isTooShort) {
+            foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
+                $fallback = is_numeric($feedback[$field] ?? null) ? self::normalizeScore($feedback[$field]) : 5;
+                $scores[$field] = min(10, $fallback);
+            }
+        }
+
+        $aiFeedback = trim((string) ($feedback['ai_feedback'] ?? ''));
+        if ($isSkipped) {
+            $aiFeedback = 'This answer was skipped, so there is no candidate evidence to evaluate. Skipping interview questions prevents the interviewer from assessing communication, judgment, and role readiness.';
+        } elseif ($isTooShort) {
+            $required = 'The answer was too short to properly evaluate communication skills, knowledge, and interview readiness.';
+            $aiFeedback = str_contains(strtolower($aiFeedback), strtolower($required))
+                ? $aiFeedback
+                : $required . ' ' . trim($aiFeedback ?: 'It did not include enough detail about actions, context, or results.');
+        } elseif ($aiFeedback === '' || self::isGenericFeedback($aiFeedback)) {
+            $aiFeedback = self::fallbackEvidenceFeedback($answerText);
+        }
+
+        $betterAnswer = trim((string) ($feedback['better_sample_answer'] ?? ''));
+        if ($betterAnswer === '') {
+            $betterAnswer = self::fallbackBetterAnswer($questionText, $sessionData);
+        }
+
+        $followUpQuestion = trim((string) ($feedback['follow_up_question'] ?? ''));
+        if ($followUpQuestion === '') {
+            $followUpQuestion = 'Can you share a specific example, your exact role, and the measurable result?';
+        }
+
+        return array_merge([
+            'id' => $id,
+        ], $scores, [
+            'ai_feedback' => $aiFeedback,
+            'better_sample_answer' => $betterAnswer,
+            'follow_up_question' => $followUpQuestion,
+        ]);
+    }
+
+    private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback): array
+    {
+        $scores = array_column($questionFeedback, 'score');
+        $averageScore = count($scores) > 0 ? (int) round(array_sum($scores) / count($scores)) : 0;
+
+        $strengths = self::feedbackText($sessionFeedback['strengths'] ?? '');
+        $weaknesses = self::feedbackText($sessionFeedback['weaknesses'] ?? '');
+        $suggestions = self::feedbackText($sessionFeedback['improvement_suggestions'] ?? '');
+
+        return [
+            'overall_readiness_score' => $averageScore,
+            'star_method_score' => self::normalizeScore($sessionFeedback['star_method_score'] ?? 0),
+            'strengths' => $strengths !== '' ? $strengths : self::fallbackSessionStrengths($questionFeedback),
+            'weaknesses' => $weaknesses !== '' ? $weaknesses : 'The answers need more specific evidence, clearer structure, and stronger coverage of outcomes before they can be considered interview-ready.',
+            'improvement_suggestions' => $suggestions !== '' ? $suggestions : 'Use the STAR method for each answer: set context, explain your responsibility, describe concrete actions, and close with a measurable result or lesson learned.',
+        ];
+    }
+
+    private static function feedbackText($value): string
+    {
+        if (is_array($value)) {
+            $value = implode("\n", array_filter(array_map('strval', $value)));
+        }
+
+        return trim((string) $value);
+    }
+
+    private static function fallbackSessionStrengths(array $questionFeedback): string
+    {
+        $scores = array_column($questionFeedback, 'score');
+        $averageScore = count($scores) > 0 ? (int) round(array_sum($scores) / count($scores)) : 0;
+
+        if ($averageScore >= 70) {
+            return 'The stronger answers were generally understandable and relevant to the questions asked.';
+        }
+
+        return 'No consistent strengths were demonstrated across the submitted answers.';
+    }
+
+    private static function candidateAnswerText(array $answer): string
+    {
+        return trim((string) ($answer['answer'] ?? ''));
+    }
+
+    private static function isSkippedAnswer(array $answer): bool
+    {
+        $answerText = self::candidateAnswerText($answer);
+
+        return (bool) ($answer['is_skipped'] ?? false)
+            || $answerText === ''
+            || strcasecmp($answerText, '(Skipped or no answer)') === 0;
+    }
+
+    private static function isTooShortAnswer(string $answerText): bool
+    {
+        $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $answerText)));
+        $shortAnswers = ['yes', 'no', 'okay', 'ok', 'maybe', "i don't know", 'i dont know', 'not sure', 'n/a', 'na'];
+
+        if (in_array($normalized, $shortAnswers, true)) {
+            return true;
+        }
+
+        preg_match_all('/\b[\pL\pN][\pL\pN\'-]*\b/u', $answerText, $matches);
+
+        return count($matches[0] ?? []) < 10;
+    }
+
+    private static function normalizeScore($score): int
+    {
+        if (!is_numeric($score)) {
+            return 0;
+        }
+
+        return max(0, min(100, (int) round($score)));
+    }
+
+    private static function isGenericFeedback(string $feedback): bool
+    {
+        $normalized = strtolower(trim(preg_replace('/[^a-z0-9 ]+/', '', $feedback)));
+        $generic = [
+            'good answer',
+            'well explained',
+            'could provide more details',
+            'try to be more specific',
+            'your answer was clear',
+        ];
+
+        return in_array($normalized, $generic, true) || str_word_count($normalized) < 8;
+    }
+
+    private static function fallbackEvidenceFeedback(string $answerText): string
+    {
+        $excerpt = self::excerpt($answerText);
+
+        return 'The provider did not return enough evidence-linked feedback. Based only on the submitted answer excerpt "' . $excerpt . '", this response should be reviewed for clearer responsibilities, actions, and results before relying on the score.';
+    }
+
+    private static function fallbackBetterAnswer(string $questionText, array $sessionData): string
+    {
+        $position = trim((string) ($sessionData['target_position'] ?? 'the role'));
+        $question = $questionText !== '' ? ' to "' . self::excerpt($questionText, 120) . '"' : '';
+
+        return "A stronger answer{$question} would name the situation, explain the candidate's responsibility, describe specific actions taken for {$position}, and close with a measurable result or lesson learned.";
+    }
+
+    private static function excerpt(string $text, int $limit = 180): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', $text));
+
+        if ($text === '') {
+            return 'no answer provided';
+        }
+
+        return strlen($text) > $limit ? substr($text, 0, $limit - 3) . '...' : $text;
+    }
+
     private static function parseJsonResponse($content)
     {
+        if (!is_string($content) || trim($content) === '') {
+            return [];
+        }
+
         // Strip markdown backticks if present
         $content = preg_replace('/^```json\s*|```\s*$/i', '', trim($content));
         $content = preg_replace('/^```\s*|```\s*$/i', '', trim($content));
@@ -729,7 +1013,12 @@ EOT;
                         ['text' => $prompt]
                     ]
                 ]
-            ]
+            ],
+            'generationConfig' => [
+                'temperature' => 0.1,
+                'maxOutputTokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+                'responseMimeType' => 'application/json',
+            ],
         ]);
 
         if ($response->successful()) {
@@ -751,8 +1040,8 @@ EOT;
         ])->post('https://api.cohere.ai/v1/generate', [
             'model' => $model,
             'prompt' => $prompt,
-            'max_tokens' => 500,
-            'temperature' => 0.7,
+            'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+            'temperature' => 0.1,
         ]);
 
         if ($response->successful()) {
@@ -773,6 +1062,9 @@ EOT;
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
             'model' => $model,
+            'temperature' => 0.1,
+            'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+            'response_format' => ['type' => 'json_object'],
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ]
@@ -796,6 +1088,9 @@ EOT;
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
             'model' => $model,
+            'temperature' => 0.1,
+            'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+            'response_format' => ['type' => 'json_object'],
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ]
@@ -821,7 +1116,8 @@ EOT;
             'content-type' => 'application/json',
         ])->post('https://api.anthropic.com/v1/messages', [
             'model' => $model,
-            'max_tokens' => 1000,
+            'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+            'temperature' => 0.1,
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ]
@@ -846,6 +1142,9 @@ EOT;
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [
             'model' => $model,
+            'temperature' => 0.1,
+            'max_tokens' => (int) env('AI_JSON_MAX_TOKENS', 4096),
+            'response_format' => ['type' => 'json_object'],
             'messages' => [
                 ['role' => 'user', 'content' => $prompt]
             ]
