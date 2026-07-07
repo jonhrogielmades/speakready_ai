@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI - Practice Smarter. Interview Better.</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -22,36 +22,13 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
       <script>
          if (localStorage.getItem('theme') === 'light') {
              document.documentElement.classList.add('lm');
          }
       </script>
       <style>
-         /* Global Mobile Responsiveness for Premium UI Updates */
-         @media (max-width: 768px) {
-             .premium-panel, .panel, .setup-panel {
-                 border-radius: 16px !important;
-                 padding: 16px !important;
-             }
-             .stat-card.premium-panel, .perk-card.premium-panel, .module-card.premium-panel, .print-card {
-                 padding: 16px !important;
-             }
-             h4.text-gradient-primary, .text-gradient-primary {
-                 font-size: 1.25rem !important;
-             }
-             .db-section {
-                 padding: 15px !important;
-             }
-             .accordion-item.premium-panel {
-                 padding: 0 !important;
-             }
-             .accordion-button {
-                 padding: 16px !important;
-             }
-         }
-
          html, body {
             overflow-x: hidden;
             width: 100%;
@@ -157,12 +134,8 @@
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
              <div class="container position-relative" style="z-index:2">
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
-                    <span class="hbadge sr-hero-badge">
-                       <span>AI-Powered Learning</span>
-                       <span class="sr-badge-separator">|</span>
-                       <span>Real-Time Feedback</span>
-                       <span class="sr-badge-separator">|</span>
-                       <span>Interactive Training</span>
+                    <span class="hbadge">
+                 AI-Powered Learning | Real-Time Feedback | Interactive Training
                     </span>
                 </div>
                 <div class="row align-items-center mt-4">
@@ -183,12 +156,12 @@
                            100% { transform: translateY(0px) rotateY(0deg); }
                         }
                      </style>
-                     <img src="{{ asset('img/hero_boy.png') }}" class="img-fluid mic-3d-anim afu sr-hero-image" alt="SpeakReady AI Interview Practice" style="max-height: 450px; animation-delay: .1s; mix-blend-mode: multiply;">
+                     <img src="{{ asset('img/hero_boy.png') }}" class="img-fluid mic-3d-anim afu" alt="SpeakReady AI Interview Practice" style="max-height: 450px; animation-delay: .1s; mix-blend-mode: multiply;">
                   </div>
                   <div class="col-lg-7 col-md-6 text-center order-2 order-lg-1">
-                     <h1 class="h1 afu sr-hero-title" style="animation-delay:.12s">Practice <span class="sr-mobile-break"><br></span>Smarter.<br><span class="gt">Interview <span class="sr-mobile-break"><br></span>Better.</span></h1>
-                     <p class="mx-auto afu sr-hero-copy" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
-                     <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu sr-hero-actions" style="animation-delay:.28s">
+                     <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
+                     <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
+                     <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
                         <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
@@ -230,7 +203,7 @@
                 
                 <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-11 adi">
-                     <div class="dwrap sr-hero-preview">
+                     <div class="dwrap">
                         <div class="dtbar"><span class="dd" style="background:#ff5f57"></span><span class="dd" style="background:#ffbd2e"></span><span class="dd" style="background:#28c840"></span><span class="ms-auto me-auto" style="font-size:.76rem;color:var(--tx3)"></span></div>
                         <div class="dgrid">
                            <div class="dside">
@@ -371,84 +344,84 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:var(--pur)"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Monitor your overall readiness score, performance trends, and recent interview metrics in one centralized dashboard.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Monitor readiness scores, recent sessions, learning progress, and AI feedback summaries from one home base.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Mock Interview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Practice with our AI avatar using tailored questions for job, scholarship, and admission interviews.</p>
+                        <h3 class="fs-6 fw-bold mb-2">AI Mock Interviews</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Hone your delivery with dedicated vocal drills analyzing your pacing, enunciation, and filler words.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-file-lines fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Advanced Personalization</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Upload a resume, paste a job description, and choose company personas for sharper role-specific questions.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.15s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(239,68,68,.15);color:#ef4444"><i class="fa-solid fa-book-open fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Learning Lab</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Master your skills with structured learning modules, chapters, and quizzes tailored to interview strategies.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal Studio</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Improve pacing, clarity, confidence, and filler-word control with dedicated voice drills and history analytics.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Engage in continuous conversations with your personalized AI Coach to discuss strategies and get actionable advice.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(239,68,68,.15);color:#ef4444"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Interview Modules</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Study structured modules with chapters, resources, quizzes, and practice activities tied to interview skills.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:#3b82f6"><i class="fa-solid fa-chart-line fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Visualize your growth through detailed performance trends, including grammar, clarity, and readiness scores.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(236,72,153,.15);color:#ec4899"><i class="fa-solid fa-gamepad fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Learning Games</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Complete challenge paths with levels, energy, lives, target tones, banned words, and score goals.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(16,185,129,.15);color:#10b981"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Receive granular, sentence-by-sentence AI feedback highlighting strengths, weaknesses, and improvement suggestions.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Chat with a focused interview coach for resume refinement, behavioral practice, and preparation strategy.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(234,179,8,.15);color:#eab308"><i class="fa-solid fa-trophy fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Leaderboard</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Earn experience points from sessions and see how you rank globally within our active community of learners.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(16,185,129,.15);color:#10b981"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Review evidence-linked feedback, per-question scores, better sample answers, and follow-up questions.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(236,72,153,.15);color:#ec4899"><i class="fa-solid fa-gamepad fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Arena Challenges</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Engage in competitive game levels to put your skills to the test.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:#3b82f6"><i class="fa-solid fa-chart-line fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and voice rehearsal growth.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.45s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(99,102,241,.15);color:#6366f1"><i class="fa-solid fa-star fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Skills System</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Earn points through practice to unlock perks and boost capabilities.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(6,182,212,.15);color:#06b6d4"><i class="fa-solid fa-folder-open fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Build portfolio reports, print detailed reviews, and create secure public links for mentors or peers.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(6,182,212,.15);color:#06b6d4"><i class="fa-solid fa-share-nodes fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Share Sessions</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Generate secure links to share your feedback with mentors.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(99,102,241,.15);color:#6366f1"><i class="fa-solid fa-network-wired fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Skill Trees</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Earn leadership, communication, technical, and problem-solving XP, then unlock perks as you improve.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.55s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(244,63,94,.15);color:#f43f5e"><i class="fa-solid fa-wand-magic-sparkles fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Smart Assistant</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">An integrated AI helper to guide and recommend tailored modules.</p>
+                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(234,179,8,.15);color:#eab308"><i class="fa-solid fa-trophy fa-lg"></i></div>
+                        <h3 class="fs-6 fw-bold mb-2">Leaderboard</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Compare progress with the community through rankings powered by practice activity and performance.</p>
                      </div>
                   </div>
                </div>
