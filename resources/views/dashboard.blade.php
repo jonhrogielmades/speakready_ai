@@ -629,12 +629,12 @@
         }
 
         .sr-dashboard {
-            gap: 12px;
+            gap: 14px;
             padding: 6px 0 8px !important;
         }
 
         #dashboard .db-content .db-section.active.sr-dashboard {
-            gap: 12px;
+            gap: 14px;
             padding: 6px 0 8px !important;
         }
 
@@ -656,6 +656,11 @@
             margin: 0;
         }
 
+        .sr-hero-card {
+            border-radius: 14px;
+            margin-bottom: 0;
+        }
+
         .sr-stats-desktop {
             display: none;
         }
@@ -665,14 +670,19 @@
             z-index: 1;
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px;
-            padding: 0 14px 14px;
-            margin: -2px 0 0;
+            gap: 8px;
+            padding: 0 12px 12px;
+            margin: 0;
         }
 
         .sr-card-pad,
         .sr-hero-inner {
             padding: 14px;
+        }
+
+        .sr-hero-inner {
+            gap: 12px;
+            padding-bottom: 12px;
         }
 
         .sr-user-row {
@@ -723,6 +733,31 @@
             grid-template-columns: 1fr;
         }
 
+        .sr-score-panel {
+            width: 100%;
+            max-width: none;
+            padding: 14px;
+            border-radius: 14px;
+        }
+
+        .sr-score-top {
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .sr-score-value {
+            font-size: clamp(2.75rem, 13vw, 3.35rem);
+        }
+
+        .sr-score-meta {
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .sr-score-meta-item {
+            padding: 9px 10px;
+        }
+
         .sr-stat-card {
             min-height: 118px;
             padding: 12px;
@@ -766,9 +801,76 @@
             line-height: 1.25;
         }
 
+        .sr-mobile-stat-grid .sr-stat-card {
+            min-height: 104px;
+            padding: 10px;
+            border-radius: 12px;
+            gap: 8px;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-head {
+            gap: 6px;
+            min-height: 28px;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            font-size: 0.76rem;
+        }
+
+        .sr-mobile-stat-grid .sr-chip {
+            max-width: calc(100% - 34px);
+            padding: 4px 6px;
+            font-size: 0.58rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-card > div:last-child {
+            margin-top: 6px;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-value {
+            font-size: 1.12rem;
+        }
+
         .chart-container-mobile,
         .sr-chart-box {
             height: 230px;
+        }
+
+        #card-progress-chart.sr-card-pad {
+            padding: 14px;
+        }
+
+        #card-progress-chart .sr-card-header {
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        #card-progress-chart .sr-card-title {
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+            line-height: 1.2;
+        }
+
+        #card-progress-chart .sr-card-kicker {
+            font-size: 0.72rem;
+            line-height: 1.3;
+        }
+
+        #card-progress-chart .sr-card-header > .sr-chip {
+            align-self: flex-start;
+            padding: 5px 8px;
+            font-size: 0.66rem;
+        }
+
+        #card-progress-chart .sr-chart-box {
+            height: 214px;
+            margin-top: 2px;
         }
 
         .sr-sessions-table {
@@ -794,7 +896,9 @@
         }
 
         .sr-mobile-stat-grid {
-            gap: 10px;
+            gap: 8px;
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
         .sr-achievement-grid {
@@ -834,7 +938,21 @@
 
         .sr-mobile-stat-grid {
             gap: 8px;
-            padding: 0 10px 10px;
+            padding: 0 8px 10px;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-card {
+            min-height: 100px;
+            padding: 9px;
+        }
+
+        .sr-mobile-stat-grid .sr-chip {
+            padding: 4px 5px;
+            font-size: 0.56rem;
+        }
+
+        #card-progress-chart .sr-chart-box {
+            height: 202px;
         }
     }
 </style>
