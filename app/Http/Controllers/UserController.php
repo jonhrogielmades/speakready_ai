@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\InterviewSession;
+use App\Models\Question;
+use App\Models\Score;
 use App\Helpers\ActivityLogger;
 
 class UserController extends Controller
@@ -262,6 +266,77 @@ class UserController extends Controller
         return view('user.review', compact('sessionRecord', 'comparisonRows'));
     }
 
+    public function destroySession(Request $request, $id)
+    {
+        $user = Auth::user();
+        $sessionRecord = InterviewSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->findOrFail($id);
+
+        $sessionDate = $sessionRecord->created_at
+            ? $sessionRecord->created_at->format('M d, Y')
+            : 'selected date';
+
+        DB::transaction(function () use ($sessionRecord, $user) {
+            if ((int) session('active_interview_id') === (int) $sessionRecord->id) {
+                session()->forget('active_interview_id');
+            }
+
+            Question::where('interview_session_id', $sessionRecord->id)->delete();
+            $sessionRecord->delete();
+            $this->syncInterviewProfileStats($user->id);
+        });
+
+        ActivityLogger::log(
+            $user,
+            'interview_session_deleted',
+            "You deleted an interview session from {$sessionDate}.",
+            $request->ip(),
+            true,
+            ['title' => 'Session Deleted', 'icon' => 'fa-trash-can', 'type' => 'warning']
+        );
+
+        return redirect()->back()->with('success', 'Interview session deleted successfully.');
+    }
+
+    public function clearSessions(Request $request)
+    {
+        $user = Auth::user();
+        $sessionCount = InterviewSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+
+        if ($sessionCount === 0) {
+            return redirect()->back()->with('message', 'No completed sessions to clear.');
+        }
+
+        DB::transaction(function () use ($user) {
+            $sessionIds = InterviewSession::where('user_id', $user->id)
+                ->where('status', 'completed')
+                ->pluck('id');
+
+            Question::whereIn('interview_session_id', $sessionIds)->delete();
+
+            InterviewSession::whereIn('id', $sessionIds)
+                ->delete();
+
+            $this->syncInterviewProfileStats($user->id);
+        });
+
+        $label = $sessionCount === 1 ? 'session' : 'sessions';
+
+        ActivityLogger::log(
+            $user,
+            'interview_sessions_cleared',
+            "You cleared {$sessionCount} completed interview {$label}.",
+            $request->ip(),
+            true,
+            ['title' => 'Sessions Cleared', 'icon' => 'fa-broom', 'type' => 'warning']
+        );
+
+        return redirect()->back()->with('success', 'All completed interview sessions were cleared.');
+    }
+
     private function comparisonRowsFor(InterviewSession $session): array
     {
         if (!$session->score) {
@@ -303,6 +378,79 @@ class UserController extends Controller
         }
 
         return $rows;
+    }
+
+    private function syncInterviewProfileStats(int $userId): void
+    {
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $userId]);
+
+        $completedSessions = InterviewSession::where('user_id', $userId)
+            ->where('status', 'completed');
+
+        $profile->total_sessions = (clone $completedSessions)->count();
+
+        $averageScore = Score::whereHas('session', function ($query) use ($userId) {
+            $query->where('user_id', $userId)
+                ->where('status', 'completed');
+        })->avg('overall_readiness_score');
+
+        $profile->readiness_score = round($averageScore ?? 0);
+
+        $practiceDates = (clone $completedSessions)
+            ->selectRaw('DATE(created_at) as practice_date')
+            ->distinct()
+            ->orderBy('practice_date')
+            ->pluck('practice_date')
+            ->filter()
+            ->map(fn($date) => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->values();
+
+        if ($practiceDates->isEmpty()) {
+            $profile->current_streak = 0;
+            $profile->longest_streak = 0;
+            $profile->last_activity_date = null;
+        } else {
+            $profile->current_streak = $this->currentPracticeStreak($practiceDates);
+            $profile->longest_streak = $this->longestPracticeStreak($practiceDates);
+            $profile->last_activity_date = $practiceDates->last();
+        }
+
+        $profile->save();
+    }
+
+    private function currentPracticeStreak($practiceDates): int
+    {
+        $dateSet = array_fill_keys($practiceDates->all(), true);
+        $cursor = Carbon::parse($practiceDates->last());
+        $streak = 0;
+
+        while (isset($dateSet[$cursor->toDateString()])) {
+            $streak++;
+            $cursor->subDay();
+        }
+
+        return $streak;
+    }
+
+    private function longestPracticeStreak($practiceDates): int
+    {
+        $longest = 0;
+        $current = 0;
+        $previousDate = null;
+
+        foreach ($practiceDates as $date) {
+            if ($previousDate && Carbon::parse($previousDate)->addDay()->toDateString() === $date) {
+                $current++;
+            } else {
+                $current = 1;
+            }
+
+            $longest = max($longest, $current);
+            $previousDate = $date;
+        }
+
+        return $longest;
     }
 
     public function coach() { 

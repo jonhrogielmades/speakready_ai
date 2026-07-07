@@ -1237,7 +1237,18 @@
                         <h2 class="sr-card-title">Recent Sessions</h2>
                         <div class="sr-card-kicker">Review the latest completed mock interviews.</div>
                     </div>
-                    <a href="{{ route('user.reports') }}" class="sr-btn" style="min-height:36px;padding:7px 12px">View Reports</a>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <a href="{{ route('user.reports') }}" class="sr-btn" style="min-height:36px;padding:7px 12px">View Reports</a>
+                        @if(isset($recentSessions) && $recentSessions->count() > 0)
+                            <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="sr-btn" style="min-height:36px;padding:7px 12px;color:#ef4444;border-color:rgba(239,68,68,.35)">
+                                    <i class="fa-solid fa-trash-can"></i> Clear All
+                                </button>
+                            </form>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="table-responsive sr-sessions-table">
@@ -1260,7 +1271,18 @@
                                     <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
                                     <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'General' }}</span></td>
                                     <td><span style="color:{{ $sessionColor }};font-weight:900">{{ $sessionScore }}%</span></td>
-                                    <td class="text-end"><a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 11px;font-size:.78rem">Review</a></td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 11px;font-size:.78rem">Review</a>
+                                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="sr-btn" title="Delete session" style="width:34px;min-height:34px;padding:0;color:#ef4444;border-color:rgba(239,68,68,.35)">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -1285,6 +1307,13 @@
                             <div class="d-flex align-items-center gap-2">
                                 <span class="sr-score-mini" style="color:{{ $sessionColor }}">{{ $sessionScore }}%</span>
                                 <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 10px;font-size:.78rem">Review</a>
+                                <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="sr-btn" title="Delete session" style="width:34px;min-height:34px;padding:0;color:#ef4444;border-color:rgba(239,68,68,.35)">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     @empty

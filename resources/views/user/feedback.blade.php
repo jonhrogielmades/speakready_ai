@@ -53,6 +53,15 @@
                     <option value="College Admission">College Admission</option>
                 </select>
                 <button class="btn btn-outline-secondary" id="sortDateBtn" style="border-radius:8px;"><i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date</button>
+                @if($sessions->total() > 0)
+                    <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger" style="border-radius:8px;font-weight:600;">
+                            <i class="fa-solid fa-trash-can me-1"></i> Clear All
+                        </button>
+                    </form>
+                @endif
                 <div class="input-group db-filter-input" style="width:250px; background:var(--bg); border-radius:8px;">
                     <span class="input-group-text border-0" style="background:transparent;color:var(--tx3);border-radius:8px 0 0 8px;"><i class="fa-solid fa-search"></i></span>
                     <input type="text" id="feedbackSearch" class="form-control border-0 db-filter-input" placeholder="Search Feedback..." style="background:transparent;color:var(--tx);border-radius:0 8px 8px 0; outline:none; box-shadow:none !important;">
@@ -85,7 +94,18 @@
                             @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Improvement</span>
                             @endif
                         </td>
-                        <td class="border-0 py-3 text-end"><a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;">View Details</a></td>
+                        <td class="border-0 py-3 text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;">View Details</a>
+                                <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session" style="border-radius:8px;">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     @endforeach
                     @if($sessions->count() == 0)
@@ -119,7 +139,7 @@
 
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                const rowCat = row.getAttribute('data-category').toLowerCase();
+                const rowCat = (row.getAttribute('data-category') || '').toLowerCase();
                 
                 const matchesSearch = text.includes(search);
                 const matchesCat = cat === "" || rowCat.includes(cat);

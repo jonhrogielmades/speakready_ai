@@ -96,6 +96,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/drills/voice/save', [UserController::class, 'saveVoiceSession'])->name('user.drills.voice.save');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
+    Route::delete('/session/{id}', [UserController::class, 'destroySession'])->name('user.sessions.destroy');
+    Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->name('user.sessions.clear');
     Route::get('/reports', [UserController::class, 'reports'])->name('user.reports');
     Route::get('/community/leaderboard', [UserController::class, 'leaderboard'])->name('user.leaderboard');
 });

@@ -254,9 +254,20 @@
             <div class="premium-panel">
                 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                     <h5 style="color:var(--tx);margin:0;font-weight:bold;">Interview Performance History</h5>
-                    <div class="input-group" style="width:250px;">
-                        <span class="input-group-text border-0" style="background:var(--bg);color:var(--tx3);"><i class="fa-solid fa-search"></i></span>
-                        <input type="text" id="historySearch" class="form-control border-0" placeholder="Search History..." style="background:var(--bg);color:var(--tx);">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        @if($sessions->count() > 0)
+                            <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger" style="border-radius:8px;font-weight:600;">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Clear All
+                                </button>
+                            </form>
+                        @endif
+                        <div class="input-group" style="width:250px;">
+                            <span class="input-group-text border-0" style="background:var(--bg);color:var(--tx3);"><i class="fa-solid fa-search"></i></span>
+                            <input type="text" id="historySearch" class="form-control border-0" placeholder="Search History..." style="background:var(--bg);color:var(--tx);">
+                        </div>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -284,7 +295,18 @@
                                     @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Work</span>
                                     @endif
                                 </td>
-                                <td class="border-0 py-3 text-end"><a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">View Feedback</a></td>
+                                <td class="border-0 py-3 text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">View Feedback</a>
+                                        <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session" style="border-radius:8px;">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                             @endforeach
                             @if($sessions->count() == 0)
