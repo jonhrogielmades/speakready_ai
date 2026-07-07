@@ -124,7 +124,7 @@
                                 @if($isUnlocked)
                                     <button class="btn" style="background:var(--bg1);color:var(--tx3);border-radius:12px;font-weight:600;" disabled>Unlocked</button>
                                 @else
-                                    <button class="btn btn-unlock btn-shine" data-id="{{ $id }}" data-type="{{ $perk['type'] }}" data-cost="{{ $perk['cost'] }}" style="background:{{ $canAfford ? $color : 'var(--bg1)' }};color:{{ $canAfford ? '#fff' : 'var(--tx3)' }};border-radius:12px;font-weight:600;" {{ $canAfford ? '' : 'disabled' }}>
+                                    <button class="btn btn-unlock btn-shine" data-id="{{ $id }}" style="background:{{ $canAfford ? $color : 'var(--bg1)' }};color:{{ $canAfford ? '#fff' : 'var(--tx3)' }};border-radius:12px;font-weight:600;" {{ $canAfford ? '' : 'disabled' }}>
                                         <i class="fa-solid {{ $canAfford ? 'fa-unlock' : 'fa-lock' }} me-2"></i>{{ $canAfford ? 'Unlock' : 'Locked' }}
                                     </button>
                                 @endif
@@ -146,8 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
     unlockBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const perkId = this.dataset.id;
-            const perkType = this.dataset.type;
-            const cost = this.dataset.cost;
             const originalText = this.innerHTML;
             
             this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
@@ -160,9 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
-                    perk_id: perkId,
-                    perk_type: perkType,
-                    cost: cost
+                    perk_id: perkId
                 })
             })
             .then(res => res.json())

@@ -54,4 +54,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(InterviewSession::class);
     }
+
+    public function profile()
+    {
+        return $this->hasOne(Profile::class);
+    }
 }

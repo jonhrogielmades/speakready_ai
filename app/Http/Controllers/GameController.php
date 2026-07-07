@@ -12,9 +12,26 @@ class GameController extends Controller
 {
     public function startLevel(Request $request, $id)
     {
-        $level = GameLevel::findOrFail($id);
+        $level = GameLevel::with('category')->findOrFail($id);
         $user = Auth::user();
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
+
+        if ($level->category && ($level->category->status !== 'active' || $level->category->type !== 'game')) {
+            abort(404);
+        }
+
+        if ($level->is_hidden) {
+            $visibleProgress = GameProgress::where('user_id', $user->id)
+                ->where('game_level_id', $level->id)
+                ->whereIn('status', ['active', 'completed'])
+                ->exists();
+
+            if (!$visibleProgress) {
+                abort(404);
+            }
+        }
+
+        $this->refreshEnergyIfNeeded($profile);
 
         // Check if level is locked (Sequential Locking by Category)
         $status = 'locked';
@@ -67,14 +84,11 @@ class GameController extends Controller
         }
 
         if ($profile->energy < $energyCost) {
-            // Auto-refill for seamless testing/gameplay
-            $profile->energy = 5;
-            $profile->save();
-            session()->flash('success', 'You ran out of energy, so we gave you a free refill! Keep playing!');
+            return back()->with('error', 'Not enough energy to start this challenge. Your energy refills daily.');
         }
 
         // Consume Energy
-        $profile->energy -= $energyCost;
+        $profile->energy = max(0, $profile->energy - $energyCost);
         $profile->save();
 
         // Combine mission text and custom prompt
@@ -125,6 +139,20 @@ class GameController extends Controller
         session(['active_interview_id' => $session->id]);
 
         return redirect()->route('user.game.match')->with('success', 'Learning Game Started! Good luck!');
+    }
+
+    private function refreshEnergyIfNeeded(\App\Models\Profile $profile): void
+    {
+        $maxEnergy = 3;
+        $lastRefill = $profile->energy_last_refilled_at;
+
+        if ($lastRefill && $lastRefill->isSameDay(now())) {
+            return;
+        }
+
+        $profile->energy = max((int) ($profile->energy ?? 0), $maxEnergy);
+        $profile->energy_last_refilled_at = now();
+        $profile->save();
     }
 
     public function arenaSession(Request $request)

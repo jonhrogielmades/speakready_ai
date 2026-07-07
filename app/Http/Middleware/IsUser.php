@@ -20,7 +20,19 @@ class IsUser
             return redirect('/login');
         }
 
-        if (Auth::user()->is_admin) {
+        $user = Auth::user();
+
+        if (in_array($user->status, ['inactive', 'suspended'], true)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect('/')->withErrors([
+                'account_inactive' => 'Your account is inactive. Please request reactivation before continuing.',
+            ]);
+        }
+
+        if ($user->is_admin) {
             return redirect('/admin/dashboard');
         }
 

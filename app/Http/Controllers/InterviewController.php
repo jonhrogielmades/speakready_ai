@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\InterviewSession;
 use App\Models\InterviewAnswer;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use App\Helpers\ActivityLogger;
 
 class InterviewController extends Controller
@@ -14,46 +15,65 @@ class InterviewController extends Controller
     {
         if (!Auth::check()) abort(403);
 
-        $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'difficulty' => 'required|string',
+        $validated = $request->validate([
+            'category_id' => [
+                'required',
+                Rule::exists('categories', 'id')->where('status', 'active')->where('type', 'core'),
+            ],
+            'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
+            'target_position' => 'required|string|max:255',
+            'custom_position' => 'nullable|string|max:255',
+            'resume_text' => 'nullable|string|max:20000',
+            'job_description' => 'nullable|string|max:20000',
+            'num_questions' => ['nullable', 'integer', Rule::in([5, 10, 15, 20])],
+            'coach_focus_mode' => 'nullable|string|max:80',
+            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid'])],
+            'interview_focus' => 'nullable|string|max:120',
+            'company_persona' => 'nullable|string|max:120',
+            'time_limit' => ['nullable', 'integer', Rule::in([0, 1, 2, 3])],
+            'question_types' => 'nullable|array',
+            'question_types.*' => ['string', Rule::in(['Behavioral', 'Situational', 'Technical', 'Personal'])],
+            'ai_assistance_level' => ['nullable', Rule::in(['beginner', 'standard', 'challenge'])],
+            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
         ]);
 
-        $category = \App\Models\Category::findOrFail($request->category_id);
+        $category = \App\Models\Category::findOrFail($validated['category_id']);
 
-        $position = $request->target_position;
-        if ($position === 'Other' && $request->has('custom_position')) {
-            $position = $request->custom_position;
+        $position = $validated['target_position'];
+        if ($position === 'Other' && !empty($validated['custom_position'])) {
+            $position = $validated['custom_position'];
         }
+
+        $provider = $validated['ai_provider'] ?? 'openai';
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
             'category_id' => $category->id,
-            'difficulty' => $request->difficulty,
+            'difficulty' => $validated['difficulty'],
             'target_position' => $position,
-            'resume_text' => $request->resume_text,
-            'job_description' => $request->job_description,
-            'num_questions' => $request->num_questions ?? 5,
-            'coach_focus_mode' => $request->coach_focus_mode ?? 'balanced',
-            'response_mode' => $request->response_mode ?? 'text',
-            'interview_focus' => $request->interview_focus ?? 'General Practice',
-            'company_persona' => $request->company_persona,
-            'time_limit' => $request->time_limit ?? 0,
-            'question_types' => $request->has('question_types') ? json_encode($request->question_types) : null,
-            'ai_assistance_level' => $request->ai_assistance_level ?? 'standard',
+            'resume_text' => $validated['resume_text'] ?? null,
+            'job_description' => $validated['job_description'] ?? null,
+            'num_questions' => $validated['num_questions'] ?? 5,
+            'coach_focus_mode' => $validated['coach_focus_mode'] ?? 'balanced',
+            'response_mode' => $validated['response_mode'] ?? 'text',
+            'interview_focus' => $validated['interview_focus'] ?? 'General Practice',
+            'company_persona' => $validated['company_persona'] ?? null,
+            'time_limit' => $validated['time_limit'] ?? 0,
+            'question_types' => !empty($validated['question_types']) ? json_encode($validated['question_types']) : null,
+            'ai_assistance_level' => $validated['ai_assistance_level'] ?? 'standard',
             'status' => 'in_progress',
         ]);
 
-        if ($request->has('ai_provider') && $request->ai_provider !== 'local') {
+        if ($provider !== 'local') {
             $generated = \App\Services\AIService::generateQuestions(
                 1, // Only generate the first question upfront for the real-time loop
                 $position,
-                $request->difficulty,
-                $request->interview_focus ?? 'General Practice',
-                $request->ai_provider,
-                $request->resume_text,
-                $request->job_description,
-                $request->company_persona
+                $validated['difficulty'],
+                $validated['interview_focus'] ?? 'General Practice',
+                $provider,
+                $validated['resume_text'] ?? null,
+                $validated['job_description'] ?? null,
+                $validated['company_persona'] ?? null
             );
 
             if (is_array($generated)) {
@@ -62,7 +82,7 @@ class InterviewController extends Controller
                         \App\Models\Question::create([
                             'category_id' => $category->id,
                             'question_text' => trim($qText),
-                            'difficulty' => $request->difficulty,
+                            'difficulty' => $validated['difficulty'],
                             'interview_session_id' => $session->id,
                         ]);
                     }
@@ -71,7 +91,7 @@ class InterviewController extends Controller
         }
 
         session(['active_interview_id' => $session->id]);
-        session(['active_interview_provider' => $request->input('ai_provider', 'openai')]);
+        session(['active_interview_provider' => $provider]);
 
         ActivityLogger::log(
             Auth::user(),
@@ -90,35 +110,47 @@ class InterviewController extends Controller
         $session = $this->activeInterviewSession();
         if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
 
-        $request->validate([
+        $validated = $request->validate([
             'question_id' => 'required|exists:questions,id',
+            'answer_text' => 'nullable|string|max:20000',
+            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'is_skipped' => 'nullable',
+            'wpm' => 'nullable|integer|min:0|max:400',
+            'voice_duration' => 'nullable|integer|min:0|max:7200',
+            'filler_words_count' => 'nullable|integer|min:0|max:500',
+            'pause_count' => 'nullable|integer|min:0|max:500',
+            'confidence_score' => 'nullable|integer|min:0|max:100',
+            'eye_contact_score' => 'nullable|integer|min:0|max:100',
+            'posture_score' => 'nullable|integer|min:0|max:100',
+            'notes' => 'nullable|string|max:10000',
         ]);
 
-        $question = $this->questionForSession($request->question_id, $session);
+        $question = $this->questionForSession($validated['question_id'], $session);
         if (!$question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
 
-        $isSkipped = filter_var($request->input('is_skipped', false), FILTER_VALIDATE_BOOLEAN);
-        $answerText = $request->input('answer_text', '');
+        $isSkipped = filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $answerText = $validated['answer_text'] ?? '';
+        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
 
         \App\Models\InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
             'answer_text' => $answerText,
-            'response_mode' => $request->input('response_mode', 'text'),
+            'response_mode' => $validated['response_mode'] ?? 'text',
             'is_skipped' => $isSkipped,
-            'wpm' => $request->input('wpm', 0),
-            'voice_duration' => $request->input('voice_duration', 0),
-            'filler_words_count' => $request->input('filler_words_count', 0),
-            'pause_count' => $request->input('pause_count', 0),
-            'confidence_score' => $request->input('confidence_score', 0),
-            'eye_contact_score' => $request->input('eye_contact_score', 0),
-            'posture_score' => $request->input('posture_score', 0),
+            'wpm' => $deliveryMetrics['wpm'],
+            'voice_duration' => $deliveryMetrics['voice_duration'],
+            'filler_words_count' => $deliveryMetrics['filler_words_count'],
+            'pause_count' => $deliveryMetrics['pause_count'],
+            'confidence_score' => $deliveryMetrics['confidence_score'],
+            'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
+            'posture_score' => $deliveryMetrics['posture_score'],
         ]);
 
-        if ($request->has('notes')) {
-            $session->update(['notes' => $request->input('notes')]);
+        if (array_key_exists('notes', $validated)) {
+            $session->update(['notes' => $validated['notes']]);
         }
 
         return response()->json(['success' => true]);
@@ -129,9 +161,14 @@ class InterviewController extends Controller
         $session = $this->activeInterviewSession();
         if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
 
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:10000',
+            'duration_seconds' => 'nullable|integer|min:0|max:28800',
+        ]);
+
         $session->update([
-            'notes' => $request->input('notes', $session->notes),
-            'duration_seconds' => $request->input('duration_seconds', $session->duration_seconds)
+            'notes' => $validated['notes'] ?? $session->notes,
+            'duration_seconds' => $validated['duration_seconds'] ?? $session->duration_seconds,
         ]);
 
         return response()->json(['success' => true]);
@@ -142,29 +179,40 @@ class InterviewController extends Controller
         $session = $this->activeInterviewSession();
         if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
 
-        $request->validate([
-            'answer_text' => 'required|string',
-            'question_id' => 'required|exists:questions,id'
+        $validated = $request->validate([
+            'answer_text' => 'required|string|max:20000',
+            'question_id' => 'required|exists:questions,id',
+            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'wpm' => 'nullable|integer|min:0|max:400',
+            'voice_duration' => 'nullable|integer|min:0|max:7200',
+            'filler_words_count' => 'nullable|integer|min:0|max:500',
+            'pause_count' => 'nullable|integer|min:0|max:500',
+            'confidence_score' => 'nullable|integer|min:0|max:100',
+            'eye_contact_score' => 'nullable|integer|min:0|max:100',
+            'posture_score' => 'nullable|integer|min:0|max:100',
+            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
+            'is_final_question' => 'nullable',
         ]);
 
-        $question = $this->questionForSession($request->question_id, $session);
+        $question = $this->questionForSession($validated['question_id'], $session);
         if (!$question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
+        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $validated['answer_text']);
         
         // 1. Save User's Answer
         $answer = \App\Models\InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
-            'answer_text' => $request->answer_text,
-            'response_mode' => $request->input('response_mode', 'text'),
-            'wpm' => $request->input('wpm', 0),
-            'voice_duration' => $request->input('voice_duration', 0),
-            'filler_words_count' => $request->input('filler_words_count', 0),
-            'pause_count' => $request->input('pause_count', 0),
-            'confidence_score' => $request->input('confidence_score', 0),
-            'eye_contact_score' => $request->input('eye_contact_score', 0),
-            'posture_score' => $request->input('posture_score', 0),
+            'answer_text' => $validated['answer_text'],
+            'response_mode' => $validated['response_mode'] ?? 'text',
+            'wpm' => $deliveryMetrics['wpm'],
+            'voice_duration' => $deliveryMetrics['voice_duration'],
+            'filler_words_count' => $deliveryMetrics['filler_words_count'],
+            'pause_count' => $deliveryMetrics['pause_count'],
+            'confidence_score' => $deliveryMetrics['confidence_score'],
+            'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
+            'posture_score' => $deliveryMetrics['posture_score'],
         ]);
 
         // 2. Fetch Conversation History
@@ -180,9 +228,9 @@ class InterviewController extends Controller
             })->toArray();
 
         // 3. Generate Follow-up via AI
-        $provider = $request->input('ai_provider', session('active_interview_provider', 'openai'));
-        $isFinal = filter_var($request->input('is_final_question', false), FILTER_VALIDATE_BOOLEAN);
-        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $request->answer_text, $provider, $isFinal);
+        $provider = $validated['ai_provider'] ?? session('active_interview_provider', 'openai');
+        $isFinal = filter_var($validated['is_final_question'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal);
 
         if (!$followUpText) {
             $followUpText = "Thank you for sharing that. Could you tell me more about your experience in this field?"; // fallback
@@ -208,19 +256,22 @@ class InterviewController extends Controller
     {
         if (!Auth::check()) abort(403);
 
-        $request->validate([
+        $validated = $request->validate([
             'session_id' => 'required|exists:interview_sessions,id',
+            'duration_seconds' => 'nullable|integer|min:0|max:28800',
+            'notes' => 'nullable|string|max:10000',
+            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
         ]);
 
-        if ((int) session('active_interview_id') !== (int) $request->session_id) {
+        if ((int) session('active_interview_id') !== (int) $validated['session_id']) {
             abort(403);
         }
 
-        $session = InterviewSession::where('user_id', Auth::id())->findOrFail($request->session_id);
+        $session = InterviewSession::where('user_id', Auth::id())->findOrFail($validated['session_id']);
         $session->update([
             'status' => 'completed',
-            'duration_seconds' => $request->input('duration_seconds', $session->duration_seconds),
-            'notes' => $request->input('notes', $session->notes)
+            'duration_seconds' => $validated['duration_seconds'] ?? $session->duration_seconds,
+            'notes' => $validated['notes'] ?? $session->notes,
         ]);
 
         $answers = \App\Models\InterviewAnswer::with('question')->where('interview_session_id', $session->id)->get();
@@ -254,7 +305,7 @@ class InterviewController extends Controller
         }
 
         // Generate feedback with the selected provider first, then validated provider fallbacks.
-        $feedbackProvider = $request->input('ai_provider', session('active_interview_provider', env('AI_PROVIDER', 'gemini')));
+        $feedbackProvider = $validated['ai_provider'] ?? session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
         $aiFeedback = \App\Services\AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
 
         $totalClarity = 0; $totalRelevance = 0; $totalGrammar = 0; $totalProf = 0;
@@ -398,7 +449,9 @@ class InterviewController extends Controller
                     $gameStatus = 'victory';
                     
                     // Unlock next level
-                    $nextLevel = \App\Models\GameLevel::where('level_number', $gameLevel->level_number + 1)->first();
+                    $nextLevel = \App\Models\GameLevel::where('category_id', $gameLevel->category_id)
+                        ->where('level_number', $gameLevel->level_number + 1)
+                        ->first();
                     if ($nextLevel) {
                         \App\Models\GameProgress::firstOrCreate(
                             ['user_id' => Auth::id(), 'game_level_id' => $nextLevel->id],
@@ -466,7 +519,7 @@ class InterviewController extends Controller
             $profile->player_level = $newLevel;
         }
 
-        $profile->badges_earned = json_encode($badges);
+        $profile->badges_earned = $badges;
         $profile->total_sessions += 1;
         $profile->readiness_score = $overall;
         $profile->save();
@@ -490,6 +543,58 @@ class InterviewController extends Controller
         }
 
         return redirect()->route('user.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
+    }
+
+    private function deliveryMetricsFrom(array $input, string $answerText): array
+    {
+        $wpm = $this->clampInt($input['wpm'] ?? 0, 0, 400);
+        $voiceDuration = $this->clampInt($input['voice_duration'] ?? 0, 0, 7200);
+        $fillerWords = $this->clampInt($input['filler_words_count'] ?? 0, 0, 500);
+        $pauseCount = $this->clampInt($input['pause_count'] ?? 0, 0, 500);
+
+        return [
+            'wpm' => $wpm,
+            'voice_duration' => $voiceDuration,
+            'filler_words_count' => $fillerWords,
+            'pause_count' => $pauseCount,
+            'confidence_score' => $this->estimatedAnswerConfidence($answerText, $wpm, $fillerWords, $pauseCount, $voiceDuration),
+            'eye_contact_score' => $this->scoreValue($input['eye_contact_score'] ?? 0),
+            'posture_score' => $this->scoreValue($input['posture_score'] ?? 0),
+        ];
+    }
+
+    private function estimatedAnswerConfidence(string $answerText, int $wpm, int $fillerWords, int $pauseCount, int $voiceDuration): int
+    {
+        $wordCount = str_word_count(trim($answerText));
+        $score = 82;
+
+        if ($wordCount === 0) {
+            return 0;
+        }
+
+        if ($wordCount < 20) {
+            $score -= 20;
+        } elseif ($wordCount > 50) {
+            $score += 6;
+        }
+
+        $score -= min(25, $fillerWords * 3);
+        $score -= min(15, $pauseCount * 2);
+
+        if ($voiceDuration > 0 && ($wpm < 90 || $wpm > 190)) {
+            $score -= 12;
+        }
+
+        return $this->scoreValue($score);
+    }
+
+    private function clampInt($value, int $min, int $max): int
+    {
+        if (!is_numeric($value)) {
+            return $min;
+        }
+
+        return max($min, min($max, (int) round($value)));
     }
 
     private function activeInterviewSession(): ?InterviewSession

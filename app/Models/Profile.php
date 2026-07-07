@@ -7,15 +7,45 @@ use Illuminate\Database\Eloquent\Model;
 
 class Profile extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'user_id', 'readiness_score', 'total_sessions', 'experience_points', 
-        'current_streak', 'badges_earned', 'leadership_xp', 'communication_xp',
-        'technical_xp', 'problem_solving_xp', 'unlocked_perks'
+        'user_id',
+        'total_sessions',
+        'readiness_score',
+        'profile_picture',
+        'personal_information',
+        'experience_points',
+        'player_level',
+        'current_streak',
+        'longest_streak',
+        'last_activity_date',
+        'energy',
+        'energy_last_refilled_at',
+        'badges_earned',
+        'leadership_xp',
+        'communication_xp',
+        'technical_xp',
+        'problem_solving_xp',
+        'unlocked_perks',
     ];
 
     protected $casts = [
+        'total_sessions' => 'integer',
+        'readiness_score' => 'integer',
+        'experience_points' => 'integer',
+        'player_level' => 'integer',
+        'current_streak' => 'integer',
+        'longest_streak' => 'integer',
+        'last_activity_date' => 'date',
+        'energy' => 'integer',
+        'energy_last_refilled_at' => 'datetime',
+        'leadership_xp' => 'integer',
+        'communication_xp' => 'integer',
+        'technical_xp' => 'integer',
+        'problem_solving_xp' => 'integer',
         'unlocked_perks' => 'array',
-        'badges_earned' => 'array'
+        'badges_earned' => 'array',
     ];
 
     public function user()
@@ -25,9 +55,16 @@ class Profile extends Model
 
     public function hasPerk($perk)
     {
-        if (empty($this->unlocked_perks)) {
+        $perks = $this->unlocked_perks;
+
+        if (is_string($perks)) {
+            $perks = json_decode($perks, true) ?: [];
+        }
+
+        if (empty($perks) || !is_array($perks)) {
             return false;
         }
-        return in_array($perk, $this->unlocked_perks);
+
+        return in_array($perk, $perks, true);
     }
 }

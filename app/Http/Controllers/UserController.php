@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
@@ -13,6 +14,37 @@ use App\Helpers\ActivityLogger;
 
 class UserController extends Controller
 {
+    private const SKILL_PERKS = [
+        'energy_efficiency' => [
+            'name' => 'Energy Efficiency',
+            'description' => 'Reduces the energy cost of all Learning Games by 1.',
+            'cost' => 500,
+            'type' => 'leadership',
+            'icon' => 'fa-bolt',
+        ],
+        'first_impressions' => [
+            'name' => 'First Impressions',
+            'description' => 'Starts every game with a +5 baseline score buffer.',
+            'cost' => 500,
+            'type' => 'communication',
+            'icon' => 'fa-handshake',
+        ],
+        'time_extension' => [
+            'name' => 'Time Extension',
+            'description' => 'Grants an extra 30 seconds on all timed game levels.',
+            'cost' => 500,
+            'type' => 'problem_solving',
+            'icon' => 'fa-hourglass-half',
+        ],
+        'xp_boost' => [
+            'name' => 'XP Boost',
+            'description' => 'Permanently increases general XP earned from games by 20%.',
+            'cost' => 500,
+            'type' => 'technical',
+            'icon' => 'fa-arrow-up-right-dots',
+        ],
+    ];
+
     public function dashboard() {
         $user_id = Auth::id();
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user_id]);
@@ -527,12 +559,22 @@ class UserController extends Controller
 
     public function learning(Request $request) { 
         $user = \Illuminate\Support\Facades\Auth::user();
-        $profile = $user->profile;
+        $profile = $user->profile()->firstOrCreate([]);
         
-        $categories = \App\Models\Category::where('status', 'active')->where('type', 'game')->get();
+        $categories = \App\Models\Category::where('status', 'active')
+            ->where('type', 'game')
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get();
         
         if (!$request->has('category_id') && $categories->count() > 0) {
             return redirect()->route('user.learning', ['category_id' => $categories->first()->id]);
+        }
+
+        if ($request->has('category_id') && !$categories->contains('id', (int) $request->category_id)) {
+            return redirect()
+                ->route('user.learning')
+                ->with('error', 'That learning category is no longer available.');
         }
         
         $query = \App\Models\GameLevel::orderBy('level_number', 'asc');
@@ -566,35 +608,37 @@ class UserController extends Controller
     }
 
     public function saveVoiceSession(Request $request) {
-        $request->validate([
-            'category' => 'nullable|string',
-            'prompt' => 'nullable|string',
-            'transcript' => 'nullable|string',
-            'duration_seconds' => 'nullable|integer',
-            'wpm' => 'nullable|integer',
-            'filler_words' => 'nullable|integer',
-            'clarity_score' => 'nullable|integer',
-            'confidence_score' => 'nullable|integer',
-            'speaking_pace' => 'nullable|integer',
-            'ai_feedback_strengths' => 'nullable|string',
-            'ai_feedback_weaknesses' => 'nullable|string',
-            'ai_improved_answer' => 'nullable|string',
+        $validated = $request->validate([
+            'category' => 'nullable|string|max:120',
+            'prompt' => 'nullable|string|max:5000',
+            'transcript' => 'nullable|string|max:20000',
+            'duration_seconds' => 'nullable|integer|min:0|max:7200',
+            'wpm' => 'nullable|integer|min:0|max:400',
+            'filler_words' => 'nullable|integer|min:0|max:500',
+            'clarity_score' => 'nullable|integer|min:0|max:100',
+            'confidence_score' => 'nullable|integer|min:0|max:100',
+            'speaking_pace' => 'nullable|integer|min:0|max:400',
+            'ai_feedback_strengths' => 'nullable|string|max:10000',
+            'ai_feedback_weaknesses' => 'nullable|string|max:10000',
+            'ai_improved_answer' => 'nullable|string|max:20000',
         ]);
+
+        $metrics = $this->voiceSessionMetrics($validated);
 
         $session = \App\Models\VoiceSession::create([
             'user_id' => Auth::id(),
-            'category' => $request->category,
-            'prompt' => $request->prompt,
-            'transcript' => $request->transcript,
-            'duration_seconds' => $request->duration_seconds,
-            'wpm' => $request->wpm,
-            'filler_words' => $request->filler_words,
-            'clarity_score' => $request->clarity_score,
-            'confidence_score' => $request->confidence_score,
-            'speaking_pace' => $request->speaking_pace,
-            'ai_feedback_strengths' => $request->ai_feedback_strengths,
-            'ai_feedback_weaknesses' => $request->ai_feedback_weaknesses,
-            'ai_improved_answer' => $request->ai_improved_answer,
+            'category' => $validated['category'] ?? null,
+            'prompt' => $validated['prompt'] ?? null,
+            'transcript' => $validated['transcript'] ?? null,
+            'duration_seconds' => $metrics['duration_seconds'],
+            'wpm' => $metrics['wpm'],
+            'filler_words' => $metrics['filler_words'],
+            'clarity_score' => $metrics['clarity_score'],
+            'confidence_score' => $metrics['confidence_score'],
+            'speaking_pace' => $metrics['speaking_pace'],
+            'ai_feedback_strengths' => $validated['ai_feedback_strengths'] ?? null,
+            'ai_feedback_weaknesses' => $validated['ai_feedback_weaknesses'] ?? null,
+            'ai_improved_answer' => $validated['ai_improved_answer'] ?? null,
         ]);
 
         // Calculate some basic gamification points
@@ -799,75 +843,158 @@ class UserController extends Controller
         $user = Auth::user();
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
         
-        $perks = [
-            'energy_efficiency' => [
-                'name' => 'Energy Efficiency',
-                'description' => 'Reduces the energy cost of all Learning Games by 1.',
-                'cost' => 500,
-                'type' => 'leadership',
-                'icon' => 'fa-bolt'
-            ],
-            'first_impressions' => [
-                'name' => 'First Impressions',
-                'description' => 'Starts every game with a +5 baseline score buffer.',
-                'cost' => 500,
-                'type' => 'communication',
-                'icon' => 'fa-handshake'
-            ],
-            'time_extension' => [
-                'name' => 'Time Extension',
-                'description' => 'Grants an extra 30 seconds on all timed game levels.',
-                'cost' => 500,
-                'type' => 'problem_solving',
-                'icon' => 'fa-hourglass-half'
-            ],
-            'xp_boost' => [
-                'name' => 'XP Boost',
-                'description' => 'Permanently increases general XP earned from games by 20%.',
-                'cost' => 500,
-                'type' => 'technical',
-                'icon' => 'fa-arrow-up-right-dots'
-            ]
-        ];
+        $perks = self::SKILL_PERKS;
 
         return view('user.skills', compact('profile', 'perks'));
     }
 
     public function unlockPerk(Request $request) {
-        $request->validate([
-            'perk_id' => 'required|string',
-            'perk_type' => 'required|string',
-            'cost' => 'required|integer'
+        $validated = $request->validate([
+            'perk_id' => ['required', 'string', Rule::in(array_keys(self::SKILL_PERKS))],
         ]);
 
-        $profile = \App\Models\Profile::where('user_id', Auth::id())->firstOrFail();
-        
-        if ($profile->hasPerk($request->perk_id)) {
-            return response()->json(['success' => false, 'message' => 'Perk already unlocked.'], 400);
+        $perkId = $validated['perk_id'];
+        $perk = self::SKILL_PERKS[$perkId];
+
+        $result = DB::transaction(function () use ($perkId, $perk) {
+            $profile = \App\Models\Profile::where('user_id', Auth::id())->lockForUpdate()->first();
+            if (!$profile) {
+                $profile = \App\Models\Profile::create(['user_id' => Auth::id()]);
+            }
+
+            if ($profile->hasPerk($perkId)) {
+                return ['success' => false, 'message' => 'Perk already unlocked.', 'status' => 400];
+            }
+
+            $xpColumn = $perk['type'] . '_xp';
+            $cost = (int) $perk['cost'];
+            $availableXp = (int) ($profile->{$xpColumn} ?? 0);
+
+            if ($availableXp < $cost) {
+                return ['success' => false, 'message' => 'Not enough Skill XP.', 'status' => 400];
+            }
+
+            $profile->{$xpColumn} = $availableXp - $cost;
+
+            $unlocked = $profile->unlocked_perks ?? [];
+            if (is_string($unlocked)) {
+                $unlocked = json_decode($unlocked, true) ?: [];
+            }
+
+            $unlocked[] = $perkId;
+            $profile->unlocked_perks = array_values(array_unique($unlocked));
+            $profile->save();
+
+            return ['success' => true, 'message' => 'Perk successfully unlocked!', 'status' => 200];
+        });
+
+        if ($result['success']) {
+            ActivityLogger::log(
+                Auth::user(),
+                'perk_unlocked',
+                "You unlocked a new skill perk!",
+                $request->ip(),
+                true,
+                ['title' => 'Perk Unlocked', 'icon' => 'fa-unlock', 'type' => 'success']
+            );
         }
 
-        $col = $request->perk_type . '_xp';
-        if ($profile->$col < $request->cost) {
-            return response()->json(['success' => false, 'message' => 'Not enough Skill XP.'], 400);
+        return response()->json([
+            'success' => $result['success'],
+            'message' => $result['message'],
+        ], $result['status']);
+    }
+
+    private function voiceSessionMetrics(array $input): array
+    {
+        $transcript = trim((string) ($input['transcript'] ?? ''));
+        $duration = $this->clampInt($input['duration_seconds'] ?? 0, 0, 7200);
+        $wordCount = str_word_count($transcript);
+
+        if ($transcript !== '' && $duration > 0) {
+            $wpm = (int) round($wordCount / max($duration / 60, 1 / 60));
+        } else {
+            $wpm = $input['wpm'] ?? $input['speaking_pace'] ?? 0;
+        }
+        $wpm = $this->clampInt($wpm, 0, 400);
+
+        $fillerWords = $transcript !== ''
+            ? $this->countFillerWords($transcript)
+            : $this->clampInt($input['filler_words'] ?? 0, 0, 500);
+
+        $clarity = $transcript !== ''
+            ? $this->estimatedVoiceClarity($wordCount, $fillerWords, $wpm)
+            : $this->clampInt($input['clarity_score'] ?? 0, 0, 100);
+
+        $confidence = $transcript !== ''
+            ? $this->estimatedVoiceConfidence($wordCount, $fillerWords, $wpm, $duration)
+            : $this->clampInt($input['confidence_score'] ?? 0, 0, 100);
+
+        return [
+            'duration_seconds' => $duration,
+            'wpm' => $wpm,
+            'speaking_pace' => $wpm,
+            'filler_words' => $this->clampInt($fillerWords, 0, 500),
+            'clarity_score' => $clarity,
+            'confidence_score' => $confidence,
+        ];
+    }
+
+    private function countFillerWords(string $transcript): int
+    {
+        preg_match_all('/\b(?:you\s+know|i\s+mean|um+|uh+|erm|like|actually|basically|literally)\b/i', $transcript, $matches);
+
+        return count($matches[0]);
+    }
+
+    private function estimatedVoiceClarity(int $wordCount, int $fillerWords, int $wpm): int
+    {
+        $score = 92;
+
+        if ($wordCount < 5) {
+            $score -= 35;
+        } elseif ($wordCount < 20) {
+            $score -= 10;
         }
 
-        $profile->$col -= $request->cost;
-        
-        $unlocked = $profile->unlocked_perks ?? [];
-        $unlocked[] = $request->perk_id;
-        $profile->unlocked_perks = $unlocked;
-        $profile->save();
+        $score -= min(35, $fillerWords * 4);
 
-        ActivityLogger::log(
-            Auth::user(),
-            'perk_unlocked',
-            "You unlocked a new skill perk!",
-            $request->ip(),
-            true,
-            ['title' => 'Perk Unlocked', 'icon' => 'fa-unlock', 'type' => 'success']
-        );
+        if ($wpm > 0 && ($wpm < 90 || $wpm > 180)) {
+            $score -= 10;
+        }
+        if ($wpm > 0 && ($wpm < 60 || $wpm > 220)) {
+            $score -= 10;
+        }
 
-        return response()->json(['success' => true, 'message' => 'Perk successfully unlocked!']);
+        return $this->clampInt($score, 0, 100);
+    }
+
+    private function estimatedVoiceConfidence(int $wordCount, int $fillerWords, int $wpm, int $duration): int
+    {
+        $score = 85;
+
+        if ($wordCount < 5 || $duration < 5) {
+            $score -= 30;
+        } elseif ($wordCount < 20) {
+            $score -= 10;
+        }
+
+        $score -= min(30, $fillerWords * 3);
+
+        if ($wpm > 0 && ($wpm < 90 || $wpm > 190)) {
+            $score -= 12;
+        }
+
+        return $this->clampInt($score, 0, 100);
+    }
+
+    private function clampInt($value, int $min, int $max): int
+    {
+        if (!is_numeric($value)) {
+            return $min;
+        }
+
+        return max($min, min($max, (int) round($value)));
     }
 
     public function leaderboard() {
