@@ -296,6 +296,10 @@
         margin: 0 0 2px;
     }
 
+    .sr-mobile-stat-grid {
+        display: none;
+    }
+
     .sr-stat-card {
         background: var(--sf);
         border: 1px solid var(--bd);
@@ -652,6 +656,20 @@
             margin: 0;
         }
 
+        .sr-stats-desktop {
+            display: none;
+        }
+
+        .sr-mobile-stat-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0 14px 14px;
+            margin: -2px 0 0;
+        }
+
         .sr-card-pad,
         .sr-hero-inner {
             padding: 14px;
@@ -775,6 +793,10 @@
             gap: 12px !important;
         }
 
+        .sr-mobile-stat-grid {
+            gap: 10px;
+        }
+
         .sr-achievement-grid {
             grid-template-columns: 1fr;
         }
@@ -802,12 +824,17 @@
 
         .sr-stat-card {
             min-height: 112px;
-            padding: 12px;
+            padding: 10px;
         }
 
         .sr-stat-card .sr-chip {
             padding: 4px 7px;
             font-size: 0.62rem;
+        }
+
+        .sr-mobile-stat-grid {
+            gap: 8px;
+            padding: 0 10px 10px;
         }
     }
 </style>
@@ -856,9 +883,52 @@
                 </div>
             </aside>
         </div>
+
+        <section class="sr-mobile-stat-grid" aria-label="Quick statistics">
+            <div class="sr-stat-card">
+                <div class="sr-stat-head">
+                    <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
+                    <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">Practice</span>
+                </div>
+                <div>
+                    <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
+                    <div class="sr-stat-label">Completed sessions</div>
+                </div>
+            </div>
+            <div class="sr-stat-card">
+                <div class="sr-stat-head">
+                    <div class="sr-stat-icon" style="--accent:#22c55e"><i class="fa-solid fa-star-half-stroke"></i></div>
+                    <span class="sr-chip" style="background:rgba(34,197,94,.1);color:#22c55e">Quality</span>
+                </div>
+                <div>
+                    <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
+                    <div class="sr-stat-label">Average rating</div>
+                </div>
+            </div>
+            <div class="sr-stat-card">
+                <div class="sr-stat-head">
+                    <div class="sr-stat-icon" style="--accent:#06b6d4"><i class="fa-solid fa-bolt"></i></div>
+                    <span class="sr-chip" style="background:rgba(6,182,212,.1);color:#06b6d4">Growth</span>
+                </div>
+                <div>
+                    <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                    <div class="sr-stat-label">Experience points</div>
+                </div>
+            </div>
+            <div class="sr-stat-card">
+                <div class="sr-stat-head">
+                    <div class="sr-stat-icon" style="--accent:#f59e0b"><i class="fa-solid fa-fire"></i></div>
+                    <span class="sr-chip" style="background:rgba(245,158,11,.1);color:#f59e0b">Streak</span>
+                </div>
+                <div>
+                    <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
+                    <div class="sr-stat-label">Active practice days</div>
+                </div>
+            </div>
+        </section>
     </section>
 
-    <section class="stat-grid">
+    <section class="stat-grid sr-stats-desktop" aria-label="Quick statistics">
         <div class="sr-stat-card">
             <div class="sr-stat-head">
                 <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
@@ -1344,7 +1414,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsMobile = [
             { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Access Mock Interviews, Learning Lab, and Progress Tracking right from the bottom bar.', side: "top", align: 'center' }},
             { element: '.sr-hero-card', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
-            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
+            { element: '.sr-mobile-stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "top", align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
@@ -1354,7 +1424,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsDesktop = [
             { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Access all features including Mock Interviews, Learning Lab, and Progress Tracking from here.', side: "right", align: 'start' }},
             { element: '.sr-hero-card', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
-            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
+            { element: '.sr-stats-desktop', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "bottom", align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
