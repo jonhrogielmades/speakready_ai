@@ -32,7 +32,7 @@
              font-size: 1.25rem !important;
          }
          .db-section {
-             padding: 15px !important;
+             padding: 0 !important;
          }
          .accordion-item.premium-panel {
              padding: 0 !important;
@@ -52,13 +52,43 @@
              overflow-x: hidden !important;
              box-sizing: border-box !important;
          }
-         .row {
+         #mob-content .db-content,
+         #mob-content .db-section,
+         #mob-content .db-section > * {
+             width: 100%;
              max-width: 100%;
+             box-sizing: border-box;
          }
-         .row > * {
+         #mob-content .row {
+             width: auto;
+             max-width: none !important;
+             margin-left: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+             margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+         }
+         #mob-content .row > * {
              min-width: 0;
+             max-width: 100%;
+             box-sizing: border-box;
          }
-         .premium-panel, .panel, .setup-panel, .premium-card, .print-card {
+         #mob-content .premium-panel,
+         #mob-content .panel,
+         #mob-content .setup-panel,
+         #mob-content .premium-card,
+         #mob-content .print-card,
+         #mob-content .module-card,
+         #mob-content .perk-card,
+         #mob-content .ll-stat-card,
+         #mob-content .ll-module-card,
+         #mob-content .level-card,
+         #mob-content .db-stat-card,
+         #mob-content .stat-card,
+         #mob-content .sr-card,
+         #mob-content .sr-stat-card,
+         #mob-content .card,
+         #mob-content .alert,
+         #mob-content .accordion,
+         #mob-content .accordion-item {
+             width: 100% !important;
              max-width: 100% !important;
              box-sizing: border-box !important;
          }
@@ -153,13 +183,13 @@
          /* ---- Page Content ---- */
          #mob-content {
             padding-top: calc(var(--mob-top-h) + var(--mob-safe-top));
-            padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 16px);
+            padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 8px);
             min-height: 100dvh;
             overflow-x: hidden !important;
             width: 100vw;
             max-width: 100%;
          }
-         .db-content { padding: 16px !important; }
+         .db-content { padding: 10px 12px 12px !important; }
 
          /* ---- Bottom Navigation Bar ---- */
          #mob-bottom-nav {
@@ -212,7 +242,7 @@
             background: var(--bg2);
             border-top: 1px solid var(--bd2);
             border-radius: 24px 24px 0 0;
-            padding: 12px 20px calc(24px + var(--mob-safe-bottom));
+            padding: 10px 16px calc(18px + var(--mob-safe-bottom));
             max-height: 90dvh;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -222,45 +252,120 @@
          #mob-drawer.open { transform: translateY(0); }
 
          .drawer-handle {
-            width: 40px; height: 4px;
+            width: 32px; height: 4px;
             background: var(--bd2); border-radius: 100px;
-            margin: 0 auto 20px;
+            margin: 0 auto 16px;
          }
          .drawer-title {
-            font-size: 0.7rem; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 0.1em;
-            color: var(--tx3); margin-bottom: 12px; padding: 0 4px;
+            font-size: 0.66rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--tx3); margin: 14px 0 8px; padding: 0 2px;
          }
          .drawer-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 10px; margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px; margin-bottom: 14px;
          }
          .drawer-item {
-            display: flex; flex-direction: column; align-items: center; gap: 7px;
-            padding: 14px 10px; border-radius: 14px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            min-height: 62px;
+            padding: 10px 8px; border-radius: 12px;
             background: var(--sf); border: 1px solid var(--bd);
             text-decoration: none; color: var(--tx2);
-            font-size: 0.72rem; font-weight: 600; text-align: center;
+            font-size: 0.66rem; line-height: 1.15; font-weight: 700; text-align: center;
             transition: background-color 0.2s, transform 0.2s, border-color 0.2s, color 0.2s; -webkit-tap-highlight-color: transparent;
          }
-         .drawer-item i { font-size: 1.3rem; color: #60a5fa; }
+         .drawer-item i { font-size: 1.1rem; color: #60a5fa; }
+         .drawer-item span {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            overflow-wrap: anywhere;
+         }
          .drawer-item:active { transform: scale(0.95); background: rgba(139,92,246,0.1); }
          .drawer-item.active {
             border-color: rgba(96,165,250,0.4);
             background: rgba(96,165,250,0.08); color: #60a5fa;
          }
-         .drawer-divider { height: 1px; background: var(--bd); margin: 14px 0; }
+         .drawer-divider { height: 1px; background: var(--bd); margin: 12px 0; }
          .drawer-action {
             display: flex; align-items: center; gap: 12px;
-            padding: 12px 14px; border-radius: 12px;
-            color: var(--tx2); font-size: 0.875rem; font-weight: 500;
+            min-height: 42px;
+            padding: 9px 10px; border-radius: 10px;
+            color: var(--tx2); font-size: 0.78rem; font-weight: 600;
             cursor: pointer; border: none; background: transparent;
             width: 100%; font-family: "Poppins", sans-serif;
             text-align: left; text-decoration: none; transition: background-color 0.18s, color 0.18s;
          }
-         .drawer-action i { width: 20px; text-align: center; font-size: 1rem; }
+         .drawer-action i { width: 18px; text-align: center; font-size: 0.86rem; }
          .drawer-action:active { background: rgba(139,92,246,0.08); }
          .drawer-action.danger { color: #f87171; }
+
+         .drawer-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            padding: 0 2px;
+            min-width: 0;
+         }
+
+         .drawer-user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.88rem;
+            font-weight: 800;
+            flex: 0 0 auto;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid var(--bd);
+         }
+
+         .drawer-user-meta {
+            min-width: 0;
+         }
+
+         .drawer-user-name {
+            font-weight: 800;
+            font-size: 0.8rem;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
+
+         .drawer-user-role {
+            font-size: 0.64rem;
+            color: var(--tx3);
+            line-height: 1.25;
+         }
+
+         @media (max-width: 360px) {
+            #mob-drawer {
+               padding-left: 12px;
+               padding-right: 12px;
+            }
+
+            .drawer-grid {
+               gap: 7px;
+            }
+
+            .drawer-item {
+               min-height: 58px;
+               padding: 8px 6px;
+               font-size: 0.62rem;
+            }
+
+            .drawer-item i {
+               font-size: 1rem;
+            }
+         }
 
          @keyframes mobFadeIn {
             from { opacity: 0; }
@@ -383,7 +488,64 @@
 
          /* --- Make stat cards 2-per-row on mobile --- */
          @media (max-width: 575px) {
-            .col-md-3.col-sm-6 { width: 50% !important; }
+            #progress-stats,
+            #dashboard-stats {
+               --bs-gutter-x: 10px;
+               --bs-gutter-y: 10px;
+            }
+
+            .stat-grid {
+               grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+               gap: 10px !important;
+            }
+
+            #progress-stats > .col-md-3.col-sm-6,
+            #dashboard-stats > .col-12.col-sm-6,
+            .col-md-3.col-sm-6 {
+               width: 50% !important;
+               flex: 0 0 auto !important;
+            }
+
+            #progress-stats .premium-panel,
+            #dashboard-stats .ll-stat-card,
+            .stat-card.premium-panel {
+               min-height: 106px !important;
+               padding: 12px !important;
+               border-radius: 14px !important;
+            }
+
+            #dashboard-stats .ll-stat-card.gap-3,
+            #dashboard-stats .ll-stat-card.d-flex {
+               gap: 8px !important;
+            }
+
+            #dashboard-stats .ll-stat-card [style*="width:55px"] {
+               width: 38px !important;
+               height: 38px !important;
+               flex: 0 0 38px !important;
+               border-radius: 12px !important;
+            }
+
+            #progress-stats .premium-panel .fs-1,
+            #dashboard-stats .ll-stat-card [style*="font-size:1.8rem"] {
+               font-size: 1.35rem !important;
+            }
+
+            #progress-stats .premium-panel h3,
+            #dashboard-stats .ll-stat-val {
+               font-size: 1.12rem !important;
+               line-height: 1.12 !important;
+            }
+
+            #dashboard-stats .ll-stat-val span {
+               font-size: 0.75rem !important;
+            }
+
+            #progress-stats .premium-panel p,
+            #dashboard-stats .ll-stat-card [style*="text-transform:uppercase"] {
+               font-size: 0.68rem !important;
+               line-height: 1.25 !important;
+            }
          }
 
          /* --- Panel & card padding reduction on small screens --- */
@@ -397,7 +559,25 @@
          @media (max-width: 575px) {
             .cbx-grid { grid-template-columns: 1fr !important; }
             .row.g-4  { --bs-gutter-x: 0.75rem; --bs-gutter-y: 0.75rem; }
-            .db-content { padding: 10px !important; }
+            .db-content { padding: 10px 12px 12px !important; }
+         }
+
+         @media (max-width: 380px) {
+            .db-content {
+               padding-left: 10px !important;
+               padding-right: 10px !important;
+            }
+
+            .stat-grid {
+               grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+
+            #progress-stats .premium-panel,
+            #dashboard-stats .ll-stat-card,
+            .stat-card.premium-panel {
+               min-height: 100px !important;
+               padding: 10px !important;
+            }
          }
 
          /* --- Table mobile scrolling --- */
@@ -518,8 +698,8 @@
          <div class="drawer-handle"></div>
 
          <!-- User info -->
-         <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:0 4px">
-            <div style="width:42px;height:42px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:700;flex-shrink:0;padding:0;overflow:hidden;border:1px solid var(--bd);">
+         <div class="drawer-user">
+            <div class="drawer-user-avatar">
                @if(Auth::check() && Auth::user()->profile_photo_path)
                   @php
                       $photoPath = Auth::user()->profile_photo_path;
@@ -530,9 +710,9 @@
                   {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}
                @endif
             </div>
-            <div>
-               <div style="font-weight:700;font-size:.9rem">{{ Auth::user()->name ?? 'User' }}</div>
-               <div style="font-size:.72rem;color:var(--tx3)">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
+            <div class="drawer-user-meta">
+               <div class="drawer-user-name">{{ Auth::user()->name ?? 'User' }}</div>
+               <div class="drawer-user-role">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
             </div>
          </div>
 

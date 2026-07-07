@@ -186,6 +186,14 @@
         color: #fff;
     }
 
+    .sr-mobile-short {
+        display: none;
+    }
+
+    .sr-mobile-full {
+        display: inline;
+    }
+
     .sr-score-panel {
         background: rgba(8, 13, 24, 0.38);
         border: 1px solid rgba(255,255,255,.1);
@@ -608,14 +616,23 @@
     }
 
     @media (max-width: 767px) {
+        #mob-content {
+            padding-bottom: calc(var(--mob-nav-h, 64px) + var(--mob-safe-bottom, 0px) + 8px);
+        }
+
+        #mob-content > .db-content {
+            padding: 10px 12px !important;
+        }
+
         .sr-dashboard {
-            gap: 14px;
+            gap: 12px;
+            padding: 6px 0 8px !important;
         }
 
         .sr-dashboard-shell,
         .sr-main-stack,
         .sr-side-stack {
-            gap: 14px;
+            gap: 12px;
         }
 
         .sr-side-stack,
@@ -624,9 +641,15 @@
             flex-direction: column;
         }
 
+        .stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+            margin: 0;
+        }
+
         .sr-card-pad,
         .sr-hero-inner {
-            padding: 16px;
+            padding: 14px;
         }
 
         .sr-user-row {
@@ -642,7 +665,35 @@
 
         .sr-hero-actions {
             display: grid;
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 14px;
+        }
+
+        .sr-hero-actions .sr-btn {
+            min-width: 0;
+            width: 100%;
+            min-height: 32px;
+            border-radius: 8px;
+            gap: 3px;
+            padding: 6px 3px;
+            font-size: 0.6rem;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sr-hero-actions .sr-btn i {
+            font-size: 0.68rem;
+            flex: 0 0 auto;
+        }
+
+        .sr-mobile-short {
+            display: inline;
+        }
+
+        .sr-mobile-full {
+            display: none;
         }
 
         .sr-score-meta {
@@ -650,12 +701,36 @@
         }
 
         .sr-stat-card {
-            min-height: 118px;
-            padding: 14px;
+            min-height: 106px;
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .sr-stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            font-size: 0.84rem;
+        }
+
+        .sr-stat-card .sr-chip {
+            padding: 5px 8px;
+            font-size: 0.66rem;
         }
 
         .sr-stat-value {
-            font-size: 1.35rem;
+            margin-top: 12px;
+            font-size: 1.22rem;
+        }
+
+        .sr-stat-value span {
+            font-size: 0.78rem !important;
+        }
+
+        .sr-stat-label {
+            margin-top: 4px;
+            font-size: 0.68rem;
+            line-height: 1.25;
         }
 
         .chart-container-mobile,
@@ -681,12 +756,43 @@
 
     @media (max-width: 420px) {
         .stat-grid {
-            grid-template-columns: 1fr;
-            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
         }
 
         .sr-achievement-grid {
             grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #mob-content > .db-content {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        .sr-hero-actions {
+            gap: 5px;
+        }
+
+        .sr-hero-actions .sr-btn {
+            min-height: 30px;
+            padding: 5px 2px;
+            font-size: 0.56rem;
+        }
+
+        .sr-hero-actions .sr-btn i {
+            font-size: 0.62rem;
+        }
+
+        .sr-stat-card {
+            min-height: 100px;
+            padding: 10px;
+        }
+
+        .sr-stat-card .sr-chip {
+            padding: 4px 7px;
+            font-size: 0.62rem;
         }
     }
 </style>
@@ -710,9 +816,9 @@
                     </div>
                 </div>
                 <div class="sr-hero-actions">
-                    <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary"><i class="fa-solid fa-microphone-lines"></i> Start Mock Interview</a>
-                    <a href="{{ route('user.progress') }}" class="sr-btn"><i class="fa-solid fa-chart-line"></i> View Progress</a>
-                    <a href="{{ route('user.coach') }}" class="sr-btn"><i class="fa-solid fa-robot"></i> Ask AI Coach</a>
+                    <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary"><i class="fa-solid fa-microphone-lines"></i> <span class="sr-mobile-full">Start Mock Interview</span><span class="sr-mobile-short">Mock</span></a>
+                    <a href="{{ route('user.progress') }}" class="sr-btn"><i class="fa-solid fa-chart-line"></i> <span class="sr-mobile-full">View Progress</span><span class="sr-mobile-short">Progress</span></a>
+                    <a href="{{ route('user.coach') }}" class="sr-btn"><i class="fa-solid fa-robot"></i> <span class="sr-mobile-full">Ask AI Coach</span><span class="sr-mobile-short">Coach</span></a>
                 </div>
             </div>
 

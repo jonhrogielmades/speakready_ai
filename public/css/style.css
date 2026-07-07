@@ -2738,7 +2738,8 @@ textarea:focus-visible,
 
 .drawer-grid,
 .drawer-ai-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
 }
 
 #mob-drawer {
@@ -2794,8 +2795,52 @@ textarea:focus-visible,
     background: var(--bg);
   }
 
+  #dashboard .db-content,
+  #dashboard .db-content .db-section.active,
+  #dashboard .db-content .db-section.active > * {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #dashboard .db-content .row {
+    width: auto;
+    max-width: none !important;
+    margin-left: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+    margin-right: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+  }
+
+  #dashboard .db-content .row > * {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #dashboard .db-content .premium-panel,
+  #dashboard .db-content .panel,
+  #dashboard .db-content .setup-panel,
+  #dashboard .db-content .premium-card,
+  #dashboard .db-content .print-card,
+  #dashboard .db-content .module-card,
+  #dashboard .db-content .perk-card,
+  #dashboard .db-content .ll-stat-card,
+  #dashboard .db-content .ll-module-card,
+  #dashboard .db-content .level-card,
+  #dashboard .db-content .db-stat-card,
+  #dashboard .db-content .stat-card,
+  #dashboard .db-content .sr-card,
+  #dashboard .db-content .sr-stat-card,
+  #dashboard .db-content .card,
+  #dashboard .db-content .alert,
+  #dashboard .db-content .accordion,
+  #dashboard .db-content .accordion-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   .db-content {
-    padding: 14px !important;
+    padding: 12px !important;
   }
 
   .premium-card,
@@ -2810,12 +2855,12 @@ textarea:focus-visible,
 
   .stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 16px !important;
+    gap: 12px !important;
   }
 
   .stat-card {
-    min-height: 116px;
-    padding: 14px 10px !important;
+    min-height: 106px;
+    padding: 12px 10px !important;
   }
 
   .chart-container-mobile {
@@ -2849,8 +2894,22 @@ textarea:focus-visible,
   }
 
   .drawer-item {
-    min-height: 84px;
-    padding: 12px 8px !important;
+    min-height: 62px;
+    padding: 10px 8px !important;
+    border-radius: 12px !important;
+    font-size: 0.66rem !important;
+    line-height: 1.15 !important;
+    justify-content: center;
+  }
+
+  .drawer-item i {
+    font-size: 1.1rem !important;
+  }
+
+  .drawer-action {
+    min-height: 42px;
+    padding: 9px 10px !important;
+    font-size: 0.78rem !important;
   }
 
   .chat-container {
@@ -2861,7 +2920,7 @@ textarea:focus-visible,
 
 @media (max-width: 575px) {
   .db-content {
-    padding: 12px !important;
+    padding: 10px 12px 12px !important;
   }
 
   .mob-header-logo span,
@@ -2905,6 +2964,64 @@ textarea:focus-visible,
     padding: 14px !important;
   }
 
+  #progress-stats,
+  #dashboard-stats {
+    --bs-gutter-x: 10px;
+    --bs-gutter-y: 10px;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  #progress-stats > .col-md-3.col-sm-6,
+  #dashboard-stats > .col-12.col-sm-6 {
+    width: 50% !important;
+    flex: 0 0 auto !important;
+  }
+
+  #progress-stats .premium-panel,
+  #dashboard-stats .ll-stat-card,
+  .stat-card.premium-panel {
+    min-height: 106px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+
+  #dashboard-stats .ll-stat-card.gap-3,
+  #dashboard-stats .ll-stat-card.d-flex {
+    gap: 8px !important;
+  }
+
+  #dashboard-stats .ll-stat-card [style*="width:55px"] {
+    width: 38px !important;
+    height: 38px !important;
+    flex: 0 0 38px !important;
+    border-radius: 12px !important;
+  }
+
+  #progress-stats .premium-panel .fs-1,
+  #dashboard-stats .ll-stat-card [style*="font-size:1.8rem"] {
+    font-size: 1.35rem !important;
+  }
+
+  #progress-stats .premium-panel h3,
+  #dashboard-stats .ll-stat-val {
+    font-size: 1.12rem !important;
+    line-height: 1.12 !important;
+  }
+
+  #dashboard-stats .ll-stat-val span {
+    font-size: 0.75rem !important;
+  }
+
+  #progress-stats .premium-panel p,
+  #dashboard-stats .ll-stat-card [style*="text-transform:uppercase"] {
+    font-size: 0.68rem !important;
+    line-height: 1.25 !important;
+  }
+
   .row.g-4 {
     --bs-gutter-x: 0.85rem;
     --bs-gutter-y: 0.85rem;
@@ -2930,13 +3047,45 @@ textarea:focus-visible,
 }
 
 @media (max-width: 380px) {
+  .db-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
   .mob-header-logo span,
   .mob-header-brand span:not(.adm-badge) {
     max-width: 104px;
   }
 
   .stat-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #mob-drawer {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .drawer-grid,
+  .drawer-ai-grid {
+    gap: 7px !important;
+  }
+
+  .drawer-item {
+    min-height: 58px !important;
+    padding: 8px 6px !important;
+    font-size: 0.62rem !important;
+  }
+
+  .drawer-item i {
+    font-size: 1rem !important;
+  }
+
+  #progress-stats .premium-panel,
+  #dashboard-stats .ll-stat-card,
+  .stat-card.premium-panel {
+    min-height: 100px !important;
+    padding: 10px !important;
   }
 
   .mob-nav-item span {
@@ -3809,6 +3958,19 @@ textarea:focus-visible,
     min-height: 118px;
   }
 
+  #dashboard .db-content #progress-stats .premium-panel,
+  #dashboard .db-content #dashboard-stats .ll-stat-card,
+  #dashboard .db-content .stat-card.premium-panel {
+    min-height: 106px !important;
+    padding: 12px !important;
+  }
+
+  #dashboard .db-content #progress-stats > .col-md-3.col-sm-6,
+  #dashboard .db-content #dashboard-stats > .col-12.col-sm-6 {
+    width: 50% !important;
+    flex: 0 0 auto !important;
+  }
+
   #dashboard .db-content .chat-bubble {
     max-width: 100% !important;
   }
@@ -3835,6 +3997,13 @@ textarea:focus-visible,
   #dashboard .db-content .stat-card,
   #dashboard .db-content .panel {
     padding: 14px !important;
+  }
+
+  #dashboard .db-content #progress-stats .premium-panel,
+  #dashboard .db-content #dashboard-stats .ll-stat-card,
+  #dashboard .db-content .stat-card.premium-panel {
+    padding: 10px !important;
+    min-height: 100px !important;
   }
 }
 
