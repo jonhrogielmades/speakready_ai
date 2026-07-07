@@ -224,10 +224,3 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/notifications/send', [\App\Http\Controllers\AdminNotificationController::class, 'store'])->name('admin.notifications.store');
     Route::delete('/admin/notifications/{id}', [\App\Http\Controllers\AdminNotificationController::class, 'destroy'])->name('admin.notifications.destroy');
 });
-
-Route::get('/setup-db', function() {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-    \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'GameLevelSeeder', '--force' => true]);
-    return 'Cache Cleared, Database Migrated, and Seeded Successfully!';
-});

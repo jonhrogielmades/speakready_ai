@@ -11,12 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('arena_levels', function (Blueprint $table) {
-            // Drop the global unique constraint on level_number
-            $table->dropUnique('arena_levels_level_number_unique');
-            
-            // Add a composite unique constraint so level_number is unique per category_id
-            $table->unique(['category_id', 'level_number']);
+        $tableName = $this->levelsTable();
+        if (!$tableName || !Schema::hasColumn($tableName, 'category_id')) {
+            return;
+        }
+
+        foreach (["{$tableName}_level_number_unique", 'arena_levels_level_number_unique'] as $indexName) {
+            try {
+                Schema::table($tableName, function (Blueprint $table) use ($indexName) {
+                    $table->dropUnique($indexName);
+                });
+                break;
+            } catch (\Throwable $e) {
+                // Some databases keep the old index name after a table rename.
+            }
+        }
+
+        Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+            $table->unique(['category_id', 'level_number'], "{$tableName}_category_id_level_number_unique");
         });
     }
 
@@ -25,9 +37,37 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('arena_levels', function (Blueprint $table) {
-            $table->dropUnique(['category_id', 'level_number']);
+        $tableName = $this->levelsTable();
+        if (!$tableName) {
+            return;
+        }
+
+        foreach (["{$tableName}_category_id_level_number_unique", 'arena_levels_category_id_level_number_unique'] as $indexName) {
+            try {
+                Schema::table($tableName, function (Blueprint $table) use ($indexName) {
+                    $table->dropUnique($indexName);
+                });
+                break;
+            } catch (\Throwable $e) {
+                // See the matching up() note about renamed index names.
+            }
+        }
+
+        Schema::table($tableName, function (Blueprint $table) {
             $table->unique('level_number');
         });
+    }
+
+    private function levelsTable(): ?string
+    {
+        if (Schema::hasTable('game_levels')) {
+            return 'game_levels';
+        }
+
+        if (Schema::hasTable('arena_levels')) {
+            return 'arena_levels';
+        }
+
+        return null;
     }
 };

@@ -87,19 +87,24 @@ class InterviewController extends Controller
 
     public function answer(Request $request)
     {
-        $session_id = session('active_interview_id');
-        if (!$session_id) return response()->json(['error' => 'No active session'], 400);
+        $session = $this->activeInterviewSession();
+        if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
 
         $request->validate([
             'question_id' => 'required|exists:questions,id',
         ]);
 
+        $question = $this->questionForSession($request->question_id, $session);
+        if (!$question) {
+            return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+        }
+
         $isSkipped = filter_var($request->input('is_skipped', false), FILTER_VALIDATE_BOOLEAN);
         $answerText = $request->input('answer_text', '');
 
         \App\Models\InterviewAnswer::create([
-            'interview_session_id' => $session_id,
-            'question_id' => $request->question_id,
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
             'answer_text' => $answerText,
             'response_mode' => $request->input('response_mode', 'text'),
             'is_skipped' => $isSkipped,
@@ -113,10 +118,7 @@ class InterviewController extends Controller
         ]);
 
         if ($request->has('notes')) {
-            $session = \App\Models\InterviewSession::find($session_id);
-            if ($session) {
-                $session->update(['notes' => $request->input('notes')]);
-            }
+            $session->update(['notes' => $request->input('notes')]);
         }
 
         return response()->json(['success' => true]);
@@ -124,35 +126,36 @@ class InterviewController extends Controller
 
     public function saveSessionState(Request $request)
     {
-        $session_id = session('active_interview_id');
-        if (!$session_id) return response()->json(['error' => 'No active session'], 400);
-        
-        $session = \App\Models\InterviewSession::find($session_id);
-        if ($session) {
-            $session->update([
-                'notes' => $request->input('notes', $session->notes),
-                'duration_seconds' => $request->input('duration_seconds', $session->duration_seconds)
-            ]);
-        }
+        $session = $this->activeInterviewSession();
+        if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+
+        $session->update([
+            'notes' => $request->input('notes', $session->notes),
+            'duration_seconds' => $request->input('duration_seconds', $session->duration_seconds)
+        ]);
+
         return response()->json(['success' => true]);
     }
 
     public function chatReply(Request $request)
     {
-        $session_id = session('active_interview_id');
-        if (!$session_id) return response()->json(['error' => 'No active session'], 400);
+        $session = $this->activeInterviewSession();
+        if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
 
         $request->validate([
             'answer_text' => 'required|string',
             'question_id' => 'required|exists:questions,id'
         ]);
 
-        $session = \App\Models\InterviewSession::with('category')->find($session_id);
+        $question = $this->questionForSession($request->question_id, $session);
+        if (!$question) {
+            return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+        }
         
         // 1. Save User's Answer
         $answer = \App\Models\InterviewAnswer::create([
-            'interview_session_id' => $session_id,
-            'question_id' => $request->question_id,
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
             'answer_text' => $request->answer_text,
             'response_mode' => $request->input('response_mode', 'text'),
             'wpm' => $request->input('wpm', 0),
@@ -166,7 +169,7 @@ class InterviewController extends Controller
 
         // 2. Fetch Conversation History
         $history = \App\Models\InterviewAnswer::with('question')
-            ->where('interview_session_id', $session_id)
+            ->where('interview_session_id', $session->id)
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($ans) {
@@ -209,7 +212,11 @@ class InterviewController extends Controller
             'session_id' => 'required|exists:interview_sessions,id',
         ]);
 
-        $session = InterviewSession::find($request->session_id);
+        if ((int) session('active_interview_id') !== (int) $request->session_id) {
+            abort(403);
+        }
+
+        $session = InterviewSession::where('user_id', Auth::id())->findOrFail($request->session_id);
         $session->update([
             'status' => 'completed',
             'duration_seconds' => $request->input('duration_seconds', $session->duration_seconds),
@@ -253,7 +260,7 @@ class InterviewController extends Controller
         
         foreach ($answers as $answer) {
             $totalBodyLang += ($answer->eye_contact_score + $answer->posture_score) / 2;
-            $totalConfidence += $answer->confidence_score > 0 ? $answer->confidence_score : rand(70, 95);
+            $totalConfidence += $answer->confidence_score > 0 ? $this->scoreValue($answer->confidence_score) : 0;
 
             // Find matching feedback
             $qFeedback = null;
@@ -267,11 +274,11 @@ class InterviewController extends Controller
             }
 
             if ($qFeedback) {
-                $c = $qFeedback['clarity_score'] ?? rand(70, 95);
-                $r = $qFeedback['relevance_score'] ?? rand(70, 95);
-                $g = $qFeedback['grammar_score'] ?? rand(70, 95);
-                $p = $qFeedback['professionalism_score'] ?? rand(70, 95);
-                $qScore = $qFeedback['score'] ?? round(($c + $r + $g + $p) / 4);
+                $c = $this->scoreValue($qFeedback['clarity_score'] ?? 0);
+                $r = $this->scoreValue($qFeedback['relevance_score'] ?? 0);
+                $g = $this->scoreValue($qFeedback['grammar_score'] ?? 0);
+                $p = $this->scoreValue($qFeedback['professionalism_score'] ?? 0);
+                $qScore = $this->scoreValue($qFeedback['score'] ?? round(($c + $r + $g + $p) / 4));
                 
                 $totalClarity += $c; $totalRelevance += $r; $totalGrammar += $g; $totalProf += $p;
 
@@ -282,16 +289,15 @@ class InterviewController extends Controller
                     'score' => $qScore,
                 ]);
             } else {
-                // Fallback in case of AI parsing failure
-                $c = rand(70, 95); $r = rand(70, 95); $g = rand(70, 95); $p = rand(70, 95);
-                $qScore = round(($c + $r + $g + $p) / 4);
+                // Do not invent positive scores when AI scoring fails.
+                $c = 0; $r = 0; $g = 0; $p = 0; $qScore = 0;
                 
                 $totalClarity += $c; $totalRelevance += $r; $totalGrammar += $g; $totalProf += $p;
 
                 $answer->update([
-                    'ai_feedback' => 'Your answer was generally clear, but could be more structured. Using the STAR method would help highlight your specific contributions.',
-                    'better_sample_answer' => 'A stronger approach: "In my previous role, I encountered a similar situation where... I took the initiative to... resulting in a 20% improvement..."',
-                    'follow_up_question' => 'How would you handle this if the deadline was cut in half?',
+                    'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
+                    'better_sample_answer' => '',
+                    'follow_up_question' => '',
                     'score' => $qScore
                 ]);
             }
@@ -306,7 +312,7 @@ class InterviewController extends Controller
         $conf = round($totalConfidence / $count);
         
         $sFeedback = $aiFeedback['session_feedback'] ?? null;
-        $overall = $sFeedback['overall_readiness_score'] ?? round(($clarity + $relevance + $grammar + $prof + $bodyLang + $conf) / 6);
+        $overall = $this->scoreValue($sFeedback['overall_readiness_score'] ?? round(($clarity + $relevance + $grammar + $prof + $bodyLang + $conf) / 6));
 
         // Fetch Profile early for perk calculations
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -336,7 +342,7 @@ class InterviewController extends Controller
             }
         }
         
-        $starScore = $sFeedback['star_method_score'] ?? rand(70,95); // Default to a decent score if missing
+        $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
 
         \App\Models\Score::create([
             'interview_session_id' => $session->id,
@@ -344,8 +350,8 @@ class InterviewController extends Controller
             'relevance_score' => $relevance,
             'grammar_score' => $grammar,
             'professionalism_score' => $prof,
-            'body_language_score' => $bodyLang > 0 ? $bodyLang : rand(70,95),
-            'confidence_score' => $conf > 0 ? $conf : rand(70,95),
+            'body_language_score' => $bodyLang,
+            'confidence_score' => $conf,
             'overall_readiness_score' => $overall,
             'ats_match_score' => $atsScore,
             'star_method_score' => $starScore,
@@ -354,9 +360,9 @@ class InterviewController extends Controller
         // Generate Session-level Feedback from AI
         \App\Models\Feedback::create([
             'interview_session_id' => $session->id,
-            'strengths' => $sFeedback['strengths'] ?? 'You maintained a good professional tone and showed solid foundational knowledge.',
-            'weaknesses' => $sFeedback['weaknesses'] ?? 'Some answers lacked specific metrics and concrete examples of your past work.',
-            'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Focus on the "Result" part of the STAR method. Always quantify your impact when possible.',
+            'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
+            'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
+            'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
         ]);
         
         $badges = [];
@@ -476,6 +482,41 @@ class InterviewController extends Controller
         }
 
         return redirect()->route('user.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
+    }
+
+    private function activeInterviewSession(): ?InterviewSession
+    {
+        $sessionId = session('active_interview_id');
+        if (!$sessionId || !Auth::check()) {
+            return null;
+        }
+
+        return InterviewSession::with('category')
+            ->where('user_id', Auth::id())
+            ->find($sessionId);
+    }
+
+    private function questionForSession($questionId, InterviewSession $session): ?\App\Models\Question
+    {
+        return \App\Models\Question::where('id', $questionId)
+            ->where(function ($query) use ($session) {
+                $query->where('interview_session_id', $session->id)
+                    ->orWhere(function ($query) use ($session) {
+                        $query->whereNull('interview_session_id')
+                            ->where('category_id', $session->category_id)
+                            ->where('status', 'active');
+                    });
+            })
+            ->first();
+    }
+
+    private function scoreValue($score): int
+    {
+        if (!is_numeric($score)) {
+            return 0;
+        }
+
+        return max(0, min(100, (int) round($score)));
     }
 
     public function review($id)

@@ -11,17 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('arena_levels')) {
+            return;
+        }
+
         Schema::table('arena_levels', function (Blueprint $table) {
-            $table->string('ai_persona')->nullable()->after('energy_cost');
-            $table->text('ai_custom_prompt')->nullable()->after('ai_persona');
-            $table->integer('time_limit_seconds')->nullable()->after('ai_custom_prompt');
-            $table->string('banned_words')->nullable()->after('time_limit_seconds');
-            $table->string('target_tone')->nullable()->after('banned_words');
-            $table->string('custom_badge_name')->nullable()->after('target_tone');
-            $table->string('skill_xp_type')->nullable()->after('custom_badge_name');
-            $table->integer('skill_xp_amount')->default(0)->after('skill_xp_type');
-            $table->foreignId('prerequisite_level_id')->nullable()->constrained('arena_levels')->nullOnDelete()->after('skill_xp_amount');
-            $table->boolean('is_hidden')->default(false)->after('prerequisite_level_id');
+            if (!Schema::hasColumn('arena_levels', 'ai_persona')) {
+                $table->string('ai_persona')->nullable()->after('energy_cost');
+                $table->text('ai_custom_prompt')->nullable()->after('ai_persona');
+                $table->integer('time_limit_seconds')->nullable()->after('ai_custom_prompt');
+                $table->string('banned_words')->nullable()->after('time_limit_seconds');
+                $table->string('target_tone')->nullable()->after('banned_words');
+                $table->string('custom_badge_name')->nullable()->after('target_tone');
+                $table->string('skill_xp_type')->nullable()->after('custom_badge_name');
+                $table->integer('skill_xp_amount')->default(0)->after('skill_xp_type');
+                $table->foreignId('prerequisite_level_id')->nullable()->constrained('arena_levels')->nullOnDelete()->after('skill_xp_amount');
+                $table->boolean('is_hidden')->default(false)->after('prerequisite_level_id');
+            }
         });
     }
 
@@ -30,6 +36,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('arena_levels') || !Schema::hasColumn('arena_levels', 'ai_persona')) {
+            return;
+        }
+
         Schema::table('arena_levels', function (Blueprint $table) {
             $table->dropForeign(['prerequisite_level_id']);
             $table->dropColumn([

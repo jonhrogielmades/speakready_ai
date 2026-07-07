@@ -137,9 +137,12 @@ class GameController extends Controller
         }
 
         $gameLevel = GameLevel::find($level_id);
-        $interviewSession = InterviewSession::with('category')->find($session_id);
+        $interviewSession = InterviewSession::with('category')
+            ->where('user_id', Auth::id())
+            ->find($session_id);
 
         if (!$gameLevel || !$interviewSession) {
+            session()->forget(['active_interview_id', 'game_level_id']);
             return redirect()->route('user.learning')->with('error', 'Learning Game data is missing.');
         }
 

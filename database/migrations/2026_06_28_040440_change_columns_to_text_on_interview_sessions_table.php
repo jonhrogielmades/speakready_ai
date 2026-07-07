@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,6 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('interview_sessions', function (Blueprint $table) {
             $table->text('interview_focus')->nullable()->change();
             $table->text('company_persona')->nullable()->change();
@@ -24,6 +29,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('interview_sessions', function (Blueprint $table) {
             $table->string('interview_focus', 255)->nullable()->change();
             $table->string('company_persona', 255)->nullable()->change();

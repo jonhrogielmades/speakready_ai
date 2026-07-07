@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (!Schema::hasTable('arena_levels') || Schema::hasColumn('arena_levels', 'category_id')) {
+            return;
+        }
+
         Schema::table('arena_levels', function (Blueprint $table) {
             $table->unsignedBigInteger('category_id')->nullable()->after('id');
             $table->foreign('category_id')->references('id')->on('categories')->nullOnDelete();
@@ -22,6 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (!Schema::hasTable('arena_levels') || !Schema::hasColumn('arena_levels', 'category_id')) {
+            return;
+        }
+
         Schema::table('arena_levels', function (Blueprint $table) {
             $table->dropForeign(['category_id']);
             $table->dropColumn('category_id');

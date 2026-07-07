@@ -75,7 +75,9 @@
 <div class="db-section active" id="sec-interview-session">
     @if(session('active_interview_id'))
         @php
-            $sessionRecord = \App\Models\InterviewSession::with('category')->find(session('active_interview_id'));
+            $sessionRecord = \App\Models\InterviewSession::with('category')
+                ->where('user_id', auth()->id())
+                ->find(session('active_interview_id'));
             if ($sessionRecord) {
                 $num = $sessionRecord->num_questions ?? 5;
                 // Try to find questions specifically generated for this session first
@@ -975,4 +977,3 @@
 </script>
 @endpush
 @endsection
-
