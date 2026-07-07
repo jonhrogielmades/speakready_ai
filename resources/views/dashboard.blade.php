@@ -629,6 +629,11 @@
             padding: 6px 0 8px !important;
         }
 
+        #dashboard .db-content .db-section.active.sr-dashboard {
+            gap: 12px;
+            padding: 6px 0 8px !important;
+        }
+
         .sr-dashboard-shell,
         .sr-main-stack,
         .sr-side-stack {
@@ -701,9 +706,19 @@
         }
 
         .sr-stat-card {
-            min-height: 106px;
+            min-height: 118px;
             padding: 12px;
             border-radius: 14px;
+            gap: 10px;
+            justify-content: flex-start;
+        }
+
+        .sr-stat-head {
+            min-height: 32px;
+        }
+
+        .sr-stat-card > div:last-child {
+            margin-top: auto;
         }
 
         .sr-stat-icon {
@@ -719,7 +734,7 @@
         }
 
         .sr-stat-value {
-            margin-top: 12px;
+            margin-top: 0;
             font-size: 1.22rem;
         }
 
@@ -757,7 +772,7 @@
     @media (max-width: 420px) {
         .stat-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 10px !important;
+            gap: 12px !important;
         }
 
         .sr-achievement-grid {
@@ -786,8 +801,8 @@
         }
 
         .sr-stat-card {
-            min-height: 100px;
-            padding: 10px;
+            min-height: 112px;
+            padding: 12px;
         }
 
         .sr-stat-card .sr-chip {
