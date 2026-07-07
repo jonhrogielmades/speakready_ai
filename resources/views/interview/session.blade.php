@@ -160,7 +160,7 @@
                     <div style="display:block;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px; z-index:20;">
                         <div class="d-flex justify-content-start align-items-end gap-3">
                             <div>
-                                <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
+                                <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?: 'Interviewer' }}</span>
                                 <div id="aiQuestionText" style="color:white;font-size:0.85rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
                             </div>
                         </div>
@@ -246,7 +246,7 @@
 
                 <!-- AI Visualizer Panel -->
                 <div class="panel animate-fade-up delay-200">
-                    <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> AI Visualizer</div>
+                    <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> Live Readiness</div>
                     <div class="text-center mb-3">
                         <div style="font-size:2rem;font-weight:700;color:#34d399" id="overallReadiness">--%</div>
                         <div style="font-size:.75rem;color:var(--tx3)">Real-time Readiness</div>
@@ -265,7 +265,7 @@
                     <div class="star-item"><span>Action</span><i class="fa-solid fa-circle-xmark text-danger" id="starA"></i></div>
                     <div class="star-item"><span>Result</span><i class="fa-solid fa-circle-xmark text-danger" id="starR"></i></div>
                     <div style="margin-top:10px;font-size:.8rem;color:#fbbf24;background:rgba(251,191,36,.1);padding:10px;border-radius:8px;border:1px solid rgba(251,191,36,.3)" id="coachingTip">
-                        <i class="fa-solid fa-lightbulb me-1"></i> <strong>Coach:</strong> Start typing to get real-time analysis!
+                        <i class="fa-solid fa-lightbulb me-1"></i> <strong>Biggest Suggestion:</strong> Give one specific example, your role, the action you took, and the result.
                     </div>
                 </div>
 
@@ -291,7 +291,7 @@
                 <i class="fa-solid fa-robot" style="font-size:1.8rem;color:#60a5fa"></i>
             </div>
             <h4 style="color:var(--tx);font-weight:700">Interview Workspace Ready</h4>
-            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} questions. The AI visualizer and STAR analyzer will run in real-time as you respond.</p>
+            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} questions. Live readiness and STAR analysis will update as you respond.</p>
             <div style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
                 <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
                 <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-bullseye me-1"></i> {{ ucfirst($sessionRecord->coach_focus_mode) }} Focus</span>
@@ -537,7 +537,8 @@
                     timerSeconds++;
                     const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
                     const s = (timerSeconds % 60).toString().padStart(2, '0');
-                    document.getElementById('interviewTimer').innerText = m + ':' + s;
+                    const interviewTimer = document.getElementById('interviewTimer');
+                    if (interviewTimer) interviewTimer.innerText = m + ':' + s;
                     
                     if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
                 }, 1000);
@@ -568,7 +569,7 @@
                 const q = questions[idx];
                 
                 document.getElementById('aiQuestionText').innerText = '...';
-                document.getElementById('qCounter').innerText = (idx + 1);
+                document.getElementById('qCounter').innerText = (idx + 1) + '/' + totalQuestions;
 
                 // Append AI question to chat log if it's the first time seeing it
                 appendChatMessage('interviewer', q.question_text);
@@ -589,45 +590,224 @@
 
 
 
+            const analysisStopWords = new Set([
+                'about', 'after', 'again', 'also', 'and', 'are', 'because', 'been', 'before', 'being', 'but', 'can',
+                'could', 'did', 'does', 'for', 'from', 'had', 'has', 'have', 'how', 'into', 'interview', 'job',
+                'more', 'most', 'that', 'the', 'their', 'then', 'there', 'this', 'those', 'through', 'tell', 'than',
+                'was', 'were', 'what', 'when', 'where', 'which', 'while', 'with', 'would', 'you', 'your'
+            ]);
+
+            const situationMarkers = [
+                'when', 'while', 'during', 'in my previous role', 'at my last job', 'on a project', 'our team',
+                'a client', 'a customer', 'deadline', 'challenge', 'problem', 'situation', 'scenario'
+            ];
+            const taskMarkers = [
+                'my role', 'responsible for', 'i was responsible', 'i needed to', 'i had to', 'my goal',
+                'the goal', 'objective', 'task', 'asked to', 'expected to', 'requirement'
+            ];
+            const actionMarkers = [
+                'i led', 'i built', 'i created', 'i implemented', 'i designed', 'i analyzed', 'i coordinated',
+                'i resolved', 'i improved', 'i developed', 'i organized', 'i prioritized', 'i communicated',
+                'i worked with', 'i decided', 'i proposed', 'i tested', 'i delivered', 'we built', 'we implemented'
+            ];
+            const resultMarkers = [
+                'result', 'outcome', 'impact', 'increased', 'decreased', 'reduced', 'improved', 'saved',
+                'delivered', 'launched', 'resolved', 'completed', 'achieved', 'learned', 'led to', 'as a result'
+            ];
+            const fillerPattern = /\b(um|uh|like|you know|basically|i mean|sort of|kind of|literally|actually)\b/gi;
+            const unprofessionalPattern = /\b(whatever|stuff|things|idk|lol|yeah|nah|kinda|sorta)\b/gi;
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function clampScore(value) {
+                return Math.max(0, Math.min(100, Math.round(value)));
+            }
+
+            function normalizeText(text) {
+                return ` ${String(text || '').toLowerCase().replace(/\s+/g, ' ').trim()} `;
+            }
+
+            function escapeRegExp(value) {
+                return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function includesAny(text, terms) {
+                return terms.some(term => new RegExp(`\\b${escapeRegExp(term)}\\b`, 'i').test(text));
+            }
+
+            function meaningfulWords(text) {
+                return String(text || '')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s'-]/g, ' ')
+                    .split(/\s+/)
+                    .map(word => word.replace(/^'+|'+$/g, ''))
+                    .filter(word => word.length > 2 && !analysisStopWords.has(word));
+            }
+
+            function isBehavioralQuestion(questionText) {
+                return /\b(tell me about a time|describe a time|give me an example|how did you handle|conflict|challenge|failure|mistake|leadership|teamwork|difficult|situation)\b/i.test(questionText || '');
+            }
+
+            function detectStarSignals(text) {
+                const normalized = normalizeText(text);
+                const wordCount = meaningfulWords(text).length;
+                const metricPattern = /(\b\d+(\.\d+)?\s?%|\$\s?\d+|\b\d+\s?(users|customers|clients|people|hours|days|weeks|months|tickets|cases|calls|projects|minutes|seconds|revenue|sales)\b|\b(by|from|to)\s+\d+)/i;
+
+                const hasS = wordCount >= 10 && includesAny(normalized, situationMarkers);
+                const hasT = includesAny(normalized, taskMarkers);
+                const hasA = includesAny(normalized, actionMarkers) || /\b(i|we)\s+(led|built|created|implemented|designed|analyzed|coordinated|resolved|improved|developed|organized|prioritized|communicated|tested|delivered)\b/i.test(normalized);
+                const hasR = includesAny(normalized, resultMarkers) || metricPattern.test(text);
+
+                return {
+                    hasS,
+                    hasT,
+                    hasA,
+                    hasR,
+                    componentCount: [hasS, hasT, hasA, hasR].filter(Boolean).length,
+                    hasMetric: metricPattern.test(text)
+                };
+            }
+
+            function calculateRelevanceScore(answerText, questionText, wordCount, starSignals) {
+                if (wordCount === 0) return 0;
+                if (wordCount < 8) return clampScore(wordCount * 5);
+
+                const answerWords = new Set(meaningfulWords(answerText));
+                const questionWords = [...new Set(meaningfulWords(questionText))].slice(0, 10);
+                let matched = 0;
+
+                questionWords.forEach(qWord => {
+                    const hasMatch = [...answerWords].some(aWord => aWord === qWord || aWord.startsWith(qWord) || qWord.startsWith(aWord));
+                    if (hasMatch) matched++;
+                });
+
+                const ratio = questionWords.length > 0 ? matched / questionWords.length : 0.45;
+                let score = 35 + (ratio * 50);
+
+                const behavioral = isBehavioralQuestion(questionText);
+                if (behavioral && starSignals.componentCount >= 3) score = Math.max(score, 72);
+                else if (behavioral && starSignals.componentCount >= 2) score = Math.max(score, 62);
+                if (wordCount < 25) score -= 12;
+                if (starSignals.hasA && starSignals.hasR) score += 5;
+
+                return clampScore(score);
+            }
+
+            function calculateLiveScores(answerText, questionText, wordCount, fillerCount, starSignals) {
+                const sentences = answerText.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+                const sentenceCount = Math.max(1, sentences.length);
+                const hasFirstPersonOwnership = /\b(i|my|me)\b/i.test(answerText);
+                const hasEndPunctuation = /[.!?]$/.test(answerText.trim());
+                const hasRepeatedWord = /\b([a-z]+)\s+\1\b/i.test(answerText);
+                const longSentencePenalty = sentences.some(sentence => sentence.split(/\s+/).length > 40) ? 8 : 0;
+                const casualMatches = answerText.match(unprofessionalPattern);
+                const casualCount = casualMatches ? casualMatches.length : 0;
+
+                let clarity = 28 + Math.min(28, wordCount * 1.1) + (starSignals.componentCount * 8) + Math.min(8, sentenceCount * 2);
+                clarity -= fillerCount * 3;
+                clarity -= longSentencePenalty;
+                if (wordCount > 220) clarity -= 10;
+                if (wordCount < 15) clarity = Math.min(clarity, 45);
+
+                const relevance = calculateRelevanceScore(answerText, questionText, wordCount, starSignals);
+
+                let grammar = 55 + Math.min(20, wordCount * 0.5) + (hasEndPunctuation ? 8 : 0);
+                grammar -= fillerCount * 3;
+                grammar -= hasRepeatedWord ? 8 : 0;
+                grammar -= longSentencePenalty;
+                if (wordCount < 15) grammar = Math.min(grammar, 50);
+
+                let professionalism = 58 + (hasFirstPersonOwnership ? 10 : 0) + (starSignals.hasA ? 8 : 0) + (starSignals.hasR ? 8 : 0);
+                professionalism -= fillerCount * 3;
+                professionalism -= casualCount * 10;
+                if (wordCount < 15) professionalism = Math.min(professionalism, 50);
+
+                const starBonus = isBehavioralQuestion(questionText) ? starSignals.componentCount * 3 : starSignals.hasR ? 5 : 0;
+                const readiness = (clarity * 0.25) + (relevance * 0.3) + (grammar * 0.2) + (professionalism * 0.25) + starBonus;
+
+                return {
+                    clarity: clampScore(clarity),
+                    relevance: clampScore(relevance),
+                    grammar: clampScore(grammar),
+                    professionalism: clampScore(professionalism),
+                    readiness: clampScore(wordCount === 0 ? 0 : readiness)
+                };
+            }
+
+            function questionFocus(questionText) {
+                const keywords = meaningfulWords(questionText).slice(0, 5);
+                return keywords.length > 0 ? keywords.join(' / ') : 'the question asked';
+            }
+
+            function biggestSuggestion(answerText, questionText, wordCount, fillerCount, scores, starSignals) {
+                if (wordCount === 0) {
+                    return 'Give one specific example, your role, the action you took, and the result.';
+                }
+                if (wordCount < 25) {
+                    return 'Expand this into a complete interview answer: context, your responsibility, specific action, and result.';
+                }
+                if (scores.relevance < 55) {
+                    return `Tie the answer more directly to ${questionFocus(questionText)} with a relevant example.`;
+                }
+                if (isBehavioralQuestion(questionText) && !starSignals.hasS) {
+                    return 'Open with the situation so the interviewer understands the context before your action.';
+                }
+                if (!starSignals.hasT) {
+                    return 'State your exact responsibility or goal so your ownership is clear.';
+                }
+                if (!starSignals.hasA) {
+                    return 'Describe the specific actions you personally took, not only what the team did.';
+                }
+                if (!starSignals.hasR) {
+                    return 'Close with the result or impact, ideally with a number, outcome, or lesson learned.';
+                }
+                if (!starSignals.hasMetric && wordCount >= 40) {
+                    return 'Add one measurable detail, such as time saved, quality improved, revenue, volume, or customer impact.';
+                }
+                if (fillerCount >= 3) {
+                    return 'Reduce filler words and make the delivery more direct and confident.';
+                }
+                if (wordCount > 220) {
+                    return 'Tighten the answer to the strongest 60-90 seconds: situation, decision, action, result.';
+                }
+
+                return 'Strong direction. Make it sharper by naming the key decision, tradeoff, and measurable impact.';
+            }
+
             function triggerAnalysis() {
                 const text = document.getElementById('answerTextarea').value;
+                const currentQuestion = questions[currentQIdx] ? questions[currentQIdx].question_text : '';
                 const wordCount = text.trim().split(/\s+/).filter(w => w.length > 0).length;
                 const charCount = text.length;
                 
                 document.getElementById('wordCount').innerText = wordCount + ' words';
                 document.getElementById('charCount').innerText = charCount + ' characters';
 
-                // Mock STAR Analysis
-                const hasS = wordCount > 10;
-                const hasT = wordCount > 20 && text.toLowerCase().includes('task');
-                const hasA = wordCount > 30 && text.toLowerCase().includes('action');
-                const hasR = wordCount > 40 && (text.toLowerCase().includes('result') || text.toLowerCase().includes('led to'));
+                const starSignals = detectStarSignals(text);
                 
-                updateStarIcon('starS', hasS);
-                updateStarIcon('starT', hasT);
-                updateStarIcon('starA', hasA);
-                updateStarIcon('starR', hasR);
+                updateStarIcon('starS', starSignals.hasS);
+                updateStarIcon('starT', starSignals.hasT);
+                updateStarIcon('starA', starSignals.hasA);
+                updateStarIcon('starR', starSignals.hasR);
 
-                // Coaching Tip
-                let tip = "Provide a specific example.";
-                if(!hasS) tip = "Start by describing the Situation.";
-                else if(!hasR) tip = "Don't forget to mention the measurable Result of your actions.";
-                else tip = "Great STAR response!";
-                document.getElementById('coachingTip').innerHTML = `<i class="fa-solid fa-lightbulb me-1"></i> <strong>Coach:</strong> ${tip}`;
-
-                // Mock Visualizer
-                let readiness = Math.min(100, Math.max(0, wordCount * 2));
-                if(wordCount === 0) readiness = 0;
-                document.getElementById('overallReadiness').innerText = readiness + '%';
-                document.getElementById('metClarity').innerText = (readiness > 0 ? Math.min(100, readiness + 10) : 0) + '%';
-                document.getElementById('metRelevance').innerText = (readiness > 0 ? Math.min(100, readiness + 5) : 0) + '%';
-                document.getElementById('metGrammar').innerText = (readiness > 0 ? Math.min(100, readiness + 15) : 0) + '%';
-                document.getElementById('metProf').innerText = (readiness > 0 ? Math.min(100, readiness + 8) : 0) + '%';
-
-                // Fillers mock (Improved regex to catch more natural conversational fillers)
-                const fillerPattern = /\b(um|uh|like|you know|basically|i mean|sort of|kind of|literally)\b/gi;
                 const matches = text.match(fillerPattern);
                 const fillers = matches ? matches.length : 0;
+                const scores = calculateLiveScores(text, currentQuestion, wordCount, fillers, starSignals);
+                const tip = biggestSuggestion(text, currentQuestion, wordCount, fillers, scores, starSignals);
+
+                document.getElementById('coachingTip').innerHTML = `<i class="fa-solid fa-lightbulb me-1"></i> <strong>Biggest Suggestion:</strong> ${escapeHtml(tip)}`;
+                document.getElementById('overallReadiness').innerText = scores.readiness + '%';
+                document.getElementById('metClarity').innerText = scores.clarity + '%';
+                document.getElementById('metRelevance').innerText = scores.relevance + '%';
+                document.getElementById('metGrammar').innerText = scores.grammar + '%';
+                document.getElementById('metProf').innerText = scores.professionalism + '%';
                 document.getElementById('vaFillers').innerText = fillers;
                 answersData[currentQIdx].text = text;
                 answersData[currentQIdx].filler_words = fillers;
@@ -757,12 +937,12 @@
                     bubble.style.background = 'rgba(139,92,246,0.15)';
                     bubble.style.border = '1px solid rgba(139,92,246,0.3)';
                     bubble.style.alignSelf = 'flex-start';
-                    bubble.innerHTML = '<strong><i class="fa-solid fa-robot me-1"></i> Interviewer</strong><br>' + text;
+                    bubble.innerHTML = '<strong><i class="fa-solid fa-robot me-1"></i> Interviewer</strong><br>' + escapeHtml(text);
                 } else {
                     bubble.style.background = 'rgba(59,130,246,0.15)';
                     bubble.style.border = '1px solid rgba(59,130,246,0.3)';
                     bubble.style.alignSelf = 'flex-end';
-                    bubble.innerHTML = '<strong><i class="fa-solid fa-user me-1"></i> You</strong><br>' + text;
+                    bubble.innerHTML = '<strong><i class="fa-solid fa-user me-1"></i> You</strong><br>' + escapeHtml(text);
                 }
                 
                 chatContainer.appendChild(bubble);
@@ -787,7 +967,7 @@
                 thinkingBubble.style.maxWidth = '85%';
                 thinkingBubble.style.alignSelf = 'flex-start';
                 thinkingBubble.style.background = 'rgba(255,255,255,0.05)';
-                thinkingBubble.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted me-2"></i> <em>AI is thinking...</em>';
+                thinkingBubble.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted me-2"></i> <em>Interviewer is preparing the next question...</em>';
                 chatContainer.appendChild(thinkingBubble);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
@@ -852,10 +1032,11 @@
                         currentQIdx++;
                         
                         document.getElementById('aiQuestionText').innerText = '...';
-                        document.getElementById('qCounter').innerText = (currentQIdx + 1);
+                        document.getElementById('qCounter').innerText = (currentQIdx + 1) + '/' + totalQuestions;
                         
                         appendChatMessage('interviewer', newQ.question_text);
                         speakQuestion(newQ.question_text);
+                        triggerAnalysis();
                     } else {
                         alert(data.error || 'An error occurred.');
                     }
@@ -927,7 +1108,7 @@
             { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "bottom", align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "top", align: 'start' }},
             { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "top", align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "top", align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "top", align: 'start' }},
             { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "top", align: 'start' }},
             { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "top", align: 'start' }}
         ];
@@ -936,7 +1117,7 @@
             { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "right", align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "right", align: 'start' }},
             { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "left", align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "left", align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "left", align: 'start' }},
             { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "left", align: 'start' }},
             { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "left", align: 'start' }}
         ];
