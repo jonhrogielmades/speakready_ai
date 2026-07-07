@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ActivityLog;
+use App\Models\InterviewSession;
+use App\Models\Profile;
+use App\Models\Score;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -155,14 +159,74 @@ class AdminUserController extends Controller
 
     public function show(User $user)
     {
-        // This will be called via AJAX to populate the User Details Modal
-        $user->loadCount('interviews'); // Assuming interviews relationship exists, if not we'll just return basic data
-        
+        $scoreQuery = Score::join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
+            ->where('interview_sessions.user_id', $user->id);
+
+        $completedInterviews = InterviewSession::with(['category', 'score'])
+            ->where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'id' => $session->id,
+                    'date' => $session->created_at->format('M d, Y h:i A'),
+                    'category' => $session->category->title ?? 'Uncategorized',
+                    'score' => optional($session->score)->overall_readiness_score,
+                    'status' => $session->status,
+                    'review_url' => route('admin.sessions.review', $session->id),
+                ];
+            });
+
+        $profile = Profile::where('user_id', $user->id)->first();
+        $averageScore = (clone $scoreQuery)->avg('scores.overall_readiness_score');
+        $highestScore = (clone $scoreQuery)->max('scores.overall_readiness_score');
+        $completedCount = InterviewSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+
+        $activities = ActivityLog::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(8)
+            ->get()
+            ->map(function ($activity) {
+                return [
+                    'text' => $activity->description ?: $activity->action,
+                    'time' => $activity->created_at->diffForHumans(),
+                ];
+            });
+
+        $readinessRating = match (true) {
+            $averageScore === null => 'No scored sessions',
+            $averageScore >= 90 => 'Excellent',
+            $averageScore >= 70 => 'Good',
+            $averageScore >= 50 => 'Fair',
+            default => 'Needs Improvement',
+        };
+
         return response()->json([
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'email_verified_at' => optional($user->email_verified_at)->toISOString(),
+                'is_admin' => (bool) $user->is_admin,
+                'status' => $user->status,
+                'target_position' => $user->target_position,
+            ],
             'formatted_date' => $user->created_at->format('M d, Y'),
             'role_badge' => $user->is_admin ? '<span class="stat-badge primary" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Admin</span>' : '<span class="stat-badge secondary">User</span>',
-            'status_badge' => $user->status === 'active' ? '<span class="stat-badge success">🟢 Active</span>' : ($user->status === 'inactive' ? '<span class="stat-badge warning">🔴 Inactive</span>' : '<span class="stat-badge danger">⚫ Suspended</span>')
+            'status_badge' => $user->status === 'active' ? '<span class="stat-badge success">Active</span>' : ($user->status === 'inactive' ? '<span class="stat-badge warning">Inactive</span>' : '<span class="stat-badge danger">Suspended</span>'),
+            'stats' => [
+                'completed_interviews' => $completedCount,
+                'average_score' => $averageScore === null ? null : (int) round($averageScore),
+                'highest_score' => $highestScore === null ? null : (int) round($highestScore),
+                'current_streak' => (int) ($profile->current_streak ?? 0),
+                'readiness_rating' => $readinessRating,
+            ],
+            'interviews' => $completedInterviews,
+            'activities' => $activities,
         ]);
     }
 }

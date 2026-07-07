@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Models\InterviewAnswer;
+use App\Models\InterviewSession;
 use App\Models\Question;
+use App\Models\Score;
 use App\Models\LearningModule;
+use App\Services\AIService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 
 class AdminController extends Controller
@@ -48,11 +53,10 @@ class AdminController extends Controller
         $avgGrammar = round(\App\Models\Score::avg('grammar_score') ?? 0);
         $avgProfessionalism = round(\App\Models\Score::avg('professionalism_score') ?? 0);
 
-        // Activity Logs Mock based on recent users
-        $recentActivities = \App\Models\User::orderBy('created_at', 'desc')->take(4)->get()->map(function($user) {
+        $recentActivities = \App\Models\ActivityLog::orderBy('created_at', 'desc')->take(4)->get()->map(function($activity) {
             return [
-                'text' => 'User registered: ' . $user->name,
-                'time' => $user->created_at->diffForHumans()
+                'text' => $activity->description ?: $activity->action,
+                'time' => $activity->created_at->diffForHumans(),
             ];
         });
 
@@ -173,13 +177,47 @@ class AdminController extends Controller
 
     public function categoryDetails(Category $category)
     {
-        $totalQuestions = $category->questions()->count();
-        // Mock data for analytics
-        $totalInterviews = rand(10, 100); 
-        $averageScore = rand(60, 95);
-        $popularity = rand(1, 10);
+        $category->load('questions');
 
-        return view('admin.category_details', compact('category', 'totalQuestions', 'totalInterviews', 'averageScore', 'popularity'));
+        $totalQuestions = $category->questions->count();
+        $totalInterviews = InterviewSession::where('category_id', $category->id)->count();
+        $averageScore = (int) round(
+            Score::join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
+                ->where('interview_sessions.category_id', $category->id)
+                ->avg('scores.overall_readiness_score') ?? 0
+        );
+
+        $allInterviewCount = InterviewSession::count();
+        $popularity = $allInterviewCount > 0
+            ? max(1, min(10, (int) ceil(($totalInterviews / $allInterviewCount) * 10)))
+            : 0;
+
+        $categoryMonthlyLabels = [];
+        $categoryMonthlyData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $categoryMonthlyLabels[] = $date->format('M');
+            $categoryMonthlyData[] = InterviewSession::where('category_id', $category->id)
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+        }
+
+        $questionTypeCounts = $category->questions
+            ->groupBy(fn ($question) => $question->type ?: 'Unspecified')
+            ->map(fn ($questions) => $questions->count())
+            ->toArray();
+
+        return view('admin.category_details', compact(
+            'category',
+            'totalQuestions',
+            'totalInterviews',
+            'averageScore',
+            'popularity',
+            'categoryMonthlyLabels',
+            'categoryMonthlyData',
+            'questionTypeCounts'
+        ));
     }
 
     // Question CRUD
@@ -264,12 +302,14 @@ class AdminController extends Controller
 
     public function questionAnalytics(Question $question)
     {
-        // Mock data
-        $used = rand(500, 3000);
-        $avgScore = rand(60, 98);
+        $answers = InterviewAnswer::where('question_id', $question->id);
+        $used = (clone $answers)->count();
+        $avgScore = (clone $answers)->whereNotNull('score')->avg('score');
+
         return response()->json([
             'used_count' => $used,
-            'average_score' => $avgScore
+            'average_score' => $avgScore === null ? 0 : (int) round($avgScore),
+            'has_score_data' => $avgScore !== null,
         ]);
     }
 
@@ -277,36 +317,102 @@ class AdminController extends Controller
     {
         $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'position' => 'required|string',
-            'difficulty' => 'required|string',
+            'position' => 'required|string|max:255',
+            'difficulty' => 'required|string|max:50',
+            'ai_provider' => 'nullable|string|max:50',
         ]);
 
-        $category = Category::find($request->category_id);
-        
-        // Mock AI Generation
-        $mockQuestions = [
-            "Explain the concept of {$category->title} in the context of a {$request->position} role.",
-            "Can you describe a time when you applied your {$category->title} skills as a {$request->position}?",
-            "What is the most challenging {$request->difficulty} level problem you've solved related to {$category->title}?"
-        ];
-        
+        $category = Category::findOrFail($request->category_id);
+        $position = trim($request->position);
+        $difficulty = trim($request->difficulty);
+        $provider = strtolower($request->input('ai_provider', env('AI_PROVIDER', 'local')));
+
+        $questionText = null;
+        $source = 'fallback';
+
+        if ($this->providerCanGenerateQuestions($provider)) {
+            try {
+                $generated = AIService::generateQuestions(
+                    1,
+                    $position,
+                    $difficulty,
+                    $category->title,
+                    $provider
+                );
+
+                $questionText = collect($generated)
+                    ->first(fn ($question) => is_string($question) && trim($question) !== '');
+
+                if ($questionText) {
+                    $source = 'ai';
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Admin AI question generation failed; using deterministic fallback.', [
+                    'provider' => $provider,
+                    'category_id' => $category->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        $questionText = $questionText ?: $this->fallbackInterviewQuestion($category, $position, $difficulty);
+
         return response()->json([
-            'question_text' => $mockQuestions[array_rand($mockQuestions)]
+            'question_text' => trim($questionText),
+            'source' => $source,
         ]);
     }
 
     public function questionsDashboard()
     {
-        $questions = Question::all();
+        $questions = Question::with('category')
+            ->withCount('answers')
+            ->latest()
+            ->get();
         $categories = Category::withCount('questions')->get();
         
         $totalQuestions = $questions->count();
         $activeQuestions = $questions->where('status', 'active')->count();
         $totalCategories = $categories->count();
-        // Mock most used
-        $mostUsedQuestions = $questions->take(3); // In a real app, query by usage
+        $mostUsedQuestions = Question::with('category')
+            ->withCount('answers')
+            ->orderByDesc('answers_count')
+            ->take(3)
+            ->get();
 
         return view('admin.questions', compact('questions', 'categories', 'totalQuestions', 'activeQuestions', 'totalCategories', 'mostUsedQuestions'));
+    }
+
+    private function providerCanGenerateQuestions(string $provider): bool
+    {
+        $providerKeys = [
+            'gemini' => 'GEMINI_API_KEY',
+            'cohere' => 'COHERE_API_KEY',
+            'groq' => 'GROQ_API_KEY',
+            'openrouter' => 'OPENROUTER_API_KEY',
+            'claude' => 'ANTHROPIC_API_KEY',
+            'wisdomgate' => 'WISDOMGATE_API_KEY',
+        ];
+
+        if (!isset($providerKeys[$provider])) {
+            return false;
+        }
+
+        return filled(env($providerKeys[$provider]));
+    }
+
+    private function fallbackInterviewQuestion(Category $category, string $position, string $difficulty): string
+    {
+        $categoryTitle = trim($category->title) ?: 'this skill area';
+        $targetPosition = $position !== '' ? $position : 'your target role';
+
+        $difficultyPrompt = match (strtolower($difficulty)) {
+            'easy' => 'foundational',
+            'hard' => 'complex or high-pressure',
+            default => 'realistic',
+        };
+
+        return "For a {$targetPosition} role, describe a {$difficultyPrompt} situation where you used {$categoryTitle}. What was your responsibility, what actions did you take, and what measurable result followed?";
     }
 
     public function importQuestions(Request $request)

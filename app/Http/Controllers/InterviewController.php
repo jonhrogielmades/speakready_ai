@@ -533,8 +533,10 @@ class InterviewController extends Controller
             ->where('id', $id)
             ->with(['category', 'answers.question', 'score', 'feedback', 'user'])
             ->firstOrFail();
+
+        $comparisonRows = $this->comparisonRowsFor($sessionRecord);
             
-        return view('shared.review', compact('sessionRecord'));
+        return view('shared.review', compact('sessionRecord', 'comparisonRows'));
     }
 
     public function toggleShare(Request $request, $id)
@@ -562,7 +564,52 @@ class InterviewController extends Controller
             ->where('is_public', true)
             ->with(['category', 'answers.question', 'score', 'feedback', 'user'])
             ->firstOrFail();
+
+        $comparisonRows = [];
             
-        return view('shared.review', compact('sessionRecord'));
+        return view('shared.review', compact('sessionRecord', 'comparisonRows'));
+    }
+
+    private function comparisonRowsFor(InterviewSession $session): array
+    {
+        if (!$session->score) {
+            return [];
+        }
+
+        $previousSession = InterviewSession::where('user_id', $session->user_id)
+            ->where('status', 'completed')
+            ->where('id', '!=', $session->id)
+            ->where('created_at', '<', $session->created_at)
+            ->with('score')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$previousSession || !$previousSession->score) {
+            return [];
+        }
+
+        $metrics = [
+            'Clarity' => 'clarity_score',
+            'Relevance' => 'relevance_score',
+            'Grammar' => 'grammar_score',
+            'Professionalism' => 'professionalism_score',
+            'Confidence' => 'confidence_score',
+            'Overall' => 'overall_readiness_score',
+        ];
+
+        $rows = [];
+        foreach ($metrics as $label => $column) {
+            $previous = (int) ($previousSession->score->{$column} ?? 0);
+            $current = (int) ($session->score->{$column} ?? 0);
+
+            $rows[] = [
+                'label' => $label,
+                'previous' => $previous,
+                'current' => $current,
+                'delta' => $current - $previous,
+            ];
+        }
+
+        return $rows;
     }
 }

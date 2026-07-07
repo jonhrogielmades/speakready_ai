@@ -8,6 +8,7 @@
         $weaknesses = trim($feedback->weaknesses ?? '');
         $suggestions = trim($feedback->improvement_suggestions ?? '');
         $feedbackSummary = $suggestions !== '' ? $suggestions : ($weaknesses !== '' ? $weaknesses : ($strengths !== '' ? $strengths : 'AI feedback was unavailable for this session.'));
+        $comparisonRows = $comparisonRows ?? [];
     @endphp
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -117,38 +118,39 @@
         <div class="col-lg-4">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Feedback Comparison</h5>
-                <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Comparing to your last Job Interview session.</p>
-                
-                <table class="table table-borderless table-sm mb-0" style="color:var(--tx);font-size:0.95rem;">
-                    <thead>
-                        <tr style="border-bottom: 1px solid var(--bd);color:var(--tx3);">
-                            <th>Metric</th>
-                            <th class="text-center">Prev</th>
-                            <th class="text-center">Cur</th>
-                            <th class="text-end">Trend</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Clarity</td>
-                            <td class="text-center">75%</td>
-                            <td class="text-center fw-bold">88%</td>
-                            <td class="text-end text-success"><i class="fa-solid fa-arrow-up"></i></td>
-                        </tr>
-                        <tr>
-                            <td>Grammar</td>
-                            <td class="text-center">82%</td>
-                            <td class="text-center fw-bold">92%</td>
-                            <td class="text-end text-success"><i class="fa-solid fa-arrow-up"></i></td>
-                        </tr>
-                        <tr>
-                            <td>Confidence</td>
-                            <td class="text-center">85%</td>
-                            <td class="text-center fw-bold">80%</td>
-                            <td class="text-end text-danger"><i class="fa-solid fa-arrow-down"></i></td>
-                        </tr>
-                    </tbody>
-                </table>
+                @if(count($comparisonRows) > 0)
+                    <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Comparing to the previous completed scored session.</p>
+                    <table class="table table-borderless table-sm mb-0" style="color:var(--tx);font-size:0.95rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--bd);color:var(--tx3);">
+                                <th>Metric</th>
+                                <th class="text-center">Prev</th>
+                                <th class="text-center">Cur</th>
+                                <th class="text-end">Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($comparisonRows as $row)
+                                <tr>
+                                    <td>{{ $row['label'] }}</td>
+                                    <td class="text-center">{{ $row['previous'] }}%</td>
+                                    <td class="text-center fw-bold">{{ $row['current'] }}%</td>
+                                    <td class="text-end {{ $row['delta'] > 0 ? 'text-success' : ($row['delta'] < 0 ? 'text-danger' : 'text-muted') }}">
+                                        @if($row['delta'] > 0)
+                                            <i class="fa-solid fa-arrow-up"></i>
+                                        @elseif($row['delta'] < 0)
+                                            <i class="fa-solid fa-arrow-down"></i>
+                                        @else
+                                            <i class="fa-solid fa-minus"></i>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p style="color:var(--tx3);font-size:0.9rem;line-height:1.6;margin:0;">No previous scored session is available for comparison.</p>
+                @endif
             </div>
         </div>
     </div>
@@ -181,43 +183,55 @@
                         </div>
                     @else
                         
+                        @php
+                            $hasDeliveryMetrics = ($answer->wpm ?? 0) > 0
+                                || ($answer->voice_duration ?? 0) > 0
+                                || ($answer->filler_words_count ?? 0) > 0
+                                || ($answer->confidence_score ?? 0) > 0;
+                            $hasBodyLanguageMetrics = ($answer->eye_contact_score ?? 0) > 0
+                                || ($answer->posture_score ?? 0) > 0;
+                        @endphp
+
                         <!-- Feature 11: Voice Rehearsal Feedback -->
-                        @if($answer->wpm > 0 || $answer->filler_words_count > 0 || true) <!-- mocked 'true' for UI demonstration -->
+                        @if($hasDeliveryMetrics)
                         <div class="row g-3 mb-4">
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
                                     <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Speaking Pace</div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->wpm ?? 135 }} WPM <span class="text-success" style="font-size:0.8rem;">(Good)</span></div>
+                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->wpm ?? 0 }} WPM</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
                                     <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Duration</div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->voice_duration ?? 45 }}s</div>
+                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->voice_duration ?? 0 }}s</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
                                     <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Confidence</div>
-                                    <div style="color:{{ ($answer->confidence_score ?? 85) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->confidence_score ?? 85 }}%</div>
+                                    <div style="color:{{ ($answer->confidence_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->confidence_score ?? 0 }}%</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
                                     <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Filler Words</div>
-                                    <div style="color:#ef4444;font-weight:bold;font-size:1.1rem;">{{ $answer->filler_words_count ?? 3 }}</div>
+                                    <div style="color:#ef4444;font-weight:bold;font-size:1.1rem;">{{ $answer->filler_words_count ?? 0 }}</div>
                                 </div>
                             </div>
                         </div>
 
+                        @endif
+
                         <!-- Feature 16: Body Language Breakdown -->
+                        @if($hasBodyLanguageMetrics)
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(236,72,153,0.05);border-radius:12px;border:1px solid rgba(236,72,153,0.2);">
                                     <div>
                                         <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:2px;"><i class="fa-solid fa-eye me-2" style="color:#ec4899"></i>Eye Contact</div>
                                     </div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->eye_contact_score ?? 90 }}%</div>
+                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->eye_contact_score ?? 0 }}%</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -225,7 +239,7 @@
                                     <div>
                                         <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:2px;"><i class="fa-solid fa-person me-2" style="color:#ec4899"></i>Posture</div>
                                     </div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->posture_score ?? 90 }}%</div>
+                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->posture_score ?? 0 }}%</div>
                                 </div>
                             </div>
                         </div>
@@ -236,31 +250,41 @@
                             <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback ?: 'No AI feedback was generated for this answer.' }}</p>
                         </div>
 
-                        <!-- Feature 9: STAR Framework Analysis (shown randomly or based on question type) -->
-                        <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
-                            <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">STAR Framework Analysis</h6>
-                            <div class="d-flex flex-wrap gap-4 align-items-center">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge rounded-pill bg-success" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-check"></i></span>
-                                    <span style="color:var(--tx);font-weight:600;">Situation</span>
+                        @php
+                            $starAnalysis = is_array($answer->star_analysis) ? $answer->star_analysis : [];
+                            $starLabels = [
+                                'situation' => 'Situation',
+                                'task' => 'Task',
+                                'action' => 'Action',
+                                'result' => 'Result',
+                            ];
+                        @endphp
+                        @if(!empty($starAnalysis))
+                            <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
+                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">STAR Framework Analysis</h6>
+                                <div class="d-flex flex-wrap gap-4 align-items-center">
+                                    @foreach($starLabels as $key => $label)
+                                        @php $present = (bool) ($starAnalysis[$key] ?? false); @endphp
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge rounded-pill {{ $present ? 'bg-success' : 'bg-danger' }}" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">
+                                                <i class="fa-solid {{ $present ? 'fa-check' : 'fa-xmark' }}"></i>
+                                            </span>
+                                            <span style="color:var(--tx);font-weight:600;">{{ $label }}</span>
+                                        </div>
+                                    @endforeach
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge rounded-pill bg-success" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-check"></i></span>
-                                    <span style="color:var(--tx);font-weight:600;">Task</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge rounded-pill bg-success" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-check"></i></span>
-                                    <span style="color:var(--tx);font-weight:600;">Action</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge rounded-pill bg-danger" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-xmark"></i></span>
-                                    <span style="color:var(--tx);font-weight:600;">Result</span>
-                                </div>
+                                @if(!empty($starAnalysis['suggestion']))
+                                    <p style="color:var(--tx3);font-size:0.9rem;margin-top:12px;margin-bottom:0;">
+                                        <strong class="text-danger">Suggestion:</strong> {{ $starAnalysis['suggestion'] }}
+                                    </p>
+                                @endif
                             </div>
-                            <p style="color:var(--tx3);font-size:0.9rem;margin-top:12px;margin-bottom:0;">
-                                <strong class="text-danger">Suggestion:</strong> Include the final measurable outcome of your actions to complete the STAR method effectively.
-                            </p>
-                        </div>
+                        @elseif(($sessionRecord->score->star_method_score ?? 0) > 0)
+                            <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
+                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">STAR Method Score</h6>
+                                <p style="color:var(--tx3);font-size:0.9rem;margin:0;">Session-level STAR score: {{ $sessionRecord->score->star_method_score }}%.</p>
+                            </div>
+                        @endif
 
                         <!-- Feature 8: Suggested Answer Improvement -->
                         <div class="row g-4 mb-4">

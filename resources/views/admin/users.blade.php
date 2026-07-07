@@ -351,16 +351,16 @@
 
 <!-- ================= MODALS ================= -->
 
-<!-- Feature 20: User Detail Dashboard (Large Modal) -->
+<!-- User Detail Dashboard -->
 <div class="modal fade custom-modal" id="userDetailModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header d-flex justify-content-between align-items-center pb-0 border-0">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div style="width:60px;height:60px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.5rem;">JD</div>
+                    <div id="userDetailInitials" style="width:60px;height:60px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.5rem;">--</div>
                     <div>
-                        <h4 class="mb-0 fw-bold">Juan Dela Cruz</h4>
-                        <div style="color:var(--tx2);font-size:0.9rem;">ID: USR-98241 <span class="stat-badge success ms-2">🟢 Active</span></div>
+                        <h4 id="userDetailName" class="mb-0 fw-bold">Loading user...</h4>
+                        <div style="color:var(--tx2);font-size:0.9rem;">ID: <span id="userDetailId">--</span> <span id="userDetailStatus" class="ms-2"></span></div>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
@@ -370,8 +370,6 @@
                 <ul class="nav nav-tabs border-0 w-100" id="userTabs" role="tablist">
                     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">Overview</button></li>
                     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-interviews" type="button">Interviews</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-progress" type="button" onclick="setTimeout(()=>window.dispatchEvent(new Event('resize')), 100)">Progress</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-learning" type="button">Learning</button></li>
                     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-activity" type="button">Activity Logs</button></li>
                 </ul>
             </div>
@@ -385,11 +383,10 @@
                             <div class="col-md-6">
                                 <div class="premium-card p-3">
                                     <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;">Personal Information</h6>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Email</div><div class="col-8">juan@example.com <span class="badge bg-success ms-1">Verified</span></div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Contact</div><div class="col-8">+63 912 345 6789</div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Education</div><div class="col-8">College Graduate</div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Course</div><div class="col-8">BS Information Technology</div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Registered</div><div class="col-8">Oct 12, 2026</div></div>
+                                    <div class="row mb-2"><div class="col-4 text-muted">Email</div><div id="userDetailEmail" class="col-8">--</div></div>
+                                    <div class="row mb-2"><div class="col-4 text-muted">Role</div><div id="userDetailRole" class="col-8">--</div></div>
+                                    <div class="row mb-2"><div class="col-4 text-muted">Target Role</div><div id="userDetailTarget" class="col-8">--</div></div>
+                                    <div class="row mb-2"><div class="col-4 text-muted">Registered</div><div id="userDetailRegistered" class="col-8">--</div></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -397,24 +394,24 @@
                                     <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Interview Statistics</h6>
                                     <div class="row text-center mb-3">
                                         <div class="col-6 mb-3">
-                                            <h3 class="fw-bold text-primary mb-0">25</h3>
+                                            <h3 id="userDetailCompleted" class="fw-bold text-primary mb-0">0</h3>
                                             <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Interviews Completed</div>
                                         </div>
                                         <div class="col-6 mb-3">
-                                            <h3 class="fw-bold text-success mb-0">88%</h3>
+                                            <h3 id="userDetailAverage" class="fw-bold text-success mb-0">N/A</h3>
                                             <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Average Score</div>
                                         </div>
                                         <div class="col-6">
-                                            <h3 class="fw-bold text-warning mb-0">96%</h3>
+                                            <h3 id="userDetailHighest" class="fw-bold text-warning mb-0">N/A</h3>
                                             <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Highest Score</div>
                                         </div>
                                         <div class="col-6">
-                                            <h3 class="fw-bold text-info mb-0">7 Days</h3>
+                                            <h3 id="userDetailStreak" class="fw-bold text-info mb-0">0 Days</h3>
                                             <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Practice Streak</div>
                                         </div>
                                     </div>
                                     <div class="text-center p-2 rounded" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);">
-                                        <span class="text-success fw-bold">Readiness Rating: Highly Acceptable</span>
+                                        <span id="userDetailRating" class="text-success fw-bold">Readiness Rating: No scored sessions</span>
                                     </div>
                                 </div>
                             </div>
@@ -435,131 +432,20 @@
                                             <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Today, 10:30 AM</td>
-                                            <td><span class="stat-badge primary">Job Interview</span></td>
-                                            <td><span class="fw-bold text-success">88%</span></td>
-                                            <td>Completed</td>
-                                            <td class="text-end">
-                                                <button class="btn btn-sm btn-outline-secondary">View Feedback</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Yesterday</td>
-                                            <td><span class="stat-badge warning">IT Interview</span></td>
-                                            <td><span class="fw-bold text-warning">72%</span></td>
-                                            <td>Completed</td>
-                                            <td class="text-end">
-                                                <button class="btn btn-sm btn-outline-secondary">View Feedback</button>
-                                            </td>
-                                        </tr>
+                                    <tbody id="userDetailInterviews">
+                                        <tr><td colspan="5" class="text-center text-muted py-3">Select a user to load interview history.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Feature 10: Progress Tab -->
-                    <div class="tab-pane fade" id="tab-progress">
-                        <div class="row g-4">
-                            <div class="col-md-8">
-                                <div class="premium-card p-3 h-100">
-                                    <h6 class="fw-bold mb-3">Readiness Trend (Monthly)</h6>
-                                    <div class="chart-container" style="height:250px;">
-                                        <canvas id="userProgressChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="premium-card p-3 h-100">
-                                    <h6 class="fw-bold mb-3">Category Performance</h6>
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Job Interview</span><span class="fw-bold">90%</span></div>
-                                        <div class="progress-track"><div class="progress-fill" style="width:90%;background:#3b82f6;"></div></div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>IT Interview</span><span class="fw-bold">85%</span></div>
-                                        <div class="progress-track"><div class="progress-fill" style="width:85%;background:#3b82f6;"></div></div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Scholarship</span><span class="fw-bold">75%</span></div>
-                                        <div class="progress-track"><div class="progress-fill" style="width:75%;background:#f59e0b;"></div></div>
-                                    </div>
-                                    <div class="p-3 mt-4 rounded text-center" style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);">
-                                        <div style="font-size:0.8rem;color:var(--tx2);">Improvement Rate</div>
-                                        <h4 class="fw-bold text-success mb-0">+12%</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Feature 11: Learning Progress Tab -->
-                    <div class="tab-pane fade" id="tab-learning">
-                        <div class="premium-card p-3">
-                            <h6 class="fw-bold mb-4">Completed Learning Modules</h6>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="fw-bold">STAR Method Mastery</span>
-                                            <span class="text-success fw-bold">100%</span>
-                                        </div>
-                                        <div class="progress-track"><div class="progress-fill" style="width:100%;background:#34d399;"></div></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="fw-bold">Communication Skills</span>
-                                            <span class="text-primary fw-bold">80%</span>
-                                        </div>
-                                        <div class="progress-track"><div class="progress-fill" style="width:80%;background:#3b82f6;"></div></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Feature 12 & 13: Activity Tab -->
+                    <!-- Activity Tab -->
                     <div class="tab-pane fade" id="tab-activity">
-                        <div class="row g-4">
-                            <div class="col-md-6">
-                                <div class="premium-card p-3 h-100">
-                                    <h6 class="fw-bold mb-4">User Activity Logs</h6>
-                                    <div class="timeline">
-                                        <div class="timeline-item">
-                                            <div style="font-size:0.85rem;">Report Downloaded</div>
-                                            <div style="font-size:0.75rem;color:var(--tx3);">Today, 11:00 AM</div>
-                                        </div>
-                                        <div class="timeline-item">
-                                            <div style="font-size:0.85rem;">Interview Completed (Job Interview)</div>
-                                            <div style="font-size:0.75rem;color:var(--tx3);">Today, 10:30 AM</div>
-                                        </div>
-                                        <div class="timeline-item">
-                                            <div style="font-size:0.85rem;">Interview Started</div>
-                                            <div style="font-size:0.75rem;color:var(--tx3);">Today, 10:00 AM</div>
-                                        </div>
-                                        <div class="timeline-item">
-                                            <div style="font-size:0.85rem;">Logged In</div>
-                                            <div style="font-size:0.75rem;color:var(--tx3);">Today, 09:55 AM</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="premium-card p-3 h-100">
-                                    <h6 class="fw-bold mb-4">AI Feedback History</h6>
-                                    <div class="p-3 mb-3 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="fw-bold text-primary">Job Interview Feedback</span>
-                                            <span style="font-size:0.75rem;color:var(--tx3);">Today</span>
-                                        </div>
-                                        <p style="font-size:0.85rem;color:var(--tx2);margin-bottom:8px;">"Excellent structure using the STAR method, but try to speak a bit slower during the technical explanation."</p>
-                                        <div style="font-size:0.75rem;"><span class="text-success">Score: 88%</span></div>
-                                    </div>
-                                </div>
+                        <div class="premium-card p-3 h-100">
+                            <h6 class="fw-bold mb-4">User Activity Logs</h6>
+                            <div id="userDetailActivities" class="timeline">
+                                <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load activity.</div>
                             </div>
                         </div>
                     </div>
@@ -568,9 +454,7 @@
             </div>
             
             <div class="modal-footer border-0 pb-3 pt-0">
-                <button type="button" class="btn btn-outline-danger me-auto"><i class="fa-solid fa-ban me-2"></i>Suspend Account</button>
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" style="background:#3b82f6;border-color:#3b82f6;"><i class="fa-solid fa-download me-2"></i>Export Full Report</button>
             </div>
         </div>
     </div>
@@ -743,52 +627,7 @@
     </div>
 </div>
 
-<!-- Chart.js scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    Chart.defaults.color = '#808090';
-    Chart.defaults.font.family = "'Inter', sans-serif";
-
-    // Re-render chart when Progress tab is clicked
-    document.querySelector('button[data-bs-target="#tab-progress"]').addEventListener('shown.bs.tab', function () {
-        if(window.progressChartObj) return; // already rendered
-        
-        const progCtx = document.getElementById('userProgressChart').getContext('2d');
-        let gradientLine = progCtx.createLinearGradient(0, 0, 0, 300);
-        gradientLine.addColorStop(0, 'rgba(52, 211, 153, 0.4)');
-        gradientLine.addColorStop(1, 'rgba(52, 211, 153, 0.0)');
-
-        window.progressChartObj = new Chart(progCtx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [{
-                    label: 'Score Avg',
-                    data: [65, 75, 82, 88],
-                    borderColor: '#34d399',
-                    backgroundColor: gradientLine,
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#1e1e2d',
-                    pointBorderColor: '#34d399',
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max:100, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
-    });
-});
-
     function togglePasswordVisibility(inputId, btn) {
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
@@ -824,23 +663,61 @@ document.addEventListener("DOMContentLoaded", function() {
         modal.show();
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[char]));
+    }
+
+    function scoreText(score) {
+        return score === null || score === undefined ? 'N/A' : `${score}%`;
+    }
+
     function viewUser(id) {
         fetch(`/admin/users/${id}`)
             .then(res => res.json())
             .then(data => {
                 const user = data.user;
-                // Update User Details Modal with real data
-                document.querySelector('#userDetailModal h4.mb-0.fw-bold').textContent = user.name;
-                document.querySelector('#userDetailModal .stat-badge.success.ms-2').outerHTML = data.status_badge;
-                
-                const infoItems = document.querySelectorAll('#tab-overview .premium-card:first-child .col-8');
-                if(infoItems.length >= 5) {
-                    infoItems[0].innerHTML = user.email + ' ' + (user.email_verified_at ? '<span class="badge bg-success ms-1">Verified</span>' : '');
-                    infoItems[4].textContent = data.formatted_date;
-                }
-                
-                // You can add more dynamic updates here as needed
-                
+                const stats = data.stats || {};
+                const initials = (user.name || '--').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '--';
+
+                document.getElementById('userDetailInitials').textContent = initials;
+                document.getElementById('userDetailName').textContent = user.name || 'Unnamed user';
+                document.getElementById('userDetailId').textContent = user.id;
+                document.getElementById('userDetailStatus').innerHTML = data.status_badge || '';
+                document.getElementById('userDetailEmail').innerHTML = `${escapeHtml(user.email)} ${user.email_verified_at ? '<span class="badge bg-success ms-1">Verified</span>' : ''}`;
+                document.getElementById('userDetailRole').innerHTML = data.role_badge || '';
+                document.getElementById('userDetailTarget').textContent = user.target_position || 'Not set';
+                document.getElementById('userDetailRegistered').textContent = data.formatted_date || '--';
+                document.getElementById('userDetailCompleted').textContent = stats.completed_interviews ?? 0;
+                document.getElementById('userDetailAverage').textContent = scoreText(stats.average_score);
+                document.getElementById('userDetailHighest').textContent = scoreText(stats.highest_score);
+                document.getElementById('userDetailStreak').textContent = `${stats.current_streak ?? 0} Days`;
+                document.getElementById('userDetailRating').textContent = `Readiness Rating: ${stats.readiness_rating || 'No scored sessions'}`;
+
+                const interviewRows = (data.interviews || []).map(session => `
+                    <tr>
+                        <td>${escapeHtml(session.date)}</td>
+                        <td><span class="stat-badge primary">${escapeHtml(session.category)}</span></td>
+                        <td><span class="fw-bold">${scoreText(session.score)}</span></td>
+                        <td>${escapeHtml(session.status)}</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(session.review_url)}">View Feedback</a></td>
+                    </tr>
+                `).join('');
+                document.getElementById('userDetailInterviews').innerHTML = interviewRows || '<tr><td colspan="5" class="text-center text-muted py-3">No completed interviews found.</td></tr>';
+
+                const activityRows = (data.activities || []).map(activity => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;">${escapeHtml(activity.text)}</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">${escapeHtml(activity.time)}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailActivities').innerHTML = activityRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No activity recorded.</div>';
+
                 var modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
                 modal.show();
             })

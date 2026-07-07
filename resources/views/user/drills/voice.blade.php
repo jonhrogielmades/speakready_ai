@@ -346,7 +346,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
     });
 });
 
-// Mock Prompts
+// Local practice prompt bank
 const prompts = {
     "Tell Me About Yourself": ["Walk me through your resume.", "How would you describe yourself in three words?", "What is your biggest professional achievement?"],
     "Strengths and Weaknesses": ["What is your greatest weakness?", "What are your top three strengths?", "Tell me about a time you failed."],
@@ -434,7 +434,7 @@ function processTranscript(text) {
         formattedHtml = formattedHtml.replace(regex, `<span class="keyword-highlight">$&</span>`);
     });
     
-    // Pronunciation mock highlight
+    // Possible pronunciation highlight based on a local watchlist.
     const mispronounced = ['specifically', 'phenomenon', 'statistics'];
     mispronounced.forEach(kw => {
         const regex = new RegExp(`\\b${kw}\\b`, 'gi');
@@ -589,7 +589,7 @@ async function generateAnalysis() {
     document.getElementById('paceBar').style.width = pacePct + '%';
     document.getElementById('paceBar').style.background = paceCol;
     
-    // Mock Clarity & Confidence
+    // Local clarity and confidence estimates based on measurable transcript signals.
     const clarity = Math.max(20, 100 - (fillerCount * 5));
     document.getElementById('resClarity').innerText = clarity;
     
@@ -627,9 +627,9 @@ async function generateAnalysis() {
         const data = await response.json();
         
         // Populate AI Feedback
-        document.getElementById('resStrengths').innerText = data.strengths || "Good articulation and solid use of action verbs.";
-        document.getElementById('resWeak').innerText = data.weaknesses || `Try to reduce the use of filler words.`;
-        document.getElementById('compAI').innerHTML = "<em>(AI Improved Version)</em><br><br>" + (data.improved_answer || "Keep practicing to refine your answer.");
+        document.getElementById('resStrengths').innerText = data.strengths || "AI strengths analysis was unavailable for this recording.";
+        document.getElementById('resWeak').innerText = data.weaknesses || "AI improvement analysis was unavailable. Review the transcript, pace, and filler-word count before relying on this session.";
+        document.getElementById('compAI').innerHTML = "<em>(AI Improved Version)</em><br><br>" + (data.improved_answer || "AI improved answer was unavailable for this recording.");
         
         // Store for saving
         window.currentAnalysis = {
@@ -710,7 +710,7 @@ async function saveSession() {
 }
 
 function downloadReport() {
-    alert("Downloading PDF Report... (Mock Action)");
+    window.print();
 }
 
 // Chart.js & History Init

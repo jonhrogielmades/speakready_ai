@@ -580,6 +580,11 @@ function openAnalytics(questionId) {
     fetch(`/admin/questions/${questionId}/analytics`)
         .then(response => response.json())
         .then(data => {
+            const averageScore = data.has_score_data ? `${data.average_score}%` : 'N/A';
+            const analyticsNote = data.has_score_data
+                ? 'Data reflects submitted answers stored in the system.'
+                : 'No scored answers have been recorded for this question yet.';
+
             document.getElementById('analyticsBody').innerHTML = `
                 <div class="row">
                     <div class="col-6 mb-3">
@@ -591,11 +596,11 @@ function openAnalytics(questionId) {
                     <div class="col-6 mb-3">
                         <div style="background:var(--bg);border-radius:12px;padding:16px;">
                             <h6 style="color:var(--tx3);font-size:.8rem;margin-bottom:8px">Average Score</h6>
-                            <h2 style="color:var(--tx);margin:0;font-weight:700">${data.average_score}%</h2>
+                            <h2 style="color:var(--tx);margin:0;font-weight:700">${averageScore}</h2>
                         </div>
                     </div>
                 </div>
-                <p style="color:var(--tx3);font-size:.85rem;margin:0">* Data reflects simulated metrics for demo purposes.</p>
+                <p style="color:var(--tx3);font-size:.85rem;margin:0">${analyticsNote}</p>
             `;
         });
 }

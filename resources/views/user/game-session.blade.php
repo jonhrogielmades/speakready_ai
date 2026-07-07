@@ -551,7 +551,7 @@
                 document.getElementById('wordCount').innerText = wordCount + ' words';
                 document.getElementById('charCount').innerText = charCount + ' characters';
 
-                // Mock STAR Analysis
+                // Local STAR estimate from answer text.
                 const hasS = wordCount > 10;
                 const hasT = wordCount > 20 && text.toLowerCase().includes('task');
                 const hasA = wordCount > 30 && text.toLowerCase().includes('action');
@@ -569,7 +569,7 @@
                 else tip = "Great STAR response!";
                 document.getElementById('coachingTip').innerHTML = `<i class="fa-solid fa-lightbulb me-1"></i> <strong>Coach:</strong> ${tip}`;
 
-                // Mock Visualizer
+                // Local readiness estimate shown before server-side scoring.
                 let readiness = Math.min(100, Math.max(0, wordCount * 2));
                 if(wordCount === 0) readiness = 0;
                 document.getElementById('overallReadiness').innerText = readiness + '%';
@@ -578,7 +578,7 @@
                 document.getElementById('metGrammar').innerText = (readiness > 0 ? Math.min(100, readiness + 15) : 0) + '%';
                 document.getElementById('metProf').innerText = (readiness > 0 ? Math.min(100, readiness + 8) : 0) + '%';
 
-                // Fillers mock (Improved regex to catch more natural conversational fillers)
+                // Local filler-word estimate.
                 const fillerPattern = /\b(um|uh|like|you know|basically|i mean|sort of|kind of|literally)\b/gi;
                 const matches = text.match(fillerPattern);
                 const fillers = matches ? matches.length : 0;

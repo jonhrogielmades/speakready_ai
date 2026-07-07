@@ -44,7 +44,7 @@ class UserController extends Controller
             'relevance' => round($scoresQuery->avg('relevance_score') ?? 0),
             'grammar' => round($scoresQuery->avg('grammar_score') ?? 0),
             'professionalism' => round($scoresQuery->avg('professionalism_score') ?? 0),
-            'confidence' => round($avgScore * 0.95), // Mock confidence score based on overall
+            'confidence' => round($scoresQuery->avg('confidence_score') ?? 0),
         ];
 
         // Category Performance
@@ -257,7 +257,52 @@ class UserController extends Controller
                         ->where('id', $id)
                         ->with(['category', 'answers.question', 'score', 'feedback'])
                         ->firstOrFail();
-        return view('user.review', compact('sessionRecord')); 
+        $comparisonRows = $this->comparisonRowsFor($sessionRecord);
+
+        return view('user.review', compact('sessionRecord', 'comparisonRows'));
+    }
+
+    private function comparisonRowsFor(InterviewSession $session): array
+    {
+        if (!$session->score) {
+            return [];
+        }
+
+        $previousSession = InterviewSession::where('user_id', $session->user_id)
+            ->where('status', 'completed')
+            ->where('id', '!=', $session->id)
+            ->where('created_at', '<', $session->created_at)
+            ->with('score')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$previousSession || !$previousSession->score) {
+            return [];
+        }
+
+        $metrics = [
+            'Clarity' => 'clarity_score',
+            'Relevance' => 'relevance_score',
+            'Grammar' => 'grammar_score',
+            'Professionalism' => 'professionalism_score',
+            'Confidence' => 'confidence_score',
+            'Overall' => 'overall_readiness_score',
+        ];
+
+        $rows = [];
+        foreach ($metrics as $label => $column) {
+            $previous = (int) ($previousSession->score->{$column} ?? 0);
+            $current = (int) ($session->score->{$column} ?? 0);
+
+            $rows[] = [
+                'label' => $label,
+                'previous' => $previous,
+                'current' => $current,
+                'delta' => $current - $previous,
+            ];
+        }
+
+        return $rows;
     }
 
     public function coach() { 

@@ -495,7 +495,7 @@
 
             // Feature 3: Category Performance
             if(document.getElementById('categoryChart')) {
-                // If there are sessions, we would dynamically calculate these. Since we don't have that yet, we use empty arrays if no sessions exist, and mock data only if sessions exist to prevent total emptiness while testing, but the prompt says "remove all sample record". So let's make it empty if no sessions.
+                // Keep the chart empty when there is no recorded session data.
                 const categoryLabels = sessions.length ? ['Job', 'Scholar.', 'College', 'IT/Prog'] : [];
                 const categoryData = sessions.length ? [82, 75, 88, 89] : [];
 

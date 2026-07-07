@@ -40,7 +40,7 @@
         </div>
         <div class="col-md-3">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Popularity Rating</h6>
+                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Usage Share</h6>
                 <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $popularity }}/10</h3>
             </div>
         </div>
@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", function() {
     new Chart(ctxBar, {
         type: 'bar',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: @json($categoryMonthlyLabels),
             datasets: [{
                 label: 'Interviews Taken',
-                data: [12, 19, 15, 25, 22, {{ $totalInterviews }}],
+                data: @json($categoryMonthlyData),
                 backgroundColor: 'rgba(54, 162, 235, 0.6)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1,
@@ -135,13 +135,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Pie Chart
     const ctxPie = document.getElementById('pieChart').getContext('2d');
     
-    // Count question types
-    const qTypes = {
-        'Behavioral': {{ $category->questions->where('type', 'Behavioral')->count() }},
-        'Situational': {{ $category->questions->where('type', 'Situational')->count() }},
-        'Technical': {{ $category->questions->where('type', 'Technical')->count() }},
-        'Personal': {{ $category->questions->where('type', 'Personal')->count() }}
-    };
+    const qTypes = @json($questionTypeCounts);
 
     new Chart(ctxPie, {
         type: 'doughnut',
