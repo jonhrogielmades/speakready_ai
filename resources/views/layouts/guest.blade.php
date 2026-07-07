@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI - Practice Smarter. Interview Better.</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=4') }}" />
       <script>
          if (localStorage.getItem('theme') === 'light') {
              document.documentElement.classList.add('lm');
@@ -157,8 +157,12 @@
             <div class="aur aur-a" style="bottom:-80px;left:45%;transform:translateX(-50%);opacity:.4"></div>
              <div class="container position-relative" style="z-index:2">
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
-                    <span class="hbadge">
-                 AI-Powered Learning | Real-Time Feedback | Interactive Training
+                    <span class="hbadge sr-hero-badge">
+                       <span>AI-Powered Learning</span>
+                       <span class="sr-badge-separator">|</span>
+                       <span>Real-Time Feedback</span>
+                       <span class="sr-badge-separator">|</span>
+                       <span>Interactive Training</span>
                     </span>
                 </div>
                 <div class="row align-items-center mt-4">
@@ -179,12 +183,12 @@
                            100% { transform: translateY(0px) rotateY(0deg); }
                         }
                      </style>
-                     <img src="{{ asset('img/hero_boy.png') }}" class="img-fluid mic-3d-anim afu" alt="SpeakReady AI Interview Practice" style="max-height: 450px; animation-delay: .1s; mix-blend-mode: multiply;">
+                     <img src="{{ asset('img/hero_boy.png') }}" class="img-fluid mic-3d-anim afu sr-hero-image" alt="SpeakReady AI Interview Practice" style="max-height: 450px; animation-delay: .1s; mix-blend-mode: multiply;">
                   </div>
                   <div class="col-lg-7 col-md-6 text-center order-2 order-lg-1">
-                     <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
-                     <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
-                     <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
+                     <h1 class="h1 afu sr-hero-title" style="animation-delay:.12s">Practice <span class="sr-mobile-break"><br></span>Smarter.<br><span class="gt">Interview <span class="sr-mobile-break"><br></span>Better.</span></h1>
+                     <p class="mx-auto afu sr-hero-copy" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
+                     <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap afu sr-hero-actions" style="animation-delay:.28s">
                         <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
@@ -226,7 +230,7 @@
                 
                 <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-11 adi">
-                     <div class="dwrap">
+                     <div class="dwrap sr-hero-preview">
                         <div class="dtbar"><span class="dd" style="background:#ff5f57"></span><span class="dd" style="background:#ffbd2e"></span><span class="dd" style="background:#28c840"></span><span class="ms-auto me-auto" style="font-size:.76rem;color:var(--tx3)"></span></div>
                         <div class="dgrid">
                            <div class="dside">

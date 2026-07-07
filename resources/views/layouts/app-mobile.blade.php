@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#08080f">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,7 +17,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=4') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
@@ -53,9 +53,10 @@
              box-sizing: border-box !important;
          }
          .row {
-             max-width: 100% !important;
-             margin-left: 0 !important;
-             margin-right: 0 !important;
+             max-width: 100%;
+         }
+         .row > * {
+             min-width: 0;
          }
          .premium-panel, .panel, .setup-panel, .premium-card, .print-card {
              max-width: 100% !important;
@@ -190,7 +191,7 @@
             transition: color 0.2s;
             -webkit-tap-highlight-color: transparent;
             border: none; background: transparent; cursor: pointer;
-            font-family: "Space Grotesk", sans-serif;
+            font-family: "Poppins", sans-serif;
          }
          .mob-nav-item i { font-size: 1.25rem; transition: transform 0.18s; }
          .mob-nav-item:active i { transform: scale(0.82); }
@@ -254,7 +255,7 @@
             padding: 12px 14px; border-radius: 12px;
             color: var(--tx2); font-size: 0.875rem; font-weight: 500;
             cursor: pointer; border: none; background: transparent;
-            width: 100%; font-family: "Space Grotesk", sans-serif;
+            width: 100%; font-family: "Poppins", sans-serif;
             text-align: left; text-decoration: none; transition: background-color 0.18s, color 0.18s;
          }
          .drawer-action i { width: 20px; text-align: center; font-size: 1rem; }
@@ -742,6 +743,3 @@
       @include('layouts.logout-transition')
    </body>
 </html>
-
-
-

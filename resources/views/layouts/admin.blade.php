@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI Admin Portal</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -21,7 +21,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=4') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }

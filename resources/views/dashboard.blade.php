@@ -1,782 +1,1205 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @section('content')
+@php
+    $scoreVal = (int) round($profile->readiness_score ?? $avgScore ?? 0);
+    $scoreVal = max(0, min(100, $scoreVal));
+    $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
+    $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Building Momentum' : 'Practice Mode');
+    $scoreIcon = $scoreVal >= 80 ? 'fa-circle-check' : ($scoreVal >= 60 ? 'fa-chart-line' : 'fa-arrow-trend-up');
+    $firstName = explode(' ', Auth::user()->name ?? 'User')[0] ?? 'User';
+    $rating = round(($avgScore ?? 0) / 20, 1);
+    $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
+    $categoryCount = isset($categoryPerformance) ? count($categoryPerformance) : 0;
+    $moduleCount = isset($learningLabProgress) ? count($learningLabProgress) : 0;
+    $avatarUrl = null;
+    if (Auth::check() && Auth::user()->profile_photo_path) {
+        $photoPath = Auth::user()->profile_photo_path;
+        $avatarUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
+    }
+@endphp
+
 <style>
-    /* Premium Dashboard Styles - Mobile Optimized */
     :root {
-        --dash-primary: #60a5fa;
-        --dash-success: #34d399;
-        --dash-warning: #fbbf24;
-        --dash-danger: #f87171;
-        --dash-info: #38bdf8;
+        --dash-primary: #3b82f6;
+        --dash-primary-2: #0ea5e9;
+        --dash-success: #22c55e;
+        --dash-warning: #f59e0b;
+        --dash-danger: #ef4444;
+        --dash-info: #06b6d4;
     }
-    
-    .db-section {
-        padding-top: 8px;
+
+    .sr-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
     }
-    
-    .premium-card {
-        background: var(--sf, #1e1e2d);
-        border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
-        border-radius: 24px;
-        padding: 24px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+    .sr-dashboard-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .sr-main-stack,
+    .sr-side-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        min-width: 0;
+    }
+
+    .sr-card {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0,0,0,.12));
+        color: var(--tx);
+        overflow: hidden;
+    }
+
+    .sr-card-pad {
+        padding: 20px;
+    }
+
+    .sr-hero-card {
         position: relative;
         overflow: hidden;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background:
+            linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(6, 182, 212, 0.06)),
+            var(--sf);
+        border-color: rgba(59, 130, 246, 0.2);
     }
-    .lm .premium-card {
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+
+    .sr-hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -90px -120px auto;
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.22), transparent 68%);
+        pointer-events: none;
     }
-    @media (max-width: 575px) {
-        .premium-card {
-            padding: 20px;
-            border-radius: 20px;
-        }
-    }
-    .premium-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-    }
-    
-    .text-gradient-primary {
-        background: linear-gradient(135deg, var(--dash-primary) 0%, #06b6d4 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
-    }
-    
-    /* Elegant gradients for premium cards */
-    .card-grad-primary {
-        background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);
-    }
-    .card-grad-success {
-        background: linear-gradient(135deg, var(--sf) 0%, rgba(52,211,153,0.05) 100%);
-    }
-    
-    .glass-effect {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .score-badge {
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 0.8rem;
-        letter-spacing: 0.3px;
-        display: inline-flex;
+
+    .sr-hero-inner {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+        gap: 24px;
         align-items: center;
-        gap: 6px;
+        padding: 24px;
     }
-    .score-high { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
-    .score-med { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-    .score-low { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
-    
-    .progress-track {
-        background: var(--bd, rgba(255, 255, 255, 0.1));
-        border-radius: 100px;
-        height: 6px;
-        overflow: hidden;
-        margin-top: 8px;
+
+    .sr-user-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
     }
-    .progress-fill {
-        height: 100%;
-        border-radius: 100px;
-        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .badge-icon {
-        width: 48px;
-        height: 48px;
+
+    .sr-avatar-xl {
+        width: 58px;
+        height: 58px;
         border-radius: 16px;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        background: var(--bg3, rgba(255,255,255,0.05));
-        border: 1px solid var(--bd, rgba(255,255,255,0.1));
-        color: #fbbf24;
-        transition: 0.3s;
-    }
-    .badge-icon:hover {
-        transform: scale(1.05) rotate(5deg);
+        color: #fff;
+        font-size: 1.45rem;
+        font-weight: 800;
+        overflow: hidden;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255,255,255,.16);
     }
 
-
-    @media (max-width: 575px) {
-
+    .sr-avatar-xl img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
-    
-    .notif-item {
+
+    .sr-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #60a5fa;
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .sr-title {
+        margin: 0;
+        font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+        line-height: 1.12;
+        font-weight: 800;
+        color: var(--tx);
+    }
+
+    .sr-subtitle {
+        margin: 8px 0 0;
+        color: var(--tx2);
+        font-size: 0.95rem;
+        max-width: 680px;
+    }
+
+    .sr-hero-actions {
         display: flex;
-        gap: 14px;
-        padding: 14px 0;
-        border-bottom: 1px solid var(--bd);
-        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
     }
-    .notif-item:last-child { border-bottom: none; padding-bottom: 0; }
-    
-    .notif-dot {
-        width: 10px; height: 10px; border-radius: 50%;
-        margin-top: 5px; flex-shrink: 0;
+
+    .sr-btn {
+        min-height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        padding: 10px 15px;
+        text-decoration: none;
+        border: 1px solid var(--bd2);
+        color: var(--tx);
+        background: transparent;
     }
-    
-    /* Modern Stat Card Grid */
+
+    .sr-btn-primary {
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .sr-score-panel {
+        background: rgba(8, 13, 24, 0.38);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 16px;
+        padding: 18px;
+    }
+
+    .lm .sr-score-panel {
+        background: rgba(255,255,255,.62);
+        border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    .sr-score-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .sr-score-value {
+        font-size: clamp(3.1rem, 6vw, 4.3rem);
+        line-height: 1;
+        font-weight: 900;
+        color: var(--tx);
+    }
+
+    .sr-score-value span {
+        font-size: 1.45rem;
+        color: var(--tx3);
+    }
+
+    .sr-status-pill,
+    .sr-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 800;
+        padding: 6px 10px;
+        white-space: nowrap;
+    }
+
+    .score-high { background: rgba(34, 197, 94, 0.13); color: var(--dash-success); border: 1px solid rgba(34,197,94,.24); }
+    .score-med { background: rgba(245, 158, 11, 0.13); color: var(--dash-warning); border: 1px solid rgba(245,158,11,.25); }
+    .score-low { background: rgba(239, 68, 68, 0.13); color: var(--dash-danger); border: 1px solid rgba(239,68,68,.25); }
+
+    .sr-progress {
+        height: 9px;
+        background: var(--bg3);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .sr-progress > span {
+        display: block;
+        height: 100%;
+        width: var(--value, 0%);
+        border-radius: inherit;
+        background: linear-gradient(90deg, #22c55e, #0ea5e9);
+    }
+
+    .sr-score-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .sr-score-meta-item {
+        border-radius: 12px;
+        padding: 10px;
+        background: rgba(255,255,255,.045);
+        border: 1px solid rgba(255,255,255,.07);
+    }
+
+    .lm .sr-score-meta-item {
+        background: rgba(15, 23, 42, 0.035);
+        border-color: rgba(15, 23, 42, 0.06);
+    }
+
+    .sr-meta-label {
+        color: var(--tx3);
+        font-size: 0.72rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+
+    .sr-meta-value {
+        color: var(--tx);
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
     .stat-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 16px;
     }
-    @media (max-width: 768px) {
-        .stat-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    
-    .stat-card {
-        padding: 24px 16px;
-        text-align: center;
-        border-radius: 20px;
+
+    .sr-stat-card {
         background: var(--sf);
         border: 1px solid var(--bd);
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 16px;
+        padding: 16px;
+        min-height: 132px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0,0,0,.12));
+    }
+
+    .sr-stat-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .sr-stat-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent, #60a5fa);
+        background: color-mix(in srgb, var(--accent, #60a5fa) 13%, transparent);
+        border: 1px solid color-mix(in srgb, var(--accent, #60a5fa) 22%, transparent);
+    }
+
+    .sr-stat-value {
+        font-size: 1.65rem;
+        line-height: 1;
+        font-weight: 900;
+        color: var(--tx);
+        margin-top: 18px;
+    }
+
+    .sr-stat-label {
+        color: var(--tx3);
+        font-size: 0.78rem;
+        font-weight: 700;
+        margin-top: 6px;
+    }
+
+    .sr-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .sr-card-title {
+        margin: 0;
+        color: var(--tx);
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .sr-card-kicker {
+        color: var(--tx3);
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+
+    .chart-container-mobile,
+    .sr-chart-box {
         position: relative;
+        width: 100%;
+        height: 280px;
+    }
+
+    .sr-two-col {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .sr-progress-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .sr-progress-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .sr-progress-name {
+        color: var(--tx);
+        font-size: 0.86rem;
+        font-weight: 700;
         overflow: hidden;
-        z-index: 1;
-    }
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: radial-gradient(circle at top right, rgba(96, 165, 250, 0.1), transparent 70%);
-        opacity: 0;
-        transition: opacity 0.4s ease;
-        z-index: -1;
-    }
-    @media (max-width: 575px) {
-        .stat-card { padding: 16px 12px; border-radius: 16px; }
-    }
-    .stat-card:hover { 
-        border-color: rgba(96,165,250,0.4); 
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    }
-    .stat-card:hover::before { opacity: 1; }
-    .stat-card:hover .stat-icon { transform: scale(1.15) rotate(5deg); }
-    .stat-val { font-size: 1.9rem; font-weight: 800; line-height: 1.1; margin-bottom: 6px; letter-spacing: -0.5px; }
-    .stat-label { font-size: 0.75rem; color: var(--tx3); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
-    .stat-icon { font-size: 1.8rem; margin-bottom: 16px; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); display: inline-block; }
-    
-    .chart-container-mobile {
-        position: relative; height: 250px; width: 100%;
-    }
-    @media (max-width: 575px) {
-        .chart-container-mobile { height: 200px; }
-    }
-    
-    .flex-col-mobile { display: flex; align-items: center; }
-    @media (max-width: 575px) {
-        .flex-col-mobile { flex-direction: column; align-items: flex-start; gap: 10px; }
-        .flex-col-mobile > div:last-child { width: 100%; }
-        .flex-col-mobile > div:last-child .nav-pills { display: flex; width: 100%; justify-content: space-between; }
-        .flex-col-mobile > div:last-child .nav-item { flex: 1; text-align: center; }
-        .flex-col-mobile > div:last-child .nav-link { width: 100%; }
-    }
-    
-    .avatar-lg {
-        width: 70px; height: 70px; border-radius: 20px;
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        display: flex; align-items: center; justify-content: center;
-        color: white; font-size: 1.8rem; font-weight: 700;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-        border: 2px solid rgba(255,255,255,0.1);
-    }
-    @media (max-width: 575px) {
-        .avatar-lg { width: 56px; height: 56px; font-size: 1.4rem; border-radius: 16px; }
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    /* Animations & Dynamic Effects */
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
+    .sr-progress-score {
+        color: var(--tx3);
+        font-size: 0.82rem;
+        font-weight: 800;
     }
 
-    @keyframes ambientFloat {
-        0% { transform: translate(0, 0) scale(1); }
-        33% { transform: translate(30px, -50px) scale(1.1); }
-        66% { transform: translate(-20px, 20px) scale(0.9); }
-        100% { transform: translate(0, 0) scale(1); }
-    }
-    
-    @keyframes pulseGlow {
-        0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+    .sr-progress-row .sr-progress {
+        grid-column: 1 / -1;
+        height: 7px;
     }
 
-    @keyframes shineEffect {
-        0% { left: -100%; }
-        20% { left: 100%; }
-        100% { left: 100%; }
+    .sr-empty {
+        min-height: 150px;
+        border: 1px dashed var(--bd2);
+        border-radius: 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: var(--tx3);
+        gap: 8px;
+        padding: 22px;
+        background: var(--sf2, var(--bg3));
     }
-    
-    .btn-shine {
-        position: relative;
+
+    .sr-empty i {
+        font-size: 1.5rem;
+        color: #60a5fa;
+    }
+
+    .sr-insight-box {
+        border-radius: 14px;
+        border: 1px solid var(--bd);
+        background: var(--sf2, var(--bg3));
+        padding: 14px;
+    }
+
+    .sr-insight-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        color: var(--tx);
+        font-size: 0.83rem;
+        font-weight: 800;
+    }
+
+    .sr-tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sr-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        background: rgba(59, 130, 246, .1);
+        border: 1px solid rgba(59, 130, 246, .18);
+        color: #60a5fa;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .sr-rec-list,
+    .sr-notification-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .sr-rec-item,
+    .sr-notification-item,
+    .sr-module-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid var(--bd);
+        background: var(--sf2, var(--bg3));
+    }
+
+    .sr-rec-icon,
+    .sr-list-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        color: var(--accent, #60a5fa);
+        background: color-mix(in srgb, var(--accent, #60a5fa) 12%, transparent);
+    }
+
+    .sr-sessions-mobile {
+        display: none;
+    }
+
+    .sr-session-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        padding: 12px;
+        background: var(--sf2, var(--bg3));
+    }
+
+    .sr-session-meta {
+        min-width: 0;
+    }
+
+    .sr-session-title {
+        color: var(--tx);
+        font-size: 0.9rem;
+        font-weight: 800;
         overflow: hidden;
-    }
-    .btn-shine::after {
-        content: '';
-        position: absolute;
-        top: 0; left: -100%;
-        width: 50%; height: 100%;
-        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
-        transform: skewX(-20deg);
-        animation: shineEffect 4s infinite;
-    }
-    
-    .ambient-bg-element {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(80px);
-        opacity: 0.15;
-        z-index: -1;
-        pointer-events: none;
-        animation: ambientFloat 20s infinite ease-in-out;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .animate-fade-up {
-        animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        opacity: 0;
-    }
-    
-    .animate-scale-in {
-        animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        opacity: 0;
+    .sr-session-date {
+        color: var(--tx3);
+        font-size: 0.76rem;
+        margin-top: 2px;
     }
 
-    .delay-100 { animation-delay: 0.1s; }
-    .delay-200 { animation-delay: 0.2s; }
-    .delay-300 { animation-delay: 0.3s; }
-    .delay-400 { animation-delay: 0.4s; }
-    .delay-500 { animation-delay: 0.5s; }
-    .delay-600 { animation-delay: 0.6s; }
-    .delay-700 { animation-delay: 0.7s; }
-    .delay-800 { animation-delay: 0.8s; }
+    .sr-score-mini {
+        color: var(--tx);
+        font-weight: 900;
+        font-size: 0.95rem;
+    }
+
+    .sr-achievement-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .sr-achievement {
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        background: var(--sf2, var(--bg3));
+        padding: 12px;
+        min-height: 104px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: var(--tx2);
+    }
+
+    .sr-achievement.locked {
+        opacity: .52;
+    }
+
+    .sr-achievement i {
+        color: var(--accent, #60a5fa);
+        font-size: 1.25rem;
+    }
+
+    .sr-achievement span {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--tx);
+    }
+
+    .sr-challenge-card {
+        background:
+            linear-gradient(135deg, rgba(59, 130, 246, 0.13), rgba(6, 182, 212, 0.05)),
+            var(--sf);
+        border-color: rgba(59, 130, 246, 0.22);
+    }
+
+    .sr-goal-box {
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        background: var(--sf2, var(--bg3));
+        padding: 14px;
+    }
+
+    .custom-table th,
+    .custom-table td {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 1199px) {
+        .sr-dashboard-shell {
+            grid-template-columns: 1fr;
+        }
+
+        .sr-side-stack {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 991px) {
+        .sr-hero-inner {
+            grid-template-columns: 1fr;
+        }
+
+        .sr-score-panel {
+            max-width: 460px;
+        }
+
+        .stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .sr-dashboard {
+            gap: 14px;
+        }
+
+        .sr-dashboard-shell,
+        .sr-main-stack,
+        .sr-side-stack {
+            gap: 14px;
+        }
+
+        .sr-side-stack,
+        .sr-two-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sr-card-pad,
+        .sr-hero-inner {
+            padding: 16px;
+        }
+
+        .sr-user-row {
+            align-items: flex-start;
+        }
+
+        .sr-avatar-xl {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            font-size: 1.15rem;
+        }
+
+        .sr-hero-actions {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+
+        .sr-score-meta {
+            grid-template-columns: 1fr;
+        }
+
+        .sr-stat-card {
+            min-height: 118px;
+            padding: 14px;
+        }
+
+        .sr-stat-value {
+            font-size: 1.35rem;
+        }
+
+        .chart-container-mobile,
+        .sr-chart-box {
+            height: 230px;
+        }
+
+        .sr-sessions-table {
+            display: none;
+        }
+
+        .sr-sessions-mobile {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sr-card-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .stat-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+        }
+
+        .sr-achievement-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="db-section active" id="sec-overview" style="position: relative; z-index: 1;">
-    <!-- Ambient Background -->
-    <div class="ambient-bg-element" style="top: -5%; left: -10%; width: 40vw; height: 40vw; background: var(--dash-primary);"></div>
-    <div class="ambient-bg-element" style="bottom: 20%; right: -5%; width: 35vw; height: 35vw; background: #06b6d4; animation-delay: -10s;"></div>
+<div class="db-section active sr-dashboard" id="sec-overview">
+    <section class="sr-card sr-hero-card card-grad-success">
+        <div class="sr-hero-inner">
+            <div>
+                <div class="sr-user-row">
+                    <div class="sr-avatar-xl">
+                        @if($avatarUrl)
+                            <img src="{{ $avatarUrl }}" alt="Avatar">
+                        @else
+                            {{ strtoupper(substr(Auth::user()->name ?? 'User', 0, 1)) }}
+                        @endif
+                    </div>
+                    <div>
+                        <div class="sr-eyebrow"><i class="fa-solid fa-gauge-high"></i> Readiness Command Center</div>
+                        <h1 class="sr-title">Welcome back, {{ $firstName }}.</h1>
+                        <p class="sr-subtitle">Track interview readiness, recent performance, AI coaching priorities, and learning progress from one focused workspace.</p>
+                    </div>
+                </div>
+                <div class="sr-hero-actions">
+                    <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary"><i class="fa-solid fa-microphone-lines"></i> Start Mock Interview</a>
+                    <a href="{{ route('user.progress') }}" class="sr-btn"><i class="fa-solid fa-chart-line"></i> View Progress</a>
+                    <a href="{{ route('user.coach') }}" class="sr-btn"><i class="fa-solid fa-robot"></i> Ask AI Coach</a>
+                </div>
+            </div>
 
-    <!-- Feature 1: Welcome Section -->
-    <div class="d-flex align-items-center justify-content-between mb-4 mt-2 animate-fade-up">
-        <div class="d-flex align-items-center gap-3">
-            <div class="avatar-lg" style="padding:0;overflow:hidden;border:2px solid rgba(255,255,255,0.1);">
-                @if(Auth::check() && Auth::user()->profile_photo_path)
-                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
-                        <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
-                    @else
-                        <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
-                    @endif
-                @else
-                    {{ substr(Auth::user()->name ?? 'User', 0, 1) }}
-                @endif
+            <aside class="sr-score-panel">
+                <div class="sr-score-top">
+                    <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
+                    <span class="sr-chip" style="background:rgba(59,130,246,.11);color:#60a5fa;border:1px solid rgba(59,130,246,.2)">Live score</span>
+                </div>
+                <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
+                <div class="sr-progress mt-3" aria-label="Readiness score"><span style="--value: {{ $scoreVal }}%"></span></div>
+                <div class="sr-score-meta">
+                    <div class="sr-score-meta-item">
+                        <div class="sr-meta-label">Avg rating</div>
+                        <div class="sr-meta-value">{{ $rating }}/5</div>
+                    </div>
+                    <div class="sr-score-meta-item">
+                        <div class="sr-meta-label">Next goal</div>
+                        <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="stat-grid">
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
+                <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">Practice</span>
             </div>
             <div>
-                <h4 class="fw-bold mb-1" style="font-size: clamp(1.4rem, 4vw, 1.8rem); letter-spacing: -0.5px;">Welcome back, <span id="greetName" class="text-gradient-primary">{{ explode(' ', Auth::user()->name)[0] ?? 'User' }}</span>!</h4>
-                <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Your interview readiness score is <strong style="color:var(--dash-success)">{{ $profile->readiness_score ?? $avgScore ?? 0 }}%</strong>.</p>
+                <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
+                <div class="sr-stat-label">Completed sessions</div>
             </div>
         </div>
-        <div>
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#22c55e"><i class="fa-solid fa-star-half-stroke"></i></div>
+                <span class="sr-chip" style="background:rgba(34,197,94,.1);color:#22c55e">Quality</span>
+            </div>
+            <div>
+                <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
+                <div class="sr-stat-label">Average rating</div>
+            </div>
         </div>
-    </div>
-
-
-
-    <div class="row g-4">
-        <!-- LEFT COLUMN (Main Content) -->
-        <div class="col-lg-8">
-            
-            <!-- Feature 2: Readiness Score Card -->
-            <div class="premium-card mb-4 position-relative overflow-hidden card-grad-success animate-fade-up delay-100">
-                <div style="position:absolute;top:-50px;right:-50px;width:200px;height:200px;background:rgba(52,211,153,0.15);border-radius:50%;filter:blur(40px);pointer-events:none;"></div>
-                
-                @php
-                    $scoreVal = $profile->readiness_score ?? $avgScore ?? 0;
-                    $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
-                    $scoreText = $scoreVal >= 80 ? 'Highly Acceptable' : ($scoreVal >= 60 ? 'Needs Practice' : 'Beginner');
-                    $scoreIcon = $scoreVal >= 80 ? 'fa-check-circle' : ($scoreVal >= 60 ? 'fa-exclamation-circle' : 'fa-arrow-up');
-                @endphp
-                
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold m-0"><i class="fa-solid fa-star me-2" style="color:var(--dash-warning)"></i> Overall Readiness</h5>
-                    <span class="score-badge {{ $scoreClass }}" style="animation: pulseGlow 2s infinite;"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
-                </div>
-                <div class="d-flex align-items-end gap-3 mb-2">
-                    <div style="font-size: clamp(3rem, 8vw, 4rem); font-weight: 800; line-height: 1; color: var(--tx); letter-spacing: -1px;">
-                        {{ $scoreVal }}<span style="font-size: clamp(1.5rem, 4vw, 2rem); color: var(--tx3)">%</span>
-                    </div>
-                </div>
-                <div class="progress-track mt-3" style="height:10px;background:var(--bd);">
-                    <div class="progress-fill" style="width: {{ $scoreVal }}%; background:linear-gradient(90deg, #34d399, #10b981);"></div>
-                </div>
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#06b6d4"><i class="fa-solid fa-bolt"></i></div>
+                <span class="sr-chip" style="background:rgba(6,182,212,.1);color:#06b6d4">Growth</span>
             </div>
-
-            <!-- Feature 3: Quick Statistics Cards -->
-            <div class="stat-grid mb-4">
-                <div class="stat-card animate-scale-in delay-200">
-                    <div class="stat-icon" style="color:var(--dash-primary);"><i class="fa-solid fa-microphone"></i></div>
-                    <div class="stat-val">{{ $totalSessions ?? 0 }}</div>
-                    <div class="stat-label">Total Sessions</div>
-                </div>
-                <div class="stat-card animate-scale-in delay-300">
-                    <div class="stat-icon" style="color:var(--dash-success);"><i class="fa-solid fa-chart-simple"></i></div>
-                    <div class="stat-val">{{ round(($avgScore ?? 0) / 20, 1) }}<span style="font-size:1rem;color:var(--tx3)">/5</span></div>
-                    <div class="stat-label">Avg Rating</div>
-                </div>
-                <div class="stat-card animate-scale-in delay-400">
-                    <div class="stat-icon" style="color:var(--dash-info);"><i class="fa-solid fa-bolt"></i></div>
-                    <div class="stat-val">{{ $experiencePoints ?? 0 }}</div>
-                    <div class="stat-label">Total XP</div>
-                </div>
-                <div class="stat-card animate-scale-in delay-500">
-                    <div class="stat-icon" style="color:var(--dash-warning);"><i class="fa-solid fa-fire"></i></div>
-                    <div class="stat-val">{{ $currentStreak ?? 0 }}</div>
-                    <div class="stat-label">Day Streak</div>
-                </div>
+            <div>
+                <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                <div class="sr-stat-label">Experience points</div>
             </div>
+        </div>
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#f59e0b"><i class="fa-solid fa-fire"></i></div>
+                <span class="sr-chip" style="background:rgba(245,158,11,.1);color:#f59e0b">Streak</span>
+            </div>
+            <div>
+                <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
+                <div class="sr-stat-label">Active practice days</div>
+            </div>
+        </div>
+    </section>
 
-            <!-- Feature 4: Interview Progress Chart -->
-            <div id="card-progress-chart" class="premium-card mb-4 card-grad-primary animate-fade-up delay-200">
-                <div class="d-flex justify-content-between mb-4 flex-col-mobile">
-                    <h5 class="fw-bold m-0"><i class="fa-solid fa-chart-line me-2" style="color:var(--dash-primary)"></i> Interview Progress</h5>
+    <div class="sr-dashboard-shell">
+        <main class="sr-main-stack">
+            <section id="card-progress-chart" class="sr-card sr-card-pad">
+                <div class="sr-card-header">
                     <div>
-                        <ul class="nav nav-pills" id="chartTabs">
-                            <li class="nav-item"><a class="nav-link active" href="#" data-period="recent" style="color: var(--tx) !important;">Recent</a></li>
-                        </ul>
+                        <h2 class="sr-card-title"><i class="fa-solid fa-chart-line me-2" style="color:#60a5fa"></i> Readiness Trend</h2>
+                        <div class="sr-card-kicker">Recent completed sessions, scored from 0 to 100.</div>
                     </div>
+                    <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.18)">Recent 10</span>
                 </div>
-                <div class="chart-container-mobile">
+                <div class="sr-chart-box">
                     <canvas id="progressChart"></canvas>
                 </div>
-            </div>
+            </section>
 
-            <div class="row g-4 mb-4">
-                <!-- Feature 5: Category Performance -->
-                <div class="col-md-6">
-                    <div class="premium-card h-100 animate-fade-up delay-300">
-                        <h6 class="fw-bold mb-4">Category Performance</h6>
-                        
-                        @if(isset($categoryPerformance) && count($categoryPerformance) > 0)
+            <section class="sr-two-col">
+                <div class="sr-card sr-card-pad">
+                    <div class="sr-card-header">
+                        <div>
+                            <h2 class="sr-card-title">Category Performance</h2>
+                            <div class="sr-card-kicker">Where your interview scores are strongest.</div>
+                        </div>
+                    </div>
+                    @if($categoryCount > 0)
+                        <div class="sr-progress-list">
                             @foreach($categoryPerformance as $index => $cat)
                                 @php
-                                    $colors = ['#34d399', '#60a5fa', '#38bdf8', '#fbbf24', '#a78bfa'];
+                                    $colors = ['#22c55e', '#3b82f6', '#06b6d4', '#f59e0b', '#8b5cf6'];
                                     $color = $colors[$index % count($colors)];
+                                    $catScore = max(0, min(100, (int) $cat->score));
                                 @endphp
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem; font-weight: 500;">
-                                        <span>{{ $cat->name }}</span>
-                                        <span style="color:{{$color}}">{{ $cat->score }}%</span>
-                                    </div>
-                                    <div class="progress-track" style="height:6px;">
-                                        <div class="progress-fill" style="width:{{ $cat->score }}%; background:{{$color}};"></div>
-                                    </div>
+                                <div class="sr-progress-row">
+                                    <div class="sr-progress-name">{{ $cat->name }}</div>
+                                    <div class="sr-progress-score">{{ $catScore }}%</div>
+                                    <div class="sr-progress"><span style="--value: {{ $catScore }}%; background: {{ $color }}"></span></div>
                                 </div>
                             @endforeach
-                        @else
-                            <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
-                                <i class="fa-solid fa-folder-open mb-2" style="font-size:2rem;opacity:0.5;"></i>
-                                <p class="m-0">Complete a session to see performance.</p>
-                            </div>
-                        @endif
-                    </div>
+                        </div>
+                    @else
+                        <div class="sr-empty">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <div>Complete a session to unlock category performance.</div>
+                        </div>
+                    @endif
                 </div>
 
-                <!-- Feature 10: Learning Lab Progress -->
-                <div class="col-md-6">
-                    <div class="premium-card h-100 animate-fade-up delay-400">
-                        <h6 class="fw-bold mb-4">Learning Lab Progress</h6>
-                        
-                        @if(isset($learningLabProgress) && count($learningLabProgress) > 0)
+                <div class="sr-card sr-card-pad">
+                    <div class="sr-card-header">
+                        <div>
+                            <h2 class="sr-card-title">Learning Progress</h2>
+                            <div class="sr-card-kicker">Latest modules you are working through.</div>
+                        </div>
+                    </div>
+                    @if($moduleCount > 0)
+                        <div class="sr-progress-list">
                             @foreach($learningLabProgress as $prog)
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div style="width:42px;height:42px;border-radius:12px;background:{{ $prog->color }}22;display:flex;align-items:center;justify-content:center;color:{{ $prog->color }};font-size:1.1rem;flex-shrink:0;">
-                                    <i class="fa-solid {{ $prog->icon }}"></i>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem; font-weight: 500;">
-                                        <span>{{ $prog->title }}</span>
-                                        <span style="color:{{ $prog->progress == 100 ? '#34d399' : 'var(--tx)' }}">{{ $prog->progress }}%</span>
-                                    </div>
-                                    <div class="progress-track" style="height:5px;">
-                                        <div class="progress-fill" style="width:{{ $prog->progress }}%;background:{{ $prog->progress == 100 ? '#34d399' : $prog->color }};"></div>
+                                @php $progVal = max(0, min(100, (int) $prog->progress)); @endphp
+                                <div class="sr-module-item">
+                                    <div class="sr-list-icon" style="--accent: {{ $prog->color }}"><i class="fa-solid {{ $prog->icon }}"></i></div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <div class="sr-progress-row">
+                                            <div class="sr-progress-name">{{ $prog->title }}</div>
+                                            <div class="sr-progress-score">{{ $progVal }}%</div>
+                                            <div class="sr-progress"><span style="--value: {{ $progVal }}%; background: {{ $prog->color }}"></span></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             @endforeach
-                        @else
-                             <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
-                                <i class="fa-solid fa-book-open mb-2" style="font-size:2rem;opacity:0.5;"></i>
-                                <p class="m-0">Start a module to track progress.</p>
-                            </div>
-                        @endif
-                    </div>
+                        </div>
+                    @else
+                        <div class="sr-empty">
+                            <i class="fa-solid fa-book-open"></i>
+                            <div>Start a module to track your learning progress.</div>
+                        </div>
+                    @endif
                 </div>
-            </div>
+            </section>
 
-            <div class="row g-4 mb-4">
-                <!-- Feature 7: AI Feedback Summary -->
-                <div class="col-md-6">
-                    <div class="premium-card h-100 animate-fade-up delay-400">
-                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:var(--dash-primary)"></i> AI Feedback Summary</h6>
-                        
-                        @if(!empty($aiFeedback['strengths']) || !empty($aiFeedback['improvements']))
+            <section class="sr-two-col">
+                <div class="sr-card sr-card-pad">
+                    <div class="sr-card-header">
+                        <div>
+                            <h2 class="sr-card-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#60a5fa"></i> AI Feedback Summary</h2>
+                            <div class="sr-card-kicker">A quick view of strengths and coaching priorities.</div>
+                        </div>
+                    </div>
+                    @if(!empty($aiFeedback['strengths']) || !empty($aiFeedback['improvements']))
+                        <div class="d-flex flex-column gap-3">
                             @if(!empty($aiFeedback['strengths']))
-                            <div class="p-3 mb-3" style="background:rgba(52,211,153,0.05);border-radius:16px;border:1px solid rgba(52,211,153,0.2);">
-                                <h6 style="color:var(--dash-success);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:12px;">Top Strengths</h6>
-                                <ul style="margin:0;padding-left:20px;font-size:0.9rem;color:var(--tx);font-weight:500;line-height:1.6;">
-                                    @foreach($aiFeedback['strengths'] as $strength)
-                                        <li class="mb-1">{{ $strength }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
+                                <div class="sr-insight-box">
+                                    <div class="sr-insight-title"><i class="fa-solid fa-circle-check" style="color:#22c55e"></i> Top Strengths</div>
+                                    <div class="sr-tag-list">
+                                        @foreach($aiFeedback['strengths'] as $strength)
+                                            <span class="sr-tag" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.18);color:#22c55e">{{ $strength }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @endif
                             @if(!empty($aiFeedback['improvements']))
-                            <div class="p-3" style="background:rgba(248,113,113,0.05);border-radius:16px;border:1px solid rgba(248,113,113,0.2);">
-                                <h6 style="color:var(--dash-danger);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:12px;">Areas for Improvement</h6>
-                                <ul style="margin:0;padding-left:20px;font-size:0.9rem;color:var(--tx);font-weight:500;line-height:1.6;">
-                                    @foreach($aiFeedback['improvements'] as $improvement)
-                                        <li class="mb-1">{{ $improvement }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
+                                <div class="sr-insight-box">
+                                    <div class="sr-insight-title"><i class="fa-solid fa-arrow-trend-up" style="color:#f59e0b"></i> Improve Next</div>
+                                    <div class="sr-tag-list">
+                                        @foreach($aiFeedback['improvements'] as $improvement)
+                                            <span class="sr-tag" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.18);color:#f59e0b">{{ $improvement }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
                             @endif
-                        @else
-                            <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
-                                <i class="fa-solid fa-robot mb-2" style="font-size:2rem;opacity:0.5;"></i>
-                                <p class="m-0">Complete an interview to generate AI feedback.</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-                
-                <!-- Feature 8: AI Recommendations -->
-                <div class="col-md-6">
-                    <div id="card-ai-recommendations" class="premium-card h-100 card-grad-primary animate-fade-up delay-500">
-                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-lightbulb me-2" style="color:var(--dash-warning)"></i> AI Recommendations</h6>
-                        
-                        @if(isset($aiRecommendations) && count($aiRecommendations) > 0)
-                        <p style="font-size:0.85rem;color:var(--tx3);margin-bottom:15px;">Based on your recent performance, AI suggests:</p>
-                        @foreach($aiRecommendations as $rec)
-                        <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded" style="background:var(--bg3); border: 1px solid var(--bd); border-radius: 12px;">
-                            <div style="color:{{ $rec->color }}; font-size: 1.2rem;"><i class="fa-solid {{ $rec->icon }}"></i></div>
-                            <div style="font-size:0.9rem; font-weight: 500;">{{ $rec->text }}</div>
                         </div>
-                        @endforeach
-                        @else
-                        <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
-                            <i class="fa-solid fa-lightbulb mb-2" style="font-size:2rem;opacity:0.5;"></i>
-                            <p class="m-0">Complete a session to get recommendations.</p>
+                    @else
+                        <div class="sr-empty">
+                            <i class="fa-solid fa-robot"></i>
+                            <div>Complete an interview to generate AI feedback.</div>
                         </div>
-                        @endif
-                    </div>
+                    @endif
                 </div>
-            </div>
 
-            <!-- Feature 6: Recent Interview Sessions -->
-            <div id="card-recent-sessions" class="premium-card mb-4 animate-fade-up delay-600" style="background-color: var(--sf); color: var(--tx);">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold m-0" style="color: var(--tx);">Recent Sessions</h5>
-                    <a href="{{ route('user.reports') }}" class="btn btn-sm btn-link text-decoration-none" style="color:var(--dash-primary);font-weight:600;">View All</a>
+                <div id="card-ai-recommendations" class="sr-card sr-card-pad">
+                    <div class="sr-card-header">
+                        <div>
+                            <h2 class="sr-card-title"><i class="fa-solid fa-lightbulb me-2" style="color:#f59e0b"></i> AI Recommendations</h2>
+                            <div class="sr-card-kicker">Next actions based on recent performance.</div>
+                        </div>
+                    </div>
+                    @if(isset($aiRecommendations) && count($aiRecommendations) > 0)
+                        <div class="sr-rec-list">
+                            @foreach($aiRecommendations as $rec)
+                                <div class="sr-rec-item">
+                                    <div class="sr-rec-icon" style="--accent: {{ $rec->color }}"><i class="fa-solid {{ $rec->icon }}"></i></div>
+                                    <div style="font-size:.88rem;font-weight:700;color:var(--tx2);line-height:1.45">{{ $rec->text }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="sr-empty">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <div>Complete a session to get tailored recommendations.</div>
+                        </div>
+                    @endif
                 </div>
-                <div class="table-responsive">
-                    <table class="table custom-table mb-0 w-100" style="background-color: var(--sf); color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
+            </section>
+
+            <section id="card-recent-sessions" class="sr-card sr-card-pad">
+                <div class="sr-card-header">
+                    <div>
+                        <h2 class="sr-card-title">Recent Sessions</h2>
+                        <div class="sr-card-kicker">Review the latest completed mock interviews.</div>
+                    </div>
+                    <a href="{{ route('user.reports') }}" class="sr-btn" style="min-height:36px;padding:7px 12px">View Reports</a>
+                </div>
+
+                <div class="table-responsive sr-sessions-table">
+                    <table class="table custom-table mb-0 w-100">
                         <thead>
-                            <tr style="background-color: var(--sf);">
-                                <th style="padding-left:24px; color: var(--tx); background-color: var(--sf);">Date</th>
-                                <th style="color: var(--tx); background-color: var(--sf);">Category</th>
-                                <th style="color: var(--tx); background-color: var(--sf);">Score</th>
-                                <th class="text-end" style="padding-right:24px; color: var(--tx); background-color: var(--sf);">Action</th>
+                            <tr>
+                                <th>Date</th>
+                                <th>Category</th>
+                                <th>Score</th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($recentSessions ?? [] as $session)
-                            <tr>
-                                <td style="color:var(--tx2);font-size:0.85rem;padding-left:24px;">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
-                                <td>
-                                    <span class="badge" style="background:rgba(59,130,246,0.15);color:var(--dash-primary);padding:6px 10px;border-radius:8px;">
-                                        {{ $session->category ? $session->category->title : 'General' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @php $ss = $session->score ? $session->score->overall_readiness_score : 0; @endphp
-                                    <span style="color:{{ $ss >= 80 ? 'var(--dash-success)' : ($ss >= 60 ? 'var(--dash-warning)' : 'var(--dash-danger)') }};font-weight:700;">
-                                        {{ $ss }}%
-                                    </span>
-                                </td>
-                                <td class="text-end" style="padding-right:24px;">
-                                    <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm" style="font-size:0.8rem;border-radius:8px;background-color:#3b82f6 !important;color:#ffffff !important;border:none !important;font-weight:600;">Review</a>
-                                </td>
-                            </tr>
+                                @php
+                                    $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : 0;
+                                    $sessionColor = $sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444');
+                                @endphp
+                                <tr>
+                                    <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
+                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'General' }}</span></td>
+                                    <td><span style="color:{{ $sessionColor }};font-weight:900">{{ $sessionScore }}%</span></td>
+                                    <td class="text-end"><a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 11px;font-size:.78rem">Review</a></td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-4" style="color:var(--tx3);">No recent sessions found. Start practicing!</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start practicing when you are ready.</td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-        </div>
+                <div class="sr-sessions-mobile">
+                    @forelse($recentSessions ?? [] as $session)
+                        @php
+                            $sessionScore = $session->score ? (int) $session->score->overall_readiness_score : 0;
+                            $sessionColor = $sessionScore >= 80 ? '#22c55e' : ($sessionScore >= 60 ? '#f59e0b' : '#ef4444');
+                        @endphp
+                        <div class="sr-session-card">
+                            <div class="sr-session-meta">
+                                <div class="sr-session-title">{{ $session->category ? $session->category->title : 'General Interview' }}</div>
+                                <div class="sr-session-date">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="sr-score-mini" style="color:{{ $sessionColor }}">{{ $sessionScore }}%</span>
+                                <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 10px;font-size:.78rem">Review</a>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="sr-empty">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                            <div>No recent sessions found. Start practicing when you are ready.</div>
+                        </div>
+                    @endforelse
+                </div>
+            </section>
+        </main>
 
-        <!-- RIGHT COLUMN (Sidebar) -->
-        <div class="col-lg-4">
-            
-            <!-- Feature 16: Interview Readiness Radar Chart -->
-            <div class="premium-card mb-4 text-center animate-fade-up delay-200">
-                <h6 class="fw-bold mb-3">Readiness Radar</h6>
-                <div class="chart-container-mobile" style="height:260px;">
+        <aside class="sr-side-stack">
+            <section class="sr-card sr-card-pad">
+                <div class="sr-card-header">
+                    <div>
+                        <h2 class="sr-card-title">Skill Radar</h2>
+                        <div class="sr-card-kicker">Average capability profile.</div>
+                    </div>
+                </div>
+                <div class="chart-container-mobile" style="height:260px">
                     <canvas id="radarChart"></canvas>
                 </div>
-            </div>
+            </section>
 
-            <!-- Feature 9: Daily Practice Challenge -->
-            <div id="card-daily-challenge" class="premium-card mb-4 animate-fade-up delay-300" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.08) 100%); border: 1px solid rgba(59,130,246,0.3);">
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <i class="fa-solid fa-calendar-day" style="color:var(--dash-primary);font-size:1.2rem;"></i>
-                    <h6 class="fw-bold m-0" style="color:var(--dash-primary);text-transform:uppercase;letter-spacing:1px;font-size:0.8rem;">Today's Challenge</h6>
+            <section id="card-daily-challenge" class="sr-card sr-card-pad sr-challenge-card">
+                <div class="sr-eyebrow"><i class="fa-solid fa-calendar-day"></i> Today&apos;s Challenge</div>
+                <h2 class="sr-card-title" style="font-size:1.15rem">Answer 3 behavioral questions</h2>
+                <p class="sr-card-kicker mb-3">Earn extra XP, sharpen structure, and keep your practice streak alive.</p>
+                <div class="sr-tag-list mb-3">
+                    <span class="sr-tag" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.18);color:#f59e0b">+50 XP</span>
+                    <span class="sr-tag" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.18);color:#22c55e">+1 Streak</span>
                 </div>
-                <h5 class="fw-bold mb-2">Answer 3 Behavioral Questions</h5>
-                <p style="font-size:0.85rem;color:var(--tx2);margin-bottom:15px;">Earn extra XP and maintain your streak!</p>
-                <div class="d-flex gap-2 mb-3 flex-wrap">
-                    <span class="badge" style="background:rgba(251,191,36,0.15);color:var(--dash-warning);border:1px solid rgba(251,191,36,0.3);padding:6px 10px;border-radius:8px;">+50 XP</span>
-                    <span class="badge" style="background:rgba(52,211,153,0.15);color:var(--dash-success);border:1px solid rgba(52,211,153,0.3);padding:6px 10px;border-radius:8px;">+1 Streak</span>
-                </div>
-                <a href="{{ route('interview.setup') }}" class="btn w-100 py-2 btn-shine" style="background:var(--dash-primary);color:white;font-weight:600;border-radius:12px;border:none;box-shadow: 0 4px 15px rgba(96,165,250,0.4);transition: 0.3s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(96,165,250,0.4)'">Start Challenge</a>
-            </div>
+                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100"><i class="fa-solid fa-play"></i> Start Challenge</a>
+            </section>
 
-            <!-- Feature 13: Upcoming Goals -->
-            <div class="premium-card mb-4 animate-fade-up delay-400">
-                <h6 class="fw-bold mb-3">Upcoming Goals</h6>
+            <section class="sr-card sr-card-pad">
+                <div class="sr-card-header">
+                    <div>
+                        <h2 class="sr-card-title">Current Goal</h2>
+                        <div class="sr-card-kicker">Progress toward your next readiness target.</div>
+                    </div>
+                </div>
                 @if(isset($upcomingGoal))
-                <div class="p-3 mb-3" style="background:var(--bg3);border-radius:16px;border:1px solid var(--bd);">
-                    <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;margin-bottom:5px;letter-spacing:0.5px;font-weight:600;">Current Goal</div>
-                    <div class="fw-bold" style="color:var(--dash-success);font-size:1.1rem;">{{ $upcomingGoal->title }}</div>
-                    <div class="progress-track mt-2" style="height:6px;"><div class="progress-fill" style="width:{{ $upcomingGoal->percent }}%;background:var(--dash-success);"></div></div>
-                </div>
-                <div style="font-size:0.9rem;color:var(--tx2);font-weight:500;">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="fa-regular fa-circle text-muted"></i> Keep practicing to reach your goal
-                    </div>
-                </div>
-                @else
-                <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
-                    <i class="fa-solid fa-bullseye mb-2" style="font-size:2rem;opacity:0.5;"></i>
-                    <p class="m-0">No specific goals set yet.</p>
-                </div>
-                @endif
-            </div>
-
-            <!-- Feature 14: Achievement & Badges System -->
-            <div class="premium-card mb-4 animate-fade-up delay-500">
-                <h6 class="fw-bold mb-3">Achievements</h6>
-                <div class="d-flex flex-wrap gap-2 justify-content-between">
-                    <div class="text-center" title="First Interview Completed">
-                        <div class="badge-icon mx-auto mb-2" style="background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.3);color:{{ in_array('First Interview', $badgesEarned ?? []) ? 'var(--dash-warning)' : 'var(--tx3)' }}; opacity:{{ in_array('First Interview', $badgesEarned ?? []) ? '1' : '0.4' }};"><i class="fa-solid fa-medal"></i></div>
-                        <div style="font-size:0.65rem;color:var(--tx3);font-weight:600;">First<br>Interview</div>
-                    </div>
-                    <div class="text-center" title="Practice Streak">
-                        <div class="badge-icon mx-auto mb-2" style="background:rgba(248,113,113,0.15);border-color:rgba(248,113,113,0.3);color:{{ in_array('3-Day Streak', $badgesEarned ?? []) ? 'var(--dash-danger)' : 'var(--tx3)' }}; opacity:{{ in_array('3-Day Streak', $badgesEarned ?? []) ? '1' : '0.4' }};"><i class="fa-solid fa-fire"></i></div>
-                        <div style="font-size:0.65rem;color:var(--tx3);font-weight:600;">3-Day<br>Streak</div>
-                    </div>
-                    <div class="text-center" title="STAR Master">
-                        <div class="badge-icon mx-auto mb-2" style="background:rgba(59,130,246,0.15);border-color:rgba(59,130,246,0.3);color:{{ in_array('STAR Master', $badgesEarned ?? []) ? 'var(--dash-primary)' : 'var(--tx3)' }}; opacity:{{ in_array('STAR Master', $badgesEarned ?? []) ? '1' : '0.4' }};"><i class="fa-solid fa-star"></i></div>
-                        <div style="font-size:0.65rem;color:var(--tx3);font-weight:600;">STAR<br>Master</div>
-                    </div>
-                    <div class="text-center" title="Excellent Communicator">
-                        <div class="badge-icon mx-auto mb-2" style="background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.3);color:{{ in_array('Top Comm', $badgesEarned ?? []) ? 'var(--dash-success)' : 'var(--tx3)' }}; opacity:{{ in_array('Top Comm', $badgesEarned ?? []) ? '1' : '0.4' }};"><i class="fa-solid fa-bullhorn"></i></div>
-                        <div style="font-size:0.65rem;color:var(--tx3);font-weight:600;">Top<br>Comm</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Feature 15: Notifications Panel -->
-            <div class="premium-card mb-4 animate-fade-up delay-600">
-                <h6 class="fw-bold mb-3">Recent Notifications</h6>
-                @if(isset($recentNotifications) && count($recentNotifications) > 0)
-                    @foreach($recentNotifications as $notif)
-                    <div class="notif-item">
-                        <div class="notif-dot" style="background:var(--dash-primary);"></div>
-                        <div>
-                            <div style="font-size:0.9rem;color:var(--tx);font-weight:600;">{{ $notif->data['title'] ?? 'Notification' }}</div>
-                            <div style="font-size:0.8rem;color:var(--tx3);margin-top:2px;">{{ $notif->data['message'] ?? '' }}</div>
+                    <div class="sr-goal-box">
+                        <div class="d-flex justify-content-between gap-3 mb-2">
+                            <div style="font-weight:800;color:var(--tx)">{{ $upcomingGoal->title }}</div>
+                            <div style="font-weight:900;color:#22c55e">{{ $goalPercent }}%</div>
                         </div>
+                        <div class="sr-progress"><span style="--value: {{ $goalPercent }}%; background:linear-gradient(90deg,#22c55e,#0ea5e9)"></span></div>
                     </div>
-                    @endforeach
                 @else
-                <div class="text-center py-4" style="color:var(--tx3);font-size:0.9rem;">
-                    <i class="fa-solid fa-bell-slash mb-2" style="font-size:2rem;opacity:0.5;"></i>
-                    <p class="m-0">No new notifications.</p>
-                </div>
+                    <div class="sr-empty">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <div>No current goal set.</div>
+                    </div>
                 @endif
-            </div>
+            </section>
 
-        </div>
+            <section class="sr-card sr-card-pad">
+                <div class="sr-card-header">
+                    <div>
+                        <h2 class="sr-card-title">Achievements</h2>
+                        <div class="sr-card-kicker">Milestones earned through practice.</div>
+                    </div>
+                </div>
+                <div class="sr-achievement-grid">
+                    @php
+                        $achievements = [
+                            ['name' => 'First Interview', 'label' => 'First Interview', 'icon' => 'fa-medal', 'accent' => '#f59e0b'],
+                            ['name' => '3-Day Streak', 'label' => '3-Day Streak', 'icon' => 'fa-fire', 'accent' => '#ef4444'],
+                            ['name' => 'STAR Master', 'label' => 'STAR Master', 'icon' => 'fa-star', 'accent' => '#3b82f6'],
+                            ['name' => 'Top Comm', 'label' => 'Top Comm', 'icon' => 'fa-bullhorn', 'accent' => '#22c55e'],
+                        ];
+                    @endphp
+                    @foreach($achievements as $achievement)
+                        @php $earned = in_array($achievement['name'], $badgesEarned ?? []); @endphp
+                        <div class="sr-achievement {{ $earned ? '' : 'locked' }}" style="--accent: {{ $achievement['accent'] }}">
+                            <i class="fa-solid {{ $achievement['icon'] }}"></i>
+                            <span>{{ $achievement['label'] }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+
+            <section class="sr-card sr-card-pad">
+                <div class="sr-card-header">
+                    <div>
+                        <h2 class="sr-card-title">Notifications</h2>
+                        <div class="sr-card-kicker">Recent updates and reminders.</div>
+                    </div>
+                </div>
+                @if(isset($recentNotifications) && count($recentNotifications) > 0)
+                    <div class="sr-notification-list">
+                        @foreach($recentNotifications as $notif)
+                            <div class="sr-notification-item">
+                                <div class="sr-list-icon" style="--accent:#3b82f6"><i class="fa-solid {{ $notif->data['icon'] ?? 'fa-bell' }}"></i></div>
+                                <div>
+                                    <div style="font-size:.88rem;font-weight:800;color:var(--tx)">{{ $notif->data['title'] ?? 'Notification' }}</div>
+                                    <div style="font-size:.8rem;color:var(--tx3);line-height:1.45;margin-top:2px">{{ $notif->data['message'] ?? '' }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="sr-empty">
+                        <i class="fa-solid fa-bell-slash"></i>
+                        <div>No new notifications.</div>
+                    </div>
+                @endif
+            </section>
+        </aside>
     </div>
-
 </div>
 
-<!-- Scripts for Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    if (typeof Chart === 'undefined') return;
+
     const rootStyle = getComputedStyle(document.documentElement);
     const getThemeColor = (varName, fallback) => rootStyle.getPropertyValue(varName).trim() || fallback;
-    
-    const txColor = getThemeColor('--tx3', '#808090');
-    const sfColor = getThemeColor('--sf', '#1e1e2d');
-    // Using a reliable border color depending on whether .lm class is present on html
+    const txColor = getThemeColor('--tx3', '#8792a6');
+    const sfColor = getThemeColor('--sf', '#171d2d');
     const isLightMode = document.documentElement.classList.contains('lm');
-    const gridColor = isLightMode ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)';
-    const radarGridColor = isLightMode ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+    const gridColor = isLightMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.07)';
+    const radarGridColor = isLightMode ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.12)';
 
-    // Shared Chart.js options for dark mode
     Chart.defaults.color = txColor;
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.font.family = "'Poppins', sans-serif";
 
-    // Feature 4: Progress Line Chart
-    const progressCtx = document.getElementById('progressChart').getContext('2d');
-    
-    // Mock data for Daily, Weekly, Monthly (Replacing with actual Recent Score Trend)
-    const chartDataObj = {
-        recent: { 
-            labels: {!! json_encode(collect($scoreTrend ?? [])->pluck('date')) !!}, 
-            data: {!! json_encode(collect($scoreTrend ?? [])->pluck('score')) !!} 
-        }
-    };
+    const progressCanvas = document.getElementById('progressChart');
+    if (progressCanvas) {
+        const progressCtx = progressCanvas.getContext('2d');
+        const chartDataObj = {
+            recent: {
+                labels: {!! json_encode(collect($scoreTrend ?? [])->pluck('date')) !!},
+                data: {!! json_encode(collect($scoreTrend ?? [])->pluck('score')) !!}
+            }
+        };
 
-    let gradientLine = progressCtx.createLinearGradient(0, 0, 0, 300);
-    gradientLine.addColorStop(0, 'rgba(96, 165, 250, 0.4)');
-    gradientLine.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
+        const gradientLine = progressCtx.createLinearGradient(0, 0, 0, 300);
+        gradientLine.addColorStop(0, 'rgba(59, 130, 246, 0.34)');
+        gradientLine.addColorStop(1, 'rgba(14, 165, 233, 0.00)');
 
-    let progressChart = new Chart(progressCtx, {
-        type: 'line',
-        data: {
-            labels: chartDataObj.recent.labels.length ? chartDataObj.recent.labels : ['No Data'],
-            datasets: [{
-                label: 'Readiness Score',
-                data: chartDataObj.recent.data.length ? chartDataObj.recent.data : [0],
-                borderColor: '#60a5fa',
-                backgroundColor: gradientLine,
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: sfColor,
-                pointBorderColor: '#60a5fa',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false }, 
-                tooltip: { 
-                    mode: 'index', 
-                    intersect: false,
-                    backgroundColor: 'rgba(30, 30, 45, 0.9)',
-                    titleColor: '#fff',
-                    bodyColor: '#34d399',
-                    borderColor: '#60a5fa',
-                    borderWidth: 1,
-                    padding: 12,
-                    displayColors: false,
-                    callbacks: {
-                        label: function(context) {
-                            return ' Readiness Score: ' + context.parsed.y + '%';
+        new Chart(progressCtx, {
+            type: 'line',
+            data: {
+                labels: chartDataObj.recent.labels.length ? chartDataObj.recent.labels : ['No Data'],
+                datasets: [{
+                    label: 'Readiness Score',
+                    data: chartDataObj.recent.data.length ? chartDataObj.recent.data : [0],
+                    borderColor: '#3b82f6',
+                    backgroundColor: gradientLine,
+                    borderWidth: 3,
+                    tension: 0.38,
+                    fill: true,
+                    pointBackgroundColor: sfColor,
+                    pointBorderColor: '#3b82f6',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)',
+                        titleColor: isLightMode ? '#0f172a' : '#fff',
+                        bodyColor: isLightMode ? '#334155' : '#dbeafe',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return ' Readiness Score: ' + context.parsed.y + '%';
+                            }
                         }
                     }
-                } 
-            },
-            scales: {
-                y: { beginAtZero: true, max: 100, grid: { color: gridColor, drawBorder: false } },
-                x: { grid: { display: false, drawBorder: false } }
-            }
-        }
-    });
-
-    // Feature 16: Readiness Radar Chart
-    const radarCtx = document.getElementById('radarChart').getContext('2d');
-    
-    // Dynamic values from backend
-    let clarity = {{ $radarData['clarity'] ?? 0 }};
-    let relevance = {{ $radarData['relevance'] ?? 0 }};
-    let grammar = {{ $radarData['grammar'] ?? 0 }};
-    let professionalism = {{ $radarData['professionalism'] ?? 0 }};
-    let confidence = {{ $radarData['confidence'] ?? 0 }};
-
-    new Chart(radarCtx, {
-        type: 'radar',
-        data: {
-            labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Confidence'],
-            datasets: [{
-                label: 'Score Level',
-                data: [clarity, relevance, grammar, professionalism, confidence],
-                backgroundColor: 'rgba(52, 211, 153, 0.2)',
-                borderColor: '#34d399',
-                pointBackgroundColor: '#34d399',
-                pointBorderColor: sfColor,
-                pointHoverBackgroundColor: sfColor,
-                pointHoverBorderColor: '#34d399',
-                borderWidth: 2,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                r: {
-                    angleLines: { color: radarGridColor },
-                    grid: { color: radarGridColor },
-                    pointLabels: { color: txColor, font: { size: 11 } },
-                    ticks: { display: false, min: 0, max: 100, stepSize: 20 }
+                },
+                scales: {
+                    y: { beginAtZero: true, max: 100, grid: { color: gridColor }, border: { display: false } },
+                    x: { grid: { display: false }, border: { display: false } }
                 }
             }
-        }
-    });
-});
-</script>
+        });
+    }
 
-<!-- Gamification Confetti -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Trigger confetti if they have a streak > 2 or just earned a badge
-        const streak = {{ $currentStreak ?? 0 }};
-        if(streak >= 3) {
-            setTimeout(() => {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 },
-                    colors: ['#60a5fa', '#34d399', '#fbbf24', '#a78bfa']
-                });
-            }, 1000);
-        }
-    });
+    const radarCanvas = document.getElementById('radarChart');
+    if (radarCanvas) {
+        new Chart(radarCanvas.getContext('2d'), {
+            type: 'radar',
+            data: {
+                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Confidence'],
+                datasets: [{
+                    label: 'Score Level',
+                    data: [
+                        {{ $radarData['clarity'] ?? 0 }},
+                        {{ $radarData['relevance'] ?? 0 }},
+                        {{ $radarData['grammar'] ?? 0 }},
+                        {{ $radarData['professionalism'] ?? 0 }},
+                        {{ $radarData['confidence'] ?? 0 }}
+                    ],
+                    backgroundColor: 'rgba(34, 197, 94, 0.16)',
+                    borderColor: '#22c55e',
+                    pointBackgroundColor: '#22c55e',
+                    pointBorderColor: sfColor,
+                    pointHoverBackgroundColor: sfColor,
+                    pointHoverBorderColor: '#22c55e',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    r: {
+                        angleLines: { color: radarGridColor },
+                        grid: { color: radarGridColor },
+                        pointLabels: { color: txColor, font: { size: 11, weight: 600 } },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: { display: false, stepSize: 20 }
+                    }
+                }
+            }
+        });
+    }
+});
 </script>
 
 @push('scripts')
@@ -787,23 +1210,23 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const stepsMobile = [
             { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Access Mock Interviews, Learning Lab, and Progress Tracking right from the bottom bar.', side: "top", align: 'center' }},
-            { element: '.card-grad-success', popover: { title: 'Overall Readiness', description: 'This score represents your overall readiness based on recent interview performances.', side: "bottom", align: 'start' }},
-            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of your total sessions, average rating, and daily streak.', side: "top", align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview progress and score trends over time.', side: "top", align: 'start' }},
+            { element: '.card-grad-success', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
+            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "top", align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak!', side: "top", align: 'start' }},
-            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review your past mock interviews and see detailed feedback for each.', side: "top", align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak.', side: "top", align: 'start' }},
+            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
             { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode.', side: "bottom", align: 'end' }}
         ];
 
         const stepsDesktop = [
             { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Access all features including Mock Interviews, Learning Lab, and Progress Tracking from here.', side: "right", align: 'start' }},
-            { element: '.card-grad-success', popover: { title: 'Overall Readiness', description: 'This score represents your overall readiness based on recent interview performances.', side: "bottom", align: 'start' }},
-            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of your total sessions, average rating, and daily streak.', side: "top", align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview progress and score trends over time.', side: "top", align: 'start' }},
+            { element: '.card-grad-success', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
+            { element: '.stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "bottom", align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak!', side: "bottom", align: 'start' }},
-            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review your past mock interviews and see detailed feedback for each.', side: "top", align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Complete daily challenges to earn extra XP and maintain your practice streak.', side: "bottom", align: 'start' }},
+            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: "bottom", align: 'center' }},
             { element: '#notifWrap', popover: { title: 'Notifications', description: 'Stay updated with feedback on your interviews and platform announcements.', side: "bottom", align: 'center' }},
             { element: '#profileWrap', popover: { title: 'Your Profile', description: 'Manage your account settings and preferences.', side: "bottom", align: 'end' }}
@@ -826,11 +1249,6 @@ document.addEventListener("DOMContentLoaded", function() {
             driverObj.drive();
         };
 
-        if (!localStorage.getItem('onboarding_completed')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

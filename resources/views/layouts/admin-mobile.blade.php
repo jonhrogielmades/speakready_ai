@@ -2,7 +2,7 @@
 <html lang="en" id="htmlRoot">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#1a0a0a">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,7 +17,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=2') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=4') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
@@ -132,7 +132,7 @@
             transition: color 0.2s;
             -webkit-tap-highlight-color: transparent;
             border: none; background: transparent; cursor: pointer;
-            font-family: "Space Grotesk", sans-serif;
+            font-family: "Poppins", sans-serif;
          }
          .mob-nav-item i { font-size: 1.2rem; transition: transform 0.18s; }
          .mob-nav-item:active i { transform: scale(0.82); }
@@ -193,7 +193,7 @@
             padding: 12px 14px; border-radius: 12px;
             color: var(--tx2); font-size: 0.875rem; font-weight: 500;
             cursor: pointer; border: none; background: transparent;
-            width: 100%; font-family: "Space Grotesk", sans-serif;
+            width: 100%; font-family: "Poppins", sans-serif;
             text-align: left; text-decoration: none; transition: 0.18s;
          }
          .drawer-action i { width: 20px; text-align: center; font-size: 1rem; }
