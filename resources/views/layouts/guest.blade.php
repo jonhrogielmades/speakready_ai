@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
       <script>
          if (localStorage.getItem('theme') === 'light') {
              document.documentElement.classList.add('lm');

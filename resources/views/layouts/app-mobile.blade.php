@@ -17,7 +17,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
@@ -303,28 +303,22 @@
             /* Keep workspace wrapper stacking */
             #workspaceRow { display: flex !important; flex-direction: column; }
             
-            /* Show col-lg-4 but only for the camera */
-            #workspaceRow > .col-lg-4 { display: block !important; order: -1; margin-bottom: 0; }
+            #workspaceRow > .col-lg-8,
+            #workspaceRow > .col-lg-4 {
+               width: 100% !important;
+               max-width: 100% !important;
+               min-width: 0 !important;
+               padding-left: 0 !important;
+               padding-right: 0 !important;
+            }
             
-            /* Hide non-camera panels in col-lg-4 */
-            #workspaceRow > .col-lg-4 > .panel:not(#cameraPanel) { display: none !important; }
+            #workspaceRow > .col-lg-8 { order: 1; }
+            #workspaceRow > .col-lg-4 { display: block !important; order: 2; margin-bottom: 0; }
             
-            /* Make camera a small floating square at the top right (Picture-in-Picture) */
+            /* Pages already render the mobile camera inside the avatar panel. */
             #cameraPanel {
-               position: fixed; 
-               top: calc(var(--mob-top-h) + var(--mob-safe-top) + 16px); 
-               right: 16px;
-               width: 110px; height: 140px;
-               z-index: 100; margin: 0 !important; padding: 0 !important; 
-               border: 2px solid rgba(255,255,255,0.2); border-radius: 14px;
-               background: #000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-               overflow: hidden;
+               display: none !important;
             }
-            #cameraPanel .panel-title, #cameraPanel .stat-row { display: none !important; }
-            #cameraPanel > div:nth-child(2) {
-               height: 100% !important; width: 100% !important; margin: 0 !important; border-radius: 0 !important;
-            }
-            #cameraPanel video { object-fit: cover !important; width: 100%; height: 100%; }
             
             /* Keep standard panel styles for main content, just add bottom padding */
             #workspaceRow > .col-lg-8 {

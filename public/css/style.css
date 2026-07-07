@@ -4207,3 +4207,342 @@ textarea:focus-visible,
     padding: 5px;
   }
 }
+
+/* Mobile hardening pass
+   Keeps all app/admin pages inside the viewport while preserving card-table pages. */
+#dashboard,
+#dashboard .db-main,
+#dashboard .db-content,
+#mob-content,
+#mob-content .db-content {
+  max-width: 100%;
+  min-width: 0;
+}
+
+#mob-content {
+  width: 100% !important;
+}
+
+#dashboard .db-content .row,
+#dashboard .db-content .d-flex,
+#dashboard .db-content [class*="col-"] {
+  min-width: 0;
+}
+
+#dashboard .db-content img,
+#dashboard .db-content video,
+#dashboard .db-content canvas,
+#dashboard .db-content iframe,
+#dashboard .db-content svg {
+  max-width: 100%;
+}
+
+#dashboard .db-content canvas {
+  height: auto;
+}
+
+.offcanvas {
+  max-width: 100vw;
+}
+
+.dropdown-menu,
+.db-dropdown {
+  max-width: calc(100vw - 24px);
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  #dashboard .db-content,
+  #mob-content,
+  #mob-content .db-content {
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  #dashboard .db-content :where(h1, h2, h3, h4, h5, h6, p, li, a, span, small, strong, label, td, th, button, .badge) {
+    overflow-wrap: anywhere;
+  }
+
+  #dashboard .db-content :where(.btn, .bgrd, .boc, .badge, .dropdown-item) {
+    white-space: normal;
+  }
+
+  #dashboard .db-content :where(.btn, .bgrd, .boc) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    max-width: 100%;
+  }
+
+  #dashboard .db-content :where(.btn, .bgrd, .boc) i {
+    flex: 0 0 auto;
+  }
+
+  #dashboard .db-content :where(.form-control, .form-select, .oinp, textarea, .input-group, .db-top-search) {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #dashboard .db-content :where(.input-group[style*="width"], .db-filter-input[style*="width"]) {
+    width: 100% !important;
+  }
+
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-md-center,
+  #dashboard .db-content .d-flex.flex-column.flex-md-row {
+    gap: 12px !important;
+  }
+
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center:not(.stat-row):not(.star-item),
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start,
+  #dashboard .db-content .d-flex.flex-column.flex-md-row {
+    flex-wrap: wrap;
+  }
+
+  #dashboard .db-content .d-flex.gap-2,
+  #dashboard .db-content .d-flex.gap-3 {
+    min-width: 0;
+  }
+
+  #dashboard .db-content .table-responsive,
+  #dashboard .db-content [style*="overflow-x:auto"],
+  #dashboard .db-content [style*="overflow-x: auto"] {
+    max-width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #dashboard .db-content :where(.modal-body, .tab-content, .accordion-body, .card-body, .premium-card, .premium-panel, .setup-panel, .panel, .print-card) {
+    min-width: 0;
+  }
+
+  .modal {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .modal-dialog {
+    width: calc(100% - 16px);
+    max-width: none;
+    margin: 8px auto;
+  }
+
+  .modal-dialog-scrollable .modal-content {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .modal-body {
+    overflow-x: hidden;
+  }
+
+  .modal-footer,
+  .modal-header {
+    gap: 8px;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+  }
+
+  .modal-footer .btn {
+    flex: 1 1 auto;
+  }
+
+  .nav-tabs,
+  .nav-pills,
+  #nav-pills-container,
+  .game-categories-scroll {
+    max-width: 100%;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .nav-tabs::-webkit-scrollbar,
+  .nav-pills::-webkit-scrollbar,
+  #nav-pills-container::-webkit-scrollbar,
+  .game-categories-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-tabs .nav-link,
+  .nav-pills .nav-link,
+  #nav-pills-container > * {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  #dashboard .db-content :where(.chart-container, .chart-container-mobile) {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #dashboard .db-content :where(.chart-container, .chart-container-mobile) canvas {
+    width: 100% !important;
+  }
+
+  #dashboard .db-content .pagination {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  #dashboard .db-content .page-link {
+    min-width: 36px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 575px) {
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center.mb-4,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start.mb-4,
+  #dashboard .db-content .d-flex.flex-column.flex-md-row {
+    align-items: stretch !important;
+  }
+
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center.mb-4 > *,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start.mb-4 > *,
+  #dashboard .db-content .d-flex.flex-column.flex-md-row > * {
+    max-width: 100%;
+  }
+
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center.mb-4 > .d-flex,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start.mb-4 > .d-flex {
+    width: 100%;
+  }
+
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center.mb-4 > .btn,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start.mb-4 > .btn,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-center.mb-4 > a.btn,
+  #dashboard .db-content .d-flex.justify-content-between.align-items-start.mb-4 > a.btn {
+    width: 100%;
+  }
+
+  #dashboard .db-content .dropdown {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  #dashboard .db-content :where(
+    #mainUsersTable,
+    #mainTable,
+    #mainCategoriesTable,
+    #modulesTable,
+    #mainSessionsTable,
+    #mainArchiveTable,
+    #mainFeedbackTable,
+    #mainComplaintsTable,
+    #mainProvidersTable,
+    #moduleUsageTable,
+    #mainAuditLogsTable,
+    .game-table
+  ) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  #dashboard .db-content :where(
+    #mainUsersTable,
+    #mainTable,
+    #mainCategoriesTable,
+    #modulesTable,
+    #mainSessionsTable,
+    #mainArchiveTable,
+    #mainFeedbackTable,
+    #mainComplaintsTable,
+    #mainProvidersTable,
+    #moduleUsageTable,
+    #mainAuditLogsTable,
+    .game-table
+  ) tbody {
+    display: block;
+    width: 100%;
+  }
+
+  #dashboard .db-content :where(
+    #mainUsersTable,
+    #mainTable,
+    #mainCategoriesTable,
+    #modulesTable,
+    #mainSessionsTable,
+    #mainArchiveTable,
+    #mainFeedbackTable,
+    #mainComplaintsTable,
+    #mainProvidersTable,
+    #moduleUsageTable,
+    #mainAuditLogsTable,
+    .game-table
+  ) tbody tr {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #dashboard .db-content :where(
+    #mainUsersTable,
+    #mainTable,
+    #mainCategoriesTable,
+    #modulesTable,
+    #mainSessionsTable,
+    #mainArchiveTable,
+    #mainFeedbackTable,
+    #mainComplaintsTable,
+    #mainProvidersTable,
+    #moduleUsageTable,
+    #mainAuditLogsTable,
+    .game-table
+  ) tbody td {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  #dashboard .db-content :where(
+    #mainUsersTable,
+    #mainTable,
+    #mainCategoriesTable,
+    #modulesTable,
+    #mainSessionsTable,
+    #mainArchiveTable,
+    #mainFeedbackTable,
+    #mainComplaintsTable,
+    #mainProvidersTable,
+    #moduleUsageTable,
+    #mainAuditLogsTable,
+    .game-table
+  ) tbody td > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #dashboard .db-content :where(
+    #mainUsersTableWrapper,
+    #mainTableWrapper,
+    #mainCategoriesTableWrapper,
+    #mainModulesTableWrapper,
+    #mainSessionsTableWrapper,
+    #mainArchiveTableWrapper,
+    #mainFeedbackTableWrapper,
+    #mainComplaintsTableWrapper,
+    #mainProvidersTableWrapper,
+    #moduleUsageTableWrapper,
+    #mainAuditLogsTableWrapper,
+    .game-table-wrapper
+  ) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+}

@@ -21,7 +21,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -384,6 +384,5 @@
       @include('layouts.logout-transition')
    </body>
 </html>
-
 
 
