@@ -557,6 +557,293 @@ class UserController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function aiCollaboration(Request $request)
+    {
+        $userId = Auth::id();
+
+        $sessions = \App\Models\AiCollaborationSession::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit(12)
+            ->get();
+
+        $currentSession = null;
+        if ($request->filled('session')) {
+            $currentSession = \App\Models\AiCollaborationSession::where('user_id', $userId)
+                ->findOrFail($request->integer('session'));
+        } else {
+            $currentSession = $sessions->firstWhere('status', 'in_progress') ?: $sessions->first();
+        }
+
+        $completedQuery = \App\Models\AiCollaborationSession::where('user_id', $userId)
+            ->where('status', 'completed');
+
+        $collaborationStats = (object) [
+            'completed' => (clone $completedQuery)->count(),
+            'average' => (int) round((clone $completedQuery)->avg('overall_score') ?? 0),
+            'best' => (int) ((clone $completedQuery)->max('overall_score') ?? 0),
+            'active' => \App\Models\AiCollaborationSession::where('user_id', $userId)
+                ->where('status', 'in_progress')
+                ->count(),
+        ];
+
+        return view('user.ai-collaboration', compact('sessions', 'currentSession', 'collaborationStats'));
+    }
+
+    public function startAiCollaboration(Request $request)
+    {
+        $validated = $request->validate([
+            'role' => 'required|string|max:120',
+            'industry' => 'nullable|string|max:120',
+            'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
+            'scenario_type' => ['required', Rule::in([
+                'decision_brief',
+                'customer_insight',
+                'process_improvement',
+                'product_strategy',
+                'hiring_screen',
+            ])],
+            'provider' => 'nullable|string|max:60',
+        ]);
+
+        $scenario = $this->collaborationScenarioFrom($validated);
+        $provider = $validated['provider'] ?? env('AI_PROVIDER', 'gemini');
+
+        $session = \App\Models\AiCollaborationSession::create([
+            'user_id' => Auth::id(),
+            'title' => $scenario['title'],
+            'role' => $scenario['role'],
+            'industry' => $scenario['industry'],
+            'difficulty' => $validated['difficulty'],
+            'scenario_type' => $validated['scenario_type'],
+            'scenario_brief' => $scenario['brief'],
+            'source_material' => $scenario['source_material'],
+            'expected_output' => $scenario['expected_output'],
+            'conversation_log' => [],
+            'status' => 'in_progress',
+            'provider' => $provider,
+        ]);
+
+        ActivityLogger::log(
+            Auth::user(),
+            'ai_collaboration_started',
+            "You started an AI collaboration simulation: {$session->title}.",
+            $request->ip(),
+            true,
+            ['title' => 'AI Collaboration Started', 'icon' => 'fa-wand-magic-sparkles', 'type' => 'info']
+        );
+
+        return redirect()->route('user.ai-collaboration', ['session' => $session->id]);
+    }
+
+    public function askAiCollaboration(Request $request, $session)
+    {
+        $sessionRecord = $this->collaborationSessionForUser($session);
+        if ($sessionRecord->status === 'completed') {
+            return response()->json(['error' => 'This simulation is already completed.'], 409);
+        }
+
+        $validated = $request->validate([
+            'message' => 'required|string|max:5000',
+            'provider' => 'nullable|string|max:60',
+        ]);
+
+        $provider = $validated['provider'] ?? $sessionRecord->provider ?? env('AI_PROVIDER', 'gemini');
+        $conversationLog = is_array($sessionRecord->conversation_log) ? $sessionRecord->conversation_log : [];
+        $history = $this->collaborationHistoryForAi($conversationLog);
+
+        $message = $this->collaborationPromptForAssistant($sessionRecord, $validated['message']);
+        if (strtolower(trim((string) $provider)) === 'local') {
+            $response = 'I would compare the options against the source material, name the highest-risk assumption, and define one metric to verify after the decision. Do not let the AI make the decision for you; use it to pressure-test your reasoning.';
+        } else {
+            $response = \App\Services\AIService::chatMessage(
+                $message,
+                $history,
+                $provider,
+                $this->collaborationAssistantSystemPrompt()
+            );
+        }
+
+        if ($response === 'Sorry, I am having trouble connecting to my brain right now.' || trim((string) $response) === '') {
+            $response = 'Break this into objective, evidence, options, risks, and a verification step. I would not trust a single answer yet: ask what data is missing, decide which assumption matters most, then make a clear recommendation.';
+        }
+
+        $conversationLog[] = [
+            'role' => 'user',
+            'content' => $validated['message'],
+            'created_at' => now()->toIso8601String(),
+        ];
+        $conversationLog[] = [
+            'role' => 'ai',
+            'content' => $response,
+            'created_at' => now()->toIso8601String(),
+        ];
+
+        $sessionRecord->update([
+            'conversation_log' => $conversationLog,
+            'provider' => $provider,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'response' => $response,
+            'conversation' => $conversationLog,
+        ]);
+    }
+
+    public function submitAiCollaboration(Request $request, $session)
+    {
+        $sessionRecord = $this->collaborationSessionForUser($session);
+
+        $validated = $request->validate([
+            'final_recommendation' => 'required|string|min:60|max:20000',
+            'candidate_reflection' => 'nullable|string|max:10000',
+            'provider' => 'nullable|string|max:60',
+        ]);
+
+        $provider = $validated['provider'] ?? $sessionRecord->provider ?? env('AI_PROVIDER', 'gemini');
+        $wasCompleted = $sessionRecord->status === 'completed';
+
+        $evaluation = \App\Services\AIService::evaluateAiCollaboration([
+            'title' => $sessionRecord->title,
+            'role' => $sessionRecord->role,
+            'industry' => $sessionRecord->industry,
+            'difficulty' => $sessionRecord->difficulty,
+            'scenario_brief' => $sessionRecord->scenario_brief,
+            'source_material' => $sessionRecord->source_material,
+            'expected_output' => $sessionRecord->expected_output,
+        ], $sessionRecord->conversation_log ?? [], $validated['final_recommendation'], $validated['candidate_reflection'] ?? '', $provider);
+
+        $sessionRecord->update([
+            'final_recommendation' => $validated['final_recommendation'],
+            'candidate_reflection' => $validated['candidate_reflection'] ?? null,
+            'ai_feedback' => $evaluation,
+            'overall_score' => $evaluation['overall_score'] ?? 0,
+            'prompt_quality_score' => $evaluation['prompt_quality_score'] ?? 0,
+            'critical_thinking_score' => $evaluation['critical_thinking_score'] ?? 0,
+            'verification_score' => $evaluation['verification_score'] ?? 0,
+            'structure_score' => $evaluation['structure_score'] ?? 0,
+            'communication_score' => $evaluation['communication_score'] ?? 0,
+            'status' => 'completed',
+            'provider' => $provider,
+            'completed_at' => now(),
+        ]);
+
+        if (!$wasCompleted) {
+            $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+            $profile->experience_points = (int) $profile->experience_points + max(25, (int) round(($evaluation['overall_score'] ?? 0) / 2));
+            $profile->problem_solving_xp = (int) $profile->problem_solving_xp + 25;
+            $profile->save();
+
+            ActivityLogger::log(
+                Auth::user(),
+                'ai_collaboration_completed',
+                "You completed an AI collaboration simulation with a score of {$sessionRecord->fresh()->overall_score}%.",
+                $request->ip(),
+                true,
+                ['title' => 'AI Collaboration Completed', 'icon' => 'fa-brain', 'type' => 'success']
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'session' => $sessionRecord->fresh(),
+            'evaluation' => $evaluation,
+        ]);
+    }
+
+    private function collaborationSessionForUser($session): \App\Models\AiCollaborationSession
+    {
+        return \App\Models\AiCollaborationSession::where('user_id', Auth::id())->findOrFail($session);
+    }
+
+    private function collaborationScenarioFrom(array $input): array
+    {
+        $role = trim((string) ($input['role'] ?? 'Business Analyst')) ?: 'Business Analyst';
+        $industry = trim((string) ($input['industry'] ?? 'General business')) ?: 'General business';
+        $difficulty = $input['difficulty'] ?? 'medium';
+        $scenarioType = $input['scenario_type'] ?? 'decision_brief';
+
+        $difficultyNotes = [
+            'easy' => 'The case has a clear main issue. Focus on organizing the evidence and giving a practical first step.',
+            'medium' => 'The case has tradeoffs. Compare options, name assumptions, and explain what you would verify next.',
+            'hard' => 'The case is ambiguous. Challenge the data, expose risks, and make a recommendation even with incomplete information.',
+        ];
+
+        $templates = [
+            'decision_brief' => [
+                'title' => 'AI-Assisted Decision Brief',
+                'brief' => "You are interviewing for a {$role} role in {$industry}. The panel gives you a work sample: leadership must choose one priority for the next 30 days after performance drops. Use the AI assistant to explore the issue, but your final recommendation must be your own.",
+                'source_material' => "- Main KPI dropped from 84% to 71% over six weeks.\n- Customer or stakeholder complaints increased by 18%.\n- Team capacity is limited to one major change this month.\n- Managers want a fast fix; frontline staff say the root cause is unclear.\n- A previous quick fix improved speed but reduced quality.",
+                'expected_output' => 'Recommend one priority, explain why it beats the alternatives, name the biggest risk, and define one verification step.',
+            ],
+            'customer_insight' => [
+                'title' => 'Customer Insight Sprint',
+                'brief' => "You are interviewing for a {$role} role in {$industry}. You receive mixed customer feedback and must turn it into a clear action plan. Use the AI assistant to surface patterns, then decide what the team should do.",
+                'source_material' => "- 42% of complaints mention slow response time.\n- 31% mention confusing instructions or handoffs.\n- Satisfaction is highest when customers get one clear owner.\n- The team can change scripts, routing, or training, but not headcount.\n- One vocal stakeholder believes the product itself is the main problem.",
+                'expected_output' => 'Summarize the pattern, separate signal from noise, recommend one action, and identify what evidence would confirm the choice.',
+            ],
+            'process_improvement' => [
+                'title' => 'Process Improvement Case',
+                'brief' => "You are interviewing for a {$role} role in {$industry}. A routine workflow is missing deadlines. Use the AI assistant to inspect bottlenecks, but keep ownership of the recommendation.",
+                'source_material' => "- Average completion time rose from 2.1 days to 3.8 days.\n- Rework accounts for 26% of delayed items.\n- Two approval steps often ask for the same information.\n- A new intake form improved completeness but added friction.\n- Team members disagree whether automation or clearer ownership matters more.",
+                'expected_output' => 'Give a process diagnosis, recommend a change, explain implementation sequence, and call out one metric to track.',
+            ],
+            'product_strategy' => [
+                'title' => 'Product Strategy Tradeoff',
+                'brief' => "You are interviewing for a {$role} role in {$industry}. Product adoption is flat and the team is debating whether to improve onboarding or build a requested feature. Use the AI assistant to pressure-test the options.",
+                'source_material' => "- Activation rate is 39%, unchanged for three months.\n- 55% of new users do not finish setup.\n- Sales says a new feature would unlock two enterprise deals.\n- Support tickets show repeated setup confusion.\n- Engineering can ship one onboarding improvement or one feature this sprint.",
+                'expected_output' => 'Choose a product priority, connect it to the evidence, address the rejected option, and define a success metric.',
+            ],
+            'hiring_screen' => [
+                'title' => 'Hiring Judgment Simulation',
+                'brief' => "You are interviewing for a {$role} role in {$industry}. You need to recommend which candidate should move forward for a time-sensitive opening. Use the AI assistant to compare evidence, but avoid outsourcing the decision.",
+                'source_material' => "- Candidate A has strong domain experience but gave vague examples of ownership.\n- Candidate B has less industry experience but showed clear learning speed and measurable project results.\n- Candidate C has the exact tool experience but mixed references on collaboration.\n- The team needs someone productive within 60 days.\n- The hiring manager values judgment, communication, and coachability.",
+                'expected_output' => 'Recommend a candidate, explain the evidence, name the risk, and propose one follow-up question or reference check.',
+            ],
+        ];
+
+        $template = $templates[$scenarioType] ?? $templates['decision_brief'];
+        $template['brief'] .= "\n\nDifficulty note: " . ($difficultyNotes[$difficulty] ?? $difficultyNotes['medium']);
+
+        return [
+            'title' => $template['title'],
+            'role' => $role,
+            'industry' => $industry,
+            'brief' => $template['brief'],
+            'source_material' => $template['source_material'],
+            'expected_output' => $template['expected_output'],
+        ];
+    }
+
+    private function collaborationPromptForAssistant(\App\Models\AiCollaborationSession $session, string $candidateMessage): string
+    {
+        return "Simulation: {$session->title}\n"
+            . "Target role: {$session->role}\n"
+            . "Industry/context: {$session->industry}\n"
+            . "Difficulty: {$session->difficulty}\n\n"
+            . "Scenario brief:\n{$session->scenario_brief}\n\n"
+            . "Source material:\n{$session->source_material}\n\n"
+            . "Expected output:\n{$session->expected_output}\n\n"
+            . "Candidate request:\n{$candidateMessage}";
+    }
+
+    private function collaborationAssistantSystemPrompt(): string
+    {
+        return 'You are the AI assistant inside a workplace interview simulation. Help the candidate analyze the scenario, find gaps, compare options, and pressure-test reasoning. Do not write the final recommendation for them. Keep replies concise, use bullets when useful, mention assumptions or missing evidence, and remind the candidate to verify important claims.';
+    }
+
+    private function collaborationHistoryForAi(array $conversationLog): array
+    {
+        return collect($conversationLog)
+            ->filter(fn ($item) => is_array($item) && in_array($item['role'] ?? '', ['user', 'ai'], true))
+            ->map(fn ($item) => [
+                'role' => $item['role'] === 'ai' ? 'ai' : 'user',
+                'content' => (string) ($item['content'] ?? ''),
+            ])
+            ->values()
+            ->all();
+    }
+
     public function learning(Request $request) { 
         $user = \Illuminate\Support\Facades\Auth::user();
         $profile = $user->profile()->firstOrCreate([]);

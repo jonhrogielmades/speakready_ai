@@ -55,6 +55,11 @@ class User extends Authenticatable
         return $this->hasMany(InterviewSession::class);
     }
 
+    public function aiCollaborationSessions()
+    {
+        return $this->hasMany(AiCollaborationSession::class);
+    }
+
     public function profile()
     {
         return $this->hasOne(Profile::class);

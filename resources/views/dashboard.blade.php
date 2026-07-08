@@ -987,6 +987,7 @@
                     <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary"><i class="fa-solid fa-microphone-lines"></i> <span class="sr-mobile-full">Start Mock Interview</span><span class="sr-mobile-short">Mock</span></a>
                     <a href="{{ route('user.progress') }}" class="sr-btn"><i class="fa-solid fa-chart-line"></i> <span class="sr-mobile-full">View Progress</span><span class="sr-mobile-short">Progress</span></a>
                     <a href="{{ route('user.coach') }}" class="sr-btn"><i class="fa-solid fa-robot"></i> <span class="sr-mobile-full">Ask AI Coach</span><span class="sr-mobile-short">Coach</span></a>
+                    <a href="{{ route('user.ai-collaboration') }}" class="sr-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> <span class="sr-mobile-full">AI Collaboration</span><span class="sr-mobile-short">AI Lab</span></a>
                 </div>
             </div>
 

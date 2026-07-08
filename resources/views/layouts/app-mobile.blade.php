@@ -155,10 +155,19 @@
             display: flex; align-items: center; gap: 8px;
             font-size: 1rem; font-weight: 700;
             color: var(--tx); text-decoration: none;
+            min-width: 0; flex: 1 1 auto;
          }
          .mob-header-logo img { width: 30px; height: 30px; border-radius: 8px; }
+         .mob-header-logo span {
+            min-width: 0;
+            max-width: 130px;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
 
-         .mob-header-right { display: flex; align-items: center; gap: 10px; }
+         .mob-header-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 
          .mob-icon-btn {
             width: 36px; height: 36px;
@@ -178,6 +187,26 @@
             color: #fff; font-size: 0.8rem; font-weight: 700;
             flex-shrink: 0; cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+         }
+
+         @media (max-width: 380px) {
+            .mob-header-logo span {
+               max-width: 104px;
+            }
+
+            .mob-header-right {
+               gap: 7px;
+            }
+
+            .mob-icon-btn {
+               width: 34px;
+               height: 34px;
+            }
+
+            .mob-avatar {
+               width: 31px;
+               height: 31px;
+            }
          }
 
          /* ---- Page Content ---- */
@@ -732,6 +761,11 @@
                class="drawer-item {{ request()->routeIs('user.learning*') ? 'active' : '' }}">
                <i class="fa-solid fa-gamepad"></i>
                <span>Learning Games</span>
+            </a>
+            <a href="{{ route('user.ai-collaboration') }}"
+               class="drawer-item {{ request()->routeIs('user.ai-collaboration*') ? 'active' : '' }}">
+               <i class="fa-solid fa-wand-magic-sparkles"></i>
+               <span>AI Collaboration</span>
             </a>
             <a href="{{ route('user.feedback') }}"
                class="drawer-item {{ request()->routeIs('user.feedback') ? 'active' : '' }}">

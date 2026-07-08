@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
+use App\Models\AiCollaborationSession;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\User;
@@ -132,6 +133,50 @@ class UserSideHardeningTest extends TestCase
             'clarity_score' => 58,
             'confidence_score' => 60,
         ]);
+    }
+
+    public function test_ai_collaboration_workflow_can_complete_with_local_scoring(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->post(route('user.ai-collaboration.start'), [
+                'role' => 'Operations Analyst',
+                'industry' => 'Healthcare',
+                'difficulty' => 'medium',
+                'scenario_type' => 'process_improvement',
+                'provider' => 'local',
+            ])
+            ->assertRedirect();
+
+        $session = AiCollaborationSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->actingAs($user)
+            ->postJson(route('user.ai-collaboration.ask', $session), [
+                'message' => 'Compare the options, name the biggest risk, and suggest one metric to verify.',
+                'provider' => 'local',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->actingAs($user)
+            ->postJson(route('user.ai-collaboration.submit', $session), [
+                'final_recommendation' => 'I recommend removing the duplicate approval step first because the source material shows rework and repeated approvals are slowing completion. The main tradeoff is that speed may improve before quality improves, so I would verify the change by measuring completion time, rework rate, and escalations for two weeks.',
+                'candidate_reflection' => 'I used AI to compare alternatives, but I rejected a broad automation-first answer because the evidence points to ownership and duplicate approval risk.',
+                'provider' => 'local',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('ai_collaboration_sessions', [
+            'id' => $session->id,
+            'user_id' => $user->id,
+            'status' => 'completed',
+            'provider' => 'local',
+        ]);
+
+        $this->assertGreaterThan(0, $session->fresh()->overall_score);
+        $this->assertGreaterThanOrEqual(25, Profile::where('user_id', $user->id)->first()->experience_points);
     }
 
     public function test_interview_answer_recomputes_confidence_from_delivery_metrics(): void
