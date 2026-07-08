@@ -19,12 +19,17 @@ class InterviewSession extends Model
         'response_mode',
         'interview_focus',
         'company_persona',
+        'interviewer_strictness',
         'time_limit',
         'question_types',
         'ai_assistance_level',
+        'live_feedback_mode',
         'status',
         'notes',
         'duration_seconds',
+        'current_question_index',
+        'session_state',
+        'action_plan',
         'is_archived',
         'flag_reason',
         'share_token',
@@ -35,8 +40,10 @@ class InterviewSession extends Model
         'is_archived' => 'boolean',
         'is_public' => 'boolean',
         'duration_seconds' => 'integer',
+        'current_question_index' => 'integer',
         'num_questions' => 'integer',
         'time_limit' => 'integer',
+        'action_plan' => 'array',
     ];
 
     public function user()

@@ -59,6 +59,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/interview/save-state', [InterviewController::class, 'saveSessionState'])->name('interview.saveState');
     Route::post('/interview/finish', [InterviewController::class, 'finish'])->name('interview.finish');
     Route::get('/interview/{id}/review', [InterviewController::class, 'review'])->name('interview.review');
+    Route::post('/interview/answers/{answer}/retry', [InterviewController::class, 'retryAnswer'])->name('interview.answer.retry');
     Route::post('/session/{id}/share', [InterviewController::class, 'toggleShare'])->name('interview.toggleShare');
 
     // User Side Features

@@ -641,61 +641,45 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#progress-stats', popover: { title: 'At a Glance', description: 'Quickly see your current streak, total practice days, and month-over-month readiness improvement.', side: "bottom", align: 'start' }},
-            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Get actionable, dynamic advice from AI based on your recent performance trends.', side: "bottom", align: 'start' }},
-            { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Visualize your overall interview readiness score over time.', side: "bottom", align: 'start' }},
-            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'See which interview categories are your strongest and which need more practice.', side: "top", align: 'start' }},
-            { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Track your skill improvements over time.', side: "top", align: 'start' }},
-            { element: '#strengths-tracker', popover: { title: 'Strengths & Areas', description: 'Analyze your strengths and view your STAR method progress.', side: "top", align: 'start' }},
-            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }},
-            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Keep track of modules you have completed.', side: "top", align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check your speaking pace, clarity, and confidence from voice drills.', side: "top", align: 'start' }},
-            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Your daily practice activity visually represented.', side: "top", align: 'start' }},
-            { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track your progress towards specific platform goals.', side: "top", align: 'start' }},
-            { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards you have earned from consistent practice.', side: "top", align: 'start' }}
+            { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
+            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Use trend-based coaching notes to decide what to practice next.', side: 'bottom', align: 'start' }},
+            { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
+            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'Compare interview categories to find strengths and weak spots.', side: 'top', align: 'start' }},
+            { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'top', align: 'start' }},
+            { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
+            { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
+            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See how much of your module work is complete.', side: 'top', align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and confidence from voice drills.', side: 'top', align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
+            { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
+            { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '#progress-stats', popover: { title: 'At a Glance', description: 'Quickly see your current streak, total practice days, and month-over-month readiness improvement.', side: "bottom", align: 'start' }},
-            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Get actionable, dynamic advice from AI based on your recent performance trends.', side: "bottom", align: 'start' }},
-            { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Visualize your overall interview readiness score over time.', side: "bottom", align: 'start' }},
-            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'See which interview categories are your strongest and which need more practice.', side: "bottom", align: 'start' }},
-            { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Track your skill improvements over time.', side: "right", align: 'start' }},
-            { element: '#strengths-tracker', popover: { title: 'Strengths & Areas', description: 'Analyze your strengths and view your STAR method progress.', side: "left", align: 'start' }},
-            { element: '#history-table', popover: { title: 'Session History', description: 'Review your past mock interviews and access detailed AI feedback for each one.', side: "top", align: 'start' }},
-            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Keep track of modules you have completed.', side: "right", align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check your speaking pace, clarity, and confidence from voice drills.', side: "left", align: 'start' }},
-            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Your daily practice activity visually represented.', side: "top", align: 'start' }},
-            { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track your progress towards specific platform goals.', side: "right", align: 'start' }},
-            { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards you have earned from consistent practice.', side: "left", align: 'start' }}
+            { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
+            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Use trend-based coaching notes to decide what to practice next.', side: 'bottom', align: 'start' }},
+            { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
+            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'Compare interview categories to find strengths and weak spots.', side: 'bottom', align: 'start' }},
+            { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'right', align: 'start' }},
+            { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
+            { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
+            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See how much of your module work is complete.', side: 'right', align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and confidence from voice drills.', side: 'left', align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
+            { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
+            { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_progress', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_progress',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_progress')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

@@ -27,6 +27,21 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    .action-plan-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px; }
+    .action-plan-item { background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px; }
+    .retry-panel { display:none;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-top:18px; }
+    .retry-panel.active { display:block; }
+    .retry-meta { display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
+    .retry-chip { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700; }
+    .timeline-row { display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--bd);padding:8px 0;font-size:.86rem;color:var(--tx2); }
+    .timeline-row:last-child { border-bottom:0; }
+    @media (max-width: 768px) {
+        .action-plan-grid { grid-template-columns:1fr; }
+        .premium-panel { border-radius:18px !important; }
+        .retry-panel .btn { width:100%; }
+        .retry-meta { flex-direction:column;align-items:stretch; }
+        .retry-chip { justify-content:center; }
+    }
 </style>
 
 <div class="db-section active animate-fade-up">
@@ -37,6 +52,9 @@
         $suggestions = trim($feedback->improvement_suggestions ?? '');
         $feedbackSummary = $suggestions !== '' ? $suggestions : ($weaknesses !== '' ? $weaknesses : ($strengths !== '' ? $strengths : 'AI feedback was unavailable for this session.'));
         $comparisonRows = $comparisonRows ?? [];
+        $actionPlan = is_array($sessionRecord->action_plan ?? null) ? $sessionRecord->action_plan : [];
+        $actionPriorities = $actionPlan['priorities'] ?? [];
+        $recommendedPaths = $actionPlan['recommended_paths'] ?? [];
     @endphp
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -105,6 +123,51 @@
             </div>
         </div>
     </div>
+
+    @if(!empty($actionPlan))
+    <div class="row mb-4">
+        <div class="col-12 animate-fade-up" style="animation-delay: 0.15s;">
+            <div class="premium-panel" style="padding:24px;border:1px solid rgba(16,185,129,.22) !important;background:rgba(16,185,129,.04) !important;">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+                    <div>
+                        <h5 style="color:var(--tx);font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-route me-2" style="color:#10b981"></i>Post-Session Action Plan</h5>
+                        <p style="color:var(--tx3);margin:0;font-size:.92rem;">{{ $actionPlan['headline'] ?? 'Targeted practice plan' }}</p>
+                    </div>
+                    <div class="text-md-end">
+                        <div style="font-size:.8rem;color:var(--tx3);font-weight:700;text-transform:uppercase;">Next Target</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#10b981;line-height:1;">{{ $actionPlan['target_score'] ?? 70 }}%</div>
+                    </div>
+                </div>
+
+                @if(!empty($actionPriorities))
+                    <div class="action-plan-grid mb-3">
+                        @foreach($actionPriorities as $priority)
+                            <div class="action-plan-item">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong style="color:var(--tx);">{{ $priority['skill'] ?? 'Skill' }}</strong>
+                                    <span style="color:#f59e0b;font-weight:800;">{{ $priority['score'] ?? 0 }}%</span>
+                                </div>
+                                <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:0;">{{ $priority['task'] ?? 'Retry this area with a more specific answer.' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    @foreach($recommendedPaths as $path)
+                        <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ $path['url'] ?? route('interview.setup') }}">
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>{{ $path['label'] ?? 'Practice' }}
+                        </a>
+                    @endforeach
+                    @if(!empty($actionPlan['next_session']))
+                        <span class="retry-chip"><i class="fa-solid fa-sliders"></i>{{ ucfirst($actionPlan['next_session']['difficulty'] ?? 'medium') }} next</span>
+                        <span class="retry-chip"><i class="fa-solid fa-user-tie"></i>{{ ucfirst($actionPlan['next_session']['strictness'] ?? 'neutral') }}</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Feature 5 & 6: Strengths and Areas for Improvement -->
     <div class="row g-4 mb-4">
@@ -287,6 +350,21 @@
                         </div>
                         @endif
 
+                        @php
+                            $timeline = is_array($answer->transcript_timeline) ? array_slice($answer->transcript_timeline, -6) : [];
+                        @endphp
+                        @if(!empty($timeline))
+                            <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
+                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-wave-square me-2"></i>Transcript Timeline</h6>
+                                @foreach($timeline as $point)
+                                    <div class="timeline-row">
+                                        <span>{{ ucfirst(str_replace('_', ' ', $point['event'] ?? 'progress')) }}</span>
+                                        <span>{{ $point['at'] ?? 0 }}s / {{ $point['words'] ?? 0 }} words</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
                         <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
                             <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
                             <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback ?: 'No AI feedback was generated for this answer.' }}</p>
@@ -357,6 +435,60 @@
                             </ul>
                         </div>
                     @endif
+
+                    @php
+                        $retryAttempts = $answer->retryAttempts ?? collect();
+                    @endphp
+                    @if($retryAttempts->count() > 0)
+                        <div class="mt-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
+                            <h6 style="color:#10b981;font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-rotate me-2"></i>Retry Attempts</h6>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach($retryAttempts as $retry)
+                                    <div class="d-flex flex-column flex-md-row justify-content-between gap-2" style="color:var(--tx);border-bottom:1px solid var(--bd);padding-bottom:10px;">
+                                        <div>
+                                            <strong>Attempt {{ $retry->attempt_number }}</strong>
+                                            <div style="color:var(--tx3);font-size:.85rem;">{{ $retry->created_at?->format('M d, Y g:i A') }}</div>
+                                        </div>
+                                        <div class="retry-meta">
+                                            <span class="retry-chip">Score {{ $retry->score ?? 0 }}%</span>
+                                            <span class="retry-chip">Confidence {{ $retry->confidence_score ?? 0 }}%</span>
+                                        </div>
+                                    </div>
+                                    @if($retry->ai_feedback)
+                                        <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="mt-4">
+                        <button type="button" class="btn btn-outline-primary btn-sm" style="border-radius:999px;font-weight:700;" onclick="toggleRetryPanel({{ $answer->id }})">
+                            <i class="fa-solid fa-rotate-right me-1"></i>Retry This Answer
+                        </button>
+                        <div class="retry-panel" id="retry-panel-{{ $answer->id }}" data-url="{{ route('interview.answer.retry', $answer->id) }}">
+                            <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                                <div>
+                                    <strong style="color:var(--tx);">Practice Attempt</strong>
+                                    <div style="color:var(--tx3);font-size:.85rem;">This saves as a retry and does not change the original session score.</div>
+                                </div>
+                                <div class="retry-meta">
+                                    <span class="retry-chip" id="retry-timer-{{ $answer->id }}"><i class="fa-regular fa-clock"></i>00:00</span>
+                                    <span class="retry-chip" id="retry-words-{{ $answer->id }}">0 words</span>
+                                </div>
+                            </div>
+                            <textarea class="oinp retry-textarea" id="retry-text-{{ $answer->id }}" rows="5" style="font-size:.95rem;" placeholder="Record or type your improved answer here..." onfocus="startRetryTimer({{ $answer->id }})" oninput="updateRetryWordCount({{ $answer->id }})"></textarea>
+                            <div class="d-flex flex-column flex-md-row gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;" onclick="prefillRetry({{ $answer->id }}, @js($answer->better_sample_answer ?: ''))">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Use Improved Draft
+                                </button>
+                                <button type="button" class="btn btn-primary" style="border-radius:12px;font-weight:700;" onclick="submitRetry({{ $answer->id }})">
+                                    <i class="fa-solid fa-paper-plane me-1"></i>Submit Retry
+                                </button>
+                            </div>
+                            <div class="mt-3" id="retry-result-{{ $answer->id }}" style="display:none;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -385,6 +517,129 @@ function toggleShare() {
                 document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Share Session';
             }
         }
+    });
+}
+
+const retryTimers = {};
+
+function retryEscape(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatRetrySeconds(total) {
+    const safe = Math.max(0, Math.round(total || 0));
+    const m = Math.floor(safe / 60).toString().padStart(2, '0');
+    const s = (safe % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+function toggleRetryPanel(answerId) {
+    const panel = document.getElementById(`retry-panel-${answerId}`);
+    if (!panel) return;
+    panel.classList.toggle('active');
+    if (panel.classList.contains('active')) {
+        document.getElementById(`retry-text-${answerId}`)?.focus();
+    }
+}
+
+function startRetryTimer(answerId) {
+    if (retryTimers[answerId]) return;
+    retryTimers[answerId] = {
+        startedAt: Date.now(),
+        interval: setInterval(() => {
+            const elapsed = retryElapsed(answerId);
+            const timer = document.getElementById(`retry-timer-${answerId}`);
+            if (timer) timer.innerHTML = `<i class="fa-regular fa-clock"></i>${formatRetrySeconds(elapsed)}`;
+        }, 1000)
+    };
+}
+
+function retryElapsed(answerId) {
+    if (!retryTimers[answerId]) return 0;
+    return Math.max(1, Math.round((Date.now() - retryTimers[answerId].startedAt) / 1000));
+}
+
+function updateRetryWordCount(answerId) {
+    startRetryTimer(answerId);
+    const text = document.getElementById(`retry-text-${answerId}`)?.value || '';
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const target = document.getElementById(`retry-words-${answerId}`);
+    if (target) target.innerText = `${words} words`;
+}
+
+function prefillRetry(answerId, draft) {
+    const textarea = document.getElementById(`retry-text-${answerId}`);
+    if (!textarea || !draft) return;
+    textarea.value = draft;
+    updateRetryWordCount(answerId);
+    textarea.focus();
+}
+
+function submitRetry(answerId) {
+    const panel = document.getElementById(`retry-panel-${answerId}`);
+    const textarea = document.getElementById(`retry-text-${answerId}`);
+    const result = document.getElementById(`retry-result-${answerId}`);
+    if (!panel || !textarea || !result) return;
+
+    const text = textarea.value.trim();
+    if (!text) {
+        result.style.display = 'block';
+        result.innerHTML = '<div class="alert alert-warning mb-0">Please enter your improved answer first.</div>';
+        return;
+    }
+
+    const elapsed = retryElapsed(answerId);
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const wpm = Math.round((words / Math.max(1, elapsed)) * 60);
+    const fillers = (text.match(/\b(um|uh|like|you know|basically|i mean|sort of|kind of)\b/gi) || []).length;
+    const confidence = Math.max(0, Math.min(100, 92 - (fillers * 3) - (wpm < 90 || wpm > 190 ? 10 : 0)));
+
+    const formData = new FormData();
+    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('answer_text', text);
+    formData.append('response_mode', 'text');
+    formData.append('elapsed_seconds', elapsed);
+    formData.append('voice_duration', elapsed);
+    formData.append('wpm', wpm);
+    formData.append('filler_words_count', fillers);
+    formData.append('pause_count', 0);
+    formData.append('confidence_score', confidence);
+    formData.append('eye_contact_score', 0);
+    formData.append('posture_score', 0);
+    formData.append('transcript_timeline', JSON.stringify([
+        { at: 0, event: 'retry_started', words: 0, chars: 0 },
+        { at: elapsed, event: 'retry_submitted', words, chars: text.length }
+    ]));
+
+    result.style.display = 'block';
+    result.innerHTML = '<div class="alert alert-info mb-0"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>Scoring retry...</div>';
+
+    fetch(panel.dataset.url, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) throw new Error(data.error || 'Retry failed');
+        result.innerHTML = `
+            <div class="p-3" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px;color:var(--tx);">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="retry-chip">Attempt ${retryEscape(data.attempt_number)}</span>
+                    <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
+                    <span class="retry-chip">Confidence ${retryEscape(data.confidence_score)}%</span>
+                </div>
+                <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.ai_feedback)}</p>
+            </div>
+        `;
+    })
+    .catch(error => {
+        result.innerHTML = `<div class="alert alert-danger mb-0">${retryEscape(error.message || 'Retry failed.')}</div>`;
     });
 }
 </script>

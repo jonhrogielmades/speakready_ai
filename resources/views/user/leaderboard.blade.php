@@ -107,45 +107,29 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#leaderboard-container', popover: { title: 'Global Leaderboard', description: 'See the top performing candidates in the SpeakReady community. Your row will be highlighted so you can see your rank.', side: "bottom", align: 'start' }},
-            { element: '#col-xp', popover: { title: 'Experience Points (XP)', description: 'XP is earned by completing mock interviews, learning modules, and voice rehearsals.', side: "bottom", align: 'center' }},
-            { element: '#col-streak', popover: { title: 'Practice Streaks', description: 'Maintain your daily practice streak to multiply your XP gains and climb faster.', side: "bottom", align: 'center' }},
-            { element: '#col-badges', popover: { title: 'Badges Earned', description: 'Unlock special badges by achieving high scores and completing learning milestones.', side: "bottom", align: 'start' }}
+            { element: '#leaderboard-container', popover: { title: 'Global Leaderboard', description: 'Compare XP, streaks, and badges across the SpeakReady community.', side: 'bottom', align: 'start' }},
+            { element: '#col-xp', popover: { title: 'Experience Points', description: 'XP grows when you complete interviews, modules, games, and voice practice.', side: 'bottom', align: 'center' }},
+            { element: '#col-streak', popover: { title: 'Practice Streaks', description: 'Daily practice keeps your streak alive and helps you climb faster.', side: 'bottom', align: 'center' }},
+            { element: '#col-badges', popover: { title: 'Badges Earned', description: 'Badges mark milestones like high scores and completed learning goals.', side: 'bottom', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '#leaderboard-container', popover: { title: 'Global Leaderboard', description: 'See the top performing candidates in the SpeakReady community. Your row will be highlighted so you can see your rank.', side: "top", align: 'start' }},
-            { element: '#col-xp', popover: { title: 'Experience Points (XP)', description: 'XP is earned by completing mock interviews, learning modules, and voice rehearsals.', side: "bottom", align: 'center' }},
-            { element: '#col-streak', popover: { title: 'Practice Streaks', description: 'Maintain your daily practice streak to multiply your XP gains and climb faster.', side: "bottom", align: 'center' }},
-            { element: '#col-badges', popover: { title: 'Badges Earned', description: 'Unlock special badges by achieving high scores and completing learning milestones.', side: "bottom", align: 'end' }}
+            { element: '#leaderboard-container', popover: { title: 'Global Leaderboard', description: 'Compare XP, streaks, and badges across the SpeakReady community.', side: 'top', align: 'start' }},
+            { element: '#col-xp', popover: { title: 'Experience Points', description: 'XP grows when you complete interviews, modules, games, and voice practice.', side: 'bottom', align: 'center' }},
+            { element: '#col-streak', popover: { title: 'Practice Streaks', description: 'Daily practice keeps your streak alive and helps you climb faster.', side: 'bottom', align: 'center' }},
+            { element: '#col-badges', popover: { title: 'Badges Earned', description: 'Badges mark milestones like high scores and completed learning goals.', side: 'bottom', align: 'end' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_leaderboard', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_leaderboard',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_leaderboard')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

@@ -1245,7 +1245,7 @@
             </div>
 
             <div class="sr-two-col">
-                <section class="sr-card sr-card-pad">
+                <section id="card-ai-feedback" class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
                             <h2 class="sr-card-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#60a5fa"></i> AI Feedback Summary</h2>
@@ -1632,51 +1632,46 @@ document.addEventListener("DOMContentLoaded", function() {
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
+
+        const completionKey = 'onboarding_completed';
+        const serverDetectedMobile = @json($isMobile);
 
         const stepsMobile = [
-            { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Access Mock Interviews, Learning Lab, and Progress Tracking right from the bottom bar.', side: "top", align: 'center' }},
-            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
-            { element: '.sr-mobile-stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "top", align: 'start' }},
-            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
-            { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode.', side: "bottom", align: 'end' }}
+            { element: '#mobTutorialBtn', popover: { title: 'Replay The Tour', description: 'Use this anytime you want a quick walkthrough of the current page.', side: 'bottom', align: 'end' }},
+            { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Jump to Home, Interview, Progress, Coach, or More from the bottom bar.', side: 'top', align: 'center' }},
+            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your current readiness score, status, average rating, and next target live here.', side: 'bottom', align: 'start' }},
+            { element: '.sr-mobile-stat-grid', popover: { title: 'Practice Snapshot', description: 'Track sessions, rating, XP, and streak without opening a report.', side: 'top', align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
+            { element: '#card-ai-feedback', popover: { title: 'AI Feedback Summary', description: 'Review your strongest patterns and the next skills to tighten up.', side: 'top', align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to decide what to practice first.', side: 'top', align: 'start' }},
+            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Start a focused practice task for extra XP and streak progress.', side: 'top', align: 'start' }},
+            { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable view.', side: 'bottom', align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Access all features including Mock Interviews, Learning Lab, and Progress Tracking from here.', side: "right", align: 'start' }},
-            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
-            { element: '.sr-stats-desktop', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
-            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "bottom", align: 'start' }},
-            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Review past mock interviews and detailed feedback.', side: "top", align: 'start' }},
-            { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: "bottom", align: 'center' }},
-            { element: '#notifWrap', popover: { title: 'Notifications', description: 'Stay updated with feedback on your interviews and platform announcements.', side: "bottom", align: 'center' }},
-            { element: '#profileWrap', popover: { title: 'Your Profile', description: 'Manage your account settings and preferences.', side: "bottom", align: 'end' }}
+            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Open Mock Interview, Interview Modules, Voice Rehearsal, AI Coach, reports, and more from here.', side: 'right', align: 'start' }},
+            { element: '#dbTutorialBtn', popover: { title: 'Replay The Tour', description: 'Use this button whenever you want to restart the walkthrough.', side: 'bottom', align: 'center' }},
+            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your current readiness score, status, average rating, and next target live here.', side: 'bottom', align: 'start' }},
+            { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed sessions, rating, XP, and active practice days at a glance.', side: 'top', align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
+            { element: '#card-ai-feedback', popover: { title: 'AI Feedback Summary', description: 'Review your strongest patterns and the next skills to tighten up.', side: 'top', align: 'start' }},
+            { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to decide what to practice first.', side: 'bottom', align: 'start' }},
+            { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Start a focused practice task for extra XP and streak progress.', side: 'left', align: 'start' }},
+            { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},
+            { element: '#notifWrap', popover: { title: 'Notifications', description: 'Stay updated with interview feedback and platform announcements.', side: 'bottom', align: 'center' }},
+            { element: '#profileWrap', popover: { title: 'Your Profile', description: 'Manage account settings, notifications, and sign-out options.', side: 'bottom', align: 'end' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey,
+            serverDetectedMobile,
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 350,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed')) {
-            startOnboardingTour();
-        }
 
     });
 </script>

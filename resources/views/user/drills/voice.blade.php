@@ -788,53 +788,36 @@ document.addEventListener("DOMContentLoaded", function() {
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a question category to generate a random prompt for your practice.', side: "bottom", align: 'start' }},
-            { element: '#btnStart', popover: { title: 'Start Recording', description: 'Click here to start speaking. The system will track your WPM, filler words, and generate a transcript.', side: "bottom", align: 'center' }},
-            { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech will appear here in real-time. Filler words and keywords will be highlighted automatically.', side: "top", align: 'start' }},
-            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'Once you stop recording, AI will analyze your pacing, clarity, and provide instant actionable feedback.', side: "top", align: 'start' }},
-            { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Switch to this tab later to review your past sessions, charts, and long-term improvement.', side: "bottom", align: 'end' }}
+            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a prompt category for this voice rehearsal.', side: 'bottom', align: 'start' }},
+            { element: '#btnStart', popover: { title: 'Start Recording', description: 'Record your answer and track pacing, filler words, and transcript quality.', side: 'bottom', align: 'center' }},
+            { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech appears here while filler words and keywords are highlighted.', side: 'top', align: 'start' }},
+            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'After recording, AI summarizes pacing, clarity, and next practice actions.', side: 'top', align: 'start' }},
+            { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Use the other tabs to review past sessions, charts, and long-term progress.', side: 'bottom', align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a question category to generate a random prompt for your practice.', side: "bottom", align: 'start' }},
-            { element: '#btnStart', popover: { title: 'Start Recording', description: 'Click here to start speaking. The system will track your WPM, filler words, and generate a transcript.', side: "bottom", align: 'center' }},
-            { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech will appear here in real-time. Filler words and keywords will be highlighted automatically.', side: "top", align: 'start' }},
-            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'Once you stop recording, AI will analyze your pacing, clarity, and provide instant actionable feedback.', side: "bottom", align: 'start' }},
-            { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Switch to this tab later to review your past sessions, charts, and long-term improvement.', side: "bottom", align: 'end' }}
+            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a prompt category for this voice rehearsal.', side: 'bottom', align: 'start' }},
+            { element: '#btnStart', popover: { title: 'Start Recording', description: 'Record your answer and track pacing, filler words, and transcript quality.', side: 'bottom', align: 'center' }},
+            { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech appears here while filler words and keywords are highlighted.', side: 'top', align: 'start' }},
+            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'After recording, AI summarizes pacing, clarity, and next practice actions.', side: 'bottom', align: 'start' }},
+            { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Use the other tabs to review past sessions, charts, and long-term progress.', side: 'bottom', align: 'end' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_drills_voice', 'true');
-                }
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_drills_voice',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
+            startDelay: 300,
+            beforeStart: () => {
+                const practiceTab = document.querySelector('a[data-target="tab-practice"]');
+                if (practiceTab) practiceTab.click();
             },
         });
-
-        window.startOnboardingTour = function() {
-            // Make sure we are on the Practice tab for the tour
-            const practiceTab = document.querySelector('a[data-target="tab-practice"]');
-            if(practiceTab) practiceTab.click();
-            
-            setTimeout(() => {
-                driverObj.drive();
-            }, 300);
-        };
-
-        if (!localStorage.getItem('onboarding_completed_drills_voice')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

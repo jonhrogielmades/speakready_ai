@@ -57,6 +57,12 @@
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
     .sound-wave { position:absolute;border-radius:50%;width:100%;height:100%;display:none; }
+    .session-chip { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:700;white-space:nowrap;border:1px solid var(--bd);background:var(--bg3);color:var(--tx); }
+    .session-chip.warning { border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.12);color:#f59e0b; }
+    .session-chip.danger { border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12);color:#ef4444; }
+    .real-interview-mode .coaching-only { display:none !important; }
+    .recovery-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(52,211,153,.12);color:#34d399;font-weight:700;font-size:.76rem;margin-bottom:14px; }
+    .question-timer-anchor { position:absolute;top:15px;right:15px;z-index:55; }
 
     /* Circular Audio Spectrum */
     .circular-spectrum { position: absolute; top: 50%; left: 50%; width: 0; height: 0; display: none; z-index: 5; }
@@ -69,6 +75,10 @@
         .ai-avatar-panel { height: 260px !important; }
         .panel { padding: 15px; }
         .panel-title { font-size: 0.9rem; }
+        #interviewControls .btn { min-height: 44px; }
+        .session-chip { width:100%;justify-content:center; }
+        .interview-meta-line { flex-direction:column;gap:4px !important; }
+        .question-timer-anchor { top:128px;right:15px; }
     }
 </style>
 
@@ -80,6 +90,8 @@
                 ->find(session('active_interview_id'));
             if ($sessionRecord) {
                 $num = $sessionRecord->num_questions ?? 5;
+                $selectedQuestionTypes = json_decode($sessionRecord->question_types ?? '[]', true);
+                $selectedQuestionTypes = is_array($selectedQuestionTypes) ? array_values(array_filter($selectedQuestionTypes)) : [];
                 // Try to find questions specifically generated for this session first
                 $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)->get();
                 
@@ -89,12 +101,14 @@
                     $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
                         ->where('status', 'active')
                         ->where('difficulty', $sessionRecord->difficulty)
+                        ->when(!empty($selectedQuestionTypes), fn($query) => $query->whereIn('type', $selectedQuestionTypes))
                         ->inRandomOrder()->limit($num)->get();
                         
                     // If no questions match the difficulty, fallback to any active questions in category
                     if ($questions->isEmpty()) {
                         $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
                             ->where('status', 'active')
+                            ->when(!empty($selectedQuestionTypes), fn($query) => $query->whereIn('type', $selectedQuestionTypes))
                             ->inRandomOrder()->limit($num)->get();
                     }
                 }
@@ -108,10 +122,11 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h4 class="text-gradient-primary" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;"><i class="fa-solid fa-chalkboard-user me-2"></i>Interview Workspace</h4>
-                <div style="font-size:.85rem;color:var(--tx3);display:flex;gap:15px;">
+                <div class="interview-meta-line" style="font-size:.85rem;color:var(--tx3);display:flex;gap:15px;">
                     <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
                     <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
                     <span><i class="fa-solid fa-briefcase me-1"></i> {{ $sessionRecord->target_position ?? 'Standard' }}</span>
+                    <span><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
                 </div>
             </div>
             
@@ -134,6 +149,9 @@
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
+                    </div>
+                    <div class="question-timer-anchor">
+                        <span class="session-chip" id="questionTimerChip"><i class="fa-regular fa-clock"></i><span id="perQuestionTimer">Self-paced</span></span>
                     </div>
 
                     <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
@@ -245,7 +263,7 @@
                 </div>
 
                 <!-- AI Visualizer Panel -->
-                <div class="panel animate-fade-up delay-200">
+                <div class="panel animate-fade-up delay-200 coaching-only" id="liveFeedbackPanel">
                     <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> Live Readiness</div>
                     <div class="text-center mb-3">
                         <div style="font-size:2rem;font-weight:700;color:#34d399" id="overallReadiness">--%</div>
@@ -258,7 +276,7 @@
                 </div>
 
                 <!-- STAR Framework Analyzer -->
-                <div class="panel animate-fade-up delay-300">
+                <div class="panel animate-fade-up delay-300 coaching-only" id="starPanel">
                     <div class="panel-title"><i class="fa-solid fa-star me-2" style="color:#fbbf24"></i> STAR Analyzer</div>
                     <div class="star-item"><span>Situation</span><i class="fa-solid fa-circle-xmark text-danger" id="starS"></i></div>
                     <div class="star-item"><span>Task</span><i class="fa-solid fa-circle-xmark text-danger" id="starT"></i></div>
@@ -270,7 +288,7 @@
                 </div>
 
                 <!-- Voice Analytics Module -->
-                <div class="panel animate-fade-up delay-400" id="voiceAnalyticsPanel" style="display:none;">
+                <div class="panel animate-fade-up delay-400 coaching-only" id="voiceAnalyticsPanel" style="display:none;">
                     <div class="panel-title"><i class="fa-solid fa-wave-square me-2"></i> Voice Analytics</div>
                     <div class="stat-row"><span>Speaking Duration</span><span id="vaDuration">0s</span></div>
                     <div class="stat-row"><span>Speed (WPM)</span><span id="vaWpm">0</span></div>
@@ -280,23 +298,32 @@
                 <!-- Interview Notes -->
                 <div class="panel animate-fade-up delay-400">
                     <div class="panel-title"><i class="fa-solid fa-clipboard me-2"></i> Session Notes</div>
-                    <textarea id="sessionNotes" class="oinp" style="min-height:100px;font-size:.85rem;padding:10px" placeholder="Private notes, key reminders, etc..."></textarea>
+                    <textarea id="sessionNotes" class="oinp" style="min-height:100px;font-size:.85rem;padding:10px" placeholder="Private notes, key reminders, etc...">{{ $sessionRecord->notes }}</textarea>
                 </div>
             </div>
         </div>
         </div>
 
+        @php
+            $savedStateForUi = json_decode($sessionRecord->session_state ?? '', true);
+            $hasSavedInterviewState = is_array($savedStateForUi) && !empty($savedStateForUi['has_started']);
+        @endphp
         <div id="introContainer" class="text-center p-4 p-md-5 panel animate-fade-up" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;border: 1px solid rgba(139,92,246,0.3);box-shadow: 0 20px 50px rgba(139,92,246,0.15);">
+            @if($hasSavedInterviewState)
+                <div class="recovery-pill"><i class="fa-solid fa-rotate-left"></i> Progress saved</div>
+            @endif
             <div style="width:70px;height:70px;border-radius:20px;background:linear-gradient(135deg, rgba(59,130,246,.15), rgba(139,92,246,.15));display:flex;align-items:center;justify-content:center;margin:0 auto 24px;border: 1px solid rgba(139,92,246,0.2);">
                 <i class="fa-solid fa-robot" style="font-size:1.8rem;color:#60a5fa"></i>
             </div>
-            <h4 style="color:var(--tx);font-weight:700">Interview Workspace Ready</h4>
+            <h4 style="color:var(--tx);font-weight:700">{{ $hasSavedInterviewState ? 'Interview Workspace Saved' : 'Interview Workspace Ready' }}</h4>
             <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} questions. Live readiness and STAR analysis will update as you respond.</p>
             <div style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
                 <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
                 <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-bullseye me-1"></i> {{ ucfirst($sessionRecord->coach_focus_mode) }} Focus</span>
+                <span class="db-badge" style="background:rgba(245,158,11,.12);color:#f59e0b"><i class="fa-solid fa-stopwatch me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
+                <span class="db-badge" style="background:rgba(139,92,246,.12);color:#a78bfa"><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
             </div>
-            <button class="btn px-4 py-3 w-100 btn-shine" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">Begin Interview <i class="fa-solid fa-play ms-2"></i></button>
+            <button class="btn px-4 py-3 w-100 btn-shine" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume Interview' : 'Begin Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
         </div>
 
         <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">
@@ -310,22 +337,47 @@
             const questions = {!! json_encode($questions) !!};
             const totalQuestions = {{ $num }};
             const responseMode = "{{ $sessionRecord->response_mode }}";
-            let currentQIdx = 0;
-            let timerSeconds = 0;
+            const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit ?? 0) * 60) }};
+            const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
+            const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
+            const savedSessionState = @json($savedStateForUi ?? []);
+            let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
+            currentQIdx = Math.max(0, Math.min(currentQIdx, Math.max(0, questions.length - 1)));
+            let timerSeconds = Number(savedSessionState.timerSeconds ?? {{ (int) ($sessionRecord->duration_seconds ?? 0) }}) || 0;
             let timerInterval;
+            let questionTimerInterval = null;
+            let questionStartedAt = null;
+            let questionElapsedSeconds = 0;
+            let lastTimelineCaptureAt = 0;
+            let chatHistory = Array.isArray(savedSessionState.chatHistory) ? savedSessionState.chatHistory : [];
+            let stateSaveDebounce = null;
             
             // Answers state
-            let answersData = Array(questions.length).fill().map(() => ({
+            function defaultAnswerState() {
+                return {
                 text: '',
                 is_skipped: false,
+                timed_out: false,
+                elapsed_seconds: 0,
                 wpm: 0,
                 voice_duration: 0,
                 filler_words: 0,
                 pause_count: 0,
                 confidence_score: 85,
                 eye_contact_score: 90,
-                posture_score: 90
-            }));
+                    posture_score: 90,
+                    transcript_timeline: []
+                };
+            }
+
+            let answersData = Array(questions.length).fill().map(() => defaultAnswerState());
+            if (Array.isArray(savedSessionState.answersData)) {
+                savedSessionState.answersData.forEach((savedAnswer, idx) => {
+                    if (idx < answersData.length && savedAnswer && typeof savedAnswer === 'object') {
+                        answersData[idx] = Object.assign(defaultAnswerState(), savedAnswer);
+                    }
+                });
+            }
 
             // Voice and Body Language state
             let recognition = null;
@@ -654,9 +706,10 @@
                 loadVoices();
             }
 
-            function speakQuestion(text) {
+            function speakQuestion(text, options = {}) {
                 questionSpeechToken++;
                 const token = questionSpeechToken;
+                const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
 
                 if (isRecording) {
                     pauseRecording();
@@ -722,19 +775,113 @@
                         if(visualizerInterval) clearInterval(visualizerInterval);
                         if(captionInterval) clearInterval(captionInterval);
                         document.getElementById('aiQuestionText').innerText = text;
+                        if (startTimerAfterSpeech) startQuestionTimer();
                         scheduleAutoTranscriptionStart(token);
                     };
 
                     window.speechSynthesis.speak(utterance);
                 } else {
                     document.getElementById('aiQuestionText').innerText = text;
+                    if (startTimerAfterSpeech) startQuestionTimer();
                     scheduleAutoTranscriptionStart(token);
                 }
+            }
+
+            function formatSeconds(total) {
+                const safeTotal = Math.max(0, Math.round(total || 0));
+                const m = Math.floor(safeTotal / 60).toString().padStart(2, '0');
+                const s = (safeTotal % 60).toString().padStart(2, '0');
+                return m + ':' + s;
+            }
+
+            function getQuestionElapsedSeconds() {
+                if (!questionStartedAt) return questionElapsedSeconds || 0;
+                return Math.max(0, Math.round((Date.now() - questionStartedAt) / 1000));
+            }
+
+            function updateQuestionTimerDisplay() {
+                const chip = document.getElementById('questionTimerChip');
+                const timer = document.getElementById('perQuestionTimer');
+                if (!chip || !timer) return;
+
+                const elapsed = getQuestionElapsedSeconds();
+                questionElapsedSeconds = elapsed;
+
+                if (perQuestionLimitSeconds <= 0) {
+                    timer.innerText = 'Self-paced';
+                    chip.className = 'session-chip';
+                    return;
+                }
+
+                const remaining = perQuestionLimitSeconds - elapsed;
+                timer.innerText = formatSeconds(remaining);
+                chip.className = remaining <= 15 ? 'session-chip danger' : (remaining <= 30 ? 'session-chip warning' : 'session-chip');
+
+                if (remaining <= 0) {
+                    handleQuestionTimeout();
+                }
+            }
+
+            function startQuestionTimer() {
+                clearInterval(questionTimerInterval);
+                questionElapsedSeconds = answersData[currentQIdx]?.elapsed_seconds || 0;
+                questionStartedAt = Date.now() - (questionElapsedSeconds * 1000);
+                captureTranscriptTimeline('question_loaded', true);
+                updateQuestionTimerDisplay();
+                questionTimerInterval = setInterval(() => {
+                    updateQuestionTimerDisplay();
+                    if (getQuestionElapsedSeconds() - lastTimelineCaptureAt >= 5) {
+                        captureTranscriptTimeline('progress');
+                    }
+                }, 1000);
+            }
+
+            function stopQuestionTimer() {
+                clearInterval(questionTimerInterval);
+                questionTimerInterval = null;
+                if (answersData[currentQIdx]) {
+                    answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+                }
+            }
+
+            function captureTranscriptTimeline(eventName = 'progress', force = false) {
+                if (!answersData[currentQIdx]) return;
+                const elapsed = getQuestionElapsedSeconds();
+                if (!force && elapsed === lastTimelineCaptureAt) return;
+                lastTimelineCaptureAt = elapsed;
+                const text = document.getElementById('answerTextarea')?.value || '';
+                answersData[currentQIdx].transcript_timeline = answersData[currentQIdx].transcript_timeline || [];
+                answersData[currentQIdx].transcript_timeline.push({
+                    at: elapsed,
+                    event: eventName,
+                    words: text.trim().split(/\s+/).filter(Boolean).length,
+                    chars: text.length
+                });
+            }
+
+            function handleQuestionTimeout() {
+                clearInterval(questionTimerInterval);
+                if (document.querySelector('.next-btn-class:disabled')) return;
+                submitAnswer({ timedOut: true });
+            }
+
+            function scheduleStateSave() {
+                clearTimeout(stateSaveDebounce);
+                stateSaveDebounce = setTimeout(autoSaveState, 1200);
+            }
+
+            function restoreChatHistory() {
+                const chatContainer = document.getElementById('chatTranscriptContainer');
+                chatContainer.innerHTML = '';
+                if (!Array.isArray(chatHistory) || chatHistory.length === 0) return false;
+                chatHistory.forEach(item => appendChatMessage(item.role, item.text, false));
+                return true;
             }
 
             function startInterviewSession() {
                 document.getElementById('introContainer').style.display = 'none';
                 document.getElementById('workspaceWrapper').style.display = 'block';
+                document.getElementById('workspaceWrapper').classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview');
                 document.getElementById('interviewControls').style.opacity = '1';
                 document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
@@ -742,7 +889,9 @@
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
-                    document.getElementById('voiceAnalyticsPanel').style.display = 'block';
+                    if (liveFeedbackMode !== 'real_interview') {
+                        document.getElementById('voiceAnalyticsPanel').style.display = 'block';
+                    }
                 }
 
                 timerInterval = setInterval(() => {
@@ -770,29 +919,38 @@
                     holdBtn.addEventListener('touchcancel', (e) => { if(isRecording) endHold(e); });
                 }
 
-                loadQuestion(0);
+                const restoredChat = restoreChatHistory();
+                loadQuestion(currentQIdx, { append: !restoredChat });
                 
                 document.getElementById('answerTextarea').addEventListener('input', triggerAnalysis);
-                document.getElementById('sessionNotes').addEventListener('change', autoSaveState);
+                document.getElementById('sessionNotes').addEventListener('input', scheduleStateSave);
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'hidden') autoSaveState();
+                });
             }
 
-            function loadQuestion(idx) {
+            function loadQuestion(idx, options = {}) {
                 currentQIdx = idx;
                 const q = questions[idx];
+                if (!q) return;
                 
                 document.getElementById('aiQuestionText').innerText = '...';
                 document.getElementById('qCounter').innerText = (idx + 1) + '/' + totalQuestions;
 
                 // Append AI question to chat log if it's the first time seeing it
-                appendChatMessage('interviewer', q.question_text);
+                if (options.append !== false) {
+                    appendChatMessage('interviewer', q.question_text);
+                }
 
                 // Restore answer state if navigated back (though disabled in chat mode)
                 document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
                 resetSpeechRecognitionBufferFromTextarea();
+                lastTimelineCaptureAt = 0;
                 
-                speakQuestion(q.question_text);
+                speakQuestion(q.question_text, { startTimerAfterSpeech: true });
                 
                 triggerAnalysis();
+                scheduleStateSave();
             }
 
             function repeatQuestion() {
@@ -1024,6 +1182,11 @@
                 document.getElementById('vaFillers').innerText = fillers;
                 answersData[currentQIdx].text = text;
                 answersData[currentQIdx].filler_words = fillers;
+                answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+                if (getQuestionElapsedSeconds() - lastTimelineCaptureAt >= 5) {
+                    captureTranscriptTimeline('input');
+                }
+                scheduleStateSave();
             }
 
             function updateStarIcon(id, status) {
@@ -1116,12 +1279,17 @@
                 resetSpeechRecognitionBufferFromTextarea();
             }
 
-            function saveCurrentAnswer(isSkipped = false) {
+            function saveCurrentAnswer(isSkipped = false, timedOut = false) {
+                stopQuestionTimer();
+                captureTranscriptTimeline(timedOut ? 'timed_out_submit' : 'submitted', true);
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answersData[currentQIdx].text);
+                formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
                 formData.append('is_skipped', isSkipped);
+                formData.append('timed_out', timedOut);
+                formData.append('elapsed_seconds', answersData[currentQIdx].elapsed_seconds || getQuestionElapsedSeconds());
                 formData.append('response_mode', responseMode);
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
@@ -1140,10 +1308,24 @@
             }
 
             function autoSaveState() {
+                if (answersData[currentQIdx]) {
+                    answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
+                    answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
+                }
+
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
                 formData.append('notes', document.getElementById('sessionNotes').value);
                 formData.append('duration_seconds', timerSeconds);
+                formData.append('current_question_index', currentQIdx);
+                formData.append('session_state', JSON.stringify({
+                    has_started: true,
+                    currentQIdx,
+                    timerSeconds,
+                    answersData,
+                    chatHistory,
+                    updated_at: new Date().toISOString()
+                }));
                 
                 fetch('{{ url("interview/save-state") }}', {
                     method: 'POST',
@@ -1156,14 +1338,14 @@
                 });
             }
 
-            function appendChatMessage(role, text) {
+            function appendChatMessage(role, text, record = true) {
                 const chatContainer = document.getElementById('chatTranscriptContainer');
                 const bubble = document.createElement('div');
                 bubble.style.padding = '10px 14px';
                 bubble.style.borderRadius = '16px';
                 bubble.style.maxWidth = '85%';
                 bubble.style.lineHeight = '1.4';
-                bubble.style.fontSize = '0.60rem';
+                bubble.style.fontSize = '0.85rem';
                 
                 if (role === 'interviewer') {
                     bubble.style.background = 'rgba(139,92,246,0.15)';
@@ -1179,16 +1361,44 @@
                 
                 chatContainer.appendChild(bubble);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                if (record) {
+                    chatHistory.push({ role, text });
+                    if (chatHistory.length > 80) chatHistory = chatHistory.slice(chatHistory.length - 80);
+                    scheduleStateSave();
+                }
             }
 
-            function submitAnswer() {
+            function submitAnswer(options = {}) {
                 if(isRecording) stopRecording();
                 
-                const answerText = document.getElementById('answerTextarea').value.trim();
-                if(!answerText) return alert("Please provide an answer before submitting.");
+                const timedOut = options.timedOut === true;
+                let answerText = document.getElementById('answerTextarea').value.trim();
+                const wasSkipped = options.skipped === true || (timedOut && !answerText);
+
+                if(!answerText && !timedOut && !wasSkipped) return alert("Please provide an answer before submitting.");
+                if(!answerText && timedOut) {
+                    answerText = "[Time expired with no answer]";
+                    document.getElementById('answerTextarea').value = answerText;
+                }
+
+                answersData[currentQIdx].text = answerText;
+                answersData[currentQIdx].is_skipped = wasSkipped;
+                answersData[currentQIdx].timed_out = timedOut;
 
                 // Optimistically append user answer to chat
                 appendChatMessage('user', answerText);
+
+                if (currentQIdx >= totalQuestions - 1) {
+                    document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = true);
+                    saveCurrentAnswer(wasSkipped, timedOut).then(() => {
+                        finishInterview();
+                    });
+                    return;
+                }
+
+                stopQuestionTimer();
+                captureTranscriptTimeline(timedOut ? 'timed_out_submit' : 'submitted', true);
                 
                 // Show thinking indicator
                 const chatContainer = document.getElementById('chatTranscriptContainer');
@@ -1210,7 +1420,10 @@
                 formData.append('_token', '{{ csrf_token() }}');
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answerText);
-                formData.append('is_skipped', false);
+                formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
+                formData.append('is_skipped', wasSkipped);
+                formData.append('timed_out', timedOut);
+                formData.append('elapsed_seconds', answersData[currentQIdx].elapsed_seconds || getQuestionElapsedSeconds());
                 formData.append('response_mode', responseMode);
                 formData.append('wpm', answersData[currentQIdx].wpm);
                 formData.append('voice_duration', answersData[currentQIdx].voice_duration);
@@ -1219,13 +1432,6 @@
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
-
-                if (currentQIdx >= totalQuestions - 1) {
-                    saveCurrentAnswer(false).then(() => {
-                        finishInterview();
-                    });
-                    return;
-                }
 
                 formData.append('is_final_question', (currentQIdx === totalQuestions - 2));
 
@@ -1247,28 +1453,9 @@
                         };
                         questions.push(newQ);
                         
-                        answersData.push({
-                            text: '',
-                            is_skipped: false,
-                            wpm: 0,
-                            voice_duration: 0,
-                            filler_words: 0,
-                            pause_count: 0,
-                            confidence_score: 85,
-                            eye_contact_score: 90,
-                            posture_score: 90
-                        });
-
-                        document.getElementById('answerTextarea').value = '';
-                        resetSpeechRecognitionBufferFromTextarea();
+                        answersData.push(defaultAnswerState());
                         currentQIdx++;
-                        
-                        document.getElementById('aiQuestionText').innerText = '...';
-                        document.getElementById('qCounter').innerText = (currentQIdx + 1) + '/' + totalQuestions;
-                        
-                        appendChatMessage('interviewer', newQ.question_text);
-                        speakQuestion(newQ.question_text);
-                        triggerAnalysis();
+                        loadQuestion(currentQIdx);
                     } else {
                         alert(data.error || 'An error occurred.');
                     }
@@ -1285,7 +1472,7 @@
             function skipQuestion() {
                 if(isRecording) stopRecording();
                 document.getElementById('answerTextarea').value = "[User skipped the question]";
-                submitAnswer();
+                submitAnswer({ skipped: true });
             }
 
             function prevQuestion() {
@@ -1296,10 +1483,14 @@
             }
 
             function finishInterview() {
-                let video = document.getElementById('userCamera');
-                if (video && video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                }
+                stopQuestionTimer();
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                ['userCamera', 'userCameraMobile'].forEach(id => {
+                    let video = document.getElementById(id);
+                    if (video && video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                    }
+                });
                 clearInterval(timerInterval);
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
@@ -1333,56 +1524,44 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "bottom", align: 'start' }},
-            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "top", align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "top", align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "top", align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "top", align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "top", align: 'start' }}
+            { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
+            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Camera analysis checks eye contact and posture when available.', side: 'top', align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'top', align: 'start' }},
+            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
+            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "right", align: 'start' }},
-            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "right", align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "left", align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "left", align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "left", align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "left", align: 'start' }}
+            { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
+            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Camera analysis checks eye contact and posture when available.', side: 'left', align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'left', align: 'start' }},
+            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
+            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_interview_session', 'true');
-                }
-            },
+        const onboardingTour = window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_interview_session',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStart: false,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_interview_session')) {
-            // We want this to show only AFTER the intro container is hidden.
-            // So we'll let the user click "Begin Interview" first.
-        }
         
         // Expose startOnboardingTour to be called after interview starts
         const originalStartInterview = window.startInterviewSession;
         window.startInterviewSession = function() {
-            originalStartInterview();
-            if (!localStorage.getItem('onboarding_completed_interview_session')) {
+            if (typeof originalStartInterview === 'function') {
+                originalStartInterview.apply(this, arguments);
+            }
+
+            if (onboardingTour && !onboardingTour.isCompleted()) {
                 setTimeout(() => {
-                    startOnboardingTour();
+                    onboardingTour.start();
                 }, 1000);
             }
         };

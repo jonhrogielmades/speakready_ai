@@ -15,7 +15,7 @@ class AIService
         'professionalism_score',
     ];
 
-    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null)
+    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral')
     {
         $jobDescription = self::truncateText($jobDescription);
         $resumeText = self::truncateText($resumeText);
@@ -24,6 +24,15 @@ class AIService
         $prompt .= "Make the questions sound like a real live interviewer: concise, natural, role-specific, and professionally probing. ";
         $prompt .= "Each question must ask for one clear answer, avoid coaching the candidate, and avoid generic classroom phrasing. ";
         $prompt .= "Calibrate depth to the difficulty: easy asks for foundational experience, medium asks for evidence and tradeoffs, and hard asks for ambiguity, judgment, impact, and follow-up depth. ";
+
+        if (!empty($questionTypes)) {
+            $types = implode(', ', array_unique(array_filter((array) $questionTypes)));
+            if ($types !== '') {
+                $prompt .= "Only generate questions from these requested question types: {$types}. Keep the set balanced across the requested types when possible. ";
+            }
+        }
+
+        $prompt .= self::interviewStyleInstruction($assistanceLevel, $strictness);
         
         if ($focus === 'Salary Negotiation') {
             $prompt .= "This is a Salary Negotiation simulation. Generate questions and statements that a hiring manager or recruiter would use during a compensation negotiation, including budget constraints, asking for expected salary, and presenting counter-offers. ";
@@ -97,6 +106,12 @@ class AIService
         $prompt .= "Stay in interviewer mode. Sound like a real hiring manager: neutral, concise, curious, and professionally probing. ";
         $prompt .= "Do not give coaching, scores, praise-heavy feedback, or explanations during the interview. ";
         $prompt .= "Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ";
+        $prompt .= self::interviewStyleInstruction($session->ai_assistance_level ?? 'standard', $session->interviewer_strictness ?? 'neutral');
+
+        $requestedTypes = self::decodeQuestionTypes($session->question_types ?? null);
+        if (!empty($requestedTypes)) {
+            $prompt .= "The session's requested question types are " . implode(', ', $requestedTypes) . ". Keep follow-ups aligned with those types unless the candidate's answer requires clarification. ";
+        }
         
         if (!empty($session->company_persona)) {
             $prompt .= "You must act as an interviewer from '" . $session->company_persona . "'. ";
@@ -146,6 +161,47 @@ class AIService
             }
         }
         return "Thank you for sharing that. Let's move on to the next question. Can you tell me more about your background?";
+    }
+
+    private static function interviewStyleInstruction($assistanceLevel = 'standard', $strictness = 'neutral'): string
+    {
+        $assistanceLevel = strtolower((string) $assistanceLevel);
+        $strictness = strtolower((string) $strictness);
+        $instruction = '';
+
+        if ($assistanceLevel === 'beginner') {
+            $instruction .= "Use an approachable interview style with clearer wording and less adversarial follow-ups, while still asking realistic questions. ";
+        } elseif ($assistanceLevel === 'challenge') {
+            $instruction .= "Use a challenge-mode interview style: ask tougher, more specific follow-ups and probe weak or vague answers without giving hints. ";
+        } else {
+            $instruction .= "Use a balanced professional interview style. ";
+        }
+
+        if ($strictness === 'friendly') {
+            $instruction .= "The interviewer tone should be warm and encouraging, but not coaching. ";
+        } elseif ($strictness === 'strict') {
+            $instruction .= "The interviewer tone should be direct, skeptical, and evidence-driven, similar to a strict technical lead. ";
+        } elseif ($strictness === 'executive') {
+            $instruction .= "The interviewer tone should be concise and senior, focused on judgment, impact, business value, and executive presence. ";
+        } else {
+            $instruction .= "The interviewer tone should be neutral and realistic. ";
+        }
+
+        return $instruction;
+    }
+
+    private static function decodeQuestionTypes($questionTypes): array
+    {
+        if (is_array($questionTypes)) {
+            return array_values(array_filter($questionTypes));
+        }
+
+        if (!is_string($questionTypes) || trim($questionTypes) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($questionTypes, true);
+        return is_array($decoded) ? array_values(array_filter($decoded)) : [];
     }
 
     private static function callOpenAI($prompt, $systemPrompt = null)

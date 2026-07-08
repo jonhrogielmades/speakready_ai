@@ -19,6 +19,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+      @include('partials.onboarding-styles')
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
          .premium-panel, .panel, .setup-panel {
@@ -826,6 +827,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js') }}"></script>
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+      @include('partials.onboarding-script')
 
       <script>
          function openMobDrawer() {

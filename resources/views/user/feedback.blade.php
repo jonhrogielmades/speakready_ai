@@ -176,43 +176,27 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Quickly find past feedback by filtering by category or searching for specific keywords.', side: "bottom", align: 'start' }},
-            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review your past mock interviews, scores, and overall ratings.', side: "top", align: 'center' }},
-            { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Navigate through your older interview records here.', side: "top", align: 'center' }}
+            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by category or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past mock interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
+            { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
-            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Quickly find past feedback by filtering by category or searching for specific keywords.', side: "bottom", align: 'end' }},
-            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review your past mock interviews, scores, and overall ratings.', side: "top", align: 'center' }},
-            { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Navigate through your older interview records here.', side: "top", align: 'end' }}
+            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by category or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
+            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past mock interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
+            { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_feedback', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_feedback',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_feedback')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

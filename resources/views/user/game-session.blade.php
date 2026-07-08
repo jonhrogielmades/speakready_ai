@@ -1011,56 +1011,44 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "bottom", align: 'start' }},
-            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "top", align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "top", align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "top", align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "top", align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "top", align: 'start' }}
+            { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
+            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Camera analysis checks eye contact and posture when available.', side: 'top', align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'top', align: 'start' }},
+            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
+            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '.ai-avatar-panel', popover: { title: 'AI Avatar', description: 'Your AI interviewer. It will speak the questions out loud.', side: "right", align: 'start' }},
-            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here. Real-time metrics will update as you speak.', side: "right", align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Real-time eye contact and posture analysis using your camera.', side: "left", align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Instant feedback on clarity, relevance, and professionalism.', side: "left", align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'Tracks if you are using the Situation, Task, Action, Result framework.', side: "left", align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Measures speaking duration, pace (WPM), and filler word usage.', side: "left", align: 'start' }}
+            { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
+            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Camera analysis checks eye contact and posture when available.', side: 'left', align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'left', align: 'start' }},
+            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
+            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_interview_session', 'true');
-                }
-            },
+        const onboardingTour = window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_interview_session',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStart: false,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_interview_session')) {
-            // We want this to show only AFTER the intro container is hidden.
-            // So we'll let the user click "Begin Interview" first.
-        }
         
         // Expose startOnboardingTour to be called after interview starts
         const originalStartInterview = window.startInterviewSession;
         window.startInterviewSession = function() {
-            originalStartInterview();
-            if (!localStorage.getItem('onboarding_completed_interview_session')) {
+            if (typeof originalStartInterview === 'function') {
+                originalStartInterview.apply(this, arguments);
+            }
+
+            if (onboardingTour && !onboardingTour.isCompleted()) {
                 setTimeout(() => {
-                    startOnboardingTour();
+                    onboardingTour.start();
                 }, 1000);
             }
         };

@@ -291,7 +291,15 @@ class UserController extends Controller
     public function review($id) { 
         $sessionRecord = InterviewSession::where('user_id', Auth::id())
                         ->where('id', $id)
-                        ->with(['category', 'answers.question', 'score', 'feedback'])
+                        ->with([
+                            'category',
+                            'answers' => function ($query) {
+                                $query->whereNull('retry_of_answer_id')
+                                    ->with(['question', 'retryAttempts']);
+                            },
+                            'score',
+                            'feedback',
+                        ])
                         ->firstOrFail();
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 

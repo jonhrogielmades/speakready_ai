@@ -520,45 +520,29 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your current readiness score and how much you have improved since your first interview.', side: "bottom", align: 'start' }},
-            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Track specific metric improvements between your first and latest mock interviews.', side: "bottom", align: 'start' }},
-            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review your core strengths, areas for improvement, and AI recommendations.', side: "top", align: 'start' }},
-            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track your completion rate across the Learning Lab and Voice Rehearsal modules.', side: "top", align: 'start' }}
+            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your latest readiness score and improvement since your first interview.', side: 'bottom', align: 'start' }},
+            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest mock interviews.', side: 'bottom', align: 'start' }},
+            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and AI recommendations.', side: 'top', align: 'start' }},
+            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track completion across learning modules and voice rehearsal work.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your current readiness score and how much you have improved since your first interview.', side: "bottom", align: 'start' }},
-            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Track specific metric improvements between your first and latest mock interviews.', side: "bottom", align: 'start' }},
-            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review your core strengths, areas for improvement, and AI recommendations.', side: "top", align: 'start' }},
-            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track your completion rate across the Learning Lab and Voice Rehearsal modules.', side: "top", align: 'end' }}
+            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your latest readiness score and improvement since your first interview.', side: 'bottom', align: 'start' }},
+            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest mock interviews.', side: 'bottom', align: 'start' }},
+            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and AI recommendations.', side: 'top', align: 'start' }},
+            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track completion across learning modules and voice rehearsal work.', side: 'top', align: 'end' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_reports', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_reports',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_reports')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

@@ -437,43 +437,26 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#chatBox', popover: { title: 'AI Coach Messages', description: 'Your AI Coach will provide personalized advice, resume tips, and answer interview questions here.', side: "bottom", align: 'center' }},
-            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type your questions or prompts here and press Enter to chat with the AI.', side: "top", align: 'center' }}
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview advice, resume tips, and practice guidance.', side: 'bottom', align: 'center' }},
+            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type a question or prompt here, then press Enter to send it.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
-            { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new conversation or revisit previous chats with your AI Coach.', side: "right", align: 'start' }},
-            { element: '#chatBox', popover: { title: 'AI Coach Messages', description: 'Your AI Coach will provide personalized advice, resume tips, and answer interview questions here.', side: "bottom", align: 'center' }},
-            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type your questions or prompts here and press Enter to chat with the AI.', side: "top", align: 'center' }}
+            { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new chat or return to an earlier coaching conversation.', side: 'right', align: 'start' }},
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview advice, resume tips, and practice guidance.', side: 'bottom', align: 'center' }},
+            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type a question or prompt here, then press Enter to send it.', side: 'top', align: 'center' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_coach', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_coach',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
         });
-
-        window.startOnboardingTour = function() {
-            // If on mobile, sidebar might be hidden, so we skip the sidebar step by just driving
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_coach')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush

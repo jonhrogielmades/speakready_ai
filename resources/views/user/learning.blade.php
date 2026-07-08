@@ -583,48 +583,31 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.driver === 'undefined') return;
-        const driver = window.driver.js.driver;
+        if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#nav-pills-container', popover: { title: '1. Categories', description: 'Switch between different learning categories to discover new challenges and topics.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: '2. Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy as you play.', side: "top", align: 'start' }},
-            { element: '#modules-list', popover: { title: '3. Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs. Complete them sequentially to unlock more.', side: "top", align: 'start' }},
-            { element: '#btn-skill-tree', popover: { title: '4. Skill Tree', description: 'Click here to view your complete Skill Tree and spend your earned XP on valuable perks!', side: "bottom", align: 'end' }}
+            { element: '#nav-pills-container', popover: { title: 'Learning Categories', description: 'Switch categories to find different challenge paths and topics.', side: 'bottom', align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track level, energy, combo streak, and accuracy while you play.', side: 'top', align: 'start' }},
+            { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Choose a level, review its goals and energy cost, then complete levels to unlock more.', side: 'top', align: 'start' }},
+            { element: '#btn-skill-tree', popover: { title: 'Skill Tree', description: 'Open the skill tree to spend XP on perks that improve your training loop.', side: 'bottom', align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#nav-pills-container', popover: { title: '1. Categories', description: 'Switch between different learning categories to discover new challenges and topics.', side: "bottom", align: 'start' }},
-            { element: '#dashboard-stats', popover: { title: '2. Player Stats', description: 'Track your current Level, Energy, Combo Streak, and overall Accuracy as you play.', side: "bottom", align: 'start' }},
-            { element: '#modules-list', popover: { title: '3. Challenge Path', description: 'Select a game level to play. Each level has unique goals, time limits, and energy costs. Complete them sequentially to unlock more.', side: "top", align: 'start' }},
-            { element: '#btn-skill-tree', popover: { title: '4. Skill Tree', description: 'Click here to view your complete Skill Tree and spend your earned XP on valuable perks!', side: "bottom", align: 'end' }}
+            { element: '#nav-pills-container', popover: { title: 'Learning Categories', description: 'Switch categories to find different challenge paths and topics.', side: 'bottom', align: 'start' }},
+            { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track level, energy, combo streak, and accuracy while you play.', side: 'bottom', align: 'start' }},
+            { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Choose a level, review its goals and energy cost, then complete levels to unlock more.', side: 'top', align: 'start' }},
+            { element: '#btn-skill-tree', popover: { title: 'Skill Tree', description: 'Open the skill tree to spend XP on perks that improve your training loop.', side: 'bottom', align: 'end' }}
         ];
 
-        const driverObj = driver({
-            showProgress: true,
-            animate: true,
-            popoverClass: document.documentElement.classList.contains('lm') ? 'driverjs-theme-light' : 'driverjs-theme-dark',
-            steps: ({{ $isMobile ? 'true' : 'false' }} ? stepsMobile : stepsDesktop).filter(step => step.element ? document.querySelector(step.element) : true),
-            onDestroyStarted: () => {
-                if (!driverObj.hasNextStep() || confirm("Are you sure you want to exit the tutorial?")) {
-                    driverObj.destroy();
-                    localStorage.setItem('onboarding_completed_learning', 'true');
-                }
-            },
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_learning',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
         });
-
-        window.startOnboardingTour = function() {
-            driverObj.drive();
-        };
-
-        if (!localStorage.getItem('onboarding_completed_learning')) {
-            setTimeout(() => {
-                startOnboardingTour();
-            }, 500);
-        }
     });
 </script>
 @endpush
 @endsection
-
 
