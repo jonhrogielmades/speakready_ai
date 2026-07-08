@@ -31,12 +31,15 @@
         --dash-warning: #f59e0b;
         --dash-danger: #ef4444;
         --dash-info: #06b6d4;
+        --dash-section-gap: 20px;
+        --dash-card-radius: 16px;
+        --dash-card-pad: 20px;
     }
 
     .sr-dashboard {
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: var(--dash-section-gap);
         padding-top: 10px !important;
         padding-bottom: 28px !important;
     }
@@ -44,7 +47,7 @@
     #dashboard .db-content .db-section.active.sr-dashboard {
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: var(--dash-section-gap);
         padding-top: 10px !important;
         padding-bottom: 28px !important;
     }
@@ -52,29 +55,42 @@
     .sr-dashboard-shell {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 360px;
-        gap: 20px;
+        gap: var(--dash-section-gap);
         align-items: start;
+    }
+
+    .sr-summary-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+        gap: var(--dash-section-gap);
+        align-items: stretch;
+    }
+
+    .sr-summary-grid > .sr-card {
+        min-width: 0;
     }
 
     .sr-main-stack,
     .sr-side-stack {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: var(--dash-section-gap);
         min-width: 0;
     }
 
     .sr-card {
         background: var(--sf);
         border: 1px solid var(--bd);
-        border-radius: 16px;
+        border-radius: var(--dash-card-radius);
         box-shadow: var(--shadow-soft, 0 10px 28px rgba(0,0,0,.12));
         color: var(--tx);
         overflow: hidden;
+        min-width: 0;
+        width: 100%;
     }
 
     .sr-card-pad {
-        padding: 20px;
+        padding: var(--dash-card-pad);
     }
 
     .sr-hero-card {
@@ -100,11 +116,11 @@
     .sr-hero-inner {
         position: relative;
         z-index: 1;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
-        gap: 24px;
-        align-items: center;
-        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+        padding: var(--dash-card-pad);
     }
 
     .sr-user-row {
@@ -204,14 +220,18 @@
     }
 
     .sr-score-panel {
-        background: rgba(8, 13, 24, 0.38);
-        border: 1px solid rgba(255,255,255,.1);
-        border-radius: 16px;
-        padding: 18px;
+        background:
+            linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(34, 197, 94, 0.04)),
+            var(--sf);
+        border: 1px solid rgba(59, 130, 246, 0.16);
+        border-radius: var(--dash-card-radius);
+        padding: var(--dash-card-pad);
     }
 
     .lm .sr-score-panel {
-        background: rgba(255,255,255,.62);
+        background:
+            linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(34, 197, 94, 0.045)),
+            var(--sf);
         border-color: rgba(15, 23, 42, 0.08);
     }
 
@@ -301,7 +321,7 @@
     .stat-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
+        gap: var(--dash-section-gap);
         margin: 0 0 2px;
     }
 
@@ -386,7 +406,16 @@
     .sr-two-col {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 20px;
+        gap: var(--dash-section-gap);
+    }
+
+    .sr-dashboard section,
+    .sr-two-col > .sr-card {
+        min-width: 0;
+    }
+
+    .sr-two-col > .sr-card {
+        height: 100%;
     }
 
     .sr-progress-list {
@@ -614,12 +643,12 @@
     }
 
     @media (max-width: 991px) {
-        .sr-hero-inner {
+        .sr-summary-grid {
             grid-template-columns: 1fr;
         }
 
         .sr-score-panel {
-            max-width: 460px;
+            max-width: none;
         }
 
         .stat-grid {
@@ -638,35 +667,57 @@
         }
 
         .sr-dashboard {
-            gap: 14px;
+            --dash-section-gap: 16px;
+            --dash-card-radius: 14px;
+            --dash-card-pad: 14px;
+            gap: 0;
             padding: 6px 0 8px !important;
         }
 
         #dashboard .db-content .db-section.active.sr-dashboard {
-            gap: 14px;
+            gap: 0;
             padding: 6px 0 8px !important;
         }
 
+        #mob-content .sr-dashboard > * + *,
+        .sr-dashboard > * + * {
+            margin-top: var(--dash-section-gap) !important;
+        }
+
         .sr-dashboard-shell,
+        .sr-summary-grid,
         .sr-main-stack,
         .sr-side-stack {
-            gap: 12px;
+            gap: 0;
         }
 
         .sr-side-stack,
         .sr-two-col {
             display: flex;
             flex-direction: column;
+            gap: 0;
+        }
+
+        .sr-summary-grid > * + *,
+        .sr-dashboard-shell > * + *,
+        .sr-main-stack > * + *,
+        .sr-side-stack > * + *,
+        .sr-two-col > * + * {
+            margin-top: var(--dash-section-gap) !important;
         }
 
         .stat-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 12px !important;
+            gap: var(--dash-section-gap) !important;
             margin: 0;
         }
 
+        .sr-card {
+            border-radius: var(--dash-card-radius);
+        }
+
         .sr-hero-card {
-            border-radius: 14px;
+            border-radius: var(--dash-card-radius);
             margin-bottom: 0;
         }
 
@@ -679,14 +730,28 @@
             z-index: 1;
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            padding: 0 12px 12px;
-            margin: 0;
+            grid-auto-rows: 1fr;
+            align-items: stretch;
+            gap: var(--dash-section-gap);
+            padding: 0;
+            margin: var(--dash-section-gap) 0;
+        }
+
+        #mob-content .sr-mobile-stat-grid {
+            margin-top: var(--dash-section-gap) !important;
+            margin-bottom: var(--dash-section-gap) !important;
+        }
+
+        #mob-content .sr-mobile-stat-grid + .sr-stats-desktop + .sr-dashboard-shell,
+        #mob-content .sr-mobile-stat-grid + .sr-dashboard-shell,
+        .sr-mobile-stat-grid + .sr-stats-desktop + .sr-dashboard-shell,
+        .sr-mobile-stat-grid + .sr-dashboard-shell {
+            margin-top: 0 !important;
         }
 
         .sr-card-pad,
         .sr-hero-inner {
-            padding: 14px;
+            padding: var(--dash-card-pad);
         }
 
         .sr-hero-inner {
@@ -707,26 +772,26 @@
 
         .sr-hero-actions {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 6px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
             margin-top: 14px;
         }
 
         .sr-hero-actions .sr-btn {
             min-width: 0;
             width: 100%;
-            min-height: 32px;
-            border-radius: 8px;
-            gap: 3px;
-            padding: 6px 3px;
-            font-size: 0.6rem;
-            line-height: 1.1;
-            white-space: nowrap;
-            overflow: hidden;
+            min-height: 38px;
+            border-radius: 10px;
+            gap: 5px;
+            padding: 8px 6px;
+            font-size: 0.72rem;
+            line-height: 1.15;
+            white-space: normal;
+            text-align: center;
         }
 
         .sr-hero-actions .sr-btn i {
-            font-size: 0.68rem;
+            font-size: 0.78rem;
             flex: 0 0 auto;
         }
 
@@ -745,12 +810,14 @@
         .sr-score-panel {
             width: 100%;
             max-width: none;
-            padding: 14px;
-            border-radius: 14px;
+            padding: var(--dash-card-pad);
+            border-radius: var(--dash-card-radius);
         }
 
         .sr-score-top {
             gap: 8px;
+            flex-wrap: wrap;
+            align-items: flex-start;
             margin-bottom: 12px;
         }
 
@@ -811,15 +878,19 @@
         }
 
         .sr-mobile-stat-grid .sr-stat-card {
+            min-width: 0;
             min-height: 104px;
-            padding: 10px;
-            border-radius: 12px;
+            height: 100%;
+            padding: 12px;
+            border-radius: 14px;
             gap: 8px;
+            box-shadow: var(--shadow-soft, 0 8px 22px rgba(0,0,0,.1));
         }
 
         .sr-mobile-stat-grid .sr-stat-head {
             gap: 6px;
             min-height: 28px;
+            min-width: 0;
         }
 
         .sr-mobile-stat-grid .sr-stat-icon {
@@ -838,11 +909,16 @@
         }
 
         .sr-mobile-stat-grid .sr-stat-card > div:last-child {
-            margin-top: 6px;
+            min-width: 0;
+            margin-top: auto;
         }
 
         .sr-mobile-stat-grid .sr-stat-value {
             font-size: 1.12rem;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-label {
+            overflow-wrap: anywhere;
         }
 
         .chart-container-mobile,
@@ -850,8 +926,74 @@
             height: 230px;
         }
 
+        .sr-btn,
+        .sr-chip,
+        .sr-status-pill {
+            max-width: 100%;
+        }
+
+        .sr-card-header {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .sr-card-title {
+            font-size: 0.96rem;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        .sr-card-kicker,
+        .sr-subtitle {
+            line-height: 1.4;
+        }
+
+        .sr-empty {
+            min-height: 128px;
+            padding: 16px;
+        }
+
+        .sr-rec-item,
+        .sr-notification-item,
+        .sr-module-item,
+        .sr-session-card,
+        .sr-insight-box,
+        .sr-goal-box {
+            border-radius: 12px;
+            padding: 11px;
+        }
+
+        .sr-session-card {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .sr-session-actions {
+            justify-content: space-between;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .sr-session-actions .sr-btn-primary {
+            flex: 1 1 auto;
+        }
+
+        #card-recent-sessions .sr-card-header > .d-flex {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+            gap: 8px !important;
+            width: 100%;
+        }
+
+        #card-recent-sessions .sr-card-header form,
+        #card-recent-sessions .sr-card-header .sr-btn {
+            width: 100%;
+        }
+
         #card-progress-chart.sr-card-pad {
-            padding: 14px;
+            padding: var(--dash-card-pad);
         }
 
         #card-progress-chart .sr-card-header {
@@ -892,10 +1034,6 @@
             gap: 10px;
         }
 
-        .sr-card-header {
-            align-items: stretch;
-            flex-direction: column;
-        }
     }
 
     @media (max-width: 420px) {
@@ -905,9 +1043,7 @@
         }
 
         .sr-mobile-stat-grid {
-            gap: 8px;
-            padding-left: 10px;
-            padding-right: 10px;
+            gap: 12px;
         }
 
         .sr-achievement-grid {
@@ -922,17 +1058,17 @@
         }
 
         .sr-hero-actions {
-            gap: 5px;
+            gap: 6px;
         }
 
         .sr-hero-actions .sr-btn {
-            min-height: 30px;
-            padding: 5px 2px;
-            font-size: 0.56rem;
+            min-height: 34px;
+            padding: 6px 4px;
+            font-size: 0.66rem;
         }
 
         .sr-hero-actions .sr-btn i {
-            font-size: 0.62rem;
+            font-size: 0.72rem;
         }
 
         .sr-stat-card {
@@ -946,13 +1082,13 @@
         }
 
         .sr-mobile-stat-grid {
-            gap: 8px;
-            padding: 0 8px 10px;
+            gap: 12px;
+            padding: 0;
         }
 
         .sr-mobile-stat-grid .sr-stat-card {
-            min-height: 100px;
-            padding: 9px;
+            min-height: 104px;
+            padding: 12px;
         }
 
         .sr-mobile-stat-grid .sr-chip {
@@ -967,9 +1103,9 @@
 </style>
 
 <div class="db-section active sr-dashboard" id="sec-overview">
-    <section class="sr-card sr-hero-card card-grad-success">
-        <div class="sr-hero-inner">
-            <div>
+    <div class="sr-summary-grid">
+        <section class="sr-card sr-hero-card card-grad-success">
+            <div class="sr-hero-inner">
                 <div class="sr-user-row">
                     <div class="sr-avatar-xl">
                         @if($avatarUrl)
@@ -990,72 +1126,29 @@
                     <a href="{{ route('user.ai-collaboration') }}" class="sr-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> <span class="sr-mobile-full">AI Collaboration</span><span class="sr-mobile-short">AI Lab</span></a>
                 </div>
             </div>
+        </section>
 
-            <aside class="sr-score-panel">
-                <div class="sr-score-top">
-                    <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
-                    <span class="sr-chip" style="background:rgba(59,130,246,.11);color:#60a5fa;border:1px solid rgba(59,130,246,.2)">Live score</span>
-                </div>
-                <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
-                <div class="sr-progress mt-3" aria-label="Readiness score"><span style="--value: {{ $scoreVal }}%"></span></div>
-                <div class="sr-score-meta">
-                    <div class="sr-score-meta-item">
-                        <div class="sr-meta-label">Avg rating</div>
-                        <div class="sr-meta-value">{{ $rating }}/5</div>
-                    </div>
-                    <div class="sr-score-meta-item">
-                        <div class="sr-meta-label">Next goal</div>
-                        <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
-                    </div>
-                </div>
-            </aside>
-        </div>
-
-        <section class="sr-mobile-stat-grid" aria-label="Quick statistics">
-            <div class="sr-stat-card">
-                <div class="sr-stat-head">
-                    <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
-                    <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">Practice</span>
-                </div>
-                <div>
-                    <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
-                    <div class="sr-stat-label">Completed sessions</div>
-                </div>
+        <section class="sr-card sr-score-panel" aria-label="Readiness score">
+            <div class="sr-score-top">
+                <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
+                <span class="sr-chip" style="background:rgba(59,130,246,.11);color:#60a5fa;border:1px solid rgba(59,130,246,.2)">Live score</span>
             </div>
-            <div class="sr-stat-card">
-                <div class="sr-stat-head">
-                    <div class="sr-stat-icon" style="--accent:#22c55e"><i class="fa-solid fa-star-half-stroke"></i></div>
-                    <span class="sr-chip" style="background:rgba(34,197,94,.1);color:#22c55e">Quality</span>
+            <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
+            <div class="sr-progress mt-3" aria-label="Readiness score"><span style="--value: {{ $scoreVal }}%"></span></div>
+            <div class="sr-score-meta">
+                <div class="sr-score-meta-item">
+                    <div class="sr-meta-label">Avg rating</div>
+                    <div class="sr-meta-value">{{ $rating }}/5</div>
                 </div>
-                <div>
-                    <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
-                    <div class="sr-stat-label">Average rating</div>
-                </div>
-            </div>
-            <div class="sr-stat-card">
-                <div class="sr-stat-head">
-                    <div class="sr-stat-icon" style="--accent:#06b6d4"><i class="fa-solid fa-bolt"></i></div>
-                    <span class="sr-chip" style="background:rgba(6,182,212,.1);color:#06b6d4">Growth</span>
-                </div>
-                <div>
-                    <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
-                    <div class="sr-stat-label">Experience points</div>
-                </div>
-            </div>
-            <div class="sr-stat-card">
-                <div class="sr-stat-head">
-                    <div class="sr-stat-icon" style="--accent:#f59e0b"><i class="fa-solid fa-fire"></i></div>
-                    <span class="sr-chip" style="background:rgba(245,158,11,.1);color:#f59e0b">Streak</span>
-                </div>
-                <div>
-                    <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
-                    <div class="sr-stat-label">Active practice days</div>
+                <div class="sr-score-meta-item">
+                    <div class="sr-meta-label">Next goal</div>
+                    <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
                 </div>
             </div>
         </section>
-    </section>
+    </div>
 
-    <section class="stat-grid sr-stats-desktop" aria-label="Quick statistics">
+    <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
         <div class="sr-stat-card">
             <div class="sr-stat-head">
                 <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
@@ -1096,7 +1189,50 @@
                 <div class="sr-stat-label">Active practice days</div>
             </div>
         </div>
-    </section>
+    </div>
+
+    <div class="stat-grid sr-stats-desktop" role="group" aria-label="Quick statistics">
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
+                <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">Practice</span>
+            </div>
+            <div>
+                <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
+                <div class="sr-stat-label">Completed sessions</div>
+            </div>
+        </div>
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#22c55e"><i class="fa-solid fa-star-half-stroke"></i></div>
+                <span class="sr-chip" style="background:rgba(34,197,94,.1);color:#22c55e">Quality</span>
+            </div>
+            <div>
+                <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
+                <div class="sr-stat-label">Average rating</div>
+            </div>
+        </div>
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#06b6d4"><i class="fa-solid fa-bolt"></i></div>
+                <span class="sr-chip" style="background:rgba(6,182,212,.1);color:#06b6d4">Growth</span>
+            </div>
+            <div>
+                <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                <div class="sr-stat-label">Experience points</div>
+            </div>
+        </div>
+        <div class="sr-stat-card">
+            <div class="sr-stat-head">
+                <div class="sr-stat-icon" style="--accent:#f59e0b"><i class="fa-solid fa-fire"></i></div>
+                <span class="sr-chip" style="background:rgba(245,158,11,.1);color:#f59e0b">Streak</span>
+            </div>
+            <div>
+                <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
+                <div class="sr-stat-label">Active practice days</div>
+            </div>
+        </div>
+    </div>
 
     <div class="sr-dashboard-shell">
         <main class="sr-main-stack">
@@ -1113,8 +1249,8 @@
                 </div>
             </section>
 
-            <section class="sr-two-col">
-                <div class="sr-card sr-card-pad">
+            <div class="sr-two-col">
+                <section class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
                             <h2 class="sr-card-title">Category Performance</h2>
@@ -1142,9 +1278,9 @@
                             <div>Complete a session to unlock category performance.</div>
                         </div>
                     @endif
-                </div>
+                </section>
 
-                <div class="sr-card sr-card-pad">
+                <section class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
                             <h2 class="sr-card-title">Learning Progress</h2>
@@ -1173,11 +1309,11 @@
                             <div>Start a module to track your learning progress.</div>
                         </div>
                     @endif
-                </div>
-            </section>
+                </section>
+            </div>
 
-            <section class="sr-two-col">
-                <div class="sr-card sr-card-pad">
+            <div class="sr-two-col">
+                <section class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
                             <h2 class="sr-card-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#60a5fa"></i> AI Feedback Summary</h2>
@@ -1213,9 +1349,9 @@
                             <div>Complete an interview to generate AI feedback.</div>
                         </div>
                     @endif
-                </div>
+                </section>
 
-                <div id="card-ai-recommendations" class="sr-card sr-card-pad">
+                <section id="card-ai-recommendations" class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
                             <h2 class="sr-card-title"><i class="fa-solid fa-lightbulb me-2" style="color:#f59e0b"></i> AI Recommendations</h2>
@@ -1237,8 +1373,8 @@
                             <div>Complete a session to get tailored recommendations.</div>
                         </div>
                     @endif
-                </div>
-            </section>
+                </section>
+            </div>
 
             <section id="card-recent-sessions" class="sr-card sr-card-pad">
                 <div class="sr-card-header">
@@ -1313,7 +1449,7 @@
                                 <div class="sr-session-title">{{ $session->category ? $session->category->title : 'General Interview' }}</div>
                                 <div class="sr-session-date">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="sr-session-actions d-flex align-items-center gap-2">
                                 <span class="sr-score-mini" style="color:{{ $sessionColor }}">{{ $sessionScore }}%</span>
                                 <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 10px;font-size:.78rem">Review</a>
                                 <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
@@ -1569,7 +1705,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const stepsMobile = [
             { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Access Mock Interviews, Learning Lab, and Progress Tracking right from the bottom bar.', side: "top", align: 'center' }},
-            { element: '.sr-hero-card', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
+            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
             { element: '.sr-mobile-stat-grid', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "top", align: 'start' }},
@@ -1579,7 +1715,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const stepsDesktop = [
             { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Access all features including Mock Interviews, Learning Lab, and Progress Tracking from here.', side: "right", align: 'start' }},
-            { element: '.sr-hero-card', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
+            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'This area summarizes your current interview readiness and next goal.', side: "bottom", align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Quick Statistics', description: 'Get a quick overview of practice activity, rating, XP, and streak.', side: "top", align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Progress Chart', description: 'Visualize your interview score trend over time.', side: "top", align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Get personalized suggestions to improve your specific weak points.', side: "bottom", align: 'start' }},
