@@ -7,7 +7,11 @@
     $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
     $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Building Momentum' : 'Practice Mode');
     $scoreIcon = $scoreVal >= 80 ? 'fa-circle-check' : ($scoreVal >= 60 ? 'fa-chart-line' : 'fa-arrow-trend-up');
-    $firstName = explode(' ', Auth::user()->name ?? 'User')[0] ?? 'User';
+    $fullName = trim(Auth::user()->name ?? '') ?: 'User';
+    $nameParts = preg_split('/\s+/', $fullName);
+    $firstName = $nameParts[0] ?? 'User';
+    $lastName = count($nameParts) > 1 ? $nameParts[count($nameParts) - 1] : '';
+    $welcomeName = trim($firstName . ' ' . $lastName);
     $rating = round(($avgScore ?? 0) / 20, 1);
     $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
     $categoryCount = isset($categoryPerformance) ? count($categoryPerformance) : 0;
@@ -144,10 +148,15 @@
 
     .sr-title {
         margin: 0;
-        font-size: clamp(1.55rem, 2.6vw, 2.15rem);
-        line-height: 1.12;
-        font-weight: 800;
+        font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+        line-height: 1.25;
+        font-weight: 700;
         color: var(--tx);
+    }
+
+    .sr-title-name {
+        color: var(--dash-primary);
+        font-weight: 800;
     }
 
     .sr-subtitle {
@@ -970,9 +979,8 @@
                         @endif
                     </div>
                     <div>
-                        <div class="sr-eyebrow"><i class="fa-solid fa-gauge-high"></i> Readiness Command Center</div>
-                        <h1 class="sr-title">Welcome back, {{ $firstName }}.</h1>
-                        <p class="sr-subtitle">Track interview readiness, recent performance, AI coaching priorities, and learning progress from one focused workspace.</p>
+                        <h6 class="sr-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span>.</h6>
+                        <p class="sr-subtitle">Track readiness, progress, and coaching.</p>
                     </div>
                 </div>
                 <div class="sr-hero-actions">
