@@ -82,7 +82,6 @@
                <a href="{{ route('user.drills.voice') }}" class="db-nl {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
                <a href="{{ route('user.learning') }}" class="db-nl {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Learning Games</a>
                <a href="{{ route('user.coach') }}" class="db-nl {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> AI Coach</a>
-               <a href="{{ route('user.ai-collaboration') }}" class="db-nl {{ request()->routeIs('user.ai-collaboration*') ? 'active' : '' }}"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Collaboration</a>
                
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress Tracking</a>
@@ -385,4 +384,3 @@
       @include('layouts.logout-transition')
    </body>
 </html>
-

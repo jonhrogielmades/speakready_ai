@@ -762,11 +762,6 @@
                <i class="fa-solid fa-gamepad"></i>
                <span>Learning Games</span>
             </a>
-            <a href="{{ route('user.ai-collaboration') }}"
-               class="drawer-item {{ request()->routeIs('user.ai-collaboration*') ? 'active' : '' }}">
-               <i class="fa-solid fa-wand-magic-sparkles"></i>
-               <span>AI Collaboration</span>
-            </a>
             <a href="{{ route('user.feedback') }}"
                class="drawer-item {{ request()->routeIs('user.feedback') ? 'active' : '' }}">
                <i class="fa-solid fa-clipboard-check"></i>

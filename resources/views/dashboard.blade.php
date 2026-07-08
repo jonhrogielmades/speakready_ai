@@ -182,13 +182,6 @@
         max-width: 680px;
     }
 
-    .sr-hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 18px;
-    }
-
     .sr-btn {
         min-height: 42px;
         border-radius: 12px;
@@ -209,14 +202,6 @@
         background: linear-gradient(135deg, #2563eb, #0ea5e9);
         border-color: transparent;
         color: #fff;
-    }
-
-    .sr-mobile-short {
-        display: none;
-    }
-
-    .sr-mobile-full {
-        display: inline;
     }
 
     .sr-score-panel {
@@ -770,39 +755,6 @@
             font-size: 1.15rem;
         }
 
-        .sr-hero-actions {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-        .sr-hero-actions .sr-btn {
-            min-width: 0;
-            width: 100%;
-            min-height: 38px;
-            border-radius: 10px;
-            gap: 5px;
-            padding: 8px 6px;
-            font-size: 0.72rem;
-            line-height: 1.15;
-            white-space: normal;
-            text-align: center;
-        }
-
-        .sr-hero-actions .sr-btn i {
-            font-size: 0.78rem;
-            flex: 0 0 auto;
-        }
-
-        .sr-mobile-short {
-            display: inline;
-        }
-
-        .sr-mobile-full {
-            display: none;
-        }
-
         .sr-score-meta {
             grid-template-columns: 1fr;
         }
@@ -1057,20 +1009,6 @@
             padding-right: 10px !important;
         }
 
-        .sr-hero-actions {
-            gap: 6px;
-        }
-
-        .sr-hero-actions .sr-btn {
-            min-height: 34px;
-            padding: 6px 4px;
-            font-size: 0.66rem;
-        }
-
-        .sr-hero-actions .sr-btn i {
-            font-size: 0.72rem;
-        }
-
         .sr-stat-card {
             min-height: 112px;
             padding: 10px;
@@ -1118,12 +1056,6 @@
                         <h6 class="sr-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span>.</h6>
                         <p class="sr-subtitle">Track readiness, progress, and coaching.</p>
                     </div>
-                </div>
-                <div class="sr-hero-actions">
-                    <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary"><i class="fa-solid fa-microphone-lines"></i> <span class="sr-mobile-full">Start Mock Interview</span><span class="sr-mobile-short">Mock</span></a>
-                    <a href="{{ route('user.progress') }}" class="sr-btn"><i class="fa-solid fa-chart-line"></i> <span class="sr-mobile-full">View Progress</span><span class="sr-mobile-short">Progress</span></a>
-                    <a href="{{ route('user.coach') }}" class="sr-btn"><i class="fa-solid fa-robot"></i> <span class="sr-mobile-full">Ask AI Coach</span><span class="sr-mobile-short">Coach</span></a>
-                    <a href="{{ route('user.ai-collaboration') }}" class="sr-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> <span class="sr-mobile-full">AI Collaboration</span><span class="sr-mobile-short">AI Lab</span></a>
                 </div>
             </div>
         </section>

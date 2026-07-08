@@ -78,10 +78,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/coach/chat', [UserController::class, 'coachChat'])->name('user.coach.chat');
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
-    Route::get('/ai-collaboration', [UserController::class, 'aiCollaboration'])->name('user.ai-collaboration');
-    Route::post('/ai-collaboration/start', [UserController::class, 'startAiCollaboration'])->name('user.ai-collaboration.start');
-    Route::post('/ai-collaboration/{session}/ask', [UserController::class, 'askAiCollaboration'])->name('user.ai-collaboration.ask');
-    Route::post('/ai-collaboration/{session}/submit', [UserController::class, 'submitAiCollaboration'])->name('user.ai-collaboration.submit');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
