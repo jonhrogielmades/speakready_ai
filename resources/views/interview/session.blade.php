@@ -329,16 +329,181 @@
 
             // Voice and Body Language state
             let recognition = null;
+            let recognitionActive = false;
+            let shouldAutoRestartRecognition = false;
             let isRecording = false;
             let recTimerSeconds = 0;
             let recTimerInterval;
-            let preRecordingText = ''; // Prevents duplicate word bugs
+            let preRecordingText = '';
+            let committedSpeechTranscript = '';
+            let liveSpeechInterim = '';
+            let lastCommittedSpeech = '';
+            let lastCommittedAt = 0;
+
+            const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const duplicateSafeWordSet = new Set([
+                'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
+                'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
+            ]);
+
+            function cleanTranscriptText(value) {
+                return String(value || '').replace(/\s+/g, ' ').trim();
+            }
+
+            function normalizeTranscriptForMatch(value) {
+                return cleanTranscriptText(value)
+                    .toLowerCase()
+                    .replace(/[^\w'\s]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+
+            function wordsForTranscript(value) {
+                return cleanTranscriptText(value).split(/\s+/).filter(Boolean);
+            }
+
+            function appendWithoutOverlap(existing, addition) {
+                const existingClean = cleanTranscriptText(existing);
+                const additionClean = cleanTranscriptText(addition);
+                if (!existingClean) return additionClean;
+                if (!additionClean) return existingClean;
+
+                const existingWords = wordsForTranscript(existingClean);
+                const additionWords = wordsForTranscript(additionClean);
+                const existingNormalized = existingWords.map(normalizeTranscriptForMatch);
+                const additionNormalized = additionWords.map(normalizeTranscriptForMatch);
+                const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
+                let overlap = 0;
+
+                for (let size = maxOverlap; size > 0; size--) {
+                    const existingTail = existingNormalized.slice(existingNormalized.length - size).join(' ');
+                    const additionHead = additionNormalized.slice(0, size).join(' ');
+                    if (existingTail && existingTail === additionHead) {
+                        overlap = size;
+                        break;
+                    }
+                }
+
+                const remainder = additionWords.slice(overlap).join(' ');
+                return cleanTranscriptText(existingClean + (remainder ? ' ' + remainder : ''));
+            }
+
+            function shouldCollapseDuplicateWindow(size, normalizedPhrase) {
+                if (!normalizedPhrase) return false;
+                if (size >= 2) return true;
+                return normalizedPhrase.length > 2 || duplicateSafeWordSet.has(normalizedPhrase);
+            }
+
+            function collapseRepeatedSpeech(text) {
+                const words = wordsForTranscript(text);
+                if (words.length < 2) return cleanTranscriptText(text);
+
+                let index = 0;
+                while (index < words.length) {
+                    let collapsed = false;
+                    const maxWindow = Math.min(12, Math.floor((words.length - index) / 2));
+
+                    for (let size = maxWindow; size >= 1; size--) {
+                        const first = words.slice(index, index + size).map(normalizeTranscriptForMatch).join(' ');
+                        const second = words.slice(index + size, index + (size * 2)).map(normalizeTranscriptForMatch).join(' ');
+
+                        if (first && first === second && shouldCollapseDuplicateWindow(size, first)) {
+                            words.splice(index + size, size);
+                            index = Math.max(0, index - size);
+                            collapsed = true;
+                            break;
+                        }
+                    }
+
+                    if (!collapsed) index++;
+                }
+
+                return cleanTranscriptText(words.join(' '));
+            }
+
+            function mergeTranscriptParts(...parts) {
+                let merged = '';
+                parts.forEach(part => {
+                    const clean = cleanTranscriptText(part);
+                    if (clean) merged = appendWithoutOverlap(merged, clean);
+                });
+                return collapseRepeatedSpeech(merged);
+            }
+
+            function bestSpeechAlternative(result) {
+                let best = result[0] || null;
+                for (let i = 1; i < result.length; i++) {
+                    if ((result[i].confidence || 0) > (best.confidence || 0)) {
+                        best = result[i];
+                    }
+                }
+                return best ? best.transcript : '';
+            }
+
+            function resetSpeechRecognitionBufferFromTextarea() {
+                const ta = document.getElementById('answerTextarea');
+                preRecordingText = ta ? cleanTranscriptText(ta.value) : '';
+                committedSpeechTranscript = '';
+                liveSpeechInterim = '';
+                lastCommittedSpeech = '';
+                lastCommittedAt = 0;
+            }
+
+            function commitSpeechSegment(segment) {
+                const cleanSegment = collapseRepeatedSpeech(cleanTranscriptText(segment));
+                if (!cleanSegment) return;
+
+                const normalized = normalizeTranscriptForMatch(cleanSegment);
+                const now = Date.now();
+                if (normalized && normalized === lastCommittedSpeech && (now - lastCommittedAt) < 5000) {
+                    return;
+                }
+
+                committedSpeechTranscript = collapseRepeatedSpeech(appendWithoutOverlap(committedSpeechTranscript, cleanSegment));
+                lastCommittedSpeech = normalized;
+                lastCommittedAt = now;
+            }
+
+            function renderSpeechTranscript() {
+                const ta = document.getElementById('answerTextarea');
+                if (!ta) return;
+
+                const recognizedTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
+                ta.value = mergeTranscriptParts(preRecordingText, recognizedTranscript);
+                triggerAnalysis();
+            }
+
+            function startSpeechRecognitionEngine() {
+                if (!recognition || recognitionActive || !isRecording || !shouldAutoRestartRecognition) return;
+
+                try {
+                    recognition.start();
+                    recognitionActive = true;
+                } catch (error) {
+                    if (!error || error.name !== 'InvalidStateError') {
+                        console.error('Speech recognition failed to start:', error);
+                    }
+                }
+            }
+
+            function finalizeInterimTranscript() {
+                if (!liveSpeechInterim) return;
+                commitSpeechSegment(liveSpeechInterim);
+                liveSpeechInterim = '';
+                renderSpeechTranscript();
+            }
 
             let lastSpeechEnd = 0;
-            if ('webkitSpeechRecognition' in window) {
-                recognition = new webkitSpeechRecognition();
+            if (BrowserSpeechRecognition) {
+                recognition = new BrowserSpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
+                recognition.lang = document.documentElement.lang || navigator.language || 'en-US';
+                recognition.maxAlternatives = 3;
+
+                recognition.onstart = function() {
+                    recognitionActive = true;
+                };
                 
                 recognition.onsoundstart = function() {
                     if (lastSpeechEnd > 0) {
@@ -354,15 +519,34 @@
                 };
 
                 recognition.onresult = function(event) {
-                    let currentTranscript = '';
-                    for (let i = 0; i < event.results.length; ++i) {
-                        currentTranscript += event.results[i][0].transcript;
+                    const interimParts = [];
+
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        const transcript = bestSpeechAlternative(event.results[i]);
+                        if (!transcript) continue;
+
+                        if (event.results[i].isFinal) {
+                            commitSpeechSegment(transcript);
+                        } else {
+                            interimParts.push(transcript);
+                        }
                     }
-                    if(currentTranscript) {
-                        const ta = document.getElementById('answerTextarea');
-                        let newText = preRecordingText + (preRecordingText ? " " : "") + currentTranscript.trim();
-                        ta.value = newText.trim();
-                        triggerAnalysis();
+
+                    liveSpeechInterim = cleanTranscriptText(interimParts.join(' '));
+                    renderSpeechTranscript();
+                };
+
+                recognition.onerror = function(event) {
+                    console.warn('Speech recognition error:', event.error || event);
+                    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
+                        shouldAutoRestartRecognition = false;
+                    }
+                };
+
+                recognition.onend = function() {
+                    recognitionActive = false;
+                    if (shouldAutoRestartRecognition && isRecording) {
+                        setTimeout(startSpeechRecognitionEngine, 250);
                     }
                 };
             }
@@ -439,6 +623,23 @@
             let visualizerInterval = null;
             let currentAmplitude = 0.2;
             let preferredVoice = null;
+            let autoStartAfterQuestionTimer = null;
+            let questionSpeechToken = 0;
+
+            function isVoiceTranscriptionMode() {
+                return responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text';
+            }
+
+            function scheduleAutoTranscriptionStart(token) {
+                if (token !== questionSpeechToken) return;
+                clearTimeout(autoStartAfterQuestionTimer);
+                if (!isVoiceTranscriptionMode()) return;
+
+                autoStartAfterQuestionTimer = setTimeout(() => {
+                    if (token !== questionSpeechToken || isRecording) return;
+                    startRecording({ silent: true });
+                }, 450);
+            }
 
             // Initialize preferred voice
             function loadVoices() {
@@ -454,6 +655,13 @@
             }
 
             function speakQuestion(text) {
+                questionSpeechToken++;
+                const token = questionSpeechToken;
+
+                if (isRecording) {
+                    pauseRecording();
+                }
+
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     let utterance = new SpeechSynthesisUtterance(text);
@@ -514,9 +722,13 @@
                         if(visualizerInterval) clearInterval(visualizerInterval);
                         if(captionInterval) clearInterval(captionInterval);
                         document.getElementById('aiQuestionText').innerText = text;
+                        scheduleAutoTranscriptionStart(token);
                     };
 
                     window.speechSynthesis.speak(utterance);
+                } else {
+                    document.getElementById('aiQuestionText').innerText = text;
+                    scheduleAutoTranscriptionStart(token);
                 }
             }
 
@@ -528,7 +740,7 @@
                 
                 initCamera();
                 
-                if(responseMode === 'voice' || responseMode === 'hybrid') {
+                if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
                     document.getElementById('voiceAnalyticsPanel').style.display = 'block';
                 }
@@ -576,6 +788,7 @@
 
                 // Restore answer state if navigated back (though disabled in chat mode)
                 document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
+                resetSpeechRecognitionBufferFromTextarea();
                 
                 speakQuestion(q.question_text);
                 
@@ -822,15 +1035,24 @@
                 }
             }
 
-            function startRecording() {
-                if(!recognition) return alert("Speech recognition not supported in this browser.");
-                preRecordingText = document.getElementById('answerTextarea').value.trim();
-                recognition.start();
+            function startRecording(options = {}) {
+                const silent = options && options.silent === true;
+                if(!recognition) {
+                    if(!silent) alert("Speech recognition not supported in this browser.");
+                    return;
+                }
+                if (isRecording) return;
+
+                resetSpeechRecognitionBufferFromTextarea();
+                lastSpeechEnd = 0;
+                shouldAutoRestartRecognition = true;
                 isRecording = true;
+                startSpeechRecognitionEngine();
                 document.getElementById('micStartBtn').style.display = 'none';
                 document.getElementById('micPauseBtn').style.display = 'block';
                 document.getElementById('micStopBtn').style.display = 'block';
                 document.getElementById('recordingTimer').style.display = 'block';
+                clearInterval(recTimerInterval);
                 
                 recTimerInterval = setInterval(() => {
                     recTimerSeconds++;
@@ -867,7 +1089,15 @@
             }
 
             function pauseRecording() {
-                if(recognition) recognition.stop();
+                finalizeInterimTranscript();
+                shouldAutoRestartRecognition = false;
+                if(recognition) {
+                    try {
+                        recognition.stop();
+                    } catch (error) {
+                        console.error('Speech recognition failed to stop:', error);
+                    }
+                }
                 isRecording = false;
                 clearInterval(recTimerInterval);
                 document.getElementById('micStartBtn').style.display = 'block';
@@ -878,10 +1108,12 @@
 
             function stopRecording() {
                 pauseRecording();
+                clearTimeout(autoStartAfterQuestionTimer);
                 document.getElementById('micStartBtn').innerText = 'Start';
                 document.getElementById('micStopBtn').style.display = 'none';
                 document.getElementById('recordingTimer').style.display = 'none';
                 recTimerSeconds = 0;
+                resetSpeechRecognitionBufferFromTextarea();
             }
 
             function saveCurrentAnswer(isSkipped = false) {
@@ -1028,7 +1260,7 @@
                         });
 
                         document.getElementById('answerTextarea').value = '';
-                        preRecordingText = '';
+                        resetSpeechRecognitionBufferFromTextarea();
                         currentQIdx++;
                         
                         document.getElementById('aiQuestionText').innerText = '...';

@@ -231,6 +231,29 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
+    public function test_interview_answer_cleans_adjacent_transcript_duplicates(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.answer'), [
+                'question_id' => $question->id,
+                'answer_text' => 'I led a migration I led a migration and reduced downtime downtime.',
+                'response_mode' => 'voice',
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I led a migration and reduced downtime',
+        ]);
+    }
+
     public function test_game_start_stops_when_energy_is_empty_after_today_refill(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

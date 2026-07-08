@@ -131,7 +131,7 @@ class InterviewController extends Controller
         }
 
         $isSkipped = filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $answerText = $validated['answer_text'] ?? '';
+        $answerText = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
 
         \App\Models\InterviewAnswer::create([
@@ -198,13 +198,14 @@ class InterviewController extends Controller
         if (!$question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $validated['answer_text']);
+        $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
+        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
         
         // 1. Save User's Answer
         $answer = \App\Models\InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
-            'answer_text' => $validated['answer_text'],
+            'answer_text' => $answerText,
             'response_mode' => $validated['response_mode'] ?? 'text',
             'wpm' => $deliveryMetrics['wpm'],
             'voice_duration' => $deliveryMetrics['voice_duration'],
@@ -586,6 +587,70 @@ class InterviewController extends Controller
         }
 
         return $this->scoreValue($score);
+    }
+
+    private function cleanTranscribedAnswer(?string $answerText): string
+    {
+        $text = trim((string) $answerText);
+        $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
+
+        return $this->collapseAdjacentTranscriptDuplicates($text);
+    }
+
+    private function collapseAdjacentTranscriptDuplicates(string $text): string
+    {
+        $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+        if (!$words || count($words) < 2) {
+            return trim($text);
+        }
+
+        $index = 0;
+        while ($index < count($words)) {
+            $collapsed = false;
+            $maxWindow = min(12, intdiv(count($words) - $index, 2));
+
+            for ($size = $maxWindow; $size >= 1; $size--) {
+                $first = $this->transcriptPhraseKey(array_slice($words, $index, $size));
+                $second = $this->transcriptPhraseKey(array_slice($words, $index + $size, $size));
+
+                if ($first !== '' && $first === $second && $this->shouldCollapseTranscriptDuplicate($size, $first)) {
+                    array_splice($words, $index + $size, $size);
+                    $index = max(0, $index - $size);
+                    $collapsed = true;
+                    break;
+                }
+            }
+
+            if (!$collapsed) {
+                $index++;
+            }
+        }
+
+        return trim(implode(' ', $words));
+    }
+
+    private function transcriptPhraseKey(array $words): string
+    {
+        $normalized = array_map(function ($word) {
+            $word = strtolower((string) $word);
+            return preg_replace("/[^a-z0-9']+/i", '', $word) ?? '';
+        }, $words);
+
+        return trim(implode(' ', array_filter($normalized, fn ($word) => $word !== '')));
+    }
+
+    private function shouldCollapseTranscriptDuplicate(int $wordCount, string $phraseKey): bool
+    {
+        if ($wordCount >= 2) {
+            return true;
+        }
+
+        $duplicateSafeWords = [
+            'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
+            'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
+        ];
+
+        return strlen($phraseKey) > 2 || in_array($phraseKey, $duplicateSafeWords, true);
     }
 
     private function clampInt($value, int $min, int $max): int
