@@ -348,7 +348,7 @@
                 <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
                 <input type="text" placeholder="Search quests, skills, topics..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
             </div>
-            <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600;"><i class="fa-solid fa-tree me-sm-1" style="color:#10b981"></i> <span class="d-none d-sm-inline">Skill Tree</span></a>
+            <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-tree me-1" style="color:#10b981"></i> <span>Skill Tree</span></a>
         </div>
     </div>
 
@@ -610,4 +610,3 @@
 </script>
 @endpush
 @endsection
-
