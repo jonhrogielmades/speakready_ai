@@ -642,3 +642,40 @@ document.addEventListener('click', (e) => {
         if (ch) ch.style.transform = 'rotate(0deg)';
     }
 });
+
+/*  RESPONSIVE ADMIN TABLE LABELS  */
+function hydrateAdminTableLabels(root = document) {
+    const tables = root.querySelectorAll?.('#dashboard .db-content table, #mob-content .db-content table') || [];
+
+    tables.forEach(table => {
+        const labels = Array.from(table.querySelectorAll('thead th')).map(th =>
+            th.textContent.replace(/\s+/g, ' ').trim()
+        );
+
+        if (!labels.length) return;
+
+        table.querySelectorAll('tbody tr').forEach(row => {
+            Array.from(row.children).forEach((cell, index) => {
+                if (!cell.matches('td, th') || cell.hasAttribute('colspan')) return;
+                if (!cell.getAttribute('data-label')) {
+                    cell.setAttribute('data-label', labels[index] || '');
+                }
+            });
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    hydrateAdminTableLabels();
+
+    const adminContent = document.querySelector('#dashboard .db-content, #mob-content .db-content');
+    if (!adminContent || !window.MutationObserver) return;
+
+    const tableObserver = new MutationObserver(mutations => {
+        if (mutations.some(mutation => mutation.addedNodes.length)) {
+            hydrateAdminTableLabels(adminContent);
+        }
+    });
+
+    tableObserver.observe(adminContent, { childList: true, subtree: true });
+});

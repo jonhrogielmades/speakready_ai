@@ -4849,3 +4849,340 @@ textarea:focus-visible,
     overflow-x: hidden !important;
   }
 }
+
+/* Admin responsive and theme safety pass. */
+#dashboard .db-content,
+#mob-content .db-content {
+  color: var(--tx);
+}
+
+#dashboard .db-content *,
+#mob-content .db-content * {
+  min-width: 0;
+}
+
+#dashboard .db-content .text-muted,
+#mob-content .db-content .text-muted,
+#dashboard .db-content .form-text,
+#mob-content .db-content .form-text {
+  color: var(--tx3) !important;
+}
+
+#dashboard .text-muted,
+#mob-header .text-muted,
+#mob-drawer .text-muted {
+  color: var(--tx3) !important;
+}
+
+#dashboard .db-content :is(h1, h2, h3, h4, h5, h6, p, span, small, label, li, td, th).text-white,
+#mob-content .db-content :is(h1, h2, h3, h4, h5, h6, p, span, small, label, li, td, th).text-white {
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .table,
+#mob-content .db-content .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--tx);
+  --bs-table-striped-bg: rgba(148, 163, 184, 0.045);
+  --bs-table-striped-color: var(--tx);
+  --bs-table-hover-bg: rgba(96, 165, 250, 0.09);
+  --bs-table-hover-color: var(--tx);
+  --bs-table-border-color: var(--bd);
+  background: transparent !important;
+  border-color: var(--bd) !important;
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .table > :not(caption) > * > *,
+#mob-content .db-content .table > :not(caption) > * > * {
+  background: transparent !important;
+  border-color: var(--bd) !important;
+  color: var(--tx2) !important;
+}
+
+#dashboard .db-content .table thead th,
+#mob-content .db-content .table thead th,
+#dashboard .db-content .custom-table th,
+#mob-content .db-content .custom-table th {
+  color: var(--tx3) !important;
+}
+
+#dashboard .db-content .table tbody strong,
+#mob-content .db-content .table tbody strong,
+#dashboard .db-content .table tbody .fw-bold,
+#mob-content .db-content .table tbody .fw-bold {
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .modal-content,
+#mob-content .db-content .modal-content,
+#dashboard .db-content .dropdown-menu,
+#mob-content .db-content .dropdown-menu,
+#mob-header .dropdown-menu {
+  background: var(--sf) !important;
+  border-color: var(--bd) !important;
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .modal-header,
+#mob-content .db-content .modal-header,
+#dashboard .db-content .modal-footer,
+#mob-content .db-content .modal-footer {
+  border-color: var(--bd) !important;
+}
+
+#dashboard .db-content .dropdown-item,
+#mob-content .db-content .dropdown-item,
+#mob-header .dropdown-item {
+  color: var(--tx2) !important;
+}
+
+#dashboard .db-content .dropdown-item:hover,
+#mob-content .db-content .dropdown-item:hover,
+#dashboard .db-content .dropdown-item:focus,
+#mob-content .db-content .dropdown-item:focus,
+#mob-header .dropdown-item:hover,
+#mob-header .dropdown-item:focus {
+  background: rgba(96, 165, 250, 0.12) !important;
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .list-group-item,
+#mob-content .db-content .list-group-item {
+  background: transparent !important;
+  border-color: var(--bd) !important;
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .bg-white,
+#mob-content .db-content .bg-white,
+#dashboard .db-content .bg-light,
+#mob-content .db-content .bg-light {
+  background-color: var(--sf) !important;
+  color: var(--tx) !important;
+}
+
+.lm #dashboard .db-content .bg-dark:not(.badge),
+.lm #mob-content .db-content .bg-dark:not(.badge),
+.lm #dashboard .db-content .bg-secondary:not(.badge),
+.lm #mob-content .db-content .bg-secondary:not(.badge) {
+  background-color: var(--sf2) !important;
+  color: var(--tx) !important;
+}
+
+#dashboard .db-content .btn-close,
+#mob-content .db-content .btn-close {
+  filter: invert(1) grayscale(1) brightness(1.7) !important;
+}
+
+.lm #dashboard .db-content .btn-close,
+.lm #mob-content .db-content .btn-close {
+  filter: none !important;
+}
+
+#dashboard .db-content .form-check-input,
+#mob-content .db-content .form-check-input {
+  background-color: var(--bg3);
+  border-color: var(--bd2);
+}
+
+#dashboard .db-content .form-check-input:checked,
+#mob-content .db-content .form-check-input:checked {
+  background-color: var(--pur);
+  border-color: var(--pur);
+}
+
+@media (max-width: 767px) {
+  #mob-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: clip !important;
+  }
+
+  #mob-content .db-content {
+    width: 100%;
+    max-width: 100%;
+    padding-inline: clamp(10px, 3.6vw, 14px) !important;
+  }
+
+  #mob-content .container,
+  #mob-content .container-fluid,
+  #dashboard .db-content .container,
+  #dashboard .db-content .container-fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-inline: 0 !important;
+  }
+
+  #mob-content .row,
+  #dashboard .db-content .row {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  #mob-content .row > *,
+  #dashboard .db-content .row > * {
+    min-width: 0;
+  }
+
+  #dashboard .db-content :is(.d-flex, .input-group, .btn-group),
+  #mob-content .db-content :is(.d-flex, .input-group, .btn-group) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  #dashboard .db-content [style*="min-width"],
+  #mob-content .db-content [style*="min-width"],
+  #dashboard .db-content [style*="max-width"],
+  #mob-content .db-content [style*="max-width"] {
+    max-width: 100% !important;
+  }
+
+  #dashboard .db-content .dropdown-menu,
+  #mob-content .db-content .dropdown-menu {
+    width: min(300px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  #dashboard .db-content .modal-dialog,
+  #mob-content .db-content .modal-dialog {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px auto !important;
+  }
+
+  #dashboard .db-content .modal-content,
+  #mob-content .db-content .modal-content {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  #dashboard .db-content .table-responsive,
+  #mob-content .db-content .table-responsive,
+  #dashboard .db-content [style*="overflow-x:auto"],
+  #mob-content .db-content [style*="overflow-x:auto"],
+  #dashboard .db-content [style*="overflow-x: auto"],
+  #mob-content .db-content [style*="overflow-x: auto"] {
+    overflow-x: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table),
+  #mob-content .db-content table:not(.sr-keep-table),
+  #dashboard .db-content .custom-table:not(.sr-keep-table),
+  #mob-content .db-content .custom-table:not(.sr-keep-table) {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) thead,
+  #mob-content .db-content table:not(.sr-keep-table) thead {
+    display: none !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) tbody,
+  #mob-content .db-content table:not(.sr-keep-table) tbody {
+    display: grid !important;
+    width: 100% !important;
+    gap: 12px;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) tr,
+  #mob-content .db-content table:not(.sr-keep-table) tr {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--bd) !important;
+    border-radius: 12px !important;
+    background: var(--sf) !important;
+    box-shadow: 0 10px 24px rgba(2, 6, 23, 0.12);
+  }
+
+  .lm #dashboard .db-content table:not(.sr-keep-table) tr,
+  .lm #mob-content .db-content table:not(.sr-keep-table) tr {
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) td,
+  #mob-content .db-content table:not(.sr-keep-table) td,
+  #dashboard .db-content table:not(.sr-keep-table) th,
+  #mob-content .db-content table:not(.sr-keep-table) th {
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    padding: 10px 0 !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--bd) !important;
+    text-align: right !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    overflow-wrap: anywhere;
+    color: var(--tx2) !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) tr > :last-child,
+  #mob-content .db-content table:not(.sr-keep-table) tr > :last-child {
+    border-bottom: 0 !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) td::before,
+  #mob-content .db-content table:not(.sr-keep-table) td::before,
+  #dashboard .db-content table:not(.sr-keep-table) th::before,
+  #mob-content .db-content table:not(.sr-keep-table) th::before {
+    content: attr(data-label);
+    flex: 0 0 min(42%, 10rem);
+    max-width: 42%;
+    color: var(--tx3);
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1.35;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) td[colspan],
+  #mob-content .db-content table:not(.sr-keep-table) td[colspan] {
+    display: block !important;
+    text-align: center !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) td[colspan]::before,
+  #mob-content .db-content table:not(.sr-keep-table) td[colspan]::before {
+    display: none;
+    content: "";
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) td > *,
+  #mob-content .db-content table:not(.sr-keep-table) td > *,
+  #dashboard .db-content table:not(.sr-keep-table) th > *,
+  #mob-content .db-content table:not(.sr-keep-table) th > * {
+    max-width: 100%;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) td > :is(.d-flex, form, .btn-group),
+  #mob-content .db-content table:not(.sr-keep-table) td > :is(.d-flex, form, .btn-group) {
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+  }
+
+  #dashboard .db-content table:not(.sr-keep-table) .text-truncate,
+  #mob-content .db-content table:not(.sr-keep-table) .text-truncate {
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+}

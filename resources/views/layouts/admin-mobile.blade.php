@@ -17,7 +17,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=9') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
