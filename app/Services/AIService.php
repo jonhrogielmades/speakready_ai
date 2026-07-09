@@ -15,7 +15,7 @@ class AIService
         'professionalism_score',
     ];
 
-    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral')
+    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral', $datasetContext = null)
     {
         $jobDescription = self::truncateText($jobDescription);
         $resumeText = self::truncateText($resumeText);
@@ -48,42 +48,31 @@ class AIService
         if (!empty($resumeText)) {
             $prompt .= "The candidate has provided their resume. Create behavioral and experience-based questions that specifically ask about details, projects, or experiences mentioned in this Resume: \"$resumeText\". ";
         }
+
+        if (!empty($datasetContext)) {
+            $contextText = is_array($datasetContext)
+                ? QuestionDatasetProvider::promptContext($datasetContext)
+                : (string) $datasetContext;
+
+            $prompt .= "\nUse this reliable source context when choosing question wording, local relevance, and skills coverage:\n{$contextText}\n";
+            $prompt .= "Do not fabricate source claims, do not reproduce leaked or confidential exam questions, and keep the output as practice interview questions. ";
+        }
         
-        $prompt .= "Return ONLY a valid JSON array of strings containing the questions. Do not include any markdown formatting, headers, or explanations.\n";
+        $prompt .= "Return ONLY a valid JSON object with a \"questions\" array of strings. Do not include any markdown formatting, headers, or explanations.\n";
         $prompt .= "EXAMPLE OUTPUT FORMAT:\n";
-        $prompt .= "[\n  \"Can you describe a time when you had to overcome a significant technical challenge?\",\n  \"How do you prioritize your tasks when facing multiple tight deadlines?\"\n]";
+        $prompt .= "{\"questions\":[\"Can you describe a time when you had to overcome a significant technical challenge?\",\"How do you prioritize your tasks when facing multiple tight deadlines?\"]}";
 
         $maxRetries = 3;
         $attempt = 0;
 
         while ($attempt < $maxRetries) {
             try {
-                $response = [];
-                switch ($provider) {
-                    case 'gemini':
-                        $response = self::callGemini($prompt);
-                        break;
-                    case 'cohere':
-                        $response = self::callCohere($prompt);
-                        break;
-                    case 'groq':
-                        $response = self::callGroq($prompt);
-                        break;
-                    case 'openrouter':
-                        $response = self::callOpenRouter($prompt);
-                        break;
-                    case 'claude':
-                        $response = self::callClaude($prompt);
-                        break;
-                    case 'wisdomgate':
-                        $response = self::callWisdomGate($prompt);
-                        break;
-                    default:
-                        $response = self::callGemini($prompt);
-                        break;
-                }
-                if (!empty($response)) {
-                    return $response;
+                $questions = self::normalizeGeneratedQuestions(
+                    self::callStructuredProvider($provider, $prompt)
+                );
+
+                if (!empty($questions)) {
+                    return array_slice($questions, 0, (int) $num);
                 }
             } catch (\Exception $e) {
                 Log::error("AI Generation Error (Attempt " . ($attempt + 1) . "): " . $e->getMessage());
@@ -192,6 +181,31 @@ class AIService
         }
 
         return $instruction;
+    }
+
+    private static function normalizeGeneratedQuestions(array $response): array
+    {
+        if (isset($response['questions']) && is_array($response['questions'])) {
+            $response = $response['questions'];
+        }
+
+        $questions = [];
+
+        foreach ($response as $item) {
+            if (is_string($item)) {
+                $text = trim($item);
+            } elseif (is_array($item)) {
+                $text = trim((string) ($item['question_text'] ?? $item['question'] ?? $item['text'] ?? ''));
+            } else {
+                $text = '';
+            }
+
+            if ($text !== '') {
+                $questions[] = $text;
+            }
+        }
+
+        return array_values(array_unique($questions));
     }
 
     private static function decodeQuestionTypes($questionTypes): array

@@ -34,12 +34,15 @@
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
             <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
             <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> Datasets</button>
-            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal"><i class="fa-solid fa-plus me-1"></i> Add Question</button>
+            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal" onclick="clearGeneratedQuestionSource()"><i class="fa-solid fa-plus me-1"></i> Add Question</button>
         </div>
     </div>
 
     @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
     <style>
@@ -178,6 +181,13 @@
                                 @endforeach
                             </div>
                         @endif
+                        @if($q->source_name)
+                            <div class="mt-1">
+                                <span class="badge bg-info text-dark" style="font-size:.65rem">
+                                    <i class="fa-solid fa-link me-1"></i>{{ Str::limit($q->source_name, 32) }}
+                                </span>
+                            </div>
+                        @endif
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $q->category->title ?? 'N/A' }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
@@ -259,6 +269,14 @@
 
                                             <label class="olbl">Mapped Skills (Comma separated)</label>
                                             <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Leadership, Communication">
+
+                                            <label class="olbl">Source Name</label>
+                                            <input class="oinp mb-3" type="text" name="source_name" value="{{ $q->source_name }}" placeholder="e.g. JobStreet Philippines">
+
+                                            <label class="olbl">Source URL</label>
+                                            <input class="oinp mb-3" type="url" name="source_url" value="{{ $q->source_url }}" placeholder="https://...">
+
+                                            <input type="hidden" name="source_type" value="{{ $q->source_type }}">
                                         </div>
                                     </div>
                                 </div>
@@ -313,6 +331,18 @@
                                 <div class="mt-4 p-3 text-start" style="background:var(--sf);border-radius:12px;border:1px solid var(--bd);">
                                     <h6 style="color:var(--tx3);font-size:.8rem;text-transform:uppercase;">Expected Guide (Hidden from User)</h6>
                                     <div style="color:var(--tx);font-size:.9rem;white-space:pre-wrap;">{{ $q->expected_guide }}</div>
+                                </div>
+                                @endif
+
+                                @if($q->source_name)
+                                <div class="mt-3 text-start" style="font-size:.8rem;color:var(--tx3);">
+                                    <i class="fa-solid fa-link me-1"></i>
+                                    Source:
+                                    @if($q->source_url)
+                                        <a href="{{ $q->source_url }}" target="_blank" rel="noopener" class="text-info">{{ $q->source_name }}</a>
+                                    @else
+                                        {{ $q->source_name }}
+                                    @endif
                                 </div>
                                 @endif
                             </div>
@@ -372,10 +402,15 @@
                             <textarea class="oinp mb-3" name="question_text" id="addQText" rows="2" required></textarea>
 
                             <label class="olbl">Expected Answer Guide (Helps AI)</label>
-                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. Education, Skills, Experience"></textarea>
+                            <textarea class="oinp mb-3" name="expected_guide" id="addExpectedGuide" rows="3" placeholder="e.g. Education, Skills, Experience"></textarea>
 
                             <label class="olbl">Mapped Skills (Comma separated)</label>
-                            <input class="oinp mb-3" type="text" name="mapped_skills" placeholder="Leadership, Communication">
+                            <input class="oinp mb-3" type="text" name="mapped_skills" id="addMappedSkills" placeholder="Leadership, Communication">
+
+                            <input type="hidden" name="source_name" id="addSourceName">
+                            <input type="hidden" name="source_url" id="addSourceUrl">
+                            <input type="hidden" name="source_type" id="addSourceType">
+                            <div id="addSourceBadge" style="display:none;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px;color:var(--tx3);font-size:.8rem;"></div>
                         </div>
                     </div>
                 </div>
@@ -399,7 +434,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <p style="color:var(--tx3); font-size:.85rem;">Upload a CSV file. The format should be: <code>Question Text, Type, Difficulty, Category ID</code></p>
+                    <p style="color:var(--tx3); font-size:.85rem;">Upload a CSV file. The format should be: <code>Question Text, Type, Difficulty, Category ID, Source Name, Source URL, Source Type</code></p>
                     <label class="olbl">CSV File</label>
                     <input class="form-control mb-3" style="background:var(--bg);color:var(--tx);border:1px solid var(--bd)" type="file" name="file" accept=".csv" required>
                 </div>
@@ -442,6 +477,21 @@
                         <option value="{{ $c->id }}">{{ $c->title }}</option>
                     @endforeach
                 </select>
+                <label class="olbl">AI Provider</label>
+                <select class="oinp mb-3" id="aiProvider">
+                    @foreach($aiProviderOptions ?? [] as $provider)
+                        <option value="{{ $provider['key'] }}" {{ $provider['is_default'] ? 'selected' : '' }}>
+                            {{ $provider['label'] }}{{ $provider['enabled'] ? '' : ' (not configured; fallback may be used)' }}
+                        </option>
+                    @endforeach
+                </select>
+                <label class="olbl">Reliable Philippines Source Pack</label>
+                <select class="oinp mb-3" id="aiDataset">
+                    <option value="auto">Auto-select from category</option>
+                    @foreach($datasetPacks ?? [] as $key => $pack)
+                        <option value="{{ $key }}">{{ $pack['name'] }}</option>
+                    @endforeach
+                </select>
                 <label class="olbl">Target Position/Role</label>
                 <input type="text" class="oinp mb-3" id="aiPosition" placeholder="e.g. Web Developer" value="Software Engineer">
                 <label class="olbl">Difficulty</label>
@@ -468,44 +518,27 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
             </div>
             <div class="modal-body">
-                <p style="color:var(--tx3); font-size:.85rem; margin-bottom: 20px;">Browse and import predefined question sets from the community to quickly build your Question Bank.</p>
+                <p style="color:var(--tx3); font-size:.85rem; margin-bottom: 20px;">Import predefined question sets grounded in public Philippines career, education, scholarship, and TESDA sources.</p>
                 <div class="row">
-                    <!-- Web Dev Dataset -->
-                    <div class="col-md-4 mb-3">
+                    @foreach($datasetPacks ?? [] as $key => $pack)
+                    <div class="col-md-6 mb-3">
                         <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
-                            <h6 style="color:var(--tx);font-weight:700;">Web Developer Pack</h6>
-                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;">Technical and behavioral questions tailored for frontend and backend web developers.</p>
+                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                <h6 style="color:var(--tx);font-weight:700;margin:0;">{{ $pack['name'] }}</h6>
+                                <span class="badge bg-info text-dark">{{ count($pack['questions'] ?? []) }}</span>
+                            </div>
+                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;margin-bottom:12px;">{{ $pack['description'] }}</p>
+                            <div style="font-size:.75rem;color:var(--tx3);margin-bottom:12px;">
+                                <i class="fa-solid fa-link me-1"></i>{{ $pack['sources'][0]['name'] ?? 'Reliable Philippines source' }}
+                            </div>
                             <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
                                 @csrf
-                                <input type="hidden" name="dataset" value="web_dev">
-                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import (3)</button>
+                                <input type="hidden" name="dataset" value="{{ $key }}">
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import Pack</button>
                             </form>
                         </div>
                     </div>
-                    <!-- Sales Dataset -->
-                    <div class="col-md-4 mb-3">
-                        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
-                            <h6 style="color:var(--tx);font-weight:700;">Sales Professional</h6>
-                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;">Situational and behavioral questions for evaluating sales and client-facing roles.</p>
-                            <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="dataset" value="sales">
-                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import (3)</button>
-                            </form>
-                        </div>
-                    </div>
-                    <!-- Leadership Dataset -->
-                    <div class="col-md-4 mb-3">
-                        <div style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column;">
-                            <h6 style="color:var(--tx);font-weight:700;">Leadership & Mgt.</h6>
-                            <p style="color:var(--tx3);font-size:.8rem;flex-grow:1;">Questions focusing on team management, conflict resolution, and leadership style.</p>
-                            <form action="{{ route('admin.questions.import-dataset') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="dataset" value="leadership">
-                                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="fa-solid fa-download me-1"></i> Import (3)</button>
-                            </form>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>
@@ -571,6 +604,19 @@ function submitBulkDelete() {
     form.submit();
 }
 
+function clearGeneratedQuestionSource() {
+    ['addSourceName', 'addSourceUrl', 'addSourceType', 'addExpectedGuide', 'addMappedSkills'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
+    const sourceBadge = document.getElementById('addSourceBadge');
+    if (sourceBadge) {
+        sourceBadge.style.display = 'none';
+        sourceBadge.innerHTML = '';
+    }
+}
+
 function openAnalytics(questionId) {
     var myModal = new bootstrap.Modal(document.getElementById('analyticsModal'));
     myModal.show();
@@ -609,6 +655,8 @@ function generateAiQuestion() {
     let catId = document.getElementById('aiCatId').value;
     let pos = document.getElementById('aiPosition').value;
     let diff = document.getElementById('aiDiff').value;
+    let provider = document.getElementById('aiProvider') ? document.getElementById('aiProvider').value : 'gemini';
+    let dataset = document.getElementById('aiDataset') ? document.getElementById('aiDataset').value : 'auto';
     
     let btn = event.target;
     let originalHtml = btn.innerHTML;
@@ -624,7 +672,9 @@ function generateAiQuestion() {
         body: JSON.stringify({
             category_id: catId,
             position: pos,
-            difficulty: diff
+            difficulty: diff,
+            ai_provider: provider,
+            dataset: dataset
         })
     })
     .then(res => res.json())
@@ -642,6 +692,20 @@ function generateAiQuestion() {
         document.getElementById('addCatId').value = catId;
         document.getElementById('addDiff').value = diff;
         document.getElementById('addQText').value = data.question_text;
+        document.getElementById('addExpectedGuide').value = data.expected_guide || '';
+        document.getElementById('addMappedSkills').value = Array.isArray(data.mapped_skills) ? data.mapped_skills.join(', ') : '';
+        document.getElementById('addSourceName').value = data.source_name || '';
+        document.getElementById('addSourceUrl').value = data.source_url || '';
+        document.getElementById('addSourceType').value = data.source_type || '';
+
+        let sourceBadge = document.getElementById('addSourceBadge');
+        if (sourceBadge && data.source_name) {
+            sourceBadge.style.display = 'block';
+            sourceBadge.innerHTML = `<i class="fa-solid fa-link me-1"></i> Source: ${escapeHtml(data.source_name)}${data.dataset_name ? ` via ${escapeHtml(data.dataset_name)}` : ''}`;
+        } else if (sourceBadge) {
+            sourceBadge.style.display = 'none';
+            sourceBadge.innerHTML = '';
+        }
         addModal.show();
     })
     .catch(err => {
@@ -649,6 +713,15 @@ function generateAiQuestion() {
         btn.disabled = false;
         alert("Error generating question.");
     });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 </script>
 @endsection

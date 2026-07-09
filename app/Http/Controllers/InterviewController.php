@@ -8,6 +8,7 @@ use App\Models\InterviewAnswer;
 use App\Models\InterviewPack;
 use App\Models\JobApplication;
 use App\Services\CareerPlanService;
+use App\Services\QuestionDatasetProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Helpers\ActivityLogger;
@@ -114,6 +115,9 @@ class InterviewController extends Controller
         ]);
 
         if ($provider !== 'local') {
+            $dataset = QuestionDatasetProvider::forCategory($category);
+            $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
+
             $generated = \App\Services\AIService::generateQuestions(
                 1, // Only generate the first question upfront for the real-time loop
                 $position,
@@ -125,7 +129,8 @@ class InterviewController extends Controller
                 $validated['company_persona'] ?? null,
                 $questionTypes,
                 $validated['ai_assistance_level'] ?? 'standard',
-                $validated['interviewer_strictness'] ?? 'neutral'
+                $validated['interviewer_strictness'] ?? 'neutral',
+                $dataset
             );
 
             if (is_array($generated)) {
@@ -137,6 +142,9 @@ class InterviewController extends Controller
                             'difficulty' => $validated['difficulty'],
                             'type' => $this->questionTypeForIndex(trim($qText), $questionTypes, $idx),
                             'interview_session_id' => $session->id,
+                            'source_name' => $sourceMetadata['source_name'] ?? null,
+                            'source_url' => $sourceMetadata['source_url'] ?? null,
+                            'source_type' => $sourceMetadata['source_type'] ?? null,
                         ]);
                     }
                 }
@@ -319,12 +327,20 @@ class InterviewController extends Controller
         }
 
         // 4. Save new AI Question
+        $dataset = $session->category
+            ? QuestionDatasetProvider::forCategory($session->category)
+            : null;
+        $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
+
         $newQuestion = \App\Models\Question::create([
             'category_id' => $session->category_id,
             'question_text' => trim($followUpText),
             'difficulty' => $session->difficulty,
             'interview_session_id' => $session->id,
-            'status' => 'active'
+            'status' => 'active',
+            'source_name' => $sourceMetadata['source_name'] ?? null,
+            'source_url' => $sourceMetadata['source_url'] ?? null,
+            'source_type' => $sourceMetadata['source_type'] ?? null,
         ]);
 
         return response()->json([

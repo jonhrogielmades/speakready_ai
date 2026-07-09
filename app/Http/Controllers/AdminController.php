@@ -9,7 +9,9 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\LearningModule;
+use App\Models\AiProvider;
 use App\Services\AIService;
+use App\Services\QuestionDatasetProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -231,6 +233,9 @@ class AdminController extends Controller
             'status' => 'nullable|string',
             'expected_guide' => 'nullable|string',
             'mapped_skills' => 'nullable|string',
+            'source_name' => 'nullable|string|max:255',
+            'source_url' => 'nullable|url',
+            'source_type' => 'nullable|string|max:255',
         ]);
 
         $skills = $request->mapped_skills ? array_map('trim', explode(',', $request->mapped_skills)) : null;
@@ -243,6 +248,9 @@ class AdminController extends Controller
             'status' => $request->status ?? 'active',
             'expected_guide' => $request->expected_guide,
             'mapped_skills' => $skills,
+            'source_name' => $request->source_name,
+            'source_url' => $request->source_url,
+            'source_type' => $request->source_type,
         ]);
 
         return redirect()->back()->with('success', 'Question added successfully');
@@ -258,6 +266,9 @@ class AdminController extends Controller
             'status' => 'required|string',
             'expected_guide' => 'nullable|string',
             'mapped_skills' => 'nullable|string',
+            'source_name' => 'nullable|string|max:255',
+            'source_url' => 'nullable|url',
+            'source_type' => 'nullable|string|max:255',
         ]);
 
         $skills = $request->mapped_skills ? array_map('trim', explode(',', $request->mapped_skills)) : null;
@@ -270,6 +281,9 @@ class AdminController extends Controller
             'status' => $request->status,
             'expected_guide' => $request->expected_guide,
             'mapped_skills' => $skills,
+            'source_name' => $request->source_name,
+            'source_url' => $request->source_url,
+            'source_type' => $request->source_type,
         ]);
 
         return redirect()->back()->with('success', 'Question updated successfully');
@@ -320,12 +334,19 @@ class AdminController extends Controller
             'position' => 'required|string|max:255',
             'difficulty' => 'required|string|max:50',
             'ai_provider' => 'nullable|string|max:50',
+            'dataset' => 'nullable|string|max:80',
         ]);
 
         $category = Category::findOrFail($request->category_id);
         $position = trim($request->position);
         $difficulty = trim($request->difficulty);
-        $provider = strtolower($request->input('ai_provider', env('AI_PROVIDER', 'local')));
+        $provider = $this->normalizeQuestionProvider(
+            $request->input('ai_provider', $this->defaultQuestionProvider())
+        );
+        $dataset = QuestionDatasetProvider::find($request->input('dataset'))
+            ?? QuestionDatasetProvider::forCategory($category);
+        $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
+        $fallbackQuestion = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
 
         $questionText = null;
         $source = 'fallback';
@@ -337,29 +358,47 @@ class AdminController extends Controller
                     $position,
                     $difficulty,
                     $category->title,
-                    $provider
+                    $provider,
+                    null,
+                    null,
+                    null,
+                    [],
+                    'standard',
+                    'neutral',
+                    $dataset
                 );
 
                 $questionText = collect($generated)
                     ->first(fn ($question) => is_string($question) && trim($question) !== '');
 
                 if ($questionText) {
-                    $source = 'ai';
+                    $source = 'ai_dataset';
                 }
             } catch (\Throwable $e) {
                 Log::warning('Admin AI question generation failed; using deterministic fallback.', [
                     'provider' => $provider,
                     'category_id' => $category->id,
+                    'dataset' => $dataset['key'] ?? null,
                     'error' => $e->getMessage(),
                 ]);
             }
         }
 
-        $questionText = $questionText ?: $this->fallbackInterviewQuestion($category, $position, $difficulty);
+        $questionText = $questionText ?: (
+            $provider === 'local'
+                ? $this->fallbackInterviewQuestion($category, $position, $difficulty)
+                : ($fallbackQuestion['question_text'] ?? $this->fallbackInterviewQuestion($category, $position, $difficulty))
+        );
 
         return response()->json([
             'question_text' => trim($questionText),
             'source' => $source,
+            'expected_guide' => $fallbackQuestion['expected_guide'] ?? null,
+            'mapped_skills' => $fallbackQuestion['mapped_skills'] ?? ($dataset['default_skills'] ?? []),
+            'source_name' => $sourceMetadata['source_name'] ?? null,
+            'source_url' => $sourceMetadata['source_url'] ?? null,
+            'source_type' => $sourceMetadata['source_type'] ?? null,
+            'dataset_name' => $dataset['name'] ?? null,
         ]);
     }
 
@@ -380,12 +419,25 @@ class AdminController extends Controller
             ->take(3)
             ->get();
 
-        return view('admin.questions', compact('questions', 'categories', 'totalQuestions', 'activeQuestions', 'totalCategories', 'mostUsedQuestions'));
+        $datasetPacks = QuestionDatasetProvider::all();
+        $aiProviderOptions = $this->questionProviderOptions();
+
+        return view('admin.questions', compact(
+            'questions',
+            'categories',
+            'totalQuestions',
+            'activeQuestions',
+            'totalCategories',
+            'mostUsedQuestions',
+            'datasetPacks',
+            'aiProviderOptions'
+        ));
     }
 
     private function providerCanGenerateQuestions(string $provider): bool
     {
         $providerKeys = [
+            'openai' => 'OPENAI_API_KEY',
             'gemini' => 'GEMINI_API_KEY',
             'cohere' => 'COHERE_API_KEY',
             'groq' => 'GROQ_API_KEY',
@@ -398,7 +450,60 @@ class AdminController extends Controller
             return false;
         }
 
+        if ($provider === 'openai' && AiProvider::where('name', 'like', '%OpenAI%')->where('status', 'active')->whereNotNull('api_key')->exists()) {
+            return true;
+        }
+
         return filled(env($providerKeys[$provider]));
+    }
+
+    private function defaultQuestionProvider(): string
+    {
+        $primary = AiProvider::where('is_primary', true)->where('status', 'active')->first();
+        $provider = $primary?->name ?: env('AI_PROVIDER', 'gemini');
+
+        return $this->normalizeQuestionProvider($provider);
+    }
+
+    private function normalizeQuestionProvider(?string $provider): string
+    {
+        $provider = strtolower(trim((string) $provider));
+        $provider = str_replace([' ', '_'], '', $provider);
+
+        return match ($provider) {
+            'local' => 'local',
+            'openai', 'chatgpt', 'gpt' => 'openai',
+            'google', 'googlegemini', 'gemini' => 'gemini',
+            'anthropic', 'claude' => 'claude',
+            'groq' => 'groq',
+            'openrouter' => 'openrouter',
+            'wisdomgate' => 'wisdomgate',
+            'cohere' => 'cohere',
+            default => 'gemini',
+        };
+    }
+
+    private function questionProviderOptions(): array
+    {
+        $providers = [
+            'openai' => 'OpenAI',
+            'gemini' => 'Gemini',
+            'groq' => 'Groq',
+            'claude' => 'Claude',
+            'openrouter' => 'OpenRouter',
+            'wisdomgate' => 'WisdomGate',
+            'cohere' => 'Cohere',
+        ];
+
+        return collect($providers)
+            ->map(fn (string $label, string $key) => [
+                'key' => $key,
+                'label' => $label,
+                'enabled' => $this->providerCanGenerateQuestions($key),
+                'is_default' => $key === $this->defaultQuestionProvider(),
+            ])
+            ->values()
+            ->all();
     }
 
     private function fallbackInterviewQuestion(Category $category, string $position, string $difficulty): string
@@ -434,6 +539,9 @@ class AdminController extends Controller
                     'type' => $row[1],
                     'difficulty' => $row[2],
                     'category_id' => $row[3],
+                    'source_name' => $row[4] ?? null,
+                    'source_url' => $row[5] ?? null,
+                    'source_type' => $row[6] ?? null,
                 ]);
             }
         }
@@ -448,45 +556,40 @@ class AdminController extends Controller
             'dataset' => 'required|string'
         ]);
 
-        // Get a default category for the imported questions, or create one
-        $category = Category::firstOrCreate(
-            ['title' => 'Community Datasets'],
-            ['description' => 'Imported from external datasets', 'status' => 'active']
-        );
-
-        $questionsToImport = [];
-
-        if ($request->dataset === 'web_dev') {
-            $questionsToImport = [
-                ['question_text' => 'Explain the concept of closures in JavaScript.', 'type' => 'Technical', 'difficulty' => 'Medium'],
-                ['question_text' => 'What are the main differences between React and Vue?', 'type' => 'Technical', 'difficulty' => 'Medium'],
-                ['question_text' => 'Describe a time you optimized the performance of a web application.', 'type' => 'Behavioral', 'difficulty' => 'Hard']
-            ];
-        } elseif ($request->dataset === 'sales') {
-            $questionsToImport = [
-                ['question_text' => 'How do you handle objections from a potential client?', 'type' => 'Situational', 'difficulty' => 'Medium'],
-                ['question_text' => 'Describe your most successful sale. What made it successful?', 'type' => 'Behavioral', 'difficulty' => 'Hard'],
-                ['question_text' => 'What CRM tools are you most familiar with?', 'type' => 'Technical', 'difficulty' => 'Easy']
-            ];
-        } elseif ($request->dataset === 'leadership') {
-            $questionsToImport = [
-                ['question_text' => 'Tell me about a time you had to resolve a conflict within your team.', 'type' => 'Behavioral', 'difficulty' => 'Medium'],
-                ['question_text' => 'How do you motivate a team member who is underperforming?', 'type' => 'Situational', 'difficulty' => 'Hard'],
-                ['question_text' => 'Describe your leadership style.', 'type' => 'Personal', 'difficulty' => 'Medium']
-            ];
+        $dataset = QuestionDatasetProvider::find($request->dataset);
+        if (!$dataset) {
+            return redirect()->back()->with('error', 'Selected dataset is not available.');
         }
+
+        $questionsToImport = QuestionDatasetProvider::preparedQuestions($request->dataset);
+        $imported = 0;
 
         foreach ($questionsToImport as $q) {
-            Question::create([
-                'question_text' => $q['question_text'],
-                'type' => $q['type'],
-                'difficulty' => $q['difficulty'],
-                'category_id' => $category->id,
-                'status' => 'active'
-            ]);
+            $category = Category::firstOrCreate(
+                ['title' => $q['category'] ?? 'Community Datasets'],
+                ['description' => 'Imported from reliable Philippines source packs', 'status' => 'active']
+            );
+
+            $question = Question::firstOrCreate(
+                ['question_text' => $q['question_text'], 'category_id' => $category->id],
+                [
+                    'type' => $q['type'],
+                    'difficulty' => $q['difficulty'],
+                    'expected_guide' => $q['expected_guide'] ?? null,
+                    'mapped_skills' => $q['mapped_skills'] ?? null,
+                    'source_name' => $q['source_name'] ?? null,
+                    'source_url' => $q['source_url'] ?? null,
+                    'source_type' => $q['source_type'] ?? null,
+                    'status' => 'active',
+                ]
+            );
+
+            if ($question->wasRecentlyCreated) {
+                $imported++;
+            }
         }
 
-        return redirect()->back()->with('success', count($questionsToImport) . ' questions imported from ' . $request->dataset . ' dataset successfully!');
+        return redirect()->back()->with('success', $imported . ' new questions imported from ' . $dataset['name'] . '.');
     }
 
     public function exportQuestions()
@@ -501,7 +604,7 @@ class AdminController extends Controller
             "Expires"             => "0"
         ];
 
-        $columns = ['ID', 'Category', 'Question', 'Type', 'Difficulty'];
+        $columns = ['ID', 'Category', 'Question', 'Type', 'Difficulty', 'Source Name', 'Source URL', 'Source Type'];
 
         $callback = function() use($questions, $columns) {
             $file = fopen('php://output', 'w');
@@ -513,8 +616,20 @@ class AdminController extends Controller
                 $row['Question']  = $question->question_text;
                 $row['Type']  = $question->type;
                 $row['Difficulty']  = $question->difficulty;
+                $row['Source Name'] = $question->source_name;
+                $row['Source URL'] = $question->source_url;
+                $row['Source Type'] = $question->source_type;
 
-                fputcsv($file, array($row['ID'], $row['Category'], $row['Question'], $row['Type'], $row['Difficulty']));
+                fputcsv($file, array(
+                    $row['ID'],
+                    $row['Category'],
+                    $row['Question'],
+                    $row['Type'],
+                    $row['Difficulty'],
+                    $row['Source Name'],
+                    $row['Source URL'],
+                    $row['Source Type'],
+                ));
             }
 
             fclose($file);
