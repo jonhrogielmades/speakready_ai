@@ -1,27 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\AdminSessionController;
+use App\Http\Controllers\AdminSettingController;
+use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\MentorReviewController;
-
-use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserApplicationController;
-use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\AdminSettingController;
+use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (Auth::check()) {
         if (Auth::user()->is_admin) {
             return redirect()->route('admin.dashboard');
         }
+
         return redirect()->route('dashboard');
     }
+
     return view('welcome');
 });
 
@@ -51,7 +52,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/interview/setup', function () {
         $categories = \App\Models\Category::where('status', 'active')->where('type', 'core')->get();
         $applications = \App\Models\JobApplication::where('user_id', Auth::id())
-            ->orderByRaw("CASE WHEN interview_date IS NULL THEN 1 ELSE 0 END")
+            ->orderByRaw('CASE WHEN interview_date IS NULL THEN 1 ELSE 0 END')
             ->orderBy('interview_date')
             ->orderByDesc('updated_at')
             ->get();
@@ -84,7 +85,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->name('user.account.delete');
-    
+
     Route::get('/notifications', [UserController::class, 'notifications'])->name('user.notifications');
     Route::get('/notifications/fetch', [UserController::class, 'fetchNotifications'])->name('user.notifications.fetch');
     Route::post('/notifications/read-all', [UserController::class, 'markAllNotificationsAsRead'])->name('user.notifications.readAll');
@@ -107,15 +108,15 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
-    
+
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
     Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
-    
+
     // Arena Gamification Routes
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
-    
+
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
     Route::post('/drills/voice/analyze', [UserController::class, 'analyzeVoiceSession'])->name('user.drills.voice.analyze');
@@ -144,11 +145,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::get('/{user}', [AdminUserController::class, 'show'])->name('show');
         Route::post('/{user}/approve-reactivation', [AdminUserController::class, 'approveReactivation'])->name('approve-reactivation');
     });
-    
+
     Route::get('/admin/categories', function () {
         return view('admin.categories', ['categories' => \App\Models\Category::all()]);
     })->name('admin.categories');
-    
+
     // Admin Routes - Categories
     Route::post('/admin/categories', [AdminController::class, 'storeCategory'])->name('admin.categories.store');
     Route::put('/admin/categories/{category}', [AdminController::class, 'updateCategory'])->name('admin.categories.update');
@@ -157,7 +158,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/categories/{category}/details', [AdminController::class, 'categoryDetails'])->name('admin.categories.details');
 
     Route::get('/admin/questions', [AdminController::class, 'questionsDashboard'])->name('admin.questions');
-    
+
     // Admin Routes - Questions
     Route::post('/admin/questions', [AdminController::class, 'storeQuestion'])->name('admin.questions.store');
     Route::put('/admin/questions/{question}', [AdminController::class, 'updateQuestion'])->name('admin.questions.update');
@@ -171,7 +172,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/questions/export', [AdminController::class, 'exportQuestions'])->name('admin.questions.export');
 
     Route::get('/admin/modules', [AdminController::class, 'modulesDashboard'])->name('admin.modules');
-    
+
     // Admin Routes - Modules
     Route::get('/admin/modules/{module}/edit', [AdminController::class, 'editModule'])->name('admin.modules.edit');
     Route::post('/admin/modules/generate', [AdminController::class, 'generateModule'])->name('admin.modules.generate');
@@ -211,11 +212,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Session Monitoring
     Route::get('/admin/sessions', [AdminSessionController::class, 'index'])->name('admin.sessions.index');
     Route::get('/admin/sessions/archive', [AdminSessionController::class, 'archiveIndex'])->name('admin.sessions.archive');
+    Route::delete('/admin/sessions/clear', [AdminSessionController::class, 'clear'])->name('admin.sessions.clear');
     Route::get('/admin/sessions/{session}', [AdminSessionController::class, 'show'])->name('admin.sessions.show');
     Route::get('/admin/sessions/{session}/review', [AdminSessionController::class, 'review'])->name('admin.sessions.review');
     Route::post('/admin/sessions/{session}/flag', [AdminSessionController::class, 'flag'])->name('admin.sessions.flag');
     Route::post('/admin/sessions/{session}/archive', [AdminSessionController::class, 'archive'])->name('admin.sessions.doArchive');
     Route::post('/admin/sessions/{session}/restore', [AdminSessionController::class, 'restore'])->name('admin.sessions.restore');
+    Route::delete('/admin/sessions/{session}', [AdminSessionController::class, 'destroy'])->name('admin.sessions.destroy');
     Route::get('/admin/reports/sessions/export', [AdminSessionController::class, 'export'])->name('admin.sessions.export');
 
     // Admin Contacts
@@ -230,7 +233,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/feedback/{answer}/verify', [App\Http\Controllers\AdminFeedbackController::class, 'verify'])->name('admin.feedback.verify');
     Route::patch('/admin/feedback/{answer}/status', [App\Http\Controllers\AdminFeedbackController::class, 'updateStatus'])->name('admin.feedback.status');
     Route::post('/admin/feedback/{answer}/notes', [App\Http\Controllers\AdminFeedbackController::class, 'addNote'])->name('admin.feedback.notes');
-    
+
     // Admin AI Providers Features
     Route::prefix('admin/ai')->name('admin.ai.')->group(function () {
         Route::get('/providers', [\App\Http\Controllers\AdminAiController::class, 'providers'])->name('providers');
@@ -247,7 +250,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/admin/api/activities/clear-all', [\App\Http\Controllers\AdminController::class, 'clearAllActivities']);
     Route::post('/admin/api/activities/{id}/mark-read', [\App\Http\Controllers\AdminController::class, 'markActivityRead']);
     Route::delete('/admin/api/activities/{id}', [\App\Http\Controllers\AdminController::class, 'deleteActivity']);
-    
+
     Route::get('/admin/notifications', [\App\Http\Controllers\AdminNotificationController::class, 'index'])->name('admin.notifications.index');
     Route::post('/admin/notifications/send', [\App\Http\Controllers\AdminNotificationController::class, 'store'])->name('admin.notifications.store');
     Route::delete('/admin/notifications/{id}', [\App\Http\Controllers\AdminNotificationController::class, 'destroy'])->name('admin.notifications.destroy');

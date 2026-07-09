@@ -3,9 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Feedback;
 use App\Models\GameLevel;
+use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
+use App\Models\Profile;
+use App\Models\Question;
+use App\Models\Score;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -45,6 +50,121 @@ class AdminReliabilityTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.sessions.index', ['sort' => 'not_a_column', 'direction' => 'sideways']))
             ->assertOk();
+    }
+
+    public function test_admin_can_delete_an_interview_session_and_related_records(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+
+        $question = Question::create([
+            'category_id' => $category->id,
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about yourself.',
+            'difficulty' => 'medium',
+        ]);
+
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'A concise practice answer.',
+            'response_mode' => 'text',
+        ]);
+
+        Score::create([
+            'interview_session_id' => $session->id,
+            'overall_readiness_score' => 88,
+        ]);
+
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'Clear answer.',
+        ]);
+
+        Profile::create([
+            'user_id' => $user->id,
+            'total_sessions' => 1,
+            'readiness_score' => 88,
+            'current_streak' => 1,
+            'longest_streak' => 1,
+            'last_activity_date' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.sessions.destroy', $session))
+            ->assertRedirect(route('admin.sessions.index'))
+            ->assertSessionHas('message');
+
+        $this->assertDatabaseMissing('interview_sessions', ['id' => $session->id]);
+        $this->assertDatabaseMissing('questions', ['id' => $question->id]);
+        $this->assertDatabaseMissing('interview_answers', ['id' => $answer->id]);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'total_sessions' => 0,
+            'readiness_score' => 0,
+            'current_streak' => 0,
+            'longest_streak' => 0,
+            'last_activity_date' => null,
+        ]);
+    }
+
+    public function test_admin_can_clear_all_interview_sessions_including_archived_sessions(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $firstUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $secondUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        $activeSession = $this->sessionFor($firstUser, $category, ['is_archived' => false]);
+        $archivedSession = $this->sessionFor($firstUser, $category, ['is_archived' => true]);
+        $pendingSession = $this->sessionFor($secondUser, $category, ['status' => 'pending']);
+
+        Score::create([
+            'interview_session_id' => $activeSession->id,
+            'overall_readiness_score' => 80,
+        ]);
+        Score::create([
+            'interview_session_id' => $archivedSession->id,
+            'overall_readiness_score' => 90,
+        ]);
+
+        Profile::create([
+            'user_id' => $firstUser->id,
+            'total_sessions' => 2,
+            'readiness_score' => 85,
+            'current_streak' => 1,
+            'longest_streak' => 1,
+            'last_activity_date' => now()->toDateString(),
+        ]);
+
+        Profile::create([
+            'user_id' => $secondUser->id,
+            'total_sessions' => 0,
+            'readiness_score' => 0,
+        ]);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.sessions.clear'))
+            ->assertRedirect(route('admin.sessions.index'))
+            ->assertSessionHas('message');
+
+        $this->assertDatabaseMissing('interview_sessions', ['id' => $activeSession->id]);
+        $this->assertDatabaseMissing('interview_sessions', ['id' => $archivedSession->id]);
+        $this->assertDatabaseMissing('interview_sessions', ['id' => $pendingSession->id]);
+        $this->assertDatabaseCount('interview_sessions', 0);
+        $this->assertDatabaseCount('scores', 0);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $firstUser->id,
+            'total_sessions' => 0,
+            'readiness_score' => 0,
+            'current_streak' => 0,
+            'longest_streak' => 0,
+            'last_activity_date' => null,
+        ]);
     }
 
     public function test_admin_cannot_delete_own_or_last_admin_account(): void

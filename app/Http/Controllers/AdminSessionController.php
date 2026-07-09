@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\InterviewSession;
+use App\Models\Profile;
+use App\Models\Question;
+use App\Models\Score;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +18,7 @@ class AdminSessionController extends Controller
         $totalSessions = InterviewSession::count();
         $activeSessionsToday = InterviewSession::whereDate('created_at', today())->count();
         $completedSessions = InterviewSession::where('status', 'completed')->count();
-        
+
         $avgScore = DB::table('scores')->avg('overall_readiness_score') ?? 0;
         $avgDuration = DB::table('interview_sessions')->avg('duration_seconds') ?? 0;
 
@@ -27,7 +31,7 @@ class AdminSessionController extends Controller
             ->first();
 
         $sessionCompletionRate = $totalSessions > 0 ? ($completedSessions / $totalSessions) * 100 : 0;
-        
+
         $dailySessionCount = InterviewSession::select(DB::raw('DATE(created_at) as date'), DB::raw('count(*) as total'))
             ->groupBy('date')
             ->orderBy('date', 'desc')
@@ -62,15 +66,15 @@ class AdminSessionController extends Controller
         $sort = $request->get('sort', 'created_at');
         $direction = strtolower($request->get('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
         $allowedSorts = ['id', 'created_at', 'updated_at', 'status', 'duration_seconds', 'score'];
-        if (!in_array($sort, $allowedSorts, true)) {
+        if (! in_array($sort, $allowedSorts, true)) {
             $sort = 'created_at';
         }
-        
+
         // Handle sorting relation columns
         if ($sort == 'score') {
             $query->leftJoin('scores', 'interview_sessions.id', '=', 'scores.interview_session_id')
-                  ->orderBy('scores.overall_readiness_score', $direction)
-                  ->select('interview_sessions.*');
+                ->orderBy('scores.overall_readiness_score', $direction)
+                ->select('interview_sessions.*');
         } else {
             $query->orderBy($sort, $direction);
         }
@@ -87,7 +91,7 @@ class AdminSessionController extends Controller
     public function show(InterviewSession $session)
     {
         $session->load(['user', 'category', 'score', 'answers.question', 'feedback']);
-        
+
         // Feature 3: Session Details
         $questionsAnswered = $session->answers->where('is_skipped', false)->count();
         $questionsSkipped = $session->answers->where('is_skipped', true)->count();
@@ -98,16 +102,16 @@ class AdminSessionController extends Controller
         // Feature 10: Session Timeline
         $timeline = [];
         $timeline[] = ['time' => $session->created_at, 'event' => 'Interview Started', 'icon' => 'fa-play', 'color' => 'primary'];
-        
+
         foreach ($session->answers as $answer) {
             $timeline[] = [
-                'time' => $answer->created_at, 
-                'event' => 'Question Answered: ' . ($answer->question->question_text ?? 'Unknown'),
+                'time' => $answer->created_at,
+                'event' => 'Question Answered: '.($answer->question->question_text ?? 'Unknown'),
                 'icon' => 'fa-comment-dots',
-                'color' => 'info'
+                'color' => 'info',
             ];
         }
-        
+
         if ($session->status == 'completed') {
             $timeline[] = ['time' => $session->updated_at, 'event' => 'Interview Submitted', 'icon' => 'fa-check', 'color' => 'success'];
             if ($session->feedback) {
@@ -118,7 +122,7 @@ class AdminSessionController extends Controller
         }
 
         // Sort timeline by time
-        usort($timeline, function($a, $b) {
+        usort($timeline, function ($a, $b) {
             return $a['time'] <=> $b['time'];
         });
 
@@ -128,9 +132,9 @@ class AdminSessionController extends Controller
     public function review(InterviewSession $session)
     {
         $session->load(['answers.question', 'feedback']);
-        
+
         // Feature 4: Question & Answer Review & Feature 12: AI Feedback Monitoring & Feature 11: Voice Monitoring
-        
+
         return view('admin.sessions.review', compact('session'));
     }
 
@@ -153,7 +157,7 @@ class AdminSessionController extends Controller
     public function archiveIndex(Request $request)
     {
         $query = InterviewSession::with(['user', 'category', 'score'])->where('is_archived', true);
-        
+
         if ($request->filled('search')) {
             $search = trim((string) $request->search);
             $query->where(function ($q) use ($search) {
@@ -163,8 +167,9 @@ class AdminSessionController extends Controller
                 })->orWhere('interview_sessions.id', 'like', "%{$search}%");
             });
         }
-        
+
         $sessions = $query->orderBy('updated_at', 'desc')->paginate(15);
+
         return view('admin.sessions.archive', compact('sessions'));
     }
 
@@ -176,24 +181,70 @@ class AdminSessionController extends Controller
         return redirect()->back()->with('message', 'Session restored successfully.');
     }
 
+    public function destroy(InterviewSession $session)
+    {
+        $sessionId = $session->id;
+        $userId = (int) $session->user_id;
+        $redirectRoute = $session->is_archived ? 'admin.sessions.archive' : 'admin.sessions.index';
+
+        DB::transaction(function () use ($session, $sessionId, $userId) {
+            Question::where('interview_session_id', $sessionId)->delete();
+            $session->delete();
+            $this->syncInterviewProfileStats($userId);
+        });
+
+        return redirect()
+            ->route($redirectRoute)
+            ->with('message', "Session #{$sessionId} deleted successfully.");
+    }
+
+    public function clear()
+    {
+        $sessionCount = InterviewSession::count();
+
+        if ($sessionCount === 0) {
+            return redirect()->back()->with('message', 'No sessions to clear.');
+        }
+
+        DB::transaction(function () {
+            $userIds = InterviewSession::whereNotNull('user_id')
+                ->distinct()
+                ->pluck('user_id');
+            $sessionIds = InterviewSession::pluck('id');
+
+            Question::whereIn('interview_session_id', $sessionIds)->delete();
+            InterviewSession::query()->delete();
+
+            $userIds->each(function ($userId) {
+                $this->syncInterviewProfileStats((int) $userId);
+            });
+        });
+
+        $label = $sessionCount === 1 ? 'session' : 'sessions';
+
+        return redirect()
+            ->route('admin.sessions.index')
+            ->with('message', "All {$sessionCount} interview {$label} were deleted successfully.");
+    }
+
     public function export(Request $request)
     {
         // Feature 14: Session Reports (CSV Export)
-        $fileName = 'sessions_export_' . date('Ymd_His') . '.csv';
-        
+        $fileName = 'sessions_export_'.date('Ymd_His').'.csv';
+
         $sessions = InterviewSession::with(['user', 'category', 'score'])->get();
 
         $headers = [
-            "Content-type"        => "text/csv",
-            "Content-Disposition" => "attachment; filename=$fileName",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            'Content-type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$fileName",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ];
 
         $columns = ['Session ID', 'User', 'Category', 'Status', 'Date', 'Duration (s)', 'Overall Score', 'Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Confidence'];
 
-        $callback = function() use($sessions, $columns) {
+        $callback = function () use ($sessions, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
@@ -219,5 +270,78 @@ class AdminSessionController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function syncInterviewProfileStats(int $userId): void
+    {
+        $profile = Profile::firstOrCreate(['user_id' => $userId]);
+
+        $completedSessions = InterviewSession::where('user_id', $userId)
+            ->where('status', 'completed');
+
+        $profile->total_sessions = (clone $completedSessions)->count();
+
+        $averageScore = Score::whereHas('session', function ($query) use ($userId) {
+            $query->where('user_id', $userId)
+                ->where('status', 'completed');
+        })->avg('overall_readiness_score');
+
+        $profile->readiness_score = round($averageScore ?? 0);
+
+        $practiceDates = (clone $completedSessions)
+            ->selectRaw('DATE(created_at) as practice_date')
+            ->distinct()
+            ->orderBy('practice_date')
+            ->pluck('practice_date')
+            ->filter()
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->values();
+
+        if ($practiceDates->isEmpty()) {
+            $profile->current_streak = 0;
+            $profile->longest_streak = 0;
+            $profile->last_activity_date = null;
+        } else {
+            $profile->current_streak = $this->currentPracticeStreak($practiceDates);
+            $profile->longest_streak = $this->longestPracticeStreak($practiceDates);
+            $profile->last_activity_date = $practiceDates->last();
+        }
+
+        $profile->save();
+    }
+
+    private function currentPracticeStreak($practiceDates): int
+    {
+        $dateSet = array_fill_keys($practiceDates->all(), true);
+        $cursor = Carbon::parse($practiceDates->last());
+        $streak = 0;
+
+        while (isset($dateSet[$cursor->toDateString()])) {
+            $streak++;
+            $cursor->subDay();
+        }
+
+        return $streak;
+    }
+
+    private function longestPracticeStreak($practiceDates): int
+    {
+        $longest = 0;
+        $current = 0;
+        $previousDate = null;
+
+        foreach ($practiceDates as $date) {
+            if ($previousDate && Carbon::parse($previousDate)->addDay()->toDateString() === $date) {
+                $current++;
+            } else {
+                $current = 1;
+            }
+
+            $longest = max($longest, $current);
+            $previousDate = $date;
+        }
+
+        return $longest;
     }
 }

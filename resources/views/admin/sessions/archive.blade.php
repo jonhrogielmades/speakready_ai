@@ -122,6 +122,13 @@
                                     <i class="fa-solid fa-clock-rotate-left me-1"></i> Restore
                                 </button>
                             </form>
+                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this archived session? This cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;" title="Delete">
+                                    <i class="fa-solid fa-trash-can me-1"></i> Delete
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     @empty

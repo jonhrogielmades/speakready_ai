@@ -107,6 +107,15 @@
             <a href="{{ route('admin.sessions.archive') }}" class="btn" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
                 <i class="fa-solid fa-box-archive text-warning me-2"></i>Archive
             </a>
+            @if($totalSessions > 0)
+            <form action="{{ route('admin.sessions.clear') }}" method="POST" onsubmit="return confirm('Delete all interview sessions, including archived sessions? This cannot be undone.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;border-radius:12px;">
+                    <i class="fa-solid fa-broom me-2"></i>Clear All
+                </button>
+            </form>
+            @endif
         </div>
     </div>
 
@@ -282,6 +291,11 @@
                             <form action="{{ route('admin.sessions.doArchive', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to archive this session?');">
                                 @csrf
                                 <button type="submit" class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Archive"><i class="fa-solid fa-box-archive text-warning"></i></button>
+                            </form>
+                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm" style="background:var(--bg3);color:#f87171;border:1px solid rgba(248,113,113,0.35);" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
                             </form>
                         </td>
                     </tr>
