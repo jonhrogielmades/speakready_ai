@@ -88,36 +88,26 @@
         </div>
     </div>
 
-    @if($sessions->count() > 0)
+    @if($hasScoreData)
     <!-- Feature 6: Readiness Assessment Report -->
-    @php 
-        $currentReadiness = $latestSession ? ($latestSession->score->overall_readiness_score ?? 88) : 88;
-        $prevReadiness = $previousSession ? ($previousSession->score->overall_readiness_score ?? 75) : 75;
-        $improvement = $currentReadiness - $prevReadiness;
-        
-        if($currentReadiness >= 90) { $rRating = 'Excellent'; $rColor = '#10b981'; }
-        elseif($currentReadiness >= 70) { $rRating = 'Good'; $rColor = '#3b82f6'; }
-        elseif($currentReadiness >= 50) { $rRating = 'Fair'; $rColor = '#f59e0b'; }
-        else { $rRating = 'Needs Improvement'; $rColor = '#ef4444'; }
-    @endphp
     <div id="report-readiness" class="print-card mb-4" style="border-radius:24px; padding:32px;">
         <div class="row align-items-center text-center text-md-start">
             <div class="col-md-3 border-end" style="border-color:rgba(59, 130, 246, 0.2) !important;">
                 <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Readiness Score</h6>
-                <div style="font-size:3.5rem;font-weight:900;line-height:1;color:{{ $rColor }};">{{ $currentReadiness }}<span style="font-size:1.5rem">%</span></div>
-                <div class="badge mt-2 fs-6" style="background-color:{{ $rColor }};color:#fff;">{{ $rRating }}</div>
+                <div style="font-size:3.5rem;font-weight:900;line-height:1;color:{{ $readinessSummary->color }};">{{ $readinessSummary->current }}<span style="font-size:1.5rem">%</span></div>
+                <div class="badge mt-2 fs-6" style="background-color:{{ $readinessSummary->color }};color:#fff;">{{ $readinessSummary->rating }}</div>
             </div>
             <div class="col-md-3 border-end mt-4 mt-md-0" style="border-color:rgba(59, 130, 246, 0.2) !important;">
                 <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Previous Score</h6>
-                <div style="font-size:2rem;font-weight:700;line-height:1;color:var(--tx);">{{ $prevReadiness }}%</div>
+                <div style="font-size:2rem;font-weight:700;line-height:1;color:var(--tx);">{{ $readinessSummary->previous === null ? 'N/A' : $readinessSummary->previous . '%' }}</div>
             </div>
             <div class="col-md-6 mt-4 mt-md-0 ps-md-4">
-                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Improvement Rate</h6>
+                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Readiness Change</h6>
                 <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
-                    <i class="fa-solid fa-arrow-trend-up fs-1" style="color:#10b981;"></i>
-                    <div style="font-size:2.5rem;font-weight:800;color:#10b981;">+{{ $improvement > 0 ? $improvement : 13 }}%</div>
+                    <i class="fa-solid {{ $readinessSummary->delta === null ? 'fa-minus' : ($readinessSummary->delta >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down') }} fs-1" style="color:{{ $readinessSummary->delta_color }};"></i>
+                    <div style="font-size:2.5rem;font-weight:800;color:{{ $readinessSummary->delta_color }};">{{ $readinessSummary->delta_label }}</div>
                 </div>
-                <p style="color:var(--tx);margin-top:8px;font-size:0.95rem;">You have significantly improved your interview readiness compared to your previous assessment.</p>
+                <p style="color:var(--tx);margin-top:8px;font-size:0.95rem;">{{ $readinessSummary->message }}</p>
             </div>
         </div>
     </div>
@@ -131,39 +121,30 @@
                 <div class="row mb-4 bg-light bg-opacity-10 rounded p-3" style="background:var(--bg);">
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Category</small>
-                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->category->title ?? 'Job Interview' }}</div>
+                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->category->title ?? 'Uncategorized' }}</div>
                     </div>
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Date</small>
-                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession ? $latestSession->created_at->format('M d, Y') : 'June 18, 2026' }}</div>
+                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->created_at->format('M d, Y') }}</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Difficulty</small>
-                        <div style="color:var(--tx);font-weight:bold;text-transform:capitalize;">{{ $latestSession->difficulty ?? 'Intermediate' }}</div>
+                        <div style="color:var(--tx);font-weight:bold;text-transform:capitalize;">{{ $latestSession->difficulty ?? 'Not recorded' }}</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Questions</small>
-                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->num_questions ?? 5 }}</div>
+                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->num_questions ?? 'N/A' }}</div>
                     </div>
                 </div>
 
                 <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">Performance Breakdown</h6>
                 <div class="row g-3 text-center">
-                    @php
-                        $metrics = [
-                            'Clarity' => $latestSession->score->clarity_score ?? 90,
-                            'Relevance' => $latestSession->score->relevance_score ?? 85,
-                            'Grammar' => $latestSession->score->grammar_score ?? 92,
-                            'Professionalism' => $latestSession->score->professionalism_score ?? 88,
-                            'Confidence' => $latestSession->score->confidence_score ?? 80,
-                        ];
-                    @endphp
-                    @foreach($metrics as $label => $val)
+                    @foreach($latestPerformanceMetrics as $metric)
                     <div class="col">
                         <div style="width:60px;height:60px;border-radius:50%;background:rgba(59,130,246,0.1);border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--tx);font-weight:bold;font-size:1.1rem;">
-                            {{ $val }}
+                            {{ $metric['score'] }}
                         </div>
-                        <div style="font-size:0.8rem;color:var(--tx3);font-weight:600;">{{ $label }}</div>
+                        <div style="font-size:0.8rem;color:var(--tx3);font-weight:600;">{{ $metric['name'] }}</div>
                     </div>
                     @endforeach
                 </div>
@@ -176,17 +157,7 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
                 
-                @if($latestSession && $firstSession && $latestSession->id !== $firstSession->id)
-                @php
-                    $latestS = $latestSession->score;
-                    $firstS = $firstSession->score;
-                    $metricsComp = [
-                        'Overall Score' => [$firstS->overall_readiness_score ?? 0, $latestS->overall_readiness_score ?? 0],
-                        'Clarity' => [$firstS->clarity_score ?? 0, $latestS->clarity_score ?? 0],
-                        'Confidence' => [$firstS->confidence_score ?? 0, $latestS->confidence_score ?? 0],
-                        'Relevance' => [$firstS->relevance_score ?? 0, $latestS->relevance_score ?? 0]
-                    ];
-                @endphp
+                @if(count($comparisonRows) > 0)
                 <div class="table-responsive">
                     <table class="table table-borderless table-sm align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                       <thead style="border-bottom:1px solid var(--bd);">
@@ -198,14 +169,13 @@
                           </tr>
                       </thead>
                     <tbody>
-                        @foreach($metricsComp as $metricName => $scores)
-                        @php $diff = $scores[1] - $scores[0]; @endphp
+                        @foreach($comparisonRows as $row)
                         <tr>
-                            <td class="fw-bold">{{ $metricName }}</td>
-                            <td class="text-center">{{ $scores[0] }}%</td>
-                            <td class="text-center text-primary fw-bold">{{ $scores[1] }}%</td>
-                            <td class="text-end {{ $diff >= 0 ? 'text-success' : 'text-danger' }}">
-                                <i class="fa-solid {{ $diff >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} me-1"></i>{{ abs($diff) }}%
+                            <td class="fw-bold">{{ $row['label'] }}</td>
+                            <td class="text-center">{{ $row['previous'] }}%</td>
+                            <td class="text-center text-primary fw-bold">{{ $row['current'] }}%</td>
+                            <td class="text-end {{ $row['delta'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                <i class="fa-solid {{ $row['delta'] >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' }} me-1"></i>{{ abs($row['delta']) }}%
                             </td>
                         </tr>
                         @endforeach
@@ -226,24 +196,13 @@
         <div class="col-12">
             <div id="report-feedback" class="print-card" style="padding:32px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-comment-dots text-info me-2"></i>Feedback Summary Report</h5>
-                @if($latestSession && $latestSession->score)
+                @if($feedbackSummary->has_data)
                 @php
-                    $sc = $latestSession->score;
-                    $skillsList = [
-                        'Clarity' => $sc->clarity_score ?? 0, 
-                        'Relevance' => $sc->relevance_score ?? 0, 
-                        'Grammar' => $sc->grammar_score ?? 0, 
-                        'Professionalism' => $sc->professionalism_score ?? 0, 
-                        'Confidence' => $sc->confidence_score ?? 0
-                    ];
-                    $strengths = [];
-                    $weaknesses = [];
-                    foreach($skillsList as $sName => $sVal) {
-                        if($sVal >= 80) $strengths[] = $sName;
-                        else $weaknesses[] = $sName;
-                    }
-                    if(empty($strengths)) $strengths[] = 'Keep practicing!';
-                    if(empty($weaknesses)) $weaknesses[] = 'Doing great!';
+                    $strengths = $feedbackSummary->strengths ?: ['None identified yet'];
+                    $weaknesses = $feedbackSummary->weaknesses ?: ['None identified yet'];
+                    $primaryRecommendation = ($feedbackSummary->weaknesses[0] ?? null)
+                        ? 'Focus on your ' . strtolower($feedbackSummary->weaknesses[0])
+                        : 'Maintain your strongest interview skills';
                 @endphp
                 <div class="row g-4">
                     <div class="col-md-4">
@@ -270,7 +229,7 @@
                         <div class="p-3" style="background:rgba(59,130,246,0.05);border-radius:12px;border:1px solid rgba(59,130,246,0.2);height:100%;">
                             <h6 style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>AI Recommendations</h6>
                             <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
-                                <li>Focus on your {{ strtolower($weaknesses[0] ?? 'skills') }}</li>
+                                <li>{{ $primaryRecommendation }}</li>
                                 <li>Review your past AI Feedback</li>
                                 <li>Complete Voice Drills</li>
                             </ul>
@@ -311,26 +270,18 @@
         <div class="col-md-6">
             <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-crosshairs text-danger me-2"></i>Skill Analysis Report</h5>
-                @if($latestSession && $latestSession->score && $firstSession && $firstSession->score)
                 @php
-                    $latS = $latestSession->score;
-                    $firS = $firstSession->score;
-                    $skillSet = [
-                        ['name'=>'Clarity', 'score'=>$latS->clarity_score ?? 0, 'diff'=>($latS->clarity_score ?? 0) - ($firS->clarity_score ?? 0)],
-                        ['name'=>'Confidence', 'score'=>$latS->confidence_score ?? 0, 'diff'=>($latS->confidence_score ?? 0) - ($firS->confidence_score ?? 0)],
-                        ['name'=>'Relevance', 'score'=>$latS->relevance_score ?? 0, 'diff'=>($latS->relevance_score ?? 0) - ($firS->relevance_score ?? 0)],
-                        ['name'=>'Grammar', 'score'=>$latS->grammar_score ?? 0, 'diff'=>($latS->grammar_score ?? 0) - ($firS->grammar_score ?? 0)],
-                        ['name'=>'Professionalism', 'score'=>$latS->professionalism_score ?? 0, 'diff'=>($latS->professionalism_score ?? 0) - ($firS->professionalism_score ?? 0)],
-                    ];
+                    $skillRows = array_values(array_filter($comparisonRows, fn($row) => $row['label'] !== 'Overall Score'));
                 @endphp
-                @foreach($skillSet as $sk)
+                @if(count($skillRows) > 0)
+                @foreach($skillRows as $sk)
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.9rem;">
-                        <span style="color:var(--tx);font-weight:600;">{{ $sk['name'] }}</span>
-                        <span style="color:var(--tx3)">{{ $sk['score'] }}% <span class="{{ $sk['diff'] >= 0 ? 'text-success' : 'text-danger' }} ms-2">({{ $sk['diff'] >= 0 ? '+' : '' }}{{ $sk['diff'] }}%)</span></span>
+                        <span style="color:var(--tx);font-weight:600;">{{ $sk['label'] }}</span>
+                        <span style="color:var(--tx3)">{{ $sk['current'] }}% <span class="{{ $sk['delta'] >= 0 ? 'text-success' : 'text-danger' }} ms-2">({{ $sk['delta'] >= 0 ? '+' : '' }}{{ $sk['delta'] }}%)</span></span>
                     </div>
                     <div class="progress" style="height:8px;background:var(--bd);border-radius:4px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $sk['score'] }}%;border-radius:4px;"></div>
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $sk['bar'] }}%;border-radius:4px;"></div>
                     </div>
                 </div>
                 @endforeach
@@ -348,15 +299,15 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-microphone-lines text-warning me-2"></i>Voice Rehearsal Report</h5>
                 <div class="row text-center align-items-center h-100 gy-3">
                     <div class="col-4 border-end px-1 px-sm-3" style="border-color:var(--bd)!important;">
-                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->wpm }}</div>
+                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->wpm ?? 'N/A' }}</div>
                         <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Pace (WPM)</div>
                     </div>
                     <div class="col-4 border-end px-1 px-sm-3" style="border-color:var(--bd)!important;">
-                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->confidence }}%</div>
+                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->confidence === null ? 'N/A' : $voiceData->confidence . '%' }}</div>
                         <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Confidence</div>
                     </div>
                     <div class="col-4 px-1 px-sm-3">
-                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:#ef4444;">{{ $voiceData->filler_words }}</div>
+                        <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:#ef4444;">{{ $voiceData->filler_words ?? 'N/A' }}</div>
                         <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Filler Words</div>
                     </div>
                 </div>
@@ -374,7 +325,7 @@
                         <ul class="list-unstyled mb-0" style="color:var(--tx);font-size:0.9rem;">
                             <li class="mb-2 d-flex justify-content-between align-items-center"><span>Lessons:</span> <strong>{{ $learningData->lessons_completed }}/{{ $learningData->lessons_total }}</strong></li>
                             <li class="mb-2 d-flex justify-content-between align-items-center"><span>Videos:</span> <strong>{{ $learningData->videos_watched }}</strong></li>
-                            <li class="d-flex justify-content-between align-items-center"><span>Quiz Avg:</span> <strong>{{ $learningData->quiz_average }}%</strong></li>
+                            <li class="d-flex justify-content-between align-items-center"><span>Quiz Avg:</span> <strong>{{ $learningData->quiz_average === null ? 'N/A' : $learningData->quiz_average . '%' }}</strong></li>
                         </ul>
                     </div>
                 </div>
@@ -388,23 +339,32 @@
             <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-award text-warning me-2"></i>Achievement Report</h5>
                 <div class="d-flex flex-wrap gap-4 justify-content-center justify-content-md-start">
-                    @foreach($achievements as $ach)
+                    @forelse($achievements as $ach)
                     <div class="text-center" style="width:110px;">
                         <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid {{ $ach->color }};display:flex;justify-content:center;align-items:center;margin:0 auto 12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);">
                             <i class="fa-solid {{ $ach->icon }} fs-2" style="color:{{ $ach->color }};"></i>
                         </div>
                         <div style="font-size:0.8rem;color:var(--tx);font-weight:600;line-height:1.2;">{{ $ach->title }}</div>
                     </div>
-                    @endforeach
+                    @empty
+                    <p style="color:var(--tx3);margin:0;">No achievements earned yet.</p>
+                    @endforelse
                 </div>
             </div>
         </div>
+    </div>
     @else
     <!-- Empty State -->
     <div class="print-card text-center py-5 mb-4" style="border-radius:24px; padding:32px;">
         <i class="fa-solid fa-folder-open text-primary mb-3" style="font-size: 4rem; opacity: 0.8;"></i>
-        <h4 style="color:var(--tx);font-weight:bold;">No Portfolio Data Available</h4>
-        <p style="color:var(--tx3); margin-bottom: 24px; max-width: 400px; margin-left: auto; margin-right: auto;">Your portfolio report is generated automatically based on your interview performance. Complete your first mock interview to unlock detailed analytics, performance comparisons, and personalized AI feedback.</p>
+        <h4 style="color:var(--tx);font-weight:bold;">No Scored Portfolio Data Available</h4>
+        <p style="color:var(--tx3); margin-bottom: 24px; max-width: 460px; margin-left: auto; margin-right: auto;">
+            @if($sessions->count() > 0)
+                You have completed interview records, but none of them have score data yet. Once a scored interview is available, this report will show analytics, comparisons, and feedback summaries.
+            @else
+                Your portfolio report is generated automatically from scored interview performance. Complete your first mock interview to unlock analytics, comparisons, and personalized AI feedback.
+            @endif
+        </p>
         <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine px-4 py-2" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-play me-2"></i>Start Mock Interview</a>
     </div>
     @endif
@@ -416,8 +376,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        @if($sessions->count() > 0)
-        const trendData = {!! json_encode($scoreTrend) !!};
+        @if($hasScoreData)
+        const trendData = @json($scoreTrend);
         const labels = trendData.map(d => d.date);
         const scores = trendData.map(d => d.score);
 
@@ -448,7 +408,7 @@
             }
         });
 
-        const catPerf = {!! json_encode($categoryPerf) !!};
+        const catPerf = @json($categoryPerf);
         
         new Chart(document.getElementById('catChart'), {
             type: 'bar',

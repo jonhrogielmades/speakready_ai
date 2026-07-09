@@ -47,10 +47,9 @@
             <div id="feedback-filters" class="d-flex gap-2 flex-wrap">
                 <select id="categoryFilter" class="form-select border-0 db-filter-input" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
                     <option value="">All Categories</option>
-                    <option value="Job Interview">Job Interview</option>
-                    <option value="Scholarship Interview">Scholarship Interview</option>
-                    <option value="IT Interview">IT Interview</option>
-                    <option value="College Admission">College Admission</option>
+                    @foreach($feedbackCategories as $category)
+                        <option value="{{ $category }}">{{ $category }}</option>
+                    @endforeach
                 </select>
                 <button class="btn btn-outline-secondary" id="sortDateBtn" style="border-radius:8px;"><i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date</button>
                 @if($sessions->total() > 0)
@@ -85,10 +84,17 @@
                     <tr style="border-bottom: 1px solid var(--bd);" data-category="{{ $session->category ? $session->category->title : 'Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
                         <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
                         <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->title : 'Job Interview' }}</td>
-                        <td class="border-0 py-3 fw-bold">{{ $session->score ? $session->score->overall_readiness_score : 0 }}%</td>
+                        <td class="border-0 py-3 fw-bold">
+                            @if($session->score)
+                                {{ $session->score->overall_readiness_score }}%
+                            @else
+                                <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Score pending</span>
+                            @endif
+                        </td>
                         <td class="border-0 py-3">
-                            @php $sc = $session->score ? $session->score->overall_readiness_score : 0; @endphp
-                            @if($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
+                            @php $sc = $session->score ? $session->score->overall_readiness_score : null; @endphp
+                            @if($sc === null) <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
+                            @elseif($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
                             @elseif($sc >= 70) <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
                             @elseif($sc >= 50) <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
                             @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Improvement</span>

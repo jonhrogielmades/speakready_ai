@@ -11,18 +11,42 @@
     .setup-panel { 
         background: var(--sf);
         border: 1px solid var(--bd);
-        border-radius: 24px;
-        padding: 24px;
-        margin-bottom: 24px; 
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
         scroll-margin-top: 120px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14));
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .setup-panel:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        transform: translateY(-1px);
+        border-color: rgba(96, 165, 250, 0.34);
+        box-shadow: var(--shadow-card, 0 18px 45px rgba(0, 0, 0, 0.18));
+    }
+    #sec-interview-setup { --setup-gap: 20px; }
+    #sec-interview-setup #setupForm > .row,
+    #sec-interview-setup .row.g-4 {
+        --bs-gutter-x: var(--setup-gap);
+        --bs-gutter-y: var(--setup-gap);
+    }
+    #setup-left-col {
+        display: flex;
+        flex-direction: column;
+        gap: var(--setup-gap);
+    }
+    #setup-left-col > .setup-panel,
+    #panel-summary {
+        margin-bottom: 0;
+    }
+    #sec-interview-setup .setup-panel h5 {
+        font-size: 1rem;
+        line-height: 1.3;
+        margin-bottom: 16px !important;
+        letter-spacing: 0 !important;
+    }
+    #panel-summary h5 {
+        color: var(--tx) !important;
+        text-align: left !important;
     }
     #btn-start-interview { scroll-margin-top: 120px; }
     .olbl { font-weight:600;color:var(--tx);font-size:.9rem;margin-bottom:8px;display:block; letter-spacing: 0.3px; }
@@ -91,6 +115,20 @@
     .persona-check { position: absolute; top: 12px; right: 12px; color: #8b5cf6; font-size: 1rem; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: scale(0.5); }
     .persona-card.selected .persona-check { opacity: 1; transform: scale(1); }
 
+    #sec-interview-setup .custom-radio,
+    #sec-interview-setup .custom-cbx {
+        margin-bottom: 0;
+        min-height: 100%;
+    }
+    #sec-interview-setup .summary-row {
+        gap: 14px;
+        align-items: flex-start;
+    }
+    #sec-interview-setup .summary-label,
+    #sec-interview-setup .summary-val {
+        min-width: 0;
+    }
+
     /* Animations */
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
@@ -110,6 +148,30 @@
     .driverjs-theme-dark .driver-popover-footer button { background-color: var(--bg); color: var(--tx); border: 1px solid var(--bd); text-shadow: none; }
     .driverjs-theme-dark .driver-popover-progress-text { color: var(--tx3); }
     .driverjs-theme-dark .driver-popover-arrow::before { border-color: var(--bg3) !important; }
+
+    @media (max-width: 767px) {
+        #sec-interview-setup { --setup-gap: 16px; }
+        #sec-interview-setup .setup-panel {
+            padding: 14px !important;
+            margin-bottom: 0;
+        }
+        #sec-interview-setup .setup-panel h5 {
+            font-size: 0.96rem;
+            margin-bottom: 14px !important;
+        }
+        #sec-interview-setup .custom-radio,
+        #sec-interview-setup .custom-cbx {
+            padding: 12px;
+        }
+        #sec-interview-setup .summary-row {
+            padding: 9px 0;
+            font-size: 0.82rem;
+        }
+        #panel-summary {
+            position: static !important;
+            top: auto !important;
+        }
+    }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>

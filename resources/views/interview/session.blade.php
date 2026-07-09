@@ -14,19 +14,45 @@
     .panel { 
         background: var(--sf);
         border: 1px solid var(--bd);
-        border-radius: 24px;
-        padding: 24px;
-        margin-bottom: 24px; 
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14));
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .panel:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+        transform: translateY(-1px);
+        border-color: rgba(96, 165, 250, 0.34);
+        box-shadow: var(--shadow-card, 0 18px 45px rgba(0, 0, 0, 0.18));
     }
-    .panel-title { font-weight:800;margin-bottom:20px;display:flex;align-items:center;font-size:1.1rem;color:var(--tx); letter-spacing: -0.3px; }
+    #sec-interview-session { --session-gap: 20px; }
+    #workspaceRow {
+        --bs-gutter-x: var(--session-gap);
+        --bs-gutter-y: var(--session-gap);
+    }
+    #sec-interview-session .ai-avatar-panel {
+        border-radius: 16px !important;
+        margin-bottom: var(--session-gap) !important;
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14)) !important;
+    }
+    #interviewControls {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: var(--session-gap) !important;
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14));
+    }
+    #chatTranscriptContainer {
+        border-radius: 14px !important;
+        background: var(--bg3) !important;
+    }
+    #introContainer {
+        border-radius: 16px !important;
+        margin-top: var(--session-gap) !important;
+    }
+    .interview-meta-line { flex-wrap: wrap; }
+    .panel-title { font-weight:800;margin-bottom:16px;display:flex;align-items:center;font-size:1rem;color:var(--tx); letter-spacing: 0; }
     .stat-row { display:flex;justify-content:space-between;margin-bottom:12px;font-size:.9rem;color:var(--tx2); font-weight: 500; }
     .progress-bar-bg { background:var(--bg3);height:8px;border-radius:4px;overflow:hidden;margin-bottom:15px; }
     .progress-bar-fill { background:#60a5fa;height:100%;transition:width 0.3s; }
@@ -70,13 +96,23 @@
     
     /* Responsive overrides */
     @media (max-width: 768px) {
+        #sec-interview-session { --session-gap: 16px; }
         .avatar-wrapper { transform: scale(0.7); }
         .circular-spectrum { transform: scale(0.7); }
         .ai-avatar-panel { height: 260px !important; }
-        .panel { padding: 15px; }
-        .panel-title { font-size: 0.9rem; }
-        #interviewControls .btn { min-height: 44px; }
-        .session-chip { width:100%;justify-content:center; }
+        .panel { padding: 14px !important; margin-bottom: var(--session-gap); }
+        .panel-title { font-size: 0.95rem; margin-bottom: 14px; }
+        #workspaceRow { --bs-gutter-x: 0; --bs-gutter-y: var(--session-gap); }
+        #interviewControls {
+            align-items: stretch !important;
+            border-radius: 14px;
+            padding: 12px;
+        }
+        #interviewControls > div { width: 100%; }
+        #interviewControls .btn { min-height: 42px; }
+        #chatTranscriptContainer { padding: 12px !important; margin-bottom: 14px !important; max-height: 300px !important; }
+        #introContainer { padding: 16px !important; max-width: 100% !important; }
+        .session-chip { width:auto;max-width:100%;justify-content:center; }
         .interview-meta-line { flex-direction:column;gap:4px !important; }
         .question-timer-anchor { top:128px;right:15px; }
     }

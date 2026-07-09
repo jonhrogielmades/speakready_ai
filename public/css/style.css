@@ -3323,8 +3323,8 @@ textarea:focus-visible,
 /* User workspace professional polish
    Normalizes the user feature pages that still carry page-local legacy styles. */
 #dashboard .db-content {
-  --sr-card-radius: 8px;
-  --sr-page-gap: 24px;
+  --sr-card-radius: var(--card-radius, 16px);
+  --sr-page-gap: 20px;
   --sr-page-border: rgba(148, 163, 184, 0.18);
   --sr-soft-border: rgba(148, 163, 184, 0.12);
 }
@@ -3335,6 +3335,12 @@ textarea:focus-visible,
   margin-inline: auto;
   padding: 0 !important;
   overflow-x: clip;
+}
+
+#dashboard .db-content .db-section.active > .row.g-4,
+#dashboard .db-content .db-section.active > form > .row.g-4 {
+  --bs-gutter-x: var(--sr-page-gap);
+  --bs-gutter-y: var(--sr-page-gap);
 }
 
 #dashboard .db-content .db-section.active > .mb-4:first-child,
@@ -3722,6 +3728,103 @@ textarea:focus-visible,
   max-width: 100%;
 }
 
+/* Training workspace card normalization.
+   Covers module, game, rehearsal, progress, report, feedback, and review pages
+   that still contain page-local or inline card styles. */
+#dashboard .db-content .mod-hero,
+#dashboard .db-content .chapter-card,
+#dashboard .db-content .resource-item,
+#dashboard .db-content .ll-header,
+#dashboard .db-content .ll-category-list,
+#dashboard .db-content .ll-module-card,
+#dashboard .db-content .level-card,
+#dashboard .db-content .stat-box,
+#dashboard .db-content #ai-insights,
+#dashboard .db-content #learning-progress > div,
+#dashboard .db-content #voice-progress > div,
+#dashboard .db-content #activity-calendar > .col-12 > div,
+#dashboard .db-content #goals-milestones > div,
+#dashboard .db-content #achievements-badges > div,
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="border-radius:18px"],
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="border-radius: 18px"],
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="border-radius:24px"],
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="border-radius: 24px"] {
+  border-radius: var(--sr-card-radius) !important;
+  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.16) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+#dashboard .db-content .mod-hero,
+#dashboard .db-content .chapter-card,
+#dashboard .db-content .ll-header,
+#dashboard .db-content .ll-category-list,
+#dashboard .db-content .ll-module-card,
+#dashboard .db-content .level-card,
+#dashboard .db-content #ai-insights,
+#dashboard .db-content #learning-progress > div,
+#dashboard .db-content #voice-progress > div,
+#dashboard .db-content #activity-calendar > .col-12 > div,
+#dashboard .db-content #goals-milestones > div,
+#dashboard .db-content #achievements-badges > div,
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding:24px"],
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding: 24px"],
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding:32px"],
+#dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding: 32px"] {
+  padding: 20px !important;
+}
+
+#dashboard .db-content .module-card:hover,
+#dashboard .db-content .chapter-card:hover,
+#dashboard .db-content .resource-item:hover,
+#dashboard .db-content .ll-stat-card:hover,
+#dashboard .db-content .ll-module-card:hover,
+#dashboard .db-content .level-card:hover,
+#dashboard .db-content .premium-panel:hover,
+#dashboard .db-content .premium-card:hover,
+#dashboard .db-content .print-card:hover {
+  transform: translateY(-1px) !important;
+}
+
+#dashboard .db-content .module-card,
+#dashboard .db-content .ll-module-card,
+#dashboard .db-content .level-card,
+#dashboard .db-content .chapter-card,
+#dashboard .db-content .print-card,
+#dashboard .db-content .premium-card,
+#dashboard .db-content .premium-panel {
+  margin-bottom: var(--sr-page-gap);
+}
+
+#dashboard .db-content .row > [class*="col-"] > :last-child,
+#dashboard .db-content .module-card:last-child,
+#dashboard .db-content .ll-module-card:last-child,
+#dashboard .db-content .level-card:last-child,
+#dashboard .db-content .chapter-card:last-child,
+#dashboard .db-content .print-card:last-child,
+#dashboard .db-content .premium-card:last-child,
+#dashboard .db-content .premium-panel:last-child {
+  margin-bottom: 0;
+}
+
+#dashboard .db-content .level-path-container,
+#dashboard .db-content #modules-list {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#dashboard .db-content .mod-hero,
+#dashboard .db-content .ll-header,
+#dashboard .db-content #ai-insights {
+  margin-bottom: var(--sr-page-gap) !important;
+}
+
+#dashboard .db-content #dashboard-stats,
+#dashboard .db-content #progress-stats {
+  --bs-gutter-x: var(--sr-page-gap);
+  --bs-gutter-y: var(--sr-page-gap);
+}
+
 @media (max-width: 1199px) {
   #dashboard .db-content .chat-container {
     height: calc(100vh - 132px) !important;
@@ -3860,6 +3963,37 @@ textarea:focus-visible,
     min-width: 640px;
   }
 
+  #dashboard .db-content .mod-hero,
+  #dashboard .db-content .chapter-card,
+  #dashboard .db-content .ll-header,
+  #dashboard .db-content .ll-category-list,
+  #dashboard .db-content .ll-module-card,
+  #dashboard .db-content .level-card,
+  #dashboard .db-content #ai-insights,
+  #dashboard .db-content #learning-progress > div,
+  #dashboard .db-content #voice-progress > div,
+  #dashboard .db-content #activity-calendar > .col-12 > div,
+  #dashboard .db-content #goals-milestones > div,
+  #dashboard .db-content #achievements-badges > div,
+  #dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding:24px"],
+  #dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding: 24px"],
+  #dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding:32px"],
+  #dashboard .db-content .db-section.active .row > [class*="col-"] > div[style*="padding: 32px"] {
+    padding: 14px !important;
+  }
+
+  #dashboard .db-content .mod-hero-bg {
+    display: none;
+  }
+
+  #dashboard .db-content .level-card {
+    margin-left: 12px !important;
+  }
+
+  #dashboard .db-content .level-node {
+    margin-bottom: var(--sr-page-gap) !important;
+  }
+
   #dashboard .db-content .table-responsive {
     margin-inline: 0;
     padding-bottom: 4px;
@@ -3927,8 +4061,8 @@ textarea:focus-visible,
   }
 
   #dashboard .db-content .row.g-4 {
-    --bs-gutter-x: 0.9rem;
-    --bs-gutter-y: 0.9rem;
+    --bs-gutter-x: var(--sr-page-gap);
+    --bs-gutter-y: var(--sr-page-gap);
   }
 }
 

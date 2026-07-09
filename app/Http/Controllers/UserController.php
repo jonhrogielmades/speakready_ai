@@ -14,6 +14,14 @@ use App\Helpers\ActivityLogger;
 
 class UserController extends Controller
 {
+    private const SCORE_METRICS = [
+        'Clarity' => 'clarity_score',
+        'Relevance' => 'relevance_score',
+        'Grammar' => 'grammar_score',
+        'Professionalism' => 'professionalism_score',
+        'Confidence' => 'confidence_score',
+    ];
+
     private const SKILL_PERKS = [
         'energy_efficiency' => [
             'name' => 'Energy Efficiency',
@@ -227,26 +235,38 @@ class UserController extends Controller
         ));
     }
     public function progress() { 
-        $sessions = InterviewSession::where('user_id', Auth::id())
+        $userId = Auth::id();
+
+        $sessions = InterviewSession::where('user_id', $userId)
                         ->where('interview_sessions.status', 'completed')
                         ->with(['score', 'category', 'feedback'])
                         ->orderBy('created_at', 'asc')
                         ->get();
+        $scoredSessions = $this->scoredSessions($sessions);
+        $scoreTrend = $this->scoreTrendFor($scoredSessions);
+        $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
+        $readinessMovement = $this->readinessMovementFor(
+            $scoredSessions->last(),
+            $scoredSessions->count() > 1 ? $scoredSessions[$scoredSessions->count() - 2] : null
+        );
+        $skillComparison = $this->skillComparisonFor($scoredSessions);
+        $latestSkillSummary = $this->skillSummaryFor($scoredSessions->last()?->score);
 
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $userId]);
         
-        $voiceSessions = \App\Models\VoiceSession::where('user_id', Auth::id())
-                            ->orderBy('created_at', 'desc')
+        $voiceSessions = \App\Models\VoiceSession::where('user_id', $userId)
+                            ->orderBy('created_at', 'asc')
                             ->get();
+        $voiceSummary = $this->voiceSummaryFor($voiceSessions);
                             
         $learningProgress = \App\Models\LearningProgress::with('learningModule')
-                            ->where('user_id', Auth::id())
+                            ->where('user_id', $userId)
                             ->orderBy('updated_at', 'desc')
                             ->get();
                             
         $currentStreak = $profile->current_streak ?? 0;
-        $longestStreak = max($currentStreak, 0); // No dedicated field yet, fallback to current
-        $totalPracticeDays = \App\Models\InterviewSession::where('user_id', Auth::id())
+        $longestStreak = max((int) ($profile->longest_streak ?? 0), (int) $currentStreak);
+        $totalPracticeDays = \App\Models\InterviewSession::where('user_id', $userId)
                             ->where('status', 'completed')
                             ->selectRaw('DATE(created_at) as date')
                             ->distinct()
@@ -261,31 +281,68 @@ class UserController extends Controller
             (object)['title' => 'Top Comm', 'icon' => 'fa-bullhorn', 'unlocked' => in_array('Top Comm', $badgesEarned)],
         ];
         
-        // Calculate dynamic upcoming goals based on profile readiness score
-        $currentScore = $profile->readiness_score ?? 0;
-        $goalTarget = (ceil($currentScore / 10) * 10);
-        if ($goalTarget == $currentScore) $goalTarget += 10;
-        if ($goalTarget > 100) $goalTarget = 100;
-        if ($goalTarget < 50) $goalTarget = 50;
-        
-        $goals = [
-            (object)[
-                'title' => 'Reach ' . $goalTarget . '% Readiness',
-                'description' => 'Complete interviews to boost your average score',
-                'progress' => $goalTarget > 0 ? (round($currentScore) / $goalTarget) * 100 : 0
-            ]
-        ];
+        $currentScore = $scoreTrend->isNotEmpty() ? (int) round($scoreTrend->avg('score')) : 0;
+        if ($scoreTrend->isEmpty()) {
+            $goals = [
+                (object)[
+                    'title' => 'Complete your first scored interview',
+                    'description' => 'Finish a mock interview to unlock readiness tracking',
+                    'progress' => 0,
+                ],
+            ];
+        } else {
+            $goalTarget = (ceil($currentScore / 10) * 10);
+            if ($goalTarget == $currentScore) $goalTarget += 10;
+            if ($goalTarget > 100) $goalTarget = 100;
+            if ($goalTarget < 50) $goalTarget = 50;
 
-        return view('user.progress', compact('sessions', 'voiceSessions', 'learningProgress', 'currentStreak', 'longestStreak', 'totalPracticeDays', 'goals', 'badges')); 
+            $goals = [
+                (object)[
+                    'title' => 'Reach ' . $goalTarget . '% Readiness',
+                    'description' => 'Complete interviews to boost your average score',
+                    'progress' => $goalTarget > 0 ? $this->barWidth((int) round(($currentScore / $goalTarget) * 100)) : 0,
+                ],
+            ];
+        }
+
+        return view('user.progress', compact(
+            'sessions',
+            'scoredSessions',
+            'scoreTrend',
+            'categoryPerf',
+            'readinessMovement',
+            'skillComparison',
+            'latestSkillSummary',
+            'voiceSessions',
+            'voiceSummary',
+            'learningProgress',
+            'currentStreak',
+            'longestStreak',
+            'totalPracticeDays',
+            'goals',
+            'badges'
+        ));
     }
 
     public function feedback() { 
-        $sessions = InterviewSession::where('user_id', Auth::id())
-                        ->where('interview_sessions.status', 'completed')
-                        ->with(['category', 'score', 'feedback'])
-                        ->orderBy('created_at', 'desc')
-                        ->paginate(10);
-        return view('user.feedback', compact('sessions')); 
+        $baseQuery = InterviewSession::where('user_id', Auth::id())
+            ->where('interview_sessions.status', 'completed');
+
+        $sessions = (clone $baseQuery)
+            ->with(['category', 'score', 'feedback'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        $feedbackCategories = (clone $baseQuery)
+            ->with('category')
+            ->get()
+            ->pluck('category.title')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('user.feedback', compact('sessions', 'feedbackCategories'));
     }
 
     public function review($id) { 
@@ -418,6 +475,274 @@ class UserController extends Controller
         }
 
         return $rows;
+    }
+
+    private function scoredSessions($sessions)
+    {
+        return $sessions
+            ->filter(fn ($session) => $this->scoreValue($session->score, 'overall_readiness_score') !== null)
+            ->values();
+    }
+
+    private function scoreTrendFor($sessions)
+    {
+        return $sessions
+            ->map(function ($session) {
+                $score = $this->scoreValue($session->score, 'overall_readiness_score');
+
+                if ($score === null) {
+                    return null;
+                }
+
+                return [
+                    'date' => $session->created_at->format('M d'),
+                    'score' => $score,
+                ];
+            })
+            ->filter(fn ($point) => $point !== null)
+            ->values();
+    }
+
+    private function categoryPerformanceFor($sessions): array
+    {
+        return $sessions
+            ->map(function ($session) {
+                $score = $this->scoreValue($session->score, 'overall_readiness_score');
+
+                if ($score === null) {
+                    return null;
+                }
+
+                return [
+                    'category' => $session->category?->title ?: 'Uncategorized',
+                    'score' => $score,
+                ];
+            })
+            ->filter(fn ($row) => $row !== null)
+            ->groupBy('category')
+            ->map(fn ($rows) => (int) round($rows->avg('score')))
+            ->sortKeys()
+            ->all();
+    }
+
+    private function readinessMovementFor(?InterviewSession $current, ?InterviewSession $previous): ?object
+    {
+        if (!$current || !$previous) {
+            return null;
+        }
+
+        $currentScore = $this->scoreValue($current->score, 'overall_readiness_score');
+        $previousScore = $this->scoreValue($previous->score, 'overall_readiness_score');
+
+        if ($currentScore === null || $previousScore === null) {
+            return null;
+        }
+
+        $delta = $currentScore - $previousScore;
+
+        return (object) [
+            'current' => $currentScore,
+            'previous' => $previousScore,
+            'delta' => $delta,
+            'label' => ($delta > 0 ? '+' : '') . $delta . '%',
+            'trend_html' => $delta >= 0
+                ? "improved by <strong class='text-primary'>{$delta}%</strong>"
+                : "dropped by <strong class='text-danger'>" . abs($delta) . "%</strong>",
+        ];
+    }
+
+    private function scoreBreakdownFor(?Score $score): array
+    {
+        $metrics = [];
+
+        foreach (self::SCORE_METRICS as $label => $field) {
+            $value = $this->scoreValue($score, $field);
+
+            if ($value === null) {
+                continue;
+            }
+
+            $metrics[] = [
+                'name' => $label,
+                'score' => $value,
+                'bar' => $this->barWidth($value),
+            ];
+        }
+
+        return $metrics;
+    }
+
+    private function skillSummaryFor(?Score $score): object
+    {
+        $metrics = $this->scoreBreakdownFor($score);
+        $strengths = [];
+        $weaknesses = [];
+
+        foreach ($metrics as $metric) {
+            if ($metric['score'] >= 80) {
+                $strengths[] = $metric['name'];
+            } else {
+                $weaknesses[] = $metric['name'];
+            }
+        }
+
+        return (object) [
+            'has_data' => !empty($metrics),
+            'metrics' => $metrics,
+            'strengths' => $strengths,
+            'weaknesses' => $weaknesses,
+        ];
+    }
+
+    private function skillComparisonFor($sessions): array
+    {
+        if ($sessions->count() < 2) {
+            return [];
+        }
+
+        return $this->scoreComparisonRowsFor(
+            $sessions[$sessions->count() - 2],
+            $sessions->last(),
+            self::SCORE_METRICS
+        );
+    }
+
+    private function scoreComparisonRowsFor(?InterviewSession $baseline, ?InterviewSession $current, ?array $metrics = null): array
+    {
+        if (!$baseline || !$current || (int) $baseline->id === (int) $current->id) {
+            return [];
+        }
+
+        $metrics ??= array_merge(['Overall Score' => 'overall_readiness_score'], self::SCORE_METRICS);
+        $rows = [];
+
+        foreach ($metrics as $label => $field) {
+            $previous = $this->scoreValue($baseline->score, $field);
+            $latest = $this->scoreValue($current->score, $field);
+
+            if ($previous === null || $latest === null) {
+                continue;
+            }
+
+            $rows[] = [
+                'label' => $label,
+                'previous' => $previous,
+                'current' => $latest,
+                'delta' => $latest - $previous,
+                'bar' => $this->barWidth($latest),
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function readinessSummaryFor(?InterviewSession $current, ?InterviewSession $previous): ?object
+    {
+        $currentScore = $this->scoreValue($current?->score, 'overall_readiness_score');
+
+        if ($currentScore === null) {
+            return null;
+        }
+
+        $previousScore = $this->scoreValue($previous?->score, 'overall_readiness_score');
+        $delta = $previousScore === null ? null : $currentScore - $previousScore;
+
+        if ($currentScore >= 90) {
+            $rating = 'Excellent';
+            $color = '#10b981';
+        } elseif ($currentScore >= 70) {
+            $rating = 'Good';
+            $color = '#3b82f6';
+        } elseif ($currentScore >= 50) {
+            $rating = 'Fair';
+            $color = '#f59e0b';
+        } else {
+            $rating = 'Needs Improvement';
+            $color = '#ef4444';
+        }
+
+        $deltaColor = '#64748b';
+        if ($delta !== null && $delta > 0) {
+            $deltaColor = '#10b981';
+        } elseif ($delta !== null && $delta < 0) {
+            $deltaColor = '#ef4444';
+        }
+
+        return (object) [
+            'current' => $currentScore,
+            'previous' => $previousScore,
+            'delta' => $delta,
+            'delta_label' => $delta === null ? 'N/A' : (($delta > 0 ? '+' : '') . $delta . '%'),
+            'rating' => $rating,
+            'color' => $color,
+            'delta_color' => $deltaColor,
+            'message' => $this->readinessMessage($delta),
+        ];
+    }
+
+    private function readinessMessage(?int $delta): string
+    {
+        if ($delta === null) {
+            return 'Complete another scored interview to compare progress against your previous assessment.';
+        }
+
+        if ($delta > 0) {
+            return 'Your readiness score improved compared to your previous scored assessment.';
+        }
+
+        if ($delta < 0) {
+            return 'Your readiness score decreased compared to your previous scored assessment. Review the latest feedback before your next practice round.';
+        }
+
+        return 'Your readiness score is unchanged compared to your previous scored assessment.';
+    }
+
+    private function voiceSummaryFor($voiceSessions): object
+    {
+        $latest = $voiceSessions->last();
+        $previous = $voiceSessions->count() > 1 ? $voiceSessions[$voiceSessions->count() - 2] : null;
+        $reduction = null;
+
+        if ($latest && $previous) {
+            $previousFillers = (int) ($previous->filler_words ?? 0);
+            $latestFillers = (int) ($latest->filler_words ?? 0);
+
+            if ($previousFillers > 0) {
+                $reduction = (int) round((($previousFillers - $latestFillers) / $previousFillers) * 100);
+            } elseif ($latestFillers === 0) {
+                $reduction = 0;
+            }
+        }
+
+        return (object) [
+            'latest' => $latest,
+            'previous' => $previous,
+            'filler_reduction' => $reduction,
+        ];
+    }
+
+    private function scoreValue(?Score $score, string $field): ?int
+    {
+        if (!$score) {
+            return null;
+        }
+
+        $value = $score->{$field} ?? null;
+
+        if (!is_numeric($value)) {
+            return null;
+        }
+
+        return (int) round((float) $value);
+    }
+
+    private function barWidth(?int $value): int
+    {
+        if ($value === null) {
+            return 0;
+        }
+
+        return max(0, min(100, $value));
     }
 
     private function syncInterviewProfileStats(int $userId): void
@@ -673,31 +998,47 @@ class UserController extends Controller
                         ->with(['score', 'category'])
                         ->orderBy('created_at', 'asc')
                         ->get();
+        $scoredSessions = $this->scoredSessions($sessions);
 
-        $latestSession = $sessions->last();
-        $firstSession = $sessions->first();
-        $previousSession = $sessions->count() > 1 ? $sessions[$sessions->count() - 2] : null;
+        $latestSession = $scoredSessions->last();
+        $firstSession = $scoredSessions->first();
+        $previousSession = $scoredSessions->count() > 1 ? $scoredSessions[$scoredSessions->count() - 2] : null;
+        $hasScoreData = $scoredSessions->isNotEmpty();
+        $readinessSummary = $this->readinessSummaryFor($latestSession, $previousSession);
+        $latestPerformanceMetrics = $this->scoreBreakdownFor($latestSession?->score);
+        $comparisonRows = $this->scoreComparisonRowsFor($firstSession, $latestSession);
+        $feedbackSummary = $this->skillSummaryFor($latestSession?->score);
         
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
 
-        // Dynamic Voice Data
         $latestVoice = \App\Models\VoiceSession::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
         $voiceData = (object)[
-            'wpm' => $latestVoice ? $latestVoice->speaking_pace : 0,
-            'confidence' => $latestVoice ? $latestVoice->confidence_score : 0,
-            'clarity' => $latestVoice ? $latestVoice->clarity_score : 0,
+            'has_data' => (bool) $latestVoice,
+            'wpm' => $latestVoice?->speaking_pace,
+            'confidence' => $latestVoice?->confidence_score,
+            'clarity' => $latestVoice?->clarity_score,
             'duration' => $latestVoice ? 'Complete' : 'N/A',
-            'filler_words' => $latestVoice ? $latestVoice->filler_words : 0
+            'filler_words' => $latestVoice?->filler_words,
         ];
 
-        // Dynamic Learning Data
         $learningProgress = \App\Models\LearningProgress::where('user_id', Auth::id())->get();
+        $learningModulesTotal = \App\Models\LearningModule::count();
+        $moduleProgress = $learningProgress
+            ->filter(fn ($progress) => $progress->learning_module_id !== null)
+            ->groupBy('learning_module_id')
+            ->map(fn ($records) => (int) $records->max('progress_percentage'));
+        $quizScores = $learningProgress
+            ->pluck('quiz_score')
+            ->filter(fn ($score) => is_numeric($score));
+
         $learningData = (object)[
-            'lessons_completed' => $learningProgress->where('progress_percentage', 100)->count(),
-            'lessons_total' => \App\Models\LearningModule::count() ?: 1,
-            'videos_watched' => $learningProgress->where('progress_percentage', '>', 0)->count(),
-            'quiz_average' => round($learningProgress->avg('quiz_score') ?? 0),
-            'completion_rate' => round($learningProgress->avg('progress_percentage') ?? 0)
+            'lessons_completed' => $moduleProgress->filter(fn ($progress) => $progress >= 100)->count(),
+            'lessons_total' => $learningModulesTotal,
+            'videos_watched' => $moduleProgress->filter(fn ($progress) => $progress > 0)->count(),
+            'quiz_average' => $quizScores->isNotEmpty() ? (int) round($quizScores->avg()) : null,
+            'completion_rate' => $learningModulesTotal > 0
+                ? $this->barWidth((int) round($moduleProgress->sum() / $learningModulesTotal))
+                : 0,
         ];
 
         // Dynamic Achievements
@@ -711,30 +1052,27 @@ class UserController extends Controller
         ];
         $achievements = collect($achievements)->filter(fn($ach) => $ach->unlocked)->values()->all();
         
-        // Data for Chart JS
-        $scoreTrend = $sessions->map(function ($s) {
-            return [
-                'date' => $s->created_at->format('M d'),
-                'score' => $s->score ? $s->score->overall_readiness_score : 0
-            ];
-        });
-        
-        // Category Averages
-        $categoryAverages = [];
-        foreach($sessions as $s) {
-            $catName = $s->category ? $s->category->title : 'General';
-            if(!isset($categoryAverages[$catName])) {
-                $categoryAverages[$catName] = ['total' => 0, 'count' => 0];
-            }
-            $categoryAverages[$catName]['total'] += ($s->score ? $s->score->overall_readiness_score : 0);
-            $categoryAverages[$catName]['count']++;
-        }
-        $categoryPerf = [];
-        foreach($categoryAverages as $cat => $data) {
-            $categoryPerf[$cat] = round($data['total'] / $data['count']);
-        }
+        $scoreTrend = $this->scoreTrendFor($scoredSessions);
+        $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
 
-        return view('user.reports', compact('user', 'sessions', 'latestSession', 'firstSession', 'previousSession', 'voiceData', 'learningData', 'achievements', 'scoreTrend', 'categoryPerf')); 
+        return view('user.reports', compact(
+            'user',
+            'sessions',
+            'scoredSessions',
+            'hasScoreData',
+            'latestSession',
+            'firstSession',
+            'previousSession',
+            'readinessSummary',
+            'latestPerformanceMetrics',
+            'comparisonRows',
+            'feedbackSummary',
+            'voiceData',
+            'learningData',
+            'achievements',
+            'scoreTrend',
+            'categoryPerf'
+        ));
     }
     public function notifications() { 
         $notifications = Auth::user()->notifications()->paginate(15);

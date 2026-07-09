@@ -70,29 +70,14 @@
         <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.4s;">
             <div class="premium-panel text-center">
                 <i class="fa-solid fa-arrow-trend-up text-primary fs-1 mb-2"></i>
-                @php
-                    $readinessChange = 'N/A';
-                    if ($sessions->count() >= 2) {
-                        $latest = $sessions->last()->score->overall_readiness_score ?? 0;
-                        $prev = $sessions[$sessions->count()-2]->score->overall_readiness_score ?? 0;
-                        $diff = $latest - $prev;
-                        $readinessChange = ($diff > 0 ? '+' : '') . $diff . '%';
-                    }
-                @endphp
-                <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $readinessChange }}</h3>
+                <h3 style="color:var(--tx);margin:0;font-weight:bold;">{{ $readinessMovement?->label ?? 'N/A' }}</h3>
                 <p style="color:var(--tx3);margin:0;font-size:0.9rem;">Readiness vs Last</p>
             </div>
         </div>
     </div>
 
     <!-- Feature 13: AI Progress Insights -->
-    @if($sessions->count() >= 2)
-        @php
-            $latestScore = $sessions->last()->score->overall_readiness_score ?? 0;
-            $prevScore = $sessions[$sessions->count()-2]->score->overall_readiness_score ?? 0;
-            $diff = $latestScore - $prevScore;
-            $trend = $diff >= 0 ? "improved by <strong class='text-primary'>" . $diff . "%</strong>" : "dropped by <strong class='text-danger'>" . abs($diff) . "%</strong>";
-        @endphp
+    @if($readinessMovement)
         <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up" style="animation-delay: 0.5s; border-radius:24px; background: rgba(59, 130, 246, 0.1); color: var(--tx); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); padding: 20px;">
             <div class="d-flex align-items-center">
                 <div class="flex-shrink-0">
@@ -100,8 +85,20 @@
                 </div>
                 <div>
                     <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
-                    <p class="mb-0">Your overall readiness score {{ $trend }} recently. <br>
+                    <p class="mb-0">Your overall readiness score {!! $readinessMovement->trend_html !!} recently. <br>
                     <strong>Recommended Next Step:</strong> Review your recent feedback to identify specific improvement areas.</p>
+                </div>
+            </div>
+        </div>
+    @elseif($scoredSessions->count() === 1)
+        <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up" style="animation-delay: 0.5s; border-radius:24px; background: rgba(59, 130, 246, 0.1); color: var(--tx); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); padding: 20px;">
+            <div class="d-flex align-items-center">
+                <div class="flex-shrink-0">
+                    <i class="fa-solid fa-robot fs-2 me-3 text-primary" style="background: var(--bg); border-radius: 12px; padding: 12px; box-shadow: 0 4px 15px rgba(59,130,246,0.1);"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
+                    <p class="mb-0">Complete one more scored mock interview to compare readiness movement accurately.</p>
                 </div>
             </div>
         </div>
@@ -146,40 +143,21 @@
             <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Skill Improvement Tracker</h5>
                 
-                @if($sessions->count() >= 2)
-                @php
-                    $latestS = $sessions->last()->score;
-                    $prevS = $sessions[$sessions->count()-2]->score;
-                    $skills = [
-                        'Clarity' => $latestS->clarity_score ?? 0, 
-                        'Relevance' => $latestS->relevance_score ?? 0, 
-                        'Grammar' => $latestS->grammar_score ?? 0, 
-                        'Professionalism' => $latestS->professionalism_score ?? 0, 
-                        'Confidence' => $latestS->confidence_score ?? 0
-                    ];
-                    $prevSkills = [
-                        'Clarity' => $prevS->clarity_score ?? 0, 
-                        'Relevance' => $prevS->relevance_score ?? 0, 
-                        'Grammar' => $prevS->grammar_score ?? 0, 
-                        'Professionalism' => $prevS->professionalism_score ?? 0, 
-                        'Confidence' => $prevS->confidence_score ?? 0
-                    ];
-                @endphp
-                @foreach($skills as $skill => $score)
-                @php $improvement = $score - $prevSkills[$skill]; @endphp
+                @if(count($skillComparison) > 0)
+                @foreach($skillComparison as $metric)
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.9rem;">
-                        <span style="color:var(--tx);font-weight:600;">{{ $skill }}</span>
-                        <span style="color:var(--tx3)">{{ $prevSkills[$skill] }}% <i class="fa-solid fa-arrow-right mx-1" style="font-size:0.8em"></i> {{ $score }}% 
-                        @if($improvement >= 0)
-                            <span class="text-success ms-1">(+{{ $improvement }}%)</span>
+                        <span style="color:var(--tx);font-weight:600;">{{ $metric['label'] }}</span>
+                        <span style="color:var(--tx3)">{{ $metric['previous'] }}% <i class="fa-solid fa-arrow-right mx-1" style="font-size:0.8em"></i> {{ $metric['current'] }}%
+                        @if($metric['delta'] >= 0)
+                            <span class="text-success ms-1">(+{{ $metric['delta'] }}%)</span>
                         @else
-                            <span class="text-danger ms-1">({{ $improvement }}%)</span>
+                            <span class="text-danger ms-1">({{ $metric['delta'] }}%)</span>
                         @endif
                         </span>
                     </div>
                     <div class="progress" style="height: 8px; background:var(--bd); border-radius: 4px;">
-                        <div class="progress-bar" role="progressbar" style="width: {{ $score }}%; background: #3b82f6; border-radius: 4px;"></div>
+                        <div class="progress-bar" role="progressbar" style="width: {{ $metric['bar'] }}%; background: #3b82f6; border-radius: 4px;"></div>
                     </div>
                 </div>
                 @endforeach
@@ -196,25 +174,11 @@
         <div class="col-md-6 animate-fade-up" id="strengths-tracker" style="animation-delay: 0.9s;">
             <div class="premium-panel" style="height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Strengths & Areas for Improvement</h5>
-                @if($sessions->count() > 0)
                 @php
-                    $latestS = $sessions->last()->score;
-                    $skillsList = [
-                        'Clarity' => $latestS->clarity_score ?? 0, 
-                        'Relevance' => $latestS->relevance_score ?? 0, 
-                        'Grammar' => $latestS->grammar_score ?? 0, 
-                        'Professionalism' => $latestS->professionalism_score ?? 0, 
-                        'Confidence' => $latestS->confidence_score ?? 0
-                    ];
-                    $strengths = [];
-                    $weaknesses = [];
-                    foreach($skillsList as $sName => $sVal) {
-                        if($sVal >= 80) $strengths[] = $sName;
-                        else $weaknesses[] = $sName;
-                    }
-                    if(empty($strengths)) $strengths[] = 'None identified yet';
-                    if(empty($weaknesses)) $weaknesses[] = 'None identified yet';
+                    $strengths = $latestSkillSummary->strengths ?: ['None identified yet'];
+                    $weaknesses = $latestSkillSummary->weaknesses ?: ['None identified yet'];
                 @endphp
+                @if($latestSkillSummary->has_data)
                 <div class="row mb-4">
                     <div class="col-6">
                         <h6 class="text-success fw-bold"><i class="fa-solid fa-arrow-trend-up me-2"></i>Strengths</h6>
@@ -286,10 +250,17 @@
                             <tr style="border-bottom: 1px solid var(--bd);">
                                 <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
                                 <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->title : 'Job Interview' }}</td>
-                                <td class="border-0 py-3">{{ $session->score ? $session->score->overall_readiness_score : 82 }}%</td>
                                 <td class="border-0 py-3">
-                                    @php $sc = $session->score ? $session->score->overall_readiness_score : 82; @endphp
-                                    @if($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
+                                    @if($session->score)
+                                        {{ $session->score->overall_readiness_score }}%
+                                    @else
+                                        <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Score pending</span>
+                                    @endif
+                                </td>
+                                <td class="border-0 py-3">
+                                    @php $sc = $session->score ? $session->score->overall_readiness_score : null; @endphp
+                                    @if($sc === null) <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
+                                    @elseif($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
                                     @elseif($sc >= 70) <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
                                     @elseif($sc >= 50) <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Average</span>
                                     @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Work</span>
@@ -361,19 +332,19 @@
         <div class="col-md-6" id="voice-progress">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Voice Rehearsal Progress</h5>
-                @if($voiceSessions->count() > 0)
-                    @php $latestVoice = $voiceSessions->last(); $prevVoice = $voiceSessions->first(); @endphp
+                @if($voiceSummary->latest)
+                    @php $latestVoice = $voiceSummary->latest; $prevVoice = $voiceSummary->previous; @endphp
                     <div class="row text-center mb-4">
                         <div class="col-4 border-end" style="border-color:var(--bd) !important;">
-                            <h3 style="color:var(--tx);font-weight:bold;">{{ $latestVoice->speaking_pace }}</h3>
+                            <h3 style="color:var(--tx);font-weight:bold;">{{ $latestVoice->speaking_pace ?? $latestVoice->wpm ?? 'N/A' }}</h3>
                             <small style="color:var(--tx3)">Pace (wpm)</small>
                         </div>
                         <div class="col-4 border-end" style="border-color:var(--bd) !important;">
-                            <h3 style="color:var(--tx);font-weight:bold;">{{ $latestVoice->clarity_score }}%</h3>
+                            <h3 style="color:var(--tx);font-weight:bold;">{{ is_numeric($latestVoice->clarity_score) ? $latestVoice->clarity_score . '%' : 'N/A' }}</h3>
                             <small style="color:var(--tx3)">Clarity</small>
                         </div>
                         <div class="col-4">
-                            <h3 style="color:var(--tx);font-weight:bold;">{{ $latestVoice->confidence_score }}%</h3>
+                            <h3 style="color:var(--tx);font-weight:bold;">{{ is_numeric($latestVoice->confidence_score) ? $latestVoice->confidence_score . '%' : 'N/A' }}</h3>
                             <small style="color:var(--tx3)">Confidence</small>
                         </div>
                     </div>
@@ -381,13 +352,14 @@
                     <div class="p-3" style="background: rgba(16, 185, 129, 0.1); border-radius: 12px;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-success mb-1 fw-bold">Filler Word Reduction</h6>
-                                <small style="color:var(--tx)">Previous: <strong>{{ $prevVoice->filler_words }}</strong> | Current: <strong>{{ $latestVoice->filler_words }}</strong></small>
+                                <h6 class="text-success mb-1 fw-bold">Filler Word Change</h6>
+                                @if($prevVoice)
+                                    <small style="color:var(--tx)">Previous: <strong>{{ $prevVoice->filler_words ?? 0 }}</strong> | Current: <strong>{{ $latestVoice->filler_words ?? 0 }}</strong></small>
+                                @else
+                                    <small style="color:var(--tx)">Complete another voice rehearsal to compare filler word movement.</small>
+                                @endif
                             </div>
-                            @php 
-                                $reduction = $prevVoice->filler_words > 0 ? round((($prevVoice->filler_words - $latestVoice->filler_words) / $prevVoice->filler_words) * 100) : 67; 
-                            @endphp
-                            <h2 class="text-success mb-0 fw-bold">{{ $reduction }}%</h2>
+                            <h2 class="text-success mb-0 fw-bold">{{ $voiceSummary->filler_reduction === null ? 'N/A' : (($voiceSummary->filler_reduction > 0 ? '+' : '') . $voiceSummary->filler_reduction . '%') }}</h2>
                         </div>
                     </div>
                 @else
@@ -473,11 +445,12 @@
                 });
             }
 
-            const sessions = {!! json_encode($sessions) !!};
+            const trendData = @json($scoreTrend);
+            const categoryPerformance = @json($categoryPerf);
             
             // Feature 1: Readiness Trend
-            const labels = sessions.length ? sessions.map(s => new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) : [];
-            const scores = sessions.length ? sessions.map(s => s.score ? s.score.overall_readiness_score : 0) : [];
+            const labels = trendData.map(s => s.date);
+            const scores = trendData.map(s => s.score);
             
             if(document.getElementById('readinessChart')) {
                 new Chart(document.getElementById('readinessChart'), {
@@ -517,9 +490,8 @@
 
             // Feature 3: Category Performance
             if(document.getElementById('categoryChart')) {
-                // Keep the chart empty when there is no recorded session data.
-                const categoryLabels = sessions.length ? ['Job', 'Scholar.', 'College', 'IT/Prog'] : [];
-                const categoryData = sessions.length ? [82, 75, 88, 89] : [];
+                const categoryLabels = Object.keys(categoryPerformance);
+                const categoryData = Object.values(categoryPerformance);
 
                 new Chart(document.getElementById('categoryChart'), {
                     type: 'bar',
