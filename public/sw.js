@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speakready-pwa-v6';
+const CACHE_NAME = 'speakready-pwa-v7';
 
 self.addEventListener('install', event => {
   self.skipWaiting();

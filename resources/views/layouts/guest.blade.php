@@ -3,7 +3,7 @@
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-      <meta name="theme-color" content="#ffffff">
+      <meta name="theme-color" content="#f7fbff">
       <title>SpeakReady AI - Practice Smarter. Interview Better.</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -67,15 +67,210 @@
          .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: transparent; color: #333; font-weight: 600; cursor: pointer; }
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
+
+         /* --- Mobile App Launch Splash --- */
+         .sr-launch-screen {
+            display: none;
+         }
+
+         @media (max-width: 820px), (display-mode: standalone) {
+            body.guest-splash-pending {
+               overflow: hidden;
+               background: #f7fbff;
+            }
+
+            body.guest-splash-pending #landing,
+            body.guest-splash-pending #lofc,
+            body.guest-splash-pending #pwa-install-prompt {
+               visibility: hidden;
+            }
+
+            .sr-launch-screen {
+               position: fixed;
+               inset: 0;
+               z-index: 1000000;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               min-height: 100vh;
+               min-height: 100svh;
+               padding: max(28px, env(safe-area-inset-top)) 24px max(26px, env(safe-area-inset-bottom));
+               background:
+                  linear-gradient(180deg, #ffffff 0%, #f7fbff 48%, #edf7ff 100%);
+               color: #0f172a;
+               text-align: center;
+               opacity: 1;
+               visibility: visible;
+               transition: opacity 0.42s ease, visibility 0.42s ease;
+            }
+
+            .sr-launch-screen.is-hiding {
+               opacity: 0;
+               visibility: hidden;
+               pointer-events: none;
+            }
+
+            .sr-launch-content {
+               width: min(100%, 360px);
+               display: flex;
+               flex-direction: column;
+               align-items: center;
+            }
+
+            .sr-launch-mark {
+               position: relative;
+               width: clamp(118px, 34vw, 158px);
+               aspect-ratio: 1;
+               border-radius: 32px;
+               display: grid;
+               place-items: center;
+               margin-bottom: 26px;
+               background: rgba(255, 255, 255, 0.92);
+               border: 1px solid rgba(59, 130, 246, 0.16);
+               box-shadow:
+                  0 22px 48px rgba(15, 23, 42, 0.10),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.92);
+            }
+
+            .sr-launch-mark::after {
+               content: "";
+               position: absolute;
+               inset: 11px;
+               border-radius: 24px;
+               border: 1px solid rgba(20, 184, 166, 0.16);
+               pointer-events: none;
+            }
+
+            .sr-launch-mark img {
+               width: 76%;
+               height: 76%;
+               object-fit: contain;
+               filter: drop-shadow(0 10px 16px rgba(37, 99, 235, 0.16));
+            }
+
+            .sr-launch-kicker {
+               margin: 0 0 9px;
+               color: #2563eb;
+               font-size: clamp(0.7rem, 2.4vw, 0.78rem);
+               font-weight: 700;
+               letter-spacing: 0.15em;
+               text-transform: uppercase;
+            }
+
+            .sr-launch-title {
+               margin: 0;
+               color: #0f172a;
+               font-size: clamp(2rem, 9vw, 2.75rem);
+               font-weight: 800;
+               line-height: 1.05;
+               letter-spacing: 0;
+            }
+
+            .sr-launch-copy {
+               max-width: 300px;
+               margin: 12px auto 28px;
+               color: #475569;
+               font-size: clamp(0.9rem, 3.45vw, 1rem);
+               line-height: 1.55;
+            }
+
+            .sr-launch-progress {
+               width: min(100%, 238px);
+               height: 5px;
+               overflow: hidden;
+               border-radius: 999px;
+               background: #dbeafe;
+            }
+
+            .sr-launch-progress span {
+               display: block;
+               width: 42%;
+               height: 100%;
+               border-radius: inherit;
+               background: linear-gradient(90deg, #2563eb, #14b8a6);
+               animation: srLaunchLoad 1.28s ease-in-out infinite;
+            }
+
+            .sr-launch-status {
+               min-height: 18px;
+               margin-top: 15px;
+               color: #64748b;
+               font-size: clamp(0.72rem, 2.8vw, 0.82rem);
+               font-weight: 600;
+            }
+         }
+
+         @media (max-width: 360px) {
+            .sr-launch-mark {
+               border-radius: 26px;
+               margin-bottom: 22px;
+            }
+
+            .sr-launch-copy {
+               margin-bottom: 24px;
+            }
+         }
+
+         @media (prefers-reduced-motion: reduce) {
+            .sr-launch-screen,
+            .sr-launch-progress span {
+               animation: none !important;
+               transition: none !important;
+            }
+         }
          
          @media (max-width: 767px) {
+            #hero {
+               min-height: auto;
+               padding-top: calc(var(--nav) + 18px);
+               justify-content: flex-start;
+            }
+
+            #hero .container {
+               max-width: 100%;
+               padding-left: 18px;
+               padding-right: 18px;
+            }
+
+            #hero .hbadge {
+               display: inline-block !important;
+               max-width: min(100%, 320px);
+               margin-bottom: 18px;
+               padding: 8px 12px;
+               white-space: normal;
+               text-align: center;
+               line-height: 1.35;
+               font-size: clamp(0.64rem, 2.55vw, 0.72rem);
+               letter-spacing: 0;
+            }
+
+            #hero .h1 {
+               max-width: 330px;
+               margin-left: auto;
+               margin-right: auto;
+               font-size: clamp(1.86rem, 8.1vw, 2.05rem) !important;
+               line-height: 1.08;
+               letter-spacing: 0;
+            }
+
+            #hero .h1 span {
+               display: inline-block;
+            }
+
+            #hero p.mx-auto {
+               max-width: 340px !important;
+               margin-bottom: 26px !important;
+               font-size: clamp(0.86rem, 3.6vw, 0.98rem) !important;
+               line-height: 1.55;
+            }
+
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
                display: grid !important;
-               grid-template-columns: minmax(0, 1.24fr) minmax(0, 1fr) minmax(0, .94fr);
+               grid-template-columns: repeat(2, minmax(0, 1fr));
                align-items: stretch !important;
                justify-content: center !important;
-               gap: 6px !important;
-               width: min(100%, 430px);
+               gap: 8px !important;
+               width: min(100%, 350px);
                margin-left: auto;
                margin-right: auto;
                flex-wrap: nowrap !important;
@@ -85,16 +280,20 @@
                width: 100% !important;
                max-width: none !important;
                min-width: 0;
-               min-height: 38px;
-               padding: 8px 6px !important;
+               min-height: 42px;
+               padding: 9px 8px !important;
                border-radius: 8px;
                display: inline-flex;
                align-items: center;
                justify-content: center;
                gap: 4px;
-               font-size: clamp(0.66rem, 2.7vw, 0.78rem) !important;
+               font-size: clamp(0.72rem, 3vw, 0.82rem) !important;
                line-height: 1.1;
                white-space: nowrap;
+            }
+
+            #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn:first-child {
+               grid-column: 1 / -1;
             }
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row i {
@@ -106,15 +305,15 @@
 
          @media (max-width: 360px) {
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
-               gap: 5px !important;
-               grid-template-columns: minmax(0, 1.28fr) minmax(0, 1fr) minmax(0, .92fr);
+               gap: 7px !important;
+               grid-template-columns: 1fr;
             }
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn {
-               min-height: 36px;
-               padding-left: 4px !important;
-               padding-right: 4px !important;
-               font-size: 0.6rem !important;
+               min-height: 40px;
+               padding-left: 8px !important;
+               padding-right: 8px !important;
+               font-size: 0.74rem !important;
             }
          }
 
@@ -122,9 +321,72 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
          }
+
+         @keyframes srLaunchLoad {
+            0% { transform: translateX(-115%); }
+            55% { transform: translateX(88%); }
+            100% { transform: translateX(245%); }
+         }
       </style>
    </head>
-   <body>
+   <body @if(!$errors->any()) class="guest-splash-pending" @endif>
+      @if(!$errors->any())
+      <div id="srLaunchScreen" class="sr-launch-screen" role="status" aria-live="polite" aria-label="Opening SpeakReady AI">
+         <div class="sr-launch-content">
+            <div class="sr-launch-mark">
+               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+            </div>
+            <p class="sr-launch-kicker">AI Interview Coach</p>
+            <h1 class="sr-launch-title">SpeakReady AI</h1>
+            <p class="sr-launch-copy">Practice. Improve. Speak with confidence.</p>
+            <div class="sr-launch-progress" aria-hidden="true"><span></span></div>
+            <div class="sr-launch-status">Preparing your practice space</div>
+         </div>
+      </div>
+      <script>
+         (function () {
+            const splash = document.getElementById('srLaunchScreen');
+            if (!splash) return;
+
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            const isMobile = window.matchMedia('(max-width: 820px)').matches;
+            const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const seenKey = 'speakready_guest_splash_seen';
+            const shouldShow = (isStandalone || isMobile) && !sessionStorage.getItem(seenKey);
+
+            function clearSplash() {
+               document.body.classList.remove('guest-splash-pending');
+               splash.classList.add('is-hiding');
+               window.setTimeout(function () {
+                  splash.remove();
+               }, reduceMotion ? 0 : 460);
+            }
+
+            if (!shouldShow) {
+               clearSplash();
+               return;
+            }
+
+            sessionStorage.setItem(seenKey, '1');
+            const startedAt = window.performance ? performance.now() : Date.now();
+            const minimumDuration = reduceMotion ? 240 : 1650;
+
+            function finishWhenReady() {
+               const now = window.performance ? performance.now() : Date.now();
+               const remaining = Math.max(0, minimumDuration - (now - startedAt));
+               window.setTimeout(clearSplash, remaining);
+            }
+
+            if (document.readyState === 'loading') {
+               document.addEventListener('DOMContentLoaded', finishWhenReady, { once: true });
+            } else {
+               finishWhenReady();
+            }
+
+            window.setTimeout(clearSplash, 3600);
+         })();
+      </script>
+      @endif
 <!-- ======================== LANDING PAGE ======================== -->
       <div id="landing">
          <!-- NAVBAR -->
@@ -185,7 +447,7 @@
              <div class="container position-relative" style="z-index:2">
                 <div class="text-center mt-3 pt-3 afu" style="animation-delay:.05s">
                     <span class="hbadge">
-                 AI-Powered Learning | Real-Time Feedback | Interactive Training
+                 AI-Powered Practice | Real-Time Feedback
                     </span>
                 </div>
                 <div class="row align-items-center mt-4">
@@ -1187,9 +1449,25 @@
             e.preventDefault();
             deferredPrompt = e;
             if (!localStorage.getItem('pwa_prompt_dismissed')) {
-               document.getElementById('pwa-install-prompt').style.display = 'block';
+               queuePwaInstallPrompt();
             }
          });
+
+         function queuePwaInstallPrompt() {
+            const prompt = document.getElementById('pwa-install-prompt');
+            if (!prompt) return;
+
+            window.setTimeout(() => {
+               if (document.body.classList.contains('guest-splash-pending')) {
+                  queuePwaInstallPrompt();
+                  return;
+               }
+
+               if (!localStorage.getItem('pwa_prompt_dismissed')) {
+                  prompt.style.display = 'block';
+               }
+            }, 4200);
+         }
 
          async function triggerInstall() {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;

@@ -1,12 +1,12 @@
 {
   "name": "SpeakReady AI",
   "short_name": "SpeakReady",
-  "description": "Automate Everything with AI Agents",
-  "start_url": "http://10-0-86-192.nip.io:8000/",
-  "scope": "http://10-0-86-192.nip.io:8000/",
+  "description": "Practice interviews with AI coaching and instant feedback.",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#f7fbff",
+  "theme_color": "#f7fbff",
   "icons": [
     {
       "src": "/img/app-icon-192.png",
