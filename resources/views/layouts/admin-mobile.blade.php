@@ -399,6 +399,52 @@
             .col-lg-3, .col-lg-4 { width: 100% !important; }
          }
 
+         /* --- Page headers: center title/subtitle on mobile --- */
+         @media (max-width: 767px) {
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) {
+               flex-direction: column !important;
+               gap: 12px !important;
+               justify-content: center !important;
+               align-items: center !important;
+               text-align: center !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) > div:first-child {
+               width: 100%;
+               max-width: 100%;
+               text-align: center !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) > div:first-child > .d-flex {
+               justify-content: center !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) > div:first-child :is(h1, h2, h3, h4, h5, h6, p) {
+               text-align: center !important;
+               margin-left: auto !important;
+               margin-right: auto !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) > div:first-child p {
+               max-width: 34rem;
+               margin-bottom: 0 !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) > div:not(:first-child) {
+               justify-content: center !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > .mb-4:not(.d-flex) > :is(h1, h2, h3, h4, h5, h6, p) {
+               text-align: center !important;
+               margin-left: auto !important;
+               margin-right: auto !important;
+            }
+
+            #mob-content > .db-content > :is(.db-section, .container-fluid) > .mb-4:not(.d-flex) > p {
+               max-width: 34rem;
+            }
+         }
+
          /* --- PWA Install Prompt --- */
          #pwa-install-prompt {
             display: none; position: fixed;

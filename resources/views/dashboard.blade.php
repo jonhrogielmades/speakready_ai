@@ -70,6 +70,10 @@
         min-width: 0;
     }
 
+    .sr-welcome-stack {
+        min-width: 0;
+    }
+
     .sr-main-stack,
     .sr-side-stack {
         display: flex;
@@ -121,6 +125,70 @@
         justify-content: center;
         height: 100%;
         padding: var(--dash-card-pad);
+    }
+
+    @media (min-width: 992px) {
+        .sr-summary-grid {
+            align-items: start;
+        }
+
+        .sr-welcome-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--dash-section-gap);
+        }
+
+        .sr-hero-card {
+            align-self: start;
+        }
+
+        .sr-hero-inner {
+            padding: 28px 24px;
+        }
+
+        .sr-welcome-stack .sr-hero-card {
+            align-self: stretch;
+        }
+
+        .sr-welcome-stack .sr-stats-desktop {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin: 0;
+        }
+
+        .sr-welcome-stack .sr-stat-card {
+            min-height: 104px;
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .sr-welcome-stack .sr-stat-head {
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .sr-welcome-stack .sr-stat-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+
+        .sr-welcome-stack .sr-chip {
+            padding: 5px 8px;
+            font-size: 0.66rem;
+            white-space: nowrap;
+        }
+
+        .sr-welcome-stack .sr-stat-value {
+            margin-top: 12px;
+            font-size: 1.45rem;
+        }
+
+        .sr-welcome-stack .sr-stat-label {
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
     }
 
     .sr-user-row {
@@ -632,8 +700,21 @@
             grid-template-columns: 1fr;
         }
 
+        .sr-welcome-stack {
+            display: contents;
+        }
+
+        .sr-hero-card {
+            order: 1;
+        }
+
         .sr-score-panel {
             max-width: none;
+            order: 2;
+        }
+
+        .sr-stats-desktop {
+            order: 3;
         }
 
         .stat-grid {
@@ -1042,23 +1123,68 @@
 
 <div class="db-section active sr-dashboard" id="sec-overview">
     <div class="sr-summary-grid">
-        <section class="sr-card sr-hero-card card-grad-success">
-            <div class="sr-hero-inner">
-                <div class="sr-user-row">
-                    <div class="sr-avatar-xl">
-                        @if($avatarUrl)
-                            <img src="{{ $avatarUrl }}" alt="Avatar">
-                        @else
-                            {{ strtoupper(substr(Auth::user()->name ?? 'User', 0, 1)) }}
-                        @endif
+        <div class="sr-welcome-stack">
+            <section class="sr-card sr-hero-card card-grad-success">
+                <div class="sr-hero-inner">
+                    <div class="sr-user-row">
+                        <div class="sr-avatar-xl">
+                            @if($avatarUrl)
+                                <img src="{{ $avatarUrl }}" alt="Avatar">
+                            @else
+                                {{ strtoupper(substr(Auth::user()->name ?? 'User', 0, 1)) }}
+                            @endif
+                        </div>
+                        <div>
+                            <h6 class="sr-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span>.</h6>
+                            <p class="sr-subtitle">Track readiness, progress, and coaching.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="stat-grid sr-stats-desktop" role="group" aria-label="Quick statistics">
+                <div class="sr-stat-card">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
+                        <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">Practice</span>
                     </div>
                     <div>
-                        <h6 class="sr-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span>.</h6>
-                        <p class="sr-subtitle">Track readiness, progress, and coaching.</p>
+                        <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
+                        <div class="sr-stat-label">Completed sessions</div>
+                    </div>
+                </div>
+                <div class="sr-stat-card">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon" style="--accent:#22c55e"><i class="fa-solid fa-star-half-stroke"></i></div>
+                        <span class="sr-chip" style="background:rgba(34,197,94,.1);color:#22c55e">Quality</span>
+                    </div>
+                    <div>
+                        <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
+                        <div class="sr-stat-label">Average rating</div>
+                    </div>
+                </div>
+                <div class="sr-stat-card">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon" style="--accent:#06b6d4"><i class="fa-solid fa-bolt"></i></div>
+                        <span class="sr-chip" style="background:rgba(6,182,212,.1);color:#06b6d4">Growth</span>
+                    </div>
+                    <div>
+                        <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                        <div class="sr-stat-label">Experience points</div>
+                    </div>
+                </div>
+                <div class="sr-stat-card">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon" style="--accent:#f59e0b"><i class="fa-solid fa-fire"></i></div>
+                        <span class="sr-chip" style="background:rgba(245,158,11,.1);color:#f59e0b">Streak</span>
+                    </div>
+                    <div>
+                        <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
+                        <div class="sr-stat-label">Active practice days</div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <section class="sr-card sr-score-panel" aria-label="Readiness score">
             <div class="sr-score-top">
@@ -1081,49 +1207,6 @@
     </div>
 
     <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
-        <div class="sr-stat-card">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
-                <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">Practice</span>
-            </div>
-            <div>
-                <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
-                <div class="sr-stat-label">Completed sessions</div>
-            </div>
-        </div>
-        <div class="sr-stat-card">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon" style="--accent:#22c55e"><i class="fa-solid fa-star-half-stroke"></i></div>
-                <span class="sr-chip" style="background:rgba(34,197,94,.1);color:#22c55e">Quality</span>
-            </div>
-            <div>
-                <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
-                <div class="sr-stat-label">Average rating</div>
-            </div>
-        </div>
-        <div class="sr-stat-card">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon" style="--accent:#06b6d4"><i class="fa-solid fa-bolt"></i></div>
-                <span class="sr-chip" style="background:rgba(6,182,212,.1);color:#06b6d4">Growth</span>
-            </div>
-            <div>
-                <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
-                <div class="sr-stat-label">Experience points</div>
-            </div>
-        </div>
-        <div class="sr-stat-card">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon" style="--accent:#f59e0b"><i class="fa-solid fa-fire"></i></div>
-                <span class="sr-chip" style="background:rgba(245,158,11,.1);color:#f59e0b">Streak</span>
-            </div>
-            <div>
-                <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
-                <div class="sr-stat-label">Active practice days</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="stat-grid sr-stats-desktop" role="group" aria-label="Quick statistics">
         <div class="sr-stat-card">
             <div class="sr-stat-head">
                 <div class="sr-stat-icon" style="--accent:#3b82f6"><i class="fa-solid fa-microphone"></i></div>
