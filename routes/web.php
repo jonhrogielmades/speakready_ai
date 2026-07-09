@@ -7,8 +7,11 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\AdminSessionController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\InterviewPackController;
+use App\Http\Controllers\MentorReviewController;
 
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminSettingController;
 
@@ -36,6 +39,7 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 
 // Public Shared Session Route
 Route::get('/shared/{token}', [InterviewController::class, 'sharedReview'])->name('shared.review');
+Route::post('/shared/{token}/mentor-comments', [MentorReviewController::class, 'store'])->name('shared.mentor-comments.store');
 
 // Contact Form Route
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
@@ -46,7 +50,20 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::get('/interview/setup', function () {
         $categories = \App\Models\Category::where('status', 'active')->where('type', 'core')->get();
-        return view('interview.setup', compact('categories'));
+        $applications = \App\Models\JobApplication::where('user_id', Auth::id())
+            ->orderByRaw("CASE WHEN interview_date IS NULL THEN 1 ELSE 0 END")
+            ->orderBy('interview_date')
+            ->orderByDesc('updated_at')
+            ->get();
+        $packs = \App\Models\InterviewPack::where('status', 'active')->orderBy('name')->get();
+        $selectedApplication = request('application')
+            ? $applications->firstWhere('id', (int) request('application'))
+            : null;
+        $selectedPack = request('pack')
+            ? $packs->firstWhere('id', (int) request('pack'))
+            : null;
+
+        return view('interview.setup', compact('categories', 'applications', 'packs', 'selectedApplication', 'selectedPack'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
@@ -75,6 +92,14 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/notifications/{id}/read', [UserController::class, 'markNotificationAsRead'])->name('user.notifications.read');
     Route::delete('/notifications/{id}', [UserController::class, 'deleteNotification'])->name('user.notifications.delete');
     Route::get('/feedback', [UserController::class, 'feedback'])->name('user.feedback');
+    Route::get('/applications', [UserApplicationController::class, 'index'])->name('user.applications.index');
+    Route::post('/applications', [UserApplicationController::class, 'store'])->name('user.applications.store');
+    Route::put('/applications/{application}', [UserApplicationController::class, 'update'])->name('user.applications.update');
+    Route::delete('/applications/{application}', [UserApplicationController::class, 'destroy'])->name('user.applications.destroy');
+    Route::get('/applications/{application}/practice', [UserApplicationController::class, 'practice'])->name('user.applications.practice');
+    Route::post('/practice-plan/{item}/toggle', [UserApplicationController::class, 'togglePlanItem'])->name('user.practice-plan.toggle');
+    Route::get('/interview-packs', [InterviewPackController::class, 'index'])->name('user.packs.index');
+    Route::get('/interview-packs/{pack}/practice', [InterviewPackController::class, 'practice'])->name('user.packs.practice');
     Route::get('/coach', [UserController::class, 'coach'])->name('user.coach');
     Route::post('/coach/chat', [UserController::class, 'coachChat'])->name('user.coach.chat');
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');

@@ -9,7 +9,11 @@
         $suggestions = trim($feedback->improvement_suggestions ?? '');
         $feedbackSummary = $suggestions !== '' ? $suggestions : ($weaknesses !== '' ? $weaknesses : ($strengths !== '' ? $strengths : 'AI feedback was unavailable for this session.'));
         $comparisonRows = $comparisonRows ?? [];
+        $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
     @endphp
+    @if(session('success'))
+        <div class="alert alert-success" style="border-radius:12px;">{{ session('success') }}</div>
+    @endif
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
@@ -152,6 +156,55 @@
                     <p style="color:var(--tx3);font-size:0.9rem;line-height:1.6;margin:0;">No previous scored session is available for comparison.</p>
                 @endif
             </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-user-pen me-2 text-primary"></i>Mentor Feedback</h5>
+                @forelse($mentorComments as $comment)
+                    <div style="border-bottom:1px solid var(--bd);padding:12px 0;">
+                        <div class="d-flex justify-content-between gap-3">
+                            <strong style="color:var(--tx);">{{ $comment->reviewer_name }}</strong>
+                            @if($comment->rating)
+                                <span style="color:#f59e0b;font-weight:800;">{{ $comment->rating }}/5</span>
+                            @endif
+                        </div>
+                        <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:6px 0 0;">{{ $comment->comment }}</p>
+                    </div>
+                @empty
+                    <p style="color:var(--tx3);margin:0;">No mentor feedback has been submitted yet.</p>
+                @endforelse
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <form action="{{ route('shared.mentor-comments.store', $sessionRecord->share_token) }}" method="POST" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
+                @csrf
+                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-comment-dots me-2 text-success"></i>Leave Review</h5>
+                <div class="mb-3">
+                    <label style="color:var(--tx);font-size:.82rem;font-weight:700;margin-bottom:6px;">Name</label>
+                    <input name="reviewer_name" class="form-control" style="background:var(--bg3);border-color:var(--bd);color:var(--tx);border-radius:10px;" required>
+                </div>
+                <div class="mb-3">
+                    <label style="color:var(--tx);font-size:.82rem;font-weight:700;margin-bottom:6px;">Email</label>
+                    <input type="email" name="reviewer_email" class="form-control" style="background:var(--bg3);border-color:var(--bd);color:var(--tx);border-radius:10px;">
+                </div>
+                <div class="mb-3">
+                    <label style="color:var(--tx);font-size:.82rem;font-weight:700;margin-bottom:6px;">Rating</label>
+                    <select name="rating" class="form-control" style="background:var(--bg3);border-color:var(--bd);color:var(--tx);border-radius:10px;">
+                        <option value="">No rating</option>
+                        @for($i = 5; $i >= 1; $i--)
+                            <option value="{{ $i }}">{{ $i }} / 5</option>
+                        @endfor
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label style="color:var(--tx);font-size:.82rem;font-weight:700;margin-bottom:6px;">Comment</label>
+                    <textarea name="comment" rows="4" class="form-control" style="background:var(--bg3);border-color:var(--bd);color:var(--tx);border-radius:10px;" required></textarea>
+                </div>
+                <button class="btn btn-success w-100" style="border-radius:10px;font-weight:800;">Submit Mentor Feedback</button>
+            </form>
         </div>
     </div>
 

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\InterviewSession;
 use App\Models\InterviewAnswer;
+use App\Models\InterviewPack;
+use App\Models\JobApplication;
+use App\Services\CareerPlanService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Helpers\ActivityLogger;
@@ -19,6 +22,14 @@ class InterviewController extends Controller
             'category_id' => [
                 'required',
                 Rule::exists('categories', 'id')->where('status', 'active')->where('type', 'core'),
+            ],
+            'job_application_id' => [
+                'nullable',
+                Rule::exists('job_applications', 'id')->where('user_id', Auth::id()),
+            ],
+            'interview_pack_id' => [
+                'nullable',
+                Rule::exists('interview_packs', 'id')->where('status', 'active'),
             ],
             'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
             'target_position' => 'required|string|max:255',
@@ -36,20 +47,53 @@ class InterviewController extends Controller
             'question_types.*' => ['string', Rule::in(['Behavioral', 'Situational', 'Technical', 'Personal'])],
             'ai_assistance_level' => ['nullable', Rule::in(['beginner', 'standard', 'challenge'])],
             'live_feedback_mode' => ['nullable', Rule::in(['coaching', 'real_interview'])],
+            'pressure_mode' => 'nullable|boolean',
             'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
         ]);
 
         $category = \App\Models\Category::findOrFail($validated['category_id']);
+        $application = !empty($validated['job_application_id'])
+            ? JobApplication::where('user_id', Auth::id())->findOrFail($validated['job_application_id'])
+            : null;
+        $pack = !empty($validated['interview_pack_id'])
+            ? InterviewPack::where('status', 'active')->findOrFail($validated['interview_pack_id'])
+            : null;
 
         $position = $validated['target_position'];
         if ($position === 'Other' && !empty($validated['custom_position'])) {
             $position = $validated['custom_position'];
         }
 
+        if ($application) {
+            $position = $position ?: $application->job_title;
+            $validated['resume_text'] = $validated['resume_text'] ?? $application->resume_text;
+            $validated['job_description'] = $validated['job_description'] ?? $application->job_description;
+        }
+
+        $questionTypes = $validated['question_types'] ?? [];
+        if ($pack) {
+            $questionTypes = !empty($questionTypes) ? $questionTypes : ($pack->question_types ?? []);
+            $validated['interview_focus'] = $validated['interview_focus'] ?? $pack->interview_focus;
+            $validated['company_persona'] = ($validated['company_persona'] ?? null) ?: $pack->company_persona;
+            $validated['difficulty'] = in_array($pack->difficulty, ['easy', 'medium', 'hard'], true)
+                ? $pack->difficulty
+                : $validated['difficulty'];
+        }
+
+        $pressureMode = filter_var($validated['pressure_mode'] ?? false, FILTER_VALIDATE_BOOLEAN) || (bool) ($pack?->pressure_mode);
+        if ($pressureMode) {
+            $validated['interviewer_strictness'] = 'strict';
+            $validated['ai_assistance_level'] = 'challenge';
+            $validated['live_feedback_mode'] = 'real_interview';
+            $validated['time_limit'] = (int) ($validated['time_limit'] ?? 0) > 0 ? $validated['time_limit'] : 2;
+        }
+
         $provider = $validated['ai_provider'] ?? 'openai';
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
+            'job_application_id' => $application?->id,
+            'interview_pack_id' => $pack?->id,
             'category_id' => $category->id,
             'difficulty' => $validated['difficulty'],
             'target_position' => $position,
@@ -62,9 +106,10 @@ class InterviewController extends Controller
             'company_persona' => $validated['company_persona'] ?? null,
             'interviewer_strictness' => $validated['interviewer_strictness'] ?? 'neutral',
             'time_limit' => $validated['time_limit'] ?? 0,
-            'question_types' => !empty($validated['question_types']) ? json_encode($validated['question_types']) : null,
+            'question_types' => !empty($questionTypes) ? json_encode($questionTypes) : null,
             'ai_assistance_level' => $validated['ai_assistance_level'] ?? 'standard',
             'live_feedback_mode' => $validated['live_feedback_mode'] ?? 'coaching',
+            'pressure_mode' => $pressureMode,
             'status' => 'in_progress',
         ]);
 
@@ -78,7 +123,7 @@ class InterviewController extends Controller
                 $validated['resume_text'] ?? null,
                 $validated['job_description'] ?? null,
                 $validated['company_persona'] ?? null,
-                $validated['question_types'] ?? [],
+                $questionTypes,
                 $validated['ai_assistance_level'] ?? 'standard',
                 $validated['interviewer_strictness'] ?? 'neutral'
             );
@@ -90,11 +135,21 @@ class InterviewController extends Controller
                             'category_id' => $category->id,
                             'question_text' => trim($qText),
                             'difficulty' => $validated['difficulty'],
-                            'type' => $this->questionTypeForIndex(trim($qText), $validated['question_types'] ?? [], $idx),
+                            'type' => $this->questionTypeForIndex(trim($qText), $questionTypes, $idx),
                             'interview_session_id' => $session->id,
                         ]);
                     }
                 }
+            }
+        } elseif ($pack && !empty($pack->sample_questions)) {
+            foreach (array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5)) as $idx => $qText) {
+                \App\Models\Question::create([
+                    'category_id' => $category->id,
+                    'question_text' => trim($qText),
+                    'difficulty' => $validated['difficulty'],
+                    'type' => $this->questionTypeForIndex(trim($qText), $questionTypes, $idx),
+                    'interview_session_id' => $session->id,
+                ]);
             }
         }
 
@@ -321,6 +376,7 @@ class InterviewController extends Controller
             'interview_focus' => $session->interview_focus,
             'ai_assistance_level' => $session->ai_assistance_level,
             'interviewer_strictness' => $session->interviewer_strictness,
+            'pressure_mode' => (bool) $session->pressure_mode,
         ];
 
         // Game Level specific modifiers
@@ -462,6 +518,15 @@ class InterviewController extends Controller
             'current_question_index' => max(0, $answers->count() - 1),
             'session_state' => null,
         ]);
+
+        if ($session->job_application_id) {
+            $session->load('jobApplication');
+            app(CareerPlanService::class)->addPostSessionPlanItems($session);
+
+            if ($session->jobApplication && in_array($session->jobApplication->status, ['tracking', 'applied', 'screening'], true)) {
+                $session->jobApplication->update(['status' => 'interviewing']);
+            }
+        }
         
         $badges = [];
         if (!empty($profile->badges_earned)) {
@@ -974,6 +1039,7 @@ class InterviewController extends Controller
                 'score',
                 'feedback',
                 'user',
+                'mentorReviewComments',
             ])
             ->firstOrFail();
 
@@ -1014,6 +1080,7 @@ class InterviewController extends Controller
                 'score',
                 'feedback',
                 'user',
+                'mentorReviewComments',
             ])
             ->firstOrFail();
 

@@ -114,6 +114,12 @@
     .persona-desc { font-size: 0.75rem; color: var(--tx3); margin-top: 6px; }
     .persona-check { position: absolute; top: 12px; right: 12px; color: #8b5cf6; font-size: 1rem; opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: scale(0.5); }
     .persona-card.selected .persona-check { opacity: 1; transform: scale(1); }
+    .setup-chip-panel {
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        padding: 14px;
+        background: var(--bg3);
+    }
 
     #sec-interview-setup .custom-radio,
     #sec-interview-setup .custom-cbx {
@@ -216,10 +222,34 @@
                         </div>
                         <div class="col-md-6">
                             <label class="olbl">Target Position</label>
-                            <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="Enter your target role (e.g. Software Developer)..." required>
+                            <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="Enter your target role (e.g. Software Developer)..." value="{{ old('target_position', $selectedApplication?->job_title ?? ($selectedPack?->role_family ?? '')) }}" required>
                         </div>
                     </div>
                     <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label class="olbl">Tracked Application</label>
+                            <select class="oinp setup-input" name="job_application_id" id="valApplication">
+                                <option value="">No tracked job</option>
+                                @foreach(($applications ?? collect()) as $application)
+                                    <option value="{{ $application->id }}" {{ (int) old('job_application_id', $selectedApplication?->id) === (int) $application->id ? 'selected' : '' }}>
+                                        {{ $application->company_name }} - {{ $application->job_title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="desc-text">Use your saved resume, job description, and 7-day plan context.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="olbl">Interview Pack</label>
+                            <select class="oinp setup-input" name="interview_pack_id" id="valPack">
+                                <option value="">Custom setup</option>
+                                @foreach(($packs ?? collect()) as $pack)
+                                    <option value="{{ $pack->id }}" {{ (int) old('interview_pack_id', $selectedPack?->id) === (int) $pack->id ? 'selected' : '' }}>
+                                        {{ $pack->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="desc-text"><a href="{{ route('user.packs.index') }}" style="color:#60a5fa;text-decoration:none;">Browse packs</a> for company and role-specific drills.</div>
+                        </div>
                         <div class="col-md-12">
                             <label class="olbl">Questions & AI Provider</label>
                             <select class="oinp setup-input" name="ai_provider" id="valProvider">
@@ -247,12 +277,12 @@
                                 <div class="drop-zone-text" id="dropZoneText">Drag & Drop your PDF resume here<br><span style="font-size:0.75rem;opacity:0.7">or click to browse</span></div>
                                 <input type="file" id="resumeFileInput" accept=".pdf" style="display:none;" onchange="handleResumeUpload(event)">
                             </div>
-                            <textarea class="oinp setup-input mt-2" name="resume_text" id="valResume" rows="3" placeholder="Or paste your resume text manually here..." style="font-size:0.8rem;"></textarea>
+                            <textarea class="oinp setup-input mt-2" name="resume_text" id="valResume" rows="3" placeholder="Or paste your resume text manually here..." style="font-size:0.8rem;">{{ old('resume_text', $selectedApplication?->resume_text ?? '') }}</textarea>
                             <div id="pdfParsingIndicator" style="display:none; color:#60a5fa; font-size:0.8rem; margin-top:5px;"><i class="fa-solid fa-circle-notch fa-spin me-1"></i> Extracting text from PDF...</div>
                         </div>
                         <div class="col-md-12">
                             <label class="olbl">Paste Job Description (Optional)</label>
-                            <textarea class="oinp setup-input" name="job_description" rows="3" placeholder="Paste the exact job description you are applying for to tailor the questions to those specific requirements..."></textarea>
+                            <textarea class="oinp setup-input" name="job_description" id="valJobDescription" rows="3" placeholder="Paste the exact job description you are applying for to tailor the questions to those specific requirements...">{{ old('job_description', $selectedApplication?->job_description ?? '') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -328,6 +358,7 @@
                                 <option value="Problem Solving">Problem Solving</option>
                                 <option value="Leadership">Leadership</option>
                                 <option value="Teamwork">Teamwork</option>
+                                <option value="Personal">Personal</option>
                                 <option value="Salary Negotiation">Salary Negotiation (New)</option>
                             </select>
                         </div>
@@ -358,6 +389,14 @@
                                 <option value="real_interview">Real Interview Mode</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="setup-chip-panel mb-4">
+                        <label class="custom-cbx" style="margin:0;">
+                            <input type="checkbox" name="pressure_mode" id="valPressureMode" value="1" class="setup-input" {{ old('pressure_mode', $selectedPack?->pressure_mode ? 1 : 0) ? 'checked' : '' }}>
+                            Pressure Mode
+                        </label>
+                        <div class="desc-text">Uses strict interviewer behavior, real interview mode, tougher follow-ups, and timed answers by default.</div>
                     </div>
 
                     <div class="row g-4 mb-4">
@@ -460,6 +499,14 @@
                             <span class="summary-val" id="sumPosition">Software Developer</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-label">Application:</span>
+                            <span class="summary-val" id="sumApplication">None</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Pack:</span>
+                            <span class="summary-val" id="sumPack">Custom</span>
+                        </div>
+                        <div class="summary-row">
                             <span class="summary-label">Difficulty:</span>
                             <span class="summary-val" id="sumDifficulty">Medium</span>
                         </div>
@@ -482,6 +529,10 @@
                         <div class="summary-row">
                             <span class="summary-label">Live Feedback:</span>
                             <span class="summary-val" id="sumFeedbackMode">Coaching On</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Pressure Mode:</span>
+                            <span class="summary-val" id="sumPressureMode">Off</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">Company Persona:</span>
@@ -508,7 +559,31 @@
     </form>
 </div>
 
+@php
+    $applicationData = ($applications ?? collect())->mapWithKeys(fn ($application) => [
+        $application->id => [
+            'company_name' => $application->company_name,
+            'job_title' => $application->job_title,
+            'resume_text' => $application->resume_text,
+            'job_description' => $application->job_description,
+            'match_score' => $application->match_score,
+        ],
+    ])->all();
+    $packData = ($packs ?? collect())->mapWithKeys(fn ($pack) => [
+        $pack->id => [
+            'name' => $pack->name,
+            'role_family' => $pack->role_family,
+            'difficulty' => $pack->difficulty,
+            'interview_focus' => $pack->interview_focus,
+            'company_persona' => $pack->company_persona,
+            'question_types' => $pack->question_types ?? [],
+            'pressure_mode' => (bool) $pack->pressure_mode,
+        ],
+    ])->all();
+@endphp
 <script>
+    const applicationData = @json($applicationData);
+    const packData = @json($packData);
 
     function updateSummary() {
         // Category text
@@ -520,6 +595,16 @@
         // Position
         const posVal = document.getElementById('valPosition').value;
         document.getElementById('sumPosition').innerText = posVal || 'Not Specified';
+
+        const appSelect = document.getElementById('valApplication');
+        if (appSelect) {
+            document.getElementById('sumApplication').innerText = appSelect.value ? appSelect.options[appSelect.selectedIndex].text : 'None';
+        }
+
+        const packSelect = document.getElementById('valPack');
+        if (packSelect) {
+            document.getElementById('sumPack').innerText = packSelect.value ? packSelect.options[packSelect.selectedIndex].text : 'Custom';
+        }
 
         // Difficulty
         const diff = document.querySelector('input[name="difficulty"]:checked');
@@ -545,6 +630,11 @@
         const feedbackMode = document.getElementById('valFeedbackMode');
         if (feedbackMode) {
             document.getElementById('sumFeedbackMode').innerText = feedbackMode.options[feedbackMode.selectedIndex].text;
+        }
+
+        const pressureMode = document.getElementById('valPressureMode');
+        if (pressureMode) {
+            document.getElementById('sumPressureMode').innerText = pressureMode.checked ? 'On' : 'Off';
         }
 
         // Persona
@@ -577,10 +667,99 @@
         el.addEventListener('keyup', updateSummary);
     });
 
+    document.getElementById('valApplication')?.addEventListener('change', applyApplicationSelection);
+    document.getElementById('valPack')?.addEventListener('change', applyPackSelection);
+    document.getElementById('valPressureMode')?.addEventListener('change', applyPressureMode);
+
     function selectPersona(cardEl, value) {
         document.querySelectorAll('.persona-card').forEach(el => el.classList.remove('selected'));
         cardEl.classList.add('selected');
         document.getElementById('valPersona').value = value;
+        updateSummary();
+    }
+
+    function setPersonaValue(value) {
+        document.getElementById('valPersona').value = value || '';
+        let selected = false;
+        document.querySelectorAll('.persona-card').forEach(el => {
+            const clickAttr = el.getAttribute('onclick') || '';
+            const matches = value ? clickAttr.includes(`'${value}'`) : clickAttr.includes("''");
+            el.classList.toggle('selected', matches && !selected);
+            if (matches) selected = true;
+        });
+        if (!selected) {
+            document.querySelectorAll('.persona-card').forEach(el => el.classList.remove('selected'));
+        }
+    }
+
+    function setSelectValue(id, value) {
+        const el = document.getElementById(id);
+        if (!el || value === null || value === undefined || value === '') return;
+        const option = Array.from(el.options).find(opt => opt.value === String(value));
+        if (option) el.value = String(value);
+    }
+
+    function setDifficulty(value) {
+        const radio = document.querySelector(`input[name="difficulty"][value="${value}"]`);
+        if (radio) radio.checked = true;
+    }
+
+    function setQuestionTypes(types) {
+        if (!Array.isArray(types) || types.length === 0) return;
+        document.querySelectorAll('input[name="question_types[]"]').forEach(input => {
+            input.checked = types.includes(input.value);
+        });
+    }
+
+    function applyPressureMode() {
+        const enabled = document.getElementById('valPressureMode')?.checked;
+        if (enabled) {
+            setSelectValue('valStrictness', 'strict');
+            setSelectValue('valAssistance', 'challenge');
+            setSelectValue('valFeedbackMode', 'real_interview');
+            if (document.getElementById('valTimeLimit')?.value === '0') {
+                setSelectValue('valTimeLimit', '2');
+            }
+        }
+        updateSummary();
+    }
+
+    function applyApplicationSelection() {
+        const selectedId = document.getElementById('valApplication')?.value;
+        const app = selectedId ? applicationData[selectedId] : null;
+        if (!app) {
+            updateSummary();
+            return;
+        }
+
+        document.getElementById('valPosition').value = app.job_title || '';
+        document.getElementById('valResume').value = app.resume_text || '';
+        document.getElementById('valJobDescription').value = app.job_description || '';
+        updateSummary();
+    }
+
+    function applyPackSelection() {
+        const selectedId = document.getElementById('valPack')?.value;
+        const pack = selectedId ? packData[selectedId] : null;
+        if (!pack) {
+            updateSummary();
+            return;
+        }
+
+        if (!document.getElementById('valPosition').value && pack.role_family) {
+            document.getElementById('valPosition').value = pack.role_family;
+        }
+        setDifficulty(pack.difficulty);
+        setSelectValue('valFocus', pack.interview_focus);
+        setPersonaValue(pack.company_persona);
+        setQuestionTypes(pack.question_types || []);
+
+        const pressure = document.getElementById('valPressureMode');
+        if (pressure && pack.pressure_mode) {
+            pressure.checked = true;
+            applyPressureMode();
+        }
+
         updateSummary();
     }
 
@@ -641,6 +820,9 @@
 
     // Initial update
     window.onload = () => {
+        applyApplicationSelection();
+        applyPackSelection();
+        applyPressureMode();
         updateSummary();
     };
 </script>

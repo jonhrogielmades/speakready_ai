@@ -9,6 +9,8 @@ class InterviewSession extends Model
 {
     protected $fillable = [
         'user_id',
+        'job_application_id',
+        'interview_pack_id',
         'category_id',
         'difficulty',
         'target_position',
@@ -24,6 +26,7 @@ class InterviewSession extends Model
         'question_types',
         'ai_assistance_level',
         'live_feedback_mode',
+        'pressure_mode',
         'status',
         'notes',
         'duration_seconds',
@@ -39,6 +42,7 @@ class InterviewSession extends Model
     protected $casts = [
         'is_archived' => 'boolean',
         'is_public' => 'boolean',
+        'pressure_mode' => 'boolean',
         'duration_seconds' => 'integer',
         'current_question_index' => 'integer',
         'num_questions' => 'integer',
@@ -56,6 +60,16 @@ class InterviewSession extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function jobApplication()
+    {
+        return $this->belongsTo(JobApplication::class);
+    }
+
+    public function interviewPack()
+    {
+        return $this->belongsTo(InterviewPack::class);
+    }
+
     public function answers()
     {
         return $this->hasMany(InterviewAnswer::class);
@@ -69,5 +83,10 @@ class InterviewSession extends Model
     public function feedback()
     {
         return $this->hasOne(Feedback::class);
+    }
+
+    public function mentorReviewComments()
+    {
+        return $this->hasMany(MentorReviewComment::class);
     }
 }

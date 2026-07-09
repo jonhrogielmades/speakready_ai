@@ -799,6 +799,16 @@
                <i class="fa-solid fa-book-open-reader"></i>
                <span>Interview Modules</span>
             </a>
+            <a href="{{ route('user.applications.index') }}"
+               class="drawer-item {{ request()->routeIs('user.applications.*') ? 'active' : '' }}">
+               <i class="fa-solid fa-briefcase"></i>
+               <span>Job Tracker</span>
+            </a>
+            <a href="{{ route('user.packs.index') }}"
+               class="drawer-item {{ request()->routeIs('user.packs.*') ? 'active' : '' }}">
+               <i class="fa-solid fa-layer-group"></i>
+               <span>Interview Packs</span>
+            </a>
             <a href="{{ route('user.drills.voice') }}"
                class="drawer-item {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}">
                <i class="fa-solid fa-ear-listen"></i>

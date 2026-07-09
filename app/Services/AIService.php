@@ -116,6 +116,10 @@ class AIService
         if (!empty($session->company_persona)) {
             $prompt .= "You must act as an interviewer from '" . $session->company_persona . "'. ";
         }
+
+        if (!empty($session->pressure_mode) || ($session->live_feedback_mode ?? null) === 'real_interview') {
+            $prompt .= "Pressure mode is enabled: behave like a real interview panel, do not reassure or teach, politely interrupt vague answers by asking for proof, and prefer sharper follow-ups about tradeoffs, ownership, mistakes, measurable results, and role-specific judgment. ";
+        }
         
         if (!empty($session->resume_text)) {
             $prompt .= "The candidate's resume/background is: '" . substr(trim(preg_replace('/\s+/', ' ', $session->resume_text)), 0, 1500) . "'. Tailor your questions to their experience. ";

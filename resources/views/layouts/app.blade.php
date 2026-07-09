@@ -77,6 +77,8 @@
                
                <div class="db-nav-section">Interview Practice</div>
                <a href="{{ route('interview.setup') }}" class="db-nl {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> Mock Interview</a>
+               <a href="{{ route('user.applications.index') }}" class="db-nl {{ request()->routeIs('user.applications.*') ? 'active' : '' }}"><i class="fa-solid fa-briefcase"></i> Job Tracker</a>
+               <a href="{{ route('user.packs.index') }}" class="db-nl {{ request()->routeIs('user.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i> Interview Packs</a>
                
                <div class="db-nav-section">Specialized Training</div>
                <a href="{{ route('user.modules.index') }}" class="db-nl {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Interview Modules</a>

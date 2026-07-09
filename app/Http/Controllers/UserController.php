@@ -356,6 +356,9 @@ class UserController extends Controller
                             },
                             'score',
                             'feedback',
+                            'mentorReviewComments',
+                            'jobApplication',
+                            'interviewPack',
                         ])
                         ->firstOrFail();
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);

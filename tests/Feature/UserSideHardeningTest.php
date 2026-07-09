@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
+use App\Models\InterviewPack;
 use App\Models\InterviewSession;
+use App\Models\JobApplication;
+use App\Models\PracticePlanItem;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\User;
@@ -103,6 +106,139 @@ class UserSideHardeningTest extends TestCase
             'difficulty' => 'medium',
             'status' => 'in_progress',
         ]);
+    }
+
+    public function test_application_tracker_generates_match_report_and_practice_plan(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->post(route('user.applications.store'), [
+                'company_name' => 'Acme AI',
+                'job_title' => 'Laravel Developer',
+                'status' => 'applied',
+                'interview_stage' => 'Technical screen',
+                'resume_text' => 'Laravel API testing MySQL communication leadership',
+                'job_description' => 'Laravel API testing MySQL communication leadership Docker queues',
+            ])
+            ->assertRedirect(route('user.applications.index'));
+
+        $application = JobApplication::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertSame('Acme AI', $application->company_name);
+        $this->assertGreaterThan(0, $application->match_score);
+        $this->assertNotEmpty($application->smart_plan);
+        $this->assertGreaterThanOrEqual(
+            7,
+            PracticePlanItem::where('job_application_id', $application->id)->count()
+        );
+    }
+
+    public function test_interview_start_applies_application_pack_and_pressure_mode(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $application = JobApplication::create([
+            'user_id' => $user->id,
+            'company_name' => 'Acme AI',
+            'job_title' => 'Platform Engineer',
+            'resume_text' => 'Laravel systems testing',
+            'job_description' => 'Own Laravel APIs and system reliability',
+        ]);
+        $pack = InterviewPack::create([
+            'name' => 'Acme Pressure Pack',
+            'slug' => 'acme-pressure-pack',
+            'company' => 'Acme AI',
+            'role_family' => 'Engineering',
+            'difficulty' => 'hard',
+            'interview_focus' => 'Problem Solving',
+            'company_persona' => 'Technical Panel',
+            'question_types' => ['Technical', 'Situational'],
+            'sample_questions' => ['Walk me through a production incident.'],
+            'pressure_mode' => true,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+                'job_application_id' => $application->id,
+                'interview_pack_id' => $pack->id,
+            ]))
+            ->assertRedirect(route('interview.session'));
+
+        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertSame($application->id, $session->job_application_id);
+        $this->assertSame($pack->id, $session->interview_pack_id);
+        $this->assertTrue($session->pressure_mode);
+        $this->assertSame('hard', $session->difficulty);
+        $this->assertSame('Problem Solving', $session->interview_focus);
+        $this->assertSame('Technical Panel', $session->company_persona);
+        $this->assertSame('strict', $session->interviewer_strictness);
+        $this->assertSame('challenge', $session->ai_assistance_level);
+        $this->assertSame('real_interview', $session->live_feedback_mode);
+        $this->assertSame(2, $session->time_limit);
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Walk me through a production incident.',
+        ]);
+    }
+
+    public function test_public_shared_review_accepts_mentor_comment(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $session->update([
+            'is_public' => true,
+            'share_token' => 'public-session-token',
+        ]);
+
+        $this->post(route('shared.mentor-comments.store', $session->share_token), [
+            'reviewer_name' => 'Mentor One',
+            'reviewer_email' => 'mentor@example.com',
+            'rating' => 5,
+            'comment' => 'Strong structure and clear examples. Keep tightening the measurable results.',
+        ])
+            ->assertRedirect(route('shared.review', $session->share_token));
+
+        $this->assertDatabaseHas('mentor_review_comments', [
+            'interview_session_id' => $session->id,
+            'reviewer_name' => 'Mentor One',
+            'rating' => 5,
+        ]);
+    }
+
+    public function test_new_career_pages_render_for_user(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category();
+        $application = JobApplication::create([
+            'user_id' => $user->id,
+            'company_name' => 'Acme AI',
+            'job_title' => 'Backend Developer',
+            'resume_text' => 'Laravel API testing',
+            'job_description' => 'Laravel API testing queues',
+        ]);
+        $pack = InterviewPack::query()->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('user.applications.index'))
+            ->assertOk()
+            ->assertSee('Job Application Tracker');
+
+        $this->actingAs($user)
+            ->get(route('user.packs.index'))
+            ->assertOk()
+            ->assertSee('Interview Packs');
+
+        $this->actingAs($user)
+            ->get(route('interview.setup', [
+                'application' => $application->id,
+                'pack' => $pack->id,
+            ]))
+            ->assertOk()
+            ->assertSee('Pressure Mode');
     }
 
     public function test_voice_session_save_recomputes_measurable_metrics(): void

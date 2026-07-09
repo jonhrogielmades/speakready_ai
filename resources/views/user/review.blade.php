@@ -55,6 +55,7 @@
         $actionPlan = is_array($sessionRecord->action_plan ?? null) ? $sessionRecord->action_plan : [];
         $actionPriorities = $actionPlan['priorities'] ?? [];
         $recommendedPaths = $actionPlan['recommended_paths'] ?? [];
+        $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
     @endphp
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -168,6 +169,38 @@
         </div>
     </div>
     @endif
+
+    <div class="row mb-4">
+        <div class="col-12 animate-fade-up" style="animation-delay: 0.18s;">
+            <div class="premium-panel" style="padding:24px;">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+                    <div>
+                        <h5 style="color:var(--tx);font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-user-pen me-2 text-primary"></i>Mentor / Peer Reviews</h5>
+                        <p style="color:var(--tx3);margin:0;font-size:.9rem;">Share this report and collect comments from mentors, teachers, or peers.</p>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" style="border-radius:999px;font-weight:800;" onclick="toggleShare()">
+                        <i class="fa-solid fa-share-nodes me-1"></i>Get Share Link
+                    </button>
+                </div>
+                @forelse($mentorComments as $comment)
+                    <div style="border-top:1px solid var(--bd);padding:13px 0;">
+                        <div class="d-flex justify-content-between gap-3">
+                            <strong style="color:var(--tx);">{{ $comment->reviewer_name }}</strong>
+                            <div style="color:var(--tx3);font-size:.82rem;">
+                                @if($comment->rating)
+                                    <span style="color:#f59e0b;font-weight:900;">{{ $comment->rating }}/5</span>
+                                @endif
+                                <span class="ms-2">{{ $comment->created_at?->format('M d, Y') }}</span>
+                            </div>
+                        </div>
+                        <p style="color:var(--tx2);font-size:.92rem;line-height:1.6;margin:6px 0 0;">{{ $comment->comment }}</p>
+                    </div>
+                @empty
+                    <div style="border:1px dashed var(--bd);border-radius:12px;padding:18px;color:var(--tx3);">No mentor comments yet.</div>
+                @endforelse
+            </div>
+        </div>
+    </div>
 
     <!-- Feature 5 & 6: Strengths and Areas for Improvement -->
     <div class="row g-4 mb-4">
