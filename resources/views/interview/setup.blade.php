@@ -833,7 +833,9 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, and AI provider for this session.', side: 'top', align: 'center' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, tracked job, interview pack, and AI provider.', side: 'top', align: 'center' }},
+            { element: '#valApplication', popover: { title: 'Tracked Application', description: 'Attach a job from Job Tracker to reuse its resume, job description, and role context.', side: 'bottom', align: 'start' }},
+            { element: '#valPack', popover: { title: 'Interview Pack', description: 'Apply a ready-made company or role simulation with preset focus, difficulty, and questions.', side: 'bottom', align: 'start' }},
             { element: '#panel-advanced', popover: { title: 'Personalization', description: 'Add your resume, job description, or company context for role-specific questions.', side: 'top', align: 'center' }},
             { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, and optional response timing before you start.', side: 'top', align: 'center' }},
             { element: '#panel-content', popover: { title: 'Content Focus', description: 'Pick the interview focus, assistance level, question types, and company style.', side: 'top', align: 'center' }},
@@ -843,7 +845,9 @@
         ];
 
         const stepsDesktop = [
-            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, and AI provider for this session.', side: 'top', align: 'center' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, tracked job, interview pack, and AI provider.', side: 'top', align: 'center' }},
+            { element: '#valApplication', popover: { title: 'Tracked Application', description: 'Attach a job from Job Tracker to reuse its resume, job description, and role context.', side: 'bottom', align: 'start' }},
+            { element: '#valPack', popover: { title: 'Interview Pack', description: 'Apply a ready-made company or role simulation with preset focus, difficulty, and questions.', side: 'bottom', align: 'start' }},
             { element: '#panel-advanced', popover: { title: 'Personalization', description: 'Add your resume, job description, or company context for role-specific questions.', side: 'top', align: 'center' }},
             { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, and optional response timing before you start.', side: 'top', align: 'center' }},
             { element: '#panel-content', popover: { title: 'Content Focus', description: 'Pick the interview focus, assistance level, question types, and company style.', side: 'top', align: 'center' }},

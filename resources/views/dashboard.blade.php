@@ -1734,7 +1734,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Open Mock Interview, Interview Modules, Voice Rehearsal, AI Coach, reports, and more from here.', side: 'right', align: 'start' }},
+            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Open Mock Interview, Job Tracker, Interview Packs, modules, Voice Rehearsal, AI Coach, reports, and more from here.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay The Tour', description: 'Use this button whenever you want to restart the walkthrough.', side: 'bottom', align: 'center' }},
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your current readiness score, status, average rating, and next target live here.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed sessions, rating, XP, and active practice days at a glance.', side: 'top', align: 'start' }},

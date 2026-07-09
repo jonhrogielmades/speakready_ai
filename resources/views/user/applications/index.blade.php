@@ -22,10 +22,21 @@
     .plan-item { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:start; padding:12px; border:1px solid var(--bd); border-radius:12px; background:var(--bg3); margin-bottom:9px; }
     .plan-item.done { opacity:.62; }
     .plan-item.done .plan-title, .plan-item.done .plan-task { text-decoration:line-through; }
+    .plan-item.is-saving { opacity:.72; pointer-events:none; }
     .plan-title { color:var(--tx); font-weight:800; font-size:.88rem; }
     .plan-task { color:var(--tx2); font-size:.82rem; line-height:1.45; margin-top:2px; }
     .status-pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:6px 10px; background:rgba(59,130,246,.12); color:#60a5fa; font-weight:800; font-size:.75rem; }
-    @media (max-width: 991px) { .tracker-grid { grid-template-columns:1fr; } }
+    .tracker-stats { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
+    .tracker-stat { background:var(--sf); border:1px solid var(--bd); border-radius:16px; padding:15px; min-width:0; }
+    .tracker-stat-label { color:var(--tx3); font-size:.74rem; font-weight:800; text-transform:uppercase; letter-spacing:.02em; }
+    .tracker-stat-value { color:var(--tx); font-size:1.45rem; line-height:1.1; font-weight:900; margin-top:7px; }
+    .tracker-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    @media (max-width: 991px) {
+        .tracker-grid,
+        .tracker-stats { grid-template-columns:1fr; }
+        .tracker-panel,
+        .tracker-card { border-radius:14px; padding:15px; }
+    }
 </style>
 
 <div class="db-section active">
@@ -41,6 +52,39 @@
         </a>
     </div>
 
+    @php
+        $totalApplications = $applications->count();
+        $activeApplications = $applications->whereNotIn('status', ['rejected', 'archived'])->count();
+        $upcomingInterviews = $applications->filter(fn ($application) => $application->interview_date && $application->interview_date->isFuture())->count();
+        $averageMatch = $totalApplications ? round($applications->avg('match_score')) : 0;
+        $totalPlanItems = $applications->flatMap->planItems->count();
+        $completedPlanItems = $applications->flatMap->planItems->whereNotNull('completed_at')->count();
+        $overallPlanProgress = $totalPlanItems ? round(($completedPlanItems / $totalPlanItems) * 100) : 0;
+    @endphp
+
+    <div class="tracker-stats" id="job-tracker-summary">
+        <div class="tracker-stat">
+            <div class="tracker-stat-label">Tracked Jobs</div>
+            <div class="tracker-stat-value">{{ $totalApplications }}</div>
+        </div>
+        <div class="tracker-stat">
+            <div class="tracker-stat-label">Active Pipeline</div>
+            <div class="tracker-stat-value">{{ $activeApplications }}</div>
+        </div>
+        <div class="tracker-stat">
+            <div class="tracker-stat-label">Upcoming</div>
+            <div class="tracker-stat-value">{{ $upcomingInterviews }}</div>
+        </div>
+        <div class="tracker-stat">
+            <div class="tracker-stat-label">Avg Match</div>
+            <div class="tracker-stat-value">{{ $averageMatch }}%</div>
+        </div>
+        <div class="tracker-stat">
+            <div class="tracker-stat-label">Plan Progress</div>
+            <div class="tracker-stat-value">{{ $overallPlanProgress }}%</div>
+        </div>
+    </div>
+
     @if(session('success'))
         <div class="alert alert-success" style="border-radius:12px;">{{ session('success') }}</div>
     @endif
@@ -49,7 +93,7 @@
     @endif
 
     <div class="tracker-grid">
-        <aside class="tracker-panel">
+        <aside class="tracker-panel" id="job-tracker-form">
             <h5 style="color:var(--tx);font-weight:800;margin-bottom:14px;">Add Target Job</h5>
             <form action="{{ route('user.applications.store') }}" method="POST">
                 @csrf
@@ -93,7 +137,7 @@
             </form>
         </aside>
 
-        <main>
+        <main id="job-tracker-list">
             @forelse($applications as $application)
                 @php
                     $completed = $application->planItems->whereNotNull('completed_at')->count();
@@ -101,7 +145,7 @@
                     $progress = round(($completed / $total) * 100);
                     $latestSession = $application->sessions->sortByDesc('created_at')->first();
                 @endphp
-                <section class="tracker-card">
+                <section class="tracker-card tracker-application-card">
                     <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
                         <div>
                             <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -123,7 +167,7 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="tracker-actions">
                             <div class="match-ring" style="--score: {{ $application->match_score }}%;">
                                 <span>{{ $application->match_score }}%</span>
                             </div>
@@ -173,7 +217,7 @@
 
                     @foreach($application->planItems->sortBy('due_date')->take(10) as $item)
                         <div class="plan-item {{ $item->completed_at ? 'done' : '' }}" id="plan-item-{{ $item->id }}">
-                            <input type="checkbox" class="form-check-input mt-1" {{ $item->completed_at ? 'checked' : '' }} onchange="togglePlanItem({{ $item->id }})">
+                            <input type="checkbox" class="form-check-input mt-1" {{ $item->completed_at ? 'checked' : '' }} onchange="togglePlanItem({{ $item->id }}, this)">
                             <div>
                                 <div class="plan-title">Day {{ $item->day_number }}: {{ $item->title }}</div>
                                 <div class="plan-task">{{ $item->task }}</div>
@@ -220,7 +264,13 @@
 </div>
 
 <script>
-function togglePlanItem(itemId) {
+function togglePlanItem(itemId, checkbox) {
+    const itemEl = document.getElementById(`plan-item-${itemId}`);
+    const previousState = checkbox ? !checkbox.checked : null;
+
+    if (itemEl) itemEl.classList.add('is-saving');
+    if (checkbox) checkbox.disabled = true;
+
     fetch(`{{ url('/practice-plan') }}/${itemId}/toggle`, {
         method: 'POST',
         headers: {
@@ -228,12 +278,53 @@ function togglePlanItem(itemId) {
             'Content-Type': 'application/json',
         }
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) throw new Error('Request failed');
+        return res.json();
+    })
     .then(data => {
-        if (data.success) {
-            document.getElementById(`plan-item-${itemId}`)?.classList.toggle('done', data.completed);
-        }
+        if (!data.success) throw new Error('Update failed');
+        if (itemEl) itemEl.classList.toggle('done', data.completed);
+    })
+    .catch(() => {
+        if (checkbox && previousState !== null) checkbox.checked = previousState;
+        alert('Could not update this practice task. Please try again.');
+    })
+    .finally(() => {
+        if (itemEl) itemEl.classList.remove('is-saving');
+        if (checkbox) checkbox.disabled = false;
     });
 }
 </script>
+
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof window.createSpeakReadyTour !== 'function') return;
+
+        const stepsMobile = [
+            { element: '#job-tracker-summary', popover: { title: 'Tracker Snapshot', description: 'See tracked jobs, active applications, upcoming interviews, and plan progress.', side: 'bottom', align: 'start' }},
+            { element: '#job-tracker-form', popover: { title: 'Add Target Job', description: 'Paste the job, resume, and job description to generate a match score and plan.', side: 'top', align: 'start' }},
+            { element: '.tracker-application-card', popover: { title: 'Application Card', description: 'Review stage, match score, missing keywords, and the smart practice plan.', side: 'top', align: 'start' }},
+            { element: '.plan-item', popover: { title: 'Practice Tasks', description: 'Check off each task as you work through the role-specific preparation plan.', side: 'top', align: 'start' }}
+        ];
+
+        const stepsDesktop = [
+            { element: '#job-tracker-summary', popover: { title: 'Tracker Snapshot', description: 'See tracked jobs, active applications, upcoming interviews, and plan progress.', side: 'bottom', align: 'start' }},
+            { element: '#job-tracker-form', popover: { title: 'Add Target Job', description: 'Paste the job, resume, and job description to generate a match score and plan.', side: 'right', align: 'start' }},
+            { element: '.tracker-application-card', popover: { title: 'Application Card', description: 'Review stage, match score, missing keywords, and the smart practice plan.', side: 'left', align: 'start' }},
+            { element: '.plan-item', popover: { title: 'Practice Tasks', description: 'Check off each task as you work through the role-specific preparation plan.', side: 'top', align: 'start' }}
+        ];
+
+        window.createSpeakReadyTour({
+            completionKey: 'onboarding_completed_job_tracker',
+            serverDetectedMobile: @json($isMobile),
+            stepsMobile,
+            stepsDesktop,
+            autoStartDelay: 500,
+        });
+    });
+</script>
+@endpush
+
 @endsection

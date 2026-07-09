@@ -225,12 +225,16 @@ class UserSideHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.applications.index'))
             ->assertOk()
-            ->assertSee('Job Application Tracker');
+            ->assertSee('Job Application Tracker')
+            ->assertSee('id="job-tracker-summary"', false)
+            ->assertSee('id="job-tracker-form"', false);
 
         $this->actingAs($user)
             ->get(route('user.packs.index'))
             ->assertOk()
-            ->assertSee('Interview Packs');
+            ->assertSee('Interview Packs')
+            ->assertSee('id="pack-summary"', false)
+            ->assertSee('id="pack-browser"', false);
 
         $this->actingAs($user)
             ->get(route('interview.setup', [
@@ -239,6 +243,44 @@ class UserSideHardeningTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee('Pressure Mode');
+    }
+
+    public function test_practice_plan_toggle_is_scoped_to_owner(): void
+    {
+        $owner = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $application = JobApplication::create([
+            'user_id' => $owner->id,
+            'company_name' => 'Acme AI',
+            'job_title' => 'Backend Developer',
+            'resume_text' => 'Laravel API testing',
+            'job_description' => 'Laravel API testing queues',
+        ]);
+        $item = PracticePlanItem::create([
+            'user_id' => $owner->id,
+            'job_application_id' => $application->id,
+            'day_number' => 1,
+            'due_date' => now()->toDateString(),
+            'type' => 'match',
+            'title' => 'Tighten Job Match',
+            'task' => 'Connect one answer to the job description.',
+        ]);
+
+        $this->actingAs($otherUser)
+            ->postJson(route('user.practice-plan.toggle', $item))
+            ->assertForbidden();
+
+        $this->assertNull($item->fresh()->completed_at);
+
+        $this->actingAs($owner)
+            ->postJson(route('user.practice-plan.toggle', $item))
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'completed' => true,
+            ]);
+
+        $this->assertNotNull($item->fresh()->completed_at);
     }
 
     public function test_voice_session_save_recomputes_measurable_metrics(): void

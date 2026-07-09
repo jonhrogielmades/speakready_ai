@@ -753,11 +753,11 @@
                <i class="fa-solid fa-chart-line"></i>
                <span>Progress</span>
             </a>
-            <a href="{{ route('user.coach') }}"
-               class="mob-nav-item {{ request()->routeIs('user.coach') ? 'active' : '' }}"
-               id="mobnav-coach">
-               <i class="fa-solid fa-robot"></i>
-               <span>Coach</span>
+            <a href="{{ route('user.feedback') }}"
+               class="mob-nav-item {{ request()->routeIs('user.feedback', 'user.review') ? 'active' : '' }}"
+               id="mobnav-feedback">
+               <i class="fa-solid fa-clipboard-check"></i>
+               <span>Feedback</span>
             </a>
             <button class="mob-nav-item" id="mobnav-more" onclick="openMobDrawer()">
                <i class="fa-solid fa-ellipsis"></i>
@@ -819,10 +819,10 @@
                <i class="fa-solid fa-gamepad"></i>
                <span>Learning Games</span>
             </a>
-            <a href="{{ route('user.feedback') }}"
-               class="drawer-item {{ request()->routeIs('user.feedback') ? 'active' : '' }}">
-               <i class="fa-solid fa-clipboard-check"></i>
-               <span>Feedback</span>
+            <a href="{{ route('user.coach') }}"
+               class="drawer-item {{ request()->routeIs('user.coach*') ? 'active' : '' }}">
+               <i class="fa-solid fa-robot"></i>
+               <span>AI Coach</span>
             </a>
             <a href="{{ route('user.reports') }}"
                class="drawer-item {{ request()->routeIs('user.reports') ? 'active' : '' }}">
