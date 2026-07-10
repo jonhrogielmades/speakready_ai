@@ -399,6 +399,214 @@
             .col-lg-3, .col-lg-4 { width: 100% !important; }
          }
 
+         /* --- 21. Admin mobile: remove internal horizontal table/card scroll --- */
+         @media (max-width: 767px) {
+            #mob-content,
+            #mob-content .db-content,
+            #mob-content .db-section,
+            #mob-content .container,
+            #mob-content .container-fluid,
+            #mob-content .row,
+            #mob-content [class*="col-"],
+            #mob-content .premium-card,
+            #mob-content .card,
+            #mob-content .modal-content,
+            #mob-content .tab-content {
+               max-width: 100% !important;
+               min-width: 0 !important;
+            }
+
+            #mob-content .table-responsive,
+            #mob-content [style*="overflow-x:auto"],
+            #mob-content [style*="overflow-x: auto"] {
+               width: 100% !important;
+               max-width: 100% !important;
+               overflow-x: hidden !important;
+               -webkit-overflow-scrolling: auto !important;
+            }
+
+            #mob-content table,
+            #mob-content .table,
+            #mob-content .custom-table {
+               width: 100% !important;
+               min-width: 0 !important;
+               max-width: 100% !important;
+               table-layout: auto !important;
+            }
+
+            #mob-content .custom-table,
+            #mob-content #mainTable,
+            #mob-content .table-responsive > table {
+               display: block !important;
+            }
+
+            #mob-content .custom-table thead,
+            #mob-content #mainTable thead,
+            #mob-content .table-responsive > table thead {
+               display: none !important;
+            }
+
+            #mob-content .custom-table tbody,
+            #mob-content #mainTable tbody,
+            #mob-content .table-responsive > table tbody {
+               display: block !important;
+               width: 100% !important;
+               max-width: 100% !important;
+            }
+
+            #mob-content .custom-table tbody tr,
+            #mob-content #mainTable tbody tr,
+            #mob-content .table-responsive > table tbody tr {
+               display: flex !important;
+               flex-direction: column !important;
+               width: 100% !important;
+               max-width: 100% !important;
+               min-width: 0 !important;
+               margin-bottom: 12px !important;
+               padding: 12px !important;
+               border: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+               border-radius: 12px !important;
+               background: var(--bg3, rgba(255,255,255,0.03)) !important;
+            }
+
+            #mob-content .custom-table tbody tr:last-child,
+            #mob-content #mainTable tbody tr:last-child,
+            #mob-content .table-responsive > table tbody tr:last-child {
+               margin-bottom: 0 !important;
+            }
+
+            #mob-content .custom-table tbody td,
+            #mob-content #mainTable tbody td,
+            #mob-content .table-responsive > table tbody td {
+               display: flex !important;
+               align-items: center !important;
+               justify-content: space-between !important;
+               gap: 12px !important;
+               width: 100% !important;
+               min-width: 0 !important;
+               max-width: 100% !important;
+               padding: 8px 0 !important;
+               border-top: 0 !important;
+               border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+               color: var(--tx2) !important;
+               text-align: right !important;
+               white-space: normal !important;
+               overflow-wrap: anywhere !important;
+               word-break: normal !important;
+            }
+
+            #mob-content .custom-table tbody td:last-child,
+            #mob-content #mainTable tbody td:last-child,
+            #mob-content .table-responsive > table tbody td:last-child {
+               border-bottom: 0 !important;
+               padding-bottom: 0 !important;
+            }
+
+            #mob-content .custom-table tbody td[data-label]::before,
+            #mob-content #mainTable tbody td[data-label]::before,
+            #mob-content .table-responsive > table tbody td[data-label]::before {
+               content: attr(data-label);
+               flex: 0 0 auto;
+               max-width: 44%;
+               color: var(--tx3, #8b8b98);
+               font-size: 0.76rem;
+               font-weight: 700;
+               text-align: left;
+            }
+
+            #mob-content .custom-table tbody td[colspan],
+            #mob-content #mainTable tbody td[colspan],
+            #mob-content .table-responsive > table tbody td[colspan] {
+               display: block !important;
+               text-align: center !important;
+               border-bottom: 0 !important;
+            }
+
+            #mob-content .custom-table tbody td > *,
+            #mob-content #mainTable tbody td > *,
+            #mob-content .table-responsive > table tbody td > * {
+               max-width: 100% !important;
+               min-width: 0 !important;
+            }
+
+            #mob-content .custom-table tbody td .d-flex,
+            #mob-content #mainTable tbody td .d-flex,
+            #mob-content .table-responsive > table tbody td .d-flex {
+               flex-wrap: wrap !important;
+               justify-content: flex-end;
+            }
+
+            #mob-content .custom-table tbody td.text-end,
+            #mob-content #mainTable tbody td.text-end,
+            #mob-content .table-responsive > table tbody td.text-end {
+               justify-content: flex-end !important;
+               text-align: right !important;
+            }
+
+            #mob-content .table-responsive > table tbody :is(td, th).d-none {
+               display: none !important;
+            }
+
+            #mob-content #sec-admin-questions .category-filter-mobile {
+               display: block !important;
+               width: 100% !important;
+               max-width: 100% !important;
+            }
+
+            #mob-content #sec-admin-questions .category-filter-mobile select {
+               width: 100% !important;
+               max-width: 100% !important;
+               min-width: 0 !important;
+            }
+
+            #mob-content #sec-admin-questions .category-filter-cards {
+               display: none !important;
+            }
+
+            #mob-content .nav-pills,
+            #mob-content .nav-tabs,
+            #mob-content #nav-pills-container,
+            #mob-content .game-categories-scroll {
+               display: flex !important;
+               flex-wrap: wrap !important;
+               width: 100% !important;
+               max-width: 100% !important;
+               gap: 8px !important;
+               overflow-x: hidden !important;
+               white-space: normal !important;
+               padding-bottom: 0 !important;
+            }
+
+            #mob-content .nav-pills .nav-item,
+            #mob-content .nav-tabs .nav-item,
+            #mob-content .game-categories-scroll .nav-item {
+               flex: 1 1 calc(50% - 4px) !important;
+               min-width: 0 !important;
+               max-width: 100% !important;
+            }
+
+            #mob-content .nav-pills .nav-link,
+            #mob-content .nav-tabs .nav-link,
+            #mob-content .game-categories-scroll .nav-link,
+            #mob-content .game-cat-pill {
+               width: 100% !important;
+               min-width: 0 !important;
+               max-width: 100% !important;
+               justify-content: center !important;
+               text-align: center !important;
+               white-space: normal !important;
+               line-height: 1.2 !important;
+            }
+         }
+
+         @media (max-width: 340px) {
+            #mob-content .nav-pills .nav-item,
+            #mob-content .nav-tabs .nav-item,
+            #mob-content .game-categories-scroll .nav-item {
+               flex-basis: 100% !important;
+            }
+         }
+
          /* --- Page headers: center title/subtitle on mobile --- */
          @media (max-width: 767px) {
             #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) {
@@ -905,6 +1113,3 @@
       @include('layouts.logout-transition')
    </body>
 </html>
-
-
-

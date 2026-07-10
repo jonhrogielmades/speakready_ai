@@ -63,9 +63,56 @@
             text-align: center; 
             transition: 0.2s;
         }
+        #sec-admin-questions .category-filter-cards {
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+        #sec-admin-questions .category-filter-mobile {
+            display: none;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 14px;
+            padding: 14px;
+        }
+        #sec-admin-questions .category-filter-mobile select {
+            width: 100%;
+            min-height: 46px;
+            background: var(--bg);
+            color: var(--tx);
+            border: 1px solid var(--bd);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            outline: none;
+        }
+        #sec-admin-questions .category-filter-mobile select:focus {
+            border-color: #0dcaf0;
+            box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.12);
+        }
 
         /* Mobile Card-based Table Layout for Main Questions Table */
         @media (max-width: 767px) {
+            #sec-admin-questions .category-filter-cards {
+                display: none !important;
+                visibility: hidden !important;
+                height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            #sec-admin-questions .category-filter-mobile {
+                display: block !important;
+                visibility: visible !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            #sec-admin-questions .category-filter-mobile select {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+            }
             #mainTableWrapper {
                 overflow-x: visible !important;
                 -webkit-overflow-scrolling: auto !important;
@@ -128,19 +175,31 @@
         }
     </style>
 
-    <!-- Category Filter Cards -->
-    <div class="d-flex gap-3 mb-4" style="overflow-x:auto; padding-bottom:8px;">
-        <div class="category-card active" onclick="filterCategory('all', this)">
+    <!-- Category Filter -->
+    <div class="category-filter-mobile mb-4">
+        <label class="olbl" for="categoryFilterSelect" style="margin-bottom:8px;">Category</label>
+        <select id="categoryFilterSelect" aria-label="Filter questions by category" onchange="filterCategory(this.value)">
+            <option value="all">All Categories ({{ $totalQuestions }} Questions)</option>
+            @foreach($categories as $c)
+                <option value="{{ $c->id }}">{{ $c->title }} ({{ $c->questions_count }} Questions)</option>
+            @endforeach
+        </select>
+    </div>
+
+    @unless(isset($isMobile) && $isMobile)
+    <div class="category-filter-cards d-flex gap-3 mb-4">
+        <div class="category-card active" data-category-filter="all" onclick="filterCategory('all')">
             <h6 style="color:var(--tx); margin:0; font-weight:600;">All Categories</h6>
             <span class="badge bg-secondary mt-2">{{ $totalQuestions }} Questions</span>
         </div>
         @foreach($categories as $c)
-        <div class="category-card" onclick="filterCategory('{{ $c->id }}', this)">
+        <div class="category-card" data-category-filter="{{ $c->id }}" onclick="filterCategory('{{ $c->id }}')">
             <h6 style="color:var(--tx); margin:0; font-weight:600;">{{ $c->title }}</h6>
             <span class="badge bg-secondary mt-2">{{ $c->questions_count }} Questions</span>
         </div>
         @endforeach
     </div>
+    @endunless
 
     <div id="mainTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <div class="d-md-none mb-3 pb-2" style="border-bottom: 1px solid var(--bd);">
@@ -551,13 +610,21 @@
 </form>
 
 <script>
-function filterCategory(categoryId, cardElement) {
-    document.querySelectorAll('.category-card').forEach(c => c.classList.remove('active'));
-    cardElement.classList.add('active');
+function filterCategory(categoryId) {
+    const selectedCategory = String(categoryId);
+
+    document.querySelectorAll('.category-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.categoryFilter === selectedCategory);
+    });
+
+    const mobileSelect = document.getElementById('categoryFilterSelect');
+    if (mobileSelect && mobileSelect.value !== selectedCategory) {
+        mobileSelect.value = selectedCategory;
+    }
 
     let rows = document.querySelectorAll('.question-row');
     rows.forEach(row => {
-        if (categoryId === 'all' || row.getAttribute('data-category-id') == categoryId) {
+        if (selectedCategory === 'all' || row.getAttribute('data-category-id') === selectedCategory) {
             row.style.display = '';
         } else {
             row.style.display = 'none';
