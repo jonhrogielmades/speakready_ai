@@ -99,12 +99,18 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('class="ucp-mobile-launcher"', false)
+            ->assertSee('data-ucp-context="user"', false)
             ->assertSee('id="userCommandPalette"', false)
             ->assertSee('id="userCommandList"', false)
             ->assertSee('id="ucp-destination-dashboard"', false)
             ->assertSee('id="ucp-destination-account"', false)
             ->assertSee('14 destinations')
             ->assertDontSee('data-ucp-search', false);
+
+        $this->assertMatchesRegularExpression(
+            '/class="ucp-mobile-launcher".*?data-ucp-context="user".*?<i class="fa-solid fa-bolt"/s',
+            $response->getContent()
+        );
 
         $launcherScript = file_get_contents(public_path('js/user-ui.js'));
 

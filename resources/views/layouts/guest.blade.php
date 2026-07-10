@@ -68,6 +68,57 @@
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
 
+         .guest-brand,
+         .guest-brand-copy {
+            min-width: 0;
+         }
+
+         .guest-brand-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            line-height: 1.05;
+         }
+
+         .guest-brand-name {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
+
+         .guest-header-clock {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            max-width: 100%;
+            margin-top: 4px;
+            overflow: hidden;
+            color: var(--tx3);
+            font-size: 0.58rem;
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: 0.015em;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+         }
+
+         .guest-header-clock-separator {
+            opacity: 0.55;
+         }
+
+         @media (max-width: 575.98px) {
+            .guest-header-clock { font-size: 0.53rem; }
+         }
+
+         @media (max-width: 360px) {
+            .guest-header-clock {
+               gap: 3px;
+               font-size: 0.49rem;
+            }
+         }
+
          /* --- Mobile App Launch Splash --- */
          .sr-launch-screen {
             display: none;
@@ -394,9 +445,19 @@
          <nav id="nbar">
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
-                  <a href="#" class="d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
+                  <a href="#" class="guest-brand d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
                      <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0; flex-shrink: 0;">
-                     <span class="text-truncate">SpeakReady AI</span>
+                     <span class="guest-brand-copy">
+                        <span class="guest-brand-name">SpeakReady AI</span>
+                        @php
+                           $guestHeaderNow = now();
+                        @endphp
+                        <time class="guest-header-clock" id="guestHeaderClock" datetime="{{ $guestHeaderNow->toIso8601String() }}" aria-label="Current date and time">
+                           <span id="guestHeaderDate">{{ $guestHeaderNow->format('D, M j') }}</span>
+                           <span class="guest-header-clock-separator" aria-hidden="true">&bull;</span>
+                           <span id="guestHeaderTime">{{ $guestHeaderNow->format('g:i A') }}</span>
+                        </time>
+                     </span>
                   </a>
                   <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
                      <a href="#" class="nav-link">Home</a>
@@ -417,9 +478,6 @@
                      </button>
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
-                     </button>
-                     <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
-                     <i class="fa-solid fa-bars" aria-hidden="true"></i>
                      </button>
                   </div>
                </div>
@@ -1374,7 +1432,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
       
-      <script src="{{ asset('js/main.js') }}?v=3"></script>
+      <script src="{{ asset('js/main.js') }}?v=4"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {

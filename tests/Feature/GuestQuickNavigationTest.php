@@ -28,15 +28,24 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="gqn-destination-contact"', false)
             ->assertSee('class="ucp-guest-actions"', false)
             ->assertSee('data-ucp-action', false)
+            ->assertSee('class="guest-brand-copy"', false)
+            ->assertSee('id="guestHeaderClock"', false)
+            ->assertSee('id="guestHeaderDate"', false)
+            ->assertSee('id="guestHeaderTime"', false)
             ->assertDontSee('data-ucp-search', false)
             ->assertDontSee('id="guestQuickNavLauncher"', false)
+            ->assertDontSee('id="mbtog"', false)
             ->assertDontSee('id="mbmenu"', false);
 
         $markup = $response->getContent();
 
-        $this->assertSame(2, substr_count($markup, 'data-ucp-open'));
+        $this->assertSame(1, substr_count($markup, 'data-ucp-open'));
         $this->assertSame(7, substr_count($markup, 'data-ucp-item'));
         $this->assertSame(2, substr_count($markup, 'data-ucp-action'));
+        $this->assertMatchesRegularExpression(
+            '/class="ucp-mobile-launcher".*?data-ucp-context="guest".*?<i class="fa-solid fa-bars"/s',
+            $markup
+        );
 
         $launcherScript = file_get_contents(public_path('js/user-ui.js'));
 
@@ -49,5 +58,13 @@ class GuestQuickNavigationTest extends TestCase
         $this->assertStringContainsString('destination.focus({ preventScroll: true })', $launcherScript);
         $this->assertStringContainsString("addEventListener('hidden.bs.offcanvas'", $launcherScript);
         $this->assertStringContainsString('focusReturn.focus({ preventScroll: true })', $launcherScript);
+
+        $mainScript = file_get_contents(public_path('js/main.js'));
+
+        $this->assertIsString($mainScript);
+        $this->assertStringContainsString('setupGuestHeaderClock', $mainScript);
+        $this->assertStringContainsString('new Intl.DateTimeFormat', $mainScript);
+        $this->assertStringContainsString('millisecondsUntilNextMinute', $mainScript);
+        $this->assertStringContainsString('clock.dateTime = now.toISOString()', $mainScript);
     }
 }

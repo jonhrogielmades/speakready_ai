@@ -42,8 +42,68 @@ function toggleTheme() {
     applyTheme();
 }
 
+function setupGuestHeaderClock() {
+    const clock = document.getElementById('guestHeaderClock');
+    const dateElement = document.getElementById('guestHeaderDate');
+    const timeElement = document.getElementById('guestHeaderTime');
+
+    if (!clock || !dateElement || !timeElement || clock.dataset.clockInitialized === 'true') return;
+
+    clock.dataset.clockInitialized = 'true';
+
+    const requestedLocale = document.documentElement.lang || navigator.language || 'en';
+    let locale = 'en';
+
+    try {
+        if (Intl.DateTimeFormat.supportedLocalesOf([requestedLocale]).length) {
+            locale = requestedLocale;
+        }
+    } catch (error) {
+        locale = 'en';
+    }
+
+    const dateFormatter = new Intl.DateTimeFormat(locale, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+    });
+    const fullDateFormatter = new Intl.DateTimeFormat(locale, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    });
+    const timeFormatter = new Intl.DateTimeFormat(locale, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+
+    function renderGuestHeaderClock() {
+        const now = new Date();
+        const dateText = dateFormatter.format(now);
+        const fullDateText = fullDateFormatter.format(now);
+        const timeText = timeFormatter.format(now);
+
+        dateElement.textContent = dateText;
+        timeElement.textContent = timeText;
+        clock.dateTime = now.toISOString();
+        clock.setAttribute('aria-label', 'Current date and time: ' + fullDateText + ', ' + timeText);
+        clock.title = fullDateText + ' at ' + timeText;
+    }
+
+    renderGuestHeaderClock();
+
+    const millisecondsUntilNextMinute = 60000 - (Date.now() % 60000) + 50;
+    window.setTimeout(function () {
+        renderGuestHeaderClock();
+        window.setInterval(renderGuestHeaderClock, 60000);
+    }, millisecondsUntilNextMinute);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
+    setupGuestHeaderClock();
     const thbtn = document.getElementById('thbtn');
     if (thbtn) thbtn.addEventListener('click', toggleTheme);
 });

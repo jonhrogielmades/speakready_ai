@@ -17,7 +17,7 @@
         @if ($isGuestQuickNavigation) data-ucp-storage-key="speakready.guest-quick-nav-position.v1" @endif
         title="Tap to open; drag or press Shift + Arrow to move"
     >
-        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+        <i class="fa-solid {{ $isGuestQuickNavigation ? 'fa-bars' : 'fa-bolt' }}" aria-hidden="true"></i>
         <span class="ucp-launcher-label" aria-hidden="true">Navigate</span>
     </button>
     <span id="ucpMobileLauncherHelp" class="visually-hidden">Drag this button to an edge, or press Shift and an arrow key to move it.</span>
@@ -443,6 +443,21 @@
         .ucp-mobile-launcher .ucp-launcher-label { display: none; }
         .ucp-mobile-launcher[data-ucp-context="guest"] {
             bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+            width: 28px;
+            height: 32px;
+            min-height: 32px;
+            color: #334155;
+            background: rgba(248, 250, 252, .97);
+            border-color: #dbe2ea;
+            border-radius: 7px;
+            box-shadow: 0 5px 14px rgba(15, 23, 42, .16);
+            font-size: .68rem;
+        }
+        .ucp-mobile-launcher[data-ucp-context="guest"]:hover {
+            color: #0f172a;
+            background: #fff;
+            border-color: #cbd5e1;
+            box-shadow: 0 7px 18px rgba(15, 23, 42, .2);
         }
         .ucp-mobile-launcher.is-positioned {
             right: auto;
