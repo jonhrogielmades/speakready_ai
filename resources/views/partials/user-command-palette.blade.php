@@ -1,3 +1,7 @@
+@php
+    $isGuestQuickNavigation = (bool) ($guestQuickNavigation ?? false);
+@endphp
+
 @once
     <button
         type="button"
@@ -5,9 +9,12 @@
         data-ucp-open
         aria-haspopup="dialog"
         aria-controls="userCommandPalette"
+        aria-expanded="false"
         aria-label="Open quick navigation"
         aria-describedby="ucpMobileLauncherHelp"
         aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight Shift+ArrowUp Shift+ArrowDown"
+        data-ucp-context="{{ $isGuestQuickNavigation ? 'guest' : 'user' }}"
+        @if ($isGuestQuickNavigation) data-ucp-storage-key="speakready.guest-quick-nav-position.v1" @endif
         title="Tap to open; drag or press Shift + Arrow to move"
     >
         <i class="fa-solid fa-bolt" aria-hidden="true"></i>
@@ -43,6 +50,57 @@
             </header>
 
             <nav class="ucp-results" id="userCommandList" aria-label="Navigation destinations">
+                @if ($isGuestQuickNavigation)
+                <a id="gqn-destination-home" class="ucp-result" href="#hero" data-ucp-item>
+                    <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-house" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Home</strong><small>Return to the SpeakReady introduction</small></span>
+                    <span class="ucp-result-group">Explore</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="gqn-destination-features" class="ucp-result" href="#features" data-ucp-item>
+                    <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Features</strong><small>Explore AI-powered interview tools</small></span>
+                    <span class="ucp-result-group">Explore</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="gqn-destination-how" class="ucp-result" href="#how" data-ucp-item>
+                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>How It Works</strong><small>See the path from practice to progress</small></span>
+                    <span class="ucp-result-group">Explore</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="gqn-destination-benefits" class="ucp-result" href="#benefits" data-ucp-item>
+                    <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-award" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Benefits</strong><small>Discover what focused practice unlocks</small></span>
+                    <span class="ucp-result-group">Explore</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="gqn-destination-developers" class="ucp-result" href="#developers" data-ucp-item>
+                    <span class="ucp-result-icon ucp-indigo"><i class="fa-solid fa-code" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Developers</strong><small>Meet the team behind SpeakReady</small></span>
+                    <span class="ucp-result-group">Company</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="gqn-destination-faq" class="ucp-result" href="#faq" data-ucp-item>
+                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>FAQ</strong><small>Find answers to common questions</small></span>
+                    <span class="ucp-result-group">Support</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="gqn-destination-contact" class="ucp-result" href="#contact" data-ucp-item>
+                    <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-envelope" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Contact Us</strong><small>Send a question or feedback</small></span>
+                    <span class="ucp-result-group">Support</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                @else
                 <a id="ucp-destination-dashboard" class="ucp-result" href="{{ route('dashboard') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Dashboard</strong><small>Overview of your interview workspace</small></span>
@@ -140,12 +198,25 @@
                     <span class="ucp-result-group">Account</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
-
+                @endif
             </nav>
 
-            <footer class="ucp-footer">
+            <footer class="ucp-footer {{ $isGuestQuickNavigation ? 'ucp-guest-footer' : '' }}">
+                @if ($isGuestQuickNavigation)
+                <div class="ucp-guest-actions">
+                    <button type="button" class="ucp-guest-action ucp-guest-login" data-ucp-action data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">
+                        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                        Login
+                    </button>
+                    <button type="button" class="ucp-guest-action ucp-guest-register" data-ucp-action data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
+                        Register
+                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                    </button>
+                </div>
+                @else
                 <span class="ucp-status">14 destinations</span>
                 <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
+                @endif
             </footer>
         </section>
     </div>
@@ -217,7 +288,8 @@
         .ucp-close:hover { color: var(--tx, #fff); border-color: #64748b; transform: translateY(-1px); }
         .ucp-close:focus-visible,
         .ucp-mobile-launcher:focus-visible,
-        .ucp-result:focus-visible { outline: 3px solid rgba(96, 165, 250, .48); outline-offset: 2px; }
+        .ucp-result:focus-visible,
+        .ucp-guest-action:focus-visible { outline: 3px solid rgba(96, 165, 250, .48); outline-offset: 2px; }
         .ucp-results {
             min-height: 120px;
             overflow: auto;
@@ -231,12 +303,18 @@
             grid-template-columns: 42px minmax(0, 1fr) auto 20px;
             align-items: center;
             gap: 12px;
+            width: 100%;
             min-height: 64px;
             padding: 9px 10px;
             color: var(--tx2, #cbd5e1);
+            font-family: inherit;
+            text-align: left;
             text-decoration: none;
+            background: transparent;
             border: 1px solid transparent;
             border-radius: 13px;
+            cursor: pointer;
+            appearance: none;
             transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
         }
         .ucp-result:hover,
@@ -282,6 +360,41 @@
         }
         .ucp-status { font-weight: 600; }
         .ucp-help { display: flex; align-items: center; gap: 5px; }
+        .ucp-footer.ucp-guest-footer {
+            min-height: auto;
+            padding: 12px 16px 16px;
+        }
+        .ucp-guest-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+        }
+        .ucp-guest-action {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            color: var(--tx, #f8fafc);
+            font-family: inherit;
+            font-size: .76rem;
+            font-weight: 700;
+            line-height: 1;
+            border: 1px solid var(--bd, #334155);
+            border-radius: 11px;
+            cursor: pointer;
+            transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+        }
+        .ucp-guest-action:hover { transform: translateY(-1px); }
+        .ucp-guest-login { background: var(--bg2, #111827); }
+        .ucp-guest-register {
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            border-color: transparent;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, .22);
+        }
         .ucp-help kbd {
             min-width: 22px;
             padding: 2px 5px;
@@ -328,6 +441,9 @@
             transition: left .18s ease, top .18s ease, box-shadow .18s ease, transform .18s ease;
         }
         .ucp-mobile-launcher .ucp-launcher-label { display: none; }
+        .ucp-mobile-launcher[data-ucp-context="guest"] {
+            bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        }
         .ucp-mobile-launcher.is-positioned {
             right: auto;
             bottom: auto;
@@ -383,9 +499,10 @@
             .ucp-result,
             .ucp-close,
             .ucp-result-arrow,
+            .ucp-guest-action,
             .ucp-mobile-launcher { transition: none; }
         }
     </style>
 
-    <script src="{{ asset('js/user-ui.js') }}?v=5" defer></script>
+    <script src="{{ asset('js/user-ui.js') }}?v=6" defer></script>
 @endonce

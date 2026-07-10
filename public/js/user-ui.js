@@ -46,7 +46,7 @@
         if (!launcher) return null;
 
         var mobileViewport = window.matchMedia('(max-width: 991.98px)');
-        var storageKey = 'speakready.ucp-launcher-position.v1';
+        var storageKey = launcher.dataset.ucpStorageKey || 'speakready.ucp-launcher-position.v1';
         var pointerId = null;
         var startPointerX = 0;
         var startPointerY = 0;
@@ -84,7 +84,7 @@
             var maximumLeft = viewportLeft + viewportWidth - launcherWidth - safeInsetRight - edgeGap;
             var minimumTop = viewportTop + safeInsetTop + edgeGap;
             var maximumTop = viewportTop + viewportHeight - launcherHeight - safeInsetBottom - edgeGap;
-            var mobileHeader = document.getElementById('mob-header');
+            var mobileHeader = document.getElementById('mob-header') || document.getElementById('nbar');
             var mobileNavigation = document.getElementById('mob-bottom-nav');
 
             if (isVisible(mobileHeader)) {
@@ -349,12 +349,19 @@
 
         var dialog = palette.querySelector('.ucp-dialog');
         var results = Array.from(palette.querySelectorAll('[data-ucp-item]'));
+        var openTriggers = Array.from(document.querySelectorAll('[data-ucp-open]'));
         var lastFocusedElement = null;
         var previousBodyOverflow = '';
         var activeItem = null;
         var paletteOpen = false;
         var mobileLauncher = document.querySelector('.ucp-mobile-launcher');
         var movableLauncher = setupMovableLauncher(mobileLauncher);
+
+        function setTriggerExpanded(expanded) {
+            openTriggers.forEach(function (trigger) {
+                trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            });
+        }
 
         function setActive(item, shouldScroll, shouldFocus) {
             results.forEach(function (result) {
@@ -384,6 +391,7 @@
             paletteOpen = true;
             palette.hidden = false;
             palette.setAttribute('aria-hidden', 'false');
+            setTriggerExpanded(true);
             document.body.style.overflow = 'hidden';
             setActive(results[0] || null, false, false);
 
@@ -399,6 +407,7 @@
             paletteOpen = false;
             palette.hidden = true;
             palette.setAttribute('aria-hidden', 'true');
+            setTriggerExpanded(false);
             document.body.style.overflow = previousBodyOverflow;
             setActive(null, false);
 
@@ -426,7 +435,9 @@
             closePalette();
         };
 
-        document.querySelectorAll('[data-ucp-open]').forEach(function (trigger) {
+        setTriggerExpanded(false);
+
+        openTriggers.forEach(function (trigger) {
             trigger.addEventListener('click', function (event) {
                 if (trigger === mobileLauncher && movableLauncher && movableLauncher.consumeClick()) {
                     event.preventDefault();
@@ -448,7 +459,51 @@
         results.forEach(function (item) {
             item.addEventListener('mousemove', function () { setActive(item, false); });
             item.addEventListener('focus', function () { setActive(item, false); });
-            item.addEventListener('click', function () { closePalette({ restoreFocus: false }); });
+            item.addEventListener('click', function () {
+                var href = item.getAttribute('href') || '';
+                var destination = href.startsWith('#') && href.length > 1
+                    ? document.getElementById(href.slice(1))
+                    : null;
+
+                closePalette({ restoreFocus: false });
+
+                if (!destination) return;
+
+                var hadTabIndex = destination.hasAttribute('tabindex');
+                if (!hadTabIndex) destination.setAttribute('tabindex', '-1');
+
+                window.requestAnimationFrame(function () {
+                    destination.focus({ preventScroll: true });
+
+                    if (!hadTabIndex) {
+                        destination.addEventListener('blur', function () {
+                            destination.removeAttribute('tabindex');
+                        }, { once: true });
+                    }
+                });
+            });
+        });
+
+        palette.querySelectorAll('[data-ucp-action]').forEach(function (action) {
+            action.addEventListener('click', function () {
+                var focusReturn = lastFocusedElement;
+                var targetSelector = action.getAttribute('data-bs-target') || '';
+                var actionTarget = targetSelector.startsWith('#')
+                    ? document.getElementById(targetSelector.slice(1))
+                    : null;
+
+                if (actionTarget && focusReturn && focusReturn.isConnected) {
+                    actionTarget.addEventListener('hidden.bs.offcanvas', function () {
+                        window.requestAnimationFrame(function () {
+                            if (focusReturn.isConnected && typeof focusReturn.focus === 'function') {
+                                focusReturn.focus({ preventScroll: true });
+                            }
+                        });
+                    }, { once: true });
+                }
+
+                closePalette({ restoreFocus: !actionTarget });
+            });
         });
 
         document.addEventListener('keydown', function (event) {

@@ -115,7 +115,7 @@
                </div>
                <div class="db-top-search">
                   <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-                  <button type="button" class="db-quick-launcher" data-ucp-open aria-haspopup="dialog" aria-controls="userCommandPalette" aria-keyshortcuts="Control+K Meta+K" title="Open quick navigation (Ctrl/Command + K)">Quick navigation</button>
+                  <button type="button" class="db-quick-launcher" data-ucp-open aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false" aria-keyshortcuts="Control+K Meta+K" title="Open quick navigation (Ctrl/Command + K)">Quick navigation</button>
                   <kbd aria-hidden="true">Ctrl K</kbd>
                </div>
                <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">

@@ -68,55 +68,6 @@
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
 
-         /* --- Guest Quick Navigation Launcher --- */
-         .guest-quick-nav-launcher {
-            display: none;
-         }
-
-         @media (max-width: 991.98px) {
-            .guest-quick-nav-launcher {
-               position: fixed;
-               right: max(14px, env(safe-area-inset-right, 0px));
-               bottom: max(18px, env(safe-area-inset-bottom, 0px));
-               z-index: 1039;
-               display: grid;
-               place-items: center;
-               width: 44px;
-               height: 44px;
-               padding: 0;
-               color: #fff;
-               background: linear-gradient(135deg, #3b82f6, #7c3aed);
-               border: 1px solid rgba(255, 255, 255, 0.2);
-               border-radius: 50%;
-               box-shadow: 0 10px 26px rgba(29, 78, 216, 0.34);
-               font-size: 0.82rem;
-               cursor: pointer;
-               transition: transform 0.18s ease, box-shadow 0.18s ease;
-            }
-
-            .guest-quick-nav-launcher:hover,
-            .guest-quick-nav-launcher:focus-visible {
-               color: #fff;
-               box-shadow: 0 13px 30px rgba(29, 78, 216, 0.44);
-               transform: translateY(-1px);
-            }
-
-            .guest-quick-nav-launcher:focus-visible {
-               outline: 3px solid rgba(96, 165, 250, 0.45);
-               outline-offset: 3px;
-            }
-
-            .guest-quick-nav-launcher.is-open {
-               transform: scale(0.94);
-            }
-         }
-
-         @media (min-width: 992px) {
-            #mbmenu.open {
-               display: none;
-            }
-         }
-
          /* --- Mobile App Launch Splash --- */
          .sr-launch-screen {
             display: none;
@@ -467,30 +418,14 @@
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
-                     <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px" type="button" aria-label="Toggle quick navigation" aria-controls="mbmenu" aria-expanded="false">
-                     <i class="fa-solid fa-bars" id="barIcon"></i>
-                     <i class="fa-solid fa-xmark" id="xIcon" style="display:none"></i>
+                     <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
+                     <i class="fa-solid fa-bars" aria-hidden="true"></i>
                      </button>
                   </div>
                </div>
             </div>
          </nav>
-         <nav id="mbmenu" aria-label="Quick navigation" aria-hidden="true">
-            <a href="#" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Home</a>
-            <a href="#features" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Features</a>
-            <a href="#how" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">How It Works</a>
-            <a href="#benefits" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Benefits</a>
-            <a href="#developers" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Developers</a>
-            <a href="#faq" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">FAQ</a>
-            <a href="#contact" class="nav-link d-block py-3">Contact Us</a>
-            <div class="d-flex gap-2 mt-3">
-               <button class="boc flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Login</button>
-               <button class="bgrd flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</button>
-            </div>
-         </nav>
-         <button class="guest-quick-nav-launcher" id="guestQuickNavLauncher" type="button" aria-label="Open quick navigation" aria-controls="mbmenu" aria-expanded="false" title="Quick navigation">
-            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-         </button>
+         @include('partials.user-command-palette', ['guestQuickNavigation' => true])
 
          <!-- HERO -->
          <section id="hero">
