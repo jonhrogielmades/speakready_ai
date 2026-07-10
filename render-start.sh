@@ -1,5 +1,26 @@
 #!/bin/sh
 
+set -eu
+
+export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
+export LOG_EMERGENCY_PATH="${LOG_EMERGENCY_PATH:-php://stderr}"
+
+mkdir -p \
+    storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache
+
+touch storage/logs/laravel.log || true
+
+if command -v chown >/dev/null 2>&1; then
+    chown -R www-data:www-data storage bootstrap/cache 2>/dev/null || true
+fi
+
+chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
+
 # Run skipped composer scripts
 php artisan package:discover --ansi
 

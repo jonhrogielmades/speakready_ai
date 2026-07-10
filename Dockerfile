@@ -36,14 +36,27 @@ RUN dos2unix composer.json composer.lock || true
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --ignore-platform-reqs
 
+# Send Laravel logs to container stderr by default so Render can collect them
+ENV LOG_CHANNEL=stderr
+ENV LOG_EMERGENCY_PATH=php://stderr
+
 # Copy existing application directory contents
 COPY . /var/www
 
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/sites-enabled/default
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Set Laravel writable directory permissions
+RUN mkdir -p \
+    /var/www/storage/app/public \
+    /var/www/storage/framework/cache/data \
+    /var/www/storage/framework/sessions \
+    /var/www/storage/framework/views \
+    /var/www/storage/logs \
+    /var/www/bootstrap/cache \
+    && touch /var/www/storage/logs/laravel.log \
+    && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
+    && chmod -R ug+rwX /var/www/storage /var/www/bootstrap/cache
 
 # Expose port (Render sets PORT environment variable, usually 80 or 10000. Nginx will listen on 80)
 EXPOSE 80
