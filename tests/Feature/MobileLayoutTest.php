@@ -24,6 +24,28 @@ class MobileLayoutTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('id="mob-content"', false)
+            ->assertSee('--mob-card-gap: 12px', false)
+            ->assertSee('.tracker-panel', false)
+            ->assertSee('id="mob-bottom-nav"', false)
+            ->assertDontSee('class="db-sidebar"', false);
+    }
+
+    public function test_admin_dashboard_uses_consistent_mobile_card_rhythm_for_mobile_user_agent(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'status' => 'active',
+        ]);
+
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->actingAs($admin)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('id="mob-content"', false)
+            ->assertSee('--mob-card-gap: 12px', false)
+            ->assertSee('.premium-card', false)
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
     }

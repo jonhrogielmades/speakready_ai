@@ -22,11 +22,16 @@
       @include('partials.onboarding-styles')
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
-         .premium-panel, .panel, .setup-panel {
+         .premium-panel:not(.p-0):not(.accordion-item),
+         .panel:not(.p-0):not(.accordion-item),
+         .setup-panel:not(.p-0):not(.accordion-item) {
              border-radius: 16px !important;
              padding: 16px !important;
          }
-         .stat-card.premium-panel, .perk-card.premium-panel, .module-card.premium-panel, .print-card {
+         .stat-card.premium-panel:not(.p-0):not(.accordion-item),
+         .perk-card.premium-panel:not(.p-0):not(.accordion-item),
+         .module-card.premium-panel:not(.p-0):not(.accordion-item),
+         .print-card:not(.p-0):not(.accordion-item) {
              padding: 16px !important;
          }
          h4.text-gradient-primary, .text-gradient-primary {
@@ -244,6 +249,8 @@
             max-width: 100%;
          }
          .db-content { padding: 10px 12px 12px !important; }
+
+         @include('partials.mobile-card-rhythm')
 
          /* ---- Bottom Navigation Bar ---- */
          #mob-bottom-nav {
@@ -564,7 +571,7 @@
             #dashboard-stats .ll-stat-card,
             .stat-card.premium-panel {
                min-height: 106px !important;
-               padding: 12px !important;
+               padding: var(--mob-card-pad) !important;
                border-radius: 14px !important;
             }
 
@@ -602,13 +609,6 @@
             }
          }
 
-         /* --- Panel & card padding reduction on small screens --- */
-         @media (max-width: 575px) {
-            .setup-panel  { padding: 14px !important; }
-            .panel        { padding: 14px !important; }
-            .premium-card { padding: 14px !important; }
-         }
-
          /* --- Question types checkbox grid: 1 col on small screens --- */
          @media (max-width: 575px) {
             .cbx-grid { grid-template-columns: 1fr !important; }
@@ -617,11 +617,6 @@
          }
 
          @media (max-width: 380px) {
-            .db-content {
-               padding-left: 10px !important;
-               padding-right: 10px !important;
-            }
-
             .stat-grid {
                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             }
@@ -630,7 +625,7 @@
             #dashboard-stats .ll-stat-card,
             .stat-card.premium-panel {
                min-height: 100px !important;
-               padding: 10px !important;
+               padding: var(--mob-card-pad) !important;
             }
          }
 
@@ -981,9 +976,11 @@
 
          // PWA Install Prompt Logic
          let deferredPrompt;
+         const suppressPwaInstallPrompt = @json(request()->routeIs('interview.session'));
          window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            if (suppressPwaInstallPrompt) return;
             if (!localStorage.getItem('pwa_prompt_dismissed')) {
                document.getElementById('pwa-install-prompt').style.display = 'block';
             }

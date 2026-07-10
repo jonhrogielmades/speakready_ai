@@ -89,6 +89,7 @@
     .real-interview-mode .coaching-only { display:none !important; }
     .recovery-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(52,211,153,.12);color:#34d399;font-weight:700;font-size:.76rem;margin-bottom:14px; }
     .question-timer-anchor { position:absolute;top:15px;right:15px;z-index:55; }
+    .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
 
     /* Circular Audio Spectrum */
     .circular-spectrum { position: absolute; top: 50%; left: 50%; width: 0; height: 0; display: none; z-index: 5; }
@@ -96,25 +97,80 @@
     
     /* Responsive overrides */
     @media (max-width: 768px) {
-        #sec-interview-session { --session-gap: 16px; }
-        .avatar-wrapper { transform: scale(0.7); }
-        .circular-spectrum { transform: scale(0.7); }
-        .ai-avatar-panel { height: 260px !important; }
-        .panel { padding: 14px !important; margin-bottom: var(--session-gap); }
-        .panel-title { font-size: 0.95rem; margin-bottom: 14px; }
+        #sec-interview-session { --session-gap: 12px; }
+        #sec-interview-session > .interview-session-header {
+            margin-bottom: 12px !important;
+            text-align: center;
+        }
+        .interview-session-title {
+            font-size: 1.18rem !important;
+            line-height: 1.18 !important;
+            margin-bottom: 8px !important;
+            letter-spacing: 0 !important;
+        }
+        .interview-meta-line {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px 8px !important;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+            font-size: 0.76rem !important;
+        }
+        .interview-meta-line span {
+            min-width: 0;
+            padding: 6px 8px;
+            border: 1px solid var(--bd);
+            border-radius: 999px;
+            background: var(--bg3);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .avatar-wrapper { transform: scale(0.62); }
+        .circular-spectrum { transform: scale(0.62); }
+        .ai-avatar-panel { height: 220px !important; }
+        .mobile-camera-pip {
+            top: 12px !important;
+            right: 12px !important;
+            width: 70px !important;
+            height: 92px !important;
+        }
+        .panel { padding: 12px !important; margin-bottom: var(--session-gap); }
+        .panel-title { font-size: 0.92rem; margin-bottom: 12px; }
         #workspaceRow { --bs-gutter-x: 0; --bs-gutter-y: var(--session-gap); }
         #interviewControls {
             align-items: stretch !important;
             border-radius: 14px;
-            padding: 12px;
+            padding: 10px;
+            gap: 8px !important;
+            margin-bottom: var(--session-gap) !important;
         }
+        #interviewControls > div { gap: 8px !important; }
         #interviewControls > div { width: 100%; }
-        #interviewControls .btn { min-height: 42px; }
-        #chatTranscriptContainer { padding: 12px !important; margin-bottom: 14px !important; max-height: 300px !important; }
+        #interviewControls .btn { min-height: 40px; padding: 0.48rem 0.65rem; }
+        #chatTranscriptContainer { padding: 10px !important; margin-bottom: 12px !important; max-height: 240px !important; }
+        #answerTextarea { min-height: 92px !important; }
         #introContainer { padding: 16px !important; max-width: 100% !important; }
+        #introContainer h4 { font-size: 1.18rem !important; line-height: 1.22 !important; }
+        #introContainer p { font-size: 0.9rem !important; margin-bottom: 18px !important; }
+        #introContainer .db-badge { font-size: 0.7rem !important; max-width: 100%; }
         .session-chip { width:auto;max-width:100%;justify-content:center; }
-        .interview-meta-line { flex-direction:column;gap:4px !important; }
-        .question-timer-anchor { top:128px;right:15px; }
+        .question-timer-anchor { top:112px;right:12px; }
+        #aiQuestionText { max-height: 4.5em; overflow-y: auto; }
+    }
+
+    @media (max-width: 380px) {
+        #sec-interview-session { --session-gap: 10px; }
+        .interview-session-title { font-size: 1.06rem !important; }
+        .interview-meta-line { gap: 5px !important; font-size: 0.7rem !important; }
+        .interview-meta-line span { padding: 5px 7px; }
+        .ai-avatar-panel { height: 204px !important; }
+        .mobile-camera-pip { width: 62px !important; height: 82px !important; }
+        .question-timer-anchor { top: 100px; right: 10px; }
+        .session-chip { padding: 6px 8px; font-size: 0.7rem; }
+        #interviewControls { padding: 9px; }
+        #interviewControls .btn { font-size: 0.82rem; }
     }
 </style>
 
@@ -155,9 +211,9 @@
 
         @if($sessionRecord && $questions->count() > 0)
         <!-- Header Info -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 interview-session-header">
             <div>
-                <h4 class="text-gradient-primary" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;"><i class="fa-solid fa-chalkboard-user me-2"></i>Interview Workspace</h4>
+                <h4 class="text-gradient-primary interview-session-title" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;"><i class="fa-solid fa-chalkboard-user me-2"></i>Interview Workspace</h4>
                 <div class="interview-meta-line" style="font-size:.85rem;color:var(--tx3);display:flex;gap:15px;">
                     <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
                     <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
@@ -179,7 +235,7 @@
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
                     <!-- Mobile Picture-in-Picture Camera -->
-                    <div class="d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+                    <div class="d-block d-lg-none mobile-camera-pip">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                     </div>
                     <!-- Question Counter (Top Left) -->
@@ -1595,7 +1651,8 @@
                 originalStartInterview.apply(this, arguments);
             }
 
-            if (onboardingTour && !onboardingTour.isCompleted()) {
+            const shouldAutoStartTour = !window.matchMedia('(max-width: 767px)').matches;
+            if (shouldAutoStartTour && onboardingTour && !onboardingTour.isCompleted()) {
                 setTimeout(() => {
                     onboardingTour.start();
                 }, 1000);

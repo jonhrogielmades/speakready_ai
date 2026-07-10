@@ -104,6 +104,8 @@
          }
          .db-content { padding: 14px !important; }
 
+         @include('partials.mobile-card-rhythm')
+
          /* ---- Admin Bottom Navigation Bar ---- */
          #mob-bottom-nav {
             position: fixed;
@@ -286,12 +288,6 @@
             .chart-container[style*="height: 250px"] { height: 180px !important; }
          }
 
-         /* --- 8. premium-card padding reduction --- */
-         @media (max-width: 575px) {
-            .premium-card { padding: 14px !important; }
-            .premium-card.p-3 { padding: 12px !important; }
-         }
-
          /* --- 9. User filter row (search + selects): full width each --- */
          @media (max-width: 575px) {
             .row.g-3 .col-md-4,
@@ -385,13 +381,6 @@
          /* --- 18. Stat badges: don't overflow --- */
          @media (max-width: 575px) {
             .stat-badge { font-size: 0.68rem !important; padding: 4px 8px !important; }
-         }
-
-         /* --- 19. db-content padding on tiny screens --- */
-         @media (max-width: 380px) {
-            .db-content { padding: 10px !important; }
-            .row.g-3 { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0.5rem; }
-            .row.g-4 { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0.5rem; }
          }
 
          /* --- 20. Settings page: form labels + inputs stack --- */
