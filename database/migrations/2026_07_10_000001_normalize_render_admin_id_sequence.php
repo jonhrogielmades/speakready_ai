@@ -15,7 +15,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!app()->environment('production')) {
+        if (!app()->environment('production') || !$this->cleanupEnabled()) {
             return;
         }
 
@@ -45,6 +45,11 @@ return new class extends Migration
     public function down(): void
     {
         // This destructive cleanup is intentionally one-way.
+    }
+
+    private function cleanupEnabled(): bool
+    {
+        return filter_var(env('RUN_RENDER_DATA_CLEANUP', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     private function ensureAdminExists(): void
