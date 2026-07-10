@@ -1,12 +1,12 @@
          <!-- CONTACT US -->
          <section id="contact" class="sp position-relative">
             <div class="container position-relative" style="z-index:1">
+               <div class="text-center mb-5 rv">
+                  <span class="slbl">Contact Us</span>
+                  <h2 class="stitle mb-0">Get in <span class="gt">Touch</span></h2>
+               </div>
                <div class="row g-5 justify-content-center">
                   <div class="col-lg-5 rv">
-                     <div class="text-center mb-4">
-                        <span class="slbl">Contact Us</span>
-                        <h2 class="stitle mb-0">Get in <span class="gt">Touch</span></h2>
-                     </div>
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:30px">Have questions or need support? We're here to help you on your journey to interview success.</p>
                      
                      <div class="d-flex flex-column gap-4">

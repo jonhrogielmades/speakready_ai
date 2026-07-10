@@ -2,14 +2,13 @@
          <section id="benefits" class="sp position-relative">
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
+               <div class="text-center mb-5 rv">
+                  <span class="slbl">Benefits</span>
+                  <h2 class="stitle mb-0">Why use <span class="gt">SpeakReady AI?</span></h2>
+               </div>
                <div class="row g-5">
                   <div class="col-lg-5 rv">
-                     <div class="text-center mb-4">
-                        <span class="slbl">Benefits</span>
-                        <h2 class="stitle mb-0">Why use <span class="gt">SpeakReady AI?</span></h2>
-                     </div>
-                     
-                     <ul class="list-unstyled d-flex flex-column gap-3 mt-4">
+                     <ul class="list-unstyled d-flex flex-column gap-3">
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-comments"></i></div>
                            <div><h4 class="fs-6 fw-bold mb-1">Improve Communication Skills</h4><p style="font-size:.85rem;color:var(--tx2)">Enhance how you articulate your thoughts and experiences.</p></div>
