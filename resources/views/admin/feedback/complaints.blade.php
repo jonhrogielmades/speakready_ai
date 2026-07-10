@@ -2,6 +2,86 @@
 
 @section('content')
 <style>
+    #sec-admin-complaints {
+        max-width: 100%;
+    }
+    #sec-admin-complaints .complaints-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        box-shadow: 0 14px 36px rgba(2, 6, 23, 0.12);
+        padding: 20px;
+    }
+    #mainComplaintsTable {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 0;
+        font-size: 0.86rem;
+    }
+    #mainComplaintsTable th,
+    #mainComplaintsTable td {
+        vertical-align: middle;
+    }
+    #mainComplaintsTable th:nth-child(1),
+    #mainComplaintsTable td:nth-child(1) { width: 10%; }
+    #mainComplaintsTable th:nth-child(2),
+    #mainComplaintsTable td:nth-child(2) { width: 23%; }
+    #mainComplaintsTable th:nth-child(3),
+    #mainComplaintsTable td:nth-child(3) { width: 14%; }
+    #mainComplaintsTable th:nth-child(4),
+    #mainComplaintsTable td:nth-child(4) {
+        width: 24%;
+        white-space: normal !important;
+    }
+    #mainComplaintsTable th:nth-child(5),
+    #mainComplaintsTable td:nth-child(5) { width: 13%; }
+    #mainComplaintsTable th:nth-child(6),
+    #mainComplaintsTable td:nth-child(6) { width: 10%; }
+    #mainComplaintsTable th:nth-child(7),
+    #mainComplaintsTable td:nth-child(7) { width: 10%; }
+    #mainComplaintsTableWrapper {
+        overflow-x: hidden !important;
+    }
+    #mainComplaintsTable .complaint-notes {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        color: var(--tx3);
+    }
+    #mainComplaintsTable .complaints-empty {
+        white-space: normal !important;
+        overflow: hidden;
+    }
+    #mainComplaintsTable .complaints-empty p {
+        max-width: 620px;
+        margin: 0 auto;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+    }
+    @media (max-width: 1199.98px) {
+        #mainComplaintsTable {
+            font-size: 0.78rem;
+        }
+        #mainComplaintsTable th,
+        #mainComplaintsTable td {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+        #mainComplaintsTable .btn-sm {
+            min-height: 30px;
+            padding: 0.3rem 0.52rem;
+            font-size: 0.7rem;
+        }
+        #mainComplaintsTable .badge {
+            font-size: 0.68rem;
+            padding-inline: 0.45rem;
+        }
+    }
     /* Mobile Card-based Table Layout for Main Complaints Table */
     @media (max-width: 767px) {
         #mainComplaintsTableWrapper {
@@ -68,13 +148,20 @@
             white-space: normal;
             text-align: left;
         }
+        #mainComplaintsTable {
+            table-layout: auto;
+        }
+        #mainComplaintsTable th,
+        #mainComplaintsTable td {
+            width: auto !important;
+        }
     }
 </style>
-<div class="container-fluid py-4">
+<div class="db-section active" id="sec-admin-complaints">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1" style="font-weight: 700; color: var(--tx);">User Feedback Complaints</h2>
+            <h4 class="mb-1" style="font-size:1.6rem;font-weight: 700; color: var(--tx);">User Feedback Complaints</h4>
             <p class="mb-0" style="color: var(--tx3);">Manage and investigate feedback reported by users.</p>
         </div>
     </div>
@@ -87,8 +174,7 @@
         </div>
     @endif
 
-    <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
-        <div class="card-body p-4">
+    <div class="complaints-panel">
             <div class="table-responsive" id="mainComplaintsTableWrapper">
                 <table class="table align-middle" id="mainComplaintsTable" style="color: var(--tx); --bs-table-bg: transparent; --bs-table-color: var(--tx);">
                     <thead style="background: transparent;">
@@ -121,7 +207,7 @@
                                 <span class="badge" style="background: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">{{ $complaint->reason }}</span>
                             </td>
                             <td style="border-bottom: 1px solid var(--bd);">
-                                <div class="text-truncate" style="max-width: 200px; color: var(--tx3);" title="{{ $complaint->notes }}">
+                                <div class="complaint-notes" title="{{ $complaint->notes }}">
                                     {{ $complaint->notes ?? 'N/A' }}
                                 </div>
                             </td>
@@ -141,7 +227,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">
+                            <td colspan="7" class="text-center py-5 complaints-empty" style="color: var(--tx3); border-bottom: 1px solid var(--bd);">
                                 <i class="fa-regular fa-face-smile-beam fa-3x mb-3 text-success opacity-50"></i>
                                 <h5 style="color: var(--tx);">No Complaints Found</h5>
                                 <p>Great job! There are no user complaints regarding AI feedback at the moment.</p>
@@ -155,7 +241,6 @@
             <div class="mt-4">
                 {{ $complaints->links('pagination::bootstrap-5') }}
             </div>
-        </div>
     </div>
 </div>
 @endsection

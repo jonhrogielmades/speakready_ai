@@ -30,7 +30,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('class="db-sidebar"', false);
     }
 
-    public function test_admin_dashboard_uses_consistent_mobile_card_rhythm_for_mobile_user_agent(): void
+    public function test_admin_dashboard_is_locked_for_mobile_user_agent(): void
     {
         $admin = User::factory()->create([
             'is_admin' => true,
@@ -42,12 +42,43 @@ class MobileLayoutTest extends TestCase
         $this->actingAs($admin)
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->get(route('admin.dashboard'))
-            ->assertOk()
-            ->assertSee('id="mob-content"', false)
-            ->assertSee('--mob-card-gap: 12px', false)
-            ->assertSee('.premium-card', false)
-            ->assertSee('id="mob-bottom-nav"', false)
+            ->assertForbidden()
+            ->assertSee('Admin is temporarily desktop only.')
+            ->assertSee('Please open the admin portal on a desktop or laptop browser.')
+            ->assertDontSee('id="mob-content"', false)
             ->assertDontSee('class="db-sidebar"', false);
+    }
+
+    public function test_admin_dashboard_keeps_desktop_shell_for_desktop_user_agent(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'status' => 'active',
+        ]);
+
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->actingAs($admin)
+            ->withHeader('User-Agent', $desktopUserAgent)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('class="db-sidebar"', false)
+            ->assertDontSee('Admin is temporarily desktop only.');
+    }
+
+    public function test_admin_write_requests_are_forbidden_from_mobile_user_agent(): void
+    {
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'status' => 'active',
+        ]);
+
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->actingAs($admin)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->post(route('admin.settings.update'), [])
+            ->assertForbidden();
     }
 
     public function test_user_dashboard_keeps_desktop_shell_for_desktop_user_agent(): void

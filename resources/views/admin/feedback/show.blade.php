@@ -19,10 +19,10 @@
                 @csrf
                 @method('PATCH')
                 <select name="audit_status" class="form-select border-0 fw-bold" style="border-radius: 8px; width: 150px; background: var(--bg); color: var(--tx);">
-                    <option value="approved" {{ $answer->audit_status == 'approved' ? 'selected' : '' }}>🟢 Approved</option>
-                    <option value="under_review" {{ $answer->audit_status == 'under_review' ? 'selected' : '' }}>🟡 Under Review</option>
-                    <option value="flagged" {{ $answer->audit_status == 'flagged' ? 'selected' : '' }}>🔴 Flagged</option>
-                    <option value="archived" {{ $answer->audit_status == 'archived' ? 'selected' : '' }}>⚫ Archived</option>
+                    <option value="approved" {{ $answer->audit_status == 'approved' ? 'selected' : '' }}>Approved</option>
+                    <option value="under_review" {{ $answer->audit_status == 'under_review' ? 'selected' : '' }}>Under Review</option>
+                    <option value="flagged" {{ $answer->audit_status == 'flagged' ? 'selected' : '' }}>Flagged</option>
+                    <option value="archived" {{ $answer->audit_status == 'archived' ? 'selected' : '' }}>Archived</option>
                 </select>
                 <button type="submit" class="btn btn-dark" style="border-radius: 8px;">Update</button>
             </form>

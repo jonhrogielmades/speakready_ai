@@ -30,6 +30,9 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="guestHeaderClock"', false)
             ->assertSee('id="guestHeaderDate"', false)
             ->assertSee('id="guestHeaderTime"', false)
+            ->assertSee('Start Practicing', false)
+            ->assertSee('onclick="swTab(\'login\')"', false)
+            ->assertDontSee('swTab(\'signin\')', false)
             ->assertDontSee('data-ucp-search', false)
             ->assertDontSee('class="ucp-mobile-launcher"', false)
             ->assertDontSee('data-ucp-context="guest"', false)
@@ -64,5 +67,7 @@ class GuestQuickNavigationTest extends TestCase
         $this->assertStringContainsString('new Intl.DateTimeFormat', $mainScript);
         $this->assertStringContainsString('millisecondsUntilNextMinute', $mainScript);
         $this->assertStringContainsString('clock.dateTime = now.toISOString()', $mainScript);
+        $this->assertStringContainsString("t === 'login' || t === 'signin'", $mainScript);
+        $this->assertStringContainsString('loginTab?.classList.toggle', $mainScript);
     }
 }

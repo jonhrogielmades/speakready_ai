@@ -275,13 +275,20 @@ if (ptog) {
 
 /*  AUTH FUNCTIONS  */
 function swTab(t) {
-    const isL = t === 'login';
-    document.getElementById('fLogin').style.display = isL ? 'block' : 'none';
-    document.getElementById('fSignup').style.display = isL ? 'none' : 'block';
-    document.getElementById('tabLogin').classList.toggle('on', isL);
-    document.getElementById('tabSignup').classList.toggle('on', !isL);
-    document.getElementById('loginErr').style.display = 'none';
-    document.getElementById('signupErr').style.display = 'none';
+    const isL = t === 'login' || t === 'signin';
+    const loginPanel = document.getElementById('fLogin');
+    const signupPanel = document.getElementById('fSignup');
+    const loginTab = document.getElementById('tabLogin');
+    const signupTab = document.getElementById('tabSignup');
+    const loginErr = document.getElementById('loginErr');
+    const signupErr = document.getElementById('signupErr');
+
+    if (loginPanel) loginPanel.style.display = isL ? 'block' : 'none';
+    if (signupPanel) signupPanel.style.display = isL ? 'none' : 'block';
+    loginTab?.classList.toggle('on', isL);
+    signupTab?.classList.toggle('on', !isL);
+    if (loginErr) loginErr.style.display = 'none';
+    if (signupErr) signupErr.style.display = 'none';
 }
 
 function showErrLogin(msg) {

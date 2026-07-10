@@ -32,6 +32,33 @@
         transition: 0.2s;
     }
     .action-btn:hover { background: var(--pur); border-color: var(--pur); color: #fff; }
+    .user-action-cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .user-action-cell form {
+        display: inline-flex;
+        margin: 0;
+    }
+    #sec-admin-users .input-group {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+    }
+    #sec-admin-users .input-group .input-group-text {
+        flex: 0 0 auto;
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+    #sec-admin-users .input-group .form-control {
+        flex: 1 1 auto;
+        min-width: 0;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
 
     /* Modal Styles */
     .custom-modal .modal-content {
@@ -147,6 +174,10 @@
         #mainUsersTable tbody td.text-end {
             text-align: right;
         }
+        #mainUsersTable .user-action-cell {
+            width: 100%;
+            justify-content: flex-end;
+        }
     }
 </style>
 
@@ -173,6 +204,32 @@
             </div>
         </div>
     </div>
+
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1)"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1)"></button>
+    </div>
+    @endif
+
+    @if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171">
+        <div class="fw-bold mb-1">Please fix the highlighted user form fields.</div>
+        <ul class="mb-0 ps-3">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter:invert(1)"></button>
+    </div>
+    @endif
 
     <!-- Feature 16 & 17: Top Users & Needs Improvement -->
     <div class="row g-4 mb-4">
@@ -308,11 +365,11 @@
                         </td>
                         <td>
                             @if($user->status === 'active')
-                                <span class="stat-badge success">🟢 Active</span>
+                                <span class="stat-badge success"><i class="fa-solid fa-circle me-1"></i>Active</span>
                             @elseif($user->status === 'inactive')
-                                <span class="stat-badge warning">🔴 Inactive</span>
+                                <span class="stat-badge warning"><i class="fa-solid fa-circle me-1"></i>Inactive</span>
                             @else
-                                <span class="stat-badge danger">⚫ Suspended</span>
+                                <span class="stat-badge danger"><i class="fa-solid fa-circle me-1"></i>Suspended</span>
                             @endif
                             @if($user->reactivation_requested_at)
                                 <div class="mt-1"><span class="stat-badge text-white" style="background:#f59e0b;font-size:0.65rem;">Req. Reactivation</span></div>
@@ -320,15 +377,33 @@
                         </td>
                         <td style="color:var(--tx2);">{{ $user->created_at->format('M d, Y') }}</td>
                         <td class="text-end">
+                            <div class="user-action-cell">
                             @if($user->reactivation_requested_at)
-                            <form action="{{ route('admin.users.approve-reactivation', $user) }}" method="POST" class="d-inline">
+                            <form action="{{ route('admin.users.approve-reactivation', $user) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="action-btn text-success border-success" title="Approve Reactivation"><i class="fa-solid fa-check"></i></button>
                             </form>
                             @endif
                             <button type="button" class="action-btn" title="View Detail Dashboard" onclick="viewUser({{ $user->id }})"><i class="fa-solid fa-eye"></i></button>
-                            <button type="button" class="action-btn" title="Edit User" onclick="editUser({{ $user->id }}, '{{ addslashes($user->name) }}', '{{ addslashes($user->email) }}', '{{ $user->is_admin ? 'admin' : 'user' }}', '{{ $user->status }}')"><i class="fa-solid fa-pen"></i></button>
-                            <button type="button" class="action-btn text-danger" title="Delete User" onclick="deleteUser({{ $user->id }})"><i class="fa-solid fa-trash"></i></button>
+                            <button
+                                type="button"
+                                class="action-btn"
+                                title="Edit User"
+                                data-update-url="{{ route('admin.users.update', $user) }}"
+                                data-user-name="{{ $user->name }}"
+                                data-user-email="{{ $user->email }}"
+                                data-user-role="{{ $user->is_admin ? 'admin' : 'user' }}"
+                                data-user-status="{{ $user->status }}"
+                                onclick="editUser(this)"
+                            ><i class="fa-solid fa-pen"></i></button>
+                            <button
+                                type="button"
+                                class="action-btn text-danger"
+                                title="Delete User"
+                                data-delete-url="{{ route('admin.users.destroy', $user) }}"
+                                onclick="deleteUser(this)"
+                            ><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -642,22 +717,22 @@
         }
     }
 
-    function editUser(id, name, email, role, status) {
+    function editUser(button) {
         const form = document.getElementById('editUserForm');
-        form.action = `/admin/users/${id}`;
-        document.getElementById('editUserName').value = name;
-        document.getElementById('editUserEmail').value = email;
+        form.action = button.dataset.updateUrl;
+        document.getElementById('editUserName').value = button.dataset.userName || '';
+        document.getElementById('editUserEmail').value = button.dataset.userEmail || '';
         document.getElementById('editUserPassword').value = ''; // Clear password field
-        document.getElementById('editUserRole').value = role;
-        document.getElementById('editUserStatus').value = status;
+        document.getElementById('editUserRole').value = button.dataset.userRole || 'user';
+        document.getElementById('editUserStatus').value = button.dataset.userStatus || 'active';
         
         var modal = new bootstrap.Modal(document.getElementById('editUserModal'));
         modal.show();
     }
 
-    function deleteUser(id) {
+    function deleteUser(button) {
         const form = document.getElementById('deleteUserForm');
-        form.action = `/admin/users/${id}`;
+        form.action = button.dataset.deleteUrl;
         
         var modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
         modal.show();
@@ -679,7 +754,12 @@
 
     function viewUser(id) {
         fetch(`/admin/users/${id}`)
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Unable to load user details.');
+                }
+                return res.json();
+            })
             .then(data => {
                 const user = data.user;
                 const stats = data.stats || {};
@@ -721,7 +801,10 @@
                 var modal = new bootstrap.Modal(document.getElementById('userDetailModal'));
                 modal.show();
             })
-            .catch(err => console.error('Error fetching user details:', err));
+            .catch(err => {
+                console.error('Error fetching user details:', err);
+                alert('Unable to load this user right now. Please refresh and try again.');
+            });
     }
 </script>
 @endsection

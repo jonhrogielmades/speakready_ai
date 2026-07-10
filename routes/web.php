@@ -132,7 +132,7 @@ Route::middleware(['auth', 'user'])->group(function () {
 });
 
 // Admin Routes
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'admin', 'admin.desktop'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
 
     // System Settings

@@ -1,28 +1,6 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <div class="db-section active" id="sec-admin-questions">
-    <!-- Overview Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Total Questions</h6>
-                <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $totalQuestions ?? 0 }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Active Questions</h6>
-                <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $activeQuestions ?? 0 }}</h3>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Categories</h6>
-                <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $totalCategories ?? 0 }}</h3>
-            </div>
-        </div>
-    </div>
-
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Question Bank</h4>
@@ -89,6 +67,131 @@
         #sec-admin-questions .category-filter-mobile select:focus {
             border-color: #0dcaf0;
             box-shadow: 0 0 0 0.2rem rgba(13, 202, 240, 0.12);
+        }
+        #sec-admin-questions #mainTable {
+            table-layout: fixed;
+            width: 100%;
+            min-width: 0;
+            font-size: 0.86rem;
+        }
+        #sec-admin-questions #mainTable th,
+        #sec-admin-questions #mainTable td {
+            vertical-align: middle;
+        }
+        #sec-admin-questions #mainTable th:nth-child(1),
+        #sec-admin-questions #mainTable td:nth-child(1) {
+            width: 3.5%;
+        }
+        #sec-admin-questions #mainTable th:nth-child(2),
+        #sec-admin-questions #mainTable td:nth-child(2) {
+            width: 5%;
+        }
+        #sec-admin-questions #mainTable th:nth-child(3),
+        #sec-admin-questions #mainTable td:nth-child(3) {
+            width: 31%;
+            min-width: 0;
+            max-width: none;
+            white-space: normal !important;
+        }
+        #sec-admin-questions #mainTable th:nth-child(4),
+        #sec-admin-questions #mainTable td:nth-child(4) {
+            width: 13%;
+        }
+        #sec-admin-questions #mainTable th:nth-child(5),
+        #sec-admin-questions #mainTable td:nth-child(5) {
+            width: 12%;
+        }
+        #sec-admin-questions #mainTable th:nth-child(6),
+        #sec-admin-questions #mainTable td:nth-child(6) {
+            width: 10%;
+        }
+        #sec-admin-questions #mainTable th:nth-child(7),
+        #sec-admin-questions #mainTable td:nth-child(7) {
+            width: 25.5%;
+        }
+        #sec-admin-questions .question-title {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-height: 1.35;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+        #sec-admin-questions .question-category {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #sec-admin-questions .question-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        #sec-admin-questions .question-actions form {
+            display: inline-flex;
+            margin: 0;
+        }
+        #sec-admin-questions #mainTable .badge {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.72rem;
+            line-height: 1.15;
+            padding: 0.35rem 0.55rem;
+        }
+        #sec-admin-questions #mainTable .btn-sm {
+            min-height: 32px;
+            padding: 0.34rem 0.58rem;
+            font-size: 0.74rem !important;
+        }
+        #sec-admin-questions #mainTable .form-check-input,
+        #sec-admin-questions #selectAllMobile {
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px !important;
+            min-height: 16px !important;
+            max-width: 16px !important;
+            max-height: 16px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 4px !important;
+            flex: 0 0 16px !important;
+            aspect-ratio: 1 / 1;
+            vertical-align: middle;
+        }
+        #sec-admin-questions #mainTable td:first-child,
+        #sec-admin-questions #mainTable th:first-child {
+            text-align: center;
+        }
+        #sec-admin-questions #mainTableWrapper {
+            overflow-x: hidden !important;
+        }
+
+        @media (max-width: 1199.98px) {
+            #sec-admin-questions #mainTable {
+                font-size: 0.78rem;
+            }
+            #sec-admin-questions #mainTable th,
+            #sec-admin-questions #mainTable td {
+                padding-left: 6px !important;
+                padding-right: 6px !important;
+            }
+            #sec-admin-questions #mainTable .btn-sm {
+                min-height: 30px;
+                padding: 0.3rem 0.48rem;
+                font-size: 0.68rem !important;
+            }
+            #sec-admin-questions #mainTable .badge {
+                font-size: 0.66rem;
+                padding-inline: 0.42rem;
+            }
         }
 
         /* Mobile Card-based Table Layout for Main Questions Table */
@@ -172,6 +275,24 @@
             }
             #mainTable tbody td:nth-child(3)::before { content: none; }
             #mainTable tbody td:nth-child(3) .fw-bold { max-width: 100% !important; white-space: normal; }
+            #sec-admin-questions #mainTable {
+                min-width: 0;
+                table-layout: auto;
+            }
+            #sec-admin-questions #mainTable th,
+            #sec-admin-questions #mainTable td {
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+            #sec-admin-questions .question-title {
+                display: block;
+                -webkit-line-clamp: unset;
+            }
+            #sec-admin-questions .question-actions {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
         }
     </style>
 
@@ -231,8 +352,8 @@
                         <input class="form-check-input question-checkbox" type="checkbox" value="{{ $q->id }}" onchange="toggleBulkDeleteBtn()">
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $q->id }}</td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px;max-width:250px;">
-                        <div class="fw-bold">{{ Str::limit($q->question_text, 60) }}</div>
+                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px;">
+                        <div class="fw-bold question-title" title="{{ $q->question_text }}">{{ $q->question_text }}</div>
                         @if($q->mapped_skills)
                             <div class="mt-1">
                                 @foreach($q->mapped_skills as $skill)
@@ -248,7 +369,7 @@
                             </div>
                         @endif
                     </td>
-                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $q->category->title ?? 'N/A' }}</td>
+                    <td style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="question-category" title="{{ $q->category->title ?? 'N/A' }}">{{ $q->category->title ?? 'N/A' }}</span></td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         <span class="badge bg-secondary mb-1 d-block">{{ $q->type }}</span>
                         @if($q->difficulty == 'Easy') <span class="badge bg-success d-block">Easy</span>
@@ -258,13 +379,13 @@
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($q->status == 'active')
-                            <span class="badge bg-success">🟢 Active</span>
+                            <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Active</span>
                         @else
-                            <span class="badge bg-secondary">🔴 Inactive</span>
+                            <span class="badge bg-secondary"><i class="fa-solid fa-circle me-1"></i>Inactive</span>
                         @endif
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        <div class="d-flex gap-1 flex-wrap">
+                        <div class="question-actions">
                             <form action="{{ route('admin.questions.status', $q->id) }}" method="POST" style="display:inline-block">
                                 @csrf @method('PATCH')
                                 <button class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>

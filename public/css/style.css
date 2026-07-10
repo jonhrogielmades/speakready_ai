@@ -3728,6 +3728,316 @@ textarea:focus-visible,
   max-width: 100%;
 }
 
+/* Admin desktop UI hardening
+   Keeps legacy admin pages stable across wide and laptop-sized desktops. */
+body.admin-shell {
+  min-width: 0;
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.05), transparent 360px),
+    var(--bg);
+}
+
+body.admin-shell #dashboard {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: clip;
+  background: transparent;
+}
+
+body.admin-shell .db-sidebar {
+  width: var(--dsb);
+  min-width: var(--dsb);
+  border-right: 1px solid rgba(148, 163, 184, 0.16) !important;
+}
+
+body.admin-shell .db-logo {
+  min-height: var(--nav);
+  gap: 12px;
+}
+
+body.admin-shell .db-logo .logo-i {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+body.admin-shell .admin-brand {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+body.admin-shell .db-nav {
+  padding-bottom: 16px;
+}
+
+body.admin-shell .db-nl {
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+body.admin-shell .db-nl i {
+  flex: 0 0 20px;
+}
+
+body.admin-shell .db-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: var(--dsb);
+  padding-top: var(--nav);
+}
+
+body.admin-shell .db-top {
+  min-width: 0;
+  gap: 12px;
+}
+
+body.admin-shell .db-page-context {
+  min-width: 150px;
+  max-width: 260px;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+body.admin-shell .db-page-context strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--tx);
+}
+
+body.admin-shell .db-page-eyebrow {
+  color: var(--tx3);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.admin-shell .db-top-search {
+  flex: 1 1 280px;
+  min-width: 180px;
+  max-width: 460px;
+}
+
+body.admin-shell .db-user-pill {
+  min-height: 40px;
+  background: rgba(148, 163, 184, 0.06);
+}
+
+body.admin-shell .db-dropdown,
+body.admin-shell .dropdown-menu {
+  max-width: min(92vw, 360px);
+}
+
+body.admin-shell .db-content {
+  max-width: none;
+  min-width: 0;
+  padding: clamp(20px, 2vw, 30px);
+}
+
+body.admin-shell .db-content .db-section.active {
+  max-width: 1560px;
+  overflow: visible;
+}
+
+body.admin-shell .db-content .db-section.active > .mb-4:first-child,
+body.admin-shell .db-content .db-section.active > form > .mb-4:first-child {
+  flex-wrap: wrap;
+}
+
+body.admin-shell .db-content .db-section.active > .mb-4:first-child > .d-flex,
+body.admin-shell .db-content .db-section.active > form > .mb-4:first-child > .d-flex {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+body.admin-shell .premium-card,
+body.admin-shell .premium-panel,
+body.admin-shell .setup-panel,
+body.admin-shell .panel,
+body.admin-shell .db-stat-card,
+body.admin-shell .ll-stat-card,
+body.admin-shell .module-card,
+body.admin-shell .print-card,
+body.admin-shell .card {
+  border-radius: 8px !important;
+}
+
+body.admin-shell .premium-card,
+body.admin-shell .premium-panel,
+body.admin-shell .setup-panel,
+body.admin-shell .panel {
+  min-width: 0;
+}
+
+body.admin-shell .row {
+  min-width: 0;
+}
+
+body.admin-shell .row > * {
+  min-width: 0;
+}
+
+body.admin-shell .table-responsive {
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.16);
+}
+
+.lm body.admin-shell .table-responsive,
+.lm body.admin-shell .db-content .table-responsive {
+  background: rgba(248, 250, 252, 0.82);
+}
+
+body.admin-shell .db-content table {
+  min-width: max-content;
+}
+
+body.admin-shell .db-content table th,
+body.admin-shell .db-content table td {
+  white-space: nowrap;
+}
+
+body.admin-shell .db-content table td {
+  max-width: 340px;
+}
+
+body.admin-shell .db-content table td,
+body.admin-shell .db-content .text-break,
+body.admin-shell .db-content .small,
+body.admin-shell .db-content p {
+  overflow-wrap: anywhere;
+}
+
+body.admin-shell .db-content table td[data-label="Question"],
+body.admin-shell .db-content table td[data-label="Description"],
+body.admin-shell .db-content table td[data-label="Message"],
+body.admin-shell .db-content table td[data-label="Details"] {
+  white-space: normal;
+  min-width: 260px;
+}
+
+body.admin-shell .db-content .btn,
+body.admin-shell .db-content .bgrd,
+body.admin-shell .db-content .boc,
+body.admin-shell .db-top .boc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.15;
+}
+
+body.admin-shell .db-content .btn-sm {
+  min-height: 34px;
+  padding-inline: 10px;
+}
+
+body.admin-shell .db-content .btn-group,
+body.admin-shell .db-content .action-buttons,
+body.admin-shell .db-content td .d-flex {
+  flex-wrap: wrap;
+}
+
+body.admin-shell .modal-content {
+  background: var(--sf) !important;
+  color: var(--tx);
+  border-radius: 8px !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.36);
+}
+
+body.admin-shell .modal-dialog {
+  max-width: min(var(--bs-modal-width, 720px), calc(100vw - 32px));
+}
+
+body.admin-shell .modal-body {
+  max-height: min(72vh, 760px);
+  overflow-y: auto;
+}
+
+body.admin-shell .modal-header,
+body.admin-shell .modal-footer {
+  gap: 10px;
+}
+
+body.admin-shell .form-control,
+body.admin-shell .form-select,
+body.admin-shell textarea,
+body.admin-shell .oinp {
+  width: 100%;
+}
+
+body.admin-shell textarea.form-control,
+body.admin-shell textarea.oinp {
+  min-height: 112px;
+}
+
+body.admin-shell .alert {
+  border-radius: 8px !important;
+}
+
+@media (min-width: 1200px) {
+  body.admin-shell {
+    --dsb: 260px;
+  }
+
+  body.admin-shell .db-content {
+    padding-inline: clamp(26px, 2.4vw, 42px);
+  }
+}
+
+@media (max-width: 1199.98px) and (min-width: 992px) {
+  body.admin-shell {
+    --dsb: 228px;
+  }
+
+  body.admin-shell .db-top-search {
+    max-width: 340px;
+  }
+
+  body.admin-shell .db-user-pill {
+    padding-inline: 8px;
+  }
+}
+
+@media (min-width: 992px) {
+  body.admin-shell .db-sidebar-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    flex: 0 0 40px;
+  }
+
+  body.admin-shell.collapsed-sidebar {
+    --dsb: 76px;
+  }
+
+  body.admin-shell.collapsed-sidebar .db-top,
+  body.admin-shell.collapsed-sidebar .db-main {
+    transition: left 0.25s ease, margin-left 0.25s ease;
+  }
+}
+
+@media (max-width: 991.98px) {
+  body.admin-shell #dashboard {
+    display: block;
+  }
+
+  body.admin-shell .db-main {
+    margin-left: 0;
+  }
+
+  body.admin-shell .db-top {
+    left: 0;
+  }
+}
+
 /* Training workspace card normalization.
    Covers module, game, rehearsal, progress, report, feedback, and review pages
    that still contain page-local or inline card styles. */
@@ -5271,5 +5581,738 @@ textarea:focus-visible,
 
   body.sidebar-open {
     overflow: hidden;
+  }
+}
+
+/* Sidebar and header color refresh */
+#dashboard {
+  --shell-glow-blue: rgba(59, 130, 246, 0.24);
+  --shell-glow-green: rgba(16, 185, 129, 0.15);
+}
+
+#dashboard .db-sidebar {
+  background:
+    linear-gradient(180deg, rgba(59, 130, 246, 0.12), transparent 210px),
+    linear-gradient(145deg, rgba(16, 185, 129, 0.08), transparent 42%),
+    color-mix(in srgb, var(--bg2) 94%, #020617 6%);
+}
+
+.lm #dashboard .db-sidebar {
+  background:
+    linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent 220px),
+    linear-gradient(145deg, rgba(16, 185, 129, 0.055), transparent 44%),
+    #ffffff;
+}
+
+#dashboard .db-logo {
+  backdrop-filter: blur(18px);
+}
+
+#dashboard .db-logo .logo-i {
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+#dashboard .db-nav-section {
+  color: color-mix(in srgb, var(--tx3) 72%, #60a5fa 28%);
+}
+
+#dashboard .db-nl {
+  position: relative;
+  z-index: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0);
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+#dashboard .db-nl:hover {
+  transform: translateX(2px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+#dashboard .db-nl i {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--db-nav-icon) 34%, transparent);
+  border-radius: 9px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--db-nav-icon-bg) 72%, transparent), rgba(255, 255, 255, 0.035));
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--db-nav-icon) 18%, transparent);
+}
+
+#dashboard .db-nl.active {
+  color: var(--tx);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--db-nav-icon-bg) 82%, transparent), rgba(255, 255, 255, 0.025));
+  border-color: color-mix(in srgb, var(--db-nav-icon) 45%, var(--shell-border));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--db-nav-icon) 13%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+#dashboard .db-nl.active::before {
+  background: linear-gradient(180deg, var(--db-nav-icon), color-mix(in srgb, var(--db-nav-icon) 42%, #ffffff 58%));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--db-nav-icon) 46%, transparent);
+}
+
+#dashboard .db-nl.active i,
+#dashboard .db-nl:hover i {
+  color: var(--db-nav-icon);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--db-nav-icon-bg) 86%, transparent), rgba(255, 255, 255, 0.07));
+}
+
+#dashboard .db-top {
+  backdrop-filter: blur(18px);
+  background:
+    linear-gradient(90deg, rgba(96, 165, 250, 0.075), rgba(16, 185, 129, 0.035), transparent),
+    rgba(8, 10, 18, 0.82);
+}
+
+.lm #dashboard .db-top {
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.07), rgba(16, 185, 129, 0.035), transparent),
+    rgba(255, 255, 255, 0.9);
+}
+
+#dashboard .db-page-context {
+  border-right-color: color-mix(in srgb, var(--shell-border) 78%, #60a5fa 22%);
+}
+
+#dashboard .db-page-eyebrow {
+  color: #60a5fa;
+}
+
+#dashboard .db-top .boc {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+#dashboard .db-top .boc:nth-of-type(1) i {
+  color: #60a5fa;
+}
+
+#dashboard .db-top .boc:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px var(--shell-glow-blue), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+#dashboard .db-top-search input,
+#dashboard .db-top-search .db-quick-launcher {
+  border-color: color-mix(in srgb, var(--shell-border) 78%, #60a5fa 22%);
+}
+
+#dashboard .db-user-pill {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+#dashboard .db-avatar {
+  background: linear-gradient(135deg, #60a5fa, #10b981);
+}
+
+/* Admin table contrast hardening */
+body.admin-shell #dashboard .db-content .table-responsive,
+body.admin-shell #dashboard .db-content [id$="TableWrapper"],
+body.admin-shell #dashboard .db-content #mainTableWrapper {
+  background: color-mix(in srgb, var(--sf) 94%, #020617 6%) !important;
+  border-color: color-mix(in srgb, var(--bd) 78%, #60a5fa 22%) !important;
+}
+
+.lm body.admin-shell #dashboard .db-content .table-responsive,
+.lm body.admin-shell #dashboard .db-content [id$="TableWrapper"],
+.lm body.admin-shell #dashboard .db-content #mainTableWrapper {
+  background: #ffffff !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .table-dark, .custom-table, .db-table) {
+  --bs-table-bg: transparent !important;
+  --bs-table-striped-bg: rgba(96, 165, 250, 0.045) !important;
+  --bs-table-hover-bg: rgba(96, 165, 250, 0.095) !important;
+  --bs-table-color: var(--tx) !important;
+  --bs-table-hover-color: var(--tx) !important;
+  background: transparent !important;
+  color: var(--tx) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) thead th {
+  background: color-mix(in srgb, var(--bg3) 84%, #60a5fa 16%) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--bd) 72%, #60a5fa 28%) !important;
+  color: color-mix(in srgb, var(--tx2) 82%, #ffffff 18%) !important;
+  font-weight: 800 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody tr {
+  background: transparent !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody tr:hover {
+  background: rgba(96, 165, 250, 0.075) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody td {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--bd) 78%, transparent) !important;
+  color: var(--tx2) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody td :where(.fw-bold, strong, a:not(.btn), h6) {
+  color: var(--tx) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody td :where(.text-muted, small) {
+  color: var(--tx3) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge, .stat-badge) {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 750;
+  letter-spacing: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge.bg-secondary, .stat-badge.secondary) {
+  background: rgba(100, 116, 139, 0.26) !important;
+  color: #cbd5e1 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge.bg-success, .stat-badge.success) {
+  background: rgba(34, 197, 94, 0.18) !important;
+  border-color: rgba(34, 197, 94, 0.32);
+  color: #86efac !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge.bg-danger, .stat-badge.danger) {
+  background: rgba(248, 113, 113, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.32);
+  color: #fca5a5 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge.bg-warning, .stat-badge.warning) {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(245, 158, 11, 0.34);
+  color: #fcd34d !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge.bg-info, .stat-badge.primary, .badge.bg-primary) {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: rgba(96, 165, 250, 0.34);
+  color: #93c5fd !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.badge.bg-dark) {
+  background: rgba(15, 23, 42, 0.62) !important;
+  color: #e2e8f0 !important;
+}
+
+body.admin-shell #dashboard .db-content .form-check-input {
+  background-color: var(--bg3);
+  border-color: color-mix(in srgb, var(--bd) 70%, #60a5fa 30%);
+}
+
+body.admin-shell #dashboard .db-content .form-check-input:checked {
+  background-color: #2563eb;
+  border-color: #60a5fa;
+}
+
+body.admin-shell #dashboard .db-content .btn-outline-primary,
+body.admin-shell #dashboard .db-content .btn-outline-secondary,
+body.admin-shell #dashboard .db-content .btn-outline-info,
+body.admin-shell #dashboard .db-content .btn-outline-success,
+body.admin-shell #dashboard .db-content .btn-outline-warning,
+body.admin-shell #dashboard .db-content .btn-outline-danger {
+  background: rgba(15, 23, 42, 0.14);
+}
+
+.lm body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) {
+  --bs-table-color: #0f172a !important;
+  --bs-table-hover-color: #0f172a !important;
+  color: #0f172a !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) thead th {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody td {
+  color: #334155 !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody td :where(.fw-bold, strong, a:not(.btn), h6) {
+  color: #0f172a !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(table, .table, .custom-table, .db-table) tbody td :where(.text-muted, small) {
+  color: #64748b !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge, .stat-badge) {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge.bg-secondary, .stat-badge.secondary) {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge.bg-success, .stat-badge.success) {
+  background: #dcfce7 !important;
+  border-color: #bbf7d0;
+  color: #166534 !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge.bg-danger, .stat-badge.danger) {
+  background: #fee2e2 !important;
+  border-color: #fecaca;
+  color: #991b1b !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge.bg-warning, .stat-badge.warning) {
+  background: #fef3c7 !important;
+  border-color: #fde68a;
+  color: #92400e !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge.bg-info, .stat-badge.primary, .badge.bg-primary) {
+  background: #dbeafe !important;
+  border-color: #bfdbfe;
+  color: #1d4ed8 !important;
+}
+
+.lm body.admin-shell #dashboard .db-content :where(.badge.bg-dark) {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+.lm body.admin-shell #dashboard .db-content .btn-outline-primary,
+.lm body.admin-shell #dashboard .db-content .btn-outline-secondary,
+.lm body.admin-shell #dashboard .db-content .btn-outline-info,
+.lm body.admin-shell #dashboard .db-content .btn-outline-success,
+.lm body.admin-shell #dashboard .db-content .btn-outline-warning,
+.lm body.admin-shell #dashboard .db-content .btn-outline-danger {
+  background: #ffffff !important;
+}
+
+/* Admin spacing contract
+   Final override for consistent card rhythm across all admin Blade pages. */
+body.admin-shell #dashboard .db-content {
+  --admin-page-gap: 20px;
+  --admin-card-pad: 20px;
+  --admin-card-radius: 8px;
+  --admin-inner-gap: 14px;
+}
+
+body.admin-shell #dashboard .db-content .db-section.active {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-page-gap);
+}
+
+body.admin-shell #dashboard .db-content .db-section.active > :where(.mb-1, .mb-2, .mb-3, .mb-4, .mb-5) {
+  margin-bottom: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content .db-section.active > :where(.alert, .row, .premium-card, .premium-panel, .setup-panel, .panel, .card, .table-responsive, form) {
+  width: 100%;
+}
+
+body.admin-shell #dashboard .db-content :where(.row, .row.g-2, .row.g-3, .row.g-4, .row.g-5) {
+  --bs-gutter-x: var(--admin-page-gap) !important;
+  --bs-gutter-y: var(--admin-page-gap) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.row) > [class*="col-"] {
+  display: flex;
+  flex-direction: column;
+}
+
+body.admin-shell #dashboard .db-content :where(.row) > [class*="col-"] > :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .table-responsive, form, .module-card, .ll-stat-card, .stat-card, .db-stat-card) {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+body.admin-shell #dashboard .db-content :where(.row) > [class*="col-"] > :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .module-card, .ll-stat-card, .stat-card, .db-stat-card):last-child {
+  margin-bottom: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .module-card, .print-card, .perk-card, .ll-stat-card, .db-stat-card, .stat-card, .category-card) {
+  border-radius: var(--admin-card-radius) !important;
+  padding: var(--admin-card-pad) !important;
+  margin: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > :where(.card-header, .card-body, .card-footer) {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > .card-header {
+  margin-bottom: var(--admin-inner-gap) !important;
+  border-bottom: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > .card-footer {
+  margin-top: var(--admin-inner-gap) !important;
+  border-top: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .module-card, .print-card, .perk-card, .ll-stat-card, .db-stat-card, .stat-card) > :last-child {
+  margin-bottom: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .module-card, .print-card, .perk-card, .ll-stat-card, .db-stat-card, .stat-card) :where(h1, h2, h3, h4, h5, h6).mb-4 {
+  margin-bottom: var(--admin-inner-gap) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .module-card, .print-card, .perk-card, .ll-stat-card, .db-stat-card, .stat-card) :where(.mb-4, .my-4) {
+  margin-bottom: var(--admin-inner-gap) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.premium-card, .premium-panel, .setup-panel, .panel, .card, .module-card, .print-card, .perk-card, .ll-stat-card, .db-stat-card, .stat-card) :where(.mt-4, .my-4) {
+  margin-top: var(--admin-inner-gap) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > :where(.card-header, .card-body, .card-footer):where(.p-4, .px-4, .ps-4) {
+  padding-left: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > :where(.card-header, .card-body, .card-footer):where(.p-4, .px-4, .pe-4) {
+  padding-right: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > :where(.card-header, .card-body, .card-footer):where(.p-4, .py-4, .pt-4) {
+  padding-top: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.card) > :where(.card-header, .card-body, .card-footer):where(.p-4, .py-4, .pb-4) {
+  padding-bottom: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.d-flex.gap-3, .d-flex.gap-4, .d-grid.gap-3, .d-grid.gap-4) {
+  gap: var(--admin-inner-gap) !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.d-flex.gap-1, .d-flex.gap-2, .d-grid.gap-1, .d-grid.gap-2) {
+  gap: 10px !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.table-responsive) {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content :where(.table-responsive) > table {
+  border-radius: var(--admin-card-radius);
+}
+
+body.admin-shell #dashboard .db-content :where(.input-group) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+body.admin-shell #dashboard .db-content :where(.input-group) > :where(.form-control, .form-select) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.admin-shell #dashboard .db-content :where(.input-group) > :where(.input-group-text, .btn) {
+  flex: 0 0 auto;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-questions #mainTable {
+  min-width: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-questions #mainTableWrapper {
+  overflow-x: hidden !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-questions :where(#mainTable, #mainTableWrapper) .form-check-input {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  padding: 0 !important;
+  border-radius: 4px !important;
+  flex: 0 0 16px !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-complaints #mainComplaintsTable {
+  min-width: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-complaints #mainComplaintsTableWrapper {
+  overflow-x: hidden !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-complaints #mainComplaintsTable .complaints-empty {
+  white-space: normal !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-modules #modulesTable {
+  min-width: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-modules #mainModulesTableWrapper {
+  overflow-x: hidden !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-modules .modules-panel {
+  padding: 0 !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] {
+  min-height: 118px !important;
+  padding: 14px 12px !important;
+  border-radius: 8px !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-settings {
+  overflow-x: hidden !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-settings :where(.modal-title, .custom-switch-container h6, .form-check-label, .list-group-item, .text-white) {
+  color: var(--tx) !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-settings :where(.text-muted, small, .custom-switch-container small) {
+  color: var(--tx3) !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-settings :where(.custom-switch-container, .list-group, .list-group-item) {
+  background: var(--bg3) !important;
+  border-color: var(--bd) !important;
+}
+
+body.admin-shell #dashboard .db-content #sec-admin-settings :where(.btn-close, .btn-close-white) {
+  filter: invert(1) grayscale(100%) brightness(180%) !important;
+  opacity: 0.85;
+}
+
+.lm body.admin-shell #dashboard .db-content #sec-admin-settings :where(.btn-close, .btn-close-white) {
+  filter: none !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .modal-dialog {
+  width: min(760px, calc(100vw - 48px)) !important;
+  max-width: min(760px, calc(100vw - 48px)) !important;
+  margin: 24px auto !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .modal-content {
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  background: var(--sf) !important;
+  color: var(--tx) !important;
+  border-color: var(--bd) !important;
+  border-radius: 8px !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .modal-header,
+body.admin-shell .modal[id^="modal-"] .modal-footer {
+  flex: 0 0 auto;
+  padding: 16px 20px !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .modal-body {
+  flex: 1 1 auto;
+  max-height: calc(100vh - 180px) !important;
+  overflow-y: auto;
+  padding: 0 20px 16px !important;
+}
+
+body.admin-shell .modal[id^="modal-"] :where(.modal-title, h5, h6, .text-white, .form-check-label) {
+  color: var(--tx) !important;
+  -webkit-text-fill-color: var(--tx) !important;
+}
+
+body.admin-shell .modal[id^="modal-"] :where(.text-muted, small, p) {
+  color: var(--tx3) !important;
+  -webkit-text-fill-color: var(--tx3) !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .custom-switch-container {
+  min-height: 70px;
+  padding: 14px 18px !important;
+  background: var(--bg3) !important;
+  border: 1px solid var(--bd) !important;
+  border-radius: 8px !important;
+  gap: 16px;
+}
+
+body.admin-shell .modal[id^="modal-"] .custom-switch-container h6 {
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.3 !important;
+  font-weight: 700 !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .form-check.form-switch {
+  flex: 0 0 auto;
+}
+
+body.admin-shell .modal[id^="modal-"] .form-check-input {
+  cursor: pointer;
+}
+
+body.admin-shell .modal[id^="modal-"] .form-switch .form-check-input {
+  width: 3rem !important;
+  height: 1.55rem !important;
+  min-width: 3rem !important;
+  min-height: 1.55rem !important;
+}
+
+body.admin-shell .modal[id^="modal-"] .btn-close,
+body.admin-shell .modal[id^="modal-"] .btn-close-white {
+  filter: invert(1) grayscale(100%) brightness(180%) !important;
+  opacity: 0.85;
+}
+
+.lm body.admin-shell .modal[id^="modal-"] .btn-close,
+.lm body.admin-shell .modal[id^="modal-"] .btn-close-white {
+  filter: none !important;
+}
+
+@media (min-width: 1200px) {
+  body.admin-shell .modal[id^="modal-"] .modal-dialog {
+    width: min(720px, calc(100vw - 64px)) !important;
+    max-width: min(720px, calc(100vw - 64px)) !important;
+  }
+}
+
+body.admin-shell #dashboard .db-content :where(.alert) {
+  margin: 0 !important;
+  padding: 14px 16px !important;
+}
+
+/* Final admin sidebar behavior
+   Overrides legacy collapse rules so desktop open/close is predictable. */
+@media (min-width: 992px) {
+  body.admin-shell {
+    --admin-sidebar-open: var(--dsb);
+    --admin-sidebar-collapsed: 84px;
+  }
+
+  body.admin-shell #dashboard .db-sidebar {
+    width: var(--admin-sidebar-open) !important;
+    min-width: var(--admin-sidebar-open) !important;
+    max-width: var(--admin-sidebar-open) !important;
+    transform: none !important;
+  }
+
+  body.admin-shell #dashboard .db-main {
+    margin-left: var(--admin-sidebar-open) !important;
+    transition: margin-left 0.22s ease;
+  }
+
+  body.admin-shell #dashboard .db-top {
+    left: var(--admin-sidebar-open) !important;
+    transition: left 0.22s ease;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-sidebar {
+    width: var(--admin-sidebar-collapsed) !important;
+    min-width: var(--admin-sidebar-collapsed) !important;
+    max-width: var(--admin-sidebar-collapsed) !important;
+    overflow-x: hidden !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-main {
+    margin-left: var(--admin-sidebar-collapsed) !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-top {
+    left: var(--admin-sidebar-collapsed) !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-logo {
+    justify-content: center !important;
+    padding-inline: 0 !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-logo .admin-brand,
+  body.admin-shell.collapsed-sidebar #dashboard .db-nav-section {
+    display: none !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-nav {
+    padding: 14px 0 18px !important;
+    overflow-x: hidden !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-bottom {
+    padding: 12px 0 16px !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-nl {
+    width: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    margin: 0 auto 8px !important;
+    padding: 9px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: transparent !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-nl i {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    flex: 0 0 30px !important;
+    margin: 0 !important;
+    font-size: 0.95rem !important;
+    line-height: 30px !important;
+    color: var(--db-nav-icon, #60a5fa) !important;
+  }
+
+  body.admin-shell.collapsed-sidebar #dashboard .db-nl.active::before {
+    left: 4px !important;
+    top: 13px !important;
+    bottom: 13px !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  body.admin-shell.collapsed-sidebar {
+    --dsb: 260px;
+  }
+
+  body.admin-shell #dashboard .db-main,
+  body.admin-shell.collapsed-sidebar #dashboard .db-main {
+    margin-left: 0 !important;
+  }
+
+  body.admin-shell #dashboard .db-top,
+  body.admin-shell.collapsed-sidebar #dashboard .db-top {
+    left: 0 !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  body.admin-shell #dashboard .db-content {
+    --admin-page-gap: 22px;
+    --admin-card-pad: 22px;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  body.admin-shell #dashboard .db-content {
+    --admin-page-gap: 18px;
+    --admin-card-pad: 18px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body.admin-shell #dashboard .db-content {
+    --admin-page-gap: 14px;
+    --admin-card-pad: 14px;
+    --admin-inner-gap: 12px;
   }
 }

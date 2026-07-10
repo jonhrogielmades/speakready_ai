@@ -21,7 +21,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=10') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=18') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -33,7 +33,7 @@
          }
       </script>
    </head>
-   <body>
+   <body class="admin-shell">
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar" style="border-right: 2px solid rgba(248,113,113,0.1);">
@@ -48,29 +48,29 @@
              </div>
             <div class="db-nav">
                <div class="db-nav-section">Core Modules</div>
-               <a href="{{ route('admin.dashboard') }}" class="db-nl {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Admin Dashboard</a>
-               <a href="{{ route('admin.users.index') }}" class="db-nl {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i> User Management</a>
-               <a href="{{ route('admin.categories') }}" class="db-nl {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> Categories</a>
-               <a href="{{ route('admin.questions') }}" class="db-nl {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> Question Bank</a>
-               <a href="{{ route('admin.modules') }}" class="db-nl {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Learning Content</a>
-               <a href="{{ route('admin.game') }}" class="db-nl {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Learning Games</a>
+               <a href="{{ route('admin.dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Admin Dashboard</a>
+               <a href="{{ route('admin.users.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i> User Management</a>
+               <a href="{{ route('admin.categories') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> Categories</a>
+               <a href="{{ route('admin.questions') }}" class="db-nl db-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> Question Bank</a>
+               <a href="{{ route('admin.modules') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Learning Content</a>
+               <a href="{{ route('admin.game') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Learning Games</a>
                
                <div class="db-nav-section">Monitoring</div>
-               <a href="{{ route('admin.sessions.index') }}" class="db-nl {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> Session Monitoring</a>
-               <a href="{{ route('admin.feedback.index') }}" class="db-nl {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Audit</a>
-               <a href="{{ route('admin.feedback.complaints') }}" class="db-nl {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i> User Complaints</a>
-               <a href="{{ route('admin.contacts.index') }}" class="db-nl {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> Contact Messages</a>
+               <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> Session Monitoring</a>
+               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Audit</a>
+               <a href="{{ route('admin.feedback.complaints') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i> User Complaints</a>
+               <a href="{{ route('admin.contacts.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> Contact Messages</a>
                
                <div class="db-nav-section">System</div>
                
-               <a href="{{ route('admin.ai.providers') }}" class="db-nl {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i> AI Providers</a>
+               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i> AI Providers</a>
                
-               <a href="{{ route('admin.settings.index') }}" class="db-nl {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i> System Settings</a>
+               <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i> System Settings</a>
             </div>
             <div class="db-bottom">
                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                   @csrf
-                  <button type="submit" class="db-nl" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+                  <button type="submit" class="db-nl db-nav-danger" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
                </form>
             </div>
          </div>
@@ -79,7 +79,7 @@
          <div class="db-main">
             <!-- Top bar -->
             <div class="db-top">
-               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" onclick="toggleDashboardSidebar()">
+               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-expanded="true" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
                <div class="db-page-context d-none d-xl-flex">
@@ -186,15 +186,51 @@
             document.body.classList.remove('sidebar-open');
          }
 
+         function syncSidebarToggleState() {
+            const toggle = document.querySelector('.db-sidebar-toggle');
+            const isDesktopCollapsed = window.innerWidth >= 992 && document.body.classList.contains('collapsed-sidebar');
+            if (toggle) {
+               toggle.setAttribute('aria-expanded', isDesktopCollapsed ? 'false' : 'true');
+               toggle.title = isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation';
+            }
+         }
+
          function toggleDashboardSidebar() {
             if (window.innerWidth < 992) {
+               document.body.classList.remove('collapsed-sidebar');
                const sidebar = document.getElementById('dbSidebar');
                const isOpen = sidebar?.classList.toggle('mob-open');
                document.body.classList.toggle('sidebar-open', Boolean(isOpen));
+               syncSidebarToggleState();
                return;
             }
-            document.body.classList.toggle('collapsed-sidebar');
+            const isCollapsed = document.body.classList.toggle('collapsed-sidebar');
+            localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? '1' : '0');
+            closeDashboardSidebar();
+            syncSidebarToggleState();
          }
+
+         function initializeDashboardSidebar() {
+            if (window.innerWidth >= 992 && localStorage.getItem('admin_sidebar_collapsed') === '1') {
+               document.body.classList.add('collapsed-sidebar');
+            } else if (window.innerWidth < 992) {
+               document.body.classList.remove('collapsed-sidebar');
+            }
+            closeDashboardSidebar();
+            syncSidebarToggleState();
+         }
+
+         initializeDashboardSidebar();
+
+         window.addEventListener('resize', function() {
+            if (window.innerWidth < 992) {
+               document.body.classList.remove('collapsed-sidebar');
+            } else if (localStorage.getItem('admin_sidebar_collapsed') === '1') {
+               document.body.classList.add('collapsed-sidebar');
+            }
+            closeDashboardSidebar();
+            syncSidebarToggleState();
+         });
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
@@ -304,4 +340,3 @@
       @include('layouts.logout-transition')
    </body>
 </html>
-

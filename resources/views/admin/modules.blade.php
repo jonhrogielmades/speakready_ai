@@ -1,6 +1,152 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <style>
+    #sec-admin-modules .modules-stats-row > [class*="col-"] > div {
+        width: 100%;
+        min-height: 116px;
+    }
+    #sec-admin-modules .modules-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    #sec-admin-modules .modules-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--bd);
+    }
+    #sec-admin-modules .modules-filters {
+        display: grid;
+        grid-template-columns: minmax(180px, 260px) minmax(150px, 190px) minmax(130px, 170px);
+        gap: 10px;
+        align-items: center;
+    }
+    #sec-admin-modules .modules-filters .oinp {
+        width: 100%;
+        max-width: none !important;
+        min-width: 0;
+    }
+    #mainModulesTableWrapper {
+        border: 0 !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+        background: transparent !important;
+    }
+    #modulesTable {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 0;
+        font-size: 0.78rem;
+    }
+    #modulesTable th:nth-child(1),
+    #modulesTable td:nth-child(1) {
+        width: 36%;
+        white-space: normal !important;
+    }
+    #modulesTable th:nth-child(2),
+    #modulesTable td:nth-child(2) {
+        width: 18%;
+    }
+    #modulesTable th:nth-child(3),
+    #modulesTable td:nth-child(3) {
+        width: 12%;
+    }
+    #modulesTable th:nth-child(4),
+    #modulesTable td:nth-child(4) {
+        width: 13%;
+    }
+    #modulesTable th:nth-child(5),
+    #modulesTable td:nth-child(5) {
+        width: 6%;
+    }
+    #modulesTable th:nth-child(6),
+    #modulesTable td:nth-child(6) {
+        width: 16%;
+    }
+    #modulesTable th,
+    #modulesTable td {
+        padding: 10px 8px !important;
+    }
+    #sec-admin-modules .module-title-text {
+        display: block;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.25;
+        font-size: 0.86rem;
+        max-width: 100%;
+    }
+    #sec-admin-modules .module-category-text {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #sec-admin-modules .module-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    #sec-admin-modules .module-actions form {
+        display: inline-flex;
+        margin: 0;
+    }
+    #modulesTable .btn-sm {
+        min-height: 30px;
+        padding: 0.28rem 0.5rem;
+        font-size: 0.68rem !important;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+    #modulesTable .badge {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.66rem;
+        padding: 0.28rem 0.5rem;
+        line-height: 1.1;
+    }
+    #modulesTable .badge.bg-warning.ms-1 {
+        display: inline-flex;
+        width: fit-content;
+        margin-left: 0 !important;
+        margin-top: 4px;
+    }
+    @media (max-width: 1199.98px) {
+        #sec-admin-modules .modules-panel-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        #sec-admin-modules .modules-filters {
+            width: 100%;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        #modulesTable {
+            font-size: 0.72rem;
+        }
+        #modulesTable th,
+        #modulesTable td {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+            #modulesTable .btn-sm {
+            min-height: 28px;
+            padding: 0.26rem 0.42rem;
+            font-size: 0.62rem !important;
+        }
+        #modulesTable .badge {
+            font-size: 0.66rem;
+            padding-inline: 0.42rem;
+        }
+    }
     /* Mobile Card-based Table Layout for Main Modules Table */
     @media (max-width: 767px) {
         #mainModulesTableWrapper {
@@ -67,6 +213,16 @@
             align-items: flex-start;
         }
         #modulesTable tbody td:nth-child(1)::before { content: none; }
+        #sec-admin-modules .modules-filters {
+            grid-template-columns: 1fr;
+        }
+        #modulesTable {
+            table-layout: auto;
+        }
+        #modulesTable th,
+        #modulesTable td {
+            width: auto !important;
+        }
     }
 </style>
 <div class="db-section active" id="sec-admin-modules">
@@ -99,7 +255,7 @@
     </div>
 
     <!-- Overview Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 modules-stats-row">
         <div class="col-md-3">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h6 style="color:var(--tx3);font-size:0.85rem">Total Modules</h6>
@@ -127,12 +283,12 @@
     </div>
 
     <!-- Module List Table -->
-    <div id="mainModulesTableWrapper" class="table-responsive" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
-        <div class="d-flex justify-content-between mb-3 align-items-center flex-wrap gap-2">
+    <div class="modules-panel">
+        <div class="modules-panel-header">
             <h6 style="margin:0;font-weight:600;">Module List</h6>
-            <div class="d-flex gap-2 flex-wrap">
-                <input type="text" id="moduleSearch" class="oinp" placeholder="Search Modules..." style="max-width:200px;">
-                <select id="categoryFilter" class="oinp" style="max-width:150px;">
+            <div class="modules-filters">
+                <input type="text" id="moduleSearch" class="oinp" placeholder="Search Modules...">
+                <select id="categoryFilter" class="oinp">
                     <option value="">All Categories</option>
                     @if(isset($categories))
                         @foreach($categories as $cat)
@@ -140,7 +296,7 @@
                         @endforeach
                     @endif
                 </select>
-                <select id="moduleFilter" class="oinp" style="max-width:150px;">
+                <select id="moduleFilter" class="oinp">
                     <option value="">All Status</option>
                     <option value="published">Published</option>
                     <option value="draft">Draft</option>
@@ -149,6 +305,7 @@
             </div>
         </div>
 
+        <div id="mainModulesTableWrapper" class="table-responsive">
         <table class="table table-dark table-hover mb-0" id="modulesTable" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
@@ -164,10 +321,10 @@
                 @foreach($modules as $m)
                 <tr data-status="{{ $m->status }}" data-category="{{ strtolower($m->category ?? '') }}">
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        {{ $m->title }}
-                        @if($m->is_featured) <span class="badge bg-warning ms-1 text-dark" style="font-size:0.6rem">⭐ Featured</span> @endif
+                        <span class="module-title-text">{{ $m->title }}</span>
+                        @if($m->is_featured) <span class="badge bg-warning ms-1 text-dark" style="font-size:0.6rem"><i class="fa-solid fa-star me-1"></i>Featured</span> @endif
                     </td>
-                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->category ?? 'None' }}</td>
+                    <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px"><span class="module-category-text" title="{{ $m->category ?? 'None' }}">{{ $m->category ?? 'None' }}</span></td>
                     <td class="d-none d-md-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($m->difficulty == 'Beginner') <span class="badge bg-success">Beginner</span>
                         @elseif($m->difficulty == 'Intermediate') <span class="badge bg-warning text-dark">Intermediate</span>
@@ -175,22 +332,25 @@
                         @else <span class="badge bg-secondary">Unknown</span> @endif
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
-                        @if($m->status == 'published') 🟢 Published
-                        @elseif($m->status == 'draft') 🟡 Draft
-                        @else 🔴 Archived @endif
+                        @if($m->status == 'published') <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Published</span>
+                        @elseif($m->status == 'draft') <span class="badge bg-warning text-dark"><i class="fa-solid fa-circle me-1"></i>Draft</span>
+                        @else <span class="badge bg-secondary"><i class="fa-solid fa-circle me-1"></i>Archived</span> @endif
                     </td>
                     <td class="d-none d-lg-table-cell" style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $m->views }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px;">
-                        <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem">Manage Content</a>
-                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this module?');">
+                        <div class="module-actions">
+                        <a href="{{ route('admin.modules.edit', $m->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:.7rem">Manage</a>
+                        <form action="{{ route('admin.modules.destroy', $m->id) }}" method="POST" onsubmit="return confirm('Delete this module?');">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.7rem">Delete</button>
                         </form>
+                        </div>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+        </div>
     </div>
 </div>
 
@@ -234,7 +394,7 @@
 
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="featureSwitch">
-                        <label class="form-check-label olbl" for="featureSwitch">Mark as Featured ⭐</label>
+                        <label class="form-check-label olbl" for="featureSwitch">Mark as Featured</label>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">

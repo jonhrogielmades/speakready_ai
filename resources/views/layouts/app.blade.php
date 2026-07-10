@@ -21,7 +21,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=12') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=14') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           

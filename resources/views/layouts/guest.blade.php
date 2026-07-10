@@ -46,7 +46,7 @@
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 15px; font-size: 1.2rem;
          }
-         
+
          /* --- PWA Install Prompt --- */
          #pwa-install-prompt {
             display: none; position: fixed;
@@ -269,7 +269,7 @@
                transition: none !important;
             }
          }
-         
+
          @media (max-width: 767px) {
             #hero {
                min-height: auto;
@@ -523,14 +523,14 @@
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Start Practicing</button>
+                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Start Practicing</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
-                     
+
                    </div>
                 </div>
-                
+
                 <div class="mt-3 mb-3 afu text-center" style="animation-delay:.4s">
                    <p style="font-size:.71rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
                    <style>
@@ -561,7 +561,7 @@
                       <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API" target="_blank" rel="noopener noreferrer" title="Web Speech API"><i class="fa-solid fa-microphone"></i></a>
                    </div>
                 </div>
-                
+
                 <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-11 adi">
                      <div class="dwrap">
@@ -642,7 +642,7 @@
                      <span class="slbl">About the System</span>
                      <h2 class="stitle mb-4">Empowering you to <span class="gt">shine in interviews</span></h2>
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for any interview scenario. By simulating realistic interviews, it provides immediate, actionable feedback on your answers, delivery, and body language to solve the problem of interview anxiety and lack of practice.</p>
-                     
+
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="d-flex flex-wrap gap-2 mb-4">
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
@@ -796,7 +796,7 @@
                   <span class="slbl">How It Works</span>
                   <h2 class="stitle">Your journey to <span class="gt">interview mastery</span></h2>
                </div>
-               
+
                <div class="row g-4 justify-content-center">
                   <div class="col-md-4 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center position-relative">
@@ -852,7 +852,7 @@
                   <div class="col-lg-5 rv">
                      <span class="slbl">Benefits</span>
                      <h2 class="stitle mb-4">Why use <span class="gt">SpeakReady AI?</span></h2>
-                     
+
                      <ul class="list-unstyled d-flex flex-column gap-3 mt-4">
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-comments"></i></div>
@@ -880,7 +880,7 @@
                         </li>
                      </ul>
                   </div>
-                  
+
                   <div class="col-lg-7 rv">
                      <span class="slbl">Interview Categories</span>
                      <h2 class="stitle mb-4">Tailored to your <span class="gt">goals</span></h2>
@@ -954,7 +954,7 @@
                </div>
             </div>
          </section>
-         
+
          <!-- DEMO PREVIEW GALLERY -->
          <section id="demo-preview" class="sp position-relative">
             <div class="aur aur-a" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
@@ -963,7 +963,7 @@
                   <span class="slbl">Demo Preview</span>
                   <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                </div>
-               
+
                <div class="row justify-content-center">
                    <div class="col-lg-10">
                        <div class="gc p-2">
@@ -1106,7 +1106,7 @@
                      <span class="slbl">Contact Us</span>
                      <h2 class="stitle mb-4">Get in <span class="gt">Touch</span></h2>
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:30px">Have questions or need support? We're here to help you on your journey to interview success.</p>
-                     
+
                      <div class="d-flex flex-column gap-4">
                          <div class="d-flex align-items-center gap-3">
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
@@ -1315,7 +1315,7 @@
          </footer>
       </div>
       <!-- /landing -->
-      
+
 
 
       <!-- ======================== LOGIN OFFCANVAS ======================== -->
@@ -1408,7 +1408,7 @@
             </div>
          </div>
       </div>
-      
+
       <!-- ===== PWA INSTALL PROMPT ===== -->
       <div id="pwa-install-prompt">
          <h5>Install SpeakReady AI</h5>
@@ -1434,7 +1434,7 @@
       <!-- Counter Up and Waypoints -->
       <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
-      
+
       <script src="{{ asset('js/main.js') }}?v=4"></script>
       @if($errors->any())
       <script>
@@ -1458,7 +1458,7 @@
                      time: 1500
                  });
              }
-             
+
              if(typeof Swiper !== 'undefined') {
                  var swiper = new Swiper(".demoSwiper", {
                      slidesPerView: 1,
@@ -1633,7 +1633,7 @@
                   });
               }
           });
-          
+
           function togglePasswordVisibility(inputId, btn) {
              const input = document.getElementById(inputId);
              const icon = btn.querySelector('i');

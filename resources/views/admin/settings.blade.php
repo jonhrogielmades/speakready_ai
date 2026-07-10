@@ -145,9 +145,136 @@
         justify-content: space-between;
         align-items: center;
     }
+
+    #sec-admin-settings {
+        overflow-x: hidden;
+    }
+    #sec-admin-settings .settings-grid {
+        --bs-gutter-x: 14px;
+        --bs-gutter-y: 14px;
+    }
+    #sec-admin-settings .settings-grid > [class*="col-"] {
+        min-width: 0;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] {
+        min-height: 118px !important;
+        padding: 14px 12px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 10px 24px rgba(2, 6, 23, 0.08) !important;
+        gap: 0 !important;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"]:hover {
+        transform: translateY(-1px) !important;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] > div:first-child {
+        display: none !important;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] > div:nth-child(2) {
+        width: 42px !important;
+        height: 42px !important;
+        border-radius: 8px !important;
+        margin-bottom: 10px !important;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] i {
+        font-size: 1.15rem !important;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] .fw-bold {
+        max-width: 100%;
+        margin-bottom: 4px !important;
+        font-size: 0.9rem !important;
+        line-height: 1.2 !important;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] span:last-child {
+        font-size: 0.58rem !important;
+        letter-spacing: 0.08em !important;
+        line-height: 1.1 !important;
+    }
+    #sec-admin-settings .modal-dialog {
+        max-width: min(760px, calc(100vw - 48px));
+    }
+    #sec-admin-settings .modal-content {
+        border-radius: 8px !important;
+    }
+    #sec-admin-settings .modal-body {
+        max-height: min(68vh, 680px);
+        overflow-y: auto;
+    }
+    #sec-admin-settings .form-control,
+    #sec-admin-settings .form-select {
+        min-height: 40px;
+        padding: 9px 10px;
+        font-size: 0.88rem;
+        border-radius: 8px;
+    }
+    #sec-admin-settings .form-label {
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+    }
+    #sec-admin-settings .custom-switch-container {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    #sec-admin-settings .modal-title,
+    #sec-admin-settings .custom-switch-container h6,
+    #sec-admin-settings .form-check-label,
+    #sec-admin-settings .list-group-item,
+    #sec-admin-settings .text-white {
+        color: var(--tx) !important;
+    }
+    #sec-admin-settings .text-muted,
+    #sec-admin-settings small,
+    #sec-admin-settings .custom-switch-container small {
+        color: var(--tx3) !important;
+    }
+    #sec-admin-settings .custom-switch-container,
+    #sec-admin-settings .list-group,
+    #sec-admin-settings .list-group-item {
+        background: var(--bg3) !important;
+        border-color: var(--bd) !important;
+    }
+    #sec-admin-settings .modal .custom-switch-container h6,
+    #sec-admin-settings .modal .text-white,
+    #sec-admin-settings .modal .form-check-label {
+        color: var(--tx) !important;
+        -webkit-text-fill-color: var(--tx) !important;
+    }
+    #sec-admin-settings .modal .custom-switch-container {
+        min-height: 70px;
+        padding: 14px 18px !important;
+        gap: 16px;
+    }
+    #sec-admin-settings .modal .form-switch .form-check-input {
+        width: 3rem !important;
+        height: 1.55rem !important;
+        min-width: 3rem !important;
+        min-height: 1.55rem !important;
+    }
+    #sec-admin-settings .btn-close-white,
+    #sec-admin-settings .btn-close {
+        filter: var(--admin-close-filter, invert(1)) !important;
+        opacity: 0.85;
+    }
+    .lm #sec-admin-settings .btn-close-white,
+    .lm #sec-admin-settings .btn-close {
+        --admin-close-filter: none;
+    }
+    @media (min-width: 1400px) {
+        #sec-admin-settings .settings-grid > .col-lg-3 {
+            flex: 0 0 auto;
+            width: 20%;
+        }
+    }
+    @media (max-width: 1199.98px) {
+        #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] {
+            min-height: 108px !important;
+        }
+    }
 </style>
 
-<div class="db-section active">
+<div class="db-section active" id="sec-admin-settings">
     @if(session('message'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('message') }}
@@ -171,7 +298,7 @@
         <div class="row g-4 position-relative">
             <!-- Settings Grid -->
 <div class="col-12 mb-4">
-    <div class="row g-3">
+    <div class="row g-3 settings-grid">
         <div class="col-6 col-md-4 col-lg-3">
         <button type="button" class="btn w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255,255,255,0.05)); border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); min-height: 200px; transition: all 0.3s; padding: 20px; position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 30px rgba(0,0,0,0.15)'; this.style.borderColor='#3b82f640';" onmouseout="this.style.transform='none'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.05)'; this.style.borderColor='var(--bd, rgba(255,255,255,0.05))';" data-bs-toggle="modal" data-bs-target="#modal-1">
             <!-- Background glow -->

@@ -347,6 +347,102 @@ class AdminReliabilityTest extends TestCase
         ]);
     }
 
+    public function test_users_page_uses_safe_action_buttons_for_special_character_names(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create([
+            'name' => "O'Connor \"QA\" <Lead>",
+            'email' => 'qa+lead@example.com',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('onclick="editUser(this)"', false)
+            ->assertSee('data-update-url="'.route('admin.users.update', $user).'"', false)
+            ->assertSee('data-delete-url="'.route('admin.users.destroy', $user).'"', false)
+            ->assertDontSee("editUser({$user->id},", false);
+    }
+
+    public function test_questions_page_uses_stable_table_layout_classes(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $category = $this->category(['title' => 'Behavioral Readiness']);
+        Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Describe a time you resolved a conflict with your teammate while balancing a tight deadline.',
+            'difficulty' => 'Hard',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.questions'))
+            ->assertOk()
+            ->assertSee('class="fw-bold question-title"', false)
+            ->assertSee('class="question-category"', false)
+            ->assertSee('class="question-actions"', false);
+    }
+
+    public function test_feedback_complaints_page_uses_desktop_table_layout(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.feedback.complaints'))
+            ->assertOk()
+            ->assertSee('id="sec-admin-complaints"', false)
+            ->assertSee('class="complaints-panel"', false)
+            ->assertSee('class="text-center py-5 complaints-empty"', false);
+    }
+
+    public function test_modules_page_uses_desktop_table_panel_layout(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        LearningModule::create([
+            'title' => 'Building Self Confidence: A Path to Empowerment',
+            'description' => 'Practice module',
+            'category' => 'Emotional Intelligence',
+            'difficulty' => 'Beginner',
+            'status' => 'published',
+            'is_featured' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.modules'))
+            ->assertOk()
+            ->assertSee('class="modules-panel"', false)
+            ->assertSee('class="modules-panel-header"', false)
+            ->assertSee('class="modules-filters"', false)
+            ->assertSee('class="module-title-text"', false)
+            ->assertSee('class="module-actions"', false);
+    }
+
+    public function test_settings_page_uses_compact_desktop_grid(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.settings.index'))
+            ->assertOk()
+            ->assertSee('id="sec-admin-settings"', false)
+            ->assertSee('settings-grid', false);
+    }
+
+    public function test_settings_page_overrides_hard_coded_white_text_for_theme_contrast(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.settings.index'))
+            ->assertOk()
+            ->assertSee('#sec-admin-settings .custom-switch-container h6', false)
+            ->assertSee('color: var(--tx) !important', false)
+            ->assertSee('color: var(--tx3) !important', false);
+    }
+
     public function test_feedback_audit_forms_accept_their_page_payloads(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

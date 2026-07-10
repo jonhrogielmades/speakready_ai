@@ -111,9 +111,9 @@
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">{{ $c->questions()->count() }}</td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
                         @if($c->status == 'active')
-                            <span class="badge bg-success">🟢 Active</span>
+                            <span class="badge bg-success"><i class="fa-solid fa-circle me-1"></i>Active</span>
                         @else
-                            <span class="badge bg-secondary">🔴 Inactive</span>
+                            <span class="badge bg-secondary"><i class="fa-solid fa-circle me-1"></i>Inactive</span>
                         @endif
                     </td>
                     <td style="border-bottom:1px solid var(--bd);padding:12px 8px">
