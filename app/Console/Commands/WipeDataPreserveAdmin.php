@@ -282,9 +282,15 @@ class WipeDataPreserveAdmin extends Command
             return;
         }
 
-        $nextId = max(1, (int) DB::table($table)->max('id'));
+        $maxId = (int) (DB::table($table)->max('id') ?: 0);
 
-        DB::statement('SELECT setval(?, ?, true)', [$sequence->sequence_name, $nextId]);
+        if ($maxId > 0) {
+            DB::statement('SELECT setval(?, ?, true)', [$sequence->sequence_name, $maxId]);
+
+            return;
+        }
+
+        DB::statement('SELECT setval(?, 1, false)', [$sequence->sequence_name]);
     }
 
     private function resetSqlServerIdentity(string $table): void
