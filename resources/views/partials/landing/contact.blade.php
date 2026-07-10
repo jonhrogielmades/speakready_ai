@@ -1,9 +1,9 @@
          <!-- CONTACT US -->
          <section id="contact" class="sp position-relative">
             <div class="container position-relative" style="z-index:1">
-               <div class="text-center mb-5 rv">
+               <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">Contact Us</span>
-                  <h2 class="stitle mb-0">Get in <span class="gt">Touch</span></h2>
+                  <h2 class="stitle">Get in <span class="gt">Touch</span></h2>
                </div>
                <div class="row g-5 justify-content-center">
                   <div class="col-lg-5 rv">

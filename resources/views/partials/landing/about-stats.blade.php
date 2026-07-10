@@ -1,9 +1,9 @@
          <!-- ABOUT THE SYSTEM & SYSTEM STATS -->
          <section id="about" class="sp position-relative" style="background:var(--bg2)">
             <div class="container position-relative" style="z-index:1">
-               <div class="text-center mb-5 rv">
+               <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">About the System</span>
-                  <h2 class="stitle mb-0">Empowering you to <span class="gt">shine in interviews</span></h2>
+                  <h2 class="stitle">Empowering you to <span class="gt">shine in interviews</span></h2>
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">

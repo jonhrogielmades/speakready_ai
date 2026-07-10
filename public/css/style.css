@@ -81,6 +81,18 @@ a {
   background: var(--grad);
 }
 
+.landing-section-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.landing-section-heading .slbl {
+  justify-content: center;
+}
+
 .stitle {
   font-size: clamp(1.85rem, 4vw, 3rem);
   font-weight: 700;

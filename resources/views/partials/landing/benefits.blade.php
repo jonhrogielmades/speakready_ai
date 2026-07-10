@@ -2,9 +2,9 @@
          <section id="benefits" class="sp position-relative">
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
-               <div class="text-center mb-5 rv">
+               <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">Benefits</span>
-                  <h2 class="stitle mb-0">Why use <span class="gt">SpeakReady AI?</span></h2>
+                  <h2 class="stitle">Why use <span class="gt">SpeakReady AI?</span></h2>
                </div>
                <div class="row g-5">
                   <div class="col-lg-5 rv">
@@ -37,9 +37,9 @@
                   </div>
                   
                   <div class="col-lg-7 rv">
-                     <div class="text-center mb-4">
+                     <div class="landing-section-heading mb-4">
                         <span class="slbl">Interview Categories</span>
-                        <h2 class="stitle mb-0">Tailored to your <span class="gt">goals</span></h2>
+                        <h2 class="stitle">Tailored to your <span class="gt">goals</span></h2>
                      </div>
                      <div class="row g-3">
                         <div class="col-sm-6">
