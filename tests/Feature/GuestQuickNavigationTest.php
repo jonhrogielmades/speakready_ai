@@ -9,14 +9,12 @@ class GuestQuickNavigationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_layout_uses_the_movable_destination_quick_navigation(): void
+    public function test_guest_layout_uses_the_header_destination_quick_navigation(): void
     {
         $response = $this->get('/');
 
         $response->assertOk()
-            ->assertSee('class="ucp-mobile-launcher"', false)
-            ->assertSee('data-ucp-context="guest"', false)
-            ->assertSee('data-ucp-storage-key="speakready.guest-quick-nav-position.v1"', false)
+            ->assertSee('id="mbtog"', false)
             ->assertSee('id="userCommandPalette"', false)
             ->assertSee('id="userCommandList"', false)
             ->assertSee('id="gqn-destination-home"', false)
@@ -33,8 +31,12 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="guestHeaderDate"', false)
             ->assertSee('id="guestHeaderTime"', false)
             ->assertDontSee('data-ucp-search', false)
+            ->assertDontSee('class="ucp-mobile-launcher"', false)
+            ->assertDontSee('data-ucp-context="guest"', false)
+            ->assertDontSee('speakready.guest-quick-nav-position.v1', false)
+            ->assertDontSee('id="ucpMobileLauncherHelp"', false)
+            ->assertDontSee('id="ucpMobileLauncherStatus"', false)
             ->assertDontSee('id="guestQuickNavLauncher"', false)
-            ->assertDontSee('id="mbtog"', false)
             ->assertDontSee('id="mbmenu"', false);
 
         $markup = $response->getContent();
@@ -43,21 +45,17 @@ class GuestQuickNavigationTest extends TestCase
         $this->assertSame(7, substr_count($markup, 'data-ucp-item'));
         $this->assertSame(2, substr_count($markup, 'data-ucp-action'));
         $this->assertMatchesRegularExpression(
-            '/class="ucp-mobile-launcher".*?data-ucp-context="guest".*?<i class="fa-solid fa-bars"/s',
+            '/id="mbtog".*?data-ucp-open.*?aria-controls="userCommandPalette".*?<i class="fa-solid fa-bars"/s',
             $markup
         );
 
-        $launcherScript = file_get_contents(public_path('js/user-ui.js'));
+        $paletteScript = file_get_contents(public_path('js/user-ui.js'));
 
-        $this->assertIsString($launcherScript);
-        $this->assertStringContainsString('launcher.dataset.ucpStorageKey', $launcherScript);
-        $this->assertStringContainsString("document.getElementById('nbar')", $launcherScript);
-        $this->assertStringContainsString('snapToNearestEdge', $launcherScript);
-        $this->assertStringContainsString("addEventListener('pointermove'", $launcherScript);
-        $this->assertStringContainsString('setTriggerExpanded', $launcherScript);
-        $this->assertStringContainsString('destination.focus({ preventScroll: true })', $launcherScript);
-        $this->assertStringContainsString("addEventListener('hidden.bs.offcanvas'", $launcherScript);
-        $this->assertStringContainsString('focusReturn.focus({ preventScroll: true })', $launcherScript);
+        $this->assertIsString($paletteScript);
+        $this->assertStringContainsString('setTriggerExpanded', $paletteScript);
+        $this->assertStringContainsString('destination.focus({ preventScroll: true })', $paletteScript);
+        $this->assertStringContainsString("addEventListener('hidden.bs.offcanvas'", $paletteScript);
+        $this->assertStringContainsString('focusReturn.focus({ preventScroll: true })', $paletteScript);
 
         $mainScript = file_get_contents(public_path('js/main.js'));
 

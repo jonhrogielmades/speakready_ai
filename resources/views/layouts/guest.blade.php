@@ -479,6 +479,9 @@
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
+                     <button class="boc d-lg-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
+                     <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                     </button>
                   </div>
                </div>
             </div>
