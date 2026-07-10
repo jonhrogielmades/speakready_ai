@@ -216,7 +216,9 @@ class WipeDataPreserveAdmin extends Command
     {
         match ($driver) {
             'sqlite' => $this->resetSqliteSequence($table),
-            'sqlsrv' => DB::statement('DBCC CHECKIDENT ('.$this->quoteIdentifier($driver, $table).', RESEED, 0)'),
+            'mysql' => $this->resetMysqlAutoIncrement($table),
+            'pgsql' => $this->resetPostgresSequence($table),
+            'sqlsrv' => $this->resetSqlServerIdentity($table),
             default => null,
         };
     }
@@ -224,6 +226,7 @@ class WipeDataPreserveAdmin extends Command
     private function normalizeAdminAccount(int $adminId): void
     {
         $updates = [
+            'id' => 1,
             'is_admin' => true,
             'status' => 'active',
             'deleted_at' => null,
@@ -242,11 +245,57 @@ class WipeDataPreserveAdmin extends Command
 
     private function resetSqliteSequence(string $table): void
     {
+        if (!Schema::hasColumn($table, 'id')) {
+            return;
+        }
+
         try {
             DB::table('sqlite_sequence')->where('name', $table)->delete();
         } catch (\Throwable) {
             // SQLite creates sqlite_sequence only when a table uses AUTOINCREMENT.
         }
+    }
+
+    private function resetMysqlAutoIncrement(string $table): void
+    {
+        if (!Schema::hasColumn($table, 'id')) {
+            return;
+        }
+
+        $nextId = max(1, ((int) DB::table($table)->max('id')) + 1);
+
+        DB::statement('ALTER TABLE '.$this->quoteIdentifier('mysql', $table).' AUTO_INCREMENT = '.$nextId);
+    }
+
+    private function resetPostgresSequence(string $table): void
+    {
+        if (!Schema::hasColumn($table, 'id')) {
+            return;
+        }
+
+        $sequence = DB::selectOne(
+            "SELECT pg_get_serial_sequence(?, 'id') AS sequence_name",
+            [$table]
+        );
+
+        if (!($sequence?->sequence_name)) {
+            return;
+        }
+
+        $nextId = max(1, (int) DB::table($table)->max('id'));
+
+        DB::statement('SELECT setval(?, ?, true)', [$sequence->sequence_name, $nextId]);
+    }
+
+    private function resetSqlServerIdentity(string $table): void
+    {
+        if (!Schema::hasColumn($table, 'id')) {
+            return;
+        }
+
+        $currentId = max(0, (int) DB::table($table)->max('id'));
+
+        DB::statement('DBCC CHECKIDENT ('.$this->quoteIdentifier('sqlsrv', $table).', RESEED, '.$currentId.')');
     }
 
     private function quoteIdentifier(string $driver, string $identifier): string
