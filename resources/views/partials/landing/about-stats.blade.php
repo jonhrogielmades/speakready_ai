@@ -3,8 +3,10 @@
             <div class="container position-relative" style="z-index:1">
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <span class="slbl">About the System</span>
-                     <h2 class="stitle mb-4">Empowering you to <span class="gt">shine in interviews</span></h2>
+                     <div class="text-center mb-4">
+                        <span class="slbl">About the System</span>
+                        <h2 class="stitle mb-0">Empowering you to <span class="gt">shine in interviews</span></h2>
+                     </div>
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for any interview scenario. By simulating realistic interviews, it provides immediate, actionable feedback on your answers, delivery, and body language to solve the problem of interview anxiety and lack of practice.</p>
                      
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>

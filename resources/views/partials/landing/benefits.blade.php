@@ -4,8 +4,10 @@
             <div class="container position-relative" style="z-index:1">
                <div class="row g-5">
                   <div class="col-lg-5 rv">
-                     <span class="slbl">Benefits</span>
-                     <h2 class="stitle mb-4">Why use <span class="gt">SpeakReady AI?</span></h2>
+                     <div class="text-center mb-4">
+                        <span class="slbl">Benefits</span>
+                        <h2 class="stitle mb-0">Why use <span class="gt">SpeakReady AI?</span></h2>
+                     </div>
                      
                      <ul class="list-unstyled d-flex flex-column gap-3 mt-4">
                         <li class="d-flex align-items-start gap-3">
@@ -36,8 +38,10 @@
                   </div>
                   
                   <div class="col-lg-7 rv">
-                     <span class="slbl">Interview Categories</span>
-                     <h2 class="stitle mb-4">Tailored to your <span class="gt">goals</span></h2>
+                     <div class="text-center mb-4">
+                        <span class="slbl">Interview Categories</span>
+                        <h2 class="stitle mb-0">Tailored to your <span class="gt">goals</span></h2>
+                     </div>
                      <div class="row g-3">
                         <div class="col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
