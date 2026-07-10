@@ -1,4 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Account Management')
 
 @section('content')
 <style>
@@ -168,5 +169,4 @@
     }
 </script>
 @endsection
-
 

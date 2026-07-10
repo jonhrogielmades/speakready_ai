@@ -1,4 +1,5 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Module Details')
 
 @section('content')
 <style>

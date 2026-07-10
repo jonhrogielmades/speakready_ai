@@ -1,4 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Interview Portfolio Report')
 
 @section('content')
 <!-- Add print styles specifically for this portfolio report -->

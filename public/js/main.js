@@ -55,25 +55,123 @@ window.addEventListener('scroll', () => {
 });
 let mbOpen = false;
 const mobileToggle = document.getElementById('mbtog');
+const guestQuickNavToggle = document.getElementById('guestQuickNavLauncher');
 const mobileMenu = document.getElementById('mbmenu');
 const barIcon = document.getElementById('barIcon');
 const xIcon = document.getElementById('xIcon');
-if (mobileToggle && mobileMenu) {
-    mobileToggle.addEventListener('click', () => {
-        mbOpen = !mbOpen;
-        mobileMenu.classList.toggle('open', mbOpen);
-        if (barIcon) barIcon.style.display = mbOpen ? 'none' : 'inline';
-        if (xIcon) xIcon.style.display = mbOpen ? 'inline' : 'none';
+const mobileMenuToggles = [mobileToggle, guestQuickNavToggle].filter(Boolean);
+let lastMobileMenuTrigger = null;
+let restoreMobileMenuFocusAfterAuth = false;
+
+function setMobileMenuState(open, focusFirstLink = false) {
+    if (!mobileMenu) return;
+
+    mbOpen = open;
+    mobileMenu.classList.toggle('open', open);
+    mobileMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    mobileMenuToggles.forEach(toggle => toggle.setAttribute('aria-expanded', open ? 'true' : 'false'));
+    if (guestQuickNavToggle) {
+        guestQuickNavToggle.classList.toggle('is-open', open);
+        guestQuickNavToggle.setAttribute('aria-label', open ? 'Close quick navigation' : 'Open quick navigation');
+    }
+
+    if (barIcon) barIcon.style.display = open ? 'none' : 'inline';
+    if (xIcon) xIcon.style.display = open ? 'inline' : 'none';
+
+    if (open && focusFirstLink) {
+        window.requestAnimationFrame(() => {
+            mobileMenu.querySelector('a, button')?.focus({ preventScroll: true });
+        });
+    }
+}
+
+function focusMobileMenuDestination(link) {
+    const href = link.getAttribute('href') || '';
+    const destination = href.length > 1 && href.startsWith('#')
+        ? document.querySelector(href)
+        : document.getElementById('hero');
+
+    if (!destination) {
+        lastMobileMenuTrigger?.focus({ preventScroll: true });
+        return;
+    }
+
+    const hadTabIndex = destination.hasAttribute('tabindex');
+    if (!hadTabIndex) destination.setAttribute('tabindex', '-1');
+
+    window.requestAnimationFrame(() => {
+        destination.focus({ preventScroll: true });
+
+        if (!hadTabIndex) {
+            destination.addEventListener('blur', () => destination.removeAttribute('tabindex'), { once: true });
+        }
     });
+}
+
+if (mobileMenu && mobileMenuToggles.length) {
+    mobileMenuToggles.forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            lastMobileMenuTrigger = toggle;
+            setMobileMenuState(!mbOpen, !mbOpen);
+        });
+    });
+
     document.querySelectorAll('#mbmenu a, #mbmenu button').forEach(el =>
         el.addEventListener('click', () => {
-            mbOpen = false;
-            mobileMenu.classList.remove('open');
-            if (barIcon) barIcon.style.display = 'inline';
-            if (xIcon) xIcon.style.display = 'none';
+            const opensAuthPanel = el.matches('[data-bs-target="#lofc"]');
+            restoreMobileMenuFocusAfterAuth = opensAuthPanel;
+            setMobileMenuState(false);
+
+            if (el.matches('a[href^="#"]')) {
+                focusMobileMenuDestination(el);
+            }
         })
     );
+
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !mbOpen) return;
+
+        event.preventDefault();
+        setMobileMenuState(false);
+        lastMobileMenuTrigger?.focus({ preventScroll: true });
+    });
+
+    setMobileMenuState(false);
 }
+
+const desktopMenuBreakpoint = window.matchMedia('(min-width: 992px)');
+const closeMobileMenuAtDesktop = event => {
+    if (!event.matches || !mbOpen) return;
+
+    const focusedMenuItem = mobileMenu?.contains(document.activeElement) ? document.activeElement : null;
+    const focusedHref = focusedMenuItem?.getAttribute?.('href');
+    setMobileMenuState(false);
+
+    if (focusedMenuItem) {
+        window.requestAnimationFrame(() => {
+            const desktopLinks = Array.from(document.querySelectorAll('#nbar .d-lg-flex .nav-link'));
+            const focusTarget = desktopLinks.find(link => link.getAttribute('href') === focusedHref)
+                || document.querySelector('#nbar a');
+            focusTarget?.focus({ preventScroll: true });
+        });
+    }
+};
+
+if (typeof desktopMenuBreakpoint.addEventListener === 'function') {
+    desktopMenuBreakpoint.addEventListener('change', closeMobileMenuAtDesktop);
+} else if (typeof desktopMenuBreakpoint.addListener === 'function') {
+    desktopMenuBreakpoint.addListener(closeMobileMenuAtDesktop);
+}
+
+const guestAuthPanel = document.getElementById('lofc');
+guestAuthPanel?.addEventListener('hidden.bs.offcanvas', () => {
+    if (!restoreMobileMenuFocusAfterAuth) return;
+
+    restoreMobileMenuFocusAfterAuth = false;
+    window.requestAnimationFrame(() => {
+        lastMobileMenuTrigger?.focus({ preventScroll: true });
+    });
+});
 
 /*  REVEAL  */
 const rvObs = new IntersectionObserver(

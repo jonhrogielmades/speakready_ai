@@ -1,4 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Voice Rehearsal Studio')
 
 @section('content')
 <style>

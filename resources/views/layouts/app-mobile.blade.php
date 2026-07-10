@@ -6,7 +6,7 @@
       <meta name="theme-color" content="#08080f">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <title>SpeakReady AI - AI-Based Interview Practice System</title>
+      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -17,7 +17,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=9') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       @include('partials.onboarding-styles')
       <style>
@@ -335,7 +335,14 @@
             font-size: 0.66rem; line-height: 1.15; font-weight: 700; text-align: center;
             transition: background-color 0.2s, transform 0.2s, border-color 0.2s, color 0.2s; -webkit-tap-highlight-color: transparent;
          }
-         .drawer-item i { font-size: 1.1rem; color: #60a5fa; }
+         .drawer-item i { font-size: 1.1rem; color: var(--drawer-icon, #60a5fa); }
+         .drawer-nav-blue { --drawer-icon: #93c5fd; }
+         .drawer-nav-purple { --drawer-icon: #c4b5fd; }
+         .drawer-nav-cyan { --drawer-icon: #67e8f9; }
+         .drawer-nav-indigo { --drawer-icon: #a5b4fc; }
+         .drawer-nav-emerald { --drawer-icon: #6ee7b7; }
+         .drawer-nav-rose { --drawer-icon: #fda4af; }
+         .drawer-nav-amber { --drawer-icon: #fcd34d; }
          .drawer-item span {
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -358,7 +365,7 @@
             width: 100%; font-family: "Poppins", sans-serif;
             text-align: left; text-decoration: none; transition: background-color 0.18s, color 0.18s;
          }
-         .drawer-action i { width: 18px; text-align: center; font-size: 0.86rem; }
+         .drawer-action i { width: 18px; text-align: center; font-size: 0.86rem; color: var(--drawer-icon, currentColor); }
          .drawer-action:active { background: rgba(139,92,246,0.08); }
          .drawer-action.danger { color: #f87171; }
 
@@ -814,37 +821,37 @@
          <div class="drawer-title">Training & Performance</div>
          <div class="drawer-grid">
             <a href="{{ route('user.modules.index') }}"
-               class="drawer-item {{ request()->routeIs('user.modules.*') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}">
                <i class="fa-solid fa-book-open-reader"></i>
                <span>Interview Modules</span>
             </a>
             <a href="{{ route('user.applications.index') }}"
-               class="drawer-item {{ request()->routeIs('user.applications.*') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-cyan {{ request()->routeIs('user.applications.*') ? 'active' : '' }}">
                <i class="fa-solid fa-briefcase"></i>
                <span>Job Tracker</span>
             </a>
             <a href="{{ route('user.packs.index') }}"
-               class="drawer-item {{ request()->routeIs('user.packs.*') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-indigo {{ request()->routeIs('user.packs.*') ? 'active' : '' }}">
                <i class="fa-solid fa-layer-group"></i>
                <span>Interview Packs</span>
             </a>
             <a href="{{ route('user.drills.voice') }}"
-               class="drawer-item {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}">
                <i class="fa-solid fa-ear-listen"></i>
                <span>Voice Rehearsal</span>
             </a>
             <a href="{{ route('user.learning') }}"
-               class="drawer-item {{ request()->routeIs('user.learning*') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}">
                <i class="fa-solid fa-gamepad"></i>
                <span>Learning Games</span>
             </a>
             <a href="{{ route('user.coach') }}"
-               class="drawer-item {{ request()->routeIs('user.coach*') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}">
                <i class="fa-solid fa-robot"></i>
                <span>AI Coach</span>
             </a>
             <a href="{{ route('user.reports') }}"
-               class="drawer-item {{ request()->routeIs('user.reports') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}">
                <i class="fa-solid fa-folder-open"></i>
                <span>Reports</span>
             </a>
@@ -853,17 +860,17 @@
          <div class="drawer-title">Community & More</div>
          <div class="drawer-grid">
             <a href="{{ route('user.leaderboard') }}"
-               class="drawer-item {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}">
                <i class="fa-solid fa-trophy"></i>
                <span>Leaderboard</span>
             </a>
             <a href="{{ route('user.account') }}"
-               class="drawer-item {{ request()->routeIs('user.account') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-indigo {{ request()->routeIs('user.account') ? 'active' : '' }}">
                <i class="fa-solid fa-user-gear"></i>
                <span>Account</span>
             </a>
             <a href="{{ route('user.notifications') }}"
-               class="drawer-item {{ request()->routeIs('user.notifications') ? 'active' : '' }}">
+               class="drawer-item drawer-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}">
                <i class="fa-solid fa-bell"></i>
                <span>Notifications</span>
             </a>
@@ -871,15 +878,15 @@
 
          <div class="drawer-divider"></div>
 
-         <a href="{{ route('user.account') }}" class="drawer-action">
+         <a href="{{ route('user.account') }}" class="drawer-action drawer-nav-indigo">
             <i class="fa-solid fa-user-gear"></i> Account Management
          </a>
 
          <form action="{{ route('user.language.update') }}" method="POST" style="display:block;margin:4px 0 8px;">
             @csrf
-            <div class="drawer-action" style="display:block;">
+            <div class="drawer-action drawer-nav-blue" style="display:block;">
                <label for="mobileLanguageSelect" style="display:flex;align-items:center;gap:12px;color:var(--tx2);font-size:.9rem;font-weight:600;margin-bottom:8px;">
-                  <i class="fa-solid fa-language" style="width:18px;text-align:center;color:#60a5fa;"></i>
+                  <i class="fa-solid fa-language" style="width:18px;text-align:center;"></i>
                   Language
                </label>
                <select id="mobileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;font-size:.86rem;">
@@ -899,6 +906,7 @@
          </form>
       </div>
 
+      @include('partials.user-command-palette')
       @include('partials.viewport-mobile-cookie')
 
 

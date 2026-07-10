@@ -1,0 +1,58 @@
+<svg width="184" height="116" viewBox="0 0 184 116" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="target-rim" x1="90" y1="10" x2="151" y2="72" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#93C5FD"/>
+            <stop offset="1" stop-color="#3B82F6"/>
+        </linearGradient>
+        <linearGradient id="target-face" x1="98" y1="18" x2="145" y2="68" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#F8FBFF"/>
+            <stop offset="1" stop-color="#DBEAFE"/>
+        </linearGradient>
+        <linearGradient id="block-front" x1="82" y1="72" x2="143" y2="116" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#93C5FD"/>
+            <stop offset="1" stop-color="#60A5FA"/>
+        </linearGradient>
+        <linearGradient id="block-side" x1="110" y1="72" x2="162" y2="113" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#60A5FA"/>
+            <stop offset="1" stop-color="#3B82F6"/>
+        </linearGradient>
+        <filter id="soft-shadow" x="55" y="3" width="120" height="126" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#2563EB" flood-opacity="0.18"/>
+        </filter>
+    </defs>
+
+    <ellipse cx="127" cy="109" rx="47" ry="6" fill="#BFDBFE" fill-opacity="0.46"/>
+
+    <g filter="url(#soft-shadow)">
+        <path d="M76 83L91 75L112 83L97 91L76 83Z" fill="#BFDBFE"/>
+        <path d="M97 91L112 83V108L97 116V91Z" fill="#60A5FA"/>
+        <path d="M76 83L97 91V116L76 108V83Z" fill="url(#block-front)"/>
+
+        <path d="M103 72L119 64L142 72L126 80L103 72Z" fill="#DBEAFE"/>
+        <path d="M126 80L142 72V108L126 116V80Z" fill="url(#block-side)"/>
+        <path d="M103 72L126 80V116L103 108V72Z" fill="url(#block-front)"/>
+
+        <path d="M137 91L149 85L166 91L154 97L137 91Z" fill="#BFDBFE"/>
+        <path d="M154 97L166 91V108L154 114V97Z" fill="#3B82F6"/>
+        <path d="M137 91L154 97V114L137 108V91Z" fill="#60A5FA"/>
+
+        <path d="M122 76V56" stroke="#3B82F6" stroke-width="7" stroke-linecap="round"/>
+        <path d="M122 76V56" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
+
+        <g transform="rotate(-9 123 41)">
+            <circle cx="123" cy="41" r="34" fill="#60A5FA" fill-opacity="0.2"/>
+            <circle cx="123" cy="41" r="30" fill="url(#target-rim)"/>
+            <circle cx="123" cy="41" r="24" fill="url(#target-face)"/>
+            <circle cx="123" cy="41" r="18" fill="#60A5FA"/>
+            <circle cx="123" cy="41" r="12" fill="#EFF6FF"/>
+            <circle cx="123" cy="41" r="6" fill="#3B82F6"/>
+            <path d="M105 20C113 14 125 12 135 16" stroke="white" stroke-opacity="0.55" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+    </g>
+
+    <path d="M23 25L119 41" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
+    <path d="M18 24L29 17L34 24L23 27L18 24Z" fill="#60A5FA"/>
+    <path d="M18 24L27 31L34 25L23 22L18 24Z" fill="#93C5FD"/>
+    <path d="M119 41L109 35L111 44L119 41Z" fill="#2563EB"/>
+    <circle cx="119" cy="41" r="2.5" fill="#1D4ED8"/>
+</svg>

@@ -1,0 +1,391 @@
+@once
+    <button
+        type="button"
+        class="ucp-mobile-launcher"
+        data-ucp-open
+        aria-haspopup="dialog"
+        aria-controls="userCommandPalette"
+        aria-label="Open quick navigation"
+        aria-describedby="ucpMobileLauncherHelp"
+        aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight Shift+ArrowUp Shift+ArrowDown"
+        title="Tap to open; drag or press Shift + Arrow to move"
+    >
+        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+        <span class="ucp-launcher-label" aria-hidden="true">Navigate</span>
+    </button>
+    <span id="ucpMobileLauncherHelp" class="visually-hidden">Drag this button to an edge, or press Shift and an arrow key to move it.</span>
+    <span id="ucpMobileLauncherStatus" class="visually-hidden" aria-live="polite" aria-atomic="true"></span>
+
+    <div
+        id="userCommandPalette"
+        class="ucp-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="userCommandPaletteTitle"
+        aria-describedby="userCommandPaletteDescription"
+        aria-hidden="true"
+        hidden
+    >
+        <section class="ucp-dialog" role="document" tabindex="-1">
+            <header class="ucp-header">
+                <div class="ucp-heading">
+                    <span class="ucp-heading-icon" aria-hidden="true">
+                        <i class="fa-solid fa-bolt"></i>
+                    </span>
+                    <div>
+                        <h2 id="userCommandPaletteTitle">Quick navigation</h2>
+                        <p id="userCommandPaletteDescription">Choose where you want to go.</p>
+                    </div>
+                </div>
+                <button type="button" class="ucp-close" data-ucp-close aria-label="Close quick navigation">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </header>
+
+            <nav class="ucp-results" id="userCommandList" aria-label="Navigation destinations">
+                <a id="ucp-destination-dashboard" class="ucp-result" href="{{ route('dashboard') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-gauge-high" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Dashboard</strong><small>Overview of your interview workspace</small></span>
+                    <span class="ucp-result-group">Workspace</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-interview" class="ucp-result" href="{{ route('interview.setup') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-microphone-lines" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Mock Interview</strong><small>Start a guided interview practice</small></span>
+                    <span class="ucp-result-group">Practice</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-applications" class="ucp-result" href="{{ route('user.applications.index') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-briefcase" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Job Tracker</strong><small>Manage applications and practice plans</small></span>
+                    <span class="ucp-result-group">Practice</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-packs" class="ucp-result" href="{{ route('user.packs.index') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-indigo"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Interview Packs</strong><small>Practice with role-focused question sets</small></span>
+                    <span class="ucp-result-group">Practice</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-modules" class="ucp-result" href="{{ route('user.modules.index') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Build skills with structured lessons</small></span>
+                    <span class="ucp-result-group">Training</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-voice" class="ucp-result" href="{{ route('user.drills.voice') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-ear-listen" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Voice Rehearsal</strong><small>Improve clarity, pace, and delivery</small></span>
+                    <span class="ucp-result-group">Training</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-learning" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Learning Games</strong><small>Sharpen your skills through challenges</small></span>
+                    <span class="ucp-result-group">Training</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-coach" class="ucp-result" href="{{ route('user.coach') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-robot" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>AI Coach</strong><small>Get personalized interview guidance</small></span>
+                    <span class="ucp-result-group">Training</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-progress" class="ucp-result" href="{{ route('user.progress') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Progress Tracking</strong><small>See performance trends and growth</small></span>
+                    <span class="ucp-result-group">Insights</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-feedback" class="ucp-result" href="{{ route('user.feedback') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Feedback Center</strong><small>Review answers and coaching feedback</small></span>
+                    <span class="ucp-result-group">Insights</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-reports" class="ucp-result" href="{{ route('user.reports') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Reports</strong><small>Open your interview records and results</small></span>
+                    <span class="ucp-result-group">Insights</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-leaderboard" class="ucp-result" href="{{ route('user.leaderboard') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Leaderboard</strong><small>Compare progress with the community</small></span>
+                    <span class="ucp-result-group">Community</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-notifications" class="ucp-result" href="{{ route('user.notifications') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-bell" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Notifications</strong><small>Catch up on alerts and updates</small></span>
+                    <span class="ucp-result-group">Account</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+                <a id="ucp-destination-account" class="ucp-result" href="{{ route('user.account') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-indigo"><i class="fa-solid fa-user-gear" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Account Management</strong><small>Update your profile and preferences</small></span>
+                    <span class="ucp-result-group">Account</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
+            </nav>
+
+            <footer class="ucp-footer">
+                <span class="ucp-status">14 destinations</span>
+                <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
+            </footer>
+        </section>
+    </div>
+
+    <style>
+        .ucp-backdrop[hidden] { display: none !important; }
+        .ucp-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 12000;
+            display: grid;
+            place-items: start center;
+            padding: clamp(72px, 10vh, 120px) 18px 24px;
+            background: rgba(3, 8, 20, .72);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            animation: ucp-fade-in .16s ease-out both;
+        }
+        .ucp-dialog {
+            width: min(680px, 100%);
+            max-height: min(720px, calc(100dvh - clamp(96px, 14vh, 152px)));
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: var(--tx, #f8fafc);
+            background:
+                linear-gradient(145deg, rgba(96, 165, 250, .08), transparent 34%),
+                var(--bg2, #111827);
+            border: 1px solid color-mix(in srgb, var(--bd, #334155) 82%, #60a5fa 18%);
+            border-radius: 22px;
+            box-shadow: 0 28px 90px rgba(0, 0, 0, .46), 0 0 0 1px rgba(255, 255, 255, .025) inset;
+            animation: ucp-dialog-in .2s cubic-bezier(.2, .8, .2, 1) both;
+        }
+        .ucp-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 20px 22px 15px;
+        }
+        .ucp-heading { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .ucp-heading-icon {
+            width: 40px;
+            height: 40px;
+            flex: 0 0 40px;
+            display: grid;
+            place-items: center;
+            color: #dbeafe;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 12px;
+            box-shadow: 0 8px 22px rgba(59, 130, 246, .28);
+        }
+        .ucp-heading h2 { margin: 0; color: var(--tx, #f8fafc); font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
+        .ucp-heading p { margin: 3px 0 0; color: var(--tx3, #94a3b8); font-size: .77rem; line-height: 1.4; }
+        .ucp-close {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            color: var(--tx2, #cbd5e1);
+            background: var(--bg3, #1e293b);
+            border: 1px solid var(--bd, #334155);
+            border-radius: 11px;
+            cursor: pointer;
+            transition: border-color .16s ease, color .16s ease, transform .16s ease;
+        }
+        .ucp-close:hover { color: var(--tx, #fff); border-color: #64748b; transform: translateY(-1px); }
+        .ucp-close:focus-visible,
+        .ucp-mobile-launcher:focus-visible,
+        .ucp-result:focus-visible { outline: 3px solid rgba(96, 165, 250, .48); outline-offset: 2px; }
+        .ucp-results {
+            min-height: 120px;
+            overflow: auto;
+            overscroll-behavior: contain;
+            padding: 2px 12px 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--bd, #334155) transparent;
+        }
+        .ucp-result {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr) auto 20px;
+            align-items: center;
+            gap: 12px;
+            min-height: 64px;
+            padding: 9px 10px;
+            color: var(--tx2, #cbd5e1);
+            text-decoration: none;
+            border: 1px solid transparent;
+            border-radius: 13px;
+            transition: background-color .12s ease, border-color .12s ease, transform .12s ease;
+        }
+        .ucp-result:hover,
+        .ucp-result.is-active {
+            color: var(--tx, #f8fafc);
+            background: color-mix(in srgb, var(--bg3, #1e293b) 87%, #3b82f6 13%);
+            border-color: color-mix(in srgb, var(--bd, #334155) 72%, #60a5fa 28%);
+        }
+        .ucp-result:active { transform: scale(.992); }
+        .ucp-result-icon {
+            width: 40px;
+            height: 40px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            font-size: .92rem;
+        }
+        .ucp-blue { color: #93c5fd; background: rgba(59, 130, 246, .14); }
+        .ucp-purple { color: #c4b5fd; background: rgba(139, 92, 246, .14); }
+        .ucp-cyan { color: #67e8f9; background: rgba(6, 182, 212, .13); }
+        .ucp-indigo { color: #a5b4fc; background: rgba(99, 102, 241, .14); }
+        .ucp-emerald { color: #6ee7b7; background: rgba(16, 185, 129, .13); }
+        .ucp-rose { color: #fda4af; background: rgba(244, 63, 94, .13); }
+        .ucp-amber { color: #fcd34d; background: rgba(245, 158, 11, .13); }
+        .ucp-result-copy { min-width: 0; }
+        .ucp-result-copy strong { display: block; overflow: hidden; color: inherit; font-size: .84rem; font-weight: 650; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+        .ucp-result-copy small { display: block; overflow: hidden; margin-top: 3px; color: var(--tx3, #94a3b8); font-size: .71rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+        .ucp-result-group { color: var(--tx3, #94a3b8); font-size: .65rem; font-weight: 600; letter-spacing: .025em; text-transform: uppercase; }
+        .ucp-result-arrow { color: var(--tx3, #64748b); font-size: .68rem; opacity: 0; transform: translateX(-4px); transition: opacity .12s ease, transform .12s ease; }
+        .ucp-result:hover .ucp-result-arrow,
+        .ucp-result.is-active .ucp-result-arrow { opacity: 1; transform: translateX(0); }
+        .ucp-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 46px;
+            padding: 10px 22px;
+            color: var(--tx3, #94a3b8);
+            background: color-mix(in srgb, var(--bg3, #1e293b) 54%, transparent);
+            border-top: 1px solid var(--bd, #334155);
+            font-size: .68rem;
+        }
+        .ucp-status { font-weight: 600; }
+        .ucp-help { display: flex; align-items: center; gap: 5px; }
+        .ucp-help kbd {
+            min-width: 22px;
+            padding: 2px 5px;
+            color: var(--tx2, #cbd5e1);
+            font-family: inherit;
+            font-size: .64rem;
+            font-weight: 600;
+            line-height: 1.35;
+            text-align: center;
+            background: var(--bg2, #111827);
+            border: 1px solid var(--bd, #334155);
+            border-radius: 5px;
+            box-shadow: none;
+        }
+        .ucp-mobile-launcher {
+            --ucp-safe-top: env(safe-area-inset-top, 0px);
+            --ucp-safe-right: env(safe-area-inset-right, 0px);
+            --ucp-safe-bottom: env(safe-area-inset-bottom, 0px);
+            --ucp-safe-left: env(safe-area-inset-left, 0px);
+            position: fixed;
+            right: 16px;
+            bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+            z-index: 1035;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            min-height: 30px;
+            padding: 0;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6, #7c3aed);
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 50%;
+            box-shadow: 0 6px 16px rgba(29, 78, 216, .28);
+            font-family: inherit;
+            font-size: .66rem;
+            font-weight: 650;
+            line-height: 1;
+            cursor: grab;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            transition: left .18s ease, top .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+        .ucp-mobile-launcher .ucp-launcher-label { display: none; }
+        .ucp-mobile-launcher.is-positioned {
+            right: auto;
+            bottom: auto;
+        }
+        .ucp-mobile-launcher.is-dragging {
+            cursor: grabbing;
+            box-shadow: 0 8px 20px rgba(29, 78, 216, .36);
+            transform: scale(.96);
+            transition: none;
+        }
+        .ucp-mobile-launcher.is-restoring {
+            transition: none;
+        }
+        @keyframes ucp-fade-in { from { opacity: 0; } }
+        @keyframes ucp-dialog-in { from { opacity: 0; transform: translateY(-10px) scale(.985); } }
+
+        .lm .ucp-backdrop { background: rgba(15, 23, 42, .52); }
+        .lm .ucp-dialog { box-shadow: 0 28px 80px rgba(15, 23, 42, .22), 0 0 0 1px rgba(255, 255, 255, .6) inset; }
+
+        @media (max-width: 991.98px) {
+            .ucp-mobile-launcher { display: inline-flex; }
+        }
+        @media (max-width: 640px) {
+            .ucp-backdrop { place-items: end center; padding: 18px 0 0; }
+            .ucp-dialog {
+                width: 100%;
+                max-height: min(88dvh, 760px);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                border-right: 0;
+                border-bottom: 0;
+                border-left: 0;
+                border-radius: 22px 22px 0 0;
+                animation-name: ucp-dialog-mobile-in;
+            }
+            .ucp-dialog::before { content: ""; width: 40px; height: 4px; flex: 0 0 4px; margin: 8px auto 0; background: var(--bd, #475569); border-radius: 99px; }
+            .ucp-header { padding: 13px 16px 12px; }
+            .ucp-heading-icon { width: 36px; height: 36px; flex-basis: 36px; }
+            .ucp-heading p { display: none; }
+            .ucp-results { padding-right: 8px; padding-left: 8px; }
+            .ucp-result { grid-template-columns: 40px minmax(0, 1fr) 16px; gap: 10px; min-height: 62px; padding: 8px; }
+            .ucp-result-icon { width: 38px; height: 38px; }
+            .ucp-result-group { display: none; }
+            .ucp-result-copy strong { font-size: .82rem; }
+            .ucp-result-copy small { font-size: .69rem; }
+            .ucp-result-arrow { opacity: .55; transform: none; }
+            .ucp-footer { min-height: 42px; padding: 9px 16px; }
+            .ucp-help { display: none; }
+        }
+        @keyframes ucp-dialog-mobile-in { from { opacity: 0; transform: translateY(24px); } }
+        @media (prefers-reduced-motion: reduce) {
+            .ucp-backdrop,
+            .ucp-dialog { animation: none; }
+            .ucp-result,
+            .ucp-close,
+            .ucp-result-arrow,
+            .ucp-mobile-launcher { transition: none; }
+        }
+    </style>
+
+    <script src="{{ asset('js/user-ui.js') }}?v=5" defer></script>
+@endonce

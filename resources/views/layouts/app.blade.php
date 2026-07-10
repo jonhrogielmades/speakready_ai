@@ -4,7 +4,7 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
-      <title>SpeakReady AI - AI-Based Interview Practice System</title>
+      <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -21,7 +21,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=12') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -66,64 +66,70 @@
                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
                   <span>SpeakReady AI</span>
                </div>
-               <button class="d-lg-none" style="background:none;border:none;color:var(--tx2);font-size:1.5rem;padding:0;line-height:1;" onclick="document.getElementById('dbSidebar').classList.remove('mob-open')">
+               <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                   <i class="fa-solid fa-xmark"></i>
                </button>
             </div>
             <div class="db-nav">
                <div class="db-nav-section">Dashboard</div>
-               <a href="{{ route('dashboard') }}" class="db-nl {{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Overview</a>
+               <a href="{{ route('dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Overview</a>
 
                
                <div class="db-nav-section">Interview Practice</div>
-               <a href="{{ route('interview.setup') }}" class="db-nl {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> Mock Interview</a>
-               <a href="{{ route('user.applications.index') }}" class="db-nl {{ request()->routeIs('user.applications.*') ? 'active' : '' }}"><i class="fa-solid fa-briefcase"></i> Job Tracker</a>
-               <a href="{{ route('user.packs.index') }}" class="db-nl {{ request()->routeIs('user.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i> Interview Packs</a>
+               <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> Mock Interview</a>
+               <a href="{{ route('user.applications.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.applications.*') ? 'active' : '' }}"><i class="fa-solid fa-briefcase"></i> Job Tracker</a>
+               <a href="{{ route('user.packs.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('user.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i> Interview Packs</a>
                
                <div class="db-nav-section">Specialized Training</div>
-               <a href="{{ route('user.modules.index') }}" class="db-nl {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Interview Modules</a>
-               <a href="{{ route('user.drills.voice') }}" class="db-nl {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
-               <a href="{{ route('user.learning') }}" class="db-nl {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Learning Games</a>
-               <a href="{{ route('user.coach') }}" class="db-nl {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> AI Coach</a>
+               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Interview Modules</a>
+               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
+               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Learning Games</a>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> AI Coach</a>
                
                <div class="db-nav-section">Performance</div>
-               <a href="{{ route('user.progress') }}" class="db-nl {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress Tracking</a>
-               <a href="{{ route('user.feedback') }}" class="db-nl {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Center</a>
-               <a href="{{ route('user.reports') }}" class="db-nl {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> Reports</a>
+               <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress Tracking</a>
+               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Center</a>
+               <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> Reports</a>
 
                <div class="db-nav-section">Community</div>
-               <a href="{{ route('user.leaderboard') }}" class="db-nl {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
+               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-trophy"></i> Leaderboard</a>
             </div>
             <div class="db-bottom">
                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                   @csrf
-                  <button type="submit" class="db-nl" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+                  <button type="submit" class="db-nl db-nav-danger" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
                </form>
             </div>
          </div>
+         <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->
          <div class="db-main">
             <!-- Top bar -->
             <div class="db-top">
-               <button class="boc me-2 px-2 py-2" style="border-radius:10px;width:38px;height:38px; display:flex; align-items:center; justify-content:center;" onclick="window.innerWidth < 992 ? document.getElementById('dbSidebar').classList.toggle('mob-open') : document.body.classList.toggle('collapsed-sidebar')">
+               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
+               <div class="db-page-context d-none d-xl-flex">
+                  <span class="db-page-eyebrow">Workspace</span>
+                  <strong>{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}</strong>
+               </div>
                <div class="db-top-search">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" placeholder="Search...">
+                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                  <button type="button" class="db-quick-launcher" data-ucp-open aria-haspopup="dialog" aria-controls="userCommandPalette" aria-keyshortcuts="Control+K Meta+K" title="Open quick navigation (Ctrl/Command + K)">Quick navigation</button>
+                  <kbd aria-hidden="true">Ctrl K</kbd>
                </div>
                <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
-                  <button class="boc d-flex align-items-center justify-content-center" id="dbTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="width:38px;height:38px;padding:0;border-radius:12px;color:#60a5fa;border-color:rgba(96,165,250,0.3)">
+                  <button class="boc d-flex align-items-center justify-content-center" id="dbTutorialBtn" type="button" aria-label="Start tutorial" onclick="triggerMobTutorial()" title="Start tutorial" style="color:#60a5fa;border-color:rgba(96,165,250,0.3)">
                      <i class="fa-solid fa-circle-play"></i>
                   </button>
-                  <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleTheme()">
+                  <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" type="button" aria-label="Toggle color theme" title="Toggle color theme" onclick="toggleTheme()">
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
                   </button>
                   
                   <!-- Notifications -->
                   <div style="position:relative" id="notifWrap">
-                     <button class="boc d-flex align-items-center justify-content-center" id="bellBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleNotif(event)">
+                     <button class="boc d-flex align-items-center justify-content-center" id="bellBtn" type="button" aria-label="Open notifications" title="Notifications" onclick="toggleNotif(event)">
                         <i class="fa-regular fa-bell"></i>
                      </button>
                      <span id="notifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
@@ -204,6 +210,7 @@
             </div>
          </div>
       </div>
+      @include('partials.user-command-palette')
       @include('partials.viewport-mobile-cookie')
       <!-- ======================== SCRIPTS ======================== -->
       <!-- jQuery -->
@@ -221,6 +228,21 @@
       @include('partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
+         function closeDashboardSidebar() {
+            document.getElementById('dbSidebar')?.classList.remove('mob-open');
+            document.body.classList.remove('sidebar-open');
+         }
+
+         function toggleDashboardSidebar() {
+            if (window.innerWidth < 992) {
+               const sidebar = document.getElementById('dbSidebar');
+               const isOpen = sidebar?.classList.toggle('mob-open');
+               document.body.classList.toggle('sidebar-open', Boolean(isOpen));
+               return;
+            }
+            document.body.classList.toggle('collapsed-sidebar');
+         }
+
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js').then(function(registration) {

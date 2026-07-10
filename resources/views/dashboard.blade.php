@@ -99,21 +99,33 @@
 
     .sr-hero-card {
         position: relative;
+        isolation: isolate;
+        min-height: 98px;
         overflow: hidden;
         background:
-            linear-gradient(135deg, rgba(59, 130, 246, 0.14), rgba(6, 182, 212, 0.06)),
+            radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.2), transparent 25%),
+            linear-gradient(110deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.045)),
             var(--sf);
-        border-color: rgba(59, 130, 246, 0.2);
+        border-color: rgba(96, 165, 250, 0.26);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         margin-bottom: 2px;
+    }
+
+    .lm .sr-hero-card {
+        background:
+            radial-gradient(circle at 92% 35%, rgba(147, 197, 253, 0.2), transparent 25%),
+            linear-gradient(110deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 255, 0.97));
+        border-color: #dce8fb;
+        box-shadow: 0 7px 22px rgba(59, 130, 246, 0.08);
     }
 
     .sr-hero-card::after {
         content: "";
         position: absolute;
-        inset: auto -90px -120px auto;
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.22), transparent 68%);
+        z-index: -1;
+        inset: 0 0 0 auto;
+        width: min(34%, 320px);
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.055));
         pointer-events: none;
     }
 
@@ -121,10 +133,21 @@
         position: relative;
         z-index: 1;
         display: flex;
-        flex-direction: column;
+        align-items: center;
         justify-content: center;
-        height: 100%;
-        padding: var(--dash-card-pad);
+        min-height: 98px;
+        padding: 14px clamp(126px, 14vw, 148px) 14px 16px;
+    }
+
+    .sr-welcome-art {
+        position: absolute;
+        z-index: 0;
+        right: 10px;
+        bottom: -2px;
+        width: clamp(122px, 13vw, 142px);
+        height: auto;
+        pointer-events: none;
+        user-select: none;
     }
 
     @media (min-width: 992px) {
@@ -140,10 +163,6 @@
 
         .sr-hero-card {
             align-self: start;
-        }
-
-        .sr-hero-inner {
-            padding: 28px 24px;
         }
 
         .sr-welcome-stack .sr-hero-card {
@@ -192,16 +211,19 @@
     }
 
     .sr-user-row {
+        position: relative;
+        z-index: 1;
         display: flex;
         align-items: center;
         gap: 14px;
+        width: 100%;
         min-width: 0;
     }
 
     .sr-avatar-xl {
-        width: 58px;
-        height: 58px;
-        border-radius: 16px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
         background: linear-gradient(135deg, #2563eb, #0ea5e9);
         display: flex;
         align-items: center;
@@ -211,13 +233,18 @@
         font-weight: 800;
         overflow: hidden;
         flex: 0 0 auto;
-        border: 1px solid rgba(255,255,255,.16);
+        border: 3px solid rgba(255, 255, 255, 0.78);
+        box-shadow: 0 4px 14px rgba(30, 64, 175, 0.16);
     }
 
     .sr-avatar-xl img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    .sr-welcome-copy {
+        min-width: 0;
     }
 
     .sr-eyebrow {
@@ -232,7 +259,7 @@
 
     .sr-title {
         margin: 0;
-        font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+        font-size: clamp(0.92rem, 1.1vw, 1rem);
         line-height: 1.25;
         font-weight: 700;
         color: var(--tx);
@@ -243,10 +270,17 @@
         font-weight: 800;
     }
 
+    .sr-wave {
+        display: inline-block;
+        margin-left: 5px;
+        transform-origin: 70% 70%;
+    }
+
     .sr-subtitle {
-        margin: 8px 0 0;
+        margin: 5px 0 0;
         color: var(--tx2);
-        font-size: 0.95rem;
+        font-size: 0.72rem;
+        line-height: 1.45;
         max-width: 680px;
     }
 
@@ -821,19 +855,34 @@
         }
 
         .sr-hero-inner {
-            gap: 12px;
-            padding-bottom: 12px;
+            min-height: 112px;
+            padding: 14px 112px 14px 14px;
         }
 
-        .sr-user-row {
-            align-items: flex-start;
+        .sr-welcome-art {
+            right: -2px;
+            bottom: -1px;
+            width: 122px;
         }
 
         .sr-avatar-xl {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
+            width: 46px;
+            height: 46px;
             font-size: 1.15rem;
+        }
+
+        .sr-hero-card .sr-user-row {
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sr-hero-card .sr-title {
+            font-size: 1rem;
+        }
+
+        .sr-hero-card .sr-subtitle {
+            font-size: 0.7rem;
+            line-height: 1.4;
         }
 
         .sr-score-meta {
@@ -1070,6 +1119,16 @@
     }
 
     @media (max-width: 420px) {
+        .sr-hero-inner {
+            padding-right: 72px;
+        }
+
+        .sr-welcome-art {
+            right: -12px;
+            width: 92px;
+            opacity: 0.78;
+        }
+
         .stat-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 12px !important;
@@ -1085,6 +1144,14 @@
     }
 
     @media (max-width: 360px) {
+        .sr-hero-inner {
+            padding-right: 14px;
+        }
+
+        .sr-welcome-art {
+            display: none;
+        }
+
         #mob-content > .db-content {
             padding-left: 10px !important;
             padding-right: 10px !important;
@@ -1124,21 +1191,22 @@
 <div class="db-section active sr-dashboard" id="sec-overview">
     <div class="sr-summary-grid">
         <div class="sr-welcome-stack">
-            <section class="sr-card sr-hero-card card-grad-success">
+            <section class="sr-card sr-hero-card p-0" aria-labelledby="dashboard-welcome-title">
                 <div class="sr-hero-inner">
                     <div class="sr-user-row">
                         <div class="sr-avatar-xl">
                             @if($avatarUrl)
-                                <img src="{{ $avatarUrl }}" alt="Avatar">
+                                <img src="{{ $avatarUrl }}" alt="{{ $welcomeName }} profile photo">
                             @else
                                 {{ strtoupper(substr(Auth::user()->name ?? 'User', 0, 1)) }}
                             @endif
                         </div>
-                        <div>
-                            <h6 class="sr-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span>.</h6>
-                            <p class="sr-subtitle">Track readiness, progress, and coaching.</p>
+                        <div class="sr-welcome-copy">
+                            <h6 class="sr-title" id="dashboard-welcome-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span><span class="sr-wave" aria-hidden="true">&#128075;</span></h6>
+                            <p class="sr-subtitle">Track readiness, progress, and coaching to ace your next interview.</p>
                         </div>
                     </div>
+                    <img class="sr-welcome-art" src="{{ asset('img/dashboard-welcome-target.svg') }}" alt="" aria-hidden="true">
                 </div>
             </section>
 

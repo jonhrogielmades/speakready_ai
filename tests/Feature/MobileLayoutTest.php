@@ -83,4 +83,34 @@ class MobileLayoutTest extends TestCase
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
     }
+
+    public function test_user_mobile_shell_includes_movable_quick_navigation_destinations(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $response = $this->actingAs($user)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('class="ucp-mobile-launcher"', false)
+            ->assertSee('id="userCommandPalette"', false)
+            ->assertSee('id="userCommandList"', false)
+            ->assertSee('id="ucp-destination-dashboard"', false)
+            ->assertSee('id="ucp-destination-account"', false)
+            ->assertSee('14 destinations')
+            ->assertDontSee('data-ucp-search', false);
+
+        $launcherScript = file_get_contents(public_path('js/user-ui.js'));
+
+        $this->assertIsString($launcherScript);
+        $this->assertStringContainsString('setupMovableLauncher', $launcherScript);
+        $this->assertStringContainsString('snapToNearestEdge', $launcherScript);
+        $this->assertStringContainsString('speakready.ucp-launcher-position.v1', $launcherScript);
+    }
 }

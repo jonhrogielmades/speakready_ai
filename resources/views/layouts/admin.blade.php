@@ -21,7 +21,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=10') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -42,7 +42,7 @@
                    <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
                    <span class="admin-brand">SpeakReady AI</span>
                 </div>
-                <button class="d-lg-none" style="background:none;border:none;color:var(--tx2);font-size:1.5rem;padding:0;line-height:1;" onclick="document.getElementById('dbSidebar').classList.remove('mob-open')">
+                <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                    <i class="fa-solid fa-xmark"></i>
                 </button>
              </div>
@@ -74,16 +74,21 @@
                </form>
             </div>
          </div>
+         <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->
          <div class="db-main">
             <!-- Top bar -->
             <div class="db-top">
-               <button class="boc me-2 px-2 py-2" style="border-radius:10px;width:38px;height:38px; display:flex; align-items:center; justify-content:center;" onclick="window.innerWidth < 992 ? document.getElementById('dbSidebar').classList.toggle('mob-open') : document.body.classList.toggle('collapsed-sidebar')">
+               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
+               <div class="db-page-context d-none d-xl-flex">
+                  <span class="db-page-eyebrow">Admin console</span>
+                  <strong>{{ trim($__env->yieldContent('page-title')) ?: 'Dashboard' }}</strong>
+               </div>
                <div class="db-top-search">
                   <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" placeholder="Search Admin Portal...">
+                  <input type="text" aria-label="Search admin portal" placeholder="Search admin portal">
                </div>
                <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <div class="dropdown">
@@ -176,6 +181,21 @@
       <script src="{{ asset('js/main.js') }}"></script>
       <!-- PWA Service Worker Registration -->
       <script>
+         function closeDashboardSidebar() {
+            document.getElementById('dbSidebar')?.classList.remove('mob-open');
+            document.body.classList.remove('sidebar-open');
+         }
+
+         function toggleDashboardSidebar() {
+            if (window.innerWidth < 992) {
+               const sidebar = document.getElementById('dbSidebar');
+               const isOpen = sidebar?.classList.toggle('mob-open');
+               document.body.classList.toggle('sidebar-open', Boolean(isOpen));
+               return;
+            }
+            document.body.classList.toggle('collapsed-sidebar');
+         }
+
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                navigator.serviceWorker.register('/sw.js').then(function(registration) {
@@ -284,5 +304,4 @@
       @include('layouts.logout-transition')
    </body>
 </html>
-
 

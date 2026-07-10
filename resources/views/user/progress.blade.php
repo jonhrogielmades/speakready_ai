@@ -1,4 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Progress Tracking')
 
 @section('content')
 <style>

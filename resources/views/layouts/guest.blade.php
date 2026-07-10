@@ -4,7 +4,7 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <meta name="theme-color" content="#f7fbff">
-      <title>SpeakReady AI - Practice Smarter. Interview Better.</title>
+      <title>@yield('title', 'SpeakReady AI - Practice Smarter. Interview Better.')</title>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -67,6 +67,55 @@
          .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: transparent; color: #333; font-weight: 600; cursor: pointer; }
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
+
+         /* --- Guest Quick Navigation Launcher --- */
+         .guest-quick-nav-launcher {
+            display: none;
+         }
+
+         @media (max-width: 991.98px) {
+            .guest-quick-nav-launcher {
+               position: fixed;
+               right: max(14px, env(safe-area-inset-right, 0px));
+               bottom: max(18px, env(safe-area-inset-bottom, 0px));
+               z-index: 1039;
+               display: grid;
+               place-items: center;
+               width: 44px;
+               height: 44px;
+               padding: 0;
+               color: #fff;
+               background: linear-gradient(135deg, #3b82f6, #7c3aed);
+               border: 1px solid rgba(255, 255, 255, 0.2);
+               border-radius: 50%;
+               box-shadow: 0 10px 26px rgba(29, 78, 216, 0.34);
+               font-size: 0.82rem;
+               cursor: pointer;
+               transition: transform 0.18s ease, box-shadow 0.18s ease;
+            }
+
+            .guest-quick-nav-launcher:hover,
+            .guest-quick-nav-launcher:focus-visible {
+               color: #fff;
+               box-shadow: 0 13px 30px rgba(29, 78, 216, 0.44);
+               transform: translateY(-1px);
+            }
+
+            .guest-quick-nav-launcher:focus-visible {
+               outline: 3px solid rgba(96, 165, 250, 0.45);
+               outline-offset: 3px;
+            }
+
+            .guest-quick-nav-launcher.is-open {
+               transform: scale(0.94);
+            }
+         }
+
+         @media (min-width: 992px) {
+            #mbmenu.open {
+               display: none;
+            }
+         }
 
          /* --- Mobile App Launch Splash --- */
          .sr-launch-screen {
@@ -418,7 +467,7 @@
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
-                     <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px">
+                     <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px" type="button" aria-label="Toggle quick navigation" aria-controls="mbmenu" aria-expanded="false">
                      <i class="fa-solid fa-bars" id="barIcon"></i>
                      <i class="fa-solid fa-xmark" id="xIcon" style="display:none"></i>
                      </button>
@@ -426,7 +475,7 @@
                </div>
             </div>
          </nav>
-         <div id="mbmenu">
+         <nav id="mbmenu" aria-label="Quick navigation" aria-hidden="true">
             <a href="#" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Home</a>
             <a href="#features" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Features</a>
             <a href="#how" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">How It Works</a>
@@ -438,7 +487,10 @@
                <button class="boc flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Login</button>
                <button class="bgrd flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</button>
             </div>
-         </div>
+         </nav>
+         <button class="guest-quick-nav-launcher" id="guestQuickNavLauncher" type="button" aria-label="Open quick navigation" aria-controls="mbmenu" aria-expanded="false" title="Quick navigation">
+            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+         </button>
 
          <!-- HERO -->
          <section id="hero">
@@ -1387,7 +1439,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
       
-      <script src="{{ asset('js/main.js') }}"></script>
+      <script src="{{ asset('js/main.js') }}?v=3"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {

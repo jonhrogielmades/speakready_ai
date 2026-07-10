@@ -1,4 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Interview Setup')
 @section('content')
 <style>
     .text-gradient-primary {

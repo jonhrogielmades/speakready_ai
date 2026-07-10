@@ -1,4 +1,5 @@
 @extends(Auth::check() ? (isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app') : 'layouts.guest')
+@section('title', 'Interview Results')
 
 @section('content')
 <div class="db-section active">

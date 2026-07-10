@@ -1,4 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
+@section('title', 'Interview Workspace')
 @section('content')
 <style>
     .pulse-anim { animation: pulse 1.5s infinite; }
