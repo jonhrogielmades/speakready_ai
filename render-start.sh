@@ -1,9 +1,11 @@
 #!/bin/sh
 
-set -eu
+set -u
 
-export LOG_CHANNEL="${LOG_CHANNEL:-stderr}"
-export LOG_EMERGENCY_PATH="${LOG_EMERGENCY_PATH:-php://stderr}"
+cd /var/www
+
+export LOG_CHANNEL=stderr
+export LOG_EMERGENCY_PATH=php://stderr
 
 mkdir -p \
     storage/app/public \
@@ -22,15 +24,19 @@ fi
 chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
 
 # Run skipped composer scripts
-php artisan package:discover --ansi
+php artisan package:discover --ansi || true
 
 # Clear and cache configurations
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:clear || true
+php artisan cache:clear || true
+php artisan view:clear || true
+php artisan route:clear || true
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
 
 # Create storage symlink for public uploads
-php artisan storage:link
+php artisan storage:link --force || true
 
 # Run database migrations (forces it in production)
 php artisan migrate --force
