@@ -9,6 +9,7 @@ use App\Models\InterviewAnswer;
 use App\Models\InterviewPack;
 use App\Models\JobApplication;
 use App\Models\Question;
+use App\Models\Setting;
 use App\Services\CareerPlanService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Support\Facades\Auth;
@@ -133,7 +134,8 @@ class InterviewController extends Controller
                 $questionTypes,
                 $validated['ai_assistance_level'] ?? 'standard',
                 $validated['interviewer_strictness'] ?? 'neutral',
-                $dataset
+                $dataset,
+                $this->currentLanguageConfig()
             );
 
             if (is_array($generated)) {
@@ -151,7 +153,26 @@ class InterviewController extends Controller
                 }
             }
         } elseif ($pack && !empty($pack->sample_questions)) {
-            foreach (array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5)) as $idx => $qText) {
+            $sampleQuestions = array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5));
+            $sampleQuestions = $this->localizedQuestionTexts($sampleQuestions, $provider);
+
+            foreach ($sampleQuestions as $idx => $qText) {
+                $this->createInterviewQuestion(
+                    $session,
+                    $category,
+                    $qText,
+                    $validated['difficulty'],
+                    $questionTypes,
+                    $idx
+                );
+            }
+        }
+
+        if (!Question::where('interview_session_id', $session->id)->exists()) {
+            $fallbackQuestions = $this->fallbackQuestionTextsForSession($session, $questionTypes, (int) ($validated['num_questions'] ?? 5));
+            $fallbackQuestions = $this->localizedQuestionTexts($fallbackQuestions, $provider);
+
+            foreach ($fallbackQuestions as $idx => $qText) {
                 $this->createInterviewQuestion(
                     $session,
                     $category,
@@ -322,7 +343,7 @@ class InterviewController extends Controller
         // 3. Generate Follow-up via AI
         $provider = $validated['ai_provider'] ?? session('active_interview_provider', 'openai');
         $isFinal = filter_var($validated['is_final_question'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal);
+        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal, $this->currentLanguageConfig());
 
         if (!$followUpText) {
             $followUpText = "Thank you for sharing that. Could you tell me more about your experience in this field?"; // fallback
@@ -396,6 +417,7 @@ class InterviewController extends Controller
             'ai_assistance_level' => $session->ai_assistance_level,
             'interviewer_strictness' => $session->interviewer_strictness,
             'pressure_mode' => (bool) $session->pressure_mode,
+            'target_language' => $this->currentLanguageConfig(),
         ];
 
         // Game Level specific modifiers
@@ -723,6 +745,7 @@ class InterviewController extends Controller
         $feedback = \App\Services\AIService::generateFeedback([
             'target_position' => $session->target_position,
             'difficulty' => $session->difficulty,
+            'target_language' => $this->currentLanguageConfig(),
         ], [[
             'id' => $retry->id,
             'question' => $answer->question->question_text ?? '',
@@ -758,6 +781,11 @@ class InterviewController extends Controller
             'follow_up_question' => $retry->follow_up_question ?: '',
             'created_at' => optional($retry->created_at)->format('M d, Y g:i A'),
         ]);
+    }
+
+    private function currentLanguageConfig(): array
+    {
+        return Setting::languageConfig(Auth::user()->preferred_language ?? null);
     }
 
     private function deliveryMetricsFrom(array $input, string $answerText): array
@@ -825,6 +853,44 @@ class InterviewController extends Controller
         }
 
         return $sessionQuestion;
+    }
+
+    private function fallbackQuestionTextsForSession(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
+    {
+        $query = Question::where('category_id', $session->category_id)
+            ->whereNull('interview_session_id')
+            ->where('status', 'active')
+            ->where('difficulty', $session->difficulty)
+            ->when(!empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes));
+
+        $questions = $query->inRandomOrder()->limit($limit)->pluck('question_text')->all();
+
+        if (empty($questions)) {
+            $questions = Question::where('category_id', $session->category_id)
+                ->whereNull('interview_session_id')
+                ->where('status', 'active')
+                ->when(!empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes))
+                ->inRandomOrder()
+                ->limit($limit)
+                ->pluck('question_text')
+                ->all();
+        }
+
+        return $questions;
+    }
+
+    private function localizedQuestionTexts(array $questions, string $provider): array
+    {
+        $questions = array_values(array_filter(array_map(fn ($question) => trim((string) $question), $questions)));
+        $languageConfig = $this->currentLanguageConfig();
+
+        if (($languageConfig['code'] ?? 'en') === 'en' || empty($questions)) {
+            return $questions;
+        }
+
+        $translations = \App\Services\AIService::translateInterfaceTexts($questions, $languageConfig, $provider);
+
+        return array_map(fn ($question) => $translations[$question] ?? $question, $questions);
     }
 
     private function saveGeneratedQuestionToAdminBank(array $questionData): void

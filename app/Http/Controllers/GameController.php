@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
 use App\Models\InterviewSession;
+use App\Models\Setting;
+use App\Services\AIService;
 use Illuminate\Support\Facades\Auth;
 
 class GameController extends Controller
@@ -97,6 +99,11 @@ class GameController extends Controller
             $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: " . $level->ai_custom_prompt;
         }
 
+        $languageConfig = Setting::languageConfig($user->preferred_language);
+        if (($languageConfig['code'] ?? 'en') !== 'en') {
+            $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: Conduct all interviewer-facing content in " . ($languageConfig['ai_label'] ?? $languageConfig['label']) . ".";
+        }
+
         // Get or create a default category for Arena levels
         $defaultCategory = \App\Models\Category::firstOrCreate(
             ['title' => 'General Behavioral'],
@@ -104,6 +111,10 @@ class GameController extends Controller
         );
 
         $questions = $level->parsed_questions;
+        if (($languageConfig['code'] ?? 'en') !== 'en' && !empty($questions)) {
+            $translations = AIService::translateInterfaceTexts($questions, $languageConfig, env('AI_PROVIDER', 'gemini'));
+            $questions = array_map(fn ($question) => $translations[$question] ?? $question, $questions);
+        }
 
         $timeLimit = $level->time_limit_seconds ?? 0;
         if ($timeLimit > 0 && $profile->hasPerk('time_extension')) {

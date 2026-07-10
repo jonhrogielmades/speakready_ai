@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" id="htmlRoot">
+<html lang="{{ $systemHtmlLocale ?? 'en' }}" id="htmlRoot" data-speech-locale="{{ $systemSpeechLocale ?? 'en-US' }}">
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -174,6 +174,19 @@
                         <div style="padding:8px 0">
                            <a href="{{ route('user.account') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
+                           <form action="{{ route('user.language.update') }}" method="POST" style="padding:10px 16px 8px;">
+                              @csrf
+                              <label for="profileLanguageSelect" style="display:flex;align-items:center;gap:8px;color:var(--tx2);font-size:.86rem;font-weight:600;margin-bottom:8px;">
+                                 <i class="fa-solid fa-language" style="width:18px;text-align:center;color:#60a5fa;"></i>
+                                 Language
+                              </label>
+                              <select id="profileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;font-size:.82rem;">
+                                 @foreach($supportedLanguages as $languageCode => $language)
+                                    <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
+                                 @endforeach
+                              </select>
+                              <small style="display:block;color:var(--tx3);font-size:.68rem;margin-top:6px;line-height:1.35;">AI translates the app and interview experience.</small>
+                           </form>
                            <div style="border-top:1px solid var(--bd);margin:8px 0"></div>
                            <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                               @csrf
@@ -205,6 +218,7 @@
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
       <script src="{{ asset('js/main.js') }}"></script>
+      @include('partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
          if ('serviceWorker' in navigator) {

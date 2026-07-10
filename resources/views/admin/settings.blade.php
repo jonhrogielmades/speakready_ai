@@ -1016,8 +1016,9 @@
                             <div class="col-md-6">
                                 <label class="form-label">Default Language</label>
                                 <select class="form-select" name="sys_language">
-                                    <option value="en" {{ ($settings['sys_language'] ?? '') == 'en' ? 'selected' : '' }}>English</option>
-                                    <option value="fil" {{ ($settings['sys_language'] ?? '') == 'fil' ? 'selected' : '' }}>Filipino</option>
+                                    @foreach($supportedLanguages as $languageCode => $language)
+                                        <option value="{{ $languageCode }}" {{ ($settings['sys_language'] ?? 'en') == $languageCode ? 'selected' : '' }}>{{ $language['label'] }}</option>
+                                    @endforeach
                                 </select>
                                 <small class="text-muted mt-2 d-block">Future-ready for multilingual support.</small>
                             </div>

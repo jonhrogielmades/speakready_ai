@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Setting;
+use Illuminate\Validation\Rule;
 
 class AdminSettingController extends Controller
 {
@@ -34,6 +35,7 @@ class AdminSettingController extends Controller
         $request->validate([
             'system_logo' => 'nullable|file|mimes:png,jpg,jpeg,webp,svg|max:2048',
             'system_favicon' => 'nullable|file|mimes:ico,png,jpg,jpeg,webp,svg|max:1024',
+            'sys_language' => ['nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
         ]);
 
         $booleanKeys = [

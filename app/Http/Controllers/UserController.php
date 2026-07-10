@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Setting;
+use App\Services\AIService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -865,7 +868,13 @@ class UserController extends Controller
             'content' => $message
         ]);
 
-        $response = \App\Services\AIService::chatMessage($message, $history, $provider);
+        $languageConfig = Setting::languageConfig(Auth::user()->preferred_language);
+        $systemPrompt = 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+        if (($languageConfig['code'] ?? 'en') !== 'en') {
+            $systemPrompt .= ' Reply in ' . ($languageConfig['ai_label'] ?? $languageConfig['label']) . ' unless the user explicitly asks for another language.';
+        }
+
+        $response = AIService::chatMessage($message, $history, $provider, $systemPrompt);
 
         \App\Models\ChatbotMessage::create([
             'chatbot_conversation_id' => $conversation_id,
@@ -938,7 +947,12 @@ class UserController extends Controller
         ]);
 
         $provider = env('AI_PROVIDER', 'gemini');
-        $analysis = \App\Services\AIService::analyzeVoiceRehearsal($request->prompt, $request->transcript, $provider);
+        $analysis = AIService::analyzeVoiceRehearsal(
+            $request->prompt,
+            $request->transcript,
+            $provider,
+            Setting::languageConfig(Auth::user()->preferred_language)
+        );
 
         return response()->json($analysis);
     }
@@ -1122,6 +1136,78 @@ class UserController extends Controller
     }
 
     public function account() { return view('user.account'); }
+
+    public function updateLanguage(Request $request)
+    {
+        $validated = $request->validate([
+            'preferred_language' => ['required', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
+        ]);
+
+        $user = Auth::user();
+        $user->preferred_language = $validated['preferred_language'];
+        $user->save();
+
+        return redirect()->back()->with('success', 'Language updated successfully.');
+    }
+
+    public function translateLanguage(Request $request)
+    {
+        $validated = $request->validate([
+            'texts' => ['required', 'array', 'max:120'],
+            'texts.*' => ['required', 'string', 'max:500'],
+        ]);
+
+        $languageCode = Auth::user()->preferred_language ?: ($request->input('language') ?: 'en');
+        $languageConfig = Setting::languageConfig($languageCode);
+        $languageCode = $languageConfig['code'];
+
+        $texts = collect($validated['texts'])
+            ->map(fn ($text) => trim(preg_replace('/\s+/', ' ', (string) $text)))
+            ->filter(fn ($text) => $text !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($languageCode === 'en' || empty($texts)) {
+            return response()->json([
+                'language' => $languageCode,
+                'translations' => collect($texts)->mapWithKeys(fn ($text) => [$text => $text])->all(),
+            ]);
+        }
+
+        $translations = [];
+        $missing = [];
+
+        foreach ($texts as $text) {
+            $cacheKey = 'ui_translation:' . $languageCode . ':' . sha1($text);
+            $cached = Cache::get($cacheKey);
+
+            if (is_string($cached) && $cached !== '') {
+                $translations[$text] = $cached;
+            } else {
+                $missing[] = $text;
+            }
+        }
+
+        if (!empty($missing)) {
+            $generated = AIService::translateInterfaceTexts(
+                $missing,
+                $languageConfig,
+                env('AI_PROVIDER', 'gemini')
+            );
+
+            foreach ($missing as $text) {
+                $translated = trim((string) ($generated[$text] ?? $text));
+                $translations[$text] = $translated !== '' ? $translated : $text;
+                Cache::put('ui_translation:' . $languageCode . ':' . sha1($text), $translations[$text], now()->addDays(30));
+            }
+        }
+
+        return response()->json([
+            'language' => $languageCode,
+            'translations' => $translations,
+        ]);
+    }
 
     public function updateProfile(Request $request) {
         $user = Auth::user();

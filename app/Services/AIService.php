@@ -15,7 +15,7 @@ class AIService
         'professionalism_score',
     ];
 
-    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral', $datasetContext = null)
+    public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral', $datasetContext = null, $targetLanguage = null)
     {
         $jobDescription = self::truncateText($jobDescription);
         $resumeText = self::truncateText($resumeText);
@@ -24,6 +24,7 @@ class AIService
         $prompt .= "Make the questions sound like a real live interviewer: concise, natural, role-specific, and professionally probing. ";
         $prompt .= "Each question must ask for one clear answer, avoid coaching the candidate, and avoid generic classroom phrasing. ";
         $prompt .= "Calibrate depth to the difficulty: easy asks for foundational experience, medium asks for evidence and tradeoffs, and hard asks for ambiguity, judgment, impact, and follow-up depth. ";
+        $prompt .= self::languageOutputInstruction($targetLanguage, 'all interviewer questions');
 
         if (!empty($questionTypes)) {
             $types = implode(', ', array_unique(array_filter((array) $questionTypes)));
@@ -88,13 +89,14 @@ class AIService
         return [];
     }
 
-    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false)
+    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null)
     {
         $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '" . ($session->target_position ?? 'General') . "' role. ";
         $prompt .= "The difficulty is '" . ($session->difficulty ?? 'Medium') . "'. ";
         $prompt .= "Stay in interviewer mode. Sound like a real hiring manager: neutral, concise, curious, and professionally probing. ";
         $prompt .= "Do not give coaching, scores, praise-heavy feedback, or explanations during the interview. ";
         $prompt .= "Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ";
+        $prompt .= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
         $prompt .= self::interviewStyleInstruction($session->ai_assistance_level ?? 'standard', $session->interviewer_strictness ?? 'neutral');
 
         $requestedTypes = self::decodeQuestionTypes($session->question_types ?? null);
@@ -136,7 +138,7 @@ class AIService
 
         while ($attempt < $maxRetries) {
             try {
-                $systemPrompt = 'You are a realistic hiring interviewer. Ask one concise, natural spoken follow-up question. Do not coach, score, use markdown, or add labels.';
+                $systemPrompt = 'You are a realistic hiring interviewer. Ask one concise, natural spoken follow-up question. Do not coach, score, use markdown, or add labels. ' . self::languageOutputInstruction($targetLanguage, 'the whole answer');
                 
                 // Rely on chatMessage for robust failover
                 $response = self::chatMessage($prompt, [], $provider, $systemPrompt);
@@ -263,6 +265,7 @@ class AIService
         $prompt = "You are an expert Interview Coach evaluating a candidate's interview session. Evaluate the following interview answers and provide highly accurate feedback and scores.\n";
         $prompt .= "Target Position: " . ($sessionData['target_position'] ?? 'General') . "\n";
         $prompt .= "Difficulty: " . ($sessionData['difficulty'] ?? 'Medium') . "\n\n";
+        $prompt .= self::languageOutputInstruction($sessionData['target_language'] ?? null, 'all user-visible JSON string values, including feedback, sample answers, follow-up questions, strengths, weaknesses, and improvement suggestions') . "\n";
 
         if (isset($sessionData['banned_words']) && !empty($sessionData['banned_words'])) {
             $prompt .= "CRITICAL MODIFIER - BANNED WORDS: The user was strictly forbidden from using the following words or phrases: " . $sessionData['banned_words'] . ". If you detect ANY of these words in their answers, you MUST heavily penalize their professionalism_score and mention it explicitly in their ai_feedback.\n";
@@ -640,11 +643,12 @@ EOT;
         return null;
     }
 
-    public static function analyzeVoiceRehearsal($questionPrompt, $transcript, $provider = 'gemini')
+    public static function analyzeVoiceRehearsal($questionPrompt, $transcript, $provider = 'gemini', $targetLanguage = null)
     {
         $prompt = "You are an expert Speech and Interview Coach evaluating a candidate's verbal response to an interview question.\n";
         $prompt .= "Question Prompt: \"$questionPrompt\"\n";
         $prompt .= "Candidate Transcript: \"$transcript\"\n\n";
+        $prompt .= self::languageOutputInstruction($targetLanguage, 'all user-visible JSON string values, including strengths, weaknesses, and improved answer') . "\n";
         
         $prompt .= <<<EOT
 Provide your evaluation STRICTLY as a valid JSON object only. Do not include Markdown, code blocks, or explanations outside JSON.
@@ -695,6 +699,73 @@ EOT;
         ];
     }
 
+    public static function translateInterfaceTexts(array $texts, array|string|null $targetLanguage, $provider = 'gemini'): array
+    {
+        $language = self::languageConfigFrom($targetLanguage);
+        if (($language['code'] ?? 'en') === 'en') {
+            return collect($texts)->mapWithKeys(fn ($text) => [$text => $text])->all();
+        }
+
+        $texts = collect($texts)
+            ->map(fn ($text) => trim(preg_replace('/\s+/', ' ', (string) $text)))
+            ->filter(fn ($text) => $text !== '')
+            ->unique()
+            ->take(120)
+            ->values()
+            ->all();
+
+        if (empty($texts)) {
+            return [];
+        }
+
+        $payload = json_encode($texts, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $target = $language['ai_label'] ?? $language['label'] ?? 'the target language';
+
+        $prompt = <<<PROMPT
+Translate the following SpeakReady AI interface strings into {$target}.
+
+Rules:
+- Return ONLY a valid JSON object.
+- Preserve the original source strings exactly as keys.
+- Translate values naturally for a professional interview-practice system.
+- Preserve brand names, product names, email addresses, URLs, code-like tokens, numbers, and placeholders.
+- Do not translate empty strings.
+- Do not add explanations, markdown, or extra keys.
+- If a string is already in {$target}, return it unchanged.
+
+Required JSON schema:
+{"translations":{"source string":"translated string"}}
+
+Source strings:
+{$payload}
+PROMPT;
+
+        $providers = array_values(array_filter(
+            self::feedbackProviderPriority($provider),
+            fn ($currentProvider) => self::providerHasCredentials($currentProvider)
+        ));
+
+        foreach ($providers as $currentProvider) {
+            try {
+                $response = self::callStructuredProvider($currentProvider, $prompt);
+                $translations = $response['translations'] ?? null;
+
+                if (is_array($translations)) {
+                    return collect($texts)
+                        ->mapWithKeys(function ($text) use ($translations) {
+                            $translated = trim((string) ($translations[$text] ?? $text));
+                            return [$text => $translated !== '' ? $translated : $text];
+                        })
+                        ->all();
+                }
+            } catch (\Exception $e) {
+                Log::error("AI Interface Translation Error ({$currentProvider}): " . $e->getMessage());
+            }
+        }
+
+        return collect($texts)->mapWithKeys(fn ($text) => [$text => $text])->all();
+    }
+
     public static function chatMessage($message, $history = [], $provider = 'gemini', $systemPrompt = null)
     {
         $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere,openai');
@@ -743,6 +814,33 @@ EOT;
         return $text;
     }
 
+    private static function languageConfigFrom(array|string|null $language): array
+    {
+        if (is_array($language)) {
+            $code = $language['code'] ?? null;
+            if ($code && isset(\App\Models\Setting::SUPPORTED_LANGUAGES[$code])) {
+                return array_merge(['code' => $code], \App\Models\Setting::SUPPORTED_LANGUAGES[$code]);
+            }
+
+            return array_merge(\App\Models\Setting::languageConfig('en'), $language);
+        }
+
+        return \App\Models\Setting::languageConfig($language ?: 'en');
+    }
+
+    private static function languageOutputInstruction(array|string|null $language, string $contentScope): string
+    {
+        $config = self::languageConfigFrom($language);
+
+        if (($config['code'] ?? 'en') === 'en') {
+            return '';
+        }
+
+        $target = $config['ai_label'] ?? $config['label'] ?? 'the selected language';
+
+        return "Write {$contentScope} in {$target}. Keep names, company names, technical terms, acronyms, numbers, and JSON keys unchanged unless translating them would be natural and unambiguous. ";
+    }
+
     private static function feedbackProviderPriority($provider): array
     {
         $priorityString = env(
@@ -771,6 +869,20 @@ EOT;
             'wisdomgate' => 'wisdomgate',
             'cohere' => 'cohere',
             default => '',
+        };
+    }
+
+    private static function providerHasCredentials($provider): bool
+    {
+        return match (self::normalizeProviderName($provider)) {
+            'openai' => filled(env('OPENAI_API_KEY')) || \App\Models\AiProvider::where('name', 'like', '%OpenAI%')->where('status', 'active')->whereNotNull('api_key')->exists(),
+            'gemini' => filled(env('GEMINI_API_KEY')),
+            'claude' => filled(env('ANTHROPIC_API_KEY')),
+            'groq' => filled(env('GROQ_API_KEY')),
+            'openrouter' => filled(env('OPENROUTER_API_KEY')),
+            'wisdomgate' => filled(env('WISDOMGATE_API_KEY')),
+            'cohere' => filled(env('COHERE_API_KEY')),
+            default => false,
         };
     }
 

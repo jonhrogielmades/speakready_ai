@@ -82,6 +82,8 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     // User Side Features
     Route::get('/account', [UserController::class, 'account'])->name('user.account');
+    Route::post('/language', [UserController::class, 'updateLanguage'])->name('user.language.update');
+    Route::post('/language/translate', [UserController::class, 'translateLanguage'])->name('user.language.translate');
     Route::post('/account/profile', [UserController::class, 'updateProfile'])->name('user.account.profile');
     Route::post('/account/password', [UserController::class, 'updatePassword'])->name('user.account.password');
     Route::post('/account/delete', [UserController::class, 'deleteAccount'])->name('user.account.delete');

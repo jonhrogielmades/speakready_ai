@@ -28,6 +28,7 @@ class User extends Authenticatable
         'reactivation_requested_at',
         'profile_photo_path',
         'target_position',
+        'preferred_language',
     ];
 
     /**

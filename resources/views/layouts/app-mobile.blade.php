@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" id="htmlRoot">
+<html lang="{{ $systemHtmlLocale ?? 'en' }}" id="htmlRoot" data-speech-locale="{{ $systemSpeechLocale ?? 'en-US' }}">
    <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -875,6 +875,22 @@
             <i class="fa-solid fa-user-gear"></i> Account Management
          </a>
 
+         <form action="{{ route('user.language.update') }}" method="POST" style="display:block;margin:4px 0 8px;">
+            @csrf
+            <div class="drawer-action" style="display:block;">
+               <label for="mobileLanguageSelect" style="display:flex;align-items:center;gap:12px;color:var(--tx2);font-size:.9rem;font-weight:600;margin-bottom:8px;">
+                  <i class="fa-solid fa-language" style="width:18px;text-align:center;color:#60a5fa;"></i>
+                  Language
+               </label>
+               <select id="mobileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;font-size:.86rem;">
+                  @foreach($supportedLanguages as $languageCode => $language)
+                     <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
+                  @endforeach
+               </select>
+               <small style="display:block;color:var(--tx3);font-size:.72rem;margin-top:6px;line-height:1.35;">AI translates the app and interview experience.</small>
+            </div>
+         </form>
+
          <form action="{{ route('logout') }}" method="POST" style="display:block">
             @csrf
             <button type="submit" class="drawer-action danger">
@@ -905,6 +921,7 @@
       <script src="{{ asset('js/main.js') }}"></script>
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
+      @include('partials.language-translation')
 
       <script>
          function openMobDrawer() {

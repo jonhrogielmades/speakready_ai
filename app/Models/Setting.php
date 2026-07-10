@@ -9,6 +9,37 @@ class Setting extends Model
 {
     use HasFactory;
 
+    public const SUPPORTED_LANGUAGES = [
+        'en' => [
+            'label' => 'English',
+            'native_label' => 'English',
+            'html_locale' => 'en',
+            'speech_locale' => 'en-US',
+            'ai_label' => 'English',
+        ],
+        'fil' => [
+            'label' => 'Filipino',
+            'native_label' => 'Filipino',
+            'html_locale' => 'fil',
+            'speech_locale' => 'fil-PH',
+            'ai_label' => 'Filipino',
+        ],
+        'tl' => [
+            'label' => 'Tagalog',
+            'native_label' => 'Tagalog',
+            'html_locale' => 'tl',
+            'speech_locale' => 'tl-PH',
+            'ai_label' => 'Tagalog',
+        ],
+        'ceb' => [
+            'label' => 'Cebuano',
+            'native_label' => 'Cebuano / Binisaya',
+            'html_locale' => 'ceb',
+            'speech_locale' => 'ceb-PH',
+            'ai_label' => 'Cebuano (Binisaya)',
+        ],
+    ];
+
     protected $fillable = [
         'key',
         'value',
@@ -40,6 +71,21 @@ class Setting extends Model
         }
 
         return $setting->value ?? $default;
+    }
+
+    public static function supportedLanguages(): array
+    {
+        return self::SUPPORTED_LANGUAGES;
+    }
+
+    public static function languageConfig(?string $language = null): array
+    {
+        $key = $language ?: (string) self::getVal('sys_language', 'en');
+        if (!isset(self::SUPPORTED_LANGUAGES[$key])) {
+            $key = 'en';
+        }
+
+        return array_merge(['code' => $key], self::SUPPORTED_LANGUAGES[$key]);
     }
 
     /**

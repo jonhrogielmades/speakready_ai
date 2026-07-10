@@ -37,6 +37,46 @@ class UserSideHardeningTest extends TestCase
             ->assertOk();
     }
 
+    public function test_user_can_choose_language_from_profile_menu(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('id="profileLanguageSelect"', false)
+            ->assertSee('<option value="tl"', false)
+            ->assertSee('<option value="ceb"', false);
+
+        $this->actingAs($user)
+            ->post(route('user.language.update'), [
+                'preferred_language' => 'ceb',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('ceb', $user->fresh()->preferred_language);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('lang="ceb"', false)
+            ->assertSee('data-speech-locale="ceb-PH"', false);
+    }
+
+    public function test_english_translation_endpoint_returns_identity_without_ai_provider(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active', 'preferred_language' => 'en']);
+
+        $this->actingAs($user)
+            ->postJson(route('user.language.translate'), [
+                'texts' => ['Account Management', 'Notifications'],
+            ])
+            ->assertOk()
+            ->assertJsonPath('language', 'en')
+            ->assertJsonPath('translations.Account Management', 'Account Management')
+            ->assertJsonPath('translations.Notifications', 'Notifications');
+    }
+
     public function test_perk_unlock_uses_server_catalog_cost_and_type(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

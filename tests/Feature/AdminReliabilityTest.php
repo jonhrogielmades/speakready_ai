@@ -270,6 +270,33 @@ class AdminReliabilityTest extends TestCase
         $this->assertFalse(Setting::getVal('sec_2fa'));
     }
 
+    public function test_admin_language_settings_include_tagalog_and_cebuano(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.settings.index'))
+            ->assertOk()
+            ->assertSee('<option value="tl"', false)
+            ->assertSee('Tagalog')
+            ->assertSee('<option value="ceb"', false)
+            ->assertSee('Cebuano');
+
+        $this->actingAs($admin)
+            ->post(route('admin.settings.update'), [
+                'sys_language' => 'ceb',
+            ])
+            ->assertRedirect(route('admin.settings.index'));
+
+        $this->assertSame('ceb', Setting::getVal('sys_language'));
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('lang="ceb"', false)
+            ->assertSee('data-speech-locale="ceb-PH"', false);
+    }
+
     public function test_admin_users_export_respects_current_filters(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active', 'email' => 'admin@example.com']);

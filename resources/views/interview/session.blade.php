@@ -485,6 +485,8 @@
             let lastCommittedAt = 0;
 
             const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
+            const speechLanguage = speechLocale.split('-')[0];
             const duplicateSafeWordSet = new Set([
                 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
                 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -642,7 +644,7 @@
                 recognition = new BrowserSpeechRecognition();
                 recognition.continuous = true;
                 recognition.interimResults = true;
-                recognition.lang = document.documentElement.lang || navigator.language || 'en-US';
+                recognition.lang = speechLocale;
                 recognition.maxAlternatives = 3;
 
                 recognition.onstart = function() {
@@ -789,8 +791,7 @@
             function loadVoices() {
                 let voices = window.speechSynthesis.getVoices();
                 if (voices.length > 0) {
-                    // Try to find a high-quality English voice
-                    preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Siri'))) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+                    preferredVoice = voices.find(v => v.lang === speechLocale && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Siri'))) || voices.find(v => v.lang === speechLocale) || voices.find(v => v.lang.startsWith(speechLanguage)) || voices.find(v => v.lang.startsWith('en')) || voices[0];
                 }
             }
             if ('speechSynthesis' in window) {
@@ -810,6 +811,7 @@
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     let utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = speechLocale;
                     if (preferredVoice) utterance.voice = preferredVoice;
                     utterance.rate = 0.95;
                     utterance.pitch = 1.0;

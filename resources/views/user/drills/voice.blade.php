@@ -373,6 +373,7 @@ let timer = null;
 let seconds = 0;
 let mediaRecorder = null;
 let audioChunks = [];
+const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
 
 const fillerWordsList = ['um', 'uh', 'like', 'basically', 'you know', 'actually', 'literally'];
 let fillerCount = 0;
@@ -382,6 +383,7 @@ if ('webkitSpeechRecognition' in window) {
     recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
+    recognition.lang = speechLocale;
     
     recognition.onresult = (event) => {
         let interim = '';
