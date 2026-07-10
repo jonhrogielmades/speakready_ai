@@ -12,6 +12,7 @@ class EncryptCookies extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        'sr_is_mobile',
+        'sr_viewport_width',
     ];
 }

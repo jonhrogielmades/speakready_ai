@@ -93,19 +93,43 @@
              max-width: 100% !important;
              box-sizing: border-box !important;
          }
-         .table-responsive {
+         #mob-content .table-responsive {
+             width: 100% !important;
              max-width: 100% !important;
-             overflow-x: auto !important;
+             overflow-x: visible !important;
              margin-left: 0 !important;
              margin-right: 0 !important;
-             -webkit-overflow-scrolling: touch !important;
          }
          canvas {
              max-width: 100% !important;
              height: auto !important;
          }
-         .table {
-             min-width: 100% !important;
+         #mob-content .table,
+         #mob-content .custom-table {
+             width: 100% !important;
+             min-width: 0 !important;
+             max-width: 100% !important;
+             table-layout: fixed !important;
+         }
+         #mob-content .table th,
+         #mob-content .table td,
+         #mob-content .custom-table th,
+         #mob-content .custom-table td {
+             min-width: 0 !important;
+             max-width: 100% !important;
+             white-space: normal !important;
+             overflow-wrap: anywhere !important;
+             word-break: normal !important;
+             padding: 10px 8px !important;
+             vertical-align: middle !important;
+         }
+         #mob-content .table .btn,
+         #mob-content .custom-table .btn {
+             width: 100% !important;
+             max-width: 100% !important;
+             white-space: normal !important;
+             padding: 7px 8px !important;
+             font-size: 0.72rem !important;
          }
          
          /* ===== MOBILE LAYOUT SHELL ===== */
@@ -863,6 +887,8 @@
             </button>
          </form>
       </div>
+
+      @include('partials.viewport-mobile-cookie')
 
 
       <!-- ===== PWA INSTALL PROMPT ===== -->

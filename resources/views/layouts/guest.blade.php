@@ -330,6 +330,7 @@
       </style>
    </head>
    <body @if(!$errors->any()) class="guest-splash-pending" @endif>
+      @include('partials.viewport-mobile-cookie')
       @if(!$errors->any())
       <div id="srLaunchScreen" class="sr-launch-screen" role="status" aria-live="polite" aria-label="Opening SpeakReady AI">
          <div class="sr-launch-content">
