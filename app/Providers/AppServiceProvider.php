@@ -41,8 +41,8 @@ class AppServiceProvider extends ServiceProvider
                     $languageCode = 'en';
                 }
 
-                if (auth()->check() && auth()->user()->preferred_language) {
-                    $languageCode = auth()->user()->preferred_language;
+                if (auth()->check() && Setting::preferredLanguageFor(auth()->user())) {
+                    $languageCode = Setting::preferredLanguageFor(auth()->user());
                 }
 
                 $languageConfig = Setting::languageConfig($languageCode);

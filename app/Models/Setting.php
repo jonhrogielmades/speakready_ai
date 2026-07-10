@@ -88,6 +88,31 @@ class Setting extends Model
         return array_merge(['code' => $key], self::SUPPORTED_LANGUAGES[$key]);
     }
 
+    public static function usersTableHasPreferredLanguage(): bool
+    {
+        try {
+            return \Illuminate\Support\Facades\Schema::hasTable('users')
+                && \Illuminate\Support\Facades\Schema::hasColumn('users', 'preferred_language');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    public static function preferredLanguageFor($user = null): ?string
+    {
+        if ($user && self::usersTableHasPreferredLanguage()) {
+            $language = $user->getAttribute('preferred_language');
+            if (is_string($language) && isset(self::SUPPORTED_LANGUAGES[$language])) {
+                return $language;
+            }
+        }
+
+        $sessionLanguage = session('preferred_language');
+        return is_string($sessionLanguage) && isset(self::SUPPORTED_LANGUAGES[$sessionLanguage])
+            ? $sessionLanguage
+            : null;
+    }
+
     /**
      * Set a setting value by key.
      * 

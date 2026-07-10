@@ -99,7 +99,7 @@ class GameController extends Controller
             $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: " . $level->ai_custom_prompt;
         }
 
-        $languageConfig = Setting::languageConfig($user->preferred_language);
+        $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor($user));
         if (($languageConfig['code'] ?? 'en') !== 'en') {
             $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: Conduct all interviewer-facing content in " . ($languageConfig['ai_label'] ?? $languageConfig['label']) . ".";
         }

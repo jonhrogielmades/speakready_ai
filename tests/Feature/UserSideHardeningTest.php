@@ -13,6 +13,7 @@ use App\Models\Profile;
 use App\Models\Question;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class UserSideHardeningTest extends TestCase
@@ -75,6 +76,28 @@ class UserSideHardeningTest extends TestCase
             ->assertJsonPath('language', 'en')
             ->assertJsonPath('translations.Account Management', 'Account Management')
             ->assertJsonPath('translations.Notifications', 'Notifications');
+    }
+
+    public function test_language_update_falls_back_to_session_when_column_is_missing(): void
+    {
+        Schema::table('users', function ($table) {
+            $table->dropColumn('preferred_language');
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->post(route('user.language.update'), [
+                'preferred_language' => 'fil',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('preferred_language', 'fil');
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('lang="fil"', false)
+            ->assertSee('data-speech-locale="fil-PH"', false);
     }
 
     public function test_perk_unlock_uses_server_catalog_cost_and_type(): void

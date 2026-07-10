@@ -785,7 +785,7 @@ class InterviewController extends Controller
 
     private function currentLanguageConfig(): array
     {
-        return Setting::languageConfig(Auth::user()->preferred_language ?? null);
+        return Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
     }
 
     private function deliveryMetricsFrom(array $input, string $answerText): array

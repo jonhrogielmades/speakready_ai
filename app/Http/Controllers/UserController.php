@@ -868,7 +868,7 @@ class UserController extends Controller
             'content' => $message
         ]);
 
-        $languageConfig = Setting::languageConfig(Auth::user()->preferred_language);
+        $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
         $systemPrompt = 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
         if (($languageConfig['code'] ?? 'en') !== 'en') {
             $systemPrompt .= ' Reply in ' . ($languageConfig['ai_label'] ?? $languageConfig['label']) . ' unless the user explicitly asks for another language.';
@@ -951,7 +951,7 @@ class UserController extends Controller
             $request->prompt,
             $request->transcript,
             $provider,
-            Setting::languageConfig(Auth::user()->preferred_language)
+            Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()))
         );
 
         return response()->json($analysis);
@@ -1144,8 +1144,12 @@ class UserController extends Controller
         ]);
 
         $user = Auth::user();
-        $user->preferred_language = $validated['preferred_language'];
-        $user->save();
+        session(['preferred_language' => $validated['preferred_language']]);
+
+        if (Setting::usersTableHasPreferredLanguage()) {
+            $user->preferred_language = $validated['preferred_language'];
+            $user->save();
+        }
 
         return redirect()->back()->with('success', 'Language updated successfully.');
     }
@@ -1157,7 +1161,7 @@ class UserController extends Controller
             'texts.*' => ['required', 'string', 'max:500'],
         ]);
 
-        $languageCode = Auth::user()->preferred_language ?: ($request->input('language') ?: 'en');
+        $languageCode = Setting::preferredLanguageFor(Auth::user()) ?: ($request->input('language') ?: 'en');
         $languageConfig = Setting::languageConfig($languageCode);
         $languageCode = $languageConfig['code'];
 
