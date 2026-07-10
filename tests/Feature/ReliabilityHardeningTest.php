@@ -12,6 +12,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ReliabilityHardeningTest extends TestCase
@@ -66,6 +67,103 @@ class ReliabilityHardeningTest extends TestCase
                 'source' => 'fallback',
             ])
             ->assertJsonPath('question_text', 'For a Software Engineer role, describe a complex or high-pressure situation where you used Behavioral. What was your responsibility, what actions did you take, and what measurable result followed?');
+    }
+
+    public function test_user_ai_generated_start_question_is_saved_to_admin_question_bank(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $questionText = 'Tell me about a production issue you diagnosed and resolved.';
+
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode(['questions' => [$questionText]]),
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), [
+                'category_id' => $category->id,
+                'difficulty' => 'medium',
+                'target_position' => 'Backend Developer',
+                'num_questions' => 5,
+                'response_mode' => 'text',
+                'time_limit' => 0,
+                'ai_provider' => 'openai',
+            ])
+            ->assertRedirect(route('interview.session'));
+
+        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'category_id' => $category->id,
+            'question_text' => $questionText,
+        ]);
+
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => null,
+            'category_id' => $category->id,
+            'question_text' => $questionText,
+            'source_type' => 'ai_generated_user',
+        ]);
+    }
+
+    public function test_user_ai_follow_up_question_is_saved_to_admin_question_bank(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        $followUpText = 'What tradeoff would you make differently if you handled that project again?';
+
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => $followUpText,
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+            ])
+            ->postJson(route('interview.chatReply'), [
+                'question_id' => $question->id,
+                'answer_text' => 'I coordinated the release, found the issue, and shipped a fix.',
+                'response_mode' => 'text',
+                'ai_provider' => 'openai',
+            ])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'next_question_text' => $followUpText,
+            ]);
+
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'category_id' => $category->id,
+            'question_text' => $followUpText,
+        ]);
+
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => null,
+            'category_id' => $category->id,
+            'question_text' => $followUpText,
+            'source_type' => 'ai_generated_user',
+        ]);
     }
 
     public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void

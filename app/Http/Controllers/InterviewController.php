@@ -3,13 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Category;
 use App\Models\InterviewSession;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewPack;
 use App\Models\JobApplication;
+use App\Models\Question;
 use App\Services\CareerPlanService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use App\Helpers\ActivityLogger;
 
@@ -52,7 +55,7 @@ class InterviewController extends Controller
             'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
         ]);
 
-        $category = \App\Models\Category::findOrFail($validated['category_id']);
+        $category = Category::findOrFail($validated['category_id']);
         $application = !empty($validated['job_application_id'])
             ? JobApplication::where('user_id', Auth::id())->findOrFail($validated['job_application_id'])
             : null;
@@ -135,29 +138,28 @@ class InterviewController extends Controller
 
             if (is_array($generated)) {
                 foreach ($generated as $idx => $qText) {
-                    if (is_string($qText) && !empty(trim($qText))) {
-                        \App\Models\Question::create([
-                            'category_id' => $category->id,
-                            'question_text' => trim($qText),
-                            'difficulty' => $validated['difficulty'],
-                            'type' => $this->questionTypeForIndex(trim($qText), $questionTypes, $idx),
-                            'interview_session_id' => $session->id,
-                            'source_name' => $sourceMetadata['source_name'] ?? null,
-                            'source_url' => $sourceMetadata['source_url'] ?? null,
-                            'source_type' => $sourceMetadata['source_type'] ?? null,
-                        ]);
-                    }
+                    $this->createInterviewQuestion(
+                        $session,
+                        $category,
+                        $qText,
+                        $validated['difficulty'],
+                        $questionTypes,
+                        $idx,
+                        $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
+                        true
+                    );
                 }
             }
         } elseif ($pack && !empty($pack->sample_questions)) {
             foreach (array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5)) as $idx => $qText) {
-                \App\Models\Question::create([
-                    'category_id' => $category->id,
-                    'question_text' => trim($qText),
-                    'difficulty' => $validated['difficulty'],
-                    'type' => $this->questionTypeForIndex(trim($qText), $questionTypes, $idx),
-                    'interview_session_id' => $session->id,
-                ]);
+                $this->createInterviewQuestion(
+                    $session,
+                    $category,
+                    $qText,
+                    $validated['difficulty'],
+                    $questionTypes,
+                    $idx
+                );
             }
         }
 
@@ -208,7 +210,7 @@ class InterviewController extends Controller
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
 
-        \App\Models\InterviewAnswer::create([
+        InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
             'answer_text' => $answerText,
@@ -287,7 +289,7 @@ class InterviewController extends Controller
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
         
         // 1. Save User's Answer
-        $answer = \App\Models\InterviewAnswer::create([
+        $answer = InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
             'answer_text' => $answerText,
@@ -306,7 +308,7 @@ class InterviewController extends Controller
         ]);
 
         // 2. Fetch Conversation History
-        $history = \App\Models\InterviewAnswer::with('question')
+        $history = InterviewAnswer::with('question')
             ->where('interview_session_id', $session->id)
             ->orderBy('created_at', 'asc')
             ->get()
@@ -332,16 +334,17 @@ class InterviewController extends Controller
             : null;
         $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
 
-        $newQuestion = \App\Models\Question::create([
-            'category_id' => $session->category_id,
-            'question_text' => trim($followUpText),
-            'difficulty' => $session->difficulty,
-            'interview_session_id' => $session->id,
-            'status' => 'active',
-            'source_name' => $sourceMetadata['source_name'] ?? null,
-            'source_url' => $sourceMetadata['source_url'] ?? null,
-            'source_type' => $sourceMetadata['source_type'] ?? null,
-        ]);
+        $questionIndex = InterviewAnswer::where('interview_session_id', $session->id)->count();
+        $newQuestion = $this->createInterviewQuestion(
+            $session,
+            $session->category,
+            $followUpText,
+            $session->difficulty,
+            $this->decodeQuestionTypes($session->question_types),
+            $questionIndex,
+            $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
+            $provider !== 'local'
+        );
 
         return response()->json([
             'success' => true,
@@ -783,6 +786,102 @@ class InterviewController extends Controller
 
         $decoded = json_decode($payload, true);
         return is_array($decoded) ? $decoded : null;
+    }
+
+    private function createInterviewQuestion(
+        InterviewSession $session,
+        ?Category $category,
+        $questionText,
+        string $difficulty,
+        array $selectedTypes = [],
+        int $index = 0,
+        array $sourceMetadata = [],
+        bool $saveToAdminBank = false
+    ): ?Question {
+        $questionText = trim((string) $questionText);
+        $categoryId = $category?->id ?? $session->category_id;
+
+        if ($questionText === '' || !$categoryId) {
+            return null;
+        }
+
+        $questionData = [
+            'category_id' => $categoryId,
+            'question_text' => $questionText,
+            'difficulty' => $difficulty,
+            'type' => $this->questionTypeForIndex($questionText, $selectedTypes, $index),
+            'status' => 'active',
+            'source_name' => $sourceMetadata['source_name'] ?? null,
+            'source_url' => $sourceMetadata['source_url'] ?? null,
+            'source_type' => $sourceMetadata['source_type'] ?? null,
+        ];
+
+        $sessionQuestion = Question::create(array_merge($questionData, [
+            'interview_session_id' => $session->id,
+        ]));
+
+        if ($saveToAdminBank) {
+            $this->saveGeneratedQuestionToAdminBank($questionData);
+        }
+
+        return $sessionQuestion;
+    }
+
+    private function saveGeneratedQuestionToAdminBank(array $questionData): void
+    {
+        try {
+            Question::firstOrCreate(
+                [
+                    'category_id' => $questionData['category_id'],
+                    'question_text' => $questionData['question_text'],
+                    'interview_session_id' => null,
+                ],
+                [
+                    'difficulty' => $questionData['difficulty'],
+                    'type' => $questionData['type'],
+                    'status' => $questionData['status'] ?? 'active',
+                    'source_name' => $questionData['source_name'] ?? null,
+                    'source_url' => $questionData['source_url'] ?? null,
+                    'source_type' => $questionData['source_type'] ?? null,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Unable to save AI-generated question to the admin bank.', [
+                'category_id' => $questionData['category_id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function aiGeneratedQuestionSourceMetadata(array $sourceMetadata, string $provider): array
+    {
+        $providerName = $this->providerDisplayName($provider);
+        $sourceName = trim((string) ($sourceMetadata['source_name'] ?? ''));
+        $displayName = "User AI Generated ({$providerName})";
+
+        if ($sourceName !== '') {
+            $displayName .= " via {$sourceName}";
+        }
+
+        return [
+            'source_name' => mb_substr($displayName, 0, 255),
+            'source_url' => $sourceMetadata['source_url'] ?? null,
+            'source_type' => 'ai_generated_user',
+        ];
+    }
+
+    private function providerDisplayName(?string $provider): string
+    {
+        return match (strtolower(trim((string) $provider))) {
+            'openai' => 'OpenAI',
+            'gemini' => 'Gemini',
+            'groq' => 'Groq',
+            'claude' => 'Claude',
+            'openrouter' => 'OpenRouter',
+            'wisdomgate' => 'WisdomGate',
+            'cohere' => 'Cohere',
+            default => ucfirst((string) $provider ?: 'AI Provider'),
+        };
     }
 
     private function questionTypeForIndex(string $questionText, array $selectedTypes, int $index): string

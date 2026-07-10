@@ -316,7 +316,10 @@ class AdminController extends Controller
 
     public function questionAnalytics(Question $question)
     {
-        $answers = InterviewAnswer::where('question_id', $question->id);
+        $questionIds = Question::where('category_id', $question->category_id)
+            ->where('question_text', $question->question_text)
+            ->pluck('id');
+        $answers = InterviewAnswer::whereIn('question_id', $questionIds);
         $used = (clone $answers)->count();
         $avgScore = (clone $answers)->whereNotNull('score')->avg('score');
 
@@ -405,15 +408,19 @@ class AdminController extends Controller
     public function questionsDashboard()
     {
         $questions = Question::with('category')
+            ->whereNull('interview_session_id')
             ->withCount('answers')
             ->latest()
             ->get();
-        $categories = Category::withCount('questions')->get();
+        $categories = Category::withCount([
+            'questions as questions_count' => fn ($query) => $query->whereNull('interview_session_id'),
+        ])->get();
         
         $totalQuestions = $questions->count();
         $activeQuestions = $questions->where('status', 'active')->count();
         $totalCategories = $categories->count();
         $mostUsedQuestions = Question::with('category')
+            ->whereNull('interview_session_id')
             ->withCount('answers')
             ->orderByDesc('answers_count')
             ->take(3)
@@ -594,7 +601,9 @@ class AdminController extends Controller
 
     public function exportQuestions()
     {
-        $questions = Question::with('category')->get();
+        $questions = Question::with('category')
+            ->whereNull('interview_session_id')
+            ->get();
 
         $headers = [
             "Content-type"        => "text/csv",
