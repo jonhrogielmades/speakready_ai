@@ -53,10 +53,20 @@ class AdminFeedbackController extends Controller
             'relevance_score' => 'required|integer|min:0|max:100',
             'confidence_score' => 'required|integer|min:0|max:100',
             'grammar_score' => 'required|integer|min:0|max:100',
-            'star_analysis' => 'nullable|array',
             'notes' => 'nullable|string',
             'audit_status' => 'required|string|in:approved,under_review,flagged,archived',
         ]);
+
+        [$starAnalysisIsValid, $starAnalysis] = $this->starAnalysisFromRequest(
+            $request->input('star_analysis'),
+            $answer->star_analysis
+        );
+
+        if (!$starAnalysisIsValid) {
+            return back()
+                ->withErrors(['star_analysis' => 'STAR analysis must be valid JSON.'])
+                ->withInput();
+        }
 
         $oldStatus = $answer->audit_status;
 
@@ -65,7 +75,7 @@ class AdminFeedbackController extends Controller
             'relevance_score' => $validated['relevance_score'],
             'confidence_score' => $validated['confidence_score'],
             'grammar_score' => $validated['grammar_score'],
-            'star_analysis' => $validated['star_analysis'] ?? $answer->star_analysis,
+            'star_analysis' => $starAnalysis,
             'audit_status' => $validated['audit_status'],
         ]);
 
@@ -85,15 +95,18 @@ class AdminFeedbackController extends Controller
     {
         $validated = $request->validate([
             'audit_status' => 'required|string|in:approved,under_review,flagged,archived',
-            'flagged_reason' => 'nullable|string|required_if:audit_status,flagged',
+            'flagged_reason' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
 
         $oldStatus = $answer->audit_status;
+        $flaggedReason = $validated['audit_status'] === 'flagged'
+            ? ($validated['flagged_reason'] ?? $validated['notes'] ?? 'Flagged by admin review.')
+            : null;
 
         $answer->update([
             'audit_status' => $validated['audit_status'],
-            'flagged_reason' => $validated['audit_status'] === 'flagged' ? $validated['flagged_reason'] : null,
+            'flagged_reason' => $flaggedReason,
         ]);
 
         FeedbackAuditLog::create([
@@ -130,5 +143,32 @@ class AdminFeedbackController extends Controller
     {
         $complaints = FeedbackComplaint::with(['user', 'interviewAnswer.question'])->latest()->paginate(15);
         return view('admin.feedback.complaints', compact('complaints'));
+    }
+
+    private function starAnalysisFromRequest($value, ?array $fallback): array
+    {
+        if (is_array($value)) {
+            return [true, $value];
+        }
+
+        if ($value === null || trim((string) $value) === '') {
+            return [true, $fallback];
+        }
+
+        $decoded = json_decode((string) $value, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return [false, $fallback];
+        }
+
+        if ($decoded === null) {
+            return [true, $fallback];
+        }
+
+        if (!is_array($decoded)) {
+            return [false, $fallback];
+        }
+
+        return [true, $decoded];
     }
 }

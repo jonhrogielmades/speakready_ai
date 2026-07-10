@@ -155,6 +155,10 @@
     </div>
     @endif
 
+    @php
+        $settingChecked = fn (string $key, string $default = 'true') => (($settings[$key] ?? $default) === 'true') ? 'checked' : '';
+    @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-sliders me-2" style="color:#3b82f6;"></i>System Settings</h4>
@@ -475,8 +479,7 @@
                                     <small class="text-muted">Allow new users to sign up on the platform.</small>
                                 </div>
                                 <div class="form-check form-switch fs-4 mb-0">
-                                    <input class="form-check-input" type="checkbox" name="acc_registration" value="true" {{ ($settings['acc_registration'] ?? 'true') == 'true' ? 'checked' : '' }}>
-                                    <input type="hidden" name="acc_registration" value="false" disabled>
+                                    <input class="form-check-input" type="checkbox" name="acc_registration" value="true" {{ $settingChecked('acc_registration') }}>
                                 </div>
                             </div>
 
@@ -486,7 +489,7 @@
                                     <small class="text-muted">Users must verify their email before logging in.</small>
                                 </div>
                                 <div class="form-check form-switch fs-4 mb-0">
-                                    <input class="form-check-input" type="checkbox" name="acc_verify_email" value="true" {{ ($settings['acc_verify_email'] ?? 'false') == 'true' ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="acc_verify_email" value="true" {{ $settingChecked('acc_verify_email', 'false') }}>
                                 </div>
                             </div>
 
@@ -536,7 +539,7 @@
                                 @foreach(['View Content', 'Take Interview', 'Delete Own Account', 'Export Reports'] as $i => $perm)
                                 <div class="col-md-4">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="role_user_perm_{{$i}}" value="true" checked>
+                                        <input class="form-check-input" type="checkbox" name="role_user_perm_{{$i}}" value="true" {{ $settingChecked('role_user_perm_'.$i) }}>
                                         <label class="form-check-label">{{ $perm }}</label>
                                     </div>
                                 </div>
@@ -579,13 +582,13 @@
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Follow-Up Questions</h6></div>
                                 <div class="form-check form-switch fs-4 mb-0">
-                                    <input class="form-check-input" type="checkbox" name="int_follow_up" value="true" {{ ($settings['int_follow_up'] ?? 'true') == 'true' ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="int_follow_up" value="true" {{ $settingChecked('int_follow_up') }}>
                                 </div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable AI Evaluation</h6></div>
                                 <div class="form-check form-switch fs-4 mb-0">
-                                    <input class="form-check-input" type="checkbox" name="int_ai_eval" value="true" {{ ($settings['int_ai_eval'] ?? 'true') == 'true' ? 'checked' : '' }}>
+                                    <input class="form-check-input" type="checkbox" name="int_ai_eval" value="true" {{ $settingChecked('int_ai_eval') }}>
                                 </div>
                             </div>
             </div>
@@ -610,19 +613,19 @@
                             
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Voice Recording</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_recording" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_recording" value="true" {{ $settingChecked('vr_recording') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Speech-to-Text</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_stt" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_stt" value="true" {{ $settingChecked('vr_stt') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Confidence Analysis</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_confidence" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_confidence" value="true" {{ $settingChecked('vr_confidence') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Filler Word Detection</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_filler" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_filler" value="true" {{ $settingChecked('vr_filler') }}></div>
                             </div>
             </div>
             <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
@@ -645,19 +648,19 @@
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable AI Coach</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_enable" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_enable" value="true" {{ $settingChecked('aic_enable') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Sample Answer Generation</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_sample" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_sample" value="true" {{ $settingChecked('aic_sample') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Follow-Up Questions</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_follow" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_follow" value="true" {{ $settingChecked('aic_follow') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Learning Recommendations</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_recommend" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_recommend" value="true" {{ $settingChecked('aic_recommend') }}></div>
                             </div>
             </div>
             <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
@@ -680,19 +683,19 @@
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Learning Modules</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_modules" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_modules" value="true" {{ $settingChecked('ll_modules') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Quizzes</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_quizzes" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_quizzes" value="true" {{ $settingChecked('ll_quizzes') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Certificates</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_certs" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_certs" value="true" {{ $settingChecked('ll_certs') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Enable Achievements</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_achievements" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_achievements" value="true" {{ $settingChecked('ll_achievements') }}></div>
                             </div>
             </div>
             <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
@@ -758,19 +761,19 @@
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">System Notifications</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_sys" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_sys" value="true" {{ $settingChecked('notif_sys') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Email Notifications</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_email" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_email" value="true" {{ $settingChecked('notif_email') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Interview Reminders</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_reminders" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_reminders" value="true" {{ $settingChecked('notif_reminders') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Achievement Notifications</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_achieve" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_achieve" value="true" {{ $settingChecked('notif_achieve') }}></div>
                             </div>
             </div>
             <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
@@ -830,11 +833,11 @@
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Require Strong Passwords</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_strong_pass" value="true" checked></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_strong_pass" value="true" {{ $settingChecked('sec_strong_pass') }}></div>
                             </div>
                             <div class="custom-switch-container">
                                 <div><h6 class="mb-1 text-white">Two-Factor Authentication (Optional)</h6></div>
-                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_2fa" value="true"></div>
+                                <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="sec_2fa" value="true" {{ $settingChecked('sec_2fa', 'false') }}></div>
                             </div>
                             <div class="row mt-4 g-3">
                                 <div class="col-md-6">

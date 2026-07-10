@@ -166,9 +166,9 @@
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="fa-solid fa-file-export me-2"></i>Export</button>
                 <ul class="dropdown-menu dropdown-menu-end" style="background:var(--sf);border:1px solid var(--bd);">
-                    <li><a class="dropdown-item" href="#" style="color:var(--tx);"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>PDF</a></li>
-                    <li><a class="dropdown-item" href="#" style="color:var(--tx);"><i class="fa-solid fa-file-excel me-2 text-success"></i>Excel</a></li>
-                    <li><a class="dropdown-item" href="#" style="color:var(--tx);"><i class="fa-solid fa-file-csv me-2 text-info"></i>CSV</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); window.print();" style="color:var(--tx);"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>PDF</a></li>
+                    <li><a class="dropdown-item" href="{{ route('admin.users.export', array_merge(request()->query(), ['format' => 'excel'])) }}" style="color:var(--tx);"><i class="fa-solid fa-file-excel me-2 text-success"></i>Excel CSV</a></li>
+                    <li><a class="dropdown-item" href="{{ route('admin.users.export', array_merge(request()->query(), ['format' => 'csv'])) }}" style="color:var(--tx);"><i class="fa-solid fa-file-csv me-2 text-info"></i>CSV</a></li>
                 </ul>
             </div>
         </div>
@@ -592,37 +592,37 @@
 <div class="modal fade custom-modal" id="broadcastModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold">Send Notification</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label text-muted">Type</label>
-                    <select class="form-select">
-                        <option>Broadcast to All Users</option>
-                        <option>Bulk Notification</option>
-                        <option>Individual Notification</option>
-                        <option>Dashboard Announcement</option>
-                    </select>
+            <form action="{{ route('admin.notifications.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="target" value="all">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Broadcast Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted">Subject</label>
-                    <input type="text" class="form-control">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Alert Type</label>
+                        <select class="form-select" name="type" required>
+                            <option value="info">Info</option>
+                            <option value="success">Success</option>
+                            <option value="warning">Warning</option>
+                            <option value="danger">Danger</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Subject</label>
+                        <input type="text" name="title" class="form-control" required maxlength="255">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Message</label>
+                        <textarea name="message" class="form-control" rows="4" required></textarea>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label text-muted">Message</label>
-                    <textarea class="form-control" rows="4"></textarea>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning"><i class="fa-solid fa-paper-plane me-2"></i>Send</button>
                 </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="scheduleCheck">
-                    <label class="form-check-label text-muted" for="scheduleCheck">Schedule for later</label>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning"><i class="fa-solid fa-paper-plane me-2"></i>Send</button>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -725,4 +725,3 @@
     }
 </script>
 @endsection
-

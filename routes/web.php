@@ -139,6 +139,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::prefix('admin/users')->name('admin.users.')->group(function () {
         Route::get('/', [AdminUserController::class, 'index'])->name('index');
+        Route::get('/export', [AdminUserController::class, 'export'])->name('export');
         Route::post('/', [AdminUserController::class, 'store'])->name('store');
         Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');

@@ -15,30 +15,7 @@ class AdminUserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::query();
-
-        // Handle Search
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        // Handle Role Filter
-        if ($request->has('role') && $request->role != '') {
-            if ($request->role === 'admin') {
-                $query->where('is_admin', true);
-            } elseif ($request->role === 'user') {
-                $query->where('is_admin', false);
-            }
-        }
-
-        // Handle Status Filter
-        if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
-        }
+        $query = $this->filteredUsers($request);
 
         $users = $query->latest()->paginate(10)->withQueryString();
 
@@ -79,6 +56,42 @@ class AdminUserController extends Controller
         }
 
         return view('admin.users', compact('users', 'topUsers', 'needingImprovement'));
+    }
+
+    public function export(Request $request)
+    {
+        $users = $this->filteredUsers($request)
+            ->latest()
+            ->get();
+        $fileName = 'users_export_'.now()->format('Ymd_His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($users) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['ID', 'Name', 'Email', 'Role', 'Status', 'Registered At']);
+
+            foreach ($users as $user) {
+                fputcsv($file, [
+                    $user->id,
+                    $user->name,
+                    $user->email,
+                    $user->is_admin ? 'Admin' : 'User',
+                    $user->status,
+                    optional($user->created_at)->toDateTimeString(),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function store(Request $request)
@@ -236,5 +249,32 @@ class AdminUserController extends Controller
             'interviews' => $completedInterviews,
             'activities' => $activities,
         ]);
+    }
+
+    private function filteredUsers(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            if ($request->role === 'admin') {
+                $query->where('is_admin', true);
+            } elseif ($request->role === 'user') {
+                $query->where('is_admin', false);
+            }
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        return $query;
     }
 }

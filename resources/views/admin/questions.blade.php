@@ -276,144 +276,144 @@
                         </div>
                     </td>
                 </tr>
-
-                <!-- Modals per question (Edit, Delete, Preview) -->
-                <!-- Edit Question Modal -->
-                <div class="modal fade" id="editQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content" style="border:1px solid var(--bd)">
-                            <form action="{{ route('admin.questions.update', $q->id) }}" method="POST">
-                                @csrf @method('PUT')
-                                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                                    <h5 class="modal-title" style="color:var(--tx)">Edit Question</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label class="olbl">Category</label>
-                                            <select class="oinp mb-3" name="category_id" required>
-                                                @foreach($categories as $c)
-                                                    <option value="{{ $c->id }}" {{ $c->id == $q->category_id ? 'selected' : '' }}>{{ $c->title }}</option>
-                                                @endforeach
-                                            </select>
-                                            
-                                            <label class="olbl">Type</label>
-                                            <select class="oinp mb-3" name="type" required>
-                                                <option value="Behavioral" {{ $q->type == 'Behavioral' ? 'selected' : '' }}>Behavioral</option>
-                                                <option value="Situational" {{ $q->type == 'Situational' ? 'selected' : '' }}>Situational</option>
-                                                <option value="Technical" {{ $q->type == 'Technical' ? 'selected' : '' }}>Technical</option>
-                                                <option value="Personal" {{ $q->type == 'Personal' ? 'selected' : '' }}>Personal</option>
-                                            </select>
-
-                                            <label class="olbl">Difficulty</label>
-                                            <select class="oinp mb-3" name="difficulty" required>
-                                                <option value="Easy" {{ $q->difficulty == 'Easy' ? 'selected' : '' }}>Easy</option>
-                                                <option value="Medium" {{ $q->difficulty == 'Medium' ? 'selected' : '' }}>Medium</option>
-                                                <option value="Hard" {{ $q->difficulty == 'Hard' ? 'selected' : '' }}>Hard</option>
-                                            </select>
-                                            
-                                            <label class="olbl">Status</label>
-                                            <select class="oinp mb-3" name="status" required>
-                                                <option value="active" {{ $q->status == 'active' ? 'selected' : '' }}>Active</option>
-                                                <option value="inactive" {{ $q->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="olbl">Question Text</label>
-                                            <textarea class="oinp mb-3" name="question_text" rows="2" required>{{ $q->question_text }}</textarea>
-
-                                            <label class="olbl">Expected Answer Guide (Helps AI)</label>
-                                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. Education, Skills, Experience">{{ $q->expected_guide }}</textarea>
-
-                                            <label class="olbl">Mapped Skills (Comma separated)</label>
-                                            <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Leadership, Communication">
-
-                                            <label class="olbl">Source Name</label>
-                                            <input class="oinp mb-3" type="text" name="source_name" value="{{ $q->source_name }}" placeholder="e.g. JobStreet Philippines">
-
-                                            <label class="olbl">Source URL</label>
-                                            <input class="oinp mb-3" type="url" name="source_url" value="{{ $q->source_url }}" placeholder="https://...">
-
-                                            <input type="hidden" name="source_type" value="{{ $q->source_type }}">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="bgrd btn px-4">Update</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Delete Question Modal -->
-                <div class="modal fade" id="deleteQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-                    <div class="modal-dialog">
-                        <div class="modal-content" style="border:1px solid var(--bd)">
-                            <form action="{{ route('admin.questions.destroy', $q->id) }}" method="POST">
-                                @csrf @method('DELETE')
-                                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                                    <h5 class="modal-title" style="color:var(--tx)">Delete Question</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p style="color:var(--tx)">Are you sure you want to delete this question?</p>
-                                </div>
-                                <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-danger px-4">Delete</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Preview Question Modal -->
-                <div class="modal fade" id="previewQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-                    <div class="modal-dialog">
-                        <div class="modal-content" style="border:1px solid var(--bd);background:var(--bg)">
-                            <div class="modal-header" style="border-bottom:none">
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                            </div>
-                            <div class="modal-body text-center p-4">
-                                <span class="badge bg-primary mb-3">{{ $q->category->title ?? 'General' }}</span>
-                                <h3 style="color:var(--tx);font-weight:700;line-height:1.5;margin-bottom:24px;">{{ $q->question_text }}</h3>
-                                
-                                <div class="d-flex justify-content-center gap-3 text-muted" style="font-size:.85rem">
-                                    <div><i class="fa-solid fa-layer-group me-1"></i> {{ $q->type }}</div>
-                                    <div><i class="fa-solid fa-gauge-high me-1"></i> {{ $q->difficulty }}</div>
-                                </div>
-
-                                @if($q->expected_guide)
-                                <div class="mt-4 p-3 text-start" style="background:var(--sf);border-radius:12px;border:1px solid var(--bd);">
-                                    <h6 style="color:var(--tx3);font-size:.8rem;text-transform:uppercase;">Expected Guide (Hidden from User)</h6>
-                                    <div style="color:var(--tx);font-size:.9rem;white-space:pre-wrap;">{{ $q->expected_guide }}</div>
-                                </div>
-                                @endif
-
-                                @if($q->source_name)
-                                <div class="mt-3 text-start" style="font-size:.8rem;color:var(--tx3);">
-                                    <i class="fa-solid fa-link me-1"></i>
-                                    Source:
-                                    @if($q->source_url)
-                                        <a href="{{ $q->source_url }}" target="_blank" rel="noopener" class="text-info">{{ $q->source_name }}</a>
-                                    @else
-                                        {{ $q->source_name }}
-                                    @endif
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 @endforeach
             </tbody>
         </table>
     </div>
 </div>
+
+@foreach($questions as $q)
+<!-- Edit Question Modal -->
+<div class="modal fade" id="editQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border:1px solid var(--bd)">
+            <form action="{{ route('admin.questions.update', $q->id) }}" method="POST">
+                @csrf @method('PUT')
+                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
+                    <h5 class="modal-title" style="color:var(--tx)">Edit Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="olbl">Category</label>
+                            <select class="oinp mb-3" name="category_id" required>
+                                @foreach($categories as $c)
+                                    <option value="{{ $c->id }}" {{ $c->id == $q->category_id ? 'selected' : '' }}>{{ $c->title }}</option>
+                                @endforeach
+                            </select>
+
+                            <label class="olbl">Type</label>
+                            <select class="oinp mb-3" name="type" required>
+                                <option value="Behavioral" {{ $q->type == 'Behavioral' ? 'selected' : '' }}>Behavioral</option>
+                                <option value="Situational" {{ $q->type == 'Situational' ? 'selected' : '' }}>Situational</option>
+                                <option value="Technical" {{ $q->type == 'Technical' ? 'selected' : '' }}>Technical</option>
+                                <option value="Personal" {{ $q->type == 'Personal' ? 'selected' : '' }}>Personal</option>
+                            </select>
+
+                            <label class="olbl">Difficulty</label>
+                            <select class="oinp mb-3" name="difficulty" required>
+                                <option value="Easy" {{ $q->difficulty == 'Easy' ? 'selected' : '' }}>Easy</option>
+                                <option value="Medium" {{ $q->difficulty == 'Medium' ? 'selected' : '' }}>Medium</option>
+                                <option value="Hard" {{ $q->difficulty == 'Hard' ? 'selected' : '' }}>Hard</option>
+                            </select>
+
+                            <label class="olbl">Status</label>
+                            <select class="oinp mb-3" name="status" required>
+                                <option value="active" {{ $q->status == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ $q->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="olbl">Question Text</label>
+                            <textarea class="oinp mb-3" name="question_text" rows="2" required>{{ $q->question_text }}</textarea>
+
+                            <label class="olbl">Expected Answer Guide (Helps AI)</label>
+                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. Education, Skills, Experience">{{ $q->expected_guide }}</textarea>
+
+                            <label class="olbl">Mapped Skills (Comma separated)</label>
+                            <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Leadership, Communication">
+
+                            <label class="olbl">Source Name</label>
+                            <input class="oinp mb-3" type="text" name="source_name" value="{{ $q->source_name }}" placeholder="e.g. JobStreet Philippines">
+
+                            <label class="olbl">Source URL</label>
+                            <input class="oinp mb-3" type="url" name="source_url" value="{{ $q->source_url }}" placeholder="https://...">
+
+                            <input type="hidden" name="source_type" value="{{ $q->source_type }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--bd)">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="bgrd btn px-4">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Question Modal -->
+<div class="modal fade" id="deleteQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border:1px solid var(--bd)">
+            <form action="{{ route('admin.questions.destroy', $q->id) }}" method="POST">
+                @csrf @method('DELETE')
+                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
+                    <h5 class="modal-title" style="color:var(--tx)">Delete Question</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                </div>
+                <div class="modal-body">
+                    <p style="color:var(--tx)">Are you sure you want to delete this question?</p>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--bd)">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger px-4">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Question Modal -->
+<div class="modal fade" id="previewQuestionModal{{ $q->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border:1px solid var(--bd);background:var(--bg)">
+            <div class="modal-header" style="border-bottom:none">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <span class="badge bg-primary mb-3">{{ $q->category->title ?? 'General' }}</span>
+                <h3 style="color:var(--tx);font-weight:700;line-height:1.5;margin-bottom:24px;">{{ $q->question_text }}</h3>
+
+                <div class="d-flex justify-content-center gap-3 text-muted" style="font-size:.85rem">
+                    <div><i class="fa-solid fa-layer-group me-1"></i> {{ $q->type }}</div>
+                    <div><i class="fa-solid fa-gauge-high me-1"></i> {{ $q->difficulty }}</div>
+                </div>
+
+                @if($q->expected_guide)
+                <div class="mt-4 p-3 text-start" style="background:var(--sf);border-radius:12px;border:1px solid var(--bd);">
+                    <h6 style="color:var(--tx3);font-size:.8rem;text-transform:uppercase;">Expected Guide (Hidden from User)</h6>
+                    <div style="color:var(--tx);font-size:.9rem;white-space:pre-wrap;">{{ $q->expected_guide }}</div>
+                </div>
+                @endif
+
+                @if($q->source_name)
+                <div class="mt-3 text-start" style="font-size:.8rem;color:var(--tx3);">
+                    <i class="fa-solid fa-link me-1"></i>
+                    Source:
+                    @if($q->source_url)
+                        <a href="{{ $q->source_url }}" target="_blank" rel="noopener" class="text-info">{{ $q->source_name }}</a>
+                    @else
+                        {{ $q->source_name }}
+                    @endif
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endforeach
 
 <!-- Add Modal -->
 <div class="modal fade" id="addQuestionModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">

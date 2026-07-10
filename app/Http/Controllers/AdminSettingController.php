@@ -13,7 +13,15 @@ class AdminSettingController extends Controller
     public function index()
     {
         // Fetch all settings and pluck into key => value array for easy access in view
-        $settings = Setting::pluck('value', 'key')->toArray();
+        $settings = Setting::all()
+            ->mapWithKeys(function (Setting $setting) {
+                if ($setting->type === 'boolean') {
+                    return [$setting->key => Setting::getVal($setting->key) ? 'true' : 'false'];
+                }
+
+                return [$setting->key => $setting->value];
+            })
+            ->toArray();
 
         return view('admin.settings', compact('settings'));
     }
@@ -28,8 +36,41 @@ class AdminSettingController extends Controller
             'system_favicon' => 'nullable|file|mimes:ico,png,jpg,jpeg,webp,svg|max:1024',
         ]);
 
+        $booleanKeys = [
+            'acc_registration',
+            'acc_verify_email',
+            'int_follow_up',
+            'int_ai_eval',
+            'vr_recording',
+            'vr_stt',
+            'vr_confidence',
+            'vr_filler',
+            'aic_enable',
+            'aic_sample',
+            'aic_follow',
+            'aic_recommend',
+            'll_modules',
+            'll_quizzes',
+            'll_certs',
+            'll_achievements',
+            'notif_sys',
+            'notif_email',
+            'notif_reminders',
+            'notif_achieve',
+            'sec_strong_pass',
+            'sec_2fa',
+        ];
+
+        foreach (range(0, 3) as $index) {
+            $booleanKeys[] = "role_user_perm_{$index}";
+        }
+
         // Validate request depending on what's submitted
         $data = $request->except(['_token', '_method', 'system_logo', 'system_favicon']);
+
+        foreach ($booleanKeys as $key) {
+            $data[$key] = $request->boolean($key) ? 'true' : 'false';
+        }
 
         foreach ($data as $key => $value) {
             // Group and Type can be determined by the input key prefix or we just default them

@@ -257,148 +257,6 @@
                                 </div>
                             </td>
                         </tr>
-
-                        <!-- Edit Learning Game Modal -->
-                        <div class="modal fade" id="editGameModal{{ $level->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
-                            <div class="modal-dialog modal-xl">
-                                <div class="modal-content" style="border:1px solid var(--bd)">
-                                    <form action="{{ route('admin.game.update', $level->id) }}" method="POST">
-                                        @csrf @method('PUT')
-                                        <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                                            <h5 class="modal-title" style="color:var(--tx)">Edit Learning Game: Lvl {{ $level->level_number }}</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
-                                        </div>
-                                        <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
-                                            <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Core Settings</h6>
-                                            <div class="row g-3 mb-3">
-                                                <div class="col-md-2">
-                                                    <label class="olbl">Level #</label>
-                                                    <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" required>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Personal Improvement</label>
-                                                    <select class="oinp w-100" name="category_id" required>
-                                                        @foreach($categories as $cat)
-                                                            <option value="{{ $cat->id }}" {{ $level->category_id == $cat->id ? 'selected' : '' }}>{{ $cat->title }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="olbl">Title</label>
-                                                    <input class="oinp w-100" type="text" name="title" value="{{ $level->title }}" required>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Improvement Goal</label>
-                                                    <input class="oinp w-100" type="text" name="target_position" value="{{ $level->target_position }}" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="row g-3 mb-3">
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Difficulty</label>
-                                                    <select class="oinp w-100" name="difficulty" required>
-                                                        <option value="beginner" {{ $level->difficulty == 'beginner' ? 'selected' : '' }}>Beginner</option>
-                                                        <option value="intermediate" {{ $level->difficulty == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                                                        <option value="advanced" {{ $level->difficulty == 'advanced' ? 'selected' : '' }}>Advanced</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Required Score (%)</label>
-                                                    <input class="oinp w-100" type="number" name="required_score" value="{{ $level->required_score }}" min="0" max="100" required>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Prerequisite Level</label>
-                                                    <select class="oinp w-100" name="prerequisite_level_id">
-                                                        <option value="">None (Always Unlocked)</option>
-                                                        @foreach($allLevels as $al)
-                                                            @if($al->id !== $level->id)
-                                                                <option value="{{ $al->id }}" {{ $level->prerequisite_level_id == $al->id ? 'selected' : '' }}>Level {{ $al->level_number }}: {{ $al->title }}</option>
-                                                            @endif
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3 d-flex align-items-end">
-                                                    <div class="form-check mb-2">
-                                                        <input class="form-check-input" type="checkbox" name="is_hidden" value="1" id="isHiddenEdit{{ $level->id }}" {{ $level->is_hidden ? 'checked' : '' }}>
-                                                        <label class="form-check-label text-white" for="isHiddenEdit{{ $level->id }}">
-                                                            Hidden until unlocked
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label class="olbl">Description</label>
-                                                <textarea class="oinp w-100" name="description" rows="2">{{ $level->description }}</textarea>
-                                            </div>
-                                            <div class="mb-4">
-                                                <label class="olbl">Questions (For the user to answer)</label>
-                                                <textarea class="oinp w-100" name="mission_text" rows="2">{{ $level->mission_text }}</textarea>
-                                            </div>
-
-                                            <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>
-                                            <div class="row g-3 mb-3">
-                                                <div class="col-md-4">
-                                                    <label class="olbl">AI Persona (e.g. Supportive Coach)</label>
-                                                    <input class="oinp w-100" type="text" name="ai_persona" value="{{ $level->ai_persona }}">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="olbl">Time Limit (Seconds)</label>
-                                                    <input class="oinp w-100" type="number" name="time_limit_seconds" value="{{ $level->time_limit_seconds }}" placeholder="e.g. 120 (Leave empty for none)">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="olbl">Target Tone</label>
-                                                    <input class="oinp w-100" type="text" name="target_tone" value="{{ $level->target_tone }}" placeholder="e.g. Confident, Empathetic">
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="olbl">Banned Words (Comma separated)</label>
-                                                <input class="oinp w-100" type="text" name="banned_words" value="{{ $level->banned_words }}" placeholder="e.g. um, like, basically">
-                                            </div>
-                                            <div class="mb-4">
-                                                <label class="olbl">Custom AI Prompt (Hidden instructions)</label>
-                                                <textarea class="oinp w-100" name="ai_custom_prompt" rows="2" placeholder="e.g. Interrupt the user at least once.">{{ $level->ai_custom_prompt }}</textarea>
-                                            </div>
-
-                                            <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Rewards & Economy</h6>
-                                            <div class="row g-3 mb-3">
-                                                <div class="col-md-2">
-                                                    <label class="olbl">Energy Cost</label>
-                                                    <input class="oinp w-100" type="number" name="energy_cost" value="{{ $level->energy_cost }}" min="0" required>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="olbl">General XP Reward</label>
-                                                    <input class="oinp w-100" type="number" name="xp_reward" value="{{ $level->xp_reward }}" min="0" required>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Custom Badge Name</label>
-                                                    <input class="oinp w-100" type="text" name="custom_badge_name" value="{{ $level->custom_badge_name }}" placeholder="e.g. Master Negotiator">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="olbl">Bonus Skill Type</label>
-                                                    <select class="oinp w-100" name="skill_xp_type">
-                                                        <option value="">None</option>
-                                                        <option value="Leadership" {{ $level->skill_xp_type == 'Leadership' ? 'selected' : '' }}>Leadership</option>
-                                                        <option value="Communication" {{ $level->skill_xp_type == 'Communication' ? 'selected' : '' }}>Communication</option>
-                                                        <option value="Technical" {{ $level->skill_xp_type == 'Technical' ? 'selected' : '' }}>Technical</option>
-                                                        <option value="Problem Solving" {{ $level->skill_xp_type == 'Problem Solving' ? 'selected' : '' }}>Problem Solving</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="olbl">Bonus Skill XP</label>
-                                                    <input class="oinp w-100" type="number" name="skill_xp_amount" value="{{ $level->skill_xp_amount }}" min="0">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer" style="border-top:1px solid var(--bd)">
-                                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="bgrd btn px-4">Save Changes</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
                     @empty
                         <tr>
                             <td colspan="6" class="text-center py-5" style="color:var(--tx3);">
@@ -416,6 +274,149 @@
     @endforeach
 </div>
 </div>
+
+@foreach($levels as $level)
+<!-- Edit Learning Game Modal -->
+<div class="modal fade" id="editGameModal{{ $level->id }}" tabindex="-1" style="--bs-modal-bg:var(--sf)">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content" style="border:1px solid var(--bd)">
+            <form action="{{ route('admin.game.update', $level->id) }}" method="POST">
+                @csrf @method('PUT')
+                <div class="modal-header" style="border-bottom:1px solid var(--bd)">
+                    <h5 class="modal-title" style="color:var(--tx)">Edit Learning Game: Lvl {{ $level->level_number }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
+                </div>
+                <div class="modal-body" style="max-height: 75vh; overflow-y: auto;">
+                    <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Core Settings</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-2">
+                            <label class="olbl">Level #</label>
+                            <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="olbl">Personal Improvement</label>
+                            <select class="oinp w-100" name="category_id" required>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}" {{ $level->category_id == $cat->id ? 'selected' : '' }}>{{ $cat->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="olbl">Title</label>
+                            <input class="oinp w-100" type="text" name="title" value="{{ $level->title }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="olbl">Improvement Goal</label>
+                            <input class="oinp w-100" type="text" name="target_position" value="{{ $level->target_position }}" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="olbl">Difficulty</label>
+                            <select class="oinp w-100" name="difficulty" required>
+                                <option value="beginner" {{ $level->difficulty == 'beginner' ? 'selected' : '' }}>Beginner</option>
+                                <option value="intermediate" {{ $level->difficulty == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
+                                <option value="advanced" {{ $level->difficulty == 'advanced' ? 'selected' : '' }}>Advanced</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="olbl">Required Score (%)</label>
+                            <input class="oinp w-100" type="number" name="required_score" value="{{ $level->required_score }}" min="0" max="100" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="olbl">Prerequisite Level</label>
+                            <select class="oinp w-100" name="prerequisite_level_id">
+                                <option value="">None (Always Unlocked)</option>
+                                @foreach($allLevels as $al)
+                                    @if($al->id !== $level->id)
+                                        <option value="{{ $al->id }}" {{ $level->prerequisite_level_id == $al->id ? 'selected' : '' }}>Level {{ $al->level_number }}: {{ $al->title }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="is_hidden" value="1" id="isHiddenEdit{{ $level->id }}" {{ $level->is_hidden ? 'checked' : '' }}>
+                                <label class="form-check-label text-white" for="isHiddenEdit{{ $level->id }}">
+                                    Hidden until unlocked
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="olbl">Description</label>
+                        <textarea class="oinp w-100" name="description" rows="2">{{ $level->description }}</textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="olbl">Questions (For the user to answer)</label>
+                        <textarea class="oinp w-100" name="mission_text" rows="2">{{ $level->mission_text }}</textarea>
+                    </div>
+
+                    <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="olbl">AI Persona (e.g. Supportive Coach)</label>
+                            <input class="oinp w-100" type="text" name="ai_persona" value="{{ $level->ai_persona }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="olbl">Time Limit (Seconds)</label>
+                            <input class="oinp w-100" type="number" name="time_limit_seconds" value="{{ $level->time_limit_seconds }}" placeholder="e.g. 120 (Leave empty for none)">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="olbl">Target Tone</label>
+                            <input class="oinp w-100" type="text" name="target_tone" value="{{ $level->target_tone }}" placeholder="e.g. Confident, Empathetic">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="olbl">Banned Words (Comma separated)</label>
+                        <input class="oinp w-100" type="text" name="banned_words" value="{{ $level->banned_words }}" placeholder="e.g. um, like, basically">
+                    </div>
+                    <div class="mb-4">
+                        <label class="olbl">Custom AI Prompt (Hidden instructions)</label>
+                        <textarea class="oinp w-100" name="ai_custom_prompt" rows="2" placeholder="e.g. Interrupt the user at least once.">{{ $level->ai_custom_prompt }}</textarea>
+                    </div>
+
+                    <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Rewards & Economy</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-2">
+                            <label class="olbl">Energy Cost</label>
+                            <input class="oinp w-100" type="number" name="energy_cost" value="{{ $level->energy_cost }}" min="0" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="olbl">General XP Reward</label>
+                            <input class="oinp w-100" type="number" name="xp_reward" value="{{ $level->xp_reward }}" min="0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="olbl">Custom Badge Name</label>
+                            <input class="oinp w-100" type="text" name="custom_badge_name" value="{{ $level->custom_badge_name }}" placeholder="e.g. Master Negotiator">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="olbl">Bonus Skill Type</label>
+                            <select class="oinp w-100" name="skill_xp_type">
+                                <option value="">None</option>
+                                <option value="Leadership" {{ $level->skill_xp_type == 'Leadership' ? 'selected' : '' }}>Leadership</option>
+                                <option value="Communication" {{ $level->skill_xp_type == 'Communication' ? 'selected' : '' }}>Communication</option>
+                                <option value="Technical" {{ $level->skill_xp_type == 'Technical' ? 'selected' : '' }}>Technical</option>
+                                <option value="Problem Solving" {{ $level->skill_xp_type == 'Problem Solving' ? 'selected' : '' }}>Problem Solving</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="olbl">Bonus Skill XP</label>
+                            <input class="oinp w-100" type="number" name="skill_xp_amount" value="{{ $level->skill_xp_amount }}" min="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--bd)">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="bgrd btn px-4">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
 
 <!-- Auto-Generate Game Modal -->
 <div class="modal fade" id="generateGameModal" tabindex="-1" style="--bs-modal-bg:var(--sf)">

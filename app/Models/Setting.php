@@ -57,10 +57,14 @@ class Setting extends Model
             $value = json_encode($value);
         }
 
+        if ($type === 'boolean') {
+            $value = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+        }
+
         return self::updateOrCreate(
             ['key' => $key],
             [
-                'value' => (string) $value,
+                'value' => is_null($value) ? null : (string) $value,
                 'group' => $group,
                 'type' => $type
             ]

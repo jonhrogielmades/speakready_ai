@@ -108,7 +108,7 @@
 
                         <div class="mb-3">
                             <label class="form-label small" style="color: var(--tx3);">STAR Analysis (JSON format)</label>
-                            <textarea name="star_analysis" class="form-control font-monospace" rows="4" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);">{{ json_encode($answer->star_analysis) ?? '{}' }}</textarea>
+                            <textarea name="star_analysis" class="form-control font-monospace" rows="4" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);">{{ json_encode($answer->star_analysis ?? []) }}</textarea>
                             <div class="form-text" style="color: var(--tx3);">Verify Situation, Task, Action, Result parameters.</div>
                         </div>
 

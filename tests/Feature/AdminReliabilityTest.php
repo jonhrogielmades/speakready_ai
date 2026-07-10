@@ -11,6 +11,7 @@ use App\Models\LearningModule;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -241,6 +242,141 @@ class AdminReliabilityTest extends TestCase
             ->assertSee('Upload')
             ->assertSee('AI Generate Quiz')
             ->assertSee('Confidence Sprint');
+    }
+
+    public function test_admin_settings_can_persist_disabled_switches(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.settings.update'), [
+                'site_name' => 'SpeakReady',
+                'acc_registration' => 'true',
+                'sec_2fa' => 'true',
+            ])
+            ->assertRedirect(route('admin.settings.index'));
+
+        $this->assertTrue(Setting::getVal('acc_registration'));
+        $this->assertTrue(Setting::getVal('sec_2fa'));
+        $this->assertFalse(Setting::getVal('int_follow_up'));
+
+        $this->actingAs($admin)
+            ->post(route('admin.settings.update'), [
+                'site_name' => 'SpeakReady',
+            ])
+            ->assertRedirect(route('admin.settings.index'));
+
+        $this->assertFalse(Setting::getVal('acc_registration'));
+        $this->assertFalse(Setting::getVal('sec_2fa'));
+    }
+
+    public function test_admin_users_export_respects_current_filters(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active', 'email' => 'admin@example.com']);
+        $activeUser = User::factory()->create(['is_admin' => false, 'status' => 'active', 'email' => 'active@example.com']);
+        $inactiveUser = User::factory()->create(['is_admin' => false, 'status' => 'inactive', 'email' => 'inactive@example.com']);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.users.export', ['role' => 'user', 'status' => 'active']));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString($activeUser->email, $csv);
+        $this->assertStringNotContainsString($inactiveUser->email, $csv);
+        $this->assertStringNotContainsString($admin->email, $csv);
+    }
+
+    public function test_users_page_broadcast_form_sends_notifications(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee(route('admin.notifications.store'), false)
+            ->assertSee('name="title"', false)
+            ->assertSee('name="message"', false);
+
+        $this->actingAs($admin)
+            ->post(route('admin.notifications.store'), [
+                'title' => 'Platform Update',
+                'message' => 'A new practice pack is available.',
+                'type' => 'info',
+                'target' => 'all',
+            ])
+            ->assertRedirect(route('admin.notifications.index'));
+
+        $this->assertDatabaseHas('announcements', [
+            'title' => 'Platform Update',
+            'target' => 'all',
+            'sent_by' => $admin->id,
+        ]);
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_id' => $user->id,
+            'notifiable_type' => User::class,
+        ]);
+    }
+
+    public function test_feedback_audit_forms_accept_their_page_payloads(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Describe a difficult project.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I organized the work and shipped the project.',
+            'ai_feedback' => 'Clear feedback.',
+            'score' => 72,
+            'audit_status' => 'under_review',
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.feedback.status', $answer), [
+                'audit_status' => 'flagged',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('interview_answers', [
+            'id' => $answer->id,
+            'audit_status' => 'flagged',
+            'flagged_reason' => 'Flagged by admin review.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.feedback.show', $answer))
+            ->assertOk()
+            ->assertSee('name="star_analysis"', false)
+            ->assertSee('[]', false);
+
+        $this->actingAs($admin)
+            ->post(route('admin.feedback.verify', $answer), [
+                'clarity_score' => 80,
+                'relevance_score' => 81,
+                'confidence_score' => 82,
+                'grammar_score' => 83,
+                'star_analysis' => '{"situation":"clear","result":"measurable"}',
+                'audit_status' => 'approved',
+                'notes' => 'Verified after review.',
+            ])
+            ->assertRedirect(route('admin.feedback.show', $answer));
+
+        $this->assertSame([
+            'situation' => 'clear',
+            'result' => 'measurable',
+        ], $answer->refresh()->star_analysis);
+        $this->assertSame('approved', $answer->audit_status);
     }
 
     private function category(array $overrides = []): Category
