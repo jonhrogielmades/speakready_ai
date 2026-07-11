@@ -3,7 +3,7 @@
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
                <div class="landing-section-heading mb-5 rv">
-                  <span class="slbl">Benefits</span>
+                  <span class="slbl">Interview Categories</span>
                   <h2 class="stitle">Why use <span class="gt">SpeakReady AI?</span></h2>
                </div>
                <div class="row g-5">

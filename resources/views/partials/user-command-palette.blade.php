@@ -54,7 +54,7 @@
 
                 <a id="gqn-destination-benefits" class="ucp-result" href="#benefits" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-award" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Benefits</strong><small>Discover what focused practice unlocks</small></span>
+                    <span class="ucp-result-copy"><strong>Interview Categories</strong><small>Explore practice paths by interview type</small></span>
                     <span class="ucp-result-group">Explore</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

@@ -354,6 +354,363 @@
             }
          }
 
+         .ui-showcase {
+            display: block;
+            width: 100%;
+         }
+
+         .ui-device {
+            overflow: hidden;
+            background: var(--sf);
+            border: 1px solid var(--bd2);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+         }
+
+         .ui-device-mobile {
+            max-width: 318px;
+            margin-inline: auto;
+            border-radius: 14px;
+         }
+
+         .ui-device-desktop {
+            width: min(100%, 1280px);
+            margin-inline: auto;
+            border-radius: 14px;
+         }
+
+         .ui-device-bar {
+            height: 33px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px;
+            background: var(--bg3);
+            border-bottom: 1px solid var(--bd2);
+         }
+
+         .ui-device-title {
+            min-width: 0;
+            flex: 1;
+            max-width: 360px;
+            height: 20px;
+            margin-left: 8px;
+            padding: 0 12px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            color: var(--tx3);
+            background: rgba(148, 163, 184, 0.12);
+            border: 1px solid var(--bd);
+            font-size: 0.64rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+         }
+
+         .ui-device-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+         }
+
+         .ui-dashboard {
+            padding: 10px;
+            color: var(--tx);
+         }
+
+         .ui-dashboard-desktop {
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            gap: 20px;
+            padding: 24px;
+         }
+
+         .ui-sidebar {
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+         }
+
+         .ui-side-title {
+            margin-bottom: 14px;
+            color: var(--tx3);
+            font-size: 0.63rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+         }
+
+         .ui-side-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            min-height: 38px;
+            margin-bottom: 8px;
+            padding: 9px 10px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--tx2);
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-align: left;
+         }
+
+         .ui-side-item.active {
+            color: var(--tx);
+            background: rgba(59, 130, 246, 0.16);
+            box-shadow: inset 3px 0 0 #3b82f6;
+         }
+
+         .ui-main {
+            min-width: 0;
+         }
+
+         .ui-main-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+         }
+
+         .ui-main-title {
+            margin: 0;
+            color: var(--tx);
+            font-size: 1.2rem;
+            font-weight: 800;
+         }
+
+         .ui-main-subtitle {
+            margin: 3px 0 0;
+            color: var(--tx3);
+            font-size: 0.72rem;
+            font-weight: 600;
+         }
+
+         .ui-main-chip {
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.16);
+            color: #2563eb;
+            font-size: 0.68rem;
+            font-weight: 800;
+         }
+
+         .ui-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+         }
+
+         .ui-device-desktop .ui-stat-grid {
+            gap: 12px;
+            margin-bottom: 14px;
+         }
+
+         .ui-device-mobile .ui-stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-bottom: 14px;
+         }
+
+         .ui-stat {
+            min-height: 70px;
+            padding: 11px;
+            border-radius: 8px;
+            background: var(--bg3);
+            border: 1px solid var(--bd2);
+            box-shadow: 0 2px 0 #38bdf8;
+         }
+
+         .ui-device-desktop .ui-stat {
+            min-height: 92px;
+            padding: 15px;
+            box-shadow: 0 3px 0 rgba(56, 189, 248, 0.9);
+         }
+
+         .ui-stat-value {
+            color: var(--tx);
+            font-size: 1.28rem;
+            font-weight: 800;
+            line-height: 1.05;
+         }
+
+         .ui-device-desktop .ui-stat-value {
+            font-size: 1.62rem;
+         }
+
+         .ui-device-desktop .ui-stat-label {
+            font-size: 0.74rem;
+         }
+
+         .ui-stat-value.accent {
+            color: #2563eb;
+         }
+
+         .ui-stat-label {
+            margin-top: 6px;
+            color: var(--tx3);
+            font-size: 0.66rem;
+            line-height: 1.15;
+         }
+
+         .ui-stat-note {
+            margin-top: 3px;
+            color: #10b981;
+            font-size: 0.64rem;
+            font-weight: 800;
+         }
+
+         .ui-panel-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.88fr);
+            gap: 12px;
+         }
+
+         .ui-device-mobile .ui-panel-grid {
+            grid-template-columns: 1fr;
+         }
+
+         .ui-panel {
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg3);
+            border: 1px solid var(--bd2);
+         }
+
+         .ui-device-desktop .ui-panel {
+            min-height: 168px;
+            padding: 16px;
+         }
+
+         .ui-panel-title {
+            margin-bottom: 10px;
+            color: var(--tx3);
+            font-size: 0.72rem;
+            font-weight: 800;
+         }
+
+         .ui-bars {
+            display: flex;
+            align-items: end;
+            gap: 6px;
+            height: 72px;
+         }
+
+         .ui-device-desktop .ui-bars {
+            gap: 9px;
+            height: 104px;
+         }
+
+         .ui-bars span {
+            flex: 1;
+            min-width: 0;
+            border-radius: 4px 4px 0 0;
+            background: #6097ee;
+         }
+
+         .ui-axis {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color: var(--tx3);
+            font-size: 0.61rem;
+         }
+
+         .ui-chat {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+         }
+
+         .ui-pulse {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 6px;
+            border-radius: 999px;
+            background: #3b82f6;
+            box-shadow: 0 0 7px #3b82f6;
+            animation: bpls 2s infinite;
+         }
+
+         .ui-bubble {
+            max-width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            line-height: 1.35;
+         }
+
+         .ui-device-desktop .ui-bubble {
+            font-size: 0.78rem;
+         }
+
+         .ui-bubble.user {
+            align-self: flex-end;
+            background: #1495ee;
+            color: #fff;
+            font-weight: 700;
+         }
+
+         .ui-bubble.ai {
+            background: rgba(99, 102, 241, 0.16);
+            color: var(--tx2);
+            border: 1px solid rgba(129, 140, 248, 0.24);
+         }
+
+         .lm .ui-device {
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+         }
+
+         .lm .ui-main-chip {
+            color: #2563eb;
+         }
+
+         @media (max-width: 991.98px) {
+            .ui-device-desktop {
+               display: none;
+            }
+         }
+
+         @media (min-width: 992px) {
+            .ui-showcase {
+               width: min(calc(100vw - 32px), 1300px);
+               margin-left: 50%;
+               transform: translateX(-50%);
+            }
+
+            .ui-device-mobile {
+               display: none;
+            }
+         }
+
+         @media (min-width: 992px) and (max-width: 1199.98px) {
+            .ui-dashboard-desktop {
+               grid-template-columns: 190px minmax(0, 1fr);
+               gap: 14px;
+               padding: 18px;
+            }
+
+            .ui-device-desktop .ui-stat {
+               padding: 13px;
+            }
+
+            .ui-panel-grid {
+               grid-template-columns: minmax(0, 1.25fr) minmax(230px, 0.85fr);
+            }
+         }
+
+         @media (max-width: 575.98px) {
+            .ui-device-mobile {
+               max-width: 100%;
+            }
+         }
+
          @media (max-width: 360px) {
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
                gap: 7px !important;
@@ -463,7 +820,7 @@
                      <a href="#" class="nav-link">Home</a>
                      <a href="#features" class="nav-link">Features</a>
                      <a href="#how" class="nav-link">How It Works</a>
-                     <a href="#benefits" class="nav-link">Benefits</a>
+                     <a href="#benefits" class="nav-link">Interview Categories</a>
                      <a href="#developers" class="nav-link">Developers</a>
                      <a href="#faq" class="nav-link">FAQ</a>
                      <a href="#contact" class="nav-link">Contact Us</a>
@@ -562,67 +919,112 @@
                    </div>
                 </div>
 
+                @php
+                   $previewReadiness = number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0);
+                   $previewInterviews = number_format(\App\Models\InterviewSession::count() ?: 6);
+                   $previewClarity = number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0);
+                   $previewGrammar = number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0);
+                @endphp
                 <div class="row justify-content-center mt-3 mb-3">
-                  <div class="col-lg-11 adi">
-                     <div class="dwrap">
-                        <div class="dtbar"><span class="dd" style="background:#ff5f57"></span><span class="dd" style="background:#ffbd2e"></span><span class="dd" style="background:#28c840"></span><span class="ms-auto me-auto" style="font-size:.76rem;color:var(--tx3)"></span></div>
-                        <div class="dgrid">
-                           <div class="dside">
-                              <div style="font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);padding:0 10px 10px;font-weight:700">Interview Hub</div>
-                              <button class="dsi on"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
-                              <button class="dsi"><i class="fa-solid fa-video"></i> Mock Sessions</button>
-                              <button class="dsi"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
-                              <button class="dsi"><i class="fa-solid fa-graduation-cap"></i> Learning Lab</button>
+                  <div class="col-lg-12 adi">
+                     <div class="ui-showcase">
+                        <div class="ui-device ui-device-mobile" aria-label="Mobile UI preview">
+                           <div class="ui-device-bar">
+                              <span class="ui-device-dot" style="background:#ff5f57"></span>
+                              <span class="ui-device-dot" style="background:#ffbd2e"></span>
+                              <span class="ui-device-dot" style="background:#28c840"></span>
                            </div>
-                           <div class="p-3">
-                              <div class="row g-2 mb-3">
-                                 <div class="col-6 col-sm-3">
-                                    <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700" class="gt">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0) }}%</div>
-                                       <div style="font-size:.67rem;color:var(--tx3)">Readiness Score</div>
-                                       <div style="font-size:.67rem;color:#34d399;font-weight:600"><i class="fa-solid fa-caret-up me-1"></i>Avg</div>
-                                    </div>
+                           <div class="ui-dashboard">
+                              <div class="ui-stat-grid">
+                                 <div class="ui-stat">
+                                    <div class="ui-stat-value accent">{{ $previewReadiness }}%</div>
+                                    <div class="ui-stat-label">Readiness Score</div>
+                                    <div class="ui-stat-note"><i class="fa-solid fa-caret-up"></i> Avg</div>
                                  </div>
-                                 <div class="col-6 col-sm-3">
-                                    <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\InterviewSession::count() ?? 12) }}</div>
-                                       <div style="font-size:.67rem;color:var(--tx3)">Interviews Done</div>
-                                    </div>
+                                 <div class="ui-stat">
+                                    <div class="ui-stat-value">{{ $previewInterviews }}</div>
+                                    <div class="ui-stat-label">Interviews Done</div>
                                  </div>
-                                 <div class="col-6 col-sm-3">
-                                    <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0) }}%</div>
-                                       <div style="font-size:.67rem;color:var(--tx3)">Clarity Score</div>
-                                    </div>
+                                 <div class="ui-stat">
+                                    <div class="ui-stat-value">{{ $previewClarity }}%</div>
+                                    <div class="ui-stat-label">Clarity Score</div>
                                  </div>
-                                 <div class="col-6 col-sm-3">
-                                    <div class="stpill">
-                                       <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0) }}%</div>
-                                       <div style="font-size:.67rem;color:var(--tx3)">Grammar Score</div>
-                                    </div>
+                                 <div class="ui-stat">
+                                    <div class="ui-stat-value">{{ $previewGrammar }}%</div>
+                                    <div class="ui-stat-label">Grammar Score</div>
                                  </div>
                               </div>
-                              <div class="row g-2">
-                                 <div class="col-sm-7">
-                                    <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:14px">
-                                       <div style="font-size:.73rem;color:var(--tx3);margin-bottom:10px;font-weight:600"><i class="fa-solid fa-chart-bar me-1"></i>Performance Trend</div>
-                                       <div style="display:flex;align-items:flex-end;gap:5px;height:76px">
-                                          <div class="bbar" style="height:45%"></div>
-                                          <div class="bbar" style="height:55%"></div>
-                                          <div class="bbar" style="height:60%"></div>
-                                          <div class="bbar" style="height:70%"></div>
-                                          <div class="bbar" style="height:75%"></div>
-                                          <div class="bbar" style="height:85%"></div>
-                                          <div class="bbar" style="height:92%"></div>
-                                       </div>
-                                       <div class="d-flex justify-content-between mt-2" style="font-size:.62rem;color:var(--tx3)"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+                              <div class="ui-panel-grid">
+                                 <div class="ui-panel">
+                                    <div class="ui-panel-title"><i class="fa-solid fa-chart-bar me-1"></i>Performance Trend</div>
+                                    <div class="ui-bars" aria-hidden="true">
+                                       <span style="height:45%"></span><span style="height:55%"></span><span style="height:60%"></span><span style="height:70%"></span><span style="height:75%"></span><span style="height:85%"></span><span style="height:92%"></span>
+                                    </div>
+                                    <div class="ui-axis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+                                 </div>
+                                 <div class="ui-panel ui-chat">
+                                    <div class="ui-panel-title"><span class="ui-pulse"></span>AI Feedback</div>
+                                    <div class="ui-bubble user">Tell me about a challenge you faced.</div>
+                                    <div class="ui-bubble ai"><strong>Great STAR method usage!</strong> Your response was structured perfectly, but try reducing filler words like 'um'.</div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+
+                        <div class="ui-device ui-device-desktop" aria-label="Desktop UI preview">
+                           <div class="ui-device-bar">
+                              <span class="ui-device-dot" style="background:#ff5f57"></span>
+                              <span class="ui-device-dot" style="background:#ffbd2e"></span>
+                              <span class="ui-device-dot" style="background:#28c840"></span>
+                              <span class="ui-device-title">speakready.ai/dashboard</span>
+                           </div>
+                           <div class="ui-dashboard ui-dashboard-desktop">
+                              <div class="ui-sidebar">
+                                 <div class="ui-side-title">Interview Hub</div>
+                                 <button class="ui-side-item active" type="button"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
+                                 <button class="ui-side-item" type="button"><i class="fa-solid fa-video"></i> Sessions</button>
+                                 <button class="ui-side-item" type="button"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
+                                 <button class="ui-side-item" type="button"><i class="fa-solid fa-graduation-cap"></i> Learning</button>
+                              </div>
+                              <div class="ui-main">
+                                 <div class="ui-main-head">
+                                    <div>
+                                       <h3 class="ui-main-title">Readiness Dashboard</h3>
+                                       <p class="ui-main-subtitle">Live interview analytics, progress, and AI coaching feedback.</p>
+                                    </div>
+                                    <span class="ui-main-chip">Desktop UI</span>
+                                 </div>
+                                 <div class="ui-stat-grid">
+                                    <div class="ui-stat">
+                                       <div class="ui-stat-value accent">{{ $previewReadiness }}%</div>
+                                       <div class="ui-stat-label">Readiness Score</div>
+                                       <div class="ui-stat-note"><i class="fa-solid fa-caret-up"></i> Avg</div>
+                                    </div>
+                                    <div class="ui-stat">
+                                       <div class="ui-stat-value">{{ $previewInterviews }}</div>
+                                       <div class="ui-stat-label">Interviews Done</div>
+                                    </div>
+                                    <div class="ui-stat">
+                                       <div class="ui-stat-value">{{ $previewClarity }}%</div>
+                                       <div class="ui-stat-label">Clarity Score</div>
+                                    </div>
+                                    <div class="ui-stat">
+                                       <div class="ui-stat-value">{{ $previewGrammar }}%</div>
+                                       <div class="ui-stat-label">Grammar Score</div>
                                     </div>
                                  </div>
-                                 <div class="col-sm-5">
-                                    <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:12px;height:100%;display:flex;flex-direction:column;gap:8px">
-                                       <div style="font-size:.71rem;color:var(--tx3);font-weight:600"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pur);box-shadow:0 0 6px var(--pur);margin-right:6px;animation:bpls 2s infinite"></span>AI Feedback</div>
-                                       <div class="cbbl cbus">Tell me about a challenge you faced.</div>
-                                       <div class="cbbl cbai"><strong>Great STAR method usage!</strong> Your response was structured perfectly, but try reducing filler words like 'um'.</div>
+                                 <div class="ui-panel-grid">
+                                    <div class="ui-panel">
+                                       <div class="ui-panel-title"><i class="fa-solid fa-chart-bar me-1"></i>Performance Trend</div>
+                                       <div class="ui-bars" aria-hidden="true">
+                                          <span style="height:45%"></span><span style="height:55%"></span><span style="height:60%"></span><span style="height:70%"></span><span style="height:75%"></span><span style="height:85%"></span><span style="height:92%"></span>
+                                       </div>
+                                       <div class="ui-axis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
+                                    </div>
+                                    <div class="ui-panel ui-chat">
+                                       <div class="ui-panel-title"><span class="ui-pulse"></span>AI Feedback</div>
+                                       <div class="ui-bubble user">Tell me about a challenge you faced.</div>
+                                       <div class="ui-bubble ai"><strong>Great STAR method usage!</strong> Your response was structured perfectly, but try reducing filler words like 'um'.</div>
                                     </div>
                                  </div>
                               </div>
@@ -846,45 +1248,12 @@
             </div>
          </section>
 
-         <!-- BENEFITS & INTERVIEW CATEGORIES -->
+         <!-- INTERVIEW CATEGORIES -->
          <section id="benefits" class="sp position-relative">
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
-               <div class="landing-section-heading mb-5 rv">
-                  <span class="slbl">Benefits</span>
-                  <h2 class="stitle">Why use <span class="gt">SpeakReady AI?</span></h2>
-               </div>
-               <div class="row g-5">
-                  <div class="col-lg-5 rv">
-                     <ul class="list-unstyled d-flex flex-column gap-3">
-                        <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-comments"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Improve Communication Skills</h4><p style="font-size:.85rem;color:var(--tx2)">Enhance how you articulate your thoughts and experiences.</p></div>
-                        </li>
-                        <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Build Interview Confidence</h4><p style="font-size:.85rem;color:var(--tx2)">Overcome anxiety through repeated, low-stakes practice.</p></div>
-                        </li>
-                        <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-clock"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Practice Anytime, Anywhere</h4><p style="font-size:.85rem;color:var(--tx2)">24/7 access to your personal AI interview coach.</p></div>
-                        </li>
-                        <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-bolt"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Receive Personalized Feedback</h4><p style="font-size:.85rem;color:var(--tx2)">Actionable insights specific to your responses.</p></div>
-                        </li>
-                        <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-book-open-reader"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Learn Professional Techniques</h4><p style="font-size:.85rem;color:var(--tx2)">Master the STAR method and behavioral strategies.</p></div>
-                        </li>
-                        <li class="d-flex align-items-start gap-3">
-                           <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-chart-pie"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Monitor Progress Over Time</h4><p style="font-size:.85rem;color:var(--tx2)">See tangible improvements in your interview readiness.</p></div>
-                        </li>
-                     </ul>
-                  </div>
-
-                  <div class="col-lg-7 rv">
+               <div class="row justify-content-center">
+                  <div class="col-lg-10 rv">
                      <div class="landing-section-heading mb-4">
                         <span class="slbl">Interview Categories</span>
                         <h2 class="stitle">Tailored to your <span class="gt">goals</span></h2>

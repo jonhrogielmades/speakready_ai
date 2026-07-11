@@ -10,7 +10,7 @@
                      <a href="#" class="nav-link">Home</a>
                      <a href="#features" class="nav-link">Features</a>
                      <a href="#how" class="nav-link">How It Works</a>
-                     <a href="#benefits" class="nav-link">Benefits</a>
+                     <a href="#benefits" class="nav-link">Interview Categories</a>
                      <a href="#developers" class="nav-link">Developers</a>
                      <a href="#faq" class="nav-link">FAQ</a>
                      <a href="#contact" class="nav-link">Contact Us</a>
@@ -38,7 +38,7 @@
             <a href="#" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Home</a>
             <a href="#features" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Features</a>
             <a href="#how" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">How It Works</a>
-            <a href="#benefits" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Benefits</a>
+            <a href="#benefits" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Interview Categories</a>
             <a href="#developers" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">Developers</a>
             <a href="#faq" class="nav-link d-block py-3 border-bottom" style="border-color:var(--bd)!important">FAQ</a>
             <a href="#contact" class="nav-link d-block py-3">Contact Us</a>
