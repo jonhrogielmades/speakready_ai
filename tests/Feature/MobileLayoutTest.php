@@ -115,6 +115,34 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('class="db-sidebar"', false);
     }
 
+    public function test_user_mobile_bottom_nav_centers_interview_action(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $response = $this->actingAs($user)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('class="mob-nav-primary-icon"', false)
+            ->assertSee('<span>Interview</span>', false)
+            ->assertSee('<span>Profile</span>', false);
+
+        $content = $response->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '/id="mobnav-home".*id="mobnav-progress".*id="mobnav-interview".*id="mobnav-feedback".*id="mobnav-more"/s',
+            $content
+        );
+
+        $this->assertStringContainsString('class="mob-nav-item mob-nav-primary ', $content);
+    }
+
     public function test_user_mobile_shell_includes_movable_quick_navigation_destinations(): void
     {
         $user = User::factory()->create([

@@ -1790,7 +1790,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const stepsMobile = [
             { element: '#mobTutorialBtn', popover: { title: 'Replay The Tour', description: 'Use this anytime you want a quick walkthrough of the current page.', side: 'bottom', align: 'end' }},
-            { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Jump to Home, Interview, Progress, Coach, or More from the bottom bar.', side: 'top', align: 'center' }},
+            { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Jump to Home, Progress, Interview, Feedback, or Profile from the bottom bar.', side: 'top', align: 'center' }},
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your current readiness score, status, average rating, and next target live here.', side: 'bottom', align: 'start' }},
             { element: '.sr-mobile-stat-grid', popover: { title: 'Practice Snapshot', description: 'Track sessions, rating, XP, and streak without opening a report.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},

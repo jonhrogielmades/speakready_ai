@@ -637,10 +637,12 @@
          <!-- ABOUT THE SYSTEM & SYSTEM STATS -->
          <section id="about" class="sp position-relative" style="background:var(--bg2)">
             <div class="container position-relative" style="z-index:1">
+               <div class="landing-section-heading mb-5 rv">
+                  <span class="slbl">About the System</span>
+                  <h2 class="stitle">Empowering you to <span class="gt">shine in interviews</span></h2>
+               </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <span class="slbl">About the System</span>
-                     <h2 class="stitle mb-4">Empowering you to <span class="gt">shine in interviews</span></h2>
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for any interview scenario. By simulating realistic interviews, it provides immediate, actionable feedback on your answers, delivery, and body language to solve the problem of interview anxiety and lack of practice.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
@@ -792,7 +794,7 @@
          <!-- HOW IT WORKS -->
          <section id="how" class="sp" style="background:var(--bg3)">
             <div class="container">
-               <div class="text-center mb-5 rv">
+               <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
                   <h2 class="stitle">Your journey to <span class="gt">interview mastery</span></h2>
                </div>
@@ -848,12 +850,13 @@
          <section id="benefits" class="sp position-relative">
             <div class="aur aur-b" style="top:50%;right:-200px;transform:translateY(-50%)"></div>
             <div class="container position-relative" style="z-index:1">
+               <div class="landing-section-heading mb-5 rv">
+                  <span class="slbl">Benefits</span>
+                  <h2 class="stitle">Why use <span class="gt">SpeakReady AI?</span></h2>
+               </div>
                <div class="row g-5">
                   <div class="col-lg-5 rv">
-                     <span class="slbl">Benefits</span>
-                     <h2 class="stitle mb-4">Why use <span class="gt">SpeakReady AI?</span></h2>
-
-                     <ul class="list-unstyled d-flex flex-column gap-3 mt-4">
+                     <ul class="list-unstyled d-flex flex-column gap-3">
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-comments"></i></div>
                            <div><h4 class="fs-6 fw-bold mb-1">Improve Communication Skills</h4><p style="font-size:.85rem;color:var(--tx2)">Enhance how you articulate your thoughts and experiences.</p></div>
@@ -882,8 +885,10 @@
                   </div>
 
                   <div class="col-lg-7 rv">
-                     <span class="slbl">Interview Categories</span>
-                     <h2 class="stitle mb-4">Tailored to your <span class="gt">goals</span></h2>
+                     <div class="landing-section-heading mb-4">
+                        <span class="slbl">Interview Categories</span>
+                        <h2 class="stitle">Tailored to your <span class="gt">goals</span></h2>
+                     </div>
                      <div class="row g-3">
                         <div class="col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
@@ -1101,10 +1106,12 @@
          <!-- CONTACT US -->
          <section id="contact" class="sp position-relative">
             <div class="container position-relative" style="z-index:1">
+               <div class="landing-section-heading mb-5 rv">
+                  <span class="slbl">Contact Us</span>
+                  <h2 class="stitle">Get in <span class="gt">Touch</span></h2>
+               </div>
                <div class="row g-5 justify-content-center">
                   <div class="col-lg-5 rv">
-                     <span class="slbl">Contact Us</span>
-                     <h2 class="stitle mb-4">Get in <span class="gt">Touch</span></h2>
                      <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:30px">Have questions or need support? We're here to help you on your journey to interview success.</p>
 
                      <div class="d-flex flex-column gap-4">

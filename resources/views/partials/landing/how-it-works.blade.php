@@ -1,7 +1,7 @@
          <!-- HOW IT WORKS -->
          <section id="how" class="sp" style="background:var(--bg3)">
             <div class="container">
-               <div class="text-center mb-5 rv">
+               <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
                   <h2 class="stitle">Your journey to <span class="gt">interview mastery</span></h2>
                </div>
