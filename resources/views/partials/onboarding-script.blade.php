@@ -28,18 +28,80 @@
             return `sr-driver-popover ${themeClass}`;
         }
 
+        function getViewportBuffers(config) {
+            const mobile = isMobileTour(config.serverDetectedMobile);
+
+            return {
+                top: mobile ? (config.mobileTopBuffer ?? 78) : (config.desktopTopBuffer ?? 24),
+                bottom: mobile ? (config.mobileBottomBuffer ?? 96) : (config.desktopBottomBuffer ?? 24),
+            };
+        }
+
+        function getScrollParent(element) {
+            let parent = element.parentElement;
+
+            while (parent && parent !== document.body) {
+                const style = window.getComputedStyle(parent);
+                const overflowY = `${style.overflowY}${style.overflow}`;
+
+                if (/(auto|scroll|overlay)/.test(overflowY) && parent.scrollHeight > parent.clientHeight) {
+                    return parent;
+                }
+
+                parent = parent.parentElement;
+            }
+
+            return document.scrollingElement || document.documentElement;
+        }
+
         function keepHighlightedElementInView(element, config) {
             if (!element) return;
 
-            const mobile = isMobileTour(config.serverDetectedMobile);
             const rect = element.getBoundingClientRect();
-            const topBuffer = mobile ? (config.mobileTopBuffer ?? 76) : (config.desktopTopBuffer ?? 24);
-            const bottomBuffer = mobile ? (config.mobileBottomBuffer ?? 92) : (config.desktopBottomBuffer ?? 24);
+            const { top: topBuffer, bottom: bottomBuffer } = getViewportBuffers(config);
+            const usableHeight = Math.max(160, window.innerHeight - topBuffer - bottomBuffer);
             const isClipped = rect.top < topBuffer || rect.bottom > (window.innerHeight - bottomBuffer);
+            const isTallerThanUsableArea = rect.height > usableHeight;
 
-            if (isClipped) {
-                element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+            if (!isClipped && !isTallerThanUsableArea) return;
+
+            const scrollParent = getScrollParent(element);
+            const currentScroll = scrollParent === document.scrollingElement ||
+                scrollParent === document.documentElement ||
+                scrollParent === document.body ?
+                window.scrollY :
+                scrollParent.scrollTop;
+            const parentRect = scrollParent === document.scrollingElement ||
+                scrollParent === document.documentElement ||
+                scrollParent === document.body ?
+                { top: 0 } :
+                scrollParent.getBoundingClientRect();
+            const targetTop = currentScroll + rect.top - parentRect.top - topBuffer - Math.max(12, (usableHeight - Math.min(rect.height, usableHeight)) / 2);
+
+            if (scrollParent === document.scrollingElement ||
+                scrollParent === document.documentElement ||
+                scrollParent === document.body) {
+                window.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+                return;
             }
+
+            scrollParent.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+        }
+
+        function refreshTourPlacement(driverObj) {
+            window.setTimeout(() => {
+                if (!driverObj || !driverObj.isActive || !driverObj.isActive()) return;
+
+                if (typeof driverObj.refresh === 'function') {
+                    driverObj.refresh();
+                    return;
+                }
+
+                const activeIndex = typeof driverObj.getActiveIndex === 'function' ? driverObj.getActiveIndex() : null;
+                if (Number.isInteger(activeIndex) && typeof driverObj.moveTo === 'function') {
+                    driverObj.moveTo(activeIndex);
+                }
+            }, 40);
         }
 
         function getSteps(config) {
@@ -63,13 +125,14 @@
                 driverObj = driverFactory({
                     showProgress: true,
                     animate: true,
-                    smoothScroll: true,
+                    smoothScroll: false,
                     stagePadding: config.stagePadding ?? 8,
                     stageRadius: config.stageRadius ?? 14,
                     overlayOpacity: config.overlayOpacity ?? 0.58,
                     popoverClass: getPopoverClass(),
                     steps,
                     onHighlightStarted: (element) => keepHighlightedElementInView(element, config),
+                    onHighlighted: () => refreshTourPlacement(driverObj),
                     onDestroyStarted: () => {
                         const exitText = config.exitConfirmText || 'Are you sure you want to exit the tutorial?';
 

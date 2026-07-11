@@ -10,6 +10,106 @@
         background-clip: text;
         color: transparent;
     }
+    .progress-hero {
+        min-height: 98px;
+        margin-bottom: 14px;
+        border: 1px solid rgba(96, 165, 250, 0.26);
+        border-radius: 16px;
+        background:
+            radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.2), transparent 25%),
+            linear-gradient(110deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.045)),
+            var(--sf);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        position: relative;
+        isolation: isolate;
+    }
+    .progress-hero::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 0 0 0 auto;
+        width: min(34%, 320px);
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.055));
+        pointer-events: none;
+    }
+    .lm .progress-hero {
+        background:
+            radial-gradient(circle at 92% 35%, rgba(147, 197, 253, 0.2), transparent 25%),
+            linear-gradient(110deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 255, 0.97));
+        border-color: #dce8fb;
+        box-shadow: 0 7px 22px rgba(59, 130, 246, 0.08);
+    }
+    .progress-hero-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 98px;
+        padding: 14px clamp(126px, 14vw, 148px) 14px 16px;
+    }
+    .progress-hero-copy {
+        min-width: 0;
+        width: 100%;
+    }
+    .progress-hero-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        line-height: 1.15;
+    }
+    .progress-hero-title svg {
+        width: 23px;
+        height: 23px;
+        flex: 0 0 auto;
+        color: #3b82f6;
+    }
+    .progress-hero-subtitle {
+        max-width: 680px;
+        font-size: 0.88rem;
+        color: var(--tx3);
+        margin: 0;
+        line-height: 1.45;
+    }
+    .progress-hero-art {
+        position: absolute;
+        z-index: 0;
+        right: 8px;
+        bottom: -2px;
+        width: clamp(122px, 13vw, 142px);
+        height: auto;
+        filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18));
+        pointer-events: none;
+        user-select: none;
+        transform-origin: 50% 78%;
+        animation: progressHeroArtFloat 4.8s ease-in-out infinite;
+    }
+    .progress-hero-art :is(circle, rect, path, polygon, ellipse):nth-child(odd) {
+        transform-origin: center;
+        animation: progressHeroArtPulse 3.4s ease-in-out infinite;
+    }
+    @keyframes progressHeroArtFloat {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+        35% { transform: translate3d(0, -7px, 0) rotate(1.5deg) scale(1.015); }
+        70% { transform: translate3d(-3px, -2px, 0) rotate(-1deg) scale(1.005); }
+    }
+    @keyframes progressHeroArtPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.78; }
+    }
+    .progress-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
     .premium-panel {
         background: var(--sf);
         border: 1px solid var(--bd);
@@ -29,20 +129,365 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+
+    @media (max-width: 767px) {
+        #sec-progress-tracking {
+            padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        }
+        #sec-progress-tracking > .row,
+        #sec-progress-tracking .row.g-4 {
+            --bs-gutter-x: 12px;
+            --bs-gutter-y: 12px;
+            margin-bottom: 12px !important;
+        }
+        .progress-hero {
+            min-height: 104px;
+            margin-bottom: 12px;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        .progress-hero-inner {
+            justify-content: flex-start;
+            min-height: 104px;
+            padding: 14px 96px 14px 14px;
+        }
+        .progress-hero-title {
+            justify-content: flex-start;
+            gap: 7px;
+            font-size: 1.1rem !important;
+            margin-bottom: 4px;
+            letter-spacing: 0;
+        }
+        .progress-hero-title svg {
+            width: 20px;
+            height: 20px;
+        }
+        .progress-hero-subtitle {
+            max-width: 100%;
+            font-size: 0.74rem;
+            line-height: 1.4;
+        }
+        .progress-hero-art {
+            right: -10px;
+            bottom: -1px;
+            width: 112px;
+        }
+        .progress-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .progress-actions .btn {
+            width: 100%;
+            min-height: 44px;
+            padding-left: 8px;
+            padding-right: 8px;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 12px !important;
+            white-space: normal;
+        }
+        .progress-actions .btn i {
+            margin-right: 0 !important;
+        }
+        #sec-progress-tracking .premium-panel,
+        #sec-progress-tracking #learning-progress > div,
+        #sec-progress-tracking #voice-progress > div,
+        #sec-progress-tracking #activity-calendar .col-12 > div,
+        #sec-progress-tracking #goals-milestones > div,
+        #sec-progress-tracking #achievements-badges > div {
+            border-radius: 14px !important;
+            padding: 14px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #sec-progress-tracking .premium-panel:hover {
+            transform: none;
+        }
+        #sec-progress-tracking .premium-panel h5,
+        #sec-progress-tracking #learning-progress h5,
+        #sec-progress-tracking #voice-progress h5,
+        #sec-progress-tracking #activity-calendar h5,
+        #sec-progress-tracking #goals-milestones h5,
+        #sec-progress-tracking #achievements-badges h5 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+            margin-bottom: 12px !important;
+        }
+        #progress-stats {
+            --bs-gutter-x: 10px;
+            --bs-gutter-y: 10px;
+        }
+        #progress-stats > .col-md-3.col-sm-6 {
+            width: 50% !important;
+            flex: 0 0 50% !important;
+        }
+        #progress-stats .premium-panel {
+            min-height: 104px !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #progress-stats .premium-panel .fs-1 {
+            font-size: 1.35rem !important;
+            margin-bottom: 6px !important;
+        }
+        #progress-stats .premium-panel h3 {
+            font-size: 1.08rem;
+            line-height: 1.12;
+        }
+        #progress-stats .premium-panel p {
+            font-size: 0.68rem !important;
+            line-height: 1.25;
+        }
+        #ai-insights {
+            border-radius: 14px !important;
+            padding: 14px !important;
+            margin-bottom: 12px !important;
+        }
+        #ai-insights .d-flex {
+            align-items: flex-start !important;
+            gap: 10px;
+        }
+        #ai-insights .fa-robot {
+            width: 38px;
+            height: 38px;
+            padding: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem !important;
+            margin-right: 0 !important;
+            flex: 0 0 auto;
+        }
+        #ai-insights h6 {
+            font-size: 0.88rem;
+        }
+        #ai-insights p {
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+        #readiness-trend .premium-panel > div,
+        #category-perf .premium-panel > div {
+            height: 210px !important;
+        }
+        #skill-tracker .d-flex.justify-content-between,
+        #learning-progress .d-flex.justify-content-between,
+        #goals-milestones .d-flex.justify-content-between {
+            align-items: flex-start !important;
+            gap: 8px;
+        }
+        #skill-tracker .d-flex.justify-content-between > span:first-child,
+        #learning-progress .d-flex.justify-content-between > span:first-child,
+        #goals-milestones .d-flex.justify-content-between > span:first-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+        #skill-tracker .d-flex.justify-content-between > span:last-child,
+        #learning-progress .d-flex.justify-content-between > span:last-child,
+        #goals-milestones .d-flex.justify-content-between > span:last-child {
+            flex: 0 0 auto;
+            text-align: right;
+            font-size: 0.78rem;
+        }
+        #strengths-tracker .row.mb-4 {
+            --bs-gutter-y: 12px;
+        }
+        #strengths-tracker .col-6 {
+            width: 100%;
+        }
+        #strengths-tracker h6 {
+            font-size: 0.86rem;
+        }
+        #strengths-tracker .list-group {
+            font-size: 0.8rem !important;
+        }
+        #history-table .premium-panel > .d-flex {
+            align-items: stretch !important;
+            gap: 10px !important;
+            margin-bottom: 12px !important;
+        }
+        #history-table .premium-panel > .d-flex > div {
+            width: 100%;
+            align-items: stretch !important;
+        }
+        #history-table .premium-panel > .d-flex form,
+        #history-table .premium-panel > .d-flex .btn,
+        #history-table .input-group {
+            width: 100% !important;
+        }
+        #history-table .input-group {
+            min-height: 44px;
+        }
+        #history-table table,
+        #history-table tbody,
+        #history-table tr,
+        #history-table td {
+            display: block;
+            width: 100%;
+        }
+        #history-table thead {
+            display: none;
+        }
+        #history-table tbody tr {
+            border: 1px solid var(--bd) !important;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--bg3);
+        }
+        #history-table tbody td {
+            border: 0 !important;
+            padding: 5px 0 !important;
+            text-align: left !important;
+            font-size: 0.82rem;
+        }
+        #history-table tbody td:nth-child(1) {
+            color: var(--tx3);
+            font-size: 0.74rem;
+            padding-bottom: 2px !important;
+        }
+        #history-table tbody td:nth-child(2) {
+            font-size: 0.94rem;
+            color: var(--tx);
+        }
+        #history-table tbody td:nth-child(3)::before {
+            content: "Score: ";
+            color: var(--tx3);
+            font-weight: 600;
+        }
+        #history-table tbody td:nth-child(4)::before {
+            content: "Rating: ";
+            color: var(--tx3);
+            font-weight: 600;
+        }
+        #history-table tbody td:nth-child(5) .d-flex {
+            justify-content: stretch !important;
+            margin-top: 6px;
+        }
+        #history-table tbody td:nth-child(5) .btn-outline-primary {
+            flex: 1 1 auto;
+            min-height: 38px;
+        }
+        #history-table tbody td:nth-child(5) form {
+            flex: 0 0 42px;
+        }
+        #history-table tbody td:nth-child(5) .btn-outline-danger {
+            width: 42px;
+            min-height: 38px;
+        }
+        #voice-progress .row.text-center {
+            --bs-gutter-x: 8px;
+            margin-bottom: 12px !important;
+        }
+        #voice-progress .row.text-center h3 {
+            font-size: 1rem;
+            line-height: 1.15;
+        }
+        #voice-progress .row.text-center small {
+            font-size: 0.68rem;
+            line-height: 1.25;
+        }
+        #voice-progress .p-3 .d-flex {
+            align-items: flex-start !important;
+            gap: 10px;
+        }
+        #voice-progress .p-3 h2 {
+            font-size: 1.1rem;
+            flex: 0 0 auto;
+        }
+        #achievements-badges .row.g-3 {
+            --bs-gutter-x: 8px;
+            --bs-gutter-y: 12px;
+        }
+        #achievements-badges .col-4 {
+            width: 33.333333%;
+        }
+        #achievements-badges .rounded-circle {
+            width: 52px !important;
+            height: 52px !important;
+            padding: 10px !important;
+        }
+        #achievements-badges .rounded-circle i {
+            font-size: 1.1rem !important;
+        }
+        #achievements-badges .col-4 > div:last-child {
+            font-size: 0.68rem !important;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    @media (max-width: 390px) {
+        .progress-hero-inner {
+            padding-right: 82px;
+        }
+        .progress-hero-title {
+            font-size: 1rem !important;
+        }
+        .progress-hero-art {
+            width: 98px;
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .progress-hero-art,
+        .progress-hero-art :is(circle, rect, path, polygon, ellipse) {
+            animation: none !important;
+        }
+    }
 </style>
 
-<div class="db-section active">
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-chart-line me-2"></i>Progress Tracking</h4>
-            <p style="color:var(--tx3)">Visualize your interview readiness improvement over time.</p>
+<div class="db-section active" id="sec-progress-tracking">
+    <div class="progress-hero">
+        <div class="progress-hero-inner">
+            <div class="progress-hero-copy">
+                <h4 class="progress-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" role="img">
+                        <path d="M4 18V6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 15l3-4 4 2 5-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="10" cy="11" r="1.5" fill="currentColor"/>
+                        <circle cx="14" cy="13" r="1.5" fill="currentColor"/>
+                        <circle cx="19" cy="6" r="1.5" fill="currentColor"/>
+                    </svg>
+                    Progress Tracking
+                </h4>
+                <p class="progress-hero-subtitle">Visualize your interview readiness improvement over time.</p>
+            </div>
         </div>
-        <div class="d-flex gap-2 flex-wrap align-items-center">
-            <!-- Feature 15: Progress Reports -->
-            <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
-            <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
-        </div>
+        <svg class="progress-hero-art" viewBox="0 0 220 150" aria-hidden="true" role="img">
+            <defs>
+                <linearGradient id="progressArtPanel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#DBEAFE"/>
+                    <stop offset="1" stop-color="#ECFEFF"/>
+                </linearGradient>
+                <linearGradient id="progressArtBlue" x1="54" y1="34" x2="168" y2="112" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#3B82F6"/>
+                    <stop offset="1" stop-color="#06B6D4"/>
+                </linearGradient>
+            </defs>
+            <rect x="31" y="21" width="158" height="108" rx="18" fill="url(#progressArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <path d="M54 105V52" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
+            <path d="M54 105h113" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
+            <path d="M65 92l25-28 27 16 38-43" fill="none" stroke="url(#progressArtBlue)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="90" cy="64" r="9" fill="#2563EB" stroke="#EFF6FF" stroke-width="4"/>
+            <circle cx="117" cy="80" r="9" fill="#0EA5E9" stroke="#EFF6FF" stroke-width="4"/>
+            <circle cx="155" cy="37" r="11" fill="#22C55E" stroke="#EFF6FF" stroke-width="4"/>
+            <rect x="67" y="101" width="13" height="16" rx="5" fill="#60A5FA" opacity=".65"/>
+            <rect x="93" y="91" width="13" height="26" rx="5" fill="#38BDF8" opacity=".75"/>
+            <rect x="119" y="97" width="13" height="20" rx="5" fill="#818CF8" opacity=".65"/>
+            <rect x="145" y="75" width="13" height="42" rx="5" fill="#22C55E" opacity=".75"/>
+            <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+            <path d="M194 28l10-10m-6 30l14-2M24 59l-11-7m18 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        </svg>
+    </div>
+    <div class="progress-actions">
+        <!-- Feature 15: Progress Reports -->
+        <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
+        <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
     </div>
 
     <!-- Feature 9, 14: Top Stats (Streaks, Comparison) -->

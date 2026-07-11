@@ -358,6 +358,45 @@
             .dropdown-menu-end { right: 0 !important; left: auto !important; }
          }
 
+         .mob-notification-dropdown {
+            width: min(340px, calc(100vw - 24px));
+            max-width: calc(100vw - 24px);
+            border-radius: 12px;
+            border: 1px solid var(--adm-bd);
+            background: var(--bg3, #2b2b40);
+            padding: 0;
+            overflow: hidden;
+            margin-top: 10px;
+         }
+         .mob-notification-list {
+            max-height: min(280px, calc(100dvh - var(--mob-top-h) - var(--mob-safe-top) - var(--mob-nav-h) - var(--mob-safe-bottom) - 120px));
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+         }
+
+         @media (max-width: 575px) {
+            .mob-notification-wrap {
+               position: static;
+            }
+            #mob-header .mob-notification-dropdown {
+               position: fixed !important;
+               top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
+               right: max(12px, env(safe-area-inset-right, 0px)) !important;
+               left: max(12px, env(safe-area-inset-left, 0px)) !important;
+               width: auto !important;
+               max-width: none !important;
+               transform: none !important;
+               margin-top: 0;
+            }
+            .mob-notification-list {
+               max-height: min(55dvh, 360px);
+            }
+            .mob-notification-actions {
+               position: static !important;
+            }
+         }
+
          /* --- 16. Question bank table inside card: ensure overflow scrolls --- */
          @media (max-width: 767px) {
             [style*="overflow-x:auto"], [style*="overflow-x: auto"] {
@@ -678,20 +717,20 @@
             <span>SpeakReady AI</span>
          </a>
          <div class="mob-header-right">
-            <div class="dropdown">
+            <div class="dropdown mob-notification-wrap">
                 <a href="#" class="mob-icon-btn position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Live Activity" style="text-decoration:none;" onclick="resetAdminActivityBadge('mobile')">
                    <i class="fa-regular fa-bell"></i>
                    <span id="admin-activity-badge-mobile" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle" style="display:none; width: 8px; height: 8px; margin-left: -5px; margin-top: 5px;">
                       <span class="visually-hidden">New alerts</span>
                    </span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 300px; border-radius: 12px; border: 1px solid var(--adm-bd); background: var(--bg3, #2b2b40); padding: 0; overflow: hidden; margin-top: 10px;">
+                <div class="dropdown-menu dropdown-menu-end shadow-lg mob-notification-dropdown">
                     <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important; background: var(--sf, #1e1e2d);">
                         <div>
                             <span class="fw-bold" style="color: var(--tx, #fff); font-size: 0.95rem;">Live User Activity</span>
                             <span id="admin-activity-count-mobile" class="badge bg-danger rounded-pill ms-1" style="display:none;">0</span>
                         </div>
-                        <div class="dropdown">
+                        <div class="dropdown mob-notification-actions">
                             <button class="btn btn-sm p-0 m-0 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
@@ -702,7 +741,7 @@
                             </ul>
                         </div>
                     </div>
-                    <div id="admin-activity-list-mobile" style="max-height: 280px; overflow-y: auto;">
+                    <div id="admin-activity-list-mobile" class="mob-notification-list">
                         <div class="p-3 text-center text-muted" style="font-size:0.85rem;">Loading activities...</div>
                     </div>
                     <div class="p-2 border-top text-center" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important; background: var(--sf, #1e1e2d);">

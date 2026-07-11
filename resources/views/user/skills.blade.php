@@ -28,20 +28,118 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    @media (max-width: 767px) {
+        #skill-trees-page .sr-page-actions {
+            display: grid !important;
+            grid-template-columns: 82px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+        #skill-trees-page .sr-page-actions > * {
+            width: 100% !important;
+            min-height: 42px;
+        }
+        #skill-trees-page .stat-card {
+            min-height: 106px;
+            padding: 12px !important;
+            border-radius: 14px !important;
+        }
+        #skill-trees-page .stat-card [style*="width:50px"] {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 11px !important;
+            font-size: 0.95rem !important;
+            margin-bottom: 8px !important;
+        }
+        #skill-trees-page .stat-card h6 {
+            font-size: 0.62rem !important;
+            line-height: 1.15;
+            letter-spacing: 0 !important;
+        }
+        #skill-trees-page .stat-card h3 {
+            font-size: 1.05rem;
+            line-height: 1.12;
+        }
+        #skill-trees-page h5 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+        }
+        #skill-trees-page .perk-card {
+            padding: 14px !important;
+            border-radius: 14px !important;
+        }
+        #skill-trees-page .perk-card [style*="width:60px"] {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 13px !important;
+            font-size: 1.15rem !important;
+            margin-bottom: 12px !important;
+        }
+        #skill-trees-page .perk-card p {
+            min-height: 0 !important;
+            font-size: 0.8rem !important;
+            line-height: 1.4;
+        }
+        #skill-trees-page .perk-card .mt-auto .d-flex {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            align-items: stretch !important;
+        }
+        #skill-trees-page .perk-card .btn {
+            width: 100%;
+            min-height: 40px;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active animate-fade-up">
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;"><i class="fa-solid fa-network-wired me-2"></i>Skill Trees</h4>
-            <p style="color:var(--tx3)">Unlock powerful perks by earning Skill XP in Learning Games.</p>
+<div class="db-section active animate-fade-up" id="skill-trees-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 4v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 14h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M7 14v4M17 14v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="12" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="7" cy="20" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="17" cy="20" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="12" cy="11" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Skill Trees
+                </h4>
+                <p class="sr-page-hero-subtitle">Unlock powerful perks by earning Skill XP in Learning Games.</p>
+            </div>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-md-0">
-            <span class="badge bg-primary" style="font-size:14px;padding:10px 15px;border-radius:12px;">Level {{ $profile->player_level ?? 1 }}</span>
-            <a href="{{ route('user.learning') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;">
-                <i class="fa-solid fa-arrow-left me-1"></i> <span>Learning Games</span>
-            </a>
-        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs>
+                <linearGradient id="skillPanel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#DBEAFE"/>
+                    <stop offset="1" stop-color="#ECFEFF"/>
+                </linearGradient>
+                <linearGradient id="skillBlue" x1="64" y1="34" x2="166" y2="118" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#3B82F6"/>
+                    <stop offset="1" stop-color="#06B6D4"/>
+                </linearGradient>
+            </defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#skillPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <path d="M110 52v30M78 104h64M78 104v15M142 104v15" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
+            <circle cx="110" cy="45" r="20" fill="url(#skillBlue)"/>
+            <circle cx="110" cy="88" r="17" fill="#38BDF8"/>
+            <circle cx="78" cy="119" r="16" fill="#22C55E"/>
+            <circle cx="142" cy="119" r="16" fill="#F59E0B"/>
+            <path d="m101 45 6 6 13-15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M70 69h25M126 69h25" stroke="#93C5FD" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+            <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
+    </div>
+    <div class="sr-page-actions">
+        <span class="badge bg-primary d-inline-flex align-items-center justify-content-center" style="font-size:14px;padding:10px 15px;border-radius:12px;">Level {{ $profile->player_level ?? 1 }}</span>
+        <a href="{{ route('user.learning') }}" class="btn btn-sm d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;">
+            <i class="fa-solid fa-arrow-left me-1"></i> <span>Learning Games</span>
+        </a>
     </div>
 
     <!-- Skill XP Overview -->

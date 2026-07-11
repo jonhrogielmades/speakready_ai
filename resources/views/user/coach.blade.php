@@ -4,8 +4,14 @@
 @section('content')
 <style>
     /* Chat specific styles */
-    .chat-container { 
-        display: flex; height: calc(100vh - 140px); background: var(--sf); border: 1px solid var(--bd); border-radius: 24px; overflow: hidden; 
+    .chat-container {
+        display: flex;
+        height: calc(100vh - 274px);
+        min-height: 420px;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 24px;
+        overflow: hidden;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -31,16 +37,38 @@
 
     /* Mobile-specific: full height chat within the mobile layout */
     @media (max-width: 767px) {
+        #ai-coach-page {
+            height: auto !important;
+        }
         .chat-container {
-            height: calc(100dvh - 56px - 64px - 48px);
-            min-height: 320px;
+            height: calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 132px) !important;
+            min-height: 380px;
             border-radius: 14px !important;
             flex-direction: column !important;
         }
         .chat-sidebar { display: none !important; }
+        .chat-main > div:first-child {
+            padding: 11px 12px !important;
+        }
+        .chat-main > div:first-child [style*="width:40px"] {
+            width: 34px !important;
+            height: 34px !important;
+            margin-right: 10px !important;
+            border-radius: 10px !important;
+        }
         .chat-messages { padding: 12px; gap: 10px; }
         .chat-input-area { padding: 10px 12px; }
-        .chat-bubble { max-width: 90%; padding: 10px 14px; font-size: 0.875rem; }
+        .chat-bubble { max-width: 92%; padding: 10px 13px; font-size: 0.84rem; line-height: 1.45; }
+        .chat-input-wrapper {
+            padding: 7px 8px 7px 12px;
+            border-radius: 14px;
+        }
+        .chat-send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
     }
     
     .text-gradient-primary {
@@ -55,8 +83,24 @@
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active p-0" style="height:100%">
+<div class="db-section active" id="ai-coach-page" style="height:100%">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1v-6H7v-1a5 5 0 0 1 10 0v1h-3v6h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    AI Coach
+                </h4>
+                <p class="sr-page-hero-subtitle">Ask for interview advice, resume feedback, and focused practice guidance.</p>
+            </div>
+        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="coachPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="coachBlue" x1="62" y1="38" x2="164" y2="116"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#coachPanel)" stroke="#BFDBFE" stroke-width="3"/><rect x="64" y="53" width="92" height="56" rx="20" fill="url(#coachBlue)"/><circle cx="92" cy="79" r="7" fill="#EFF6FF"/><circle cx="128" cy="79" r="7" fill="#EFF6FF"/><path d="M92 96h36" stroke="#EFF6FF" stroke-width="6" stroke-linecap="round"/><path d="M110 53V38" stroke="#2563EB" stroke-width="6" stroke-linecap="round"/><circle cx="110" cy="34" r="8" fill="#22C55E"/><path d="M156 70h22v24h-13l-9 9V70Z" fill="#BAE6FD"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
+    </div>
     <div class="chat-container animate-fade-up">
         
         <!-- Sidebar History -->

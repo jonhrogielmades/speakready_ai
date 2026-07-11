@@ -3,27 +3,6 @@
 @endphp
 
 @once
-    @if (!$isGuestQuickNavigation)
-    <button
-        type="button"
-        class="ucp-mobile-launcher"
-        data-ucp-open
-        aria-haspopup="dialog"
-        aria-controls="userCommandPalette"
-        aria-expanded="false"
-        aria-label="Open quick navigation"
-        aria-describedby="ucpMobileLauncherHelp"
-        aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight Shift+ArrowUp Shift+ArrowDown"
-        data-ucp-context="user"
-        title="Tap to open; drag or press Shift + Arrow to move"
-    >
-        <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-        <span class="ucp-launcher-label" aria-hidden="true">Navigate</span>
-    </button>
-    <span id="ucpMobileLauncherHelp" class="visually-hidden">Drag this button to an edge, or press Shift and an arrow key to move it.</span>
-    <span id="ucpMobileLauncherStatus" class="visually-hidden" aria-live="polite" aria-atomic="true"></span>
-    @endif
-
     <div
         id="userCommandPalette"
         class="ucp-backdrop"
@@ -288,7 +267,6 @@
         }
         .ucp-close:hover { color: var(--tx, #fff); border-color: #64748b; transform: translateY(-1px); }
         .ucp-close:focus-visible,
-        .ucp-mobile-launcher:focus-visible,
         .ucp-result:focus-visible,
         .ucp-guest-action:focus-visible { outline: 3px solid rgba(96, 165, 250, .48); outline-offset: 2px; }
         .ucp-results {
@@ -410,60 +388,12 @@
             border-radius: 5px;
             box-shadow: none;
         }
-        .ucp-mobile-launcher {
-            --ucp-safe-top: env(safe-area-inset-top, 0px);
-            --ucp-safe-right: env(safe-area-inset-right, 0px);
-            --ucp-safe-bottom: env(safe-area-inset-bottom, 0px);
-            --ucp-safe-left: env(safe-area-inset-left, 0px);
-            position: fixed;
-            right: 16px;
-            bottom: calc(78px + env(safe-area-inset-bottom, 0px));
-            z-index: 1035;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            min-height: 30px;
-            padding: 0;
-            color: #fff;
-            background: linear-gradient(135deg, #3b82f6, #7c3aed);
-            border: 1px solid rgba(255, 255, 255, .18);
-            border-radius: 50%;
-            box-shadow: 0 6px 16px rgba(29, 78, 216, .28);
-            font-family: inherit;
-            font-size: .66rem;
-            font-weight: 650;
-            line-height: 1;
-            cursor: grab;
-            touch-action: none;
-            -webkit-user-select: none;
-            user-select: none;
-            transition: left .18s ease, top .18s ease, box-shadow .18s ease, transform .18s ease;
-        }
-        .ucp-mobile-launcher .ucp-launcher-label { display: none; }
-        .ucp-mobile-launcher.is-positioned {
-            right: auto;
-            bottom: auto;
-        }
-        .ucp-mobile-launcher.is-dragging {
-            cursor: grabbing;
-            box-shadow: 0 8px 20px rgba(29, 78, 216, .36);
-            transform: scale(.96);
-            transition: none;
-        }
-        .ucp-mobile-launcher.is-restoring {
-            transition: none;
-        }
         @keyframes ucp-fade-in { from { opacity: 0; } }
         @keyframes ucp-dialog-in { from { opacity: 0; transform: translateY(-10px) scale(.985); } }
 
         .lm .ucp-backdrop { background: rgba(15, 23, 42, .52); }
         .lm .ucp-dialog { box-shadow: 0 28px 80px rgba(15, 23, 42, .22), 0 0 0 1px rgba(255, 255, 255, .6) inset; }
 
-        @media (max-width: 991.98px) {
-            .ucp-mobile-launcher { display: inline-flex; }
-        }
         @media (max-width: 640px) {
             .ucp-backdrop { place-items: end center; padding: 18px 0 0; }
             .ucp-dialog {
@@ -497,8 +427,7 @@
             .ucp-result,
             .ucp-close,
             .ucp-result-arrow,
-            .ucp-guest-action,
-            .ucp-mobile-launcher { transition: none; }
+            .ucp-guest-action { transition: none; }
         }
     </style>
 

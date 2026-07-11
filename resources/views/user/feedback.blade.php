@@ -30,16 +30,26 @@
     .db-filter-input:focus, .db-filter-input:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15) !important; background: var(--sf) !important; }
     .input-group.db-filter-input:focus-within { border-radius: 8px; border: 1px solid var(--pur) !important; }
 </style>
+@include('partials.page-hero-styles')
 
 <div class="db-section active animate-fade-up">
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-clipboard-check me-2"></i>Feedback Center</h4>
-            <p style="color:var(--tx3)">Review your past interviews and AI-generated insights.</p>
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h8M9 3h6l1 3H8l1-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 6H5v15h14V6h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8 14 2 2 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Feedback Center
+                </h4>
+                <p class="sr-page-hero-subtitle">Review your past interviews and AI-generated insights.</p>
+            </div>
         </div>
-        <div>
-        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="feedbackPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="feedbackBlue" x1="72" y1="38" x2="166" y2="112"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#feedbackPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <rect x="58" y="43" width="78" height="8" rx="4" fill="#93C5FD"/><rect x="58" y="61" width="108" height="7" rx="3.5" fill="#BAE6FD"/><rect x="58" y="78" width="88" height="7" rx="3.5" fill="#C7D2FE"/>
+            <circle cx="154" cy="47" r="20" fill="url(#feedbackBlue)"/><path d="m146 47 6 6 12-14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M61 106h34m18 0h46" stroke="#60A5FA" stroke-width="8" stroke-linecap="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
     </div>
 
     <div class="premium-panel">

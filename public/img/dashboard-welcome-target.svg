@@ -1,58 +1,48 @@
-<svg width="184" height="116" viewBox="0 0 184 116" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="220" height="150" viewBox="0 0 220 150" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <linearGradient id="target-rim" x1="90" y1="10" x2="151" y2="72" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#93C5FD"/>
-            <stop offset="1" stop-color="#3B82F6"/>
+        <linearGradient id="ai-panel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#DBEAFE"/>
+            <stop offset="1" stop-color="#ECFEFF"/>
         </linearGradient>
-        <linearGradient id="target-face" x1="98" y1="18" x2="145" y2="68" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#F8FBFF"/>
-            <stop offset="1" stop-color="#DBEAFE"/>
+        <linearGradient id="ai-face" x1="72" y1="38" x2="148" y2="113" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#3B82F6"/>
+            <stop offset="1" stop-color="#06B6D4"/>
         </linearGradient>
-        <linearGradient id="block-front" x1="82" y1="72" x2="143" y2="116" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#93C5FD"/>
-            <stop offset="1" stop-color="#60A5FA"/>
+        <linearGradient id="ai-suit" x1="66" y1="91" x2="154" y2="134" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#2563EB"/>
+            <stop offset="1" stop-color="#0EA5E9"/>
         </linearGradient>
-        <linearGradient id="block-side" x1="110" y1="72" x2="162" y2="113" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#60A5FA"/>
-            <stop offset="1" stop-color="#3B82F6"/>
-        </linearGradient>
-        <filter id="soft-shadow" x="55" y="3" width="120" height="126" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-            <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#2563EB" flood-opacity="0.18"/>
+        <filter id="ai-shadow" x="20" y="8" width="184" height="136" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#2563EB" flood-opacity="0.16"/>
         </filter>
     </defs>
 
-    <ellipse cx="127" cy="109" rx="47" ry="6" fill="#BFDBFE" fill-opacity="0.46"/>
+    <path d="M30 134C64 123 102 123 138 134C174 145 196 142 216 131" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+    <path d="M194 28L204 18M198 48L212 46M24 59L13 52M31 107L17 110" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
 
-    <g filter="url(#soft-shadow)">
-        <path d="M76 83L91 75L112 83L97 91L76 83Z" fill="#BFDBFE"/>
-        <path d="M97 91L112 83V108L97 116V91Z" fill="#60A5FA"/>
-        <path d="M76 83L97 91V116L76 108V83Z" fill="url(#block-front)"/>
+    <g filter="url(#ai-shadow)">
+        <rect x="32" y="22" width="156" height="106" rx="18" fill="url(#ai-panel)" stroke="#BFDBFE" stroke-width="3"/>
+        <circle cx="59" cy="37" r="5" fill="#60A5FA"/>
+        <circle cx="76" cy="37" r="5" fill="#67E8F9"/>
 
-        <path d="M103 72L119 64L142 72L126 80L103 72Z" fill="#DBEAFE"/>
-        <path d="M126 80L142 72V108L126 116V80Z" fill="url(#block-side)"/>
-        <path d="M103 72L126 80V116L103 108V72Z" fill="url(#block-front)"/>
+        <path d="M65 126C69 102 84 90 110 90C136 90 151 102 155 126H65Z" fill="url(#ai-suit)"/>
+        <path d="M93 94L110 116L127 94" fill="#EFF6FF"/>
+        <path d="M104 106L110 116L116 106L113 100H107L104 106Z" fill="#2563EB"/>
 
-        <path d="M137 91L149 85L166 91L154 97L137 91Z" fill="#BFDBFE"/>
-        <path d="M154 97L166 91V108L154 114V97Z" fill="#3B82F6"/>
-        <path d="M137 91L154 97V114L137 108V91Z" fill="#60A5FA"/>
+        <rect x="73" y="43" width="74" height="55" rx="24" fill="url(#ai-face)"/>
+        <path d="M88 43C91 32 101 26 112 26C129 26 141 39 141 55V61H133V55C133 44 125 35 113 35C103 35 96 39 93 47L88 43Z" fill="#93C5FD"/>
+        <rect x="83" y="57" width="54" height="27" rx="13.5" fill="#EFF6FF"/>
+        <circle cx="100" cy="70" r="4.5" fill="#2563EB"/>
+        <circle cx="121" cy="70" r="4.5" fill="#2563EB"/>
+        <path d="M101 82C106 86 115 86 120 82" stroke="#0EA5E9" stroke-width="4" stroke-linecap="round"/>
+        <path d="M73 68H63C58 68 54 72 54 77C54 82 58 86 63 86H73" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
+        <path d="M147 68H157C162 68 166 72 166 77C166 82 162 86 157 86H147" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
+        <path d="M157 86V94C157 100 153 104 147 104H134" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="132" cy="104" r="5" fill="#22C55E"/>
 
-        <path d="M122 76V56" stroke="#3B82F6" stroke-width="7" stroke-linecap="round"/>
-        <path d="M122 76V56" stroke="#93C5FD" stroke-width="3" stroke-linecap="round"/>
-
-        <g transform="rotate(-9 123 41)">
-            <circle cx="123" cy="41" r="34" fill="#60A5FA" fill-opacity="0.2"/>
-            <circle cx="123" cy="41" r="30" fill="url(#target-rim)"/>
-            <circle cx="123" cy="41" r="24" fill="url(#target-face)"/>
-            <circle cx="123" cy="41" r="18" fill="#60A5FA"/>
-            <circle cx="123" cy="41" r="12" fill="#EFF6FF"/>
-            <circle cx="123" cy="41" r="6" fill="#3B82F6"/>
-            <path d="M105 20C113 14 125 12 135 16" stroke="white" stroke-opacity="0.55" stroke-width="2.5" stroke-linecap="round"/>
-        </g>
+        <path d="M160 45H184V70H171L160 81V45Z" fill="#BAE6FD" stroke="#93C5FD" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M168 55H176M168 63H173" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M51 54C48 46 51 38 58 34" stroke="#38BDF8" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+        <path d="M47 67C42 61 41 52 45 45" stroke="#93C5FD" stroke-width="4" stroke-linecap="round" opacity=".75"/>
     </g>
-
-    <path d="M23 25L119 41" stroke="#3B82F6" stroke-width="3" stroke-linecap="round"/>
-    <path d="M18 24L29 17L34 24L23 27L18 24Z" fill="#60A5FA"/>
-    <path d="M18 24L27 31L34 25L23 22L18 24Z" fill="#93C5FD"/>
-    <path d="M119 41L109 35L111 44L119 41Z" fill="#2563EB"/>
-    <circle cx="119" cy="41" r="2.5" fill="#1D4ED8"/>
 </svg>

@@ -75,21 +75,123 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    @media (max-width: 767px) {
+        #voice-rehearsal-page .sr-page-actions {
+            display: block !important;
+            margin-bottom: 12px !important;
+        }
+        #voice-rehearsal-page #moduleTabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            width: 100%;
+        }
+        #voice-rehearsal-page #moduleTabs .nav-link {
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 0.78rem;
+            text-align: center;
+        }
+        #voice-rehearsal-page .premium-card {
+            padding: 14px !important;
+            border-radius: 14px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #voice-rehearsal-page .premium-card:hover {
+            transform: none;
+        }
+        #voice-rehearsal-page .premium-card > .d-flex.justify-content-between {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            align-items: stretch !important;
+            margin-bottom: 14px !important;
+        }
+        #voice-rehearsal-page #categorySelect,
+        #voice-rehearsal-page .premium-card .btn {
+            width: 100% !important;
+            min-height: 42px;
+        }
+        #voice-rehearsal-page #promptText {
+            font-size: 1.05rem !important;
+            line-height: 1.35 !important;
+        }
+        #voice-rehearsal-page .text-center.mb-5 {
+            margin-bottom: 18px !important;
+        }
+        #voice-rehearsal-page [style*="height:160px"] {
+            height: 118px !important;
+            margin-bottom: 18px !important;
+            border-radius: 16px !important;
+        }
+        #voice-rehearsal-page .d-flex.justify-content-center.gap-3.mb-4 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px !important;
+        }
+        #voice-rehearsal-page .d-flex.justify-content-center.gap-3.mb-4 .btn {
+            padding: 9px 10px !important;
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        #voice-rehearsal-page .stat-box {
+            padding: 11px 7px;
+            border-radius: 12px;
+        }
+        #voice-rehearsal-page .stat-val {
+            font-size: 1.05rem;
+            line-height: 1.1;
+        }
+        #voice-rehearsal-page .stat-lbl {
+            font-size: 0.62rem;
+            letter-spacing: 0;
+        }
+        #voice-rehearsal-page #transcriptView {
+            min-height: 108px !important;
+            padding: 12px !important;
+            font-size: 0.9rem !important;
+            line-height: 1.45 !important;
+        }
+        #voice-rehearsal-page #analysisPanel .d-flex.justify-content-between.align-items-center {
+            gap: 10px;
+        }
+        #voice-rehearsal-page #tab-analytics .premium-card .d-flex.justify-content-between {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            align-items: stretch !important;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-        <div>
-<h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
- <i class="fa-solid fa-ear-listen me-2"></i>Voice Rehearsal Studio</h4>
-            <p style="color:var(--tx2);margin-top:4px;margin-bottom:0;font-size:0.95rem;font-weight:500;">Master your delivery, pacing, and tone with AI analysis.</p>
+<div class="db-section active" id="voice-rehearsal-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Voice Rehearsal Studio
+                </h4>
+                <p class="sr-page-hero-subtitle">Master your delivery, pacing, and tone with AI analysis.</p>
+            </div>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <ul class="nav nav-pills" id="moduleTabs" style="margin-bottom:0;">
-                <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice">Practice</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics">History & Analytics</a></li>
-            </ul>
-        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="voicePanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="voiceBlue" x1="70" y1="36" x2="154" y2="116"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#voicePanel)" stroke="#BFDBFE" stroke-width="3"/><rect x="91" y="40" width="38" height="58" rx="19" fill="url(#voiceBlue)"/><path d="M75 78a35 35 0 0 0 70 0M110 113v14M92 127h36" fill="none" stroke="#2563EB" stroke-width="7" stroke-linecap="round"/><path d="M55 72v20M68 60v44M152 60v44M165 72v20" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" opacity=".75"/><circle cx="160" cy="44" r="17" fill="#22C55E"/><path d="M153 44l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
+    </div>
+    <div class="sr-page-actions">
+        <ul class="nav nav-pills" id="moduleTabs" style="margin-bottom:0;">
+            <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice">Practice</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics">History & Analytics</a></li>
+        </ul>
     </div>
 
     <!-- TAB: PRACTICE -->

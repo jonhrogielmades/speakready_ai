@@ -38,21 +38,176 @@
         .tracker-panel,
         .tracker-card { border-radius:14px; padding:15px; }
     }
+    @media (max-width: 767px) {
+        #job-tracker-page .sr-page-actions {
+            margin-bottom: 12px !important;
+        }
+        #job-tracker-page .tracker-stats {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        #job-tracker-page .tracker-stat {
+            min-height: 86px;
+            padding: 11px;
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        #job-tracker-page .tracker-stat-label {
+            font-size: 0.62rem;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+        #job-tracker-page .tracker-stat-value {
+            font-size: 1.18rem;
+            margin-top: 8px;
+        }
+        #job-tracker-page .tracker-grid {
+            gap: 12px;
+        }
+        #job-tracker-page .tracker-panel,
+        #job-tracker-page .tracker-card {
+            padding: 14px;
+            border-radius: 14px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #job-tracker-page .tracker-panel h5,
+        #job-tracker-page .tracker-card h5 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+        }
+        #job-tracker-page .tracker-label {
+            font-size: 0.74rem;
+            margin-bottom: 6px;
+        }
+        #job-tracker-page .tracker-field {
+            min-height: 44px;
+            padding: 10px 12px;
+            border-radius: 11px;
+            font-size: 0.84rem;
+        }
+        #job-tracker-page textarea.tracker-field {
+            min-height: 94px;
+            line-height: 1.45;
+        }
+        #job-tracker-page #job-tracker-form .row.g-3 {
+            --bs-gutter-x: 8px;
+            --bs-gutter-y: 10px;
+        }
+        #job-tracker-page #job-tracker-form .btn,
+        #job-tracker-page details .btn {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        #job-tracker-page .tracker-application-card > .d-flex:first-child {
+            gap: 12px !important;
+        }
+        #job-tracker-page .tracker-application-card .status-pill {
+            padding: 5px 8px;
+            font-size: 0.66rem;
+            line-height: 1.15;
+        }
+        #job-tracker-page .tracker-actions {
+            display: grid;
+            grid-template-columns: 68px minmax(0, 1fr);
+            width: 100%;
+            gap: 10px;
+            align-items: center;
+        }
+        #job-tracker-page .match-ring {
+            width: 62px;
+            height: 62px;
+        }
+        #job-tracker-page .match-ring span {
+            width: 48px;
+            height: 48px;
+            font-size: 0.82rem;
+        }
+        #job-tracker-page .tracker-actions .d-flex {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 44px;
+            gap: 8px !important;
+        }
+        #job-tracker-page .tracker-actions .btn {
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        #job-tracker-page .tracker-actions form,
+        #job-tracker-page .tracker-actions form .btn {
+            width: 100%;
+        }
+        #job-tracker-page .keyword-chip {
+            padding: 5px 8px;
+            font-size: 0.68rem;
+            line-height: 1.15;
+            margin: 0 4px 6px 0;
+        }
+        #job-tracker-page .plan-item {
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 9px;
+            padding: 11px;
+            border-radius: 12px;
+        }
+        #job-tracker-page .plan-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        #job-tracker-page .plan-title {
+            font-size: 0.8rem;
+            line-height: 1.35;
+        }
+        #job-tracker-page .plan-task {
+            font-size: 0.76rem;
+            line-height: 1.4;
+        }
+        #job-tracker-page .plan-item > span:last-child {
+            grid-column: 2;
+            font-size: 0.7rem !important;
+            white-space: normal !important;
+        }
+        #job-tracker-page details summary {
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+        }
+        #job-tracker-page details .row.g-3 {
+            --bs-gutter-x: 8px;
+            --bs-gutter-y: 8px;
+        }
+    }
+    @media (max-width: 380px) {
+        #job-tracker-page .tracker-stats {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active">
-    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;text-transform:uppercase;">
-                <i class="fa-solid fa-briefcase me-2"></i>Job Application Tracker
-            </h4>
-            <p style="color:var(--tx3);margin:0;">Track target roles, measure resume fit, and follow a smart 7-day practice plan.</p>
+<div class="db-section active" id="job-tracker-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 12h16M10 12v2h4v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    Job Tracker
+                </h4>
+                <p class="sr-page-hero-subtitle">Track target roles, measure resume fit, and follow a smart 7-day practice plan.</p>
+            </div>
         </div>
-        <a href="{{ route('user.packs.index') }}" class="btn btn-outline-primary align-self-start" style="border-radius:12px;font-weight:700;">
-            <i class="fa-solid fa-layer-group me-1"></i>Interview Packs
-        </a>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="jobPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="jobBlue" x1="58" y1="38" x2="168" y2="118"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="32" y="24" width="156" height="104" rx="18" fill="url(#jobPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <rect x="58" y="52" width="104" height="58" rx="12" fill="url(#jobBlue)"/><path d="M90 52v-6a10 10 0 0 1 20 0v6" fill="none" stroke="#2563EB" stroke-width="6" stroke-linecap="round"/><path d="M58 75h104" stroke="#EFF6FF" stroke-width="5" opacity=".8"/><rect x="99" y="72" width="22" height="13" rx="4" fill="#EFF6FF"/>
+            <circle cx="164" cy="43" r="17" fill="#22C55E"/><path d="m157 43 5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
     </div>
-
     @php
         $totalApplications = $applications->count();
         $activeApplications = $applications->whereNotIn('status', ['rejected', 'archived'])->count();

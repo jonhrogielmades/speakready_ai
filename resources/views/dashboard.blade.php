@@ -16,11 +16,6 @@
     $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
     $categoryCount = isset($categoryPerformance) ? count($categoryPerformance) : 0;
     $moduleCount = isset($learningLabProgress) ? count($learningLabProgress) : 0;
-    $avatarUrl = null;
-    if (Auth::check() && Auth::user()->profile_photo_path) {
-        $photoPath = Auth::user()->profile_photo_path;
-        $avatarUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
-    }
 @endphp
 
 <style>
@@ -148,6 +143,9 @@
         height: auto;
         pointer-events: none;
         user-select: none;
+        transform-origin: 50% 78%;
+        animation: srWelcomeFloat 4.6s ease-in-out infinite;
+        filter: drop-shadow(0 10px 18px rgba(37, 99, 235, 0.14));
     }
 
     @media (min-width: 992px) {
@@ -220,29 +218,6 @@
         min-width: 0;
     }
 
-    .sr-avatar-xl {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb, #0ea5e9);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 1.45rem;
-        font-weight: 800;
-        overflow: hidden;
-        flex: 0 0 auto;
-        border: 3px solid rgba(255, 255, 255, 0.78);
-        box-shadow: 0 4px 14px rgba(30, 64, 175, 0.16);
-    }
-
-    .sr-avatar-xl img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
     .sr-welcome-copy {
         min-width: 0;
     }
@@ -259,9 +234,9 @@
 
     .sr-title {
         margin: 0;
-        font-size: clamp(0.92rem, 1.1vw, 1rem);
+        font-size: clamp(1.28rem, 2.3vw, 1.85rem);
         line-height: 1.25;
-        font-weight: 700;
+        font-weight: 800;
         color: var(--tx);
     }
 
@@ -274,6 +249,47 @@
         display: inline-block;
         margin-left: 5px;
         transform-origin: 70% 70%;
+        animation: srWaveHand 1.8s ease-in-out infinite;
+    }
+
+    @keyframes srWelcomeFloat {
+        0%, 100% {
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+        }
+        35% {
+            transform: translate3d(0, -7px, 0) rotate(1.6deg) scale(1.015);
+        }
+        70% {
+            transform: translate3d(-3px, -2px, 0) rotate(-1deg) scale(1.005);
+        }
+    }
+
+    @keyframes srWaveHand {
+        0%, 60%, 100% {
+            transform: rotate(0deg);
+        }
+        10% {
+            transform: rotate(16deg);
+        }
+        20% {
+            transform: rotate(-10deg);
+        }
+        30% {
+            transform: rotate(14deg);
+        }
+        40% {
+            transform: rotate(-6deg);
+        }
+        50% {
+            transform: rotate(8deg);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sr-welcome-art,
+        .sr-wave {
+            animation: none;
+        }
     }
 
     .sr-subtitle {
@@ -352,6 +368,11 @@
         font-weight: 800;
         padding: 6px 10px;
         white-space: nowrap;
+    }
+
+    .sr-status-pill {
+        width: fit-content;
+        max-width: max-content;
     }
 
     .score-high { background: rgba(34, 197, 94, 0.13); color: var(--dash-success); border: 1px solid rgba(34,197,94,.24); }
@@ -471,15 +492,28 @@
     }
 
     .sr-card-title {
+        display: flex;
+        align-items: center;
+        gap: 7px;
         margin: 0;
         color: var(--tx);
-        font-size: 1rem;
+        font-size: clamp(0.88rem, 0.9vw, 0.95rem);
+        line-height: 1.25;
         font-weight: 800;
+        overflow-wrap: anywhere;
+        min-width: 0;
+    }
+
+    .sr-card-title i {
+        flex: 0 0 auto;
+        font-size: 1em;
+        margin: 0 !important;
     }
 
     .sr-card-kicker {
         color: var(--tx3);
-        font-size: 0.8rem;
+        font-size: 0.76rem;
+        line-height: 1.35;
         margin-top: 4px;
     }
 
@@ -767,7 +801,7 @@
         }
 
         .sr-dashboard {
-            --dash-section-gap: 16px;
+            --dash-section-gap: 12px;
             --dash-card-radius: 14px;
             --dash-card-pad: 14px;
             gap: 0;
@@ -808,17 +842,20 @@
 
         .stat-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: var(--dash-section-gap) !important;
+            gap: 10px !important;
             margin: 0;
         }
 
         .sr-card {
             border-radius: var(--dash-card-radius);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
         }
 
         .sr-hero-card {
             border-radius: var(--dash-card-radius);
             margin-bottom: 0;
+            min-height: 104px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
         }
 
         .sr-stats-desktop {
@@ -832,7 +869,7 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
             grid-auto-rows: 1fr;
             align-items: stretch;
-            gap: var(--dash-section-gap);
+            gap: 10px;
             padding: 0;
             margin: var(--dash-section-gap) 0;
         }
@@ -855,34 +892,38 @@
         }
 
         .sr-hero-inner {
-            min-height: 112px;
-            padding: 14px 112px 14px 14px;
+            min-height: 104px;
+            padding: 13px 14px;
         }
 
         .sr-welcome-art {
-            right: -2px;
-            bottom: -1px;
-            width: 122px;
-        }
-
-        .sr-avatar-xl {
-            width: 46px;
-            height: 46px;
-            font-size: 1.15rem;
+            right: -18px;
+            bottom: -8px;
+            width: 78px;
+            opacity: 0.5;
         }
 
         .sr-hero-card .sr-user-row {
             align-items: center;
-            gap: 10px;
+            gap: 9px;
+        }
+
+        .sr-welcome-copy {
+            flex: 1 1 auto;
+            max-width: 100%;
         }
 
         .sr-hero-card .sr-title {
-            font-size: 1rem;
+            font-size: 1.22rem;
+            line-height: 1.22;
+            margin-bottom: 4px;
+            overflow-wrap: anywhere;
         }
 
         .sr-hero-card .sr-subtitle {
             font-size: 0.7rem;
-            line-height: 1.4;
+            line-height: 1.35;
+            max-width: 100%;
         }
 
         .sr-score-meta {
@@ -890,38 +931,83 @@
         }
 
         .sr-score-panel {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(104px, 1.05fr);
+            column-gap: 12px;
+            row-gap: 8px;
+            align-items: stretch;
             width: 100%;
             max-width: none;
             padding: var(--dash-card-pad);
             border-radius: var(--dash-card-radius);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+            min-height: 0 !important;
         }
 
         .sr-score-top {
             gap: 8px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: auto auto;
+            justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+            grid-column: 1 / -1;
         }
 
         .sr-score-value {
-            font-size: clamp(2.75rem, 13vw, 3.35rem);
+            font-size: clamp(2.25rem, 10vw, 2.75rem);
+            line-height: 0.95;
+            grid-column: 1;
+            grid-row: 2;
+            align-self: end;
+        }
+
+        .sr-score-value span {
+            font-size: 1.05rem;
+        }
+
+        .sr-score-panel .sr-progress {
+            height: 7px;
+            margin-top: 8px !important;
+            grid-column: 1;
+            grid-row: 3;
+            align-self: center;
         }
 
         .sr-score-meta {
             gap: 8px;
-            margin-top: 12px;
+            margin-top: 0;
+            grid-column: 2;
+            grid-row: 2 / 4;
+            align-self: stretch;
+            display: grid;
+            grid-template-rows: repeat(2, minmax(0, 1fr));
         }
 
         .sr-score-meta-item {
-            padding: 9px 10px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .sr-meta-label {
+            font-size: 0.66rem;
+            margin-bottom: 1px;
+        }
+
+        .sr-meta-value {
+            font-size: 0.9rem;
         }
 
         .sr-stat-card {
-            min-height: 118px;
+            min-height: 104px;
             padding: 12px;
             border-radius: 14px;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-start;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
         }
 
         .sr-stat-head {
@@ -933,20 +1019,22 @@
         }
 
         .sr-stat-icon {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 10px;
-            font-size: 0.84rem;
+            font-size: 0.8rem;
         }
 
         .sr-stat-card .sr-chip {
-            padding: 5px 8px;
-            font-size: 0.66rem;
+            padding: 4px 7px;
+            font-size: 0.62rem;
+            line-height: 1.1;
         }
 
         .sr-stat-value {
             margin-top: 0;
-            font-size: 1.22rem;
+            font-size: 1.18rem;
+            line-height: 1.12;
         }
 
         .sr-stat-value span {
@@ -961,9 +1049,9 @@
 
         .sr-mobile-stat-grid .sr-stat-card {
             min-width: 0;
-            min-height: 104px;
+            min-height: 100px;
             height: 100%;
-            padding: 12px;
+            padding: 11px;
             border-radius: 14px;
             gap: 8px;
             box-shadow: var(--shadow-soft, 0 8px 22px rgba(0,0,0,.1));
@@ -996,7 +1084,7 @@
         }
 
         .sr-mobile-stat-grid .sr-stat-value {
-            font-size: 1.12rem;
+            font-size: 1.08rem;
         }
 
         .sr-mobile-stat-grid .sr-stat-label {
@@ -1005,13 +1093,39 @@
 
         .chart-container-mobile,
         .sr-chart-box {
-            height: 230px;
+            height: 218px;
         }
 
         .sr-btn,
         .sr-chip,
         .sr-status-pill {
             max-width: 100%;
+        }
+
+        .sr-btn {
+            min-height: 42px;
+            padding: 9px 12px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            line-height: 1.2;
+            text-align: center;
+            touch-action: manipulation;
+        }
+
+        .sr-btn i {
+            margin: 0 !important;
+            flex: 0 0 auto;
+        }
+
+        .sr-chip,
+        .sr-status-pill,
+        .sr-tag {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            line-height: 1.2;
         }
 
         .sr-card-header {
@@ -1022,9 +1136,17 @@
         }
 
         .sr-card-title {
-            font-size: 0.96rem;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.88rem;
             line-height: 1.25;
             overflow-wrap: anywhere;
+        }
+
+        .sr-card-title i {
+            margin: 0 !important;
+            flex: 0 0 auto;
         }
 
         .sr-card-kicker,
@@ -1047,27 +1169,70 @@
             padding: 11px;
         }
 
+        .sr-rec-item,
+        .sr-module-item {
+            gap: 10px;
+        }
+
+        .sr-rec-icon,
+        .sr-list-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            font-size: 0.88rem;
+            flex: 0 0 34px;
+        }
+
         .sr-session-card {
             align-items: stretch;
             flex-direction: column;
+            gap: 10px;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
         }
 
         .sr-session-actions {
-            justify-content: space-between;
-            flex-wrap: wrap;
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr) 40px;
+            justify-content: stretch;
+            flex-wrap: nowrap;
             width: 100%;
+            gap: 8px !important;
         }
 
         .sr-session-actions .sr-btn-primary {
-            flex: 1 1 auto;
+            width: 100%;
+            min-height: 38px;
+        }
+
+        .sr-session-actions form,
+        .sr-session-actions form .sr-btn {
+            width: 100%;
+        }
+
+        .sr-score-mini {
+            min-width: 48px;
+            min-height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(96, 165, 250, 0.1);
+            font-weight: 900;
         }
 
         #card-recent-sessions .sr-card-header > .d-flex {
             display: grid !important;
-            grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 8px !important;
             width: 100%;
         }
+
+        #card-recent-sessions .sr-card-header > .sr-recent-actions .sr-btn:only-child {
+            grid-column: 1 / -1;
+            justify-self: center;
+            width: min(180px, 100%);
+         }
 
         #card-recent-sessions .sr-card-header form,
         #card-recent-sessions .sr-card-header .sr-btn {
@@ -1086,7 +1251,7 @@
         #card-progress-chart .sr-card-title {
             display: flex;
             align-items: center;
-            font-size: 0.95rem;
+            font-size: 0.86rem;
             line-height: 1.2;
         }
 
@@ -1102,7 +1267,7 @@
         }
 
         #card-progress-chart .sr-chart-box {
-            height: 214px;
+            height: 206px;
             margin-top: 2px;
         }
 
@@ -1120,22 +1285,22 @@
 
     @media (max-width: 420px) {
         .sr-hero-inner {
-            padding-right: 72px;
+            padding-right: 82px;
         }
 
         .sr-welcome-art {
-            right: -12px;
-            width: 92px;
-            opacity: 0.78;
+            right: -10px;
+            width: 98px;
+            opacity: 0.88;
         }
 
         .stat-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 12px !important;
+            gap: 10px !important;
         }
 
         .sr-mobile-stat-grid {
-            gap: 12px;
+            gap: 10px;
         }
 
         .sr-achievement-grid {
@@ -1158,7 +1323,7 @@
         }
 
         .sr-stat-card {
-            min-height: 112px;
+            min-height: 102px;
             padding: 10px;
         }
 
@@ -1168,13 +1333,13 @@
         }
 
         .sr-mobile-stat-grid {
-            gap: 12px;
+            gap: 10px;
             padding: 0;
         }
 
         .sr-mobile-stat-grid .sr-stat-card {
-            min-height: 104px;
-            padding: 12px;
+            min-height: 100px;
+            padding: 10px;
         }
 
         .sr-mobile-stat-grid .sr-chip {
@@ -1183,7 +1348,7 @@
         }
 
         #card-progress-chart .sr-chart-box {
-            height: 202px;
+            height: 196px;
         }
     }
 </style>
@@ -1194,15 +1359,8 @@
             <section class="sr-card sr-hero-card p-0" aria-labelledby="dashboard-welcome-title">
                 <div class="sr-hero-inner">
                     <div class="sr-user-row">
-                        <div class="sr-avatar-xl">
-                            @if($avatarUrl)
-                                <img src="{{ $avatarUrl }}" alt="{{ $welcomeName }} profile photo">
-                            @else
-                                {{ strtoupper(substr(Auth::user()->name ?? 'User', 0, 1)) }}
-                            @endif
-                        </div>
                         <div class="sr-welcome-copy">
-                            <h6 class="sr-title" id="dashboard-welcome-title">Welcome back, <span class="sr-title-name">{{ $welcomeName }}</span><span class="sr-wave" aria-hidden="true">&#128075;</span></h6>
+                            <h3 class="sr-title" id="dashboard-welcome-title">Good day! <span class="sr-title-name">{{ $welcomeName }}</span><span class="sr-wave" aria-hidden="true">&#128075;</span></h3>
                             <p class="sr-subtitle">Track readiness, progress, and coaching to ace your next interview.</p>
                         </div>
                     </div>
@@ -1322,7 +1480,7 @@
             <section id="card-progress-chart" class="sr-card sr-card-pad">
                 <div class="sr-card-header">
                     <div>
-                        <h2 class="sr-card-title"><i class="fa-solid fa-chart-line me-2" style="color:#60a5fa"></i> Readiness Trend</h2>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-chart-line me-2" style="color:#60a5fa"></i> Readiness Trend</h5>
                         <div class="sr-card-kicker">Recent completed sessions, scored from 0 to 100.</div>
                     </div>
                     <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.18)">Recent 10</span>
@@ -1336,7 +1494,7 @@
                 <section class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
-                            <h2 class="sr-card-title">Category Performance</h2>
+                            <h5 class="sr-card-title"><i class="fa-solid fa-layer-group me-2" style="color:#22c55e"></i> Category Performance</h5>
                             <div class="sr-card-kicker">Where your interview scores are strongest.</div>
                         </div>
                     </div>
@@ -1366,7 +1524,7 @@
                 <section class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
-                            <h2 class="sr-card-title">Learning Progress</h2>
+                            <h5 class="sr-card-title"><i class="fa-solid fa-book-open-reader me-2" style="color:#8b5cf6"></i> Learning Progress</h5>
                             <div class="sr-card-kicker">Latest modules you are working through.</div>
                         </div>
                     </div>
@@ -1399,7 +1557,7 @@
                 <section id="card-ai-feedback" class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
-                            <h2 class="sr-card-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#60a5fa"></i> AI Feedback Summary</h2>
+                            <h5 class="sr-card-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#60a5fa"></i> AI Feedback Summary</h5>
                             <div class="sr-card-kicker">A quick view of strengths and coaching priorities.</div>
                         </div>
                     </div>
@@ -1437,7 +1595,7 @@
                 <section id="card-ai-recommendations" class="sr-card sr-card-pad">
                     <div class="sr-card-header">
                         <div>
-                            <h2 class="sr-card-title"><i class="fa-solid fa-lightbulb me-2" style="color:#f59e0b"></i> AI Recommendations</h2>
+                            <h5 class="sr-card-title"><i class="fa-solid fa-lightbulb me-2" style="color:#f59e0b"></i> AI Recommendations</h5>
                             <div class="sr-card-kicker">Next actions based on recent performance.</div>
                         </div>
                     </div>
@@ -1462,10 +1620,10 @@
             <section id="card-recent-sessions" class="sr-card sr-card-pad">
                 <div class="sr-card-header">
                     <div>
-                        <h2 class="sr-card-title">Recent Sessions</h2>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-clock-rotate-left me-2" style="color:#06b6d4"></i> Recent Sessions</h5>
                         <div class="sr-card-kicker">Review the latest completed mock interviews.</div>
                     </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="sr-recent-actions d-flex align-items-center gap-2 flex-wrap">
                         <a href="{{ route('user.reports') }}" class="sr-btn" style="min-height:36px;padding:7px 12px">View Reports</a>
                         @if(isset($recentSessions) && $recentSessions->count() > 0)
                             <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
@@ -1558,7 +1716,7 @@
             <section class="sr-card sr-card-pad">
                 <div class="sr-card-header">
                     <div>
-                        <h2 class="sr-card-title">Skill Radar</h2>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-chart-simple me-2" style="color:#ec4899"></i> Skill Radar</h5>
                         <div class="sr-card-kicker">Average capability profile.</div>
                     </div>
                 </div>
@@ -1569,7 +1727,7 @@
 
             <section id="card-daily-challenge" class="sr-card sr-card-pad sr-challenge-card">
                 <div class="sr-eyebrow"><i class="fa-solid fa-calendar-day"></i> Today&apos;s Challenge</div>
-                <h2 class="sr-card-title" style="font-size:1.15rem">Answer 3 behavioral questions</h2>
+                <h5 class="sr-card-title"><i class="fa-solid fa-clipboard-question me-2" style="color:#f97316"></i> Answer 3 behavioral questions</h5>
                 <p class="sr-card-kicker mb-3">Earn extra XP, sharpen structure, and keep your practice streak alive.</p>
                 <div class="sr-tag-list mb-3">
                     <span class="sr-tag" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.18);color:#f59e0b">+50 XP</span>
@@ -1581,7 +1739,7 @@
             <section class="sr-card sr-card-pad">
                 <div class="sr-card-header">
                     <div>
-                        <h2 class="sr-card-title">Current Goal</h2>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-bullseye me-2" style="color:#ef4444"></i> Current Goal</h5>
                         <div class="sr-card-kicker">Progress toward your next readiness target.</div>
                     </div>
                 </div>
@@ -1604,7 +1762,7 @@
             <section class="sr-card sr-card-pad">
                 <div class="sr-card-header">
                     <div>
-                        <h2 class="sr-card-title">Achievements</h2>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-trophy me-2" style="color:#f59e0b"></i> Achievements</h5>
                         <div class="sr-card-kicker">Milestones earned through practice.</div>
                     </div>
                 </div>
@@ -1630,7 +1788,7 @@
             <section class="sr-card sr-card-pad">
                 <div class="sr-card-header">
                     <div>
-                        <h2 class="sr-card-title">Notifications</h2>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-bell me-2" style="color:#6366f1"></i> Notifications</h5>
                         <div class="sr-card-kicker">Recent updates and reminders.</div>
                     </div>
                 </div>

@@ -169,54 +169,580 @@
             z-index: 1000;
             height: calc(var(--mob-top-h) + var(--mob-safe-top));
             padding-top: var(--mob-safe-top);
-            background: rgba(8, 8, 15, 0.9);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border-bottom: 1px solid var(--bd);
+            background: linear-gradient(180deg, rgba(12, 16, 28, 0.94), rgba(8, 8, 15, 0.88));
+            backdrop-filter: blur(20px) saturate(1.15);
+            -webkit-backdrop-filter: blur(20px) saturate(1.15);
+            border-bottom: 1px solid rgba(96, 165, 250, 0.16);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-left: 16px;
-            padding-right: 16px;
+            padding-left: 12px;
+            padding-right: 12px;
          }
-         .lm #mob-header { background: rgba(250, 250, 254, 0.94); }
+         .lm #mob-header {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92));
+            border-bottom-color: rgba(37, 99, 235, 0.16);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+         }
 
          .mob-header-logo {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 1rem; font-weight: 700;
+            display: flex; align-items: center; gap: 9px;
+            font-size: 0.92rem; font-weight: 800;
             color: var(--tx); text-decoration: none;
             min-width: 0; flex: 1 1 auto;
+            letter-spacing: 0;
+            -webkit-tap-highlight-color: transparent;
          }
-         .mob-header-logo img { width: 30px; height: 30px; border-radius: 8px; }
+         .mob-logo-ring {
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
+            padding: 2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            background: linear-gradient(135deg, #60a5fa, #22d3ee 42%, #a78bfa);
+            box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.28), 0 0 18px rgba(96, 165, 250, 0.42);
+         }
+         .mob-header-logo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: var(--bg);
+            object-fit: contain;
+         }
          .mob-header-logo span {
             min-width: 0;
-            max-width: 130px;
+            max-width: 128px;
             display: block;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
          }
 
-         .mob-header-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+         .mob-header-right { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
 
          .mob-icon-btn {
-            width: 36px; height: 36px;
-            border-radius: 10px;
-            border: 1px solid var(--bd2);
-            background: transparent; color: var(--tx);
+            width: 34px; height: 34px;
+            border-radius: 11px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            background: rgba(255, 255, 255, 0.04); color: var(--tx);
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s, transform 0.2s, color 0.2s;
+            font-size: 0.84rem; cursor: pointer; transition: background-color 0.2s, transform 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
             -webkit-tap-highlight-color: transparent;
          }
-         .mob-icon-btn:active { background: rgba(139,92,246,0.15); transform: scale(0.92); }
+         .mob-icon-btn:active { background: rgba(96,165,250,0.15); transform: scale(0.92); }
+         .lm .mob-icon-btn { background: rgba(255, 255, 255, 0.72); border-color: rgba(37, 99, 235, 0.14); }
 
          .mob-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
+            width: 34px; height: 34px; border-radius: 50%;
             background: var(--grad);
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 0.8rem; font-weight: 700;
             flex-shrink: 0; cursor: pointer;
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2), 0 0 16px rgba(96, 165, 250, 0.24);
             -webkit-tap-highlight-color: transparent;
+         }
+
+         .mob-profile-wrap {
+            position: relative;
+         }
+
+         .mob-profile-dropdown {
+            position: fixed;
+            top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px);
+            left: max(10px, env(safe-area-inset-left, 0px));
+            right: max(10px, env(safe-area-inset-right, 0px));
+            z-index: 1100;
+            display: none;
+            width: auto;
+            max-width: 440px;
+            margin: 0 auto;
+            background: rgba(12, 16, 28, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            overflow: hidden;
+         }
+
+         .mob-profile-dropdown.open {
+            display: block;
+            animation: mobFadeIn 0.18s ease;
+         }
+
+         .mob-profile-dropdown[data-origin="bottom"] {
+            top: auto;
+            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 10px);
+            max-height: min(72dvh, 560px);
+         }
+
+         .mob-more-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 980;
+            display: none;
+            background: rgba(2, 6, 23, 0.22);
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+         }
+
+         .mob-more-backdrop.open {
+            display: block;
+            animation: mobFadeIn 0.18s ease;
+         }
+
+         .lm .mob-more-backdrop {
+            background: rgba(248, 250, 252, 0.34);
+         }
+
+         .lm .mob-profile-dropdown {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(37, 99, 235, 0.16);
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16);
+         }
+
+         .mob-profile-head {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 14px;
+            border-bottom: 1px solid var(--bd);
+         }
+
+         .mob-profile-head-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: var(--grad);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            overflow: hidden;
+            font-weight: 800;
+         }
+
+         .mob-profile-head-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+         }
+
+         .mob-profile-head-meta {
+            min-width: 0;
+            flex: 1 1 auto;
+         }
+
+         .mob-profile-name {
+            color: var(--tx);
+            font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.25;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
+
+         .mob-profile-role {
+            color: var(--tx3);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-top: 2px;
+         }
+
+         .mob-profile-close {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--bd2);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--tx2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+         }
+
+         .mob-profile-menu {
+            max-height: min(66dvh, 500px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 10px;
+         }
+
+         .mob-profile-dropdown[data-mode="account"] .mob-profile-pages,
+         .mob-profile-dropdown[data-mode="pages"] .mob-profile-account {
+            display: none;
+         }
+
+         .mob-profile-dropdown[data-mode="pages"] .mob-profile-head {
+            display: none;
+         }
+
+         .mob-profile-pages-close {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--bd);
+            color: var(--tx);
+            font-size: 0.88rem;
+            font-weight: 800;
+         }
+
+         .mob-profile-dropdown[data-mode="pages"] .mob-profile-pages-close {
+            display: flex;
+         }
+
+         .mob-profile-section-title {
+            color: var(--tx3);
+            font-size: 0.66rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 8px 6px 7px;
+         }
+
+         .mob-profile-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+         }
+
+         .mob-profile-link,
+         .mob-profile-action {
+            min-width: 0;
+            min-height: 48px;
+            border: 1px solid var(--bd);
+            border-radius: 13px;
+            background: rgba(255, 255, 255, 0.035);
+            color: var(--tx);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px;
+            font-size: 0.76rem;
+            font-weight: 800;
+            line-height: 1.2;
+         }
+
+         .lm .mob-profile-link,
+         .lm .mob-profile-action {
+            background: rgba(248, 250, 252, 0.86);
+         }
+
+         .mob-profile-link.active {
+            border-color: rgba(96, 165, 250, 0.38);
+            background: rgba(96, 165, 250, 0.12);
+         }
+
+         .mob-profile-link i,
+         .mob-profile-action i {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+         }
+
+         .mob-profile-link.profile-nav-emerald i { background: linear-gradient(135deg, #059669, #10b981); }
+         .mob-profile-link.profile-nav-cyan i { background: linear-gradient(135deg, #0891b2, #22d3ee); }
+         .mob-profile-link.profile-nav-indigo i { background: linear-gradient(135deg, #4f46e5, #818cf8); }
+         .mob-profile-link.profile-nav-rose i { background: linear-gradient(135deg, #e11d48, #fb7185); }
+         .mob-profile-link.profile-nav-amber i { background: linear-gradient(135deg, #d97706, #fbbf24); }
+         .mob-profile-link.profile-nav-purple i { background: linear-gradient(135deg, #7c3aed, #c084fc); }
+         .mob-profile-link.profile-nav-blue i { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+         .mob-profile-link.profile-nav-slate i { background: linear-gradient(135deg, #475569, #94a3b8); }
+
+         .mob-profile-link span,
+         .mob-profile-action span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+         }
+
+         .mob-profile-action {
+            width: 100%;
+            border-color: var(--bd2);
+            text-align: left;
+         }
+
+         .mob-profile-action.danger {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.28);
+            background: rgba(248, 113, 113, 0.08);
+         }
+
+         .mob-profile-action.danger i {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+         }
+
+         .mob-profile-language {
+            border: 1px solid var(--bd);
+            border-radius: 13px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.035);
+         }
+
+         .mob-profile-language label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: var(--tx);
+            font-size: 0.76rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+         }
+
+         .mob-profile-language label i {
+            color: #60a5fa;
+         }
+
+         .mob-profile-language select {
+            background: var(--bg3);
+            border-color: var(--bd);
+            color: var(--tx);
+            border-radius: 11px;
+            min-height: 42px;
+            font-size: 0.82rem;
+         }
+
+         @media (max-width: 360px) {
+            .mob-profile-grid {
+               grid-template-columns: 1fr;
+            }
+         }
+
+         .mob-notif-wrap {
+            position: relative;
+         }
+
+         .mob-notif-dropdown {
+            position: fixed;
+            top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px);
+            left: max(10px, env(safe-area-inset-left, 0px));
+            right: max(10px, env(safe-area-inset-right, 0px));
+            z-index: 1100;
+            display: none;
+            width: auto;
+            max-width: 440px;
+            margin: 0 auto;
+            background: rgba(12, 16, 28, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 22px 56px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            overflow: hidden;
+         }
+
+         .mob-notif-dropdown.open {
+            display: block;
+            animation: mobFadeIn 0.18s ease;
+         }
+
+         .lm .mob-notif-dropdown {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(37, 99, 235, 0.16);
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16);
+         }
+
+         .mob-notif-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 14px;
+            border-bottom: 1px solid var(--bd);
+         }
+
+         .mob-notif-title {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--tx);
+            font-size: 0.92rem;
+            font-weight: 800;
+         }
+
+         .mob-notif-count {
+            display: none;
+            flex: 0 0 auto;
+            color: #f87171;
+            background: rgba(248, 113, 113, 0.14);
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.68rem;
+            font-weight: 800;
+         }
+
+         .mob-notif-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+         }
+
+         .mob-notif-action {
+            min-width: 34px;
+            min-height: 32px;
+            border: 1px solid var(--bd2);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--tx2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 6px 8px;
+            font-size: 0.72rem;
+            font-weight: 800;
+         }
+
+         .mob-notif-action.danger {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.28);
+         }
+
+         .mob-notif-list {
+            max-height: min(60dvh, 430px);
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 10px;
+         }
+
+         .mob-notif-item {
+            display: flex;
+            gap: 10px;
+            padding: 12px;
+            border: 1px solid var(--bd);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.035);
+            margin-bottom: 8px;
+         }
+
+         .lm .mob-notif-item {
+            background: rgba(248, 250, 252, 0.86);
+         }
+
+         .mob-notif-item.unread {
+            border-color: rgba(96, 165, 250, 0.32);
+            background: rgba(96, 165, 250, 0.1);
+         }
+
+         .mob-notif-ico {
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: 11px;
+            background: rgba(96, 165, 250, 0.14);
+            color: #60a5fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+         }
+
+         .mob-notif-copy {
+            min-width: 0;
+            flex: 1 1 auto;
+         }
+
+         .mob-notif-copy strong,
+         .mob-notif-copy span,
+         .mob-notif-copy small {
+            display: block;
+            overflow-wrap: anywhere;
+            word-break: normal;
+         }
+
+         .mob-notif-copy strong {
+            color: var(--tx);
+            font-size: 0.84rem;
+            line-height: 1.3;
+            margin-bottom: 4px;
+         }
+
+         .mob-notif-copy span {
+            color: var(--tx2);
+            font-size: 0.76rem;
+            line-height: 1.45;
+         }
+
+         .mob-notif-copy small {
+            color: var(--tx3);
+            font-size: 0.68rem;
+            margin-top: 6px;
+         }
+
+         .mob-notif-row-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+         }
+
+         .mob-notif-link-btn {
+            border: 0;
+            background: transparent;
+            padding: 0;
+            color: var(--pur);
+            font-size: 0.73rem;
+            font-weight: 800;
+         }
+
+         .mob-notif-link-btn.danger {
+            color: #f87171;
+         }
+
+         .mob-notif-footer {
+            padding: 12px 14px 14px;
+            border-top: 1px solid var(--bd);
+         }
+
+         .mob-notif-view-all {
+            width: 100%;
+            min-height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--bd2);
+            color: var(--tx);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            font-size: 0.8rem;
+            font-weight: 800;
+         }
+
+         @media (max-width: 360px) {
+            .mob-notif-header {
+               align-items: flex-start;
+               flex-direction: column;
+            }
+
+            .mob-notif-actions {
+               width: 100%;
+            }
+
+            .mob-notif-action {
+               flex: 1 1 0;
+            }
          }
 
          @media (max-width: 380px) {
@@ -434,338 +960,10 @@
             }
          }
 
-         /* ---- Drawer Overlay ---- */
-         #mob-drawer-overlay {
-            display: block;
-            position: fixed;
-            inset: 0;
-            z-index: 1050;
-            background: rgba(2, 6, 23, 0.62);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity 0.22s ease, visibility 0.22s ease;
-         }
-         #mob-drawer-overlay.open {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-         }
-
-         /* ---- Bottom Drawer ---- */
-         #mob-drawer {
-            position: fixed;
-            bottom: 0;
-            left: max(4px, env(safe-area-inset-left, 0px));
-            right: max(4px, env(safe-area-inset-right, 0px));
-            z-index: 1100;
-            width: auto;
-            background:
-               radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.12), transparent 32%),
-               linear-gradient(180deg, var(--bg2) 0%, var(--bg3) 100%);
-            border: 1px solid var(--bd2);
-            border-bottom: 0;
-            border-radius: 24px 24px 0 0;
-            padding: 6px 12px calc(8px + var(--mob-safe-bottom));
-            max-height: calc(100dvh - var(--mob-safe-top) - 8px);
-            overflow: hidden;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
-            transform: translate3d(0, calc(100% + 16px), 0);
-            transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-            box-shadow: 0 -24px 54px rgba(0, 0, 0, 0.4);
-         }
-         #mob-drawer.open {
-            transform: translate3d(0, 0, 0);
-         }
-         .lm #mob-drawer {
-            background:
-               radial-gradient(circle at 18% 0%, rgba(37, 99, 235, 0.1), transparent 34%),
-               linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-            box-shadow: 0 -22px 50px rgba(15, 23, 42, 0.16);
-         }
-
-         .drawer-handle {
-            width: 44px;
-            height: 4px;
-            background: rgba(148, 163, 184, 0.38);
-            border-radius: 100px;
-            margin: 3px auto 8px;
-         }
-         .drawer-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.68rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--tx3);
-            margin: 7px 2px 5px;
-         }
-         .drawer-title::after {
-            content: "";
-            height: 1px;
-            flex: 1 1 auto;
-            background: var(--bd);
-         }
-         .drawer-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 7px;
-            margin-bottom: 7px;
-         }
-         .drawer-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            min-height: 52px;
-            padding: 6px 6px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--bd);
-            text-decoration: none;
-            color: var(--tx2);
-            font-size: 0.62rem;
-            line-height: 1.16;
-            font-weight: 700;
-            text-align: center;
-            transition: background-color 0.18s ease, transform 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-            -webkit-tap-highlight-color: transparent;
-         }
-         .lm .drawer-item {
-            background: rgba(255, 255, 255, 0.78);
-            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-         }
-         .drawer-item i {
-            width: 27px;
-            height: 27px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.86rem;
-            color: var(--drawer-icon, #60a5fa);
-            background: rgba(96, 165, 250, 0.11);
-         }
-         .drawer-nav-blue { --drawer-icon: #93c5fd; }
-         .drawer-nav-purple { --drawer-icon: #c4b5fd; }
-         .drawer-nav-cyan { --drawer-icon: #67e8f9; }
-         .drawer-nav-indigo { --drawer-icon: #a5b4fc; }
-         .drawer-nav-emerald { --drawer-icon: #6ee7b7; }
-         .drawer-nav-rose { --drawer-icon: #fda4af; }
-         .drawer-nav-amber { --drawer-icon: #fcd34d; }
-         .drawer-item span {
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            overflow-wrap: anywhere;
-         }
-         .drawer-item:active {
-            transform: scale(0.97);
-            background: rgba(96, 165, 250, 0.1);
-         }
-         .drawer-item:focus-visible,
-         .drawer-action:focus-visible {
-            outline: 2px solid rgba(96, 165, 250, 0.9);
-            outline-offset: 2px;
-         }
-         .drawer-item.active {
-            border-color: rgba(96, 165, 250, 0.48);
-            background: rgba(96, 165, 250, 0.12);
-            color: #60a5fa;
-            box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.08);
-         }
-         .drawer-divider {
-            height: 1px;
-            background: var(--bd);
-            margin: 7px 0 6px;
-         }
-         .drawer-action {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-height: 36px;
-            padding: 7px 10px;
-            border-radius: 12px;
-            color: var(--tx2);
-            font-size: 0.78rem;
-            font-weight: 700;
-            cursor: pointer;
-            border: 1px solid transparent;
-            background: transparent;
-            width: 100%;
-            font-family: "Poppins", sans-serif;
-            text-align: left;
-            text-decoration: none;
-            transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
-         }
-         .drawer-action i {
-            width: 20px;
-            text-align: center;
-            font-size: 0.95rem;
-            color: var(--drawer-icon, currentColor);
-         }
-         .drawer-action:active {
-            background: rgba(96, 165, 250, 0.08);
-         }
-         .drawer-action.danger {
-            color: #f87171;
-         }
-         .drawer-action.danger:active {
-            background: rgba(248, 113, 113, 0.09);
-         }
-
-         .drawer-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 7px;
-            padding: 7px;
-            border: 1px solid var(--bd);
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.045);
-            min-width: 0;
-         }
-         .lm .drawer-user {
-            background: rgba(255, 255, 255, 0.82);
-            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.05);
-         }
-
-         .drawer-user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--grad);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 0.88rem;
-            font-weight: 800;
-            flex: 0 0 auto;
-            padding: 0;
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
-         }
-
-         .drawer-user-meta {
-            min-width: 0;
-            flex: 1 1 auto;
-         }
-
-         .drawer-user-name {
-            font-weight: 800;
-            font-size: 0.82rem;
-            line-height: 1.2;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-         }
-
-         .drawer-user-role {
-            display: inline-flex;
-            align-items: center;
-            width: fit-content;
-            margin-top: 3px;
-            padding: 2px 7px;
-            border-radius: 999px;
-            background: rgba(96, 165, 250, 0.11);
-            color: #93c5fd;
-            font-size: 0.62rem;
-            font-weight: 800;
-            line-height: 1.2;
-         }
-         .lm .drawer-user-role {
-            color: #2563eb;
-            background: rgba(37, 99, 235, 0.09);
-         }
-         .drawer-language-form {
-            display: block;
-            margin: 3px 0 6px;
-         }
-         .drawer-language-control {
-            display: block;
-            background: rgba(255, 255, 255, 0.035);
-            border: 1px solid var(--bd);
-         }
-         .lm .drawer-language-control {
-            background: rgba(255, 255, 255, 0.78);
-         }
-         .drawer-language-label {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--tx2);
-            font-size: 0.78rem;
-            font-weight: 800;
-            margin-bottom: 5px;
-         }
-         .drawer-language-label i {
-            width: 20px;
-            text-align: center;
-         }
-         .drawer-language-select {
-            min-height: 34px;
-            background: var(--bg3);
-            color: var(--tx);
-            border-color: var(--bd);
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-         }
-         .drawer-language-note {
-            display: block;
-            color: var(--tx3);
-            font-size: 0.68rem;
-            margin-top: 4px;
-            line-height: 1.25;
-         }
-
-         @media (min-width: 390px) {
-            .drawer-grid {
-               grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-         }
-
-         @media (max-width: 360px) {
-            #mob-drawer {
-               padding-left: 10px;
-               padding-right: 10px;
-               border-radius: 22px 22px 0 0;
-            }
-
-            .drawer-grid {
-               gap: 6px;
-            }
-
-            .drawer-item {
-               min-height: 50px;
-               padding: 6px 5px;
-               font-size: 0.58rem;
-            }
-
-            .drawer-item i {
-               width: 25px;
-               height: 25px;
-               font-size: 0.8rem;
-            }
-         }
-
          @media (prefers-reduced-motion: reduce) {
-            #mob-drawer,
-            #mob-drawer-overlay,
             .mob-nav-item,
             .mob-nav-icon,
-            .mob-nav-primary-icon,
-            .drawer-item,
-            .drawer-action {
+            .mob-nav-primary-icon {
                transition: none;
             }
          }
@@ -974,6 +1172,390 @@
          /* --- Table mobile scrolling --- */
          .table-responsive { -webkit-overflow-scrolling: touch; }
 
+         /* --- Cross-page mobile polish for user tools --- */
+         @media (max-width: 767px) {
+            #mob-content :is(.sr-page-hero, .progress-hero, .setup-hero) {
+               min-height: 104px !important;
+               margin-bottom: 12px !important;
+               border-radius: 14px !important;
+               box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            #mob-content :is(.sr-page-hero-inner, .progress-hero-inner, .setup-hero-inner) {
+               justify-content: flex-start !important;
+               min-height: 104px !important;
+               padding: 14px 96px 14px 14px !important;
+            }
+
+            #mob-content :is(.sr-page-hero-title, .progress-hero-title, .setup-hero-title) {
+               justify-content: flex-start !important;
+               gap: 7px !important;
+               font-size: 1.08rem !important;
+               line-height: 1.15 !important;
+               margin-bottom: 4px !important;
+               letter-spacing: 0 !important;
+            }
+
+            #mob-content :is(.sr-page-hero-title svg, .progress-hero-title svg, .setup-hero-title svg) {
+               width: 20px !important;
+               height: 20px !important;
+               flex: 0 0 auto !important;
+            }
+
+            #mob-content :is(.sr-page-hero-subtitle, .progress-hero-subtitle, .setup-hero-subtitle) {
+               max-width: 100% !important;
+               font-size: 0.74rem !important;
+               line-height: 1.4 !important;
+            }
+
+            #mob-content :is(.sr-page-hero-art, .progress-hero-art, .setup-hero-art) {
+               right: -10px !important;
+               bottom: -1px !important;
+               width: 112px !important;
+            }
+
+            #mob-content .sr-page-actions,
+            #mob-content :is(.progress-actions, .tracker-actions) {
+               display: grid !important;
+               grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+               gap: 8px !important;
+               margin-bottom: 12px !important;
+               width: 100% !important;
+            }
+
+            #mob-content .sr-page-actions > *,
+            #mob-content :is(.progress-actions, .tracker-actions) > * {
+               width: 100% !important;
+               min-width: 0 !important;
+            }
+
+            #mob-content .sr-page-actions > :only-child,
+            #mob-content :is(.progress-actions, .tracker-actions) > :only-child {
+               grid-column: 1 / -1 !important;
+            }
+
+            #mob-content :is(.sr-page-actions, .progress-actions, .tracker-actions) .btn {
+               min-height: 44px !important;
+               display: inline-flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               gap: 6px !important;
+               padding: 9px 10px !important;
+               border-radius: 12px !important;
+               font-size: 0.8rem !important;
+               line-height: 1.2 !important;
+               white-space: normal !important;
+            }
+
+            #mob-content :is(.sr-page-actions, .progress-actions, .tracker-actions) .btn i {
+               margin-right: 0 !important;
+               margin-left: 0 !important;
+            }
+
+            #mob-content :is(
+               .premium-card,
+               .premium-panel,
+               .panel,
+               .tracker-panel,
+               .tracker-card,
+               .pack-card,
+               .module-card,
+               .ll-module-card,
+               .level-card,
+               .perk-card,
+               .print-card,
+               .sr-card,
+               .sr-stat-card,
+               .db-stat-card,
+               .stat-card,
+               .card
+            ) {
+               border-radius: 14px !important;
+               box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            #mob-content :is(
+               .premium-card,
+               .premium-panel,
+               .panel,
+               .tracker-panel,
+               .tracker-card,
+               .pack-card,
+               .module-card,
+               .ll-module-card,
+               .level-card,
+               .perk-card,
+               .print-card,
+               .sr-card,
+               .sr-stat-card,
+               .db-stat-card,
+               .stat-card,
+               .card
+            ):hover {
+               transform: none !important;
+            }
+
+            #mob-content :is(.premium-panel, .panel, .tracker-panel, .tracker-card, .card) :is(h4, h5, h6) {
+               line-height: 1.25 !important;
+               letter-spacing: 0 !important;
+            }
+
+            #mob-content :is(input, select, textarea, .form-control, .form-select, .tracker-field, .oinp) {
+               min-height: 44px !important;
+               border-radius: 11px !important;
+               font-size: 0.86rem !important;
+            }
+
+            #mob-content textarea:is(.form-control, .tracker-field, .oinp) {
+               min-height: 96px !important;
+               line-height: 1.45 !important;
+            }
+
+            #mob-content :is(.btn, button.btn) {
+               touch-action: manipulation;
+            }
+
+            #mob-content :is(.btn-sm, .btn.btn-sm) {
+               min-height: 36px;
+               display: inline-flex;
+               align-items: center;
+               justify-content: center;
+               gap: 5px;
+            }
+
+            #mob-content :is(.table-responsive) {
+               overflow-x: visible !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) thead {
+               display: none !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table),
+            #mob-content :is(#feedbackTable, #history-table table) tbody,
+            #mob-content :is(#feedbackTable, #history-table table) tr,
+            #mob-content :is(#feedbackTable, #history-table table) td {
+               display: block !important;
+               width: 100% !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody tr {
+               border: 1px solid var(--bd) !important;
+               border-radius: 12px !important;
+               padding: 10px !important;
+               margin-bottom: 10px !important;
+               background: var(--bg3) !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td {
+               border: 0 !important;
+               padding: 5px 0 !important;
+               text-align: left !important;
+               font-size: 0.82rem !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(1) {
+               color: var(--tx3) !important;
+               font-size: 0.74rem !important;
+               padding-bottom: 2px !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(2) {
+               color: var(--tx) !important;
+               font-size: 0.94rem !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(3)::before {
+               content: "Score: ";
+               color: var(--tx3);
+               font-weight: 700;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(4)::before {
+               content: "Rating: ";
+               color: var(--tx3);
+               font-weight: 700;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(5) .d-flex {
+               justify-content: stretch !important;
+               margin-top: 6px !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(5) .btn-primary,
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(5) .btn-outline-primary {
+               flex: 1 1 auto !important;
+               min-height: 38px !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(5) form {
+               flex: 0 0 42px !important;
+            }
+
+            #mob-content :is(#feedbackTable, #history-table table) tbody td:nth-child(5) .btn-outline-danger {
+               width: 42px !important;
+               min-height: 38px !important;
+            }
+
+            #mob-content #feedback-filters {
+               display: grid !important;
+               grid-template-columns: 1fr !important;
+               width: 100% !important;
+               gap: 8px !important;
+            }
+
+            #mob-content #feedback-filters > *,
+            #mob-content #feedback-filters form,
+            #mob-content #feedback-filters .input-group,
+            #mob-content #feedback-filters select,
+            #mob-content #feedback-filters button {
+               width: 100% !important;
+            }
+
+            #mob-content .tracker-stats {
+               grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+               gap: 10px !important;
+               margin-bottom: 12px !important;
+            }
+
+            #mob-content .tracker-stat {
+               border-radius: 14px !important;
+               padding: 13px !important;
+               min-height: 92px !important;
+            }
+
+            #mob-content .tracker-stat-label {
+               font-size: 0.66rem !important;
+               line-height: 1.2 !important;
+            }
+
+            #mob-content .tracker-stat-value {
+               font-size: 1.18rem !important;
+            }
+
+            #mob-content .tracker-grid {
+               display: grid !important;
+               grid-template-columns: 1fr !important;
+               gap: 12px !important;
+            }
+
+            #mob-content .tracker-card .tracker-actions {
+               grid-template-columns: 72px minmax(0, 1fr) !important;
+               align-items: center !important;
+            }
+
+            #mob-content .match-ring {
+               width: 62px !important;
+               height: 62px !important;
+            }
+
+            #mob-content .match-ring span {
+               width: 48px !important;
+               height: 48px !important;
+               font-size: 0.82rem !important;
+            }
+
+            #mob-content .plan-item {
+               grid-template-columns: auto minmax(0, 1fr) !important;
+               gap: 9px !important;
+               padding: 11px !important;
+            }
+
+            #mob-content .plan-item > span:last-child {
+               grid-column: 2;
+               font-size: 0.72rem !important;
+               white-space: normal !important;
+            }
+
+            #mob-content .keyword-chip,
+            #mob-content .status-pill,
+            #mob-content .badge {
+               max-width: 100%;
+               white-space: normal !important;
+               overflow-wrap: anywhere;
+               line-height: 1.2;
+            }
+
+            #mob-content :is(.pack-chip, .keyword-chip, .status-pill) {
+               padding: 6px 9px !important;
+               font-size: 0.7rem !important;
+            }
+
+            #mob-content :is(.pack-card, .module-card, .ll-module-card, .level-card, .perk-card) .btn {
+               width: 100%;
+               min-height: 42px;
+            }
+
+            #mob-content :is(.chat-container) {
+               height: calc(100dvh - var(--mob-top-h) - var(--mob-nav-h) - 142px) !important;
+               min-height: 360px !important;
+               border-radius: 14px !important;
+            }
+
+            #mob-content .chat-main > div:first-child {
+               padding: 12px 14px !important;
+            }
+
+            #mob-content .chat-main > div:first-child [style*="width:40px"] {
+               width: 34px !important;
+               height: 34px !important;
+               margin-right: 10px !important;
+               border-radius: 10px !important;
+            }
+
+            #mob-content .chat-messages {
+               padding: 12px !important;
+               gap: 10px !important;
+            }
+
+            #mob-content .chat-bubble {
+               max-width: 92% !important;
+               padding: 10px 13px !important;
+               border-radius: 16px !important;
+               font-size: 0.84rem !important;
+               line-height: 1.45 !important;
+            }
+
+            #mob-content .chat-input-area {
+               padding: 10px 12px !important;
+            }
+
+            #mob-content .chat-input-wrapper {
+               border-radius: 14px !important;
+               padding: 7px 8px 7px 12px !important;
+            }
+
+            #mob-content .chat-send-btn {
+               width: 38px !important;
+               height: 38px !important;
+               border-radius: 12px !important;
+               margin-left: 8px !important;
+            }
+
+            #mob-content :is(.notification-card, .notification-item, .account-card, .leaderboard-card, .report-card) {
+               border-radius: 14px !important;
+               padding: 14px !important;
+            }
+         }
+
+         @media (max-width: 390px) {
+            #mob-content :is(.sr-page-hero-inner, .progress-hero-inner, .setup-hero-inner) {
+               padding-right: 82px !important;
+            }
+
+            #mob-content :is(.sr-page-hero-title, .progress-hero-title, .setup-hero-title) {
+               font-size: 1rem !important;
+            }
+
+            #mob-content :is(.sr-page-hero-art, .progress-hero-art, .setup-hero-art) {
+               width: 98px !important;
+            }
+
+            #mob-content .tracker-stats {
+               grid-template-columns: 1fr 1fr !important;
+            }
+         }
+
          /* --- Page headers: center title/subtitle on mobile --- */
          @media (max-width: 767px) {
             #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) {
@@ -1057,7 +1639,9 @@
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">
          <a href="{{ route('dashboard') }}" class="mob-header-logo">
-            <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+            <span class="mob-logo-ring">
+               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
+            </span>
             <span>SpeakReady AI</span>
          </a>
          <div class="mob-header-right">
@@ -1068,23 +1652,108 @@
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
             </button>
-            <a href="{{ route('user.notifications') }}" class="mob-icon-btn" style="position:relative; text-decoration:none;">
-               <i class="fa-regular fa-bell"></i>
-               <span id="mobNotifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
-            </a>
-            <div class="mob-avatar" onclick="openMobDrawer()" title="Menu" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+            <div class="mob-notif-wrap" id="mobNotifWrap">
+               <button class="mob-icon-btn" id="mobBellBtn" type="button" aria-label="Open notifications" aria-controls="mobNotifDropdown" aria-expanded="false" onclick="toggleMobileNotif(event)" style="position:relative;">
+                  <i class="fa-regular fa-bell"></i>
+                  <span id="mobNotifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
+               </button>
+            </div>
+            <div class="mob-profile-wrap" id="mobProfileWrap">
+               <button class="mob-avatar" id="mobProfileBtn" type="button" aria-label="Open account menu" aria-controls="mobProfileDropdown" aria-expanded="false" onclick="toggleMobileProfile(event, 'account')" title="Profile" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+                  @if(Auth::check() && Auth::user()->profile_photo_path)
+                     @php
+                         $photoPath = Auth::user()->profile_photo_path;
+                         $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
+                     @endphp
+                     <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                  @else
+                     {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}
+                  @endif
+               </button>
+            </div>
+         </div>
+      </header>
+
+      <div class="mob-profile-dropdown" id="mobProfileDropdown" aria-hidden="true" data-mode="pages" data-origin="top">
+         <div class="mob-profile-head">
+            <div class="mob-profile-head-avatar">
                @if(Auth::check() && Auth::user()->profile_photo_path)
-                  @php
-                      $photoPath = Auth::user()->profile_photo_path;
-                      $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
-                  @endphp
-                  <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                  <img src="{{ $photoUrl }}" alt="Avatar">
                @else
                   {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}
                @endif
             </div>
+            <div class="mob-profile-head-meta">
+               <div class="mob-profile-name">{{ Auth::user()->name ?? 'User' }}</div>
+               <div class="mob-profile-role">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
+            </div>
+            <button class="mob-profile-close" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close profile menu"><i class="fa-solid fa-xmark"></i></button>
          </div>
-      </header>
+         <div class="mob-profile-menu" id="mobProfileMenu">
+            <div class="mob-profile-pages">
+               <div class="mob-profile-pages-close">
+                  <span>More</span>
+                  <button class="mob-profile-close" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close more menu"><i class="fa-solid fa-xmark"></i></button>
+               </div>
+               <div class="mob-profile-section-title">Pages</div>
+               <div class="mob-profile-grid">
+               <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
+               <a href="{{ route('user.applications.index') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('user.applications.*') ? 'active' : '' }}"><i class="fa-solid fa-briefcase"></i><span>Job Tracker</span></a>
+               <a href="{{ route('user.packs.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('user.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i><span>Packs</span></a>
+               <a href="{{ route('user.drills.voice') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i><span>Voice Drill</span></a>
+               <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Learning</span></a>
+               <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>AI Coach</span></a>
+               <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
+               <a href="{{ route('user.leaderboard') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-trophy"></i><span>Leaderboard</span></a>
+               <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
+               <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
+               </div>
+            </div>
+
+            <div class="mob-profile-account">
+               <div class="mob-profile-section-title">Account</div>
+               <div class="mob-profile-grid mb-2">
+                  <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account Management</span></a>
+                  <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
+               </div>
+               <div class="mob-profile-section-title">Settings</div>
+               <form action="{{ route('user.language.update') }}" method="POST" class="mob-profile-language mb-2">
+                  @csrf
+                  <label for="mobileProfileLanguageSelect"><i class="fa-solid fa-language"></i>Language</label>
+                  <select id="mobileProfileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()">
+                     @foreach($supportedLanguages as $languageCode => $language)
+                        <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
+                     @endforeach
+                  </select>
+               </form>
+               <form action="{{ route('logout') }}" method="POST">
+                  @csrf
+                  <button type="submit" class="mob-profile-action danger"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
+               </form>
+            </div>
+         </div>
+      </div>
+
+      <div class="mob-notif-dropdown" id="mobNotifDropdown" aria-hidden="true">
+         <div class="mob-notif-header">
+            <div class="mob-notif-title">
+               <i class="fa-regular fa-bell" style="color:var(--pur)"></i>
+               <span>Notifications</span>
+               <span class="mob-notif-count" id="mobUnreadCountBadge">0 new</span>
+            </div>
+            <div class="mob-notif-actions">
+               <button class="mob-notif-action" type="button" onclick="markAllMobileNotificationsRead(event)" title="Mark all as read"><i class="fa-solid fa-check"></i><span>Read</span></button>
+               <button class="mob-notif-action danger" type="button" onclick="clearAllMobileNotifications(event)" title="Clear all"><i class="fa-solid fa-trash"></i><span>Clear</span></button>
+               <button class="mob-notif-action" type="button" onclick="toggleMobileNotif(event)" aria-label="Close notifications"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+         </div>
+         <div class="mob-notif-list" id="mobNotifListContainer">
+            <div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;">Loading notifications...</div>
+         </div>
+         <div class="mob-notif-footer">
+            <a href="{{ route('user.notifications') }}" class="mob-notif-view-all"><i class="fa-solid fa-list"></i>View All Notifications</a>
+         </div>
+      </div>
 
       <!-- ===== PAGE CONTENT ===== -->
       <div id="mob-content">
@@ -1092,6 +1761,8 @@
             @yield('content')
          </div>
       </div>
+
+      <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
 
       <!-- ===== BOTTOM NAVIGATION ===== -->
       <nav id="mob-bottom-nav" aria-label="Main navigation">
@@ -1120,132 +1791,18 @@
                <span class="mob-nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
                <span>Feedback</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('user.account') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.applications.*', 'user.packs.*', 'user.drills.voice', 'user.learning*', 'user.coach*', 'user.reports', 'user.leaderboard') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
-                    aria-controls="mob-drawer"
+                    aria-controls="mobProfileDropdown"
                     aria-expanded="false"
-                    aria-label="Open profile menu"
-                    onclick="openMobDrawer()">
-               <span class="mob-nav-icon"><i class="fa-solid fa-user"></i></span>
-               <span>Profile</span>
+                    aria-label="Open more menu"
+                    onclick="toggleMobileProfile(event, 'pages')">
+               <span class="mob-nav-icon"><i class="fa-solid fa-ellipsis"></i></span>
+               <span>More</span>
             </button>
          </div>
       </nav>
-
-      <!-- ===== DRAWER OVERLAY ===== -->
-      <div id="mob-drawer-overlay" aria-hidden="true" onclick="closeMobDrawer()"></div>
-
-      <!-- ===== BOTTOM DRAWER ===== -->
-      <div id="mob-drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-label="More options" tabindex="-1">
-         <div class="drawer-handle"></div>
-
-         <!-- User info -->
-         <div class="drawer-user">
-            <div class="drawer-user-avatar">
-               @if(Auth::check() && Auth::user()->profile_photo_path)
-                  @php
-                      $photoPath = Auth::user()->profile_photo_path;
-                      $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
-                  @endphp
-                  <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
-               @else
-                  {{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}
-               @endif
-            </div>
-            <div class="drawer-user-meta">
-               <div class="drawer-user-name">{{ Auth::user()->name ?? 'User' }}</div>
-               <div class="drawer-user-role">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
-            </div>
-         </div>
-
-         <div class="drawer-title">Training & Performance</div>
-         <div class="drawer-grid">
-            <a href="{{ route('user.modules.index') }}"
-               class="drawer-item drawer-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}">
-               <i class="fa-solid fa-book-open-reader"></i>
-               <span>Interview Modules</span>
-            </a>
-            <a href="{{ route('user.applications.index') }}"
-               class="drawer-item drawer-nav-cyan {{ request()->routeIs('user.applications.*') ? 'active' : '' }}">
-               <i class="fa-solid fa-briefcase"></i>
-               <span>Job Tracker</span>
-            </a>
-            <a href="{{ route('user.packs.index') }}"
-               class="drawer-item drawer-nav-indigo {{ request()->routeIs('user.packs.*') ? 'active' : '' }}">
-               <i class="fa-solid fa-layer-group"></i>
-               <span>Interview Packs</span>
-            </a>
-            <a href="{{ route('user.drills.voice') }}"
-               class="drawer-item drawer-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}">
-               <i class="fa-solid fa-ear-listen"></i>
-               <span>Voice Rehearsal</span>
-            </a>
-            <a href="{{ route('user.learning') }}"
-               class="drawer-item drawer-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}">
-               <i class="fa-solid fa-gamepad"></i>
-               <span>Learning Games</span>
-            </a>
-            <a href="{{ route('user.coach') }}"
-               class="drawer-item drawer-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}">
-               <i class="fa-solid fa-robot"></i>
-               <span>AI Coach</span>
-            </a>
-            <a href="{{ route('user.reports') }}"
-               class="drawer-item drawer-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}">
-               <i class="fa-solid fa-folder-open"></i>
-               <span>Reports</span>
-            </a>
-         </div>
-
-         <div class="drawer-title">Community & More</div>
-         <div class="drawer-grid">
-            <a href="{{ route('user.leaderboard') }}"
-               class="drawer-item drawer-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}">
-               <i class="fa-solid fa-trophy"></i>
-               <span>Leaderboard</span>
-            </a>
-            <a href="{{ route('user.account') }}"
-               class="drawer-item drawer-nav-indigo {{ request()->routeIs('user.account') ? 'active' : '' }}">
-               <i class="fa-solid fa-user-gear"></i>
-               <span>Account</span>
-            </a>
-            <a href="{{ route('user.notifications') }}"
-               class="drawer-item drawer-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}">
-               <i class="fa-solid fa-bell"></i>
-               <span>Notifications</span>
-            </a>
-         </div>
-
-         <div class="drawer-divider"></div>
-
-         <a href="{{ route('user.account') }}" class="drawer-action drawer-nav-indigo">
-            <i class="fa-solid fa-user-gear"></i> Account Management
-         </a>
-
-         <form action="{{ route('user.language.update') }}" method="POST" class="drawer-language-form">
-            @csrf
-            <div class="drawer-action drawer-nav-blue drawer-language-control">
-               <label for="mobileLanguageSelect" class="drawer-language-label">
-                  <i class="fa-solid fa-language"></i>
-                  Language
-               </label>
-               <select id="mobileLanguageSelect" name="preferred_language" class="form-select form-select-sm drawer-language-select" onchange="this.form.submit()">
-                  @foreach($supportedLanguages as $languageCode => $language)
-                     <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
-                  @endforeach
-               </select>
-               <small class="drawer-language-note">AI translates the app and interview experience.</small>
-            </div>
-         </form>
-
-         <form action="{{ route('logout') }}" method="POST" style="display:block">
-            @csrf
-            <button type="submit" class="drawer-action danger">
-               <i class="fa-solid fa-right-from-bracket"></i> Log Out
-            </button>
-         </form>
-      </div>
 
       @include('partials.user-command-palette')
       @include('partials.viewport-mobile-cookie')
@@ -1273,47 +1830,13 @@
       @include('partials.language-translation')
 
       <script>
-         function openMobDrawer() {
-            const drawer = document.getElementById('mob-drawer');
-            const overlay = document.getElementById('mob-drawer-overlay');
-            const trigger = document.getElementById('mobnav-more');
-            if (!drawer || !overlay) return;
-            drawer.classList.add('open');
-            overlay.classList.add('open');
-            drawer.setAttribute('aria-hidden', 'false');
-            overlay.setAttribute('aria-hidden', 'false');
-            if (trigger) trigger.setAttribute('aria-expanded', 'true');
-            document.body.style.overflow = 'hidden';
-            try {
-               drawer.focus({ preventScroll: true });
-            } catch (error) {
-               drawer.focus();
-            }
-         }
-         function closeMobDrawer() {
-            const drawer = document.getElementById('mob-drawer');
-            const overlay = document.getElementById('mob-drawer-overlay');
-            const trigger = document.getElementById('mobnav-more');
-            if (!drawer || !overlay) return;
-            drawer.classList.remove('open');
-            overlay.classList.remove('open');
-            drawer.setAttribute('aria-hidden', 'true');
-            overlay.setAttribute('aria-hidden', 'true');
-            if (trigger) trigger.setAttribute('aria-expanded', 'false');
-            document.body.style.overflow = '';
-         }
-
-         // Swipe down to close drawer
+         // Close open header menus with Escape
          (function() {
-            const drawer = document.getElementById('mob-drawer');
-            if (!drawer) return;
-            let startY = 0;
-            drawer.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
-            drawer.addEventListener('touchend', e => {
-               if (e.changedTouches[0].clientY - startY > 60) closeMobDrawer();
-            }, { passive: true });
             document.addEventListener('keydown', e => {
-               if (e.key === 'Escape') closeMobDrawer();
+               if (e.key === 'Escape') {
+                  closeMobileNotif();
+                  closeMobileProfile();
+               }
             });
          })();
 
@@ -1390,25 +1913,245 @@
             localStorage.setItem('pwa_prompt_dismissed', 'true');
          });
 
-         function fetchMobileNotifications() {
+         function escapeMobileNotifHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+               '&': '&amp;',
+               '<': '&lt;',
+               '>': '&gt;',
+               '"': '&quot;',
+               "'": '&#039;'
+            }[char]));
+         }
+
+         function toggleMobileNotif(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('mobNotifDropdown');
+            const button = document.getElementById('mobBellBtn');
+            if (!dropdown) return;
+            const willOpen = !dropdown.classList.contains('open');
+            dropdown.classList.toggle('open', willOpen);
+            dropdown.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
+            if (button) button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            if (willOpen) {
+               closeMobileProfile();
+               fetchMobileNotifications(true);
+            }
+         }
+
+         function closeMobileNotif() {
+            const dropdown = document.getElementById('mobNotifDropdown');
+            const button = document.getElementById('mobBellBtn');
+            if (!dropdown) return;
+            dropdown.classList.remove('open');
+            dropdown.setAttribute('aria-hidden', 'true');
+            if (button) button.setAttribute('aria-expanded', 'false');
+         }
+
+         function toggleMobileProfile(e, mode = 'pages') {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('mobProfileDropdown');
+            const button = document.getElementById('mobProfileBtn');
+            const bottomButton = document.getElementById('mobnav-more');
+            const moreBackdrop = document.getElementById('mobMoreBackdrop');
+            if (!dropdown) return;
+            const origin = mode === 'pages' ? 'bottom' : 'top';
+            const currentMode = dropdown.getAttribute('data-mode') || 'pages';
+            dropdown.setAttribute('data-mode', mode);
+            dropdown.setAttribute('data-origin', origin);
+            const willOpen = !dropdown.classList.contains('open');
+            const shouldStayOpen = dropdown.classList.contains('open') && currentMode !== mode;
+            if (shouldStayOpen) {
+               if (moreBackdrop) moreBackdrop.classList.add('open');
+               resetMobileProfileMenuScroll();
+               return;
+            }
+            dropdown.classList.toggle('open', willOpen);
+            dropdown.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
+            if (button) button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            if (bottomButton) bottomButton.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            if (moreBackdrop) moreBackdrop.classList.toggle('open', willOpen);
+            if (willOpen) {
+               closeMobileNotif();
+               resetMobileProfileMenuScroll();
+            }
+         }
+
+         function resetMobileProfileMenuScroll() {
+            const menu = document.getElementById('mobProfileMenu');
+            if (!menu) return;
+            const reset = () => {
+               menu.scrollTop = 0;
+               menu.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            };
+            reset();
+            requestAnimationFrame(reset);
+            setTimeout(reset, 80);
+         }
+
+         function closeMobileProfile() {
+            const dropdown = document.getElementById('mobProfileDropdown');
+            const button = document.getElementById('mobProfileBtn');
+            const bottomButton = document.getElementById('mobnav-more');
+            const moreBackdrop = document.getElementById('mobMoreBackdrop');
+            if (!dropdown) return;
+            dropdown.classList.remove('open');
+            dropdown.setAttribute('aria-hidden', 'true');
+            if (button) button.setAttribute('aria-expanded', 'false');
+            if (bottomButton) bottomButton.setAttribute('aria-expanded', 'false');
+            if (moreBackdrop) moreBackdrop.classList.remove('open');
+         }
+
+         function fetchMobileNotifications(forceRender = false) {
             fetch('/notifications/fetch')
                .then(res => res.json())
                .then(data => {
-                  const badge = document.getElementById('mobNotifBadge');
-                  if (badge) {
-                     if (data.unreadCount > 0) {
-                        badge.style.display = 'block';
-                     } else {
-                        badge.style.display = 'none';
-                     }
-                  }
+                  updateMobileNotifUI(data, forceRender);
                })
                .catch(err => console.error('Error fetching notifications:', err));
+         }
+
+         function updateMobileNotifUI(data, forceRender = false) {
+            const badge = document.getElementById('mobNotifBadge');
+            const unreadBadge = document.getElementById('mobUnreadCountBadge');
+            const listContainer = document.getElementById('mobNotifListContainer');
+
+            if (badge) {
+               if (data.unreadCount > 0) {
+                  badge.style.display = 'block';
+               } else {
+                  badge.style.display = 'none';
+               }
+            }
+
+            if (unreadBadge) {
+               if (data.unreadCount > 0) {
+                  unreadBadge.style.display = 'inline-block';
+                  unreadBadge.textContent = data.unreadCount + ' new';
+               } else {
+                  unreadBadge.style.display = 'none';
+               }
+            }
+
+            if (!listContainer || (!forceRender && !document.getElementById('mobNotifDropdown')?.classList.contains('open'))) return;
+
+            if (!data.notifications || data.notifications.length === 0) {
+               listContainer.innerHTML = '<div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;">No notifications to show.</div>';
+               return;
+            }
+
+            listContainer.innerHTML = data.notifications.map(n => {
+               const title = escapeMobileNotifHtml(n.data?.title || 'Notification');
+               const message = escapeMobileNotifHtml(n.data?.message || '');
+               const icon = escapeMobileNotifHtml(n.data?.icon || 'fa-bell');
+               const date = escapeMobileNotifHtml(new Date(n.created_at).toLocaleString());
+               const unreadClass = n.read_at ? '' : 'unread';
+               const markRead = n.read_at ? '' : `<button class="mob-notif-link-btn" type="button" onclick="markMobileNotificationRead('${n.id}', event)">Mark as read</button>`;
+
+               return `
+                  <div class="mob-notif-item ${unreadClass}">
+                     <button class="mob-notif-ico" type="button" onclick="window.location.href='/notifications'" aria-label="Open notifications page">
+                        <i class="fa-solid ${icon}"></i>
+                     </button>
+                     <div class="mob-notif-copy">
+                        <div onclick="window.location.href='/notifications'" style="cursor:pointer;">
+                           <strong>${title}</strong>
+                           <span>${message}</span>
+                           <small><i class="fa-regular fa-clock me-1"></i>${date}</small>
+                        </div>
+                        <div class="mob-notif-row-actions">
+                           ${markRead}
+                           <button class="mob-notif-link-btn danger" type="button" onclick="deleteMobileNotification('${n.id}', event)">Delete</button>
+                        </div>
+                     </div>
+                  </div>
+               `;
+            }).join('');
+         }
+
+         function markAllMobileNotificationsRead(e) {
+            if (e) e.stopPropagation();
+            fetch('/notifications/read-all', {
+               method: 'POST',
+               headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json'
+               }
+            })
+            .then(res => res.json())
+            .then(data => {
+               if (data.success) {
+                  fetchMobileNotifications(true);
+                  if (typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
+               }
+            });
+         }
+
+         function clearAllMobileNotifications(e) {
+            if (e) e.stopPropagation();
+            if (confirm('Are you sure you want to clear all notifications?')) {
+               fetch('/notifications/clear-all', {
+                  method: 'DELETE',
+                  headers: {
+                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                     'Content-Type': 'application/json'
+                  }
+               })
+               .then(res => res.json())
+               .then(data => {
+                  if (data.success) {
+                     fetchMobileNotifications(true);
+                     if (typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
+                  }
+               });
+            }
+         }
+
+         function markMobileNotificationRead(id, e) {
+            if (e) e.stopPropagation();
+            fetch('/notifications/' + id + '/read', {
+               method: 'POST',
+               headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json'
+               }
+            })
+            .then(res => res.json())
+            .then(data => {
+               if (data.success) fetchMobileNotifications(true);
+            });
+         }
+
+         function deleteMobileNotification(id, e) {
+            if (e) e.stopPropagation();
+            fetch('/notifications/' + id, {
+               method: 'DELETE',
+               headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json'
+               }
+            })
+            .then(res => res.json())
+            .then(data => {
+               if (data.success) fetchMobileNotifications(true);
+            });
          }
 
          document.addEventListener('DOMContentLoaded', function() {
             fetchMobileNotifications();
             setInterval(fetchMobileNotifications, 60000);
+            document.addEventListener('click', function(e) {
+               const notifDropdown = document.getElementById('mobNotifDropdown');
+               const notifWrap = document.getElementById('mobNotifWrap');
+               if (notifDropdown?.classList.contains('open') && !notifDropdown.contains(e.target) && !notifWrap?.contains(e.target)) {
+                  closeMobileNotif();
+               }
+
+               const profileDropdown = document.getElementById('mobProfileDropdown');
+               const profileWrap = document.getElementById('mobProfileWrap');
+               if (profileDropdown?.classList.contains('open') && !profileDropdown.contains(e.target) && !profileWrap?.contains(e.target)) {
+                  closeMobileProfile();
+               }
+            });
          });
       </script>
 

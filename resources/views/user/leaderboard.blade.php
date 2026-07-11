@@ -24,17 +24,87 @@
     
     .leaderboard-row { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .leaderboard-row:hover { background-color: rgba(255,255,255,0.03) !important; transform: scale(1.01); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    @media (max-width: 767px) {
+        #leaderboard-page .premium-panel {
+            padding: 14px !important;
+            border-radius: 14px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #leaderboard-page table,
+        #leaderboard-page tbody,
+        #leaderboard-page tr,
+        #leaderboard-page td {
+            display: block;
+            width: 100%;
+        }
+        #leaderboard-page thead {
+            display: none;
+        }
+        #leaderboard-page .leaderboard-row {
+            display: grid;
+            grid-template-columns: 42px minmax(0, 1fr);
+            gap: 8px 10px;
+            border: 1px solid var(--bd) !important;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: var(--bg3) !important;
+        }
+        #leaderboard-page .leaderboard-row:hover {
+            transform: none;
+        }
+        #leaderboard-page .leaderboard-row td {
+            padding: 0 !important;
+            border: 0 !important;
+            text-align: left !important;
+        }
+        #leaderboard-page .leaderboard-row td:first-child {
+            grid-row: 1 / span 3;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(2) .d-flex {
+            justify-content: flex-start !important;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(3) {
+            font-size: 0.86rem !important;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(3)::before {
+            content: "XP: ";
+            color: var(--tx3);
+            font-weight: 700;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(4)::before {
+            content: "Streak: ";
+            color: var(--tx3);
+            font-weight: 700;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(5) .d-flex {
+            justify-content: flex-start !important;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(5)::before {
+            content: "Badges: ";
+            color: var(--tx3);
+            font-weight: 700;
+            margin-right: 4px;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active animate-fade-up">
-    <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-trophy me-2"></i>Global Leaderboard</h4>
-            <p style="color:var(--tx3);margin:0;">See how you stack up against the community! Keep practicing to climb the ranks.</p>
+<div class="db-section active animate-fade-up" id="leaderboard-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v3a4 4 0 0 1-8 0V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6 5H3v2a4 4 0 0 0 5 4M18 5h3v2a4 4 0 0 1-5 4M12 11v5M9 21h6M8 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Global Leaderboard
+                </h4>
+                <p class="sr-page-hero-subtitle">See how you stack up against the community. Keep practicing to climb the ranks.</p>
+            </div>
         </div>
-        <div>
-        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="leaderPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="leaderBlue" x1="66" y1="36" x2="166" y2="118"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#leaderPanel)" stroke="#BFDBFE" stroke-width="3"/><path d="M82 47h56v23a28 28 0 0 1-56 0V47Z" fill="url(#leaderBlue)"/><path d="M82 55H61v12a22 22 0 0 0 24 22M138 55h21v12a22 22 0 0 1-24 22" fill="none" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/><path d="M110 97v22M91 119h38" stroke="#2563EB" stroke-width="7" stroke-linecap="round"/><path d="m110 58 5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1 5-11Z" fill="#fff"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
     </div>
 
     <div class="premium-panel" id="leaderboard-container">

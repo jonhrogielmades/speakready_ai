@@ -9,6 +9,85 @@
         background-clip: text;
         color: transparent;
     }
+    .setup-hero {
+        min-height: 98px;
+        margin-bottom: 20px;
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        background:
+            radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.2), transparent 25%),
+            linear-gradient(110deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.045)),
+            var(--sf);
+        border-color: rgba(96, 165, 250, 0.26);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+        position: relative;
+        isolation: isolate;
+    }
+    .setup-hero::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 0 0 0 auto;
+        width: min(34%, 320px);
+        background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.055));
+        pointer-events: none;
+    }
+    .lm .setup-hero {
+        background:
+            radial-gradient(circle at 92% 35%, rgba(147, 197, 253, 0.2), transparent 25%),
+            linear-gradient(110deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 255, 0.97));
+        border-color: #dce8fb;
+        box-shadow: 0 7px 22px rgba(59, 130, 246, 0.08);
+    }
+    .setup-hero-inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 98px;
+        padding: 14px clamp(126px, 14vw, 148px) 14px 16px;
+    }
+    .setup-hero-copy {
+        min-width: 0;
+        width: 100%;
+    }
+    .setup-hero-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.45rem;
+        font-weight: 800;
+        margin-bottom: 5px;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        line-height: 1.15;
+    }
+    .setup-hero-title svg {
+        width: 23px;
+        height: 23px;
+        flex: 0 0 auto;
+        color: #3b82f6;
+    }
+    .setup-hero-subtitle {
+        max-width: 680px;
+        font-size: 0.88rem;
+        color: var(--tx3);
+        margin: 0;
+        line-height: 1.45;
+    }
+    .setup-hero-art {
+        position: absolute;
+        z-index: 0;
+        right: 8px;
+        bottom: -2px;
+        width: clamp(122px, 13vw, 142px);
+        height: auto;
+        filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18));
+        pointer-events: none;
+        user-select: none;
+    }
     .setup-panel { 
         background: var(--sf);
         border: 1px solid var(--bd);
@@ -157,26 +236,223 @@
     .driverjs-theme-dark .driver-popover-arrow::before { border-color: var(--bg3) !important; }
 
     @media (max-width: 767px) {
-        #sec-interview-setup { --setup-gap: 16px; }
+        #sec-interview-setup {
+            --setup-gap: 14px;
+            padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        }
+        #sec-interview-setup #setupForm > .row {
+            --bs-gutter-y: 14px;
+        }
+        #sec-interview-setup .setup-hero {
+            margin-bottom: 12px;
+            border-radius: 14px;
+            min-height: 104px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        #sec-interview-setup .setup-hero-inner {
+            justify-content: flex-start;
+            min-height: 104px;
+            padding: 14px 96px 14px 14px;
+        }
+        #sec-interview-setup .setup-hero-title {
+            justify-content: flex-start;
+            gap: 7px;
+            font-size: 1.1rem !important;
+            margin-bottom: 4px;
+            letter-spacing: 0;
+        }
+        #sec-interview-setup .setup-hero-title svg {
+            width: 20px;
+            height: 20px;
+        }
+        #sec-interview-setup .setup-hero-subtitle {
+            max-width: 100%;
+            font-size: 0.74rem;
+            line-height: 1.4;
+        }
+        #sec-interview-setup .setup-hero-art {
+            right: -10px;
+            bottom: -1px;
+            width: 112px;
+        }
         #sec-interview-setup .setup-panel {
+            border-radius: 14px !important;
             padding: 14px !important;
             margin-bottom: 0;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #sec-interview-setup .setup-panel:hover,
+        #sec-interview-setup .custom-radio:hover,
+        #sec-interview-setup .custom-cbx:hover,
+        #sec-interview-setup .persona-card:hover,
+        #sec-interview-setup .drop-zone:hover {
+            transform: none;
         }
         #sec-interview-setup .setup-panel h5 {
-            font-size: 0.96rem;
-            margin-bottom: 14px !important;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.98rem;
+            margin-bottom: 12px !important;
+        }
+        #sec-interview-setup .setup-panel h5 i {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: rgba(96, 165, 250, 0.12);
+            margin-right: 0 !important;
+            flex: 0 0 auto;
+        }
+        #sec-interview-setup .row.g-3,
+        #sec-interview-setup .row.g-4 {
+            --bs-gutter-y: 12px;
+            --bs-gutter-x: 12px;
+        }
+        #sec-interview-setup .row.mt-1 {
+            margin-top: 0 !important;
+        }
+        #sec-interview-setup .olbl {
+            font-size: 0.78rem;
+            margin-bottom: 6px;
+        }
+        #sec-interview-setup .oinp {
+            min-height: 46px;
+            padding: 11px 13px;
+            border-radius: 11px;
+            font-size: 0.86rem;
+        }
+        #sec-interview-setup textarea.oinp {
+            min-height: 96px;
+            line-height: 1.45;
+        }
+        #sec-interview-setup .desc-text {
+            font-size: 0.71rem;
+            line-height: 1.35;
         }
         #sec-interview-setup .custom-radio,
         #sec-interview-setup .custom-cbx {
+            align-items: center;
+            min-height: 52px;
             padding: 12px;
+            border-radius: 12px;
+            gap: 10px;
+        }
+        #sec-interview-setup .custom-radio input[type="radio"],
+        #sec-interview-setup .custom-cbx input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            flex: 0 0 auto;
+        }
+        #sec-interview-setup .custom-radio .r-title {
+            font-size: 0.88rem;
+        }
+        #sec-interview-setup .custom-radio .r-desc {
+            font-size: 0.72rem;
+            line-height: 1.35;
+        }
+        #sec-interview-setup .cbx-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        #sec-interview-setup .setup-chip-panel {
+            padding: 12px;
+            border-radius: 12px;
+        }
+        #sec-interview-setup .drop-zone {
+            padding: 22px 14px;
+            border-radius: 14px;
+        }
+        #sec-interview-setup .drop-zone-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        #sec-interview-setup .drop-zone-text {
+            font-size: 0.84rem;
+            line-height: 1.35;
+        }
+        #sec-interview-setup .persona-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        #sec-interview-setup .persona-card {
+            min-height: 112px;
+            padding: 14px 10px 12px;
+            border-radius: 12px;
+        }
+        #sec-interview-setup .persona-card.selected::after {
+            border-radius: 12px;
+        }
+        #sec-interview-setup .persona-icon {
+            font-size: 1.45rem;
+            margin-bottom: 8px;
+        }
+        #sec-interview-setup .persona-title {
+            font-size: 0.8rem;
+        }
+        #sec-interview-setup .persona-desc {
+            font-size: 0.68rem;
+            line-height: 1.25;
+        }
+        #sec-interview-setup .persona-check {
+            top: 9px;
+            right: 9px;
+            font-size: 0.88rem;
         }
         #sec-interview-setup .summary-row {
-            padding: 9px 0;
-            font-size: 0.82rem;
+            display: grid;
+            grid-template-columns: minmax(92px, 0.8fr) minmax(0, 1.2fr);
+            padding: 8px 0;
+            gap: 10px;
+            font-size: 0.78rem;
+            align-items: start;
+        }
+        #sec-interview-setup .summary-val {
+            overflow-wrap: anywhere;
+        }
+        #sec-interview-setup .setup-start-action {
+            margin-top: 18px !important;
+        }
+        #sec-interview-setup #btn-start-interview {
+            min-height: 54px;
+            border-radius: 13px !important;
+            font-size: 0.98rem !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 10px 22px rgba(96, 165, 250, 0.32) !important;
+            touch-action: manipulation;
+        }
+        #sec-interview-setup #btn-start-interview i {
+            margin-left: 0 !important;
         }
         #panel-summary {
             position: static !important;
             top: auto !important;
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.11), rgba(6, 182, 212, 0.04)) !important;
+            border-color: rgba(96, 165, 250, 0.28) !important;
+        }
+        #panel-summary h5 {
+            margin-bottom: 10px !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        #sec-interview-setup .setup-hero-inner {
+            padding-right: 82px;
+        }
+        #sec-interview-setup .setup-hero-title {
+            font-size: 1rem !important;
+        }
+        #sec-interview-setup .setup-hero-art {
+            width: 98px;
+        }
+        #sec-interview-setup .persona-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -184,13 +460,50 @@
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
 
 <div class="db-section active" id="sec-interview-setup">
-    <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;"><i class="fa-solid fa-sliders me-2"></i>Interview Setup</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Configure your mock interview session to match your goals.</p>
+    <div class="setup-hero">
+        <div class="setup-hero-inner">
+            <div class="setup-hero-copy">
+                <h4 class="setup-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" role="img">
+                        <path d="M4 7h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M17 7h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="15" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M4 12h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M11 12h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="9" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <path d="M4 17h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M15 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="13" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Interview Setup
+                </h4>
+                <p class="setup-hero-subtitle">Configure your mock interview session to match your goals.</p>
+            </div>
         </div>
-        <div>
-        </div>
+        <svg class="setup-hero-art" viewBox="0 0 220 150" aria-hidden="true" role="img">
+            <defs>
+                <linearGradient id="setupArtPanel" x1="34" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#DBEAFE"/>
+                    <stop offset="1" stop-color="#ECFEFF"/>
+                </linearGradient>
+                <linearGradient id="setupArtBlue" x1="64" y1="20" x2="154" y2="120" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#3B82F6"/>
+                    <stop offset="1" stop-color="#06B6D4"/>
+                </linearGradient>
+            </defs>
+            <rect x="32" y="20" width="156" height="108" rx="18" fill="url(#setupArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <rect x="51" y="42" width="70" height="8" rx="4" fill="#93C5FD"/>
+            <rect x="51" y="59" width="118" height="7" rx="3.5" fill="#C7D2FE"/>
+            <rect x="51" y="75" width="96" height="7" rx="3.5" fill="#BAE6FD"/>
+            <path d="M58 103h46" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
+            <path d="M126 103h31" stroke="#06B6D4" stroke-width="8" stroke-linecap="round"/>
+            <circle cx="164" cy="50" r="22" fill="url(#setupArtBlue)"/>
+            <path d="M155 50l6 6 13-15" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="61" cy="31" r="5" fill="#60A5FA"/>
+            <circle cx="77" cy="31" r="5" fill="#67E8F9"/>
+            <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+            <path d="M190 30l9-9m-1 28l13-2M24 58l-11-7m19 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        </svg>
     </div>
 
     @if($errors->any())
@@ -548,7 +861,7 @@
                             <span class="summary-val text-success" id="sumDuration">15 Minutes</span>
                         </div>
                         
-                        <div style="margin-top:30px;">
+                        <div class="setup-start-action" style="margin-top:30px;">
                             <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine" style="font-size:1.1rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'">
                                 Start Mock Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
@@ -877,4 +1190,3 @@
 </script>
 @endpush
 @endsection
-

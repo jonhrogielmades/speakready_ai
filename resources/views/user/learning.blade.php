@@ -288,21 +288,57 @@
     
     /* Mobile Responsiveness */
     @media (max-width: 767px) {
+        #learning-games-page .sr-page-actions {
+            display: grid !important;
+            grid-template-columns: 1fr auto !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+        #learning-games-page #tour-search {
+            max-width: none !important;
+            min-height: 44px;
+            padding: 10px 12px !important;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+        #learning-games-page #btn-skill-tree {
+            min-height: 44px;
+            padding: 8px 11px;
+            border-radius: 12px !important;
+        }
+        #learning-games-page #nav-pills-container {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            margin-bottom: 12px !important;
+            scrollbar-width: none;
+        }
         .level-path-line {
-            left: 25px;
+            left: 20px;
         }
         .level-icon-wrapper {
-            width: 50px;
+            width: 42px;
         }
         .level-icon {
-            width: 40px;
-            height: 40px;
-            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
             border-width: 3px;
         }
         .level-card {
-            margin-left: 15px;
-            padding: 15px;
+            margin-left: 10px;
+            padding: 14px;
+            border-radius: 14px;
+        }
+        .level-node {
+            margin-bottom: 22px;
+        }
+        #learning-games-page .ll-nav-pill {
+            flex: 0 0 auto;
+            min-height: 40px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            white-space: nowrap;
         }
         .db-top-search {
             width: 100% !important;
@@ -313,10 +349,50 @@
         }
 
         .ll-stat-val {
-            font-size: 1.5rem;
+            font-size: 1.08rem !important;
+            line-height: 1.12;
         }
         .ll-stat-card {
-            padding: 15px;
+            min-height: 96px !important;
+            padding: 12px !important;
+            border-radius: 14px !important;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        #learning-games-page #dashboard-stats {
+            --bs-gutter-x: 10px;
+            --bs-gutter-y: 10px;
+            margin-bottom: 12px !important;
+        }
+        #learning-games-page #dashboard-stats > [class*="col-"] {
+            width: 50% !important;
+            flex: 0 0 50% !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card [style*="width:55px"] {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 11px !important;
+            font-size: 1rem !important;
+            flex: 0 0 36px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card [style*="text-transform:uppercase"] {
+            font-size: 0.64rem !important;
+            line-height: 1.2;
+        }
+        #learning-games-page .level-card h5 {
+            font-size: 0.94rem;
+            line-height: 1.25;
+        }
+        #learning-games-page .level-card p,
+        #learning-games-page .level-card div {
+            overflow-wrap: anywhere;
+        }
+        #learning-games-page .level-card .btn {
+            width: 100%;
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
         .ll-ai-fab {
             bottom: 80px;
@@ -333,24 +409,31 @@
         }
     }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active">
+<div class="db-section active" id="learning-games-page">
     <!-- Header & Navigation -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-gamepad me-2"></i>Learning Games</h4>
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15h10l2 3a2 2 0 0 0 3-2l-1-5a6 6 0 0 0-6-5H9a6 6 0 0 0-6 5l-1 5a2 2 0 0 0 3 2l2-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 11h4M10 9v4M16 10h.01M18 13h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Learning Games
+                </h4>
+                <p class="sr-page-hero-subtitle">Complete challenges, earn XP, and level up your career skills.</p>
             </div>
-            <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Complete challenges, earn XP, and level up your career skills.</p>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-sm-0" style="flex: 1; min-width: 250px; justify-content: flex-end;">
-            <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
-                <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-                <input type="text" placeholder="Search quests, skills, topics..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
-            </div>
-            <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-tree me-1" style="color:#10b981"></i> <span>Skill Tree</span></a>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="gamesPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="gamesBlue" x1="58" y1="40" x2="166" y2="116"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#gamesPanel)" stroke="#BFDBFE" stroke-width="3"/><path d="M67 84c5-26 18-36 43-36s38 10 43 36l4 22c2 12-11 18-18 8l-10-14H91l-10 14c-7 10-20 4-18-8l4-22Z" fill="url(#gamesBlue)"/><path d="M82 80h23M94 69v23M132 74h.01M146 88h.01" stroke="#EFF6FF" stroke-width="7" stroke-linecap="round"/><circle cx="164" cy="43" r="17" fill="#F59E0B"/><path d="m164 33 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1 3-7Z" fill="#fff"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
+    </div>
+    <div class="sr-page-actions">
+        <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
+            <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
+            <input type="text" placeholder="Search quests, skills, topics..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
         </div>
+        <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-tree me-1" style="color:#10b981"></i> <span>Skill Tree</span></a>
     </div>
 
     <!-- Sub-Navigation -->

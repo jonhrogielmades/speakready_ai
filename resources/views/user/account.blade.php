@@ -28,12 +28,84 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    @media (max-width: 767px) {
+        #account-page .premium-panel {
+            padding: 14px !important;
+            border-radius: 14px !important;
+            margin-bottom: 12px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08) !important;
+        }
+        #account-page .premium-panel:hover {
+            transform: none;
+        }
+        #account-page .premium-panel h5,
+        #account-page .premium-panel h6 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+            margin-bottom: 14px !important;
+        }
+        #account-page form .d-flex.align-items-center.mb-4 {
+            align-items: flex-start !important;
+            gap: 12px;
+            margin-bottom: 16px !important;
+        }
+        #account-page form .d-flex.align-items-center.mb-4 > div:first-child {
+            width: 58px !important;
+            height: 58px !important;
+            border-radius: 16px !important;
+            margin-right: 0 !important;
+            font-size: 1.35rem !important;
+            flex: 0 0 58px;
+        }
+        #account-page .olbl {
+            font-size: 0.76rem;
+            margin-bottom: 6px;
+        }
+        #account-page .oinp {
+            min-height: 44px;
+            padding: 10px 12px;
+            border-radius: 11px;
+            font-size: 0.86rem;
+        }
+        #account-page .btn {
+            min-height: 42px;
+            border-radius: 12px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        #account-page .text-end {
+            text-align: left !important;
+        }
+        #account-page .text-end .btn,
+        #account-page .premium-panel form > .btn,
+        #account-page .premium-panel form button[type="submit"] {
+            width: 100%;
+        }
+        #account-page .alert {
+            border-radius: 12px !important;
+            font-size: 0.82rem;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active animate-fade-up">
-    <div class="mb-4">
-        <h4 class="text-gradient-primary" style="font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</h4>
-        <p style="color:var(--tx3)">Update your personal information and security settings.</p>
+<div class="db-section active animate-fade-up" id="account-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 8v4M17 10h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Account Management
+                </h4>
+                <p class="sr-page-hero-subtitle">Update your personal information and security settings.</p>
+            </div>
+        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="accountPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="accountBlue" x1="66" y1="36" x2="166" y2="118"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#accountPanel)" stroke="#BFDBFE" stroke-width="3"/><circle cx="103" cy="63" r="23" fill="url(#accountBlue)"/><path d="M64 114a40 40 0 0 1 78 0" fill="#BAE6FD"/><circle cx="158" cy="53" r="20" fill="#22C55E"/><path d="M158 43v20M148 53h20" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
     </div>
 
     @if(session('success'))
@@ -169,4 +241,3 @@
     }
 </script>
 @endsection
-

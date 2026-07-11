@@ -1,10 +1,13 @@
 <style>
     .driver-popover.sr-driver-popover {
         max-width: min(360px, calc(100vw - 28px));
+        max-height: min(78vh, calc(100vh - 112px));
+        overflow: auto;
         border-radius: 14px;
         padding: 16px;
         box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
         font-family: "Poppins", sans-serif;
+        box-sizing: border-box;
     }
 
     .driver-popover.sr-driver-popover.driverjs-theme-dark {

@@ -8,9 +8,9 @@
         body { background: #fff !important; }
         .sidebar, .navbar, .btn-no-print { display: none !important; }
         .db-section { padding: 0 !important; margin: 0 !important; }
-        .print-card { 
-            background: #fff !important; 
-            border: 1px solid #ccc !important; 
+        .print-card {
+            background: #fff !important;
+            border: 1px solid #ccc !important;
             break-inside: avoid;
             box-shadow: none !important;
             margin-bottom: 20px !important;
@@ -19,8 +19,11 @@
         canvas { max-width: 100% !important; height: auto !important; }
         h4, h5, h6 { color: #000 !important; }
     }
-    
+
     @media screen {
+        .report-print-identity {
+            display: none !important;
+        }
         .print-card {
             background: var(--sf) !important;
             border: 1px solid var(--bd) !important;
@@ -35,7 +38,7 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
         }
         #report-readiness {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)) !important; 
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)) !important;
             border: 1px solid rgba(59, 130, 246, 0.2) !important;
         }
     }
@@ -52,34 +55,75 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+
+    @media (max-width: 767px) {
+        #portfolioReport .report-export-actions {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            width: 100% !important;
+            align-items: stretch !important;
+        }
+        #portfolioReport .report-export-actions > button {
+            width: 100% !important;
+            height: 46px !important;
+            min-height: 46px !important;
+            padding: 7px 5px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            white-space: normal !important;
+            text-align: center !important;
+        }
+        #portfolioReport .report-export-actions > button i {
+            margin: 0 !important;
+            font-size: 0.78rem !important;
+        }
+        #portfolioReport .report-export-actions > form {
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
 <div class="db-section active animate-fade-up" id="portfolioReport">
     <!-- Feature 10: Interview Portfolio Report Header & Actions -->
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3 pb-3 border-bottom btn-no-print" style="border-color:var(--bd) !important;">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-folder-open me-2"></i>Interview Portfolio Report</h4>
-            <p style="color:var(--tx3);margin:0;">A complete summary of your preparation journey and analytics.</p>
+    <div class="sr-page-hero btn-no-print">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 3v5h5M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Reports
+                </h4>
+                <p class="sr-page-hero-subtitle">A complete summary of your preparation journey and analytics.</p>
+            </div>
         </div>
-        <div class="d-flex gap-2 flex-wrap align-items-center">
-            <button class="btn btn-outline-primary btn-shine" onclick="window.print()" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-print me-2"></i>Print Report</button>
-            <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
-            <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
-            @if($sessions->count() > 0)
-                <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-outline-danger btn-shine" style="border-radius:12px;font-weight:600;">
-                        <i class="fa-solid fa-trash-can me-2"></i>Clear Sessions
-                    </button>
-                </form>
-            @endif
-        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="reportPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="reportBlue" x1="62" y1="42" x2="164" y2="116"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="42" y="18" width="128" height="116" rx="16" fill="url(#reportPanel)" stroke="#BFDBFE" stroke-width="3"/><path d="M138 18v30h32" fill="#BAE6FD"/><path d="M68 63h74M68 81h62M68 99h34" stroke="#93C5FD" stroke-width="7" stroke-linecap="round"/><path d="M76 118l18-18 15 10 25-30" fill="none" stroke="url(#reportBlue)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="164" cy="48" r="17" fill="#22C55E"/><path d="M157 48l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
+    </div>
+    <div class="sr-page-actions report-export-actions btn-no-print">
+        <button class="btn btn-outline-primary btn-shine" onclick="window.print()" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-print me-2"></i>Print Report</button>
+        <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
+        <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
+        @if($sessions->count() > 0)
+            <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger btn-shine" style="border-radius:12px;font-weight:600;width:100%;">
+                    <i class="fa-solid fa-trash-can me-2"></i>Clear Sessions
+                </button>
+            </form>
+        @endif
     </div>
 
     <!-- Print Header visible only when printing or mimicking paper -->
-    <div class="d-flex align-items-center mb-4 gap-3">
+    <div class="report-print-identity d-flex align-items-center mb-4 gap-3">
         <div style="width:60px;height:60px;background:var(--pur);border-radius:50%;display:flex;justify-content:center;align-items:center;">
             <i class="fa-solid fa-user-graduate text-white fs-3"></i>
         </div>
@@ -118,7 +162,7 @@
         <div class="col-lg-7">
             <div class="print-card" style="padding:32px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-clipboard-check text-primary me-2"></i>Latest Interview Performance</h5>
-                
+
                 <div class="row mb-4 bg-light bg-opacity-10 rounded p-3" style="background:var(--bg);">
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Category</small>
@@ -157,7 +201,7 @@
             <div id="report-comparison" class="print-card" style="padding:32px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-code-compare text-warning me-2"></i>Performance Comparison</h5>
                 <p style="color:var(--tx3);font-size:0.9rem;">Comparing First Interview vs. Latest Interview</p>
-                
+
                 @if(count($comparisonRows) > 0)
                 <div class="table-responsive">
                     <table class="table table-borderless table-sm align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent; --bs-table-color: var(--tx);">
@@ -313,7 +357,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Feature 5: Learning Progress Report -->
             <div id="report-learning" class="print-card flex-grow-1" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:16px;"><i class="fa-solid fa-graduation-cap text-info me-2"></i>Learning Progress Report</h5>
@@ -402,7 +446,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
+                scales: {
                     y: { beginAtZero: true, max: 100, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
                     x: { grid: { display: false } }
                 }
@@ -410,7 +454,7 @@
         });
 
         const catPerf = @json($categoryPerf);
-        
+
         new Chart(document.getElementById('catChart'), {
             type: 'bar',
             data: {
@@ -425,7 +469,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
+                scales: {
                     y: { beginAtZero: true, max: 100, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
                     x: { grid: { display: false } }
                 }
@@ -445,7 +489,7 @@
                     html2canvas:  { scale: 2, useCORS: true },
                     jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                 };
-                
+
                 // Hide header actions during export
                 const headerActions = element.querySelector('.btn-no-print');
                 let originalDisplay = '';
@@ -453,7 +497,7 @@
                     originalDisplay = headerActions.style.display;
                     headerActions.style.display = 'none';
                 }
-                
+
                 html2pdf().set(opt).from(element).save().then(() => {
                     if (headerActions) {
                         headerActions.style.display = originalDisplay;
@@ -508,5 +552,3 @@
 </script>
 @endpush
 @endsection
-
-

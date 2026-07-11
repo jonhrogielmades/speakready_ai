@@ -52,8 +52,59 @@
         border-radius: 16px !important;
         margin-top: var(--session-gap) !important;
     }
+    .intro-ai-icon {
+        width: 68px;
+        height: 68px;
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.72), transparent 28%),
+            linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(139, 92, 246, 0.14));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 22px;
+        border: 1px solid rgba(96, 165, 250, 0.28);
+        box-shadow: 0 12px 28px rgba(59, 130, 246, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+        color: #60a5fa;
+    }
+    .intro-ai-icon i {
+        font-size: 1.8rem;
+        filter: drop-shadow(0 4px 8px rgba(96, 165, 250, 0.28));
+    }
+    #introContainer .intro-badge-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, max-content);
+        justify-content: center !important;
+        justify-items: center;
+        gap: 7px 8px !important;
+        margin-bottom: 24px !important;
+    }
+    #introContainer .intro-badge-grid .db-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        max-width: 100%;
+        white-space: nowrap;
+    }
+    #introContainer .intro-badge-grid .db-badge:nth-child(4) {
+        grid-column: 1 / -1;
+        justify-self: center;
+    }
     .interview-meta-line { flex-wrap: wrap; }
     .panel-title { font-weight:800;margin-bottom:16px;display:flex;align-items:center;font-size:1rem;color:var(--tx); letter-spacing: 0; }
+    .panel-title > i {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(96, 165, 250, 0.12);
+        color: #60a5fa;
+        margin-right: 8px !important;
+        font-size: 0.82rem;
+    }
     .stat-row { display:flex;justify-content:space-between;margin-bottom:12px;font-size:.9rem;color:var(--tx2); font-weight: 500; }
     .progress-bar-bg { background:var(--bg3);height:8px;border-radius:4px;overflow:hidden;margin-bottom:15px; }
     .progress-bar-fill { background:#60a5fa;height:100%;transition:width 0.3s; }
@@ -109,36 +160,119 @@
             margin-bottom: 8px !important;
             letter-spacing: 0 !important;
         }
-        .interview-meta-line {
+        .interview-session-header .sr-page-actions.interview-meta-line,
+        #sec-interview-session .interview-meta-line {
             display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 6px 8px !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 4px !important;
             width: 100%;
-            max-width: 360px;
+            max-width: 100%;
             margin: 0 auto;
-            font-size: 0.76rem !important;
+            font-size: 0.56rem !important;
         }
-        .interview-meta-line span {
+        .interview-session-header .sr-page-actions.interview-meta-line span,
+        #sec-interview-session .interview-meta-line span {
             min-width: 0;
-            padding: 6px 8px;
+            width: 100%;
+            padding: 5px 3px;
             border: 1px solid var(--bd);
             border-radius: 999px;
             background: var(--bg3);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            justify-content: center;
+            gap: 2px;
+        }
+        .interview-session-header .sr-page-actions.interview-meta-line span i,
+        #sec-interview-session .interview-meta-line span i {
+            margin-right: 2px !important;
+            font-size: 0.54rem;
+            flex: 0 0 auto;
         }
         .avatar-wrapper { transform: scale(0.62); }
         .circular-spectrum { transform: scale(0.62); }
         .ai-avatar-panel { height: 220px !important; }
+        .ai-avatar-panel .interviewer-badge {
+            border-radius: 999px !important;
+            padding: 5px 9px !important;
+            font-size: 0.62rem !important;
+            font-weight: 800;
+            letter-spacing: 0;
+        }
+        .ai-question-overlay {
+            padding: 42px 12px 12px !important;
+        }
+        .ai-question-overlay > .d-flex {
+            gap: 0 !important;
+        }
         .mobile-camera-pip {
             top: 12px !important;
             right: 12px !important;
             width: 70px !important;
             height: 92px !important;
+            border-radius: 10px !important;
+            border-width: 1px !important;
         }
-        .panel { padding: 12px !important; margin-bottom: var(--session-gap); }
-        .panel-title { font-size: 0.92rem; margin-bottom: 12px; }
+        #qCounter {
+            font-size: 0.66rem !important;
+            padding: 5px 8px !important;
+            border-radius: 999px;
+        }
+        .panel {
+            padding: 12px !important;
+            margin-bottom: var(--session-gap);
+            border-radius: 14px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        .panel:hover { transform: none; }
+        .panel-title {
+            font-size: 0.86rem;
+            margin-bottom: 10px;
+            line-height: 1.15;
+        }
+        .panel-title > i {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            font-size: 0.72rem;
+        }
+        #liveFeedbackPanel .panel-title > i {
+            background: rgba(52, 211, 153, 0.13);
+            color: #34d399;
+        }
+        #starPanel .panel-title > i {
+            background: rgba(251, 191, 36, 0.14);
+            color: #fbbf24 !important;
+        }
+        #voiceAnalyticsPanel .panel-title > i {
+            background: rgba(6, 182, 212, 0.14);
+            color: #06b6d4;
+        }
+        #sec-interview-session .col-lg-4 > .panel:last-child .panel-title > i {
+            background: rgba(168, 85, 247, 0.13);
+            color: #a855f7;
+        }
+        #overallReadiness {
+            font-size: 1.7rem !important;
+            line-height: 1.05;
+        }
+        .stat-row {
+            margin-bottom: 8px;
+            padding: 8px 9px;
+            border-radius: 10px;
+            background: var(--bg3);
+            font-size: 0.78rem;
+        }
+        .star-item {
+            padding: 9px 10px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+        }
+        .star-item i {
+            font-size: 0.92rem;
+        }
         #workspaceRow { --bs-gutter-x: 0; --bs-gutter-y: var(--session-gap); }
         #interviewControls {
             align-items: stretch !important;
@@ -147,15 +281,140 @@
             gap: 8px !important;
             margin-bottom: var(--session-gap) !important;
         }
-        #interviewControls > div { gap: 8px !important; }
-        #interviewControls > div { width: 100%; }
-        #interviewControls .btn { min-height: 40px; padding: 0.48rem 0.65rem; }
+        #interviewControls > div { gap: 8px !important; width: 100%; }
+        #interviewControls > div:first-child {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        #interviewControls > div:first-child .btn {
+            width: 100%;
+            min-height: 42px;
+            padding: 0.5rem 0.55rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            line-height: 1.15;
+        }
+        #interviewControls > div:first-child .btn i {
+            margin: 0 !important;
+            font-size: 0.76rem;
+        }
+        #interviewControls > div:nth-child(2) {
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: center !important;
+            justify-items: end;
+        }
+        #recordingTimer {
+            margin-right: 0 !important;
+            font-size: 0.74rem !important;
+            min-width: 40px;
+            justify-self: start;
+        }
+        #voiceControls {
+            width: 100%;
+        }
+        #voiceControls .d-flex.gap-2 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(42px, 50px));
+            justify-content: end;
+            gap: 7px !important;
+            flex-wrap: nowrap !important;
+        }
+        #voiceControls .btn {
+            width: 100%;
+            min-width: 0;
+            min-height: 34px !important;
+            padding: 0.36rem 0.42rem !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px !important;
+        }
+        #voiceControls .btn i {
+            margin: 0 !important;
+            font-size: 0.68rem;
+        }
+        #interviewControls .btn { min-height: 38px; padding: 0.43rem 0.58rem; }
+        #interviewControls .send-answer-btn {
+            grid-column: 1 / -1;
+            justify-self: center;
+            width: min(100%, 132px) !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            padding: 0.46rem 0.62rem !important;
+            border-radius: 10px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.1;
+            margin-top: 2px;
+        }
+        #interviewControls .send-answer-btn i {
+            font-size: 0.68rem;
+            margin-left: 0.35rem !important;
+        }
         #chatTranscriptContainer { padding: 10px !important; margin-bottom: 12px !important; max-height: 240px !important; }
-        #answerTextarea { min-height: 92px !important; }
+        #chatTranscriptContainer:empty::before {
+            content: 'Transcript will appear here';
+            color: var(--tx3);
+            font-size: 0.74rem;
+            display: block;
+            text-align: center;
+            padding: 18px 8px;
+        }
+        #answerTextarea {
+            min-height: 92px !important;
+            border-radius: 12px !important;
+            padding: 11px 12px !important;
+            font-size: 0.86rem !important;
+            line-height: 1.4;
+        }
+        #answerForm > .d-flex.justify-content-between {
+            margin-bottom: 0 !important;
+            align-items: flex-start !important;
+            gap: 8px;
+        }
+        #answerForm > .d-flex.justify-content-between > div {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--bd);
+            border-radius: 10px;
+            background: var(--bg3);
+            font-size: 0.7rem !important;
+            line-height: 1.35;
+        }
+        #autoSaveIndicator {
+            display: inline-flex;
+            margin-left: 6px !important;
+        }
         #introContainer { padding: 16px !important; max-width: 100% !important; }
+        #introContainer .intro-ai-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 15px;
+            margin-bottom: 16px;
+        }
+        #introContainer .intro-ai-icon i {
+            font-size: 1.45rem;
+        }
         #introContainer h4 { font-size: 1.18rem !important; line-height: 1.22 !important; }
         #introContainer p { font-size: 0.9rem !important; margin-bottom: 18px !important; }
-        #introContainer .db-badge { font-size: 0.7rem !important; max-width: 100%; }
+        #introContainer .intro-badge-grid .db-badge {
+            font-size: 0.7rem !important;
+        }
+        #introContainer .intro-start-btn {
+            width: 100% !important;
+            min-height: 44px;
+            padding: 0.62rem 1rem !important;
+            border-radius: 11px !important;
+            font-size: 0.9rem !important;
+            box-shadow: 0 6px 16px rgba(96,165,250,0.32) !important;
+        }
+        #introContainer .intro-start-btn i {
+            font-size: 0.78rem;
+            margin-left: 0.45rem !important;
+        }
         .session-chip { width:auto;max-width:100%;justify-content:center; }
         .question-timer-anchor { top:112px;right:12px; }
         #aiQuestionText { max-height: 4.5em; overflow-y: auto; }
@@ -164,16 +423,55 @@
     @media (max-width: 380px) {
         #sec-interview-session { --session-gap: 10px; }
         .interview-session-title { font-size: 1.06rem !important; }
-        .interview-meta-line { gap: 5px !important; font-size: 0.7rem !important; }
-        .interview-meta-line span { padding: 5px 7px; }
+        .interview-session-header .sr-page-actions.interview-meta-line,
+        #sec-interview-session .interview-meta-line {
+            gap: 3px !important;
+            font-size: 0.5rem !important;
+        }
+        .interview-session-header .sr-page-actions.interview-meta-line span,
+        #sec-interview-session .interview-meta-line span {
+            padding: 5px 2px;
+        }
+        .interview-session-header .sr-page-actions.interview-meta-line span i,
+        #sec-interview-session .interview-meta-line span i {
+            font-size: 0.5rem;
+        }
         .ai-avatar-panel { height: 204px !important; }
         .mobile-camera-pip { width: 62px !important; height: 82px !important; }
+        .ai-question-overlay { padding: 38px 10px 10px !important; }
         .question-timer-anchor { top: 100px; right: 10px; }
         .session-chip { padding: 6px 8px; font-size: 0.7rem; }
         #interviewControls { padding: 9px; }
         #interviewControls .btn { font-size: 0.82rem; }
+        #interviewControls > div:first-child {
+            gap: 6px !important;
+        }
+        #interviewControls > div:first-child .btn {
+            min-height: 38px;
+            padding: 0.42rem 0.45rem;
+            font-size: 0.68rem;
+        }
+        #interviewControls > div:first-child .btn i {
+            font-size: 0.68rem;
+        }
+        #recordingTimer {
+            font-size: 0.72rem !important;
+            min-width: 38px;
+        }
+        #voiceControls .d-flex.gap-2 {
+            grid-template-columns: repeat(2, minmax(38px, 46px));
+            gap: 6px !important;
+        }
+        #voiceControls .btn {
+            min-height: 32px !important;
+            padding: 0.35rem 0.42rem !important;
+        }
+        #voiceControls .btn i {
+            font-size: 0.66rem;
+        }
     }
 </style>
+@include('partials.page-hero-styles')
 
 <div class="db-section active" id="sec-interview-session">
     @if(session('active_interview_id'))
@@ -212,18 +510,50 @@
 
         @if($sessionRecord && $questions->count() > 0)
         <!-- Header Info -->
-        <div class="d-flex justify-content-between align-items-center mb-4 interview-session-header">
-            <div>
-                <h4 class="text-gradient-primary interview-session-title" style="font-size:1.6rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;"><i class="fa-solid fa-chalkboard-user me-2"></i>Interview Workspace</h4>
-                <div class="interview-meta-line" style="font-size:.85rem;color:var(--tx3);display:flex;gap:15px;">
-                    <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
-                    <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
-                    <span><i class="fa-solid fa-briefcase me-1"></i> {{ $sessionRecord->target_position ?? 'Standard' }}</span>
-                    <span><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
+        <div class="interview-session-header">
+            <div class="sr-page-hero">
+                <div class="sr-page-hero-inner">
+                    <div class="sr-page-hero-copy">
+                        <h4 class="sr-page-hero-title text-gradient-primary">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 6h16v10H8l-4 4V6Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                <path d="M9 10h6M9 13h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            Interview Workspace
+                        </h4>
+                        <p class="sr-page-hero-subtitle">Practice with your AI interviewer and answer each question with confidence.</p>
+                    </div>
                 </div>
+                <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="workspacePanel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#DBEAFE"/>
+                            <stop offset="1" stop-color="#ECFEFF"/>
+                        </linearGradient>
+                        <linearGradient id="workspaceBlue" x1="64" y1="38" x2="164" y2="118" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#3B82F6"/>
+                            <stop offset="1" stop-color="#06B6D4"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#workspacePanel)" stroke="#BFDBFE" stroke-width="3"/>
+                    <rect x="58" y="48" width="88" height="58" rx="16" fill="url(#workspaceBlue)"/>
+                    <circle cx="88" cy="77" r="7" fill="#EFF6FF"/>
+                    <circle cx="118" cy="77" r="7" fill="#EFF6FF"/>
+                    <path d="M91 92c8 6 21 6 29 0" stroke="#EFF6FF" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M78 48v-7a28 28 0 0 1 56 0v7" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
+                    <path d="M146 67h28v27h-16l-12 12V67Z" fill="#BAE6FD" stroke="#93C5FD" stroke-width="3" stroke-linejoin="round"/>
+                    <path d="M154 77h12M154 86h8" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="161" cy="47" r="18" fill="#22C55E"/>
+                    <path d="M154 47l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+                </svg>
             </div>
-            
-            <!-- Buttons moved below AI panel -->
+            <div class="sr-page-actions interview-meta-line" style="font-size:.85rem;color:var(--tx3);">
+                <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
+                <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
+                <span><i class="fa-solid fa-briefcase me-1"></i> {{ $sessionRecord->target_position ?? 'Standard' }}</span>
+                <span><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
+            </div>
         </div>
 
         <div id="workspaceWrapper" style="display:none;">
@@ -268,10 +598,10 @@
                         </div>
                     </div>
                     <!-- Overlay Text -->
-                    <div style="display:block;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px; z-index:20;">
+                    <div class="ai-question-overlay" style="display:block;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px; z-index:20;">
                         <div class="d-flex justify-content-start align-items-end gap-3">
                             <div>
-                                <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?: 'Interviewer' }}</span>
+                                <span class="badge mb-2 interviewer-badge" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?: 'Interviewer' }}</span>
                                 <div id="aiQuestionText" style="color:white;font-size:0.85rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
                             </div>
                         </div>
@@ -305,7 +635,7 @@
                             @endif
                         </div>
 
-                        <button type="button" class="btn px-4 flex-fill next-btn-class text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 160px; border-radius:12px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
+                        <button type="button" class="btn px-4 flex-fill next-btn-class send-answer-btn text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 160px; border-radius:12px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
                     </div>
                 </div>
 
@@ -405,18 +735,18 @@
             @if($hasSavedInterviewState)
                 <div class="recovery-pill"><i class="fa-solid fa-rotate-left"></i> Progress saved</div>
             @endif
-            <div style="width:70px;height:70px;border-radius:20px;background:linear-gradient(135deg, rgba(59,130,246,.15), rgba(139,92,246,.15));display:flex;align-items:center;justify-content:center;margin:0 auto 24px;border: 1px solid rgba(139,92,246,0.2);">
-                <i class="fa-solid fa-robot" style="font-size:1.8rem;color:#60a5fa"></i>
+            <div class="intro-ai-icon" aria-hidden="true">
+                <i class="fa-solid fa-robot"></i>
             </div>
             <h4 style="color:var(--tx);font-weight:700">{{ $hasSavedInterviewState ? 'Interview Workspace Saved' : 'Interview Workspace Ready' }}</h4>
             <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} questions. Live readiness and STAR analysis will update as you respond.</p>
-            <div style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
+            <div class="intro-badge-grid" style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
                 <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
                 <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-bullseye me-1"></i> {{ ucfirst($sessionRecord->coach_focus_mode) }} Focus</span>
                 <span class="db-badge" style="background:rgba(245,158,11,.12);color:#f59e0b"><i class="fa-solid fa-stopwatch me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
                 <span class="db-badge" style="background:rgba(139,92,246,.12);color:#a78bfa"><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
             </div>
-            <button class="btn px-4 py-3 w-100 btn-shine" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume Interview' : 'Begin Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
+            <button class="btn px-4 py-3 w-100 btn-shine intro-start-btn" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume Interview' : 'Begin Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
         </div>
 
         <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">

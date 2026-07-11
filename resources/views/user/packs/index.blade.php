@@ -22,25 +22,104 @@
     .pack-stat-label { color:var(--tx3); font-size:.74rem; font-weight:800; text-transform:uppercase; letter-spacing:.02em; }
     .pack-stat-value { color:var(--tx); font-size:1.45rem; line-height:1.1; font-weight:900; margin-top:7px; }
     @media (max-width: 767px) {
-        .pack-toolbar,
-        .pack-summary { grid-template-columns:1fr; }
-        .pack-card { border-radius:14px; padding:15px; }
+        #interview-packs-page .sr-page-actions {
+            margin-bottom: 12px !important;
+        }
+        #interview-packs-page .pack-summary {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        #interview-packs-page .pack-stat {
+            border-radius: 14px;
+            padding: 11px 8px;
+            min-height: 86px;
+            text-align: center;
+        }
+        #interview-packs-page .pack-stat-label {
+            font-size: 0.58rem;
+            line-height: 1.18;
+            letter-spacing: 0;
+        }
+        #interview-packs-page .pack-stat-value {
+            font-size: 1.14rem;
+            margin-top: 8px;
+        }
+        #interview-packs-page .pack-toolbar {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        #interview-packs-page .pack-field {
+            min-height: 44px;
+            border-radius: 11px;
+            font-size: 0.84rem;
+        }
+        #interview-packs-page .pack-group h5 {
+            margin: 16px 0 10px !important;
+            font-size: 0.98rem;
+        }
+        #interview-packs-page .pack-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        #interview-packs-page .pack-card {
+            border-radius:14px;
+            padding:14px;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #interview-packs-page .pack-card > .d-flex:first-child {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 8px !important;
+        }
+        #interview-packs-page .pack-card h5 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+        }
+        #interview-packs-page .pack-card p {
+            font-size: 0.8rem !important;
+            line-height: 1.45 !important;
+            margin-bottom: 10px;
+        }
+        #interview-packs-page .pack-chip {
+            padding: 6px 9px;
+            font-size: 0.68rem;
+            line-height: 1.15;
+            margin: 0 4px 6px 0;
+        }
+        #interview-packs-page .sample-list {
+            font-size: 0.78rem;
+            line-height: 1.45;
+            margin-bottom: 10px;
+        }
+        #interview-packs-page .pack-card .btn {
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
     }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active">
-    <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
-        <div>
-            <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;text-transform:uppercase;">
-                <i class="fa-solid fa-layer-group me-2"></i>Interview Packs
-            </h4>
-            <p style="color:var(--tx3);margin:0;">Start with ready-made company and role simulations.</p>
+<div class="db-section active" id="interview-packs-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Interview Packs
+                </h4>
+                <p class="sr-page-hero-subtitle">Start with ready-made company and role simulations.</p>
+            </div>
         </div>
-        <a href="{{ route('user.applications.index') }}" class="btn btn-outline-primary align-self-start" style="border-radius:12px;font-weight:700;">
-            <i class="fa-solid fa-briefcase me-1"></i>Job Tracker
-        </a>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="packPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="packBlue" x1="66" y1="36" x2="166" y2="118"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#packPanel)" stroke="#BFDBFE" stroke-width="3"/><path d="m111 42 54 29-54 29-54-29 54-29Z" fill="url(#packBlue)"/><path d="m57 83 54 29 54-29M57 98l54 29 54-29" fill="none" stroke="#60A5FA" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M95 70h32" stroke="#EFF6FF" stroke-width="7" stroke-linecap="round"/><circle cx="164" cy="44" r="17" fill="#22C55E"/><path d="M157 44l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
     </div>
-
     @php
         $flatPacks = $packs->flatten(1);
         $totalPacks = $flatPacks->count();

@@ -75,26 +75,118 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
-</style>
 
-<div class="db-section active">
-    <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-book-open-reader me-2"></i>Interview Modules</h4>
+    @media (max-width: 767px) {
+        #interview-modules-page .sr-page-actions {
+            display: block !important;
+            margin-bottom: 12px !important;
+        }
+        #interview-modules-page .db-top-search {
+            max-width: none !important;
+            min-height: 46px;
+            padding: 10px 12px !important;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+        #interview-modules-page #nav-pills-container {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            padding-bottom: 8px !important;
+            margin-bottom: 12px !important;
+            scrollbar-width: none;
+        }
+        #interview-modules-page #nav-pills-container::-webkit-scrollbar {
+            display: none;
+        }
+        #interview-modules-page .ll-nav-pill {
+            flex: 0 0 auto;
+            min-height: 40px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+        #interview-modules-page .module-card {
+            border-radius: 14px !important;
+            min-height: auto;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        #interview-modules-page .module-card:hover {
+            transform: none;
+        }
+        #interview-modules-page .module-card > div:first-child {
+            height: 104px !important;
+        }
+        #interview-modules-page .module-card > div:first-child > div[style*="top:15px"] {
+            top: 10px !important;
+            left: 10px !important;
+            right: 10px;
+            flex-wrap: wrap;
+        }
+        #interview-modules-page .module-card > div:first-child > div[style*="bottom:-25px"] {
+            width: 46px !important;
+            height: 46px !important;
+            bottom: -21px !important;
+            left: 14px !important;
+            border-radius: 14px !important;
+            font-size: 1.2rem !important;
+        }
+        #interview-modules-page .module-card > div:last-child {
+            padding: 32px 14px 14px !important;
+        }
+        #interview-modules-page .module-card h5 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+            margin-bottom: 8px !important;
+        }
+        #interview-modules-page .module-card p {
+            font-size: 0.8rem !important;
+            line-height: 1.45;
+            margin-bottom: 14px !important;
+        }
+        #interview-modules-page .module-card .mt-auto {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            align-items: stretch !important;
+        }
+        #interview-modules-page .module-card .btn {
+            width: 100%;
+            min-height: 42px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+    }
+</style>
+@include('partials.page-hero-styles')
+
+<div class="db-section active" id="interview-modules-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 8h7M8 12h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Interview Modules
+                </h4>
+                <p class="sr-page-hero-subtitle">Learn key concepts, review study materials, and prepare for your interviews.</p>
             </div>
-            <p style="color:var(--tx3);margin-top:5px; font-weight:500;">Learn key concepts, review study materials, and prepare for your interviews.</p>
         </div>
-        <div class="d-flex align-items-center gap-3 flex-wrap mt-3 mt-sm-0" style="flex: 1; min-width: 250px; justify-content: flex-end;">
-            <form action="{{ route('user.modules.index') }}" method="GET" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
-                <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search modules..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
-                @if(request('category'))
-                    <input type="hidden" name="category" value="{{ request('category') }}">
-                @endif
-            </form>
-        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs><linearGradient id="modulePanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="moduleBlue" x1="58" y1="40" x2="168" y2="116"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
+            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#modulePanel)" stroke="#BFDBFE" stroke-width="3"/><path d="M66 48h82a12 12 0 0 1 12 12v50H78a12 12 0 0 0-12 12V48Z" fill="url(#moduleBlue)"/><path d="M83 67h55M83 84h43" stroke="#EFF6FF" stroke-width="7" stroke-linecap="round"/><circle cx="160" cy="48" r="18" fill="#22C55E"/><path d="M153 48l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        </svg>
+    </div>
+    <div class="sr-page-actions">
+        <form action="{{ route('user.modules.index') }}" method="GET" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
+            <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search modules..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
+            @if(request('category'))
+                <input type="hidden" name="category" value="{{ request('category') }}">
+            @endif
+        </form>
     </div>
 
     <!-- Sub-Navigation -->
