@@ -13,16 +13,18 @@ use App\Models\AiProvider;
 use App\Services\AIService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
         $registeredUsersCount = \App\Models\User::count();
-        $activeTodayCount = \App\Models\InterviewSession::whereDate('created_at', today())->distinct('user_id')->count() 
-            ?: \App\Models\User::whereDate('updated_at', '>=', now()->subDay())->count();
+        $onlineTodayCount = $this->onlineUserIds()->count();
         $mockInterviewsCount = \App\Models\InterviewSession::count();
         $aiFeedbacksCount = \App\Models\Feedback::count();
         $modulesCompletedCount = \App\Models\LearningProgress::where('status', 'completed')->count();
@@ -91,7 +93,7 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact(
             'registeredUsersCount',
-            'activeTodayCount',
+            'onlineTodayCount',
             'mockInterviewsCount',
             'aiFeedbacksCount',
             'modulesCompletedCount',
@@ -109,6 +111,42 @@ class AdminController extends Controller
             'userGrowthData',
             'recentActivities'
         ));
+    }
+
+    private function onlineUserIds(): \Illuminate\Support\Collection
+    {
+        $cutoff = now()->subMinutes(5);
+
+        if (config('session.driver') === 'database' && Schema::hasTable(config('session.table', 'sessions'))) {
+            return DB::table(config('session.table', 'sessions'))
+                ->whereNotNull('user_id')
+                ->where('last_activity', '>=', $cutoff->timestamp)
+                ->distinct()
+                ->pluck('user_id')
+                ->map(fn ($id) => (int) $id)
+                ->values();
+        }
+
+        if (config('session.driver') !== 'file') {
+            return collect();
+        }
+
+        $sessionPath = config('session.files');
+
+        if (!is_dir($sessionPath)) {
+            return collect();
+        }
+
+        return collect(File::files($sessionPath))
+            ->filter(fn ($file) => $file->getMTime() >= $cutoff->timestamp)
+            ->flatMap(function ($file) {
+                $contents = File::get($file->getPathname());
+                preg_match_all('/login_web_[^";|]*(?:\";i:|\|i:)(\d+)/', $contents, $matches);
+
+                return collect($matches[1] ?? [])->map(fn ($id) => (int) $id);
+            })
+            ->unique()
+            ->values();
     }
 
     // Category CRUD

@@ -405,8 +405,8 @@
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-user-check"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($activeTodayCount) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Active Today</div>
+                <div style="font-size:1.5rem;font-weight:700;">{{ number_format($onlineTodayCount) }}</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Online Today</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">

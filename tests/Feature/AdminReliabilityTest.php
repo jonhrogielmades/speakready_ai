@@ -14,6 +14,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class AdminReliabilityTest extends TestCase
@@ -295,6 +296,34 @@ class AdminReliabilityTest extends TestCase
             ->assertOk()
             ->assertSee('lang="ceb"', false)
             ->assertSee('data-speech-locale="ceb-PH"', false);
+    }
+
+    public function test_admin_dashboard_online_today_uses_current_online_sessions(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $onlineUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $staleUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $sessionPath = storage_path('framework/testing-sessions');
+        File::ensureDirectoryExists($sessionPath);
+        File::cleanDirectory($sessionPath);
+
+        config([
+            'session.driver' => 'file',
+            'session.files' => $sessionPath,
+        ]);
+
+        File::put($sessionPath . DIRECTORY_SEPARATOR . 'current-session', 'login_web_test|i:' . $onlineUser->id . ';');
+        File::put($sessionPath . DIRECTORY_SEPARATOR . 'stale-session', 'login_web_test|i:' . $staleUser->id . ';');
+        touch($sessionPath . DIRECTORY_SEPARATOR . 'current-session', now()->timestamp);
+        touch($sessionPath . DIRECTORY_SEPARATOR . 'stale-session', now()->subMinutes(10)->timestamp);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Online Today')
+            ->assertSee('>1</div>', false)
+            ->assertDontSee('Active Today');
     }
 
     public function test_admin_users_export_respects_current_filters(): void
