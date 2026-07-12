@@ -87,7 +87,30 @@
         filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18));
         pointer-events: none;
         user-select: none;
+        transform-origin: 50% 60%;
+        animation: setupHeroFloat 5.5s ease-in-out infinite;
     }
+    .setup-hero-art .setup-art-panel {
+        transform-origin: 50% 50%;
+        animation: setupPanelBreathe 5.5s ease-in-out infinite;
+    }
+    .setup-hero-art .setup-art-line {
+        transform-origin: 50% 50%;
+        animation: setupLineSlide 3.8s ease-in-out infinite;
+    }
+    .setup-hero-art .setup-art-line:nth-of-type(3) { animation-delay: 0.18s; }
+    .setup-hero-art .setup-art-line:nth-of-type(4) { animation-delay: 0.36s; }
+    .setup-hero-art .setup-art-line:nth-of-type(5) { animation-delay: 0.54s; }
+    .setup-hero-art .setup-art-check {
+        transform-origin: 164px 50px;
+        animation: setupCheckPulse 2.6s ease-in-out infinite;
+    }
+    .setup-hero-art .setup-art-spark {
+        transform-origin: center;
+        animation: setupSparkDrift 3.2s ease-in-out infinite;
+    }
+    .setup-hero-art .setup-art-spark:nth-last-child(1) { animation-delay: 0.32s; }
+
     .setup-panel { 
         background: var(--sf);
         border: 1px solid var(--bd);
@@ -226,6 +249,33 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    @keyframes setupHeroFloat {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+        50% { transform: translate3d(0, -7px, 0) rotate(1.2deg); }
+    }
+    @keyframes setupPanelBreathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.015); }
+    }
+    @keyframes setupLineSlide {
+        0%, 100% { transform: translateX(0); opacity: 0.78; }
+        50% { transform: translateX(7px); opacity: 1; }
+    }
+    @keyframes setupCheckPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.08); opacity: 0.9; }
+    }
+    @keyframes setupSparkDrift {
+        0%, 100% { transform: translate(0, 0); opacity: 0.55; }
+        50% { transform: translate(4px, -5px); opacity: 0.9; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #sec-interview-setup .setup-hero-art,
+        #sec-interview-setup .setup-hero-art * {
+            animation: none !important;
+        }
+    }
 
     /* Driver.js Dark Theme Customization */
     .driverjs-theme-dark.driver-popover { background-color: var(--bg3); color: var(--tx); border: 1px solid var(--bd); }
@@ -491,18 +541,19 @@
                     <stop offset="1" stop-color="#06B6D4"/>
                 </linearGradient>
             </defs>
-            <rect x="32" y="20" width="156" height="108" rx="18" fill="url(#setupArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
-            <rect x="51" y="42" width="70" height="8" rx="4" fill="#93C5FD"/>
-            <rect x="51" y="59" width="118" height="7" rx="3.5" fill="#C7D2FE"/>
-            <rect x="51" y="75" width="96" height="7" rx="3.5" fill="#BAE6FD"/>
-            <path d="M58 103h46" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
-            <path d="M126 103h31" stroke="#06B6D4" stroke-width="8" stroke-linecap="round"/>
-            <circle cx="164" cy="50" r="22" fill="url(#setupArtBlue)"/>
+            <rect class="setup-art-panel" x="32" y="20" width="156" height="108" rx="18" fill="url(#setupArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <rect class="setup-art-line" x="51" y="42" width="70" height="8" rx="4" fill="#93C5FD"/>
+            <rect class="setup-art-line" x="51" y="59" width="118" height="7" rx="3.5" fill="#C7D2FE"/>
+            <rect class="setup-art-line" x="51" y="75" width="96" height="7" rx="3.5" fill="#BAE6FD"/>
+            <path class="setup-art-line" d="M58 103h46" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
+            <path class="setup-art-line" d="M126 103h31" stroke="#06B6D4" stroke-width="8" stroke-linecap="round"/>
+            <circle class="setup-art-check" cx="164" cy="50" r="22" fill="url(#setupArtBlue)"/>
             <path d="M155 50l6 6 13-15" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="61" cy="31" r="5" fill="#60A5FA"/>
             <circle cx="77" cy="31" r="5" fill="#67E8F9"/>
             <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
-            <path d="M190 30l9-9m-1 28l13-2M24 58l-11-7m19 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+            <path class="setup-art-spark" d="M190 30l9-9m-1 28l13-2" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+            <path class="setup-art-spark" d="M24 58l-11-7m19 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
         </svg>
     </div>
 

@@ -10,8 +10,7 @@
     $fullName = trim(Auth::user()->name ?? '') ?: 'User';
     $nameParts = preg_split('/\s+/', $fullName);
     $firstName = $nameParts[0] ?? 'User';
-    $lastName = count($nameParts) > 1 ? $nameParts[count($nameParts) - 1] : '';
-    $welcomeName = trim($firstName . ' ' . $lastName);
+    $welcomeName = $firstName;
     $rating = round(($avgScore ?? 0) / 20, 1);
     $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
     $categoryCount = isset($categoryPerformance) ? count($categoryPerformance) : 0;

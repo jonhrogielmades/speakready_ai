@@ -876,6 +876,15 @@
          .mob-nav-item:active .mob-nav-primary-icon {
             transform: scale(0.9);
          }
+         .mob-nav-item.nav-icon-moving .mob-nav-icon {
+            animation: mobNavIconTap 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+         }
+         .mob-nav-item.nav-icon-moving .mob-nav-primary-icon {
+            animation: mobNavPrimaryTap 0.56s cubic-bezier(0.22, 1, 0.36, 1);
+         }
+         .mob-nav-item.nav-icon-moving > span:last-child {
+            animation: mobNavLabelTap 0.48s ease;
+         }
          .mob-nav-item:focus-visible {
             outline: 2px solid rgba(96, 165, 250, 0.9);
             outline-offset: 2px;
@@ -929,6 +938,31 @@
          }
          .lm .mob-nav-primary-icon {
             border-color: rgba(255, 255, 255, 0.96);
+         }
+
+         @keyframes mobNavIconTap {
+            0% { transform: translateY(0) scale(1) rotate(0deg); }
+            32% { transform: translateY(-7px) scale(1.12) rotate(-5deg); }
+            58% { transform: translateY(2px) scale(0.94) rotate(3deg); }
+            100% { transform: translateY(0) scale(1) rotate(0deg); }
+         }
+         @keyframes mobNavPrimaryTap {
+            0% { transform: translateY(0) scale(1); box-shadow: 0 16px 28px rgba(37, 99, 235, 0.38), 0 0 0 7px rgba(37, 99, 235, 0.12); }
+            34% { transform: translateY(-9px) scale(1.1); box-shadow: 0 22px 38px rgba(37, 99, 235, 0.52), 0 0 0 11px rgba(37, 99, 235, 0.18); }
+            64% { transform: translateY(2px) scale(0.96); }
+            100% { transform: translateY(0) scale(1); box-shadow: 0 16px 28px rgba(37, 99, 235, 0.38), 0 0 0 7px rgba(37, 99, 235, 0.12); }
+         }
+         @keyframes mobNavLabelTap {
+            0%, 100% { transform: translateY(0); opacity: 1; }
+            40% { transform: translateY(2px); opacity: 0.78; }
+         }
+
+         @media (prefers-reduced-motion: reduce) {
+            .mob-nav-item.nav-icon-moving .mob-nav-icon,
+            .mob-nav-item.nav-icon-moving .mob-nav-primary-icon,
+            .mob-nav-item.nav-icon-moving > span:last-child {
+               animation: none !important;
+            }
          }
 
          @media (hover: hover) {
@@ -1952,6 +1986,31 @@
             dropdown.setAttribute('aria-hidden', 'true');
             if (button) button.setAttribute('aria-expanded', 'false');
          }
+
+         function playMobileNavIconMotion(item) {
+            if (!item) return;
+            if (item._mobileNavMotionTimer) {
+               window.clearTimeout(item._mobileNavMotionTimer);
+            }
+            item.classList.remove('nav-icon-moving');
+            void item.offsetWidth;
+            item.classList.add('nav-icon-moving');
+            item._mobileNavMotionTimer = window.setTimeout(() => {
+               item.classList.remove('nav-icon-moving');
+               item._mobileNavMotionTimer = null;
+            }, item.classList.contains('mob-nav-primary') ? 620 : 540);
+         }
+
+         document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('#mob-bottom-nav .mob-nav-item').forEach(item => {
+               item.addEventListener('pointerdown', () => playMobileNavIconMotion(item), { passive: true });
+               item.addEventListener('keydown', event => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                     playMobileNavIconMotion(item);
+                  }
+               });
+            });
+         });
 
          function toggleMobileProfile(e, mode = 'pages') {
             if (e) e.stopPropagation();

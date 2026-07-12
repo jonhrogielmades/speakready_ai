@@ -43,6 +43,66 @@
         display: inline-flex;
         margin: 0;
     }
+    .admin-user-avatar-wrap {
+        position: relative;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+    }
+    .admin-user-avatar {
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        background: #3b82f6;
+    }
+    .admin-user-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .admin-user-presence-dot {
+        position: absolute;
+        right: -1px;
+        bottom: -1px;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: 2px solid var(--sf);
+        background: #94a3b8;
+        box-shadow: 0 0 0 1px rgba(15, 23, 42, .08);
+    }
+    .admin-user-presence-dot.online {
+        background: #22c55e;
+    }
+    .admin-user-presence-dot.offline {
+        background: #94a3b8;
+    }
+    .admin-user-presence-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--tx2);
+    }
+    .admin-user-presence-label::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #94a3b8;
+    }
+    .admin-user-presence-label.online::before {
+        background: #22c55e;
+    }
     #sec-admin-users .input-group {
         display: flex;
         flex-wrap: nowrap;
@@ -390,13 +450,21 @@
                             @php
                                 $photoPath = $tUser->profile_photo_path;
                                 $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
+                                $isOnline = $onlineUserIds->contains($tUser->id);
                             @endphp
-                            <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;">
-                                <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                <div class="admin-user-avatar" style="width:28px;height:28px;font-size:0.72rem;">
+                                    <img src="{{ $photoUrl }}" alt="Avatar">
+                                </div>
+                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                             </div>
                         @else
-                            <div style="width:28px;height:28px;border-radius:50%;background:#{{ substr(md5($tUser->id), 0, 6) }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;">
-                                {{ strtoupper(substr($tUser->name, 0, 2)) }}
+                            @php $isOnline = $onlineUserIds->contains($tUser->id); @endphp
+                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                <div class="admin-user-avatar" style="width:28px;height:28px;background:#{{ substr(md5($tUser->id), 0, 6) }};font-size:0.75rem;">
+                                    {{ strtoupper(substr($tUser->name, 0, 2)) }}
+                                </div>
+                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                             </div>
                         @endif
                         <span style="font-size:0.9rem;">{{ $tUser->name }}</span>
@@ -418,13 +486,21 @@
                             @php
                                 $photoPath = $nUser->profile_photo_path;
                                 $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
+                                $isOnline = $onlineUserIds->contains($nUser->id);
                             @endphp
-                            <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;">
-                                <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                <div class="admin-user-avatar" style="width:28px;height:28px;font-size:0.72rem;">
+                                    <img src="{{ $photoUrl }}" alt="Avatar">
+                                </div>
+                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                             </div>
                         @else
-                            <div style="width:28px;height:28px;border-radius:50%;background:#{{ substr(md5($nUser->id), 0, 6) }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;">
-                                {{ strtoupper(substr($nUser->name, 0, 2)) }}
+                            @php $isOnline = $onlineUserIds->contains($nUser->id); @endphp
+                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                <div class="admin-user-avatar" style="width:28px;height:28px;background:#{{ substr(md5($nUser->id), 0, 6) }};font-size:0.75rem;">
+                                    {{ strtoupper(substr($nUser->name, 0, 2)) }}
+                                </div>
+                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                             </div>
                         @endif
                         <span style="font-size:0.9rem;">{{ $nUser->name }}</span>
@@ -489,16 +565,28 @@
                                     @php
                                         $photoPath = $user->profile_photo_path;
                                         $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
+                                        $isOnline = $onlineUserIds->contains($user->id);
                                     @endphp
-                                    <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;border:1px solid var(--bd);flex-shrink:0;">
-                                        <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                                    <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                        <div class="admin-user-avatar" style="width:40px;height:40px;">
+                                            <img src="{{ $photoUrl }}" alt="Avatar">
+                                        </div>
+                                        <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                                     </div>
                                 @else
-                                    <div style="width:40px;height:40px;border-radius:50%;background:#{{ substr(md5($user->id), 0, 6) }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0;">
-                                        {{ strtoupper(substr($user->name, 0, 2)) }}
+                                    @php $isOnline = $onlineUserIds->contains($user->id); @endphp
+                                    <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                        <div class="admin-user-avatar" style="width:40px;height:40px;background:#{{ substr(md5($user->id), 0, 6) }};">
+                                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                                        </div>
+                                        <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                                     </div>
                                 @endif
-                                <div><div class="fw-bold">{{ $user->name }}</div><div style="font-size:0.75rem;color:var(--tx3);">ID: {{ $user->id }}</div></div>
+                                <div>
+                                    <div class="fw-bold">{{ $user->name }}</div>
+                                    <div style="font-size:0.75rem;color:var(--tx3);">ID: {{ $user->id }}</div>
+                                    <span class="admin-user-presence-label {{ $isOnline ? 'online' : 'offline' }}">{{ $isOnline ? 'Online' : 'Offline' }}</span>
+                                </div>
                             </div>
                         </td>
                         <td>{{ $user->email }}</td>
@@ -578,10 +666,14 @@
         <div class="modal-content">
             <div class="modal-header d-flex justify-content-between align-items-center pb-0 border-0">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div id="userDetailInitials" style="width:60px;height:60px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.5rem;">--</div>
+                    <div class="admin-user-avatar-wrap" id="userDetailAvatarWrap" title="Offline">
+                        <div id="userDetailAvatar" class="admin-user-avatar" style="width:60px;height:60px;font-size:1.5rem;">--</div>
+                        <span id="userDetailPresenceDot" class="admin-user-presence-dot offline" style="width:14px;height:14px;"></span>
+                    </div>
                     <div>
                         <h4 id="userDetailName" class="mb-0 fw-bold">Loading user...</h4>
                         <div style="color:var(--tx2);font-size:0.9rem;">ID: <span id="userDetailId">--</span> <span id="userDetailStatus" class="ms-2"></span></div>
+                        <span id="userDetailPresenceLabel" class="admin-user-presence-label offline">Offline</span>
                     </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1);"></button>
@@ -910,8 +1002,25 @@
                 const user = data.user;
                 const stats = data.stats || {};
                 const initials = (user.name || '--').trim().split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '--';
+                const isOnline = Boolean(user.is_online);
+                const avatar = document.getElementById('userDetailAvatar');
+                const avatarWrap = document.getElementById('userDetailAvatarWrap');
+                const presenceDot = document.getElementById('userDetailPresenceDot');
+                const presenceLabel = document.getElementById('userDetailPresenceLabel');
 
-                document.getElementById('userDetailInitials').textContent = initials;
+                if (user.profile_photo_url) {
+                    avatar.innerHTML = `<img src="${escapeHtml(user.profile_photo_url)}" alt="Avatar">`;
+                    avatar.style.background = '#3b82f6';
+                } else {
+                    avatar.textContent = initials;
+                    avatar.style.background = `#${String(user.id || 1).padStart(6, '0').slice(-6)}`;
+                }
+                avatarWrap.title = isOnline ? 'Online' : 'Offline';
+                presenceDot.classList.toggle('online', isOnline);
+                presenceDot.classList.toggle('offline', !isOnline);
+                presenceLabel.classList.toggle('online', isOnline);
+                presenceLabel.classList.toggle('offline', !isOnline);
+                presenceLabel.textContent = isOnline ? 'Online' : 'Offline';
                 document.getElementById('userDetailName').textContent = user.name || 'Unnamed user';
                 document.getElementById('userDetailId').textContent = user.id;
                 document.getElementById('userDetailStatus').innerHTML = data.status_badge || '';

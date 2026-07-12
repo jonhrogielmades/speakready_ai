@@ -5,6 +5,7 @@
             --mob-card-gap: 12px;
             --mob-card-pad: 16px;
             --mob-card-radius: 14px;
+            --mob-card-w: 100%;
          }
          #mob-content .db-content {
             padding: 12px var(--mob-page-x) 12px !important;
@@ -29,6 +30,7 @@
             --bs-gutter-y: 0 !important;
          }
          #mob-content .row > * {
+            width: 100% !important;
             min-width: 0 !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -53,14 +55,99 @@
             .ll-category-list,
             .retry-panel,
             .stat-box,
+            .category-filter-mobile,
+            .custom-switch-container,
+            .list-group,
+            .list-group-item,
+            .alert,
             .card
          ) {
-            width: 100% !important;
-            max-width: 100% !important;
+            width: var(--mob-card-w) !important;
+            max-width: var(--mob-card-w) !important;
             min-width: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
             border-radius: var(--mob-card-radius) !important;
+            box-sizing: border-box !important;
+            overflow-wrap: anywhere;
+         }
+         #mob-content :is(
+            .premium-card,
+            .premium-panel,
+            .setup-panel,
+            .panel,
+            .db-stat-card,
+            .ll-stat-card,
+            .ll-module-card,
+            .module-card,
+            .perk-card,
+            .level-card,
+            .print-card,
+            .sr-card,
+            .sr-stat-card,
+            .tracker-panel,
+            .chapter-card,
+            .mod-hero,
+            .ll-category-list,
+            .retry-panel,
+            .stat-box,
+            .category-filter-mobile,
+            .custom-switch-container,
+            .list-group,
+            .list-group-item,
+            .alert,
+            .card
+         ) > * {
+            max-width: 100%;
+            min-width: 0;
+         }
+         #mob-content :is(
+            .table-responsive,
+            .table-responsive-sm,
+            .table-responsive-md,
+            .table-responsive-lg,
+            .table-responsive-xl
+         ) {
+            width: var(--mob-card-w) !important;
+            max-width: var(--mob-card-w) !important;
+            min-width: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            box-sizing: border-box !important;
+         }
+         #mob-content .table-responsive > table,
+         #mob-content table {
+            width: 100% !important;
+            max-width: 100% !important;
+         }
+         #mob-content :is(
+            .custom-table,
+            #mainTable,
+            #mainUsersTable,
+            #mainSessionsTable,
+            #mainArchiveTable,
+            #mainAuditLogsTable,
+            #mainFeedbackTable,
+            #mainComplaintsTable,
+            #mainCategoriesTable,
+            #modulesTable,
+            #mainProvidersTable,
+            #moduleUsageTable,
+            .game-table
+         ) tbody tr {
+            width: var(--mob-card-w) !important;
+            max-width: var(--mob-card-w) !important;
+            min-width: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            box-sizing: border-box !important;
+         }
+         #mob-content .settings-grid button[data-bs-toggle="modal"],
+         #mob-content button.card,
+         #mob-content a.card {
+            width: var(--mob-card-w) !important;
+            max-width: var(--mob-card-w) !important;
+            min-width: 0 !important;
             box-sizing: border-box !important;
          }
          #mob-content :is(

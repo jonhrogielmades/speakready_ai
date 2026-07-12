@@ -154,53 +154,55 @@
         }
         .dashboard-overview-grid {
             display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 10px !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 8px !important;
             margin-right: 0 !important;
             margin-left: 0 !important;
             margin-bottom: 14px !important;
         }
         .dashboard-overview-grid > .col-6 {
             width: 100% !important;
+            max-width: 100% !important;
             padding-right: 0 !important;
             padding-left: 0 !important;
         }
         .overview-card {
-            aspect-ratio: 1 / 1;
+            aspect-ratio: auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 10px !important;
+            padding: 8px 4px !important;
             width: 100%;
             max-width: none;
             margin: 0 auto;
-            min-height: 128px;
-            border-radius: 16px !important;
+            min-height: 88px;
+            border-radius: 12px !important;
         }
         .overview-card > div:nth-child(1) {
-            width: 38px;
-            height: 38px;
-            border-radius: 13px;
+            width: 26px;
+            height: 24px;
+            border-radius: 9px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem !important;
-            margin-bottom: 8px !important;
-            background: rgba(255, 255, 255, 0.06);
+            font-size: 0.86rem !important;
+            margin-bottom: 5px !important;
+            background: transparent;
         }
         .overview-card > div:nth-child(2) {
-            font-size: 1.28rem !important;
+            font-size: 1rem !important;
             line-height: 1.1;
-            margin-bottom: 5px !important;
+            margin-bottom: 3px !important;
         }
         .overview-card > div:nth-child(3) {
-            font-size: 0.62rem !important;
+            font-size: 0.48rem !important;
             line-height: 1.25;
             text-align: center;
             word-wrap: break-word;
             white-space: normal;
-            letter-spacing: 0.03em !important;
+            letter-spacing: 0.01em !important;
+            max-width: 100%;
         }
         .row.g-4,
         .row.g-3 {
@@ -355,17 +357,23 @@
 
     @media (max-width: 380px) {
         .dashboard-overview-grid {
-            gap: 8px !important;
+            gap: 7px !important;
         }
         .overview-card {
-            min-height: 118px;
-            padding: 8px !important;
+            min-height: 82px;
+            padding: 7px 3px !important;
+        }
+        .overview-card > div:nth-child(1) {
+            width: 22px;
+            height: 21px;
+            font-size: 0.78rem !important;
+            margin-bottom: 4px !important;
         }
         .overview-card > div:nth-child(2) {
-            font-size: 1.12rem !important;
+            font-size: 0.92rem !important;
         }
         .overview-card > div:nth-child(3) {
-            font-size: 0.58rem !important;
+            font-size: 0.43rem !important;
         }
     }
 </style>

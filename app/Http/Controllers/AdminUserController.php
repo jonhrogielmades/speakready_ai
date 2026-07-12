@@ -9,6 +9,7 @@ use App\Models\Profile;
 use App\Models\Score;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
@@ -18,6 +19,7 @@ class AdminUserController extends Controller
         $query = $this->filteredUsers($request);
 
         $users = $query->latest()->paginate(10)->withQueryString();
+        $onlineUserIds = $this->onlineUserIds();
 
         $userScores = \Illuminate\Support\Facades\DB::table('interview_sessions')
             ->join('scores', 'interview_sessions.id', '=', 'scores.interview_session_id')
@@ -55,7 +57,7 @@ class AdminUserController extends Controller
             }
         }
 
-        return view('admin.users', compact('users', 'topUsers', 'needingImprovement'));
+        return view('admin.users', compact('users', 'topUsers', 'needingImprovement', 'onlineUserIds'));
     }
 
     public function export(Request $request)
@@ -231,6 +233,9 @@ class AdminUserController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'profile_photo_path' => $user->profile_photo_path,
+                'profile_photo_url' => $this->profilePhotoUrl($user),
+                'is_online' => $this->onlineUserIds()->contains($user->id),
                 'email_verified_at' => optional($user->email_verified_at)->toISOString(),
                 'is_admin' => (bool) $user->is_admin,
                 'status' => $user->status,
@@ -276,5 +281,41 @@ class AdminUserController extends Controller
         }
 
         return $query;
+    }
+
+    private function onlineUserIds(): \Illuminate\Support\Collection
+    {
+        if (config('session.driver') !== 'file') {
+            return collect();
+        }
+
+        $sessionPath = config('session.files');
+        $cutoff = now()->subMinutes(5)->timestamp;
+
+        if (!is_dir($sessionPath)) {
+            return collect();
+        }
+
+        return collect(File::files($sessionPath))
+            ->filter(fn ($file) => $file->getMTime() >= $cutoff)
+            ->flatMap(function ($file) {
+                $contents = File::get($file->getPathname());
+                preg_match_all('/login_web_[^";|]*(?:\";i:|\|i:)(\d+)/', $contents, $matches);
+
+                return collect($matches[1] ?? [])->map(fn ($id) => (int) $id);
+            })
+            ->unique()
+            ->values();
+    }
+
+    private function profilePhotoUrl(User $user): ?string
+    {
+        if (!$user->profile_photo_path) {
+            return null;
+        }
+
+        return str_starts_with($user->profile_photo_path, 'http') || str_starts_with($user->profile_photo_path, 'data:')
+            ? $user->profile_photo_path
+            : asset('storage/' . $user->profile_photo_path);
     }
 }

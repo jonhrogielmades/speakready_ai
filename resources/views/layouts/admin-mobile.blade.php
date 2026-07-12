@@ -2212,6 +2212,72 @@
             html.lm body.admin-mobile-shell .modal .btn-close {
                filter: none;
             }
+
+            body.admin-mobile-shell #mob-content {
+               --admin-mobile-card-width: 100%;
+            }
+
+            body.admin-mobile-shell #mob-content .db-content > *,
+            body.admin-mobile-shell #mob-content .db-section > *,
+            body.admin-mobile-shell #mob-content :is(
+               .premium-card,
+               .premium-panel,
+               .setup-panel,
+               .panel,
+               .db-stat-card,
+               .ll-stat-card,
+               .ll-module-card,
+               .module-card,
+               .perk-card,
+               .level-card,
+               .print-card,
+               .sr-card,
+               .sr-stat-card,
+               .tracker-panel,
+               .chapter-card,
+               .mod-hero,
+               .ll-category-list,
+               .retry-panel,
+               .stat-box,
+               .category-filter-mobile,
+               .custom-switch-container,
+               .list-group,
+               .list-group-item,
+               .alert,
+               .card
+            ),
+            body.admin-mobile-shell #mob-content :is(
+               .custom-table,
+               #mainTable,
+               #mainUsersTable,
+               #mainSessionsTable,
+               #mainArchiveTable,
+               #mainAuditLogsTable,
+               #mainFeedbackTable,
+               #mainComplaintsTable,
+               #mainCategoriesTable,
+               #modulesTable,
+               #mainProvidersTable,
+               #moduleUsageTable,
+               .game-table
+            ) tbody tr,
+            body.admin-mobile-shell #mob-content .settings-grid button[data-bs-toggle="modal"] {
+               width: var(--admin-mobile-card-width) !important;
+               max-width: var(--admin-mobile-card-width) !important;
+               min-width: 0 !important;
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+               box-sizing: border-box !important;
+            }
+
+            body.admin-mobile-shell #mob-content :is(.row, .container, .container-fluid, .table-responsive) {
+               width: 100% !important;
+               max-width: 100% !important;
+               min-width: 0 !important;
+               margin-left: 0 !important;
+               margin-right: 0 !important;
+               box-sizing: border-box !important;
+            }
          }
       </style>
 

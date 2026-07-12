@@ -70,17 +70,87 @@
     .bg-warning { background: #f59e0b !important; }
     .bg-danger { background: #ef4444 !important; }
     .bg-info { background: #06b6d4 !important; }
+
+    @media (max-width: 767px) {
+        #sec-admin-session-show > .session-show-header {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin-bottom: 12px !important;
+        }
+
+        #sec-admin-session-show .session-show-heading.admin-motion-title-card {
+            width: 100% !important;
+            min-height: 112px !important;
+            padding: 14px 12px !important;
+            grid-template-columns: minmax(0, 1fr) 88px !important;
+            gap: 8px !important;
+            margin: 0 !important;
+        }
+
+        #sec-admin-session-show .session-show-heading .admin-motion-title-copy {
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+
+        #sec-admin-session-show .session-show-heading h4 {
+            max-width: 100% !important;
+            font-size: clamp(1rem, 4.8vw, 1.26rem) !important;
+            line-height: 1.15 !important;
+            margin-top: 6px !important;
+            overflow-wrap: anywhere;
+        }
+
+        #sec-admin-session-show .session-show-heading a {
+            width: fit-content;
+            font-size: .78rem !important;
+            color: var(--tx2) !important;
+        }
+
+        #sec-admin-session-show .session-show-actions {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            width: 100% !important;
+        }
+
+        #sec-admin-session-show .session-show-actions form {
+            display: flex !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        #sec-admin-session-show .session-show-actions :is(a, button) {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            padding: 7px 4px !important;
+            border-radius: 9px !important;
+            font-size: .62rem !important;
+            line-height: 1.1 !important;
+            white-space: normal !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+        }
+
+        #sec-admin-session-show .session-show-actions i {
+            margin-right: 0 !important;
+            font-size: .72rem !important;
+        }
+    }
 </style>
 
-<div class="db-section active">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <a href="{{ route('admin.sessions.index') }}" class="text-decoration-none" style="color:var(--tx2);font-size:0.9rem;">
-                <i class="fa-solid fa-arrow-left me-1"></i> Back to Sessions
-            </a>
+<div class="db-section active" id="sec-admin-session-show">
+    <div class="session-show-header d-flex justify-content-between align-items-center mb-4">
+        <div class="session-show-heading">
             <h4 class="fw-bold mb-1 mt-2">Session #{{ $session->id }} Details</h4>
         </div>
-        <div class="d-flex gap-2">
+        <div class="session-show-actions d-flex gap-2">
+            <a href="{{ route('admin.sessions.index') }}" class="btn btn-outline-secondary" style="border-radius:12px;">
+                <i class="fa-solid fa-arrow-left me-2"></i>Back
+            </a>
             <a href="{{ route('admin.sessions.review', $session->id) }}" class="btn btn-primary" style="border-radius:12px;">
                 <i class="fa-solid fa-magnifying-glass-chart me-2"></i>Review Q&A
             </a>
