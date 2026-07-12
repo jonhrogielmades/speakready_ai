@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI Admin Portal</title>
+      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -21,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=18') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=19') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -135,11 +136,6 @@
              max-width: 100%;
           }
       </style>
-      <script>
-         if (localStorage.getItem('theme') === 'light') {
-             document.documentElement.classList.add('lm');
-         }
-      </script>
    </head>
    <body class="admin-shell">
       <div id="dashboard">
@@ -287,7 +283,7 @@
       <!-- CounterUp -->
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
-      <script src="{{ asset('js/main.js') }}"></script>
+      <script src="{{ asset('js/main.js?v=6') }}"></script>
       <!-- PWA Service Worker Registration -->
       <script>
          function closeDashboardSidebar() {

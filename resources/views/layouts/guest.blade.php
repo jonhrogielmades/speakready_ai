@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
       <meta name="theme-color" content="#f7fbff">
       <title>@yield('title', 'SpeakReady AI - Practice Smarter. Interview Better.')</title>
+      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -22,12 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css') }}" />
-      <script>
-         if (localStorage.getItem('theme') === 'light') {
-             document.documentElement.classList.add('lm');
-         }
-      </script>
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=1') }}" />
       <style>
          html, body {
             overflow-x: hidden;
@@ -1811,7 +1807,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
 
-      <script src="{{ asset('js/main.js') }}?v=4"></script>
+      <script src="{{ asset('js/main.js?v=6') }}"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {

@@ -1,5 +1,5 @@
 /*  STATE  */
-let isDark = localStorage.getItem('theme') !== null ? localStorage.getItem('theme') === 'dark' : true,
+let isDark = (window.SpeakReadyTheme ? window.SpeakReadyTheme.get() : localStorage.getItem('theme')) !== 'light',
     currentUser = null;
 let chatHistory = [];
 let ovChartInst = null,
@@ -7,8 +7,10 @@ let ovChartInst = null,
 
 /*  THEME  */
 function applyTheme() {
-    const root = document.getElementById('htmlRoot');
-    if (root) root.classList.toggle('lm', !isDark);
+    const appliedTheme = window.SpeakReadyTheme
+        ? window.SpeakReadyTheme.apply(isDark ? 'dark' : 'light', false)
+        : (isDark ? 'dark' : 'light');
+    isDark = appliedTheme !== 'light';
     
     // Landing icons
     const si = document.getElementById('suni'),
@@ -38,8 +40,12 @@ function applyTheme() {
 
 function toggleTheme() {
     isDark = !isDark;
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    applyTheme();
+    if (window.SpeakReadyTheme) {
+        isDark = window.SpeakReadyTheme.toggle() !== 'light';
+    } else {
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        applyTheme();
+    }
 }
 
 function setupGuestHeaderClock() {

@@ -5,6 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -21,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=14') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=16') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -48,11 +49,6 @@
               }
           }
       </style>
-      <script>
-         if (localStorage.getItem('theme') === 'light') {
-             document.documentElement.classList.add('lm');
-         }
-      </script>
       <!-- Driver.js -->
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       @include('partials.onboarding-styles')
@@ -158,17 +154,19 @@
 
                   <div style="position:relative" id="profileWrap">
                      <div class="db-user-pill" id="userPill" onclick="toggleProfile(event)">
+                        <div class="user-avatar-presence">
                     @if(Auth::check() && Auth::user()->profile_photo_path)
-                        @php
-                            $photoPath = Auth::user()->profile_photo_path;
-                            $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
-                        @endphp
-                        <div class="db-avatar" id="userAvatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
-                            <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
-                        </div>
+                           @php
+                               $photoPath = Auth::user()->profile_photo_path;
+                               $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
+                           @endphp
+                           <div class="db-avatar" id="userAvatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+                              <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
+                           </div>
                     @else
-                        <div class="db-avatar" id="userAvatar">{{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}</div>
+                           <div class="db-avatar" id="userAvatar">{{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}</div>
                     @endif
+                        </div>
                         <div class="d-none d-md-block">
                            <div style="font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ Auth::user()->name ?? 'User' }}</div>
                            <div style="font-size:.72rem;color:var(--tx3)" id="userPlan">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
@@ -224,7 +222,7 @@
       <!-- CounterUp -->
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
-      <script src="{{ asset('js/main.js') }}"></script>
+      <script src="{{ asset('js/main.js?v=6') }}"></script>
       @include('partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>

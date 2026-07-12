@@ -7,6 +7,7 @@
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <title>SpeakReady AI Admin Portal</title>
+      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -17,7 +18,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=8') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=9') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
@@ -1345,11 +1346,6 @@
          .lm .pwa-btn-no { border-color: #ccc; color: #333; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--adm, #f87171); color: #fff; font-weight: 600; cursor: pointer; }
       </style>
-      <script>
-         if (localStorage.getItem('theme') === 'light') {
-             document.documentElement.classList.add('lm');
-         }
-      </script>
    </head>
    <body class="admin-mobile-shell">
 
@@ -2414,7 +2410,7 @@
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <script src="{{ asset('js/main.js') }}"></script>
+      <script src="{{ asset('js/main.js?v=6') }}"></script>
 
       <script>
          function toggleMobileProfile(e, mode = 'pages') {
@@ -2472,27 +2468,6 @@
                closeMobileProfile();
             }
          });
-
-         function toggleTheme() {
-            const html = document.getElementById('htmlRoot');
-            if (html.classList.contains('lm')) {
-               html.classList.remove('lm');
-               localStorage.setItem('theme', 'dark');
-               document.getElementById('mobSunI').style.display = 'none';
-               document.getElementById('mobMoonI').style.display = '';
-            } else {
-               html.classList.add('lm');
-               localStorage.setItem('theme', 'light');
-               document.getElementById('mobMoonI').style.display = 'none';
-               document.getElementById('mobSunI').style.display = '';
-            }
-         }
-         (function() {
-            if (localStorage.getItem('theme') === 'light') {
-               document.getElementById('mobMoonI').style.display = 'none';
-               document.getElementById('mobSunI').style.display = '';
-            }
-         })();
 
          // Exit App Confirmation Logic for Physical Back Button
          let allowAppExit = false;

@@ -7,6 +7,7 @@
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
+      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -17,7 +18,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=9') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=11') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       @include('partials.onboarding-styles')
       <style>
@@ -1668,11 +1669,6 @@
          .lm .pwa-btn-no { border-color: #ccc; color: #333; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
       </style>
-      <script>
-         if (localStorage.getItem('theme') === 'light') {
-             document.documentElement.classList.add('lm');
-         }
-      </script>
    </head>
    <body>
 
@@ -1864,7 +1860,7 @@
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <script src="{{ asset('js/main.js') }}"></script>
+      <script src="{{ asset('js/main.js?v=6') }}"></script>
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
@@ -1879,33 +1875,6 @@
                }
             });
          })();
-
-         function toggleTheme() {
-            const html = document.getElementById('htmlRoot');
-            const sunI = document.getElementById('mobSunI');
-            const moonI = document.getElementById('mobMoonI');
-            if (html.classList.contains('lm')) {
-               html.classList.remove('lm');
-               localStorage.setItem('theme', 'dark');
-               sunI.style.display = 'none';
-               moonI.style.display = '';
-            } else {
-               html.classList.add('lm');
-               localStorage.setItem('theme', 'light');
-               moonI.style.display = 'none';
-               sunI.style.display = '';
-            }
-         }
-
-         // Sync theme icon on load
-         (function() {
-            if (localStorage.getItem('theme') === 'light') {
-               document.getElementById('mobMoonI').style.display = 'none';
-               document.getElementById('mobSunI').style.display = '';
-            }
-         })();
-
-
 
          // PWA Service Worker
          if ('serviceWorker' in navigator) {

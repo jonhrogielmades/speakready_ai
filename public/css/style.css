@@ -1306,6 +1306,27 @@ a {
   flex-shrink: 0;
 }
 
+.user-avatar-presence {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.user-avatar-presence::after,
+.mob-profile-wrap::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #31a24c;
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px rgba(49, 162, 76, 0.18);
+  pointer-events: none;
+}
+
 /* DB SIDEBAR */
 .db-sidebar {
   position: fixed;
