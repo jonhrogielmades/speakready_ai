@@ -426,55 +426,61 @@
         const labels = trendData.map(d => d.date);
         const scores = trendData.map(d => d.score);
 
-        new Chart(document.getElementById('trendChart'), {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Score Trend',
-                    data: scores,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: '#10b981',
-                    pointRadius: 5
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
-                    x: { grid: { display: false } }
+        const trendChart = document.getElementById('trendChart');
+        if (window.Chart && trendChart) {
+            new Chart(trendChart, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Score Trend',
+                        data: scores,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
+                        x: { grid: { display: false } }
+                    }
                 }
-            }
-        });
+            });
+        }
 
         const catPerf = @json($categoryPerf);
 
-        new Chart(document.getElementById('catChart'), {
-            type: 'bar',
-            data: {
-                labels: Object.keys(catPerf),
-                datasets: [{
-                    data: Object.values(catPerf),
-                    backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true, max: 100, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
-                    x: { grid: { display: false } }
+        const categoryChart = document.getElementById('catChart');
+        if (window.Chart && categoryChart) {
+            new Chart(categoryChart, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(catPerf),
+                    datasets: [{
+                        data: Object.values(catPerf),
+                        backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(156, 163, 175, 0.1)' } },
+                        x: { grid: { display: false } }
+                    }
                 }
-            }
-        });
+            });
+        }
         @endif
 
         // Export PDF
@@ -482,6 +488,10 @@
         if (exportPdfBtn) {
             exportPdfBtn.addEventListener('click', function() {
                 const element = document.getElementById('portfolioReport');
+                if (!element || typeof window.html2pdf !== 'function') {
+                    alert('PDF export is not available right now. Please use Print Report instead.');
+                    return;
+                }
                 const opt = {
                     margin:       [0.5, 0.5, 0.5, 0.5],
                     filename:     'portfolio_report.pdf',
@@ -498,7 +508,9 @@
                     headerActions.style.display = 'none';
                 }
 
-                html2pdf().set(opt).from(element).save().then(() => {
+                html2pdf().set(opt).from(element).save().catch(() => {
+                    alert('PDF export failed. Please try again or use Print Report.');
+                }).finally(() => {
                     if (headerActions) {
                         headerActions.style.display = originalDisplay;
                     }
@@ -510,6 +522,10 @@
         const exportExcelBtn = document.getElementById('exportExcelBtn');
         if (exportExcelBtn) {
             exportExcelBtn.addEventListener('click', function() {
+                if (!window.XLSX) {
+                    alert('Excel export is not available right now.');
+                    return;
+                }
                 const table = document.querySelector('#report-comparison table');
                 if (table) {
                     const wb = XLSX.utils.table_to_book(table, {sheet: "Comparison"});

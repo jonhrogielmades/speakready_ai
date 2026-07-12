@@ -104,8 +104,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    if (typeof window.Chart === 'undefined') return;
+
     // Bar Chart
-    const ctxBar = document.getElementById('barChart').getContext('2d');
+    const barCanvas = document.getElementById('barChart');
+    if (!barCanvas) return;
+    const ctxBar = barCanvas.getContext('2d');
     new Chart(ctxBar, {
         type: 'bar',
         data: {
@@ -133,7 +137,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Pie Chart
-    const ctxPie = document.getElementById('pieChart').getContext('2d');
+    const pieCanvas = document.getElementById('pieChart');
+    if (!pieCanvas) return;
+    const ctxPie = pieCanvas.getContext('2d');
     
     const qTypes = @json($questionTypeCounts);
 

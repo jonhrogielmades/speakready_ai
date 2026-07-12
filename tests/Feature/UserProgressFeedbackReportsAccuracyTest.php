@@ -153,6 +153,24 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             });
     }
 
+    public function test_progress_and_reports_exports_are_guarded_when_cdn_scripts_are_unavailable(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->get(route('user.progress'))
+            ->assertOk()
+            ->assertSee('window.Chart && document.getElementById', false)
+            ->assertSee('typeof window.html2pdf !== \'function\'', false)
+            ->assertSee('!window.XLSX', false);
+
+        $this->actingAs($user)
+            ->get(route('user.reports'))
+            ->assertOk()
+            ->assertSee('typeof window.html2pdf !== \'function\'', false)
+            ->assertSee('!window.XLSX', false);
+    }
+
     private function category(string $title): Category
     {
         return Category::create([

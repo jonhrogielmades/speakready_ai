@@ -171,6 +171,30 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
+    public function test_interview_start_creates_questions_when_bank_is_empty(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+                'num_questions' => 5,
+                'question_types' => ['Technical'],
+            ]))
+            ->assertRedirect(route('interview.session'));
+
+        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertDatabaseCount('questions', 5);
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'type' => 'Technical',
+            'status' => 'active',
+        ]);
+    }
+
     public function test_application_tracker_generates_match_report_and_practice_plan(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

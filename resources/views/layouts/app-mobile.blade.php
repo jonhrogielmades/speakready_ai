@@ -941,6 +941,45 @@
             border-color: rgba(255, 255, 255, 0.96);
          }
 
+         .ucp-mobile-launcher {
+            position: fixed;
+            right: 16px;
+            bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 16px);
+            z-index: 1001;
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(96, 165, 250, 0.36);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            background: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.32);
+            cursor: grab;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+         }
+         .ucp-mobile-launcher i {
+            font-size: 1rem;
+            line-height: 1;
+         }
+         .ucp-mobile-launcher:active,
+         .ucp-mobile-launcher.is-dragging {
+            cursor: grabbing;
+            transform: scale(0.96);
+            box-shadow: 0 12px 24px rgba(15, 23, 42, 0.28);
+         }
+         .ucp-mobile-launcher:focus-visible {
+            outline: 3px solid rgba(96, 165, 250, 0.45);
+            outline-offset: 3px;
+         }
+         .lm .ucp-mobile-launcher {
+            border-color: rgba(37, 99, 235, 0.18);
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.16);
+         }
+
          @keyframes mobNavIconTap {
             0% { transform: translateY(0) scale(1) rotate(0deg); }
             32% { transform: translateY(-7px) scale(1.12) rotate(-5deg); }
@@ -1832,13 +1871,28 @@
                     type="button"
                     aria-controls="mobProfileDropdown"
                     aria-expanded="false"
-                    aria-label="Open more menu"
+                    aria-label="Open profile menu"
                     onclick="toggleMobileProfile(event, 'pages')">
                <span class="mob-nav-icon"><i class="fa-solid fa-ellipsis"></i></span>
-               <span>More</span>
+               <span>Profile</span>
             </button>
          </div>
       </nav>
+
+      <button
+         type="button"
+         class="ucp-mobile-launcher"
+         data-ucp-open
+         data-ucp-context="user"
+         data-ucp-storage-key="speakready.ucp-launcher-position.v1"
+         aria-label="Open quick navigation"
+         aria-haspopup="dialog"
+         aria-controls="userCommandPalette"
+         aria-expanded="false">
+         <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+      </button>
+
+      <span id="ucpMobileLauncherStatus" class="visually-hidden" aria-live="polite"></span>
 
       @include('partials.user-command-palette')
       @include('partials.viewport-mobile-cookie')

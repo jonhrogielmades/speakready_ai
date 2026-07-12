@@ -179,6 +179,7 @@
                 @endforelse
             </div>
         </div>
+        @if($sessionRecord->share_token)
         <div class="col-lg-5">
             <form action="{{ route('shared.mentor-comments.store', $sessionRecord->share_token) }}" method="POST" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 @csrf
@@ -207,6 +208,7 @@
                 <button class="btn btn-success w-100" style="border-radius:10px;font-weight:800;">Submit Mentor Feedback</button>
             </form>
         </div>
+        @endif
     </div>
 
     <!-- Question Breakdown -->

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Log;
 
 class AIService
 {
+    private const AI_FAILURE_MESSAGE = "Sorry, I am having trouble connecting to my brain right now.";
+
     private const FEEDBACK_SCORE_FIELDS = [
         'score',
         'clarity_score',
@@ -239,7 +241,7 @@ class AIService
         $model = env('OPENAI_MODEL', 'gpt-4o-mini');
         $sysMsg = $systemPrompt ?? 'You are an expert interviewer. Respond concisely and professionally without markdown.';
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post($endpoint, [
@@ -769,39 +771,45 @@ PROMPT;
     public static function chatMessage($message, $history = [], $provider = 'gemini', $systemPrompt = null)
     {
         $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere,openai');
-        $fallbackProviders = array_filter(array_map('trim', explode(',', $priorityString)));
+        $fallbackProviders = array_map(fn ($name) => self::normalizeProviderName($name), explode(',', $priorityString));
         
         // Put the requested provider first, then the fallback ones
-        $providers = array_values(array_unique(array_merge([$provider], $fallbackProviders)));
+        $providers = array_values(array_unique(array_filter(array_merge([self::normalizeProviderName($provider)], $fallbackProviders))));
         
         if (empty($providers)) {
-            $providers = [$provider, 'gemini', 'groq', 'claude'];
+            $providers = ['gemini', 'groq', 'claude'];
         }
-
-        $fallbackError = "Sorry, I am having trouble connecting to my brain right now.";
 
         foreach ($providers as $currentProvider) {
             try {
-                $response = null;
-                switch ($currentProvider) {
-                    case 'openai': $response = self::chatOpenAI($message, $history, $systemPrompt); break;
-                    case 'gemini': $response = self::chatGemini($message, $history, $systemPrompt); break;
-                    case 'cohere': $response = self::chatCohere($message, $history, $systemPrompt); break;
-                    case 'groq': $response = self::chatGroq($message, $history, $systemPrompt); break;
-                    case 'openrouter': $response = self::chatOpenRouter($message, $history, $systemPrompt); break;
-                    case 'claude': $response = self::chatClaude($message, $history, $systemPrompt); break;
-                    case 'wisdomgate': $response = self::chatWisdomGate($message, $history, $systemPrompt); break;
-                }
+                $response = self::recordProviderAttempt($currentProvider, 'chat', function () use ($currentProvider, $message, $history, $systemPrompt) {
+                    $candidate = match ($currentProvider) {
+                        'openai' => self::chatOpenAI($message, $history, $systemPrompt),
+                        'gemini' => self::chatGemini($message, $history, $systemPrompt),
+                        'cohere' => self::chatCohere($message, $history, $systemPrompt),
+                        'groq' => self::chatGroq($message, $history, $systemPrompt),
+                        'openrouter' => self::chatOpenRouter($message, $history, $systemPrompt),
+                        'claude' => self::chatClaude($message, $history, $systemPrompt),
+                        'wisdomgate' => self::chatWisdomGate($message, $history, $systemPrompt),
+                        default => null,
+                    };
 
-                if ($response !== null && $response !== $fallbackError && $response !== "I'm sorry, I encountered an error processing your request.") {
-                    return $response;
-                }
+                    $candidate = trim((string) $candidate);
+
+                    if ($candidate === '' || $candidate === self::AI_FAILURE_MESSAGE || $candidate === "I'm sorry, I encountered an error processing your request.") {
+                        throw new \RuntimeException("AI provider {$currentProvider} returned an empty or fallback chat response.");
+                    }
+
+                    return $candidate;
+                });
+
+                return $response;
             } catch (\Exception $e) {
                 Log::error("AI Chat Error ({$currentProvider}): " . $e->getMessage());
             }
         }
 
-        return $fallbackError;
+        return self::AI_FAILURE_MESSAGE;
     }
 
     private static function truncateText($text, $maxWords = 800)
@@ -888,16 +896,79 @@ PROMPT;
 
     private static function callStructuredProvider($provider, $prompt): array
     {
-        return match (self::normalizeProviderName($provider)) {
-            'openai' => self::callOpenAI($prompt, 'Return only one valid JSON object that matches the requested schema.'),
-            'gemini' => self::callGemini($prompt),
-            'cohere' => self::callCohere($prompt),
-            'groq' => self::callGroq($prompt),
-            'openrouter' => self::callOpenRouter($prompt),
-            'claude' => self::callClaude($prompt),
-            'wisdomgate' => self::callWisdomGate($prompt),
-            default => [],
+        $provider = self::normalizeProviderName($provider);
+
+        if ($provider === '') {
+            throw new \RuntimeException('Unsupported AI provider requested.');
+        }
+
+        return self::recordProviderAttempt($provider, 'structured_json', function () use ($provider, $prompt) {
+            $response = match ($provider) {
+                'openai' => self::callOpenAI($prompt, 'Return only one valid JSON object that matches the requested schema.'),
+                'gemini' => self::callGemini($prompt),
+                'cohere' => self::callCohere($prompt),
+                'groq' => self::callGroq($prompt),
+                'openrouter' => self::callOpenRouter($prompt),
+                'claude' => self::callClaude($prompt),
+                'wisdomgate' => self::callWisdomGate($prompt),
+                default => [],
+            };
+
+            if (empty($response)) {
+                throw new \RuntimeException("AI provider {$provider} returned an empty or invalid JSON response.");
+            }
+
+            return $response;
+        });
+    }
+
+    private static function recordProviderAttempt(string $provider, string $module, callable $callback)
+    {
+        $startedAt = microtime(true);
+        $dbProvider = self::dbProviderFor($provider);
+
+        try {
+            $result = $callback();
+            self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'success');
+            return $result;
+        } catch (\Throwable $e) {
+            self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'failed', $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private static function dbProviderFor(string $provider): ?\App\Models\AiProvider
+    {
+        $needle = match ($provider) {
+            'openai' => 'OpenAI',
+            'gemini' => 'Gemini',
+            'claude' => 'Claude',
+            'groq' => 'Groq',
+            'openrouter' => 'OpenRouter',
+            'wisdomgate' => 'WisdomGate',
+            'cohere' => 'Cohere',
+            default => '',
         };
+
+        return $needle === ''
+            ? null
+            : \App\Models\AiProvider::where('name', 'like', "%{$needle}%")->first();
+    }
+
+    private static function writeProviderLog(?int $providerId, string $module, string $endpoint, float $startedAt, string $status, ?string $error = null): void
+    {
+        try {
+            \App\Models\AiProviderLog::create([
+                'provider_id' => $providerId,
+                'module' => $module,
+                'endpoint' => $endpoint,
+                'response_time_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+                'status' => $status,
+                'error_message' => $error ? substr($error, 0, 2000) : null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Unable to record AI provider log: ' . $e->getMessage());
+        }
     }
 
     private static function feedbackResponseIsComplete($response, array $answersData): bool
@@ -1197,7 +1268,7 @@ PROMPT;
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash-lite');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-        $response = Http::timeout(45)->post($url, [
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->post($url, [
             'contents' => [
                 [
                     'parts' => [
@@ -1225,7 +1296,7 @@ PROMPT;
         $apiKey = env('COHERE_API_KEY');
         $model = env('COHERE_MODEL', 'command-r7b-12-2024');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.cohere.ai/v1/generate', [
@@ -1248,7 +1319,7 @@ PROMPT;
         $apiKey = env('GROQ_API_KEY');
         $model = env('GROQ_MODEL', 'llama3-8b-8192');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
@@ -1274,7 +1345,7 @@ PROMPT;
         $apiKey = env('OPENROUTER_API_KEY');
         $model = env('OPENROUTER_MODEL', 'openrouter/free');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
@@ -1301,7 +1372,7 @@ PROMPT;
         $model = env('ANTHROPIC_MODEL', 'claude-3-haiku-20240307');
         $version = env('ANTHROPIC_VERSION', '2023-06-01');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => $version,
             'content-type' => 'application/json',
@@ -1328,7 +1399,7 @@ PROMPT;
         $model = env('WISDOMGATE_MODEL', 'gpt-5-nano');
 
         // Assuming WisdomGate is an OpenAI-compatible endpoint
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [
@@ -1372,7 +1443,7 @@ PROMPT;
         
         $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
 
-        $response = Http::timeout(45)->post($url, [
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->post($url, [
             'contents' => self::formatHistoryForGemini($message, $history),
             'systemInstruction' => [
                 'parts' => [['text' => $sysMsg]]
@@ -1417,7 +1488,7 @@ PROMPT;
 
         $model = env('OPENAI_MODEL', 'gpt-4o-mini');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post($endpoint, [
@@ -1447,7 +1518,7 @@ PROMPT;
 
         $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.cohere.ai/v1/chat', [
@@ -1470,7 +1541,7 @@ PROMPT;
         $apiKey = env('GROQ_API_KEY');
         $model = env('GROQ_MODEL', 'llama3-8b-8192');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
@@ -1490,7 +1561,7 @@ PROMPT;
         $apiKey = env('OPENROUTER_API_KEY');
         $model = env('OPENROUTER_MODEL', 'openrouter/free');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
@@ -1525,7 +1596,7 @@ PROMPT;
 
         $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => $version,
             'content-type' => 'application/json',
@@ -1548,7 +1619,7 @@ PROMPT;
         $apiKey = env('WISDOMGATE_API_KEY');
         $model = env('WISDOMGATE_MODEL', 'gpt-5-nano');
 
-        $response = Http::timeout(45)->withHeaders([
+        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [

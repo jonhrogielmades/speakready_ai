@@ -432,7 +432,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('scoresChart').getContext('2d');
+    if (typeof window.Chart === 'undefined') return;
+
+    const scoresCanvas = document.getElementById('scoresChart');
+    if (!scoresCanvas) return;
+
+    const ctx = scoresCanvas.getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {

@@ -531,11 +531,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    if (typeof window.Chart === 'undefined') return;
+
     Chart.defaults.color = '#808090';
     Chart.defaults.font.family = "'Inter', sans-serif";
 
     // Daily Sessions Chart
-    const dailyCtx = document.getElementById('dailySessionChart').getContext('2d');
+    const dailyCanvas = document.getElementById('dailySessionChart');
+    if (!dailyCanvas) return;
+    const dailyCtx = dailyCanvas.getContext('2d');
     const dailyLabels = {!! json_encode($dailySessionCount->pluck('date')->reverse()->values()) !!};
     const dailyData = {!! json_encode($dailySessionCount->pluck('total')->reverse()->values()) !!};
     
@@ -572,7 +576,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Readiness Distribution Chart
-    const readCtx = document.getElementById('readinessChart').getContext('2d');
+    const readCanvas = document.getElementById('readinessChart');
+    if (!readCanvas) return;
+    const readCtx = readCanvas.getContext('2d');
     const readLabels = ['Excellent', 'Good', 'Fair', 'Needs Imp.'];
     const readData = [
         {{ $readinessDistribution['Excellent'] }},

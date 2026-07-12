@@ -898,7 +898,7 @@
             const labels = trendData.map(s => s.date);
             const scores = trendData.map(s => s.score);
             
-            if(document.getElementById('readinessChart')) {
+            if(window.Chart && document.getElementById('readinessChart')) {
                 new Chart(document.getElementById('readinessChart'), {
                     type: 'line',
                     data: {
@@ -935,7 +935,7 @@
             }
 
             // Feature 3: Category Performance
-            if(document.getElementById('categoryChart')) {
+            if(window.Chart && document.getElementById('categoryChart')) {
                 const categoryLabels = Object.keys(categoryPerformance);
                 const categoryData = Object.values(categoryPerformance);
 
@@ -995,6 +995,10 @@
             if (exportPdfBtn) {
                 exportPdfBtn.addEventListener('click', function() {
                     const element = document.querySelector('.db-section');
+                    if (!element || typeof window.html2pdf !== 'function') {
+                        alert('PDF export is not available right now. Please use your browser print option instead.');
+                        return;
+                    }
                     const opt = {
                         margin:       [0.5, 0.5, 0.5, 0.5],
                         filename:     'progress_report.pdf',
@@ -1019,7 +1023,9 @@
                         input.style.display = 'none';
                     });
                     
-                    html2pdf().set(opt).from(element).save().then(() => {
+                    html2pdf().set(opt).from(element).save().catch(() => {
+                        alert('PDF export failed. Please try again or use your browser print option.');
+                    }).finally(() => {
                         buttons.forEach((btn, index) => {
                             btn.style.display = originalDisplays[index];
                         });
@@ -1034,6 +1040,10 @@
             const exportExcelBtn = document.getElementById('exportExcelBtn');
             if (exportExcelBtn) {
                 exportExcelBtn.addEventListener('click', function() {
+                    if (!window.XLSX) {
+                        alert('Excel export is not available right now.');
+                        return;
+                    }
                     const table = document.querySelector('#history-table table');
                     if (table) {
                         const clonedTable = table.cloneNode(true);

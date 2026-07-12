@@ -745,11 +745,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    if (typeof window.Chart === 'undefined') return;
+
     Chart.defaults.color = '#808090';
     Chart.defaults.font.family = "'Inter', sans-serif";
 
     // Feature 2: User Analytics (Line Chart)
-    const userCtx = document.getElementById('userGrowthChart').getContext('2d');
+    const userCanvas = document.getElementById('userGrowthChart');
+    if (!userCanvas) return;
+    const userCtx = userCanvas.getContext('2d');
     let gradientLine = userCtx.createLinearGradient(0, 0, 0, 300);
     gradientLine.addColorStop(0, 'rgba(139, 92, 246, 0.4)');
     gradientLine.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
@@ -786,7 +790,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Feature 3: Interview Analytics (Donut Chart)
-    const catCtx = document.getElementById('categoryDonutChart').getContext('2d');
+    const catCanvas = document.getElementById('categoryDonutChart');
+    if (!catCanvas) return;
+    const catCtx = catCanvas.getContext('2d');
     const chartLabels = {!! json_encode($chartLabels) !!};
     const chartDataValues = {!! json_encode($chartData) !!};
 
@@ -812,7 +818,9 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // Feature 5: Readiness Score Analytics (Bar Chart)
-    const readCtx = document.getElementById('readinessBarChart').getContext('2d');
+    const readCanvas = document.getElementById('readinessBarChart');
+    if (!readCanvas) return;
+    const readCtx = readCanvas.getContext('2d');
     const readinessDataValues = {!! json_encode($readinessData) !!};
 
     new Chart(readCtx, {

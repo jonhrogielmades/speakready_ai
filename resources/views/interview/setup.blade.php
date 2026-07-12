@@ -1,6 +1,21 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Interview Setup')
 @section('content')
+@php
+    $setupDefaults = [
+        'difficulty' => old('difficulty', $selectedPack?->difficulty ?? 'medium'),
+        'num_questions' => (string) old('num_questions', 10),
+        'time_limit' => (string) old('time_limit', $selectedPack?->pressure_mode ? 2 : 0),
+        'interview_focus' => old('interview_focus', $selectedPack?->interview_focus ?? 'General Practice'),
+        'ai_assistance_level' => old('ai_assistance_level', $selectedPack?->pressure_mode ? 'challenge' : 'standard'),
+        'interviewer_strictness' => old('interviewer_strictness', $selectedPack?->pressure_mode ? 'strict' : 'neutral'),
+        'live_feedback_mode' => old('live_feedback_mode', $selectedPack?->pressure_mode ? 'real_interview' : 'coaching'),
+        'response_mode' => old('response_mode', 'voice'),
+        'company_persona' => old('company_persona', $selectedPack?->company_persona ?? ''),
+        'ai_provider' => old('ai_provider', 'gemini'),
+    ];
+    $selectedQuestionTypes = old('question_types', $selectedPack?->question_types ?? ['Behavioral', 'Situational']);
+@endphp
 <style>
     .text-gradient-primary {
         background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
@@ -507,7 +522,11 @@
     }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';</script>
+<script>
+    if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+</script>
 
 <div class="db-section active" id="sec-interview-setup">
     <div class="setup-hero">
@@ -618,13 +637,14 @@
                         <div class="col-md-12">
                             <label class="olbl">Questions & AI Provider</label>
                             <select class="oinp setup-input" name="ai_provider" id="valProvider">
-                                <option value="local">Local</option>
-                                <option value="gemini" selected>Gemini</option>
-                                <option value="cohere">Cohere</option>
-                                <option value="groq">Groq</option>
-                                <option value="openrouter">OpenRouter</option>
-                                <option value="claude">Claude (Anthropic)</option>
-                                <option value="wisdomgate">WisdomGate</option>
+                                <option value="local" {{ $setupDefaults['ai_provider'] === 'local' ? 'selected' : '' }}>Local</option>
+                                <option value="gemini" {{ $setupDefaults['ai_provider'] === 'gemini' ? 'selected' : '' }}>Gemini</option>
+                                <option value="cohere" {{ $setupDefaults['ai_provider'] === 'cohere' ? 'selected' : '' }}>Cohere</option>
+                                <option value="groq" {{ $setupDefaults['ai_provider'] === 'groq' ? 'selected' : '' }}>Groq</option>
+                                <option value="openrouter" {{ $setupDefaults['ai_provider'] === 'openrouter' ? 'selected' : '' }}>OpenRouter</option>
+                                <option value="claude" {{ $setupDefaults['ai_provider'] === 'claude' ? 'selected' : '' }}>Claude (Anthropic)</option>
+                                <option value="wisdomgate" {{ $setupDefaults['ai_provider'] === 'wisdomgate' ? 'selected' : '' }}>WisdomGate</option>
+                                <option value="openai" {{ $setupDefaults['ai_provider'] === 'openai' ? 'selected' : '' }}>OpenAI</option>
                             </select>
                         </div>
                     </div>
@@ -660,7 +680,7 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="custom-radio">
-                                <input type="radio" name="difficulty" value="easy" class="setup-input">
+                                <input type="radio" name="difficulty" value="easy" class="setup-input" {{ $setupDefaults['difficulty'] === 'easy' ? 'checked' : '' }}>
                                 <div>
                                     <span class="r-title">Easy</span>
                                     <span class="r-desc">Basic and introductory questions</span>
@@ -669,7 +689,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="custom-radio">
-                                <input type="radio" name="difficulty" value="medium" checked class="setup-input">
+                                <input type="radio" name="difficulty" value="medium" class="setup-input" {{ $setupDefaults['difficulty'] === 'medium' ? 'checked' : '' }}>
                                 <div>
                                     <span class="r-title">Medium</span>
                                     <span class="r-desc">Common interview questions</span>
@@ -678,7 +698,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="custom-radio">
-                                <input type="radio" name="difficulty" value="hard" class="setup-input">
+                                <input type="radio" name="difficulty" value="hard" class="setup-input" {{ $setupDefaults['difficulty'] === 'hard' ? 'checked' : '' }}>
                                 <div>
                                     <span class="r-title">Hard</span>
                                     <span class="r-desc">Advanced and situational questions</span>
@@ -691,19 +711,19 @@
                         <div class="col-md-6">
                             <label class="olbl">Number of Questions</label>
                             <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
-                                <option value="5">5 Questions</option>
-                                <option value="10" selected>10 Questions</option>
-                                <option value="15">15 Questions</option>
-                                <option value="20">20 Questions</option>
+                                <option value="5" {{ $setupDefaults['num_questions'] === '5' ? 'selected' : '' }}>5 Questions</option>
+                                <option value="10" {{ $setupDefaults['num_questions'] === '10' ? 'selected' : '' }}>10 Questions</option>
+                                <option value="15" {{ $setupDefaults['num_questions'] === '15' ? 'selected' : '' }}>15 Questions</option>
+                                <option value="20" {{ $setupDefaults['num_questions'] === '20' ? 'selected' : '' }}>20 Questions</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="olbl">Time Limit</label>
                             <select class="oinp setup-input" name="time_limit" id="valTimeLimit">
-                                <option value="0" selected>No Limit</option>
-                                <option value="1">1 Minute per Question</option>
-                                <option value="2">2 Minutes per Question</option>
-                                <option value="3">3 Minutes per Question</option>
+                                <option value="0" {{ $setupDefaults['time_limit'] === '0' ? 'selected' : '' }}>No Limit</option>
+                                <option value="1" {{ $setupDefaults['time_limit'] === '1' ? 'selected' : '' }}>1 Minute per Question</option>
+                                <option value="2" {{ $setupDefaults['time_limit'] === '2' ? 'selected' : '' }}>2 Minutes per Question</option>
+                                <option value="3" {{ $setupDefaults['time_limit'] === '3' ? 'selected' : '' }}>3 Minutes per Question</option>
                             </select>
                         </div>
                     </div>
@@ -717,22 +737,17 @@
                         <div class="col-md-6">
                             <label class="olbl">Interview Focus</label>
                             <select class="oinp setup-input" name="interview_focus" id="valFocus">
-                                <option value="General Practice" selected>General Practice</option>
-                                <option value="Communication Skills">Communication Skills</option>
-                                <option value="Technical Knowledge">Technical Knowledge</option>
-                                <option value="Problem Solving">Problem Solving</option>
-                                <option value="Leadership">Leadership</option>
-                                <option value="Teamwork">Teamwork</option>
-                                <option value="Personal">Personal</option>
-                                <option value="Salary Negotiation">Salary Negotiation (New)</option>
+                                @foreach(['General Practice', 'Communication Skills', 'Technical Knowledge', 'Problem Solving', 'Leadership', 'Teamwork', 'Personal', 'Salary Negotiation'] as $focusOption)
+                                    <option value="{{ $focusOption }}" {{ $setupDefaults['interview_focus'] === $focusOption ? 'selected' : '' }}>{{ $focusOption }}{{ $focusOption === 'Salary Negotiation' ? ' (New)' : '' }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="olbl">AI Assistance Level</label>
                             <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance">
-                                <option value="beginner">Beginner Mode (More hints & feedback)</option>
-                                <option value="standard" selected>Standard Mode (Balanced experience)</option>
-                                <option value="challenge">Challenge Mode (No hints, harder follow-ups)</option>
+                                <option value="beginner" {{ $setupDefaults['ai_assistance_level'] === 'beginner' ? 'selected' : '' }}>Beginner Mode (More hints & feedback)</option>
+                                <option value="standard" {{ $setupDefaults['ai_assistance_level'] === 'standard' ? 'selected' : '' }}>Standard Mode (Balanced experience)</option>
+                                <option value="challenge" {{ $setupDefaults['ai_assistance_level'] === 'challenge' ? 'selected' : '' }}>Challenge Mode (No hints, harder follow-ups)</option>
                             </select>
                         </div>
                     </div>
@@ -741,17 +756,17 @@
                         <div class="col-md-6">
                             <label class="olbl">Interviewer Strictness</label>
                             <select class="oinp setup-input" name="interviewer_strictness" id="valStrictness">
-                                <option value="friendly">Friendly Interviewer</option>
-                                <option value="neutral" selected>Neutral HR Interviewer</option>
-                                <option value="strict">Strict Technical Lead</option>
-                                <option value="executive">Executive Panel</option>
+                                <option value="friendly" {{ $setupDefaults['interviewer_strictness'] === 'friendly' ? 'selected' : '' }}>Friendly Interviewer</option>
+                                <option value="neutral" {{ $setupDefaults['interviewer_strictness'] === 'neutral' ? 'selected' : '' }}>Neutral HR Interviewer</option>
+                                <option value="strict" {{ $setupDefaults['interviewer_strictness'] === 'strict' ? 'selected' : '' }}>Strict Technical Lead</option>
+                                <option value="executive" {{ $setupDefaults['interviewer_strictness'] === 'executive' ? 'selected' : '' }}>Executive Panel</option>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="olbl">Live Feedback Mode</label>
                             <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode">
-                                <option value="coaching" selected>Coaching On</option>
-                                <option value="real_interview">Real Interview Mode</option>
+                                <option value="coaching" {{ $setupDefaults['live_feedback_mode'] === 'coaching' ? 'selected' : '' }}>Coaching On</option>
+                                <option value="real_interview" {{ $setupDefaults['live_feedback_mode'] === 'real_interview' ? 'selected' : '' }}>Real Interview Mode</option>
                             </select>
                         </div>
                     </div>
@@ -768,33 +783,33 @@
                         <div class="col-md-12">
                             <label class="olbl">Company Persona Simulator</label>
                             <p style="font-size:.75rem;color:var(--tx3);margin-top:-4px;margin-bottom:8px;">Have the AI simulate the specific interview style of top companies.</p>
-                            <input type="hidden" name="company_persona" id="valPersona" value="" class="setup-input">
+                            <input type="hidden" name="company_persona" id="valPersona" value="{{ $setupDefaults['company_persona'] }}" class="setup-input">
                             <div class="persona-grid">
-                                <div class="persona-card selected" onclick="selectPersona(this, '')">
+                                <div class="persona-card {{ $setupDefaults['company_persona'] === '' ? 'selected' : '' }}" onclick="selectPersona(this, '')">
                                     <i class="fa-solid fa-circle-check persona-check"></i>
                                     <i class="fa-solid fa-building persona-icon" style="color:#60a5fa"></i>
                                     <div class="persona-title">Standard</div>
                                     <div class="persona-desc">General Industry</div>
                                 </div>
-                                <div class="persona-card" onclick="selectPersona(this, 'Amazon')">
+                                <div class="persona-card {{ $setupDefaults['company_persona'] === 'Amazon' ? 'selected' : '' }}" onclick="selectPersona(this, 'Amazon')">
                                     <i class="fa-solid fa-circle-check persona-check"></i>
                                     <i class="fa-brands fa-amazon persona-icon" style="color:#f97316"></i>
                                     <div class="persona-title">Amazon</div>
                                     <div class="persona-desc">Leadership Principles</div>
                                 </div>
-                                <div class="persona-card" onclick="selectPersona(this, 'Google')">
+                                <div class="persona-card {{ $setupDefaults['company_persona'] === 'Google' ? 'selected' : '' }}" onclick="selectPersona(this, 'Google')">
                                     <i class="fa-solid fa-circle-check persona-check"></i>
                                     <i class="fa-brands fa-google persona-icon" style="color:#ef4444"></i>
                                     <div class="persona-title">Google</div>
                                     <div class="persona-desc">Googlyness & Scaling</div>
                                 </div>
-                                <div class="persona-card" onclick="selectPersona(this, 'McKinsey')">
+                                <div class="persona-card {{ $setupDefaults['company_persona'] === 'McKinsey' ? 'selected' : '' }}" onclick="selectPersona(this, 'McKinsey')">
                                     <i class="fa-solid fa-circle-check persona-check"></i>
                                     <i class="fa-solid fa-chart-pie persona-icon" style="color:#3b82f6"></i>
                                     <div class="persona-title">McKinsey</div>
                                     <div class="persona-desc">Consulting & Case</div>
                                 </div>
-                                <div class="persona-card" onclick="selectPersona(this, 'Goldman Sachs')">
+                                <div class="persona-card {{ $setupDefaults['company_persona'] === 'Goldman Sachs' ? 'selected' : '' }}" onclick="selectPersona(this, 'Goldman Sachs')">
                                     <i class="fa-solid fa-circle-check persona-check"></i>
                                     <i class="fa-solid fa-vault persona-icon" style="color:#eab308"></i>
                                     <div class="persona-title">Goldman Sachs</div>
@@ -806,10 +821,9 @@
 
                     <label class="olbl mb-2">Question Types</label>
                     <div class="cbx-grid">
-                        <label class="custom-cbx"><input type="checkbox" name="question_types[]" value="Behavioral" checked> Behavioral Questions</label>
-                        <label class="custom-cbx"><input type="checkbox" name="question_types[]" value="Situational" checked> Situational Questions</label>
-                        <label class="custom-cbx"><input type="checkbox" name="question_types[]" value="Technical"> Technical Questions</label>
-                        <label class="custom-cbx"><input type="checkbox" name="question_types[]" value="Personal"> Personal Questions</label>
+                        @foreach(['Behavioral', 'Situational', 'Technical', 'Personal'] as $questionType)
+                            <label class="custom-cbx"><input type="checkbox" name="question_types[]" value="{{ $questionType }}" {{ in_array($questionType, $selectedQuestionTypes, true) ? 'checked' : '' }}> {{ $questionType }} Questions</label>
+                        @endforeach
                     </div>
                 </div>
 
@@ -819,7 +833,7 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="custom-radio">
-                                <input type="radio" name="response_mode" value="text" class="setup-input">
+                                <input type="radio" name="response_mode" value="text" class="setup-input" {{ $setupDefaults['response_mode'] === 'text' ? 'checked' : '' }}>
                                 <div>
                                     <span class="r-title">Text Mode</span>
                                     <span class="r-desc">Type your answers manually</span>
@@ -828,7 +842,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="custom-radio">
-                                <input type="radio" name="response_mode" value="voice" checked class="setup-input">
+                                <input type="radio" name="response_mode" value="voice" class="setup-input" {{ $setupDefaults['response_mode'] === 'voice' ? 'checked' : '' }}>
                                 <div>
                                     <span class="r-title">Voice Mode</span>
                                     <span class="r-desc">Speak through your microphone</span>
@@ -837,7 +851,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="custom-radio">
-                                <input type="radio" name="response_mode" value="hybrid" class="setup-input">
+                                <input type="radio" name="response_mode" value="hybrid" class="setup-input" {{ $setupDefaults['response_mode'] === 'hybrid' ? 'checked' : '' }}>
                                 <div>
                                     <span class="r-title">Hybrid Mode</span>
                                     <span class="r-desc">Voice-to-text with manual editing</span>
@@ -1152,6 +1166,10 @@
     async function processPdfFile(file) {
         if (file.type !== 'application/pdf') {
             alert('Please upload a valid PDF file.');
+            return;
+        }
+        if (!window.pdfjsLib) {
+            alert('PDF parsing is not available right now. Please paste your resume text manually.');
             return;
         }
         document.getElementById('dropZoneText').innerHTML = `<i class="fa-solid fa-file-pdf me-2"></i> ${file.name}`;

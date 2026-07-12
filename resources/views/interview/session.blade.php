@@ -302,31 +302,32 @@
             font-size: 0.76rem;
         }
         #interviewControls > div:nth-child(2) {
-            display: grid !important;
-            grid-template-columns: auto minmax(0, 1fr);
+            display: flex !important;
+            flex-wrap: wrap;
             align-items: center !important;
-            justify-items: end;
+            justify-content: center !important;
         }
         #recordingTimer {
             margin-right: 0 !important;
             font-size: 0.74rem !important;
             min-width: 40px;
-            justify-self: start;
+            text-align: center;
         }
         #voiceControls {
-            width: 100%;
+            width: auto;
         }
         #voiceControls .d-flex.gap-2 {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(42px, 50px));
-            justify-content: end;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
             gap: 7px !important;
             flex-wrap: nowrap !important;
         }
         #voiceControls .btn {
-            width: 100%;
+            width: 42px;
             min-width: 0;
             min-height: 34px !important;
+            height: 34px !important;
             padding: 0.36rem 0.42rem !important;
             display: inline-flex;
             align-items: center;
@@ -459,11 +460,12 @@
             min-width: 38px;
         }
         #voiceControls .d-flex.gap-2 {
-            grid-template-columns: repeat(2, minmax(38px, 46px));
             gap: 6px !important;
         }
         #voiceControls .btn {
+            width: 40px;
             min-height: 32px !important;
+            height: 32px !important;
             padding: 0.35rem 0.42rem !important;
         }
         #voiceControls .btn i {
@@ -618,7 +620,7 @@
                     
                     <!-- Right: Primary Actions (Mic + Send) -->
                     <div class="d-flex gap-2 w-100 flex-fill justify-content-md-end align-items-center">
-                        <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;margin-right:10px;font-weight:bold;">00:00</span>
+                        <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:block;margin-right:10px;font-weight:bold;">00:00</span>
                         
                         <!-- Voice Recording Controls -->
                         <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
@@ -628,9 +630,8 @@
                                 </button>
                             @else
                                 <div class="d-flex gap-2">
-                                    <button type="button" id="micStartBtn" class="btn btn-primary" onclick="startRecording()" style="border-radius:12px;"><i class="fa-solid fa-microphone me-2"></i>Record</button>
-                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="pauseRecording()" style="display:none; border-radius:12px;"><i class="fa-solid fa-pause"></i></button>
-                                    <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:none; border-radius:12px;"><i class="fa-solid fa-stop"></i></button>
+                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;"><i class="fa-solid fa-pause"></i></button>
+                                    <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;"><i class="fa-solid fa-stop"></i></button>
                                 </div>
                             @endif
                         </div>
@@ -807,6 +808,7 @@
             let recognitionActive = false;
             let shouldAutoRestartRecognition = false;
             let isRecording = false;
+            let isRecordingPaused = false;
             let recTimerSeconds = 0;
             let recTimerInterval;
             let preRecordingText = '';
@@ -1631,14 +1633,19 @@
                 }
                 if (isRecording) return;
 
-                resetSpeechRecognitionBufferFromTextarea();
+                if (!isRecordingPaused) {
+                    resetSpeechRecognitionBufferFromTextarea();
+                }
                 lastSpeechEnd = 0;
                 shouldAutoRestartRecognition = true;
                 isRecording = true;
+                isRecordingPaused = false;
                 startSpeechRecognitionEngine();
-                document.getElementById('micStartBtn').style.display = 'none';
-                document.getElementById('micPauseBtn').style.display = 'block';
-                document.getElementById('micStopBtn').style.display = 'block';
+                document.getElementById('micPauseBtn').style.display = 'inline-flex';
+                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Pause recording');
+                document.getElementById('micPauseBtn').setAttribute('title', 'Pause recording');
+                document.getElementById('micStopBtn').style.display = 'inline-flex';
                 document.getElementById('recordingTimer').style.display = 'block';
                 clearInterval(recTimerInterval);
                 
@@ -1676,6 +1683,15 @@
                 document.getElementById('faceScannerBox').style.display = 'block';
             }
 
+            function toggleRecordingPause() {
+                if (isRecording) {
+                    pauseRecording();
+                    return;
+                }
+
+                startRecording({ silent: false });
+            }
+
             function pauseRecording() {
                 finalizeInterimTranscript();
                 shouldAutoRestartRecognition = false;
@@ -1687,20 +1703,26 @@
                     }
                 }
                 isRecording = false;
+                isRecordingPaused = true;
                 clearInterval(recTimerInterval);
-                document.getElementById('micStartBtn').style.display = 'block';
-                document.getElementById('micStartBtn').innerText = 'Resume';
-                document.getElementById('micPauseBtn').style.display = 'none';
+                document.getElementById('micPauseBtn').style.display = 'inline-flex';
+                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Resume recording');
+                document.getElementById('micPauseBtn').setAttribute('title', 'Resume recording');
+                document.getElementById('micStopBtn').style.display = 'inline-flex';
+                document.getElementById('recordingTimer').style.display = 'block';
                 document.getElementById('faceScannerBox').style.display = 'none';
             }
 
             function stopRecording() {
                 pauseRecording();
                 clearTimeout(autoStartAfterQuestionTimer);
-                document.getElementById('micStartBtn').innerText = 'Start';
-                document.getElementById('micStopBtn').style.display = 'none';
-                document.getElementById('recordingTimer').style.display = 'none';
+                isRecordingPaused = false;
                 recTimerSeconds = 0;
+                document.getElementById('recordingTimer').innerText = '00:00';
+                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Pause recording');
+                document.getElementById('micPauseBtn').setAttribute('title', 'Pause recording');
                 resetSpeechRecognitionBufferFromTextarea();
             }
 

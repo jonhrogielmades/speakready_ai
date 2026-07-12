@@ -858,7 +858,10 @@ document.addEventListener("DOMContentLoaded", function() {
         Chart.defaults.color = '#808090';
         Chart.defaults.font.family = "'Inter', sans-serif";
         
-        const ctx = document.getElementById('voiceProgressChart').getContext('2d');
+        const voiceProgressCanvas = document.getElementById('voiceProgressChart');
+        if (!voiceProgressCanvas) return;
+
+        const ctx = voiceProgressCanvas.getContext('2d');
         new Chart(ctx, {
             type: 'line',
             data: {

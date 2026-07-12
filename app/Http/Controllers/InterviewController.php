@@ -184,6 +184,25 @@ class InterviewController extends Controller
             }
         }
 
+        if (!Question::where('interview_session_id', $session->id)->exists()) {
+            Log::warning('Interview setup used built-in fallback questions because no AI, pack, or bank questions were available.', [
+                'session_id' => $session->id,
+                'category_id' => $category->id,
+                'provider' => $provider,
+            ]);
+
+            foreach ($this->builtInFallbackQuestionTexts($session, $questionTypes, (int) ($validated['num_questions'] ?? 5)) as $idx => $qText) {
+                $this->createInterviewQuestion(
+                    $session,
+                    $category,
+                    $qText,
+                    $validated['difficulty'],
+                    $questionTypes,
+                    $idx
+                );
+            }
+        }
+
         session(['active_interview_id' => $session->id]);
         session(['active_interview_provider' => $provider]);
 
@@ -874,6 +893,65 @@ class InterviewController extends Controller
                 ->limit($limit)
                 ->pluck('question_text')
                 ->all();
+        }
+
+        return $questions;
+    }
+
+    private function builtInFallbackQuestionTexts(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
+    {
+        $position = trim((string) ($session->target_position ?: 'this role'));
+        $focus = trim((string) ($session->interview_focus ?: 'General Practice'));
+        $persona = trim((string) ($session->company_persona ?: 'the company'));
+        $limit = max(1, min(20, $limit));
+
+        $templates = [
+            'Behavioral' => [
+                "Tell me about a recent project that best shows your readiness for {$position}.",
+                "Describe a time you received difficult feedback and how you used it to improve.",
+                "Tell me about a time you had to work with a teammate or stakeholder with a different point of view.",
+                "Describe a situation where you had to take ownership without being explicitly asked.",
+                "Tell me about a mistake you made at work or school and what changed afterward.",
+            ],
+            'Situational' => [
+                "If you joined as {$position} and found unclear priorities in your first week, how would you respond?",
+                "Imagine a deadline is at risk because requirements changed late. What would you do first?",
+                "How would you handle a stakeholder who disagrees with your recommendation?",
+                "If {$persona} asked you to explain a complex decision to a non-technical audience, how would you structure it?",
+                "What would you do if you noticed a quality issue shortly before delivery?",
+            ],
+            'Technical' => [
+                "Walk me through the technical strengths that make you a fit for {$position}.",
+                "Describe a technical problem you solved and the tradeoffs behind your approach.",
+                "How do you validate that your work is reliable before handing it off?",
+                "Tell me about a tool, framework, or process you would use to improve outcomes in {$focus}.",
+                "How do you debug an issue when the root cause is not obvious?",
+            ],
+            'Personal' => [
+                "Why are you interested in {$position} right now?",
+                "What strengths would you bring to {$persona}, and where are you still growing?",
+                "How do you stay motivated when work becomes repetitive or ambiguous?",
+                "What kind of team environment helps you do your best work?",
+                "What do you want the interviewer to remember about you after this conversation?",
+            ],
+        ];
+
+        $types = array_values(array_intersect($selectedQuestionTypes, array_keys($templates)));
+        if (empty($types)) {
+            $types = ['Behavioral', 'Situational', 'Technical', 'Personal'];
+        }
+
+        $questions = [];
+        $round = 0;
+        while (count($questions) < $limit) {
+            foreach ($types as $type) {
+                $pool = $templates[$type];
+                $questions[] = $pool[$round % count($pool)];
+                if (count($questions) >= $limit) {
+                    break 2;
+                }
+            }
+            $round++;
         }
 
         return $questions;
