@@ -85,6 +85,27 @@
     .admin-user-presence-dot.offline {
         background: #94a3b8;
     }
+    .admin-user-last-active-badge {
+        position: absolute;
+        right: -7px;
+        bottom: -4px;
+        min-width: 18px;
+        height: 15px;
+        padding: 0 4px;
+        border-radius: 999px;
+        border: 2px solid var(--sf);
+        background: #94a3b8;
+        color: #fff;
+        box-shadow: 0 0 0 1px rgba(15, 23, 42, .08);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .56rem;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: 0;
+        white-space: nowrap;
+    }
     .admin-user-presence-label {
         display: inline-flex;
         align-items: center;
@@ -522,6 +543,49 @@
     }
 </style>
 
+@php
+    $formatLastActiveShort = function ($lastActiveAt) {
+        if (!$lastActiveAt) {
+            return null;
+        }
+
+        $minutes = max(1, $lastActiveAt->diffInMinutes(now()));
+
+        if ($minutes < 60) {
+            return $minutes . 'm';
+        }
+
+        $hours = (int) floor($minutes / 60);
+        if ($hours < 24) {
+            return $hours . 'h';
+        }
+
+        $days = (int) floor($hours / 24);
+        if ($days < 7) {
+            return $days . 'd';
+        }
+
+        $weeks = (int) floor($days / 7);
+        if ($weeks < 5) {
+            return $weeks . 'w';
+        }
+
+        return (int) floor($days / 30) . 'mo';
+    };
+
+    $presenceText = function ($user, $isOnline) use ($lastActiveByUserId, $formatLastActiveShort) {
+        if ($isOnline) {
+            return 'Online';
+        }
+
+        $lastActive = $formatLastActiveShort($lastActiveByUserId->get($user->id) ?? $user->created_at);
+
+        return $lastActive ? $lastActive . ' ago' : 'Offline';
+    };
+
+    $presenceBadgeText = fn ($user) => $formatLastActiveShort($lastActiveByUserId->get($user->id) ?? $user->created_at);
+@endphp
+
 <div class="db-section active" id="sec-admin-users">
     <!-- Top Header & Actions -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
@@ -587,19 +651,31 @@
                                 $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                                 $isOnline = $onlineUserIds->contains($tUser->id);
                             @endphp
-                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                            <div class="admin-user-avatar-wrap" title="{{ $presenceText($tUser, $isOnline) }}">
                                 <div class="admin-user-avatar" style="width:28px;height:28px;font-size:0.72rem;">
                                     <img src="{{ $photoUrl }}" alt="Avatar">
                                 </div>
-                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
+                                @if($isOnline)
+                                    <span class="admin-user-presence-dot online"></span>
+                                @elseif($presenceBadgeText($tUser))
+                                    <span class="admin-user-last-active-badge">{{ $presenceBadgeText($tUser) }}</span>
+                                @else
+                                    <span class="admin-user-presence-dot offline"></span>
+                                @endif
                             </div>
                         @else
                             @php $isOnline = $onlineUserIds->contains($tUser->id); @endphp
-                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                            <div class="admin-user-avatar-wrap" title="{{ $presenceText($tUser, $isOnline) }}">
                                 <div class="admin-user-avatar" style="width:28px;height:28px;background:#{{ substr(md5($tUser->id), 0, 6) }};font-size:0.75rem;">
                                     {{ strtoupper(substr($tUser->name, 0, 2)) }}
                                 </div>
-                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
+                                @if($isOnline)
+                                    <span class="admin-user-presence-dot online"></span>
+                                @elseif($presenceBadgeText($tUser))
+                                    <span class="admin-user-last-active-badge">{{ $presenceBadgeText($tUser) }}</span>
+                                @else
+                                    <span class="admin-user-presence-dot offline"></span>
+                                @endif
                             </div>
                         @endif
                         <span class="user-summary-card-name" style="font-size:0.9rem;">{{ $tUser->name }}</span>
@@ -623,19 +699,31 @@
                                 $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                                 $isOnline = $onlineUserIds->contains($nUser->id);
                             @endphp
-                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                            <div class="admin-user-avatar-wrap" title="{{ $presenceText($nUser, $isOnline) }}">
                                 <div class="admin-user-avatar" style="width:28px;height:28px;font-size:0.72rem;">
                                     <img src="{{ $photoUrl }}" alt="Avatar">
                                 </div>
-                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
+                                @if($isOnline)
+                                    <span class="admin-user-presence-dot online"></span>
+                                @elseif($presenceBadgeText($nUser))
+                                    <span class="admin-user-last-active-badge">{{ $presenceBadgeText($nUser) }}</span>
+                                @else
+                                    <span class="admin-user-presence-dot offline"></span>
+                                @endif
                             </div>
                         @else
                             @php $isOnline = $onlineUserIds->contains($nUser->id); @endphp
-                            <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                            <div class="admin-user-avatar-wrap" title="{{ $presenceText($nUser, $isOnline) }}">
                                 <div class="admin-user-avatar" style="width:28px;height:28px;background:#{{ substr(md5($nUser->id), 0, 6) }};font-size:0.75rem;">
                                     {{ strtoupper(substr($nUser->name, 0, 2)) }}
                                 </div>
-                                <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
+                                @if($isOnline)
+                                    <span class="admin-user-presence-dot online"></span>
+                                @elseif($presenceBadgeText($nUser))
+                                    <span class="admin-user-last-active-badge">{{ $presenceBadgeText($nUser) }}</span>
+                                @else
+                                    <span class="admin-user-presence-dot offline"></span>
+                                @endif
                             </div>
                         @endif
                         <span class="user-summary-card-name" style="font-size:0.9rem;">{{ $nUser->name }}</span>
@@ -702,25 +790,37 @@
                                         $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                                         $isOnline = $onlineUserIds->contains($user->id);
                                     @endphp
-                                    <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                    <div class="admin-user-avatar-wrap" title="{{ $presenceText($user, $isOnline) }}">
                                         <div class="admin-user-avatar" style="width:40px;height:40px;">
                                             <img src="{{ $photoUrl }}" alt="Avatar">
                                         </div>
-                                        <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
+                                        @if($isOnline)
+                                            <span class="admin-user-presence-dot online"></span>
+                                        @elseif($presenceBadgeText($user))
+                                            <span class="admin-user-last-active-badge">{{ $presenceBadgeText($user) }}</span>
+                                        @else
+                                            <span class="admin-user-presence-dot offline"></span>
+                                        @endif
                                     </div>
                                 @else
                                     @php $isOnline = $onlineUserIds->contains($user->id); @endphp
-                                    <div class="admin-user-avatar-wrap" title="{{ $isOnline ? 'Online' : 'Offline' }}">
+                                    <div class="admin-user-avatar-wrap" title="{{ $presenceText($user, $isOnline) }}">
                                         <div class="admin-user-avatar" style="width:40px;height:40px;background:#{{ substr(md5($user->id), 0, 6) }};">
                                             {{ strtoupper(substr($user->name, 0, 2)) }}
                                         </div>
-                                        <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
+                                        @if($isOnline)
+                                            <span class="admin-user-presence-dot online"></span>
+                                        @elseif($presenceBadgeText($user))
+                                            <span class="admin-user-last-active-badge">{{ $presenceBadgeText($user) }}</span>
+                                        @else
+                                            <span class="admin-user-presence-dot offline"></span>
+                                        @endif
                                     </div>
                                 @endif
                                 <div>
                                     <div class="fw-bold">{{ $user->name }}</div>
                                     <div style="font-size:0.75rem;color:var(--tx3);">ID: {{ $user->id }}</div>
-                                    <span class="admin-user-presence-label {{ $isOnline ? 'online' : 'offline' }}">{{ $isOnline ? 'Online' : 'Offline' }}</span>
+                                    <span class="admin-user-presence-label {{ $isOnline ? 'online' : 'offline' }}">{{ $presenceText($user, $isOnline) }}</span>
                                 </div>
                             </div>
                         </td>
@@ -1133,6 +1233,26 @@
         return score === null || score === undefined ? 'N/A' : `${score}%`;
     }
 
+    function lastActiveText(lastActiveAt) {
+        if (!lastActiveAt) {
+            return 'Offline';
+        }
+
+        const diffMinutes = Math.max(1, Math.floor((Date.now() - new Date(lastActiveAt).getTime()) / 60000));
+        if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+        const hours = Math.floor(diffMinutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+
+        const days = Math.floor(hours / 24);
+        if (days < 7) return `${days}d ago`;
+
+        const weeks = Math.floor(days / 7);
+        if (weeks < 5) return `${weeks}w ago`;
+
+        return `${Math.floor(days / 30)}mo ago`;
+    }
+
     function viewUser(id) {
         fetch(`/admin/users/${id}`)
             .then(res => {
@@ -1155,15 +1275,17 @@
                     avatar.innerHTML = `<img src="${escapeHtml(user.profile_photo_url)}" alt="Avatar">`;
                     avatar.style.background = '#3b82f6';
                 } else {
+                    avatar.innerHTML = '';
                     avatar.textContent = initials;
                     avatar.style.background = `#${String(user.id || 1).padStart(6, '0').slice(-6)}`;
                 }
-                avatarWrap.title = isOnline ? 'Online' : 'Offline';
+                const presenceText = isOnline ? 'Online' : lastActiveText(user.last_active_at);
+                avatarWrap.title = presenceText;
                 presenceDot.classList.toggle('online', isOnline);
                 presenceDot.classList.toggle('offline', !isOnline);
                 presenceLabel.classList.toggle('online', isOnline);
                 presenceLabel.classList.toggle('offline', !isOnline);
-                presenceLabel.textContent = isOnline ? 'Online' : 'Offline';
+                presenceLabel.textContent = presenceText;
                 document.getElementById('userDetailName').textContent = user.name || 'Unnamed user';
                 document.getElementById('userDetailId').textContent = user.id;
                 document.getElementById('userDetailStatus').innerHTML = data.status_badge || '';

@@ -19,7 +19,8 @@ class AdminUserController extends Controller
         $query = $this->filteredUsers($request);
 
         $users = $query->latest()->paginate(10)->withQueryString();
-        $onlineUserIds = $this->onlineUserIds();
+        $lastActiveByUserId = $this->lastActiveByUserId();
+        $onlineUserIds = $this->onlineUserIds($lastActiveByUserId);
 
         $userScores = \Illuminate\Support\Facades\DB::table('interview_sessions')
             ->join('scores', 'interview_sessions.id', '=', 'scores.interview_session_id')
@@ -57,7 +58,7 @@ class AdminUserController extends Controller
             }
         }
 
-        return view('admin.users', compact('users', 'topUsers', 'needingImprovement', 'onlineUserIds'));
+        return view('admin.users', compact('users', 'topUsers', 'needingImprovement', 'onlineUserIds', 'lastActiveByUserId'));
     }
 
     public function export(Request $request)
@@ -236,6 +237,7 @@ class AdminUserController extends Controller
                 'profile_photo_path' => $user->profile_photo_path,
                 'profile_photo_url' => $this->profilePhotoUrl($user),
                 'is_online' => $this->onlineUserIds()->contains($user->id),
+                'last_active_at' => optional($this->lastActiveByUserId()->get($user->id) ?? $user->created_at)->toISOString(),
                 'email_verified_at' => optional($user->email_verified_at)->toISOString(),
                 'is_admin' => (bool) $user->is_admin,
                 'status' => $user->status,
@@ -283,29 +285,40 @@ class AdminUserController extends Controller
         return $query;
     }
 
-    private function onlineUserIds(): \Illuminate\Support\Collection
+    private function onlineUserIds(?\Illuminate\Support\Collection $lastActiveByUserId = null): \Illuminate\Support\Collection
+    {
+        $cutoff = now()->subMinutes(5);
+
+        return ($lastActiveByUserId ?? $this->lastActiveByUserId())
+            ->filter(fn ($lastActiveAt) => $lastActiveAt->greaterThanOrEqualTo($cutoff))
+            ->keys()
+            ->values();
+    }
+
+    private function lastActiveByUserId(): \Illuminate\Support\Collection
     {
         if (config('session.driver') !== 'file') {
             return collect();
         }
 
         $sessionPath = config('session.files');
-        $cutoff = now()->subMinutes(5)->timestamp;
 
         if (!is_dir($sessionPath)) {
             return collect();
         }
 
         return collect(File::files($sessionPath))
-            ->filter(fn ($file) => $file->getMTime() >= $cutoff)
             ->flatMap(function ($file) {
                 $contents = File::get($file->getPathname());
                 preg_match_all('/login_web_[^";|]*(?:\";i:|\|i:)(\d+)/', $contents, $matches);
 
-                return collect($matches[1] ?? [])->map(fn ($id) => (int) $id);
+                return collect($matches[1] ?? [])->map(fn ($id) => [
+                    'user_id' => (int) $id,
+                    'last_active_at' => \Carbon\Carbon::createFromTimestamp($file->getMTime()),
+                ]);
             })
-            ->unique()
-            ->values();
+            ->groupBy('user_id')
+            ->map(fn ($sessions) => $sessions->max('last_active_at'));
     }
 
     private function profilePhotoUrl(User $user): ?string
