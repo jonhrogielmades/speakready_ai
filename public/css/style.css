@@ -1126,6 +1126,44 @@ a {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
 }
 
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field .oinp,
+.password-field .form-control {
+  padding-right: 46px;
+  margin-bottom: 0;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tx3);
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+  line-height: 1;
+  padding: 0;
+}
+
+.password-toggle:hover,
+.password-toggle:focus-visible {
+  color: var(--tx);
+  background: rgba(148, 163, 184, 0.12);
+  outline: none;
+}
+
 .odiv {
   display: flex;
   align-items: center;
@@ -6348,4 +6386,83 @@ body.admin-shell #dashboard .db-content :where(.alert) {
     --admin-card-pad: 14px;
     --admin-inner-gap: 12px;
   }
+}
+
+@media (max-width: 991.98px) {
+  .password-field,
+  #mob-content .password-field,
+  #dashboard .db-content .password-field {
+    position: relative !important;
+    width: 100% !important;
+  }
+
+  .password-field .oinp,
+  .password-field .form-control,
+  #mob-content .password-field .oinp,
+  #mob-content .password-field .form-control,
+  #dashboard .db-content .password-field .oinp,
+  #dashboard .db-content .password-field .form-control {
+    padding-right: 48px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .password-field .password-toggle,
+  #mob-content .password-field .password-toggle,
+  #dashboard .db-content .password-field .password-toggle {
+    position: absolute !important;
+    top: 50% !important;
+    right: 8px !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    flex: 0 0 36px !important;
+    z-index: 3 !important;
+  }
+}
+
+body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.text-muted, [style*="color:var(--tx3)"], [style*="color: var(--tx3)"]) {
+  color: var(--tx2) !important;
+  -webkit-text-fill-color: var(--tx2) !important;
+}
+
+.lm body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.text-muted, [style*="color:var(--tx3)"], [style*="color: var(--tx3)"]) {
+  color: #475569 !important;
+  -webkit-text-fill-color: #475569 !important;
+}
+
+body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.badge, .btn, button, input, textarea, select, option, .text-danger, .text-success, .text-warning, .text-primary, .text-info) {
+  -webkit-text-fill-color: currentColor;
+}
+
+.theme-empty-state,
+.admin-users-empty-state {
+  border: 1px dashed var(--bd);
+  border-radius: 12px;
+  background: var(--bg3);
+  background: color-mix(in srgb, var(--bg3) 82%, transparent);
+  color: var(--tx2) !important;
+  -webkit-text-fill-color: var(--tx2) !important;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.lm .theme-empty-state,
+.lm .admin-users-empty-state {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
 }

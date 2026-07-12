@@ -170,6 +170,20 @@
         #sec-admin-questions #mainTable th:first-child {
             text-align: center;
         }
+        #sec-admin-questions .question-select-all-wrap .form-check {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 0;
+            margin: 0;
+            padding-left: 0;
+        }
+        #sec-admin-questions .question-select-all-wrap .form-check-label {
+            margin: 0;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
         #sec-admin-questions #mainTableWrapper {
             overflow-x: hidden !important;
         }
@@ -256,7 +270,12 @@
                 flex-shrink: 0;
                 text-align: left;
             }
-            #mainTable tbody td:nth-child(1) { order: -2; justify-content: flex-start; padding-bottom: 4px !important; border-bottom: none !important; }
+            #sec-admin-questions .question-select-all-wrap {
+                display: flex;
+                justify-content: center;
+                text-align: center;
+            }
+            #mainTable tbody td:nth-child(1) { order: -2; justify-content: center; padding-bottom: 4px !important; border-bottom: none !important; }
             #mainTable tbody td:nth-child(1)::before { content: "Select:"; margin-right: 10px; }
             #mainTable tbody td:nth-child(2)::before { content: "ID"; }
             #mainTable tbody td:nth-child(4)::before { content: "Category"; }
@@ -265,16 +284,23 @@
             
             #mainTable tbody td:nth-child(3) {
                 order: -1;
-                justify-content: flex-start;
+                justify-content: center;
                 border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
                 padding-bottom: 12px !important;
                 margin-bottom: 4px;
-                text-align: left;
+                text-align: center;
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center;
             }
             #mainTable tbody td:nth-child(3)::before { content: none; }
-            #mainTable tbody td:nth-child(3) .fw-bold { max-width: 100% !important; white-space: normal; }
+            #mainTable tbody td:nth-child(3) .fw-bold {
+                max-width: min(100%, 24rem) !important;
+                margin-inline: auto;
+                white-space: normal;
+                text-align: center;
+                text-wrap: balance;
+                overflow-wrap: anywhere;
+            }
             #sec-admin-questions #mainTable {
                 min-width: 0;
                 table-layout: auto;
@@ -323,7 +349,7 @@
     @endunless
 
     <div id="mainTableWrapper" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
-        <div class="d-md-none mb-3 pb-2" style="border-bottom: 1px solid var(--bd);">
+        <div class="d-md-none mb-3 pb-2 question-select-all-wrap" style="border-bottom: 1px solid var(--bd);">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="selectAllMobile" onclick="document.getElementById('selectAllQuestions').click();">
                 <label class="form-check-label" for="selectAllMobile" style="color:var(--tx3); font-size:0.85rem; font-weight:600;">

@@ -44,18 +44,31 @@
             line-height: 1.25;
             margin-bottom: 14px !important;
         }
-        #account-page form .d-flex.align-items-center.mb-4 {
-            align-items: flex-start !important;
+        #account-page .account-photo-row {
+            align-items: center !important;
+            flex-direction: column;
+            justify-content: center;
             gap: 12px;
+            text-align: center;
             margin-bottom: 16px !important;
         }
-        #account-page form .d-flex.align-items-center.mb-4 > div:first-child {
+        #account-page .account-photo-avatar {
             width: 58px !important;
             height: 58px !important;
             border-radius: 16px !important;
             margin-right: 0 !important;
             font-size: 1.35rem !important;
             flex: 0 0 58px;
+        }
+        #account-page .account-photo-actions {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #account-page .account-photo-actions .btn {
+            width: auto;
+            min-width: 160px;
         }
         #account-page .olbl {
             font-size: 0.76rem;
@@ -135,9 +148,9 @@
                 <form action="{{ route('user.account.profile') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     
-                    <div class="d-flex align-items-center mb-4">
+                    <div class="d-flex align-items-center mb-4 account-photo-row">
                         @if(Auth::user()->profile_photo_path)
-                            <div style="width:80px;height:80px;border-radius:24px;overflow:hidden;margin-right:24px;border:1px solid var(--bd)">
+                            <div class="account-photo-avatar" style="width:80px;height:80px;border-radius:24px;overflow:hidden;margin-right:24px;border:1px solid var(--bd)">
                                 @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
                                     <img src="{{ Auth::user()->profile_photo_path }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
                                 @else
@@ -145,11 +158,11 @@
                                 @endif
                             </div>
                         @else
-                            <div style="width:80px;height:80px;background:var(--pur);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;margin-right:24px">
+                            <div class="account-photo-avatar" style="width:80px;height:80px;background:var(--pur);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;margin-right:24px">
                                 {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
                         @endif
-                        <div>
+                        <div class="account-photo-actions">
                             <input type="file" name="profile_photo" id="profile_photo" class="d-none" accept="image/png, image/jpeg, image/gif" onchange="document.getElementById('photo-filename').textContent = this.files[0].name">
                             <button type="button" class="btn btn-outline-primary btn-sm mb-2" style="border-radius:8px" onclick="document.getElementById('profile_photo').click()">Upload New Picture</button>
                             <div style="font-size:.8rem;color:var(--tx3)" id="photo-filename">JPG, GIF or PNG. Max size of 2MB.</div>
@@ -184,29 +197,29 @@
                     @csrf
                     <div class="mb-3">
                         <label class="olbl">Current Password</label>
-                        <div class="position-relative">
-                           <input type="password" class="oinp" name="current_password" id="currentPassword" placeholder="••••••••" required style="padding-right: 40px; margin-bottom: 0;">
-                           <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('currentPassword', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                        <div class="password-field">
+                           <input type="password" class="oinp" name="current_password" id="currentPassword" placeholder="••••••••" required>
+                           <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('currentPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
-                           </span>
+                           </button>
                         </div>
                     </div>
                     <div class="mb-3">
                         <label class="olbl">New Password</label>
-                        <div class="position-relative">
-                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="••••••••" required minlength="8" style="padding-right: 40px; margin-bottom: 0;">
-                           <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('newPassword', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                        <div class="password-field">
+                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="••••••••" required minlength="8">
+                           <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('newPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
-                           </span>
+                           </button>
                         </div>
                     </div>
                     <div class="mb-4">
                         <label class="olbl">Confirm New Password</label>
-                        <div class="position-relative">
-                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="••••••••" required minlength="8" style="padding-right: 40px; margin-bottom: 0;">
-                           <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                        <div class="password-field">
+                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="••••••••" required minlength="8">
+                           <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
-                           </span>
+                           </button>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-outline-primary w-100 py-2 btn-shine">Update Password</button>
@@ -229,14 +242,17 @@
     function togglePasswordVisibility(inputId, btn) {
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
+        if (!input || !icon) return;
         if (input.type === 'password') {
             input.type = 'text';
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
+            btn.setAttribute('aria-label', 'Hide password');
         } else {
             input.type = 'password';
             icon.classList.remove('fa-eye');
             icon.classList.add('fa-eye-slash');
+            btn.setAttribute('aria-label', 'Show password');
         }
     }
 </script>

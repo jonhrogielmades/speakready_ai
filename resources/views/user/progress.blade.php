@@ -403,9 +403,15 @@
         #achievements-badges .row.g-3 {
             --bs-gutter-x: 8px;
             --bs-gutter-y: 12px;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            margin-left: 0;
+            margin-right: 0;
         }
-        #achievements-badges .col-4 {
-            width: 33.333333%;
+        #achievements-badges .col-3 {
+            width: auto;
+            padding-left: 0;
+            padding-right: 0;
         }
         #achievements-badges .rounded-circle {
             width: 52px !important;
@@ -415,8 +421,8 @@
         #achievements-badges .rounded-circle i {
             font-size: 1.1rem !important;
         }
-        #achievements-badges .col-4 > div:last-child {
-            font-size: 0.68rem !important;
+        #achievements-badges .col-3 > div:last-child {
+            font-size: 0.64rem !important;
             overflow-wrap: anywhere;
         }
     }
@@ -858,7 +864,7 @@
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Achievements & Badges</h5>
                 <div class="row g-3">
                     @forelse($badges as $badge)
-                    <div class="col-4 col-sm-3 text-center">
+                    <div class="col-3 text-center">
                         <div class="p-3 rounded-circle d-inline-flex justify-content-center align-items-center mb-2 shadow-sm" 
                              style="width: 65px; height: 65px; background: {{ $badge->unlocked ? 'linear-gradient(135deg, #fef08a, #f59e0b)' : 'var(--bg)' }}; border: 2px solid {{ $badge->unlocked ? '#f59e0b' : 'var(--bd)' }}; opacity: {{ $badge->unlocked ? '1' : '0.5' }};">
                             <i class="fa-solid {{ $badge->icon }} fs-3" style="color: {{ $badge->unlocked ? '#fff' : 'var(--tx3)' }}; text-shadow: {{ $badge->unlocked ? '0 2px 4px rgba(0,0,0,0.2)' : 'none' }};"></i>

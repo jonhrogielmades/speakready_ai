@@ -9,9 +9,52 @@
         padding: 24px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
+    .archive-confirm-modal .modal-content {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        color: var(--tx);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+    .archive-confirm-modal .modal-header,
+    .archive-confirm-modal .modal-footer {
+        border-color: var(--bd);
+    }
+    .archive-confirm-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .archive-confirm-icon.restore {
+        background: rgba(52, 211, 153, 0.14);
+        color: #34d399;
+    }
+    .archive-confirm-icon.delete {
+        background: rgba(248, 113, 113, 0.14);
+        color: #f87171;
+    }
+    .archive-page-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        line-height: 1.15;
+    }
 
     /* Mobile Card-based Table Layout for Main Archive Table */
     @media (max-width: 767px) {
+        .archive-page-title {
+            font-size: clamp(1rem, 5vw, 1.18rem) !important;
+            gap: 6px;
+        }
+        .archive-page-title i {
+            margin-right: 0 !important;
+            font-size: 0.95em;
+        }
         #mainArchiveTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
@@ -72,7 +115,7 @@
 <div class="db-section active" id="sec-admin-archive">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-1 mt-2"><i class="fa-solid fa-box-archive text-warning me-2"></i>Archived Sessions</h4>
+            <h4 class="archive-page-title fw-bold mb-1 mt-2"><i class="fa-solid fa-box-archive text-warning me-2"></i>Archived Sessions</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Historical records of interview sessions.</p>
         </div>
     </div>
@@ -113,16 +156,16 @@
                         <td>{{ $session->category ? $session->category->title : 'N/A' }}</td>
                         <td style="color:var(--tx2);">{{ $session->updated_at->format('M d, Y') }}</td>
                         <td class="text-end">
-                            <form action="{{ route('admin.sessions.restore', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to restore this session?');">
+                            <form action="{{ route('admin.sessions.restore', $session->id) }}" method="POST" class="d-inline" id="restoreArchiveForm{{ $session->id }}">
                                 @csrf
-                                <button type="submit" class="btn btn-sm btn-outline-success" style="border-radius:8px;" title="Restore">
+                                <button type="button" class="btn btn-sm btn-outline-success" style="border-radius:8px;" title="Restore" data-archive-restore-trigger data-archive-restore-form="restoreArchiveForm{{ $session->id }}" data-archive-restore-title="Restore archived session #{{ $session->id }}?" data-archive-restore-message="This session will return to Session Monitoring.">
                                     <i class="fa-solid fa-clock-rotate-left me-1"></i> Restore
                                 </button>
                             </form>
-                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this archived session? This cannot be undone.');">
+                            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" id="deleteArchiveForm{{ $session->id }}">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;" title="Delete">
+                                <button type="button" class="btn btn-sm btn-outline-danger" style="border-radius:8px;" title="Delete" data-archive-delete-trigger data-archive-delete-form="deleteArchiveForm{{ $session->id }}" data-archive-delete-title="Delete archived session #{{ $session->id }}?" data-archive-delete-message="This archived session and its related records will be permanently deleted. This cannot be undone.">
                                     <i class="fa-solid fa-trash-can me-1"></i> Delete
                                 </button>
                             </form>
@@ -141,5 +184,116 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade archive-confirm-modal" id="archiveRestoreConfirmModal" tabindex="-1" aria-labelledby="archiveRestoreConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="archive-confirm-icon restore"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1" id="archiveRestoreConfirmTitle">Restore session?</h5>
+                        <div style="font-size:.8rem;color:var(--tx3);">Please confirm this restore action.</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:invert(1);"></button>
+            </div>
+            <div class="modal-body">
+                <p id="archiveRestoreConfirmMessage" style="margin:0;color:var(--tx2);line-height:1.5;">This session will return to Session Monitoring.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="archiveRestoreConfirmButton"><i class="fa-solid fa-clock-rotate-left me-1"></i>Restore</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade archive-confirm-modal" id="archiveDeleteConfirmModal" tabindex="-1" aria-labelledby="archiveDeleteConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="archive-confirm-icon delete"><i class="fa-solid fa-trash-can"></i></span>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1" id="archiveDeleteConfirmTitle">Delete archived session?</h5>
+                        <div style="font-size:.8rem;color:var(--tx3);">Please confirm this destructive action.</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter:invert(1);"></button>
+            </div>
+            <div class="modal-body">
+                <p id="archiveDeleteConfirmMessage" style="margin:0;color:var(--tx2);line-height:1.5;">This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="archiveDeleteConfirmButton"><i class="fa-solid fa-trash-can me-1"></i>Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function wireArchiveModal(config) {
+        const modalEl = document.getElementById(config.modalId);
+        const titleEl = document.getElementById(config.titleId);
+        const messageEl = document.getElementById(config.messageId);
+        const confirmButton = document.getElementById(config.buttonId);
+        let pendingForm = null;
+
+        if (!modalEl || !confirmButton || typeof bootstrap === 'undefined') return;
+
+        const modal = new bootstrap.Modal(modalEl);
+
+        document.querySelectorAll(config.triggerSelector).forEach((trigger) => {
+            trigger.addEventListener('click', () => {
+                pendingForm = document.getElementById(trigger.dataset[config.formDataset] || '');
+                if (!pendingForm) return;
+                if (titleEl) titleEl.textContent = trigger.dataset[config.titleDataset] || config.defaultTitle;
+                if (messageEl) messageEl.textContent = trigger.dataset[config.messageDataset] || config.defaultMessage;
+                modal.show();
+            });
+        });
+
+        confirmButton.addEventListener('click', () => {
+            if (!pendingForm) return;
+            confirmButton.disabled = true;
+            pendingForm.submit();
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            pendingForm = null;
+            confirmButton.disabled = false;
+        });
+    }
+
+    wireArchiveModal({
+        modalId: 'archiveRestoreConfirmModal',
+        titleId: 'archiveRestoreConfirmTitle',
+        messageId: 'archiveRestoreConfirmMessage',
+        buttonId: 'archiveRestoreConfirmButton',
+        triggerSelector: '[data-archive-restore-trigger]',
+        formDataset: 'archiveRestoreForm',
+        titleDataset: 'archiveRestoreTitle',
+        messageDataset: 'archiveRestoreMessage',
+        defaultTitle: 'Restore session?',
+        defaultMessage: 'This session will return to Session Monitoring.'
+    });
+
+    wireArchiveModal({
+        modalId: 'archiveDeleteConfirmModal',
+        titleId: 'archiveDeleteConfirmTitle',
+        messageId: 'archiveDeleteConfirmMessage',
+        buttonId: 'archiveDeleteConfirmButton',
+        triggerSelector: '[data-archive-delete-trigger]',
+        formDataset: 'archiveDeleteForm',
+        titleDataset: 'archiveDeleteTitle',
+        messageDataset: 'archiveDeleteMessage',
+        defaultTitle: 'Delete archived session?',
+        defaultMessage: 'This cannot be undone.'
+    });
+});
+</script>
 @endsection
 

@@ -120,6 +120,41 @@
         margin-left: 0 !important;
         margin-top: 4px;
     }
+    #addModuleModal .form-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-left: 0 !important;
+    }
+    #addModuleModal .form-switch .form-check-input {
+        width: 20px !important;
+        min-width: 20px !important;
+        max-width: 20px !important;
+        height: 20px !important;
+        min-height: 20px !important;
+        margin: 0 !important;
+        float: none !important;
+        flex: 0 0 20px !important;
+        border-radius: 50% !important;
+        background-image: none !important;
+        cursor: pointer;
+    }
+    #addModuleModal .form-switch .form-check-input:checked {
+        background-color: #2563eb !important;
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18) !important;
+    }
+    #addModuleModal .form-switch .form-check-input:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16) !important;
+    }
+    #addModuleModal .form-switch .form-check-label {
+        margin: 0 !important;
+        line-height: 1.3;
+        min-width: 0;
+        word-break: normal;
+        overflow-wrap: normal;
+    }
     @media (max-width: 1199.98px) {
         #sec-admin-modules .modules-panel-header {
             align-items: flex-start;
@@ -149,6 +184,35 @@
     }
     /* Mobile Card-based Table Layout for Main Modules Table */
     @media (max-width: 767px) {
+        #sec-admin-modules .modules-stats-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            overflow-x: visible;
+            padding-bottom: 0;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] > div {
+            min-height: 84px;
+            padding: 14px !important;
+            border-radius: 13px !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] > div > div:first-child {
+            font-size: .72rem !important;
+            line-height: 1.2;
+            margin-bottom: 6px !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] > div > div:last-child {
+            font-size: 1.18rem !important;
+            line-height: 1.1;
+        }
         #mainModulesTableWrapper {
             overflow-x: hidden !important;
             padding: 12px !important;

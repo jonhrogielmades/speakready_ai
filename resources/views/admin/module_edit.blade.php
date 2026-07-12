@@ -1,6 +1,43 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+    #sec-admin-module-edit .form-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-left: 0 !important;
+    }
+    #sec-admin-module-edit .form-switch .form-check-input {
+        width: 20px !important;
+        min-width: 20px !important;
+        max-width: 20px !important;
+        height: 20px !important;
+        min-height: 20px !important;
+        margin: 0 !important;
+        float: none !important;
+        flex: 0 0 20px !important;
+        border-radius: 50% !important;
+        background-image: none !important;
+        cursor: pointer;
+    }
+    #sec-admin-module-edit .form-switch .form-check-input:checked {
+        background-color: #2563eb !important;
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18) !important;
+    }
+    #sec-admin-module-edit .form-switch .form-check-input:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16) !important;
+    }
+    #sec-admin-module-edit .form-switch .form-check-label {
+        margin: 0 !important;
+        line-height: 1.3;
+        min-width: 0;
+        word-break: normal;
+        overflow-wrap: normal;
+    }
+</style>
 
 <div class="db-section active" id="sec-admin-module-edit">
     @if(session('success'))

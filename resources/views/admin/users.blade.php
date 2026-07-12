@@ -103,6 +103,20 @@
     .admin-user-presence-label.online::before {
         background: #22c55e;
     }
+    .admin-users-empty-state {
+        border: 1px dashed var(--bd);
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--bg3) 82%, transparent);
+        color: var(--tx2) !important;
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+    .lm .admin-users-empty-state {
+        background: #f8fafc;
+        color: #334155 !important;
+        border-color: #cbd5e1;
+    }
     #sec-admin-users .input-group {
         display: flex;
         flex-wrap: nowrap;
@@ -230,6 +244,19 @@
         }
         #mainUsersTable tbody td:first-child .d-flex {
             width: 100%;
+            flex-direction: row-reverse;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        #mainUsersTable tbody td:first-child .d-flex > div:last-child {
+            flex: 1 1 auto;
+            min-width: 0;
+            text-align: left;
+        }
+        #mainUsersTable tbody td:first-child .admin-user-avatar-wrap {
+            margin-left: 12px;
+            flex: 0 0 auto;
         }
         #mainUsersTable tbody td.text-end {
             text-align: right;
@@ -237,6 +264,45 @@
         #mainUsersTable .user-action-cell {
             width: 100%;
             justify-content: flex-end;
+        }
+
+        .user-summary-card-row {
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-summary-card-identity {
+            flex: 1 1 auto;
+            min-width: 0;
+            justify-content: space-between;
+            text-align: left;
+        }
+
+        .user-summary-card-identity .admin-user-avatar-wrap {
+            order: 3;
+            margin-left: 12px;
+            flex: 0 0 auto;
+        }
+
+        .user-summary-card-name {
+            order: 2;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .user-summary-card-identity > .fw-bold:first-child {
+            order: 1;
+            flex: 0 0 auto;
+        }
+
+        .user-summary-card-meta {
+            flex: 0 0 auto;
+            max-width: 42%;
+            text-align: right;
+            justify-content: center;
         }
 
         #addUserModal .modal-dialog,
@@ -284,6 +350,54 @@
             padding: 14px 16px !important;
         }
 
+        #userDetailModal .user-detail-heading {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 1 1 auto;
+            flex-direction: column;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            text-align: center;
+            margin-bottom: 10px !important;
+            padding-inline: 28px;
+        }
+
+        #userDetailModal .user-detail-heading .admin-user-avatar-wrap {
+            order: 1;
+            margin: 0 auto;
+            flex: 0 0 auto;
+        }
+
+        #userDetailModal .user-detail-heading > div:last-child {
+            order: 2;
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 auto;
+        }
+
+        #userDetailModal #userDetailName {
+            width: 100%;
+            max-width: 100%;
+            font-size: clamp(.74rem, 3.8vw, .98rem);
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+
+        #userDetailModal #userDetailStatus {
+            margin-left: 4px !important;
+        }
+
+        #userDetailModal #userDetailPresenceLabel {
+            justify-content: center;
+        }
+
         #userDetailModal .modal-body {
             min-height: 0 !important;
             max-height: calc(min(82vh, 720px) - 150px) !important;
@@ -323,21 +437,42 @@
             --bs-gutter-x: .75rem;
         }
 
-        #userDetailModal .row.mb-2 {
+        #userDetailModal .user-detail-info-row {
             display: grid;
-            grid-template-columns: 76px minmax(0, 1fr);
-            gap: 8px;
+            grid-template-columns: 1fr;
+            gap: 4px;
             margin-left: 0 !important;
             margin-right: 0 !important;
+            padding: 9px 0;
+            border-bottom: 1px solid var(--bd);
         }
 
-        #userDetailModal .row.mb-2 > [class*="col-"] {
-            width: auto !important;
+        #userDetailModal .user-detail-info-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        #userDetailModal .user-detail-info-row > [class*="col-"] {
+            width: 100% !important;
             max-width: none !important;
             padding: 0 !important;
             min-width: 0;
+        }
+
+        #userDetailModal .user-detail-info-label {
+            font-size: .72rem;
+            font-weight: 800;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 0;
+            white-space: nowrap;
+        }
+
+        #userDetailModal .user-detail-info-value {
+            font-size: .86rem;
+            line-height: 1.35;
             overflow-wrap: anywhere;
-            word-break: break-word;
+            word-break: normal;
         }
 
         #userDetailEmail,
@@ -443,8 +578,8 @@
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy me-2 text-warning"></i>Top Performing Users</h6>
                 @forelse($topUsers as $index => $tUser)
-                <div class="d-flex justify-content-between p-2 mb-2 rounded" style="background:{{ $index === 0 ? 'rgba(251,191,36,0.1)' : 'var(--bg3)' }};border:{{ $index === 0 ? '1px solid rgba(251,191,36,0.3)' : 'none' }};">
-                    <div class="d-flex align-items-center gap-2">
+                <div class="d-flex justify-content-between p-2 mb-2 rounded user-summary-card-row" style="background:{{ $index === 0 ? 'rgba(251,191,36,0.1)' : 'var(--bg3)' }};border:{{ $index === 0 ? '1px solid rgba(251,191,36,0.3)' : 'none' }};">
+                    <div class="d-flex align-items-center gap-2 user-summary-card-identity">
                         <span class="fw-bold {{ $index === 0 ? 'text-warning' : 'text-secondary' }}" style="width:20px;">{{ $index + 1 }}</span>
                         @if($tUser->profile_photo_path)
                             @php
@@ -467,12 +602,12 @@
                                 <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                             </div>
                         @endif
-                        <span style="font-size:0.9rem;">{{ $tUser->name }}</span>
+                        <span class="user-summary-card-name" style="font-size:0.9rem;">{{ $tUser->name }}</span>
                     </div>
-                    <span class="fw-bold text-success">{{ $tUser->avg_score }}% Avg</span>
+                    <span class="fw-bold text-success user-summary-card-meta">{{ $tUser->avg_score }}% Avg</span>
                 </div>
                 @empty
-                <div class="text-muted text-center py-3" style="font-size:0.9rem;">No data available yet.</div>
+                <div class="admin-users-empty-state text-center py-3 px-3">No data available yet.</div>
                 @endforelse
             </div>
         </div>
@@ -480,8 +615,8 @@
             <div class="premium-card h-100" style="border-left: 4px solid var(--danger-tx); background: var(--danger-bg);">
                 <h6 class="fw-bold mb-3" style="color: var(--danger-tx);"><i class="fa-solid fa-triangle-exclamation me-2"></i>Users Needing Improvement</h6>
                 @forelse($needingImprovement as $nUser)
-                <div class="d-flex justify-content-between align-items-center p-2 mb-2 rounded" style="background:var(--bg3);">
-                    <div class="d-flex align-items-center gap-2">
+                <div class="d-flex justify-content-between align-items-center p-2 mb-2 rounded user-summary-card-row" style="background:var(--bg3);">
+                    <div class="d-flex align-items-center gap-2 user-summary-card-identity">
                         @if($nUser->profile_photo_path)
                             @php
                                 $photoPath = $nUser->profile_photo_path;
@@ -503,12 +638,12 @@
                                 <span class="admin-user-presence-dot {{ $isOnline ? 'online' : 'offline' }}"></span>
                             </div>
                         @endif
-                        <span style="font-size:0.9rem;">{{ $nUser->name }}</span>
+                        <span class="user-summary-card-name" style="font-size:0.9rem;">{{ $nUser->name }}</span>
                     </div>
-                    <span class="stat-badge {{ $nUser->issue_class }}">{{ $nUser->issue }}</span>
+                    <span class="stat-badge {{ $nUser->issue_class }} user-summary-card-meta">{{ $nUser->issue }}</span>
                 </div>
                 @empty
-                <div class="text-muted text-center py-3" style="font-size:0.9rem;">All users are performing well!</div>
+                <div class="admin-users-empty-state text-center py-3 px-3">All users are performing well!</div>
                 @endforelse
             </div>
         </div>
@@ -665,7 +800,7 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header d-flex justify-content-between align-items-center pb-0 border-0">
-                <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center gap-3 mb-3 user-detail-heading">
                     <div class="admin-user-avatar-wrap" id="userDetailAvatarWrap" title="Offline">
                         <div id="userDetailAvatar" class="admin-user-avatar" style="width:60px;height:60px;font-size:1.5rem;">--</div>
                         <span id="userDetailPresenceDot" class="admin-user-presence-dot offline" style="width:14px;height:14px;"></span>
@@ -696,10 +831,10 @@
                             <div class="col-md-6">
                                 <div class="premium-card p-3">
                                     <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;">Personal Information</h6>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Email</div><div id="userDetailEmail" class="col-8">--</div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Role</div><div id="userDetailRole" class="col-8">--</div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Target Role</div><div id="userDetailTarget" class="col-8">--</div></div>
-                                    <div class="row mb-2"><div class="col-4 text-muted">Registered</div><div id="userDetailRegistered" class="col-8">--</div></div>
+                                    <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Email</div><div id="userDetailEmail" class="col-8 user-detail-info-value">--</div></div>
+                                    <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Role</div><div id="userDetailRole" class="col-8 user-detail-info-value">--</div></div>
+                                    <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Target Role</div><div id="userDetailTarget" class="col-8 user-detail-info-value">--</div></div>
+                                    <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Registered</div><div id="userDetailRegistered" class="col-8 user-detail-info-value">--</div></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -794,7 +929,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted">Password</label>
-                        <input type="password" name="password" class="form-control" required minlength="8">
+                        <div class="password-field">
+                            <input type="password" name="password" id="createUserPassword" class="form-control" required minlength="8">
+                            <button class="password-toggle toggle-password" type="button" onclick="togglePasswordVisibility('createUserPassword', this)" aria-label="Show password">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="row">
                         <div class="col-6 mb-3">
@@ -845,9 +985,9 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-muted">Password (Leave blank to keep current)</label>
-                        <div class="input-group">
+                        <div class="password-field">
                             <input type="password" name="password" id="editUserPassword" class="form-control" minlength="8">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editUserPassword', this)">
+                            <button class="password-toggle toggle-password" type="button" onclick="togglePasswordVisibility('editUserPassword', this)" aria-label="Show password">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
@@ -944,14 +1084,17 @@
     function togglePasswordVisibility(inputId, btn) {
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');
+        if (!input || !icon) return;
         if (input.type === 'password') {
             input.type = 'text';
             icon.classList.remove('fa-eye');
             icon.classList.add('fa-eye-slash');
+            btn.setAttribute('aria-label', 'Hide password');
         } else {
             input.type = 'password';
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
+            btn.setAttribute('aria-label', 'Show password');
         }
     }
 

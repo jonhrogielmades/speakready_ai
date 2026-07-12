@@ -642,18 +642,142 @@
          .mob-notification-dropdown {
             width: min(340px, calc(100vw - 24px));
             max-width: calc(100vw - 24px);
-            border-radius: 12px;
-            border: 1px solid var(--adm-bd);
-            background: var(--bg3, #2b2b40);
+            border-radius: 18px;
+            border: 1px solid rgba(96, 165, 250, 0.18);
+            background: rgba(12, 16, 28, 0.98);
             padding: 0;
             overflow: hidden;
             margin-top: 10px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+         }
+         .lm .mob-notification-dropdown {
+            background: rgba(255, 255, 255, 0.98);
+            border-color: rgba(37, 99, 235, 0.14);
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16);
+         }
+         .admin-mob-notif-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px;
+            border-bottom: 1px solid var(--bd);
+            background: var(--sf);
+         }
+         .admin-mob-notif-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            color: var(--tx);
+            font-weight: 800;
+            font-size: 0.9rem;
+            line-height: 1.2;
+         }
+         .admin-mob-notif-count {
+            display: none;
+            flex: 0 0 auto;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(248, 113, 113, 0.14);
+            color: #f87171;
+            font-size: 0.68rem;
+            font-weight: 800;
+         }
+         .admin-mob-notif-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+         }
+         .admin-mob-notif-action {
+            min-width: 34px;
+            min-height: 34px;
+            border: 1px solid var(--bd);
+            border-radius: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: var(--tx2);
+            background: var(--bg3);
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 0 9px;
+         }
+         .admin-mob-notif-action.danger {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.24);
          }
          .mob-notification-list {
-            max-height: min(280px, calc(100dvh - var(--mob-top-h) - var(--mob-safe-top) - var(--mob-nav-h) - var(--mob-safe-bottom) - 120px));
+            max-height: min(360px, calc(100dvh - var(--mob-top-h) - var(--mob-safe-top) - var(--mob-nav-h) - var(--mob-safe-bottom) - 132px));
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             overscroll-behavior: contain;
+            background: var(--bg);
+            padding: 8px;
+         }
+         .mob-notification-list .admin-activity-item {
+            display: flex !important;
+            gap: 8px !important;
+            margin: 0 0 8px !important;
+            padding: 11px !important;
+            border: 1px solid var(--bd) !important;
+            border-radius: 14px !important;
+            background: var(--sf) !important;
+            color: var(--tx) !important;
+            white-space: normal !important;
+         }
+         .mob-notification-list .admin-activity-item:hover {
+            background: var(--sf2, var(--sf)) !important;
+         }
+         .mob-notification-list .admin-activity-item > div:first-child {
+            align-items: flex-start !important;
+            gap: 8px !important;
+         }
+         .mob-notification-list .admin-activity-item .fw-bold {
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            font-size: 0.82rem !important;
+            line-height: 1.25 !important;
+         }
+         .mob-notification-list .admin-activity-item > div:last-child {
+            font-size: 0.76rem !important;
+            line-height: 1.45 !important;
+            color: var(--tx2) !important;
+         }
+         .mob-notification-list .admin-activity-item .act-delete,
+         .mob-notification-list .admin-activity-item .act-mark-read {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+         }
+         .admin-mob-notif-footer {
+            padding: 10px;
+            border-top: 1px solid var(--bd);
+            background: var(--sf);
+         }
+         .admin-mob-notif-view-all {
+            width: 100%;
+            min-height: 40px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #3b82f6;
+            background: rgba(59, 130, 246, 0.14);
+            font-size: 0.78rem;
+            font-weight: 800;
          }
 
          @media (max-width: 575px) {
@@ -673,8 +797,15 @@
             .mob-notification-list {
                max-height: min(55dvh, 360px);
             }
-            .mob-notification-actions {
-               position: static !important;
+            .admin-mob-notif-header {
+               align-items: flex-start;
+               flex-direction: column;
+            }
+            .admin-mob-notif-actions {
+               width: 100%;
+            }
+            .admin-mob-notif-action {
+               flex: 1 1 0;
             }
          }
 
@@ -1298,10 +1429,13 @@
 
          @media (max-width: 380px) {
             #mob-content :is(#sec-admin-categories, #sec-admin-questions, #sec-admin-modules, #sec-admin-game) > .mb-4.d-flex > div:last-child,
-            #mob-content #sec-admin-modules .modules-stats-row,
             #mob-content #sec-admin-game .game-categories-scroll,
             #mob-content :is(.question-actions, .module-actions, .game-table tbody td:last-child > .d-flex) {
                grid-template-columns: 1fr !important;
+            }
+
+            #mob-content #sec-admin-modules .modules-stats-row {
+               grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             }
 
             #mob-content #sec-admin-questions > .mb-4.d-flex > div:last-child {
@@ -1365,28 +1499,24 @@
                       <span class="visually-hidden">New alerts</span>
                    </span>
                 </a>
-                <div class="dropdown-menu dropdown-menu-end shadow-lg mob-notification-dropdown">
-                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important; background: var(--sf, #1e1e2d);">
-                        <div>
-                            <span class="fw-bold" style="color: var(--tx, #fff); font-size: 0.95rem;">Live User Activity</span>
-                            <span id="admin-activity-count-mobile" class="badge bg-danger rounded-pill ms-1" style="display:none;">0</span>
+                <div class="dropdown-menu dropdown-menu-end mob-notification-dropdown">
+                    <div class="admin-mob-notif-header">
+                        <div class="admin-mob-notif-title">
+                            <i class="fa-regular fa-bell" style="color:var(--pur)"></i>
+                            <span>Notifications</span>
+                            <span id="admin-activity-count-mobile" class="admin-mob-notif-count">0 new</span>
                         </div>
-                        <div class="dropdown mob-notification-actions">
-                            <button class="btn btn-sm p-0 m-0 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:8px; border:1px solid var(--bd); background:var(--bg3);">
-                                <li><a class="dropdown-item" href="#" onclick="markAllActivitiesRead(event)"><i class="fa-solid fa-check-double me-2 text-primary"></i>Mark all as read</a></li>
-                                <li><hr class="dropdown-divider" style="border-color:var(--bd)"></li>
-                                <li><a class="dropdown-item text-danger" href="#" onclick="clearAllActivities(event)"><i class="fa-solid fa-trash-can me-2"></i>Clear all</a></li>
-                            </ul>
+                        <div class="admin-mob-notif-actions">
+                            <button class="admin-mob-notif-action" type="button" onclick="markAllActivitiesRead(event)" title="Mark all as read"><i class="fa-solid fa-check"></i><span>Read</span></button>
+                            <button class="admin-mob-notif-action danger" type="button" onclick="clearAllActivities(event)" title="Clear all"><i class="fa-solid fa-trash"></i><span>Clear</span></button>
+                            <button class="admin-mob-notif-action" type="button" data-bs-toggle="dropdown" aria-label="Close notifications"><i class="fa-solid fa-xmark"></i></button>
                         </div>
                     </div>
                     <div id="admin-activity-list-mobile" class="mob-notification-list">
                         <div class="p-3 text-center text-muted" style="font-size:0.85rem;">Loading activities...</div>
                     </div>
-                    <div class="p-2 border-top text-center" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important; background: var(--sf, #1e1e2d);">
-                        <a href="{{ route('admin.notifications.index') }}" class="btn btn-sm w-100 fw-bold" style="background: rgba(59,130,246,0.15); color: #3b82f6; border-radius: 8px;">
+                    <div class="admin-mob-notif-footer">
+                        <a href="{{ route('admin.notifications.index') }}" class="admin-mob-notif-view-all">
                             <i class="fa-solid fa-bullhorn me-2"></i>Broadcast Announcement
                         </a>
                     </div>
@@ -1670,6 +1800,23 @@
                line-height: 1.16 !important;
                letter-spacing: 0 !important;
                text-wrap: balance;
+            }
+
+            #mob-content #sec-admin-archive .archive-page-title {
+               display: inline-flex !important;
+               width: auto !important;
+               max-width: 100% !important;
+               align-items: center !important;
+               justify-content: center !important;
+               gap: 6px !important;
+               white-space: nowrap !important;
+               text-wrap: nowrap !important;
+               font-size: clamp(.92rem, 4.4vw, 1.12rem) !important;
+            }
+
+            #mob-content #sec-admin-archive .archive-page-title i {
+               margin-right: 0 !important;
+               flex: 0 0 auto;
             }
 
             #mob-content :is(#sec-admin-archive, #sec-admin-complaints, #sec-admin-contacts, #sec-admin-notifications, #sec-admin-ai-providers, #sec-admin-settings) > :is(.d-flex.justify-content-between, .d-flex.flex-column.flex-md-row, .mb-4.d-flex) p {
@@ -2549,7 +2696,7 @@
                       const badgeEl = document.getElementById('admin-activity-badge-mobile');
                       
                       if (data.new_count > 0) {
-                          if(countEl) { countEl.style.display = 'inline-block'; countEl.innerText = data.new_count; }
+                          if(countEl) { countEl.style.display = 'inline-flex'; countEl.innerText = data.new_count + ' new'; }
                           if(badgeEl) { badgeEl.style.display = 'block'; }
                       } else {
                           if(countEl) { countEl.style.display = 'none'; }

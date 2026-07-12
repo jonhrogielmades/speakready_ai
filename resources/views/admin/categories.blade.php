@@ -1,8 +1,66 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <style>
+    #addCategoryModal .form-check-input:checked,
+    [id^="editCategoryModal"] .form-check-input:checked {
+        background-color: #2563eb !important;
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.22) !important;
+    }
+    #addCategoryModal .form-check-input:focus,
+    [id^="editCategoryModal"] .form-check-input:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18) !important;
+    }
     /* Mobile Card-based Table Layout for Main Categories Table */
     @media (max-width: 767px) {
+        #addCategoryModal .modal-dialog,
+        [id^="editCategoryModal"] .modal-dialog {
+            width: min(calc(100vw - 24px), 420px) !important;
+            max-width: 420px !important;
+            margin-inline: auto !important;
+        }
+        #addCategoryModal .modal-body,
+        [id^="editCategoryModal"] .modal-body {
+            padding: 16px !important;
+        }
+        #addCategoryModal .oinp,
+        [id^="editCategoryModal"] .oinp {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: 42px !important;
+            margin-bottom: 12px !important;
+        }
+        #addCategoryModal .form-check,
+        [id^="editCategoryModal"] .form-check {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px;
+            min-width: 0;
+            padding-left: 0 !important;
+            margin-top: 2px;
+        }
+        #addCategoryModal .form-check-input,
+        [id^="editCategoryModal"] .form-check-input {
+            width: 18px !important;
+            min-width: 18px !important;
+            max-width: 18px !important;
+            height: 18px !important;
+            min-height: 18px !important;
+            margin: 0 !important;
+            float: none !important;
+            flex: 0 0 18px !important;
+            border-radius: 50% !important;
+        }
+        #addCategoryModal .form-check-label,
+        [id^="editCategoryModal"] .form-check-label {
+            display: block !important;
+            min-width: 0;
+            margin: 0 !important;
+            line-height: 1.3;
+            overflow-wrap: normal;
+            word-break: normal;
+        }
         #mainCategoriesTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;

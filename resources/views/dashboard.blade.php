@@ -701,7 +701,7 @@
 
     .sr-achievement-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
     }
 
@@ -710,10 +710,12 @@
         border-radius: 14px;
         background: var(--sf2, var(--bg3));
         padding: 12px;
-        min-height: 104px;
+        min-height: 92px;
         display: flex;
         flex-direction: column;
+        align-items: center;
         justify-content: space-between;
+        text-align: center;
         color: var(--tx2);
     }
 
@@ -730,6 +732,8 @@
         font-size: 0.78rem;
         font-weight: 800;
         color: var(--tx);
+        line-height: 1.2;
+        overflow-wrap: anywhere;
     }
 
     .sr-challenge-card {
@@ -1303,7 +1307,17 @@
         }
 
         .sr-achievement-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .sr-achievement {
+            min-height: 82px;
+            padding: 10px 6px;
+        }
+
+        .sr-achievement span {
+            font-size: 0.66rem;
         }
     }
 

@@ -1726,11 +1726,11 @@
                   <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
                   <input class="oinp" type="email" name="email" id="loginEmail" placeholder="you@example.com" required value="{{ old('email') }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
-                  <div class="position-relative mb-3">
-                     <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required style="padding-right: 40px; margin-bottom: 0;">
-                     <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('loginPass', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                  <div class="password-field mb-3">
+                     <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required>
+                     <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('loginPass', this)" aria-label="Show password">
                         <i class="fa-solid fa-eye-slash"></i>
-                     </span>
+                     </button>
                   </div>
                   <div class="text-end mb-3" style="margin-top:-8px"><a href="#" style="font-size:.8rem;color:var(--pur)">Forgot password?</a></div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
@@ -1752,18 +1752,18 @@
                   <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
                   <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required>
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
-                  <div class="position-relative mb-3">
-                     <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required style="padding-right: 40px; margin-bottom: 0;">
-                     <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('signupPass', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                  <div class="password-field mb-3">
+                     <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required>
+                     <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPass', this)" aria-label="Show password">
                         <i class="fa-solid fa-eye-slash"></i>
-                     </span>
+                     </button>
                   </div>
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Confirm Password</label>
-                  <div class="position-relative mb-3">
-                     <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required style="padding-right: 40px; margin-bottom: 0;">
-                     <span class="position-absolute top-50 translate-middle-y toggle-password" onclick="togglePasswordVisibility('signupPassConfirm', this)" style="right: 15px; cursor: pointer; color: var(--tx3); z-index: 10;">
+                  <div class="password-field mb-3">
+                     <input class="oinp" type="password" name="password_confirmation" id="signupPassConfirm" placeholder="Confirm your password" required>
+                     <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('signupPassConfirm', this)" aria-label="Show password">
                         <i class="fa-solid fa-eye-slash"></i>
-                     </span>
+                     </button>
                   </div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
@@ -2009,14 +2009,17 @@
           function togglePasswordVisibility(inputId, btn) {
              const input = document.getElementById(inputId);
              const icon = btn.querySelector('i');
+             if (!input || !icon) return;
              if (input.type === 'password') {
                 input.type = 'text';
                 icon.classList.remove('fa-eye-slash');
                 icon.classList.add('fa-eye');
+                btn.setAttribute('aria-label', 'Hide password');
              } else {
                 input.type = 'password';
                 icon.classList.remove('fa-eye');
                 icon.classList.add('fa-eye-slash');
+                btn.setAttribute('aria-label', 'Show password');
              }
           }
       </script>
