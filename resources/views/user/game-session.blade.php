@@ -348,8 +348,8 @@
 
             function normalizeTranscriptForMatch(value) {
                 return cleanTranscriptText(value)
-                    .toLowerCase()
-                    .replace(/[^\w'\s]/g, '')
+                    .toLocaleLowerCase(speechLocale)
+                    .replace(/[^\p{L}\p{N}'\u2019\s]/gu, '')
                     .replace(/\s+/g, ' ')
                     .trim();
             }

@@ -6,6 +6,7 @@ use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
+use App\Services\CsvExportService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,21 +48,7 @@ class AdminSessionController extends Controller
         ];
 
         // Feature 2: Session List & Search/Filter/Sort
-        $query = InterviewSession::with(['user', 'category', 'score'])->where('is_archived', false);
-
-        if ($request->filled('search')) {
-            $search = trim((string) $request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($userQuery) use ($search) {
-                    $userQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                })->orWhere('interview_sessions.id', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        $query = $this->filteredSessions($request);
 
         $sort = $request->get('sort', 'created_at');
         $direction = strtolower($request->get('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
@@ -232,10 +219,12 @@ class AdminSessionController extends Controller
         // Feature 14: Session Reports (CSV Export)
         $fileName = 'sessions_export_'.date('Ymd_His').'.csv';
 
-        $sessions = InterviewSession::with(['user', 'category', 'score'])->get();
+        $sessions = $this->filteredSessions($request)
+            ->orderByDesc('created_at')
+            ->get();
 
         $headers = [
-            'Content-type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=$fileName",
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
@@ -246,7 +235,7 @@ class AdminSessionController extends Controller
 
         $callback = function () use ($sessions, $columns) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+            CsvExportService::writeRow($file, $columns);
 
             foreach ($sessions as $s) {
                 $row = [
@@ -263,13 +252,34 @@ class AdminSessionController extends Controller
                     $s->score ? $s->score->professionalism_score : 'N/A',
                     $s->score ? $s->score->confidence_score : 'N/A',
                 ];
-                fputcsv($file, $row);
+                CsvExportService::writeRow($file, $row);
             }
 
             fclose($file);
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    private function filteredSessions(Request $request)
+    {
+        $query = InterviewSession::with(['user', 'category', 'score'])->where('is_archived', false);
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            $query->where(function ($sessionQuery) use ($search) {
+                $sessionQuery->whereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })->orWhere('interview_sessions.id', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->string('status')->toString());
+        }
+
+        return $query;
     }
 
     private function syncInterviewProfileStats(int $userId): void

@@ -39,9 +39,6 @@
         border-radius: 4px;
         font-weight: 600;
     }
-    .mispronounced {
-        text-decoration: underline wavy #fbbf24;
-    }
     .stat-box {
         background: var(--bg3);
         border: 1px solid var(--bd);
@@ -469,84 +466,268 @@ document.getElementById('categorySelect').addEventListener('change', randomizePr
 
 // Recording Logic
 let recognition = null;
+let recognitionActive = false;
+let shouldAutoRestartRecognition = false;
 let isRec = false;
 let isPaused = false;
 let transcript = "";
+let committedSpeechTranscript = "";
+let liveSpeechInterim = "";
+let lastCommittedSpeech = "";
+let lastCommittedAt = 0;
+let recognitionRestartDelay = 300;
 let timer = null;
 let seconds = 0;
 let mediaRecorder = null;
+let mediaStream = null;
+let audioObjectUrl = null;
 let audioChunks = [];
+const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
 
-const fillerWordsList = ['um', 'uh', 'like', 'basically', 'you know', 'actually', 'literally'];
+const fillerWordsList = ['you know', 'i mean', 'um', 'uh', 'erm', 'hmm', 'like', 'actually', 'basically', 'literally'];
+const duplicateSafeWordSet = new Set([
+    'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
+    'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
+]);
 let fillerCount = 0;
 let wordCount = 0;
 
-if ('webkitSpeechRecognition' in window) {
-    recognition = new webkitSpeechRecognition();
+function cleanTranscriptText(value) {
+    return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function normalizeTranscriptForMatch(value) {
+    return cleanTranscriptText(value)
+        .toLocaleLowerCase(speechLocale)
+        .replace(/[^\p{L}\p{N}'\u2019\s]/gu, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function wordsForTranscript(value) {
+    return cleanTranscriptText(value).split(/\s+/u).filter(Boolean);
+}
+
+function appendWithoutOverlap(existing, addition) {
+    const existingClean = cleanTranscriptText(existing);
+    const additionClean = cleanTranscriptText(addition);
+    if (!existingClean) return additionClean;
+    if (!additionClean) return existingClean;
+
+    const existingWords = wordsForTranscript(existingClean);
+    const additionWords = wordsForTranscript(additionClean);
+    const existingNormalized = existingWords.map(normalizeTranscriptForMatch);
+    const additionNormalized = additionWords.map(normalizeTranscriptForMatch);
+    const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
+    let overlap = 0;
+
+    for (let size = maxOverlap; size > 0; size--) {
+        const existingTail = existingNormalized.slice(existingNormalized.length - size).join(' ');
+        const additionHead = additionNormalized.slice(0, size).join(' ');
+        if (existingTail && existingTail === additionHead) {
+            overlap = size;
+            break;
+        }
+    }
+
+    const remainder = additionWords.slice(overlap).join(' ');
+    return cleanTranscriptText(existingClean + (remainder ? ' ' + remainder : ''));
+}
+
+function shouldCollapseDuplicateWindow(size, normalizedPhrase) {
+    if (!normalizedPhrase) return false;
+    if (size >= 2) return true;
+    return Array.from(normalizedPhrase).length > 2 || duplicateSafeWordSet.has(normalizedPhrase);
+}
+
+function collapseRepeatedSpeech(text) {
+    const words = wordsForTranscript(text);
+    if (words.length < 2) return cleanTranscriptText(text);
+
+    let index = 0;
+    while (index < words.length) {
+        let collapsed = false;
+        const maxWindow = Math.min(12, Math.floor((words.length - index) / 2));
+
+        for (let size = maxWindow; size >= 1; size--) {
+            const first = words.slice(index, index + size).map(normalizeTranscriptForMatch).join(' ');
+            const second = words.slice(index + size, index + (size * 2)).map(normalizeTranscriptForMatch).join(' ');
+
+            if (first && first === second && shouldCollapseDuplicateWindow(size, first)) {
+                words.splice(index + size, size);
+                index = Math.max(0, index - size);
+                collapsed = true;
+                break;
+            }
+        }
+
+        if (!collapsed) index++;
+    }
+
+    return cleanTranscriptText(words.join(' '));
+}
+
+function mergeTranscriptParts(...parts) {
+    let merged = '';
+    parts.forEach(part => {
+        const clean = cleanTranscriptText(part);
+        if (clean) merged = appendWithoutOverlap(merged, clean);
+    });
+    return collapseRepeatedSpeech(merged);
+}
+
+function bestSpeechAlternative(result) {
+    let best = result[0] || null;
+    for (let i = 1; i < result.length; i++) {
+        if ((result[i].confidence || 0) > (best?.confidence || 0)) best = result[i];
+    }
+    return best ? best.transcript : '';
+}
+
+function commitSpeechSegment(segment) {
+    const cleanSegment = collapseRepeatedSpeech(cleanTranscriptText(segment));
+    if (!cleanSegment) return;
+
+    const normalized = normalizeTranscriptForMatch(cleanSegment);
+    const now = Date.now();
+    if (normalized && normalized === lastCommittedSpeech && (now - lastCommittedAt) < 5000) return;
+
+    committedSpeechTranscript = collapseRepeatedSpeech(appendWithoutOverlap(committedSpeechTranscript, cleanSegment));
+    lastCommittedSpeech = normalized;
+    lastCommittedAt = now;
+}
+
+function renderSpeechTranscript() {
+    transcript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
+    processTranscript(transcript);
+}
+
+function finalizeInterimTranscript() {
+    if (!liveSpeechInterim) return;
+    commitSpeechSegment(liveSpeechInterim);
+    liveSpeechInterim = '';
+    renderSpeechTranscript();
+}
+
+function setTranscriptionStatus(message, color = '#34d399') {
+    const status = document.getElementById('transStatus');
+    status.textContent = message;
+    status.style.color = color;
+    status.style.display = message ? 'inline-block' : 'none';
+}
+
+function startSpeechRecognitionEngine() {
+    if (!recognition || recognitionActive || !isRec || isPaused || !shouldAutoRestartRecognition) return;
+
+    try {
+        recognition.start();
+        recognitionActive = true;
+    } catch (error) {
+        if (!error || error.name !== 'InvalidStateError') {
+            console.error('Speech recognition failed to start:', error);
+            setTranscriptionStatus('Unable to start transcription', '#f87171');
+        }
+    }
+}
+
+if (BrowserSpeechRecognition) {
+    recognition = new BrowserSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = speechLocale;
-    
+    recognition.maxAlternatives = 3;
+
+    recognition.onstart = () => {
+        recognitionActive = true;
+        recognitionRestartDelay = 300;
+        setTranscriptionStatus('Transcribing');
+    };
+
     recognition.onresult = (event) => {
-        let interim = '';
-        let final = '';
+        const interimParts = [];
         for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const recognizedText = bestSpeechAlternative(event.results[i]);
+            if (!recognizedText) continue;
+
             if (event.results[i].isFinal) {
-                final += event.results[i][0].transcript;
+                commitSpeechSegment(recognizedText);
             } else {
-                interim += event.results[i][0].transcript;
+                interimParts.push(recognizedText);
             }
         }
-        
-        if (final) {
-            transcript += final;
-            processTranscript(transcript + interim);
-        } else {
-            processTranscript(transcript + interim);
+
+        liveSpeechInterim = cleanTranscriptText(interimParts.join(' '));
+        renderSpeechTranscript();
+    };
+
+    recognition.onerror = (event) => {
+        recognitionActive = false;
+        const error = event.error || 'unknown';
+        console.warn('Speech recognition error:', error);
+
+        if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(error)) {
+            shouldAutoRestartRecognition = false;
+            const message = error === 'audio-capture' ? 'Microphone unavailable' : 'Microphone permission denied';
+            setTimeout(() => {
+                stopRec(false);
+                setTranscriptionStatus(message, '#f87171');
+            }, 0);
+        } else if (error === 'network') {
+            recognitionRestartDelay = 1500;
+            setTranscriptionStatus('Reconnecting transcription', '#fbbf24');
         }
     };
-    
+
     recognition.onend = () => {
-        if (isRec && !isPaused) {
-            recognition.start(); // Keep alive if not manually stopped
+        recognitionActive = false;
+        if (shouldAutoRestartRecognition && isRec && !isPaused) {
+            setTimeout(startSpeechRecognitionEngine, recognitionRestartDelay);
         }
     };
 }
 
+function escapeTranscriptHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function countFillersInTranscript(text) {
+    return fillerWordsList.reduce((count, filler) => {
+        const regex = new RegExp(`\\b${filler}\\b`, 'gi');
+        return count + (text.match(regex)?.length || 0);
+    }, 0);
+}
+
 function processTranscript(text) {
     const box = document.getElementById('transcriptView');
+    text = collapseRepeatedSpeech(cleanTranscriptText(text));
+    transcript = text;
     
     // Count words
-    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    const words = wordsForTranscript(text);
     wordCount = words.length;
     
     // Detect Fillers and Highlights
-    fillerCount = 0;
-    let formattedHtml = text;
+    fillerCount = countFillersInTranscript(text);
+    let formattedHtml = escapeTranscriptHtml(text);
     
     fillerWordsList.forEach(filler => {
         const regex = new RegExp(`\\b${filler}\\b`, 'gi');
-        const matches = text.match(regex);
-        if (matches) fillerCount += matches.length;
-        
         formattedHtml = formattedHtml.replace(regex, `<span class="filler-word">$&</span>`);
     });
     
-    // Dummy keyword highlighting
+    // Highlight only terms that are actually present in the transcript.
     ['leadership', 'team', 'success', 'problem', 'solved', 'agile', 'communication', 'manager'].forEach(kw => {
         const regex = new RegExp(`\\b${kw}\\b`, 'gi');
         formattedHtml = formattedHtml.replace(regex, `<span class="keyword-highlight">$&</span>`);
     });
     
-    // Possible pronunciation highlight based on a local watchlist.
-    const mispronounced = ['specifically', 'phenomenon', 'statistics'];
-    mispronounced.forEach(kw => {
-        const regex = new RegExp(`\\b${kw}\\b`, 'gi');
-        formattedHtml = formattedHtml.replace(regex, `<span class="mispronounced" title="Possible mispronunciation">$&</span>`);
-    });
-
-    box.innerHTML = formattedHtml || "Listening...";
+    box.innerHTML = formattedHtml || (isRec ? "Listening..." : "");
     document.getElementById('fillerDisp').innerText = fillerCount;
     updateWPM();
 }
@@ -567,73 +748,148 @@ function updateWPM() {
     }
 }
 
-function initAudioRec() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-        mediaRecorder.ondataavailable = e => { audioChunks.push(e.data); };
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            document.getElementById('audioPlayback').src = audioUrl;
-        };
-        mediaRecorder.start();
-    }).catch(e => console.error("Audio rec error:", e));
+function releaseMediaStream(stream = mediaStream) {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    if (mediaStream === stream) {
+        mediaStream = null;
+    }
 }
 
-function startRec() {
-    if (!recognition) return alert("Chrome required for speech recognition.");
+async function initAudioRec() {
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return false;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+        mediaStream = stream;
+        const recordingChunks = audioChunks;
+        const preferredType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : '';
+        const recorder = preferredType
+            ? new MediaRecorder(stream, { mimeType: preferredType })
+            : new MediaRecorder(stream);
+        mediaRecorder = recorder;
+        recorder.ondataavailable = event => {
+            if (event.data?.size > 0) recordingChunks.push(event.data);
+        };
+        recorder.onstop = () => {
+            if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl);
+            const audioBlob = new Blob(recordingChunks, { type: recorder.mimeType || 'audio/webm' });
+            audioObjectUrl = URL.createObjectURL(audioBlob);
+            document.getElementById('audioPlayback').src = audioObjectUrl;
+            releaseMediaStream(stream);
+        };
+        recorder.start(1000);
+        return true;
+    } catch (error) {
+        console.error('Audio recording failed:', error);
+        releaseMediaStream();
+        return false;
+    }
+}
+
+async function startRec() {
+    if (!recognition) return alert("Speech recognition is not supported in this browser.");
+    if (isRec) return;
+
     isRec = true;
     isPaused = false;
+    shouldAutoRestartRecognition = true;
+    recognitionActive = false;
     transcript = "";
+    committedSpeechTranscript = "";
+    liveSpeechInterim = "";
+    lastCommittedSpeech = "";
+    lastCommittedAt = 0;
     seconds = 0;
     wordCount = 0;
     fillerCount = 0;
     audioChunks = [];
+    window.currentAnalysis = null;
+    window.analysisTranscript = null;
     
     document.getElementById('transcriptView').innerHTML = "";
     document.getElementById('transcriptView').setAttribute('contenteditable', 'false');
     document.getElementById('editHint').style.display = 'none';
     document.getElementById('audioPlayback').src = "";
-    
-    recognition.start();
-    initAudioRec();
-    
-    timer = setInterval(updateTimer, 1000);
+
     updateUIState();
+    await initAudioRec();
+    if (!isRec) {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        return;
+    }
+    startSpeechRecognitionEngine();
+
+    clearInterval(timer);
+    timer = setInterval(updateTimer, 1000);
 }
 
 function pauseRec() {
+    if (!isRec || isPaused) return;
+    finalizeInterimTranscript();
     isPaused = true;
-    recognition.stop();
+    shouldAutoRestartRecognition = false;
+    if (recognition && recognitionActive) {
+        try {
+            recognition.stop();
+        } catch (error) {
+            console.error('Speech recognition failed to pause:', error);
+        }
+    }
     if(mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.pause();
     clearInterval(timer);
     updateUIState();
 }
 
 function resumeRec() {
+    if (!isRec || !isPaused) return;
     isPaused = false;
-    recognition.start();
+    shouldAutoRestartRecognition = true;
+    startSpeechRecognitionEngine();
     if(mediaRecorder && mediaRecorder.state === "paused") mediaRecorder.resume();
+    clearInterval(timer);
     timer = setInterval(updateTimer, 1000);
     updateUIState();
 }
 
-function stopRec() {
+function stopRec(shouldAnalyze = true) {
+    finalizeInterimTranscript();
+    shouldAutoRestartRecognition = false;
     isRec = false;
     isPaused = false;
-    recognition.stop();
-    if(mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    if (recognition && recognitionActive) {
+        try {
+            recognition.stop();
+        } catch (error) {
+            console.error('Speech recognition failed to stop:', error);
+        }
+    }
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+    } else {
+        releaseMediaStream();
+    }
     clearInterval(timer);
+    processTranscript(mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim));
     updateUIState();
     
     document.getElementById('transcriptView').setAttribute('contenteditable', 'true');
     document.getElementById('editHint').style.display = 'block';
-    
-    generateAnalysis();
+
+    if (shouldAnalyze) generateAnalysis();
 }
 
 function resetRec() {
-    stopRec();
+    stopRec(false);
     document.getElementById('timeDisp').innerText = "0:00";
     document.getElementById('wpmDisp').innerText = "0";
     document.getElementById('fillerDisp').innerText = "0";
@@ -674,14 +930,68 @@ function updateUIState() {
     }
 }
 
+const transcriptView = document.getElementById('transcriptView');
+function transcriptEditorText() {
+    const text = cleanTranscriptText(transcriptView.innerText);
+    return ['Listening...', 'Your speech will appear here...'].includes(text) ? '' : text;
+}
+
+transcriptView.addEventListener('input', () => {
+    if (isRec) return;
+
+    transcript = collapseRepeatedSpeech(transcriptEditorText());
+    wordCount = wordsForTranscript(transcript).length;
+    fillerCount = countFillersInTranscript(transcript);
+    document.getElementById('fillerDisp').innerText = fillerCount;
+    updateWPM();
+    window.currentAnalysis = null;
+    window.analysisTranscript = null;
+});
+transcriptView.addEventListener('blur', () => {
+    if (!isRec) processTranscript(transcript);
+});
+
+function currentVoiceMetrics() {
+    const wpm = parseInt(document.getElementById('wpmDisp').innerText, 10) || 0;
+    let clarity = 92;
+    let confidence = 85;
+
+    if (wordCount < 5) clarity -= 35;
+    else if (wordCount < 20) clarity -= 10;
+    clarity -= Math.min(35, fillerCount * 4);
+    if (wpm > 0 && (wpm < 90 || wpm > 180)) clarity -= 10;
+    if (wpm > 0 && (wpm < 60 || wpm > 220)) clarity -= 10;
+
+    if (wordCount < 5 || seconds < 5) confidence -= 30;
+    else if (wordCount < 20) confidence -= 10;
+    confidence -= Math.min(30, fillerCount * 3);
+    if (wpm > 0 && (wpm < 90 || wpm > 190)) confidence -= 12;
+
+    return {
+        wpm,
+        clarity: Math.max(0, Math.min(100, clarity)),
+        confidence: Math.max(0, Math.min(100, confidence))
+    };
+}
+
 async function generateAnalysis() {
+    if (!isRec) {
+        transcript = collapseRepeatedSpeech(transcriptEditorText());
+        processTranscript(transcript);
+    }
+    if (!transcript) {
+        alert('No speech was detected. Record or enter a transcript before analysis.');
+        return false;
+    }
+
     // Unlock analysis panel
     const panel = document.getElementById('analysisPanel');
     panel.style.opacity = '1';
     panel.style.pointerEvents = 'auto';
     
     // Calculate metrics
-    const wpm = parseInt(document.getElementById('wpmDisp').innerText) || 0;
+    const metrics = currentVoiceMetrics();
+    const wpm = metrics.wpm;
     
     let paceRating = "Too Slow";
     let paceCol = "#f87171";
@@ -694,25 +1004,27 @@ async function generateAnalysis() {
     document.getElementById('paceBar').style.width = pacePct + '%';
     document.getElementById('paceBar').style.background = paceCol;
     
-    // Local clarity and confidence estimates based on measurable transcript signals.
-    const clarity = Math.max(20, 100 - (fillerCount * 5));
+    // Match the measurable server-side scoring rules shown after saving.
+    const clarity = metrics.clarity;
     document.getElementById('resClarity').innerText = clarity;
     
-    let conf = "High";
-    let confScore = 90;
-    if (fillerCount > 5) { conf = "Medium"; confScore = 70; }
-    if (fillerCount > 10) { conf = "Low"; confScore = 40; }
+    const confScore = metrics.confidence;
+    const conf = confScore >= 80 ? 'High' : (confScore >= 60 ? 'Medium' : 'Low');
     document.getElementById('resConfidence').innerText = conf;
     
     // Keywords
-    const kws = ['Leadership', 'Communication', 'Agile', 'Teamwork'];
-    document.getElementById('resKeywords').innerHTML = kws.map(k => `<span class="badge" style="background:rgba(52,211,153,0.15);color:#34d399;font-weight:600;">${k}</span>`).join('');
+    const keywordCandidates = ['leadership', 'communication', 'agile', 'teamwork', 'team', 'manager', 'problem', 'success'];
+    const normalizedTranscript = normalizeTranscriptForMatch(transcript);
+    const keywords = keywordCandidates.filter(keyword => new RegExp(`\\b${keyword}\\b`, 'i').test(normalizedTranscript));
+    document.getElementById('resKeywords').innerHTML = keywords.length
+        ? keywords.map(keyword => `<span class="badge" style="background:rgba(52,211,153,0.15);color:#34d399;font-weight:600;">${keyword}</span>`).join('')
+        : '<span style="color:var(--tx3);font-size:0.85rem;">No tracked keywords detected.</span>';
     
     // Set loading state for AI Feedback
     document.getElementById('resStrengths').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
     document.getElementById('resWeak').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
     document.getElementById('comparisonPanel').style.display = 'block';
-    document.getElementById('compUser').innerHTML = document.getElementById('transcriptView').innerHTML || "<em>No speech detected.</em>";
+    document.getElementById('compUser').textContent = transcript;
     document.getElementById('compAI').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating improved answer...';
 
     // Fetch AI Analysis
@@ -728,13 +1040,14 @@ async function generateAnalysis() {
             },
             body: JSON.stringify({ prompt: promptText, transcript: transText })
         });
-        
+        if (!response.ok) throw new Error(`Analysis failed with status ${response.status}`);
+
         const data = await response.json();
         
         // Populate AI Feedback
         document.getElementById('resStrengths').innerText = data.strengths || "AI strengths analysis was unavailable for this recording.";
         document.getElementById('resWeak').innerText = data.weaknesses || "AI improvement analysis was unavailable. Review the transcript, pace, and filler-word count before relying on this session.";
-        document.getElementById('compAI').innerHTML = "<em>(AI Improved Version)</em><br><br>" + (data.improved_answer || "AI improved answer was unavailable for this recording.");
+        document.getElementById('compAI').textContent = data.improved_answer || "AI improved answer was unavailable for this recording.";
         
         // Store for saving
         window.currentAnalysis = {
@@ -748,19 +1061,32 @@ async function generateAnalysis() {
             wpm: wpm,
             duration_seconds: seconds
         };
+        window.analysisTranscript = transcript;
+        return true;
 
     } catch (error) {
         console.error("Analysis Error:", error);
         document.getElementById('resStrengths').innerText = "Failed to load analysis.";
         document.getElementById('resWeak').innerText = "Failed to load analysis.";
-        document.getElementById('compAI').innerHTML = "Failed to load AI improved version.";
+        document.getElementById('compAI').innerText = "Failed to load AI improved version.";
+        window.currentAnalysis = null;
+        window.analysisTranscript = null;
+        return false;
     }
 }
 
 async function saveSession() {
-    if (!window.currentAnalysis) {
-        alert("Please record and analyze a session first.");
+    transcript = collapseRepeatedSpeech(transcriptEditorText());
+    processTranscript(transcript);
+
+    if (!transcript) {
+        alert('No transcript is available to save.');
         return;
+    }
+
+    if (!window.currentAnalysis || window.analysisTranscript !== transcript) {
+        const analyzed = await generateAnalysis();
+        if (!analyzed) return;
     }
 
     const btn = document.getElementById('btnSave');

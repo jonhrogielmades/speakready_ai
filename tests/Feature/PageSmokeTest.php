@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\ChatbotConversation;
+use App\Models\ChatbotMessage;
+use App\Models\Contact;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewPack;
@@ -68,6 +71,40 @@ class PageSmokeTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.packs.practice', $pack))
             ->assertRedirect(route('interview.setup', ['pack' => $pack->id]));
+
+        $conversation = ChatbotConversation::create(['user_id' => $user->id, 'title' => 'Interview preparation']);
+        ChatbotMessage::create([
+            'chatbot_conversation_id' => $conversation->id,
+            'role' => 'user',
+            'content' => 'Help me prepare.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.coach.load', $conversation))
+            ->assertOk()
+            ->assertJsonPath('conversation.id', $conversation->id);
+
+        $this->actingAs($user)
+            ->get(route('user.notifications.fetch'))
+            ->assertOk()
+            ->assertJsonStructure(['unreadCount', 'notifications']);
+
+        $this->actingAs($user)
+            ->get(route('user.learning.assistant'))
+            ->assertRedirect(route('user.coach'));
+
+        $export = $this->actingAs($user)->get(route('user.sessions.export', $session));
+        $export->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('Describe a difficult project.', $export->streamedContent());
+
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->actingAs($otherUser)
+            ->get(route('user.sessions.export', $session))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('user.game.match'))
+            ->assertRedirect(route('user.learning'));
     }
 
     public function test_main_admin_pages_render_successfully(): void
@@ -103,6 +140,31 @@ class PageSmokeTest extends TestCase
                 ->get($url)
                 ->assertStatus(200);
         }
+
+        $contact = Contact::create([
+            'name' => 'Page Test',
+            'email' => 'page-test@example.com',
+            'subject' => 'Question',
+            'message' => 'Please verify the contact detail page.',
+            'status' => 'unread',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.contacts.show', $contact))
+            ->assertOk();
+        $this->assertSame('read', $contact->refresh()->status);
+
+        foreach (['admin.questions.export', 'admin.sessions.export', 'admin.feedback.export'] as $routeName) {
+            $response = $this->actingAs($admin)->get(route($routeName));
+            $response->assertOk();
+            $this->assertStringContainsString('text/csv', (string) $response->headers->get('Content-Type'));
+            $this->assertNotSame('', $response->streamedContent());
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.api.latest-activities'))
+            ->assertOk()
+            ->assertJsonStructure(['html', 'new_count']);
     }
 
     private function seedUserPageData(): array

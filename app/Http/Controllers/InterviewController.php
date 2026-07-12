@@ -12,6 +12,7 @@ use App\Models\Question;
 use App\Models\Setting;
 use App\Services\CareerPlanService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\TranscriptService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -424,6 +425,7 @@ class InterviewController extends Controller
             return [
                 'id' => $answer->id,
                 'question' => $answer->question->question_text ?? '',
+                'question_type' => $answer->question->type ?? null,
                 'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
                 'is_skipped' => (bool) $answer->is_skipped,
             ];
@@ -522,10 +524,11 @@ class InterviewController extends Controller
         $sFeedback = $aiFeedback['session_feedback'] ?? null;
         $overall = $this->scoreValue($sFeedback['overall_readiness_score'] ?? round(($clarity + $relevance + $grammar + $prof + $bodyLang + $conf) / 6));
 
-        // Fetch Profile early for perk calculations
+        // Game perks affect level progression, never the stored assessment score.
         $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
-        if ($profile->hasPerk('first_impressions')) {
-            $overall = min(100, $overall + 5);
+        $gameResultScore = $overall;
+        if ($gameLevel && $profile->hasPerk('first_impressions')) {
+            $gameResultScore = min(100, $gameResultScore + 5);
         }
 
         $atsScore = 0;
@@ -608,7 +611,7 @@ class InterviewController extends Controller
                             ->where('game_level_id', $gameLevel->id)->first();
                             
             if ($progress) {
-                if ($overall >= $gameLevel->required_score) {
+                if ($gameResultScore >= $gameLevel->required_score) {
                     $progress->status = 'completed';
                     $gameStatus = 'victory';
                     
@@ -640,8 +643,8 @@ class InterviewController extends Controller
                 } else {
                     $gameStatus = 'defeat';
                 }
-                if ($overall > $progress->best_score) {
-                    $progress->best_score = $overall;
+                if ($gameResultScore > $progress->best_score) {
+                    $progress->best_score = $gameResultScore;
                 }
                 $progress->save();
             }
@@ -768,6 +771,7 @@ class InterviewController extends Controller
         ], [[
             'id' => $retry->id,
             'question' => $answer->question->question_text ?? '',
+            'question_type' => $answer->question->type ?? null,
             'answer' => $retry->answer_text,
             'is_skipped' => false,
         ]], $provider);
@@ -1154,7 +1158,7 @@ class InterviewController extends Controller
 
     private function estimatedAnswerConfidence(string $answerText, int $wpm, int $fillerWords, int $pauseCount, int $voiceDuration): int
     {
-        $wordCount = str_word_count(trim($answerText));
+        $wordCount = TranscriptService::wordCount($answerText);
         $score = 82;
 
         if ($wordCount === 0) {
@@ -1179,66 +1183,7 @@ class InterviewController extends Controller
 
     private function cleanTranscribedAnswer(?string $answerText): string
     {
-        $text = trim((string) $answerText);
-        $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
-
-        return $this->collapseAdjacentTranscriptDuplicates($text);
-    }
-
-    private function collapseAdjacentTranscriptDuplicates(string $text): string
-    {
-        $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
-        if (!$words || count($words) < 2) {
-            return trim($text);
-        }
-
-        $index = 0;
-        while ($index < count($words)) {
-            $collapsed = false;
-            $maxWindow = min(12, intdiv(count($words) - $index, 2));
-
-            for ($size = $maxWindow; $size >= 1; $size--) {
-                $first = $this->transcriptPhraseKey(array_slice($words, $index, $size));
-                $second = $this->transcriptPhraseKey(array_slice($words, $index + $size, $size));
-
-                if ($first !== '' && $first === $second && $this->shouldCollapseTranscriptDuplicate($size, $first)) {
-                    array_splice($words, $index + $size, $size);
-                    $index = max(0, $index - $size);
-                    $collapsed = true;
-                    break;
-                }
-            }
-
-            if (!$collapsed) {
-                $index++;
-            }
-        }
-
-        return trim(implode(' ', $words));
-    }
-
-    private function transcriptPhraseKey(array $words): string
-    {
-        $normalized = array_map(function ($word) {
-            $word = strtolower((string) $word);
-            return preg_replace("/[^a-z0-9']+/i", '', $word) ?? '';
-        }, $words);
-
-        return trim(implode(' ', array_filter($normalized, fn ($word) => $word !== '')));
-    }
-
-    private function shouldCollapseTranscriptDuplicate(int $wordCount, string $phraseKey): bool
-    {
-        if ($wordCount >= 2) {
-            return true;
-        }
-
-        $duplicateSafeWords = [
-            'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
-            'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
-        ];
-
-        return strlen($phraseKey) > 2 || in_array($phraseKey, $duplicateSafeWords, true);
+        return TranscriptService::clean($answerText);
     }
 
     private function clampInt($value, int $min, int $max): int

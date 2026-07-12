@@ -6,12 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\InterviewAnswer;
 use App\Models\FeedbackAuditLog;
 use App\Models\FeedbackComplaint;
+use App\Services\CsvExportService;
 
 class AdminFeedbackController extends Controller
 {
     public function index(Request $request)
     {
-        $query = InterviewAnswer::whereNotNull('ai_feedback')->with('question');
+        $query = $this->filteredFeedbackQuery($request)->with('question');
 
         // Overview Cards Stats
         $stats = [
@@ -24,20 +25,49 @@ class AdminFeedbackController extends Controller
             'avg_relevance' => InterviewAnswer::whereNotNull('ai_feedback')->avg('relevance_score') ?? 0,
         ];
 
-        // Filtering
-        if ($request->has('status') && $request->status !== '') {
-            $query->where('audit_status', $request->status);
-        }
-
-        if ($request->has('search') && $request->search !== '') {
-            $query->whereHas('question', function ($q) use ($request) {
-                $q->where('question_text', 'like', '%' . $request->search . '%');
-            });
-        }
-
         $feedbacks = $query->latest()->paginate(15);
 
         return view('admin.feedback.index', compact('feedbacks', 'stats'));
+    }
+
+    public function export(Request $request)
+    {
+        $feedbacks = $this->filteredFeedbackQuery($request)
+            ->with(['question', 'interviewSession.user'])
+            ->latest()
+            ->get();
+        $fileName = 'feedback_audit_' . now()->format('Ymd_His') . '.csv';
+
+        return response()->stream(function () use ($feedbacks) {
+            $stream = fopen('php://output', 'w');
+            CsvExportService::writeRow($stream, [
+                'Answer ID', 'Session ID', 'User', 'Question', 'Answer Score', 'Clarity',
+                'Relevance', 'Grammar', 'Confidence', 'Audit Status', 'AI Feedback', 'Created At',
+            ]);
+
+            foreach ($feedbacks as $feedback) {
+                CsvExportService::writeRow($stream, [
+                    $feedback->id,
+                    $feedback->interview_session_id,
+                    $feedback->interviewSession?->user?->name,
+                    $feedback->question?->question_text,
+                    $feedback->score,
+                    $feedback->clarity_score,
+                    $feedback->relevance_score,
+                    $feedback->grammar_score,
+                    $feedback->confidence_score,
+                    $feedback->audit_status,
+                    $feedback->ai_feedback,
+                    optional($feedback->created_at)->toDateTimeString(),
+                ]);
+            }
+
+            fclose($stream);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
     }
 
     public function show(InterviewAnswer $answer)
@@ -143,6 +173,22 @@ class AdminFeedbackController extends Controller
     {
         $complaints = FeedbackComplaint::with(['user', 'interviewAnswer.question'])->latest()->paginate(15);
         return view('admin.feedback.complaints', compact('complaints'));
+    }
+
+    private function filteredFeedbackQuery(Request $request)
+    {
+        $query = InterviewAnswer::whereNotNull('ai_feedback');
+
+        if ($request->filled('status')) {
+            $query->where('audit_status', $request->string('status')->toString());
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->whereHas('question', fn ($question) => $question->where('question_text', 'like', '%' . $search . '%'));
+        }
+
+        return $query;
     }
 
     private function starAnalysisFromRequest($value, ?array $fallback): array

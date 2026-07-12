@@ -354,7 +354,7 @@
             <p class="session-page-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Track and analyze interview session performance and activity.</p>
         </div>
         <div class="session-header-actions d-flex flex-wrap gap-2">
-            <a href="{{ route('admin.sessions.export') }}" class="btn session-top-action" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
+            <a href="{{ route('admin.sessions.export', request()->query()) }}" class="btn session-top-action" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
                 <i class="fa-solid fa-file-export text-success me-2"></i>Export CSV
             </a>
             <a href="{{ route('admin.sessions.archive') }}" class="btn session-top-action" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">

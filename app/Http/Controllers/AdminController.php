@@ -11,6 +11,7 @@ use App\Models\Score;
 use App\Models\LearningModule;
 use App\Models\AiProvider;
 use App\Services\AIService;
+use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -655,7 +656,7 @@ class AdminController extends Controller
 
         $callback = function() use($questions, $columns) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, $columns);
+            CsvExportService::writeRow($file, $columns);
 
             foreach ($questions as $question) {
                 $row['ID']  = $question->id;
@@ -667,7 +668,7 @@ class AdminController extends Controller
                 $row['Source URL'] = $question->source_url;
                 $row['Source Type'] = $question->source_type;
 
-                fputcsv($file, array(
+                CsvExportService::writeRow($file, array(
                     $row['ID'],
                     $row['Category'],
                     $row['Question'],
@@ -1157,7 +1158,8 @@ EOT;
         } else {
             foreach ($latestActivities as $activity) {
                 $time = $activity->created_at->diffForHumans();
-                $userName = $activity->user ? $activity->user->name : 'System';
+                $userName = htmlspecialchars($activity->user ? $activity->user->name : 'System', ENT_QUOTES, 'UTF-8');
+                $time = htmlspecialchars($time, ENT_QUOTES, 'UTF-8');
                 $isNew = is_null($activity->read_at);
                 $bgClass = $isNew ? 'rgba(59,130,246,0.1)' : 'transparent';
                 

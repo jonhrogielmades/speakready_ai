@@ -262,7 +262,7 @@
             <p class="feedback-page-subtitle mb-0" style="color: var(--tx3);">Monitor, review, and evaluate AI-generated feedback quality.</p>
         </div>
         <div class="feedback-header-actions">
-            <a href="#" class="btn feedback-export-btn" style="border-radius: 10px; background-color: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">
+            <a href="{{ route('admin.feedback.export', request()->query()) }}" class="btn feedback-export-btn" style="border-radius: 10px; background-color: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">
                 <i class="fa-solid fa-download me-2"></i>Export Report
             </a>
         </div>

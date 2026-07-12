@@ -125,6 +125,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/drills/voice/save', [UserController::class, 'saveVoiceSession'])->name('user.drills.voice.save');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
+    Route::get('/session/{session}/export', [UserController::class, 'exportSession'])->name('user.sessions.export');
     Route::delete('/session/{id}', [UserController::class, 'destroySession'])->name('user.sessions.destroy');
     Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->name('user.sessions.clear');
     Route::get('/reports', [UserController::class, 'reports'])->name('user.reports');
@@ -232,6 +233,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Admin Feedback Audit Features
     Route::get('/admin/feedback', [App\Http\Controllers\AdminFeedbackController::class, 'index'])->name('admin.feedback.index');
     Route::get('/admin/feedback/complaints', [App\Http\Controllers\AdminFeedbackController::class, 'complaints'])->name('admin.feedback.complaints');
+    Route::get('/admin/feedback/export', [App\Http\Controllers\AdminFeedbackController::class, 'export'])->name('admin.feedback.export');
     Route::get('/admin/feedback/{answer}', [App\Http\Controllers\AdminFeedbackController::class, 'show'])->name('admin.feedback.show');
     Route::post('/admin/feedback/{answer}/verify', [App\Http\Controllers\AdminFeedbackController::class, 'verify'])->name('admin.feedback.verify');
     Route::patch('/admin/feedback/{answer}/status', [App\Http\Controllers\AdminFeedbackController::class, 'updateStatus'])->name('admin.feedback.status');

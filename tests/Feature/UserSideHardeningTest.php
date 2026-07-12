@@ -378,7 +378,7 @@ class UserSideHardeningTest extends TestCase
             ->postJson(route('user.drills.voice.save'), [
                 'category' => 'Behavioral',
                 'prompt' => 'Tell me about a project.',
-                'transcript' => 'Um I solved the issue clearly',
+                'transcript' => 'Um I solved the issue clearly Um I solved the issue clearly',
                 'duration_seconds' => 60,
                 'wpm' => 400,
                 'filler_words' => 200,
@@ -391,11 +391,38 @@ class UserSideHardeningTest extends TestCase
 
         $this->assertDatabaseHas('voice_sessions', [
             'user_id' => $user->id,
+            'transcript' => 'Um I solved the issue clearly',
             'wpm' => 6,
             'speaking_pace' => 6,
             'filler_words' => 1,
             'clarity_score' => 58,
             'confidence_score' => 60,
+        ]);
+    }
+
+    public function test_voice_session_without_transcript_does_not_trust_client_scores(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->postJson(route('user.drills.voice.save'), [
+                'category' => 'Behavioral',
+                'transcript' => '',
+                'duration_seconds' => 60,
+                'wpm' => 180,
+                'filler_words' => 0,
+                'clarity_score' => 100,
+                'confidence_score' => 100,
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('voice_sessions', [
+            'user_id' => $user->id,
+            'transcript' => '',
+            'wpm' => 0,
+            'speaking_pace' => 0,
+            'clarity_score' => 0,
+            'confidence_score' => 0,
         ]);
     }
 

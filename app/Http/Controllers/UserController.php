@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Setting;
 use App\Services\AIService;
+use App\Services\CsvExportService;
+use App\Services\TranscriptService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
@@ -367,6 +369,58 @@ class UserController extends Controller
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
         return view('user.review', compact('sessionRecord', 'comparisonRows'));
+    }
+
+    public function exportSession(InterviewSession $session)
+    {
+        abort_unless((int) $session->user_id === (int) Auth::id(), 403);
+
+        $session->load(['category', 'score', 'feedback', 'answers.question']);
+        $answers = $session->answers->whereNull('retry_of_answer_id')->values();
+        $fileName = 'interview_session_' . $session->id . '_' . now()->format('Ymd_His') . '.csv';
+
+        return response()->stream(function () use ($session, $answers) {
+            $stream = fopen('php://output', 'w');
+            CsvExportService::writeRow($stream, [
+                'Session ID', 'Date', 'Position', 'Category', 'Question', 'Answer', 'Answer Score',
+                'Clarity', 'Relevance', 'Grammar', 'Overall Readiness', 'AI Feedback',
+            ]);
+
+            if ($answers->isEmpty()) {
+                CsvExportService::writeRow($stream, [
+                    $session->id,
+                    optional($session->created_at)->toDateTimeString(),
+                    $session->target_position,
+                    $session->category?->title,
+                    '', '', '', '', '', '',
+                    $session->score?->overall_readiness_score,
+                    '',
+                ]);
+            } else {
+                foreach ($answers as $answer) {
+                    CsvExportService::writeRow($stream, [
+                        $session->id,
+                        optional($session->created_at)->toDateTimeString(),
+                        $session->target_position,
+                        $session->category?->title,
+                        $answer->question?->question_text,
+                        $answer->answer_text,
+                        $answer->score,
+                        $answer->clarity_score,
+                        $answer->relevance_score,
+                        $answer->grammar_score,
+                        $session->score?->overall_readiness_score,
+                        $answer->ai_feedback,
+                    ]);
+                }
+            }
+
+            fclose($stream);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename={$fileName}",
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
     }
 
     public function destroySession(Request $request, $id)
@@ -933,6 +987,13 @@ class UserController extends Controller
         return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories')); 
     }
 
+    public function learningAssistant()
+    {
+        return redirect()
+            ->route('user.coach')
+            ->with('message', 'Your AI learning assistant is available in the Interview Coach.');
+    }
+
     public function voiceRehearsal() { 
         $history = \App\Models\VoiceSession::where('user_id', Auth::id())
                         ->orderBy('created_at', 'desc')
@@ -941,15 +1002,17 @@ class UserController extends Controller
     }
 
     public function analyzeVoiceSession(Request $request) {
-        $request->validate([
-            'prompt' => 'required|string',
-            'transcript' => 'required|string',
+        $validated = $request->validate([
+            'prompt' => 'required|string|max:5000',
+            'transcript' => 'required|string|max:20000',
         ]);
+
+        $transcript = TranscriptService::clean($validated['transcript']);
 
         $provider = env('AI_PROVIDER', 'gemini');
         $analysis = AIService::analyzeVoiceRehearsal(
-            $request->prompt,
-            $request->transcript,
+            $validated['prompt'],
+            $transcript,
             $provider,
             Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()))
         );
@@ -972,6 +1035,8 @@ class UserController extends Controller
             'ai_feedback_weaknesses' => 'nullable|string|max:10000',
             'ai_improved_answer' => 'nullable|string|max:20000',
         ]);
+
+        $validated['transcript'] = TranscriptService::clean($validated['transcript'] ?? '');
 
         $metrics = $this->voiceSessionMetrics($validated);
 
@@ -1346,28 +1411,31 @@ class UserController extends Controller
 
     private function voiceSessionMetrics(array $input): array
     {
-        $transcript = trim((string) ($input['transcript'] ?? ''));
+        $transcript = TranscriptService::clean($input['transcript'] ?? '');
         $duration = $this->clampInt($input['duration_seconds'] ?? 0, 0, 7200);
-        $wordCount = str_word_count($transcript);
+        $wordCount = TranscriptService::wordCount($transcript);
 
-        if ($transcript !== '' && $duration > 0) {
+        if ($transcript === '') {
+            return [
+                'duration_seconds' => $duration,
+                'wpm' => 0,
+                'speaking_pace' => 0,
+                'filler_words' => 0,
+                'clarity_score' => 0,
+                'confidence_score' => 0,
+            ];
+        }
+
+        if ($duration > 0) {
             $wpm = (int) round($wordCount / max($duration / 60, 1 / 60));
         } else {
-            $wpm = $input['wpm'] ?? $input['speaking_pace'] ?? 0;
+            $wpm = 0;
         }
         $wpm = $this->clampInt($wpm, 0, 400);
 
-        $fillerWords = $transcript !== ''
-            ? $this->countFillerWords($transcript)
-            : $this->clampInt($input['filler_words'] ?? 0, 0, 500);
-
-        $clarity = $transcript !== ''
-            ? $this->estimatedVoiceClarity($wordCount, $fillerWords, $wpm)
-            : $this->clampInt($input['clarity_score'] ?? 0, 0, 100);
-
-        $confidence = $transcript !== ''
-            ? $this->estimatedVoiceConfidence($wordCount, $fillerWords, $wpm, $duration)
-            : $this->clampInt($input['confidence_score'] ?? 0, 0, 100);
+        $fillerWords = TranscriptService::countFillerWords($transcript);
+        $clarity = $this->estimatedVoiceClarity($wordCount, $fillerWords, $wpm);
+        $confidence = $this->estimatedVoiceConfidence($wordCount, $fillerWords, $wpm, $duration);
 
         return [
             'duration_seconds' => $duration,
@@ -1377,13 +1445,6 @@ class UserController extends Controller
             'clarity_score' => $clarity,
             'confidence_score' => $confidence,
         ];
-    }
-
-    private function countFillerWords(string $transcript): int
-    {
-        preg_match_all('/\b(?:you\s+know|i\s+mean|um+|uh+|erm|like|actually|basically|literally)\b/i', $transcript, $matches);
-
-        return count($matches[0]);
     }
 
     private function estimatedVoiceClarity(int $wordCount, int $fillerWords, int $wpm): int

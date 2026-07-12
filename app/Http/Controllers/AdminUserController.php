@@ -8,6 +8,7 @@ use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\Score;
 use App\Models\User;
+use App\Services\CsvExportService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
@@ -78,10 +79,10 @@ class AdminUserController extends Controller
 
         $callback = function () use ($users) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID', 'Name', 'Email', 'Role', 'Status', 'Registered At']);
+            CsvExportService::writeRow($file, ['ID', 'Name', 'Email', 'Role', 'Status', 'Registered At']);
 
             foreach ($users as $user) {
-                fputcsv($file, [
+                CsvExportService::writeRow($file, [
                     $user->id,
                     $user->name,
                     $user->email,

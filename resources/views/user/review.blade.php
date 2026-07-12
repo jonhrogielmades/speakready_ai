@@ -94,8 +94,8 @@
                     <i class="fa-solid fa-download me-2"></i>Export
                 </button>
                 <ul class="dropdown-menu shadow-sm" style="background:var(--sf);border-color:var(--bd)">
-                    <li><a class="dropdown-item" href="#" style="color:var(--tx)" onclick="window.print()"><i class="fa-solid fa-file-pdf text-danger me-2"></i> PDF Format</a></li>
-                    <li><a class="dropdown-item" href="#" style="color:var(--tx)"><i class="fa-solid fa-file-excel text-success me-2"></i> Excel Format</a></li>
+                    <li><a class="dropdown-item" href="#" style="color:var(--tx)" onclick="event.preventDefault(); window.print();"><i class="fa-solid fa-file-pdf text-danger me-2"></i> PDF Format</a></li>
+                    <li><a class="dropdown-item" href="{{ route('user.sessions.export', $sessionRecord) }}" style="color:var(--tx)"><i class="fa-solid fa-file-excel text-success me-2"></i> Excel CSV</a></li>
                 </ul>
             </div>
         </div>

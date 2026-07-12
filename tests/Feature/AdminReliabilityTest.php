@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\ActivityLog;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
@@ -344,6 +345,82 @@ class AdminReliabilityTest extends TestCase
         $this->assertStringNotContainsString($admin->email, $csv);
     }
 
+    public function test_admin_session_export_respects_filters_and_neutralizes_formulas(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $matchingUser = User::factory()->create([
+            'name' => '=Matching Candidate',
+            'email' => 'matching@example.com',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $otherUser = User::factory()->create([
+            'name' => 'Other Candidate',
+            'email' => 'other@example.com',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $category = $this->category();
+        $this->sessionFor($matchingUser, $category, ['status' => 'completed']);
+        $this->sessionFor($otherUser, $category, ['status' => 'pending']);
+
+        $response = $this->actingAs($admin)->get(route('admin.sessions.export', [
+            'search' => 'matching@example.com',
+            'status' => 'completed',
+        ]));
+
+        $response->assertOk();
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString("'=Matching Candidate", $csv);
+        $this->assertStringNotContainsString('Other Candidate', $csv);
+    }
+
+    public function test_admin_feedback_export_respects_status_and_search_filters(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $matchingQuestion = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Describe a database migration incident.',
+            'difficulty' => 'medium',
+            'type' => 'Technical',
+            'status' => 'active',
+        ]);
+        $otherQuestion = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Tell me about teamwork.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $matchingQuestion->id,
+            'answer_text' => 'I planned and verified the migration.',
+            'ai_feedback' => 'Specific evidence was provided.',
+            'audit_status' => 'flagged',
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $otherQuestion->id,
+            'answer_text' => 'I worked with the team.',
+            'ai_feedback' => 'More detail is needed.',
+            'audit_status' => 'approved',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.feedback.export', [
+            'status' => 'flagged',
+            'search' => 'database migration',
+        ]));
+
+        $response->assertOk();
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString('Describe a database migration incident.', $csv);
+        $this->assertStringNotContainsString('Tell me about teamwork.', $csv);
+    }
+
     public function test_users_page_broadcast_form_sends_notifications(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
@@ -529,6 +606,31 @@ class AdminReliabilityTest extends TestCase
             'result' => 'measurable',
         ], $answer->refresh()->star_analysis);
         $this->assertSame('approved', $answer->audit_status);
+    }
+
+    public function test_admin_activity_feed_escapes_user_names_and_descriptions(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create([
+            'name' => '<img src=x onerror=alert(1)>',
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'action' => 'test',
+            'description' => '<script>alert(1)</script>',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.api.latest-activities'))
+            ->assertOk();
+
+        $html = $response->json('html');
+        $this->assertStringNotContainsString('<img', $html);
+        $this->assertStringNotContainsString('<script>', $html);
+        $this->assertStringContainsString('&lt;img', $html);
+        $this->assertStringContainsString('&lt;script&gt;', $html);
     }
 
     private function category(array $overrides = []): Category
