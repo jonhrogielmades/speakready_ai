@@ -2,8 +2,151 @@
 
 @section('content')
 <style>
+    .feedback-page-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--tx);
+    }
+    .feedback-page-title i {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(59, 130, 246, 0.14);
+        color: #3b82f6;
+        flex: 0 0 auto;
+    }
+    .feedback-export-btn,
+    .feedback-filter-btn,
+    .feedback-review-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 38px;
+    }
+
     /* Mobile Card-based Table Layout for Main Feedback Table */
     @media (max-width: 767px) {
+        .feedback-audit-page {
+            padding: 0 !important;
+        }
+        .feedback-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 12px;
+            margin-bottom: 14px !important;
+        }
+        .feedback-page-title {
+            justify-content: center;
+            font-size: clamp(1.04rem, 5vw, 1.14rem) !important;
+            line-height: 1.14;
+            margin-bottom: 6px !important;
+            max-width: 19rem;
+            text-wrap: balance;
+        }
+        .feedback-page-title i {
+            width: 30px;
+            height: 30px;
+            border-radius: 11px;
+            font-size: 0.84rem;
+        }
+        .feedback-page-subtitle {
+            font-size: 0.78rem !important;
+            line-height: 1.45;
+        }
+        .feedback-header-actions {
+            width: 100%;
+        }
+        .feedback-export-btn {
+            width: 100%;
+            min-height: 40px;
+            border-radius: 11px !important;
+            padding: 8px 10px !important;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .feedback-export-btn i {
+            margin-right: 0 !important;
+        }
+        .feedback-stat-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 14px !important;
+        }
+        .feedback-stat-grid > [class*="col-"] {
+            width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .feedback-stat-card {
+            border-radius: 16px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08) !important;
+        }
+        .feedback-stat-card .card-body {
+            min-height: 118px;
+            padding: 12px !important;
+        }
+        .feedback-stat-card .d-flex {
+            align-items: center !important;
+            gap: 10px;
+        }
+        .feedback-stat-card h6 {
+            font-size: 0.62rem;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px !important;
+        }
+        .feedback-stat-card h3 {
+            font-size: 1.22rem;
+            line-height: 1.1;
+        }
+        .feedback-stat-icon {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 13px !important;
+            font-size: 0.95rem;
+            flex: 0 0 38px;
+        }
+        .feedback-content-card {
+            border-radius: 14px !important;
+        }
+        .feedback-content-card .card-body {
+            padding: 14px !important;
+        }
+        .feedback-content-card h6 {
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 12px !important;
+        }
+        .feedback-chart-box {
+            height: 188px !important;
+        }
+        .feedback-filter-form {
+            margin-bottom: 14px !important;
+        }
+        .feedback-filter-form .form-control,
+        .feedback-filter-form .form-select {
+            min-height: 42px;
+            border-radius: 11px !important;
+            font-size: 0.82rem;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+            color: var(--tx);
+        }
+        .feedback-filter-btn {
+            min-height: 42px;
+            border-radius: 11px !important;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
         #mainFeedbackTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
@@ -16,28 +159,33 @@
             flex-direction: column;
             background: var(--bg3, rgba(255,255,255,0.02));
             border-radius: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border: 1px solid var(--bd, rgba(255,255,255,0.1));
-            padding: 12px;
+            padding: 11px;
         }
         #mainFeedbackTable tbody td {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0 !important;
+            gap: 12px;
+            padding: 7px 0 !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
             border-top: none !important;
+            text-align: right;
         }
         #mainFeedbackTable tbody td:last-child {
             border-bottom: none !important;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 8px;
             padding-top: 12px !important;
         }
         #mainFeedbackTable tbody td::before {
-            font-size: 0.8rem;
+            font-size: 0.68rem;
             color: var(--tx3, #888);
-            font-weight: 600;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-align: left;
         }
         #mainFeedbackTable tbody td:nth-child(1)::before { content: "Audit ID"; }
         #mainFeedbackTable tbody td:nth-child(3)::before { content: "Score"; }
@@ -55,34 +203,82 @@
         #mainFeedbackTable tbody td:nth-child(2) .text-truncate {
             max-width: 100% !important;
             white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+            line-height: 1.35;
+            font-size: 0.82rem;
+        }
+        #mainFeedbackTable .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            border-radius: 9px;
+            padding: 5px 8px;
+            font-size: 0.68rem;
+            line-height: 1.15;
+            white-space: normal;
+        }
+        .feedback-review-btn {
+            min-height: 34px;
+            border-radius: 10px !important;
+            padding: 6px 11px !important;
+            font-size: 0.74rem !important;
+            font-weight: 700;
+        }
+        .pagination {
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+        }
+        .page-link {
+            min-width: 34px;
+            min-height: 34px;
+            border-radius: 9px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .feedback-stat-grid {
+            gap: 8px !important;
+        }
+        .feedback-stat-card .card-body {
+            min-height: 108px;
+            padding: 10px !important;
+        }
+        .feedback-stat-card h3 {
+            font-size: 1.08rem;
         }
     }
 </style>
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 feedback-audit-page">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="feedback-header d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1" style="font-weight: 700; color: var(--tx);">Feedback Audit Dashboard</h2>
-            <p class="mb-0" style="color: var(--tx3);">Monitor, review, and evaluate AI-generated feedback quality.</p>
+            <h2 class="feedback-page-title mb-1" style="font-weight: 700; color: var(--tx);"><i class="fa-solid fa-clipboard-check"></i>Feedback Audit Dashboard</h2>
+            <p class="feedback-page-subtitle mb-0" style="color: var(--tx3);">Monitor, review, and evaluate AI-generated feedback quality.</p>
         </div>
-        <div>
-            <a href="#" class="btn" style="border-radius: 10px; background-color: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">
+        <div class="feedback-header-actions">
+            <a href="#" class="btn feedback-export-btn" style="border-radius: 10px; background-color: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">
                 <i class="fa-solid fa-download me-2"></i>Export Report
             </a>
         </div>
     </div>
 
     <!-- Overview Cards -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 feedback-stat-grid">
         <div class="col-md-3">
-            <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+            <div class="card boc feedback-stat-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-2" style="color: var(--tx3);">Total Feedback</h6>
                             <h3 class="mb-0 fw-bold" style="color: var(--tx);">{{ number_format($stats['total']) }}</h3>
                         </div>
-                        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                        <div class="feedback-stat-icon d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
                             <i class="fa-solid fa-comment-dots fa-lg"></i>
                         </div>
                     </div>
@@ -90,14 +286,14 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+            <div class="card boc feedback-stat-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-2" style="color: var(--tx3);">Reviewed</h6>
                             <h3 class="mb-0 fw-bold" style="color: var(--tx);">{{ number_format($stats['reviewed']) }}</h3>
                         </div>
-                        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                        <div class="feedback-stat-icon d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); color: #10b981;">
                             <i class="fa-solid fa-check-double fa-lg"></i>
                         </div>
                     </div>
@@ -105,14 +301,14 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+            <div class="card boc feedback-stat-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-2" style="color: var(--tx3);">Pending Review</h6>
                             <h3 class="mb-0 fw-bold" style="color: var(--tx);">{{ number_format($stats['pending']) }}</h3>
                         </div>
-                        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                        <div class="feedback-stat-icon d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
                             <i class="fa-solid fa-hourglass-half fa-lg"></i>
                         </div>
                     </div>
@@ -120,14 +316,14 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+            <div class="card boc feedback-stat-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="mb-2" style="color: var(--tx3);">Flagged</h6>
                             <h3 class="mb-0 fw-bold" style="color: var(--tx);">{{ number_format($stats['flagged']) }}</h3>
                         </div>
-                        <div class="d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-tx);">
+                        <div class="feedback-stat-icon d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px; background: var(--danger-bg); color: var(--danger-tx);">
                             <i class="fa-solid fa-flag fa-lg"></i>
                         </div>
                     </div>
@@ -139,22 +335,22 @@
     <!-- Analytics Charts -->
     <div class="row g-4 mb-4">
         <div class="col-md-4">
-            <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
+            <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3" style="color: var(--tx);">Average Scores</h6>
-                    <div style="position: relative; height: 250px; width: 100%;">
+                    <div class="feedback-chart-box" style="position: relative; height: 250px; width: 100%;">
                         <canvas id="scoresChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-8">
-            <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
+            <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
                     <h6 class="fw-bold mb-3" style="color: var(--tx);">Feedback Audit List</h6>
                     
                     <!-- Filters -->
-                    <form action="{{ route('admin.feedback.index') }}" method="GET" class="row g-2 mb-3">
+                    <form action="{{ route('admin.feedback.index') }}" method="GET" class="feedback-filter-form row g-2 mb-3">
                         <div class="col-md-5">
                             <input type="text" name="search" class="form-control" placeholder="Search by question..." value="{{ request('search') }}" style="border-radius: 8px;">
                         </div>
@@ -168,7 +364,7 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <button type="submit" class="btn btn-dark w-100" style="border-radius: 8px;">Filter</button>
+                            <button type="submit" class="btn btn-dark feedback-filter-btn w-100" style="border-radius: 8px;"><i class="fa-solid fa-filter"></i>Filter</button>
                         </div>
                     </form>
 
@@ -211,7 +407,7 @@
                                         @endif
                                     </td>
                                     <td style="border-bottom: 1px solid var(--bd);">
-                                        <a href="{{ route('admin.feedback.show', $fb) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px;">Review</a>
+                                        <a href="{{ route('admin.feedback.show', $fb) }}" class="btn btn-sm btn-outline-primary feedback-review-btn" style="border-radius: 6px;"><i class="fa-solid fa-eye"></i>Review</a>
                                     </td>
                                 </tr>
                                 @empty

@@ -178,6 +178,152 @@
             width: 100%;
             justify-content: flex-end;
         }
+
+        #addUserModal .modal-dialog,
+        #editUserModal .modal-dialog,
+        #broadcastModal .modal-dialog {
+            width: min(calc(100vw - 24px), 420px) !important;
+            max-width: 420px !important;
+        }
+
+        #addUserModal .modal-body,
+        #editUserModal .modal-body,
+        #broadcastModal .modal-body {
+            padding: 16px !important;
+        }
+
+        #addUserModal .mb-3,
+        #editUserModal .mb-3,
+        #broadcastModal .mb-3 {
+            margin-bottom: 12px !important;
+        }
+
+        #addUserModal .row,
+        #editUserModal .row {
+            margin-left: -6px !important;
+            margin-right: -6px !important;
+        }
+
+        #addUserModal .row > [class*="col-"],
+        #editUserModal .row > [class*="col-"] {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+
+        #userDetailModal .modal-dialog {
+            width: min(calc(100vw - 24px), 440px) !important;
+            max-width: 440px !important;
+            margin: 0 auto !important;
+        }
+
+        #userDetailModal .modal-content {
+            max-height: min(82vh, 720px) !important;
+        }
+
+        #userDetailModal .modal-header {
+            padding: 14px 16px !important;
+        }
+
+        #userDetailModal .modal-body {
+            min-height: 0 !important;
+            max-height: calc(min(82vh, 720px) - 150px) !important;
+            padding: 14px !important;
+            overflow-x: hidden !important;
+        }
+
+        #userDetailModal .modal-footer {
+            padding: 12px 16px 16px !important;
+        }
+
+        #userDetailModal .nav-tabs {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            border-bottom: 1px solid var(--bd) !important;
+            overflow: visible !important;
+        }
+
+        #userDetailModal .nav-tabs .nav-link {
+            width: 100%;
+            min-width: 0;
+            padding: 8px 4px !important;
+            font-size: .72rem !important;
+            text-align: center;
+            white-space: normal !important;
+            line-height: 1.15;
+        }
+
+        #userDetailModal .premium-card {
+            padding: 12px !important;
+            border-radius: 12px !important;
+            overflow: hidden;
+        }
+
+        #userDetailModal .row {
+            --bs-gutter-x: .75rem;
+        }
+
+        #userDetailModal .row.mb-2 {
+            display: grid;
+            grid-template-columns: 76px minmax(0, 1fr);
+            gap: 8px;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        #userDetailModal .row.mb-2 > [class*="col-"] {
+            width: auto !important;
+            max-width: none !important;
+            padding: 0 !important;
+            min-width: 0;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        #userDetailEmail,
+        #userDetailName,
+        #userDetailTarget,
+        #userDetailRegistered {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        #userDetailModal .table-responsive {
+            overflow-x: visible !important;
+        }
+
+        #userDetailModal table thead {
+            display: none;
+        }
+
+        #userDetailModal table tbody tr {
+            display: grid;
+            gap: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            background: var(--bg3);
+        }
+
+        #userDetailModal table tbody td {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 0 !important;
+            border: 0 !important;
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        #userDetailModal table tbody td.text-end {
+            justify-content: stretch;
+        }
+
+        #userDetailModal table tbody td.text-end .btn,
+        #userDetailModal table tbody td.text-end a {
+            width: 100%;
+        }
     }
 </style>
 

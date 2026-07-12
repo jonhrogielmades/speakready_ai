@@ -78,9 +78,35 @@
         .game-categories-scroll::-webkit-scrollbar {
             display: none;
         }
+        .game-category-select-wrap {
+            display: none;
+        }
         
         /* Mobile Card-based Table Layout for Learning Games */
         @media (max-width: 767px) {
+            .game-category-select-wrap {
+                display: block;
+                margin-bottom: 16px;
+            }
+            .game-category-select-wrap select {
+                width: 100%;
+                min-height: 44px;
+                border-radius: 12px;
+                border: 1px solid var(--bd);
+                background: var(--sf);
+                color: var(--tx);
+                padding: 10px 38px 10px 12px;
+                font-size: 0.86rem;
+                font-weight: 700;
+                outline: none;
+            }
+            .game-category-select-wrap select:focus {
+                border-color: #38bdf8;
+                box-shadow: 0 0 0 0.18rem rgba(56, 189, 248, 0.16);
+            }
+            .game-categories-scroll {
+                display: none !important;
+            }
             .game-table-wrapper {
                 overflow-x: visible !important;
                 -webkit-overflow-scrolling: auto !important;
@@ -161,6 +187,14 @@
             .game-table tbody td:nth-child(6)::before { content: "Actions"; }
         }
     </style>
+
+    <div class="game-category-select-wrap">
+        <select id="gameCategorySelect" aria-label="Select learning game category">
+            @foreach($categories as $index => $categoryRow)
+                <option value="#cat-pane-{{ $categoryRow->id }}" {{ $index === 0 ? 'selected' : '' }}>{{ $categoryRow->title }}</option>
+            @endforeach
+        </select>
+    </div>
 
     <ul class="nav nav-pills mb-4 game-categories-scroll" id="game-categories-tab" role="tablist" style="gap:10px;">
         @foreach($categories as $index => $categoryRow)
@@ -602,4 +636,16 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const gameCategorySelect = document.getElementById('gameCategorySelect');
+    if (!gameCategorySelect) return;
+
+    gameCategorySelect.addEventListener('change', function () {
+        const tabButton = document.querySelector(`[data-bs-target="${this.value}"]`);
+        if (!tabButton || !window.bootstrap) return;
+        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+    });
+});
+</script>
 @endsection

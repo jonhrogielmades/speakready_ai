@@ -1,4 +1,4 @@
-@extends(request()->header('User-Agent') && preg_match('/Mobile|Android|iPhone/i', request()->header('User-Agent')) ? 'layouts.admin-mobile' : 'layouts.admin')
+@extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
 <style>
@@ -58,7 +58,7 @@
     }
 </style>
 
-<div class="db-section active">
+<div class="db-section active" id="sec-admin-notifications">
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('success') }}

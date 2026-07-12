@@ -146,7 +146,7 @@
     }
 </style>
 
-<div class="db-section active">
+<div class="db-section active" id="sec-admin-ai-providers">
     @if(session('message'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('message') }}

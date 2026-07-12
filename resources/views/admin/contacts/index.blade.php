@@ -1,7 +1,7 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
-<div class="db-section active">
+<div class="db-section active" id="sec-admin-contacts">
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h4 style="color:var(--tx);font-weight:700"><i class="fa-solid fa-envelope me-2"></i>Contact Messages</h4>

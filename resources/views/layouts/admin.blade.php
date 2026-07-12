@@ -26,6 +26,114 @@
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
           .db-nl[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
+          .admin-shell .modal {
+             --bs-modal-bg: var(--sf);
+             --bs-modal-color: var(--tx);
+          }
+          .admin-shell .modal-dialog {
+             margin: 1.25rem auto;
+          }
+          .admin-shell .modal:not(.admin-fullscreen-modal) .modal-dialog {
+             min-height: calc(100% - 2.5rem);
+             display: flex;
+             align-items: center;
+          }
+          .admin-shell .modal-content {
+             width: 100%;
+             max-height: calc(100vh - 2.5rem);
+             overflow: hidden;
+             background: var(--sf) !important;
+             color: var(--tx) !important;
+             border: 1px solid var(--bd) !important;
+             border-radius: 16px !important;
+             box-shadow: 0 24px 70px rgba(0, 0, 0, .26);
+          }
+          .admin-shell .modal-header,
+          .admin-shell .modal-footer {
+             border-color: var(--bd) !important;
+             background: var(--sf) !important;
+             color: var(--tx) !important;
+          }
+          .admin-shell .modal-title,
+          .admin-shell .modal label,
+          .admin-shell .modal .form-label,
+          .admin-shell .modal p,
+          .admin-shell .modal small,
+          .admin-shell .modal span:not(.badge):not([class*="text-"]) {
+             color: var(--tx) !important;
+          }
+          .admin-shell .modal .text-muted {
+             color: var(--tx2) !important;
+          }
+          .admin-shell .modal-body {
+             max-height: min(72vh, 760px);
+             overflow-y: auto;
+             background: var(--sf) !important;
+             color: var(--tx) !important;
+          }
+          .admin-shell .modal .form-control,
+          .admin-shell .modal .form-select,
+          .admin-shell .modal textarea,
+          .admin-shell .modal input {
+             background: var(--bg3) !important;
+             color: var(--tx) !important;
+             border: 1px solid var(--bd) !important;
+          }
+          .admin-shell .modal .form-control::placeholder,
+          .admin-shell .modal textarea::placeholder,
+          .admin-shell .modal input::placeholder {
+             color: var(--tx3) !important;
+          }
+          .admin-shell .modal .btn-close {
+             opacity: .85;
+             filter: var(--admin-close-filter, invert(1));
+          }
+          .lm .admin-shell .modal .btn-close {
+             --admin-close-filter: none;
+          }
+          .admin-shell .modal-footer {
+             display: grid !important;
+             grid-template-columns: repeat(2, minmax(0, 1fr));
+             gap: .75rem;
+          }
+          .admin-shell .modal-footer .btn,
+          .admin-shell .modal-footer button {
+             width: 100%;
+             min-height: 42px;
+             border-radius: 10px !important;
+             font-weight: 700;
+          }
+          .admin-shell .modal-footer .btn-outline-secondary,
+          .admin-shell .modal-footer [data-bs-dismiss="modal"] {
+             border: 1px solid var(--bd) !important;
+             color: var(--tx) !important;
+             background: var(--bg3) !important;
+          }
+          .admin-shell .modal-footer .btn:only-child {
+             grid-column: 1 / -1;
+          }
+          .admin-shell .modal :is(a, span, strong, div, p, td, th):not(.badge) {
+             overflow-wrap: anywhere;
+             word-break: break-word;
+          }
+          .admin-shell .modal :is(.table-responsive, .table-responsive-sm, .table-responsive-md, .table-responsive-lg, .table-responsive-xl) {
+             max-width: 100%;
+          }
+          .admin-shell .modal table {
+             width: 100%;
+          }
+          .admin-shell .modal table :is(td, th) {
+             min-width: 0;
+             max-width: 100%;
+             white-space: normal;
+             overflow-wrap: anywhere;
+          }
+          .admin-shell .modal .premium-card,
+          .admin-shell .modal .card,
+          .admin-shell .modal .list-group-item,
+          .admin-shell .modal .custom-switch-container {
+             max-width: 100%;
+          }
       </style>
       <script>
          if (localStorage.getItem('theme') === 'light') {
@@ -163,6 +271,7 @@
             <!-- Dashboard Content -->
             <div class="db-content">
                 @yield('content')
+                @include('partials.admin-motion-title-svg')
             </div>
          </div>
       </div>

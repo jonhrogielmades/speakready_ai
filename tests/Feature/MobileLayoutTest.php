@@ -30,7 +30,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('class="db-sidebar"', false);
     }
 
-    public function test_admin_dashboard_is_locked_for_mobile_user_agent(): void
+    public function test_admin_dashboard_uses_mobile_shell_for_mobile_user_agent(): void
     {
         $admin = User::factory()->create([
             'is_admin' => true,
@@ -42,10 +42,9 @@ class MobileLayoutTest extends TestCase
         $this->actingAs($admin)
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->get(route('admin.dashboard'))
-            ->assertForbidden()
-            ->assertSee('Admin is temporarily desktop only.')
-            ->assertSee('Please open the admin portal on a desktop or laptop browser.')
-            ->assertDontSee('id="mob-content"', false)
+            ->assertOk()
+            ->assertSee('id="mob-content"', false)
+            ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
     }
 
@@ -63,10 +62,10 @@ class MobileLayoutTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('class="db-sidebar"', false)
-            ->assertDontSee('Admin is temporarily desktop only.');
+            ->assertDontSee('id="mob-content"', false);
     }
 
-    public function test_admin_write_requests_are_forbidden_from_mobile_user_agent(): void
+    public function test_admin_write_requests_are_accessible_from_mobile_user_agent(): void
     {
         $admin = User::factory()->create([
             'is_admin' => true,
@@ -78,7 +77,7 @@ class MobileLayoutTest extends TestCase
         $this->actingAs($admin)
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->post(route('admin.settings.update'), [])
-            ->assertForbidden();
+            ->assertRedirect();
     }
 
     public function test_user_dashboard_keeps_desktop_shell_for_desktop_user_agent(): void

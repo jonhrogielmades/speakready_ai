@@ -121,8 +121,8 @@
                             @csrf @method('PATCH')
                             <button class="btn btn-sm btn-outline-warning" style="font-size:.7rem" title="Toggle Status"><i class="fa-solid fa-power-off"></i></button>
                         </form>
-                        <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $c->id }}">Edit</button>
-                        <button class="btn btn-sm btn-outline-danger" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ $c->id }}">Delete</button>
+                        <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editCategoryModal{{ $c->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+                        <button class="btn btn-sm btn-outline-danger" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal{{ $c->id }}" title="Delete"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                     </td>
                 </tr>
 

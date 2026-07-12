@@ -26,9 +26,173 @@
     .stat-badge.primary { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
     .stat-badge.secondary { background: rgba(156, 163, 175, 0.15); color: #9ca3af; }
     .chart-container { position: relative; height: 250px; width: 100%; }
+    .session-page-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--tx);
+    }
+    .session-page-title i {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(59, 130, 246, 0.14);
+        color: #3b82f6;
+        margin-right: 0 !important;
+        flex: 0 0 auto;
+    }
+    .session-top-action,
+    .session-filter-btn,
+    .session-row-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 38px;
+    }
 
     /* Mobile Card-based Table Layout for Main Sessions Table */
     @media (max-width: 767px) {
+        .db-section > .d-flex:first-of-type {
+            margin-bottom: 14px !important;
+        }
+        .session-page-title {
+            justify-content: center;
+            font-size: clamp(1.04rem, 5vw, 1.14rem) !important;
+            line-height: 1.14;
+            margin-bottom: 6px !important;
+            max-width: 19rem;
+            text-wrap: balance;
+        }
+        .session-page-title i {
+            width: 30px;
+            height: 30px;
+            border-radius: 11px;
+            font-size: 0.84rem;
+        }
+        .session-page-subtitle {
+            font-size: 0.78rem !important;
+            line-height: 1.45;
+        }
+        .session-header-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px !important;
+            width: 100%;
+        }
+        .session-header-actions > *,
+        .session-header-actions form,
+        .session-header-actions .btn {
+            width: 100%;
+            min-width: 0;
+        }
+        .session-header-actions form:last-child {
+            grid-column: 1 / -1;
+        }
+        .session-top-action {
+            min-height: 40px;
+            border-radius: 11px !important;
+            padding: 8px 10px !important;
+            font-size: 0.76rem;
+            line-height: 1.15;
+            white-space: normal;
+        }
+        .session-top-action i {
+            margin-right: 0 !important;
+            font-size: 0.82rem;
+        }
+        .premium-card {
+            border-radius: 14px !important;
+            padding: 14px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        .premium-card:hover {
+            transform: none;
+        }
+        .session-stat-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 14px !important;
+        }
+        .session-stat-grid > [class*="col-"] {
+            width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .session-stat-card {
+            min-height: 126px;
+            border-radius: 16px !important;
+            padding: 10px !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .session-stat-card > div:first-child {
+            width: 38px;
+            height: 38px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.04rem !important;
+            margin-bottom: 8px !important;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .session-stat-card > div:nth-child(2) {
+            font-size: 1.22rem !important;
+            line-height: 1.1;
+            margin-bottom: 5px;
+        }
+        .session-stat-card > div:nth-child(3) {
+            font-size: 0.6rem !important;
+            line-height: 1.25;
+            letter-spacing: 0.03em !important;
+        }
+        .row.g-4,
+        .row.g-3 {
+            --bs-gutter-x: 12px;
+            --bs-gutter-y: 12px;
+        }
+        .chart-container {
+            height: 188px !important;
+        }
+        .premium-card h6 {
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 12px !important;
+        }
+        .session-filter-form {
+            margin-bottom: 14px !important;
+        }
+        .session-filter-form .form-control,
+        .session-filter-form .form-select {
+            min-height: 42px;
+            border-radius: 11px;
+            font-size: 0.82rem;
+        }
+        .session-filter-btn {
+            min-height: 42px;
+            border-radius: 11px !important;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            border-radius: 9px;
+            padding: 5px 8px;
+            font-size: 0.68rem;
+            line-height: 1.15;
+            white-space: normal;
+        }
         #mainSessionsTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
@@ -43,25 +207,30 @@
             border-radius: 12px;
             margin-bottom: 15px;
             border: 1px solid var(--bd);
-            padding: 12px;
+            padding: 11px;
         }
         #mainSessionsTable tbody td {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0 !important;
+            gap: 12px;
+            padding: 7px 0 !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: right;
         }
         #mainSessionsTable tbody td:last-child {
             border-bottom: none;
             justify-content: flex-end;
-            gap: 10px;
+            gap: 8px;
             padding-top: 12px !important;
         }
         #mainSessionsTable tbody td::before {
-            font-size: 0.8rem;
+            font-size: 0.68rem;
             color: var(--tx3);
-            font-weight: 600;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-align: left;
         }
         #mainSessionsTable tbody td:nth-child(1)::before { content: "ID"; }
         #mainSessionsTable tbody td:nth-child(3)::before { content: "Category"; }
@@ -81,8 +250,54 @@
         #mainSessionsTable tbody td:nth-child(2) .d-flex {
             width: 100%;
         }
+        #mainSessionsTable tbody td:nth-child(2) span {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
         #mainSessionsTable tbody td.text-end {
             text-align: right;
+        }
+        .session-row-action {
+            width: 34px !important;
+            height: 34px !important;
+            min-width: 34px !important;
+            min-height: 34px !important;
+            padding: 0 !important;
+            border-radius: 10px !important;
+            font-size: 0.76rem !important;
+        }
+        #mainSessionsTable tbody td:last-child form {
+            display: inline-flex !important;
+        }
+        .pagination {
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+        }
+        .page-link {
+            min-width: 34px;
+            min-height: 34px;
+            border-radius: 9px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .session-stat-grid {
+            gap: 8px !important;
+        }
+        .session-stat-card {
+            min-height: 116px;
+            padding: 8px !important;
+        }
+        .session-stat-card > div:nth-child(2) {
+            font-size: 1.08rem !important;
+        }
+        .session-stat-card > div:nth-child(3) {
+            font-size: 0.56rem !important;
         }
     }
 </style>
@@ -97,21 +312,21 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-video me-2" style="color:#3b82f6;"></i>Session Monitoring</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Track and analyze interview session performance and activity.</p>
+            <h4 class="session-page-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-video"></i>Session Monitoring</h4>
+            <p class="session-page-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Track and analyze interview session performance and activity.</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('admin.sessions.export') }}" class="btn" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
+        <div class="session-header-actions d-flex flex-wrap gap-2">
+            <a href="{{ route('admin.sessions.export') }}" class="btn session-top-action" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
                 <i class="fa-solid fa-file-export text-success me-2"></i>Export CSV
             </a>
-            <a href="{{ route('admin.sessions.archive') }}" class="btn" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
+            <a href="{{ route('admin.sessions.archive') }}" class="btn session-top-action" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
                 <i class="fa-solid fa-box-archive text-warning me-2"></i>Archive
             </a>
             @if($totalSessions > 0)
             <form action="{{ route('admin.sessions.clear') }}" method="POST" onsubmit="return confirm('Delete all interview sessions, including archived sessions? This cannot be undone.');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;border-radius:12px;">
+                <button type="submit" class="btn session-top-action" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;border-radius:12px;">
                     <i class="fa-solid fa-broom me-2"></i>Clear All
                 </button>
             </form>
@@ -120,44 +335,44 @@
     </div>
 
     <!-- Overview Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 session-stat-grid">
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#3b82f6;margin-bottom:8px;"><i class="fa-solid fa-list-ul"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($totalSessions) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Total Sessions</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-tower-broadcast"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($activeSessionsToday) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Active Today</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#10b981;margin-bottom:8px;"><i class="fa-solid fa-check-double"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($completedSessions) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Completed</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#fbbf24;margin-bottom:8px;"><i class="fa-solid fa-star"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($avgScore, 1) }}%</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Avg Score</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100">
+            <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#a855f7;margin-bottom:8px;"><i class="fa-solid fa-stopwatch"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ gmdate("i:s", $avgDuration) }}</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Avg Duration</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
-            <div class="premium-card text-center p-3 h-100" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(96,165,250,0.1) 100%);">
+            <div class="premium-card session-stat-card text-center p-3 h-100" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(96,165,250,0.1) 100%);">
                 <div style="font-size:1.5rem;color:#60a5fa;margin-bottom:8px;"><i class="fa-solid fa-percent"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;color:#60a5fa;">{{ number_format($sessionCompletionRate, 1) }}%</div>
                 <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Completion Rate</div>
@@ -205,7 +420,7 @@
             <h6 class="fw-bold m-0">All Sessions</h6>
         </div>
         
-        <form method="GET" action="{{ route('admin.sessions.index') }}" class="row g-2 mb-4">
+        <form method="GET" action="{{ route('admin.sessions.index') }}" class="session-filter-form row g-2 mb-4">
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" placeholder="Search user or ID..." value="{{ request('search') }}" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
             </div>
@@ -225,7 +440,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100" style="border-radius:8px;">Filter</button>
+                <button type="submit" class="btn btn-primary session-filter-btn w-100" style="border-radius:8px;"><i class="fa-solid fa-filter"></i>Filter</button>
             </div>
         </form>
 
@@ -287,15 +502,15 @@
                         <td>{{ gmdate("i:s", $session->duration_seconds) }}</td>
                         <td style="color:var(--tx2);">{{ $session->created_at->format('M d, Y h:i A') }}</td>
                         <td class="text-end">
-                            <a href="{{ route('admin.sessions.show', $session->id) }}" class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Details"><i class="fa-solid fa-eye"></i></a>
+                            <a href="{{ route('admin.sessions.show', $session->id) }}" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Details" aria-label="View Details"><i class="fa-solid fa-eye"></i></a>
                             <form action="{{ route('admin.sessions.doArchive', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to archive this session?');">
                                 @csrf
-                                <button type="submit" class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Archive"><i class="fa-solid fa-box-archive text-warning"></i></button>
+                                <button type="submit" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Archive" aria-label="Archive"><i class="fa-solid fa-box-archive text-warning"></i></button>
                             </form>
                             <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-sm" style="background:var(--bg3);color:#f87171;border:1px solid rgba(248,113,113,0.35);" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                                <button type="submit" class="btn btn-sm session-row-action" style="background:var(--bg3);color:#f87171;border:1px solid rgba(248,113,113,0.35);" title="Delete" aria-label="Delete"><i class="fa-solid fa-trash-can"></i></button>
                             </form>
                         </td>
                     </tr>

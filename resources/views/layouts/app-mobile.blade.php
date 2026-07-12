@@ -197,20 +197,26 @@
          .mob-logo-ring {
             width: 34px;
             height: 34px;
-            border-radius: 12px;
-            padding: 2px;
+            border-radius: 13px;
+            padding: 3px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
-            background: linear-gradient(135deg, #60a5fa, #22d3ee 42%, #a78bfa);
-            box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.28), 0 0 18px rgba(96, 165, 250, 0.42);
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(96, 165, 250, 0.32);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.46), 0 8px 20px rgba(37, 99, 235, 0.12);
+         }
+         .lm .mob-logo-ring {
+            background: #ffffff;
+            border-color: rgba(37, 99, 235, 0.22);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06), 0 8px 18px rgba(15, 23, 42, 0.08);
          }
          .mob-header-logo img {
             width: 100%;
             height: 100%;
             border-radius: 10px;
-            background: var(--bg);
+            background: #fff;
             object-fit: contain;
          }
          .mob-header-logo span {

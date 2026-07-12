@@ -69,12 +69,9 @@
     }
 </style>
 
-<div class="db-section active">
+<div class="db-section active" id="sec-admin-archive">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <a href="{{ route('admin.sessions.index') }}" class="text-decoration-none" style="color:var(--tx2);font-size:0.9rem;">
-                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
-            </a>
             <h4 class="fw-bold mb-1 mt-2"><i class="fa-solid fa-box-archive text-warning me-2"></i>Archived Sessions</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Historical records of interview sessions.</p>
         </div>

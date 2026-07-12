@@ -392,8 +392,8 @@
                             </form>
                             <button class="btn btn-sm btn-outline-info" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#previewQuestionModal{{ $q->id }}" title="Preview"><i class="fa-solid fa-eye"></i></button>
                             <button class="btn btn-sm btn-outline-success" style="font-size:.7rem" onclick="openAnalytics({{ $q->id }})" title="Analytics"><i class="fa-solid fa-chart-line"></i></button>
-                            <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editQuestionModal{{ $q->id }}">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal{{ $q->id }}">Delete</button>
+                            <button class="btn btn-sm btn-outline-primary" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#editQuestionModal{{ $q->id }}" title="Edit"><i class="fa-solid fa-pen me-1"></i>Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" style="font-size:.7rem" data-bs-toggle="modal" data-bs-target="#deleteQuestionModal{{ $q->id }}" title="Delete"><i class="fa-solid fa-trash me-1"></i>Delete</button>
                         </div>
                     </td>
                 </tr>

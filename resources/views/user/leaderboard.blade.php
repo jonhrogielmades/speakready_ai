@@ -24,11 +24,54 @@
     
     .leaderboard-row { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .leaderboard-row:hover { background-color: rgba(255,255,255,0.03) !important; transform: scale(1.01); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .leader-rank-badge {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+    }
+    .leader-rank-gold { background:#f59e0b;color:white;box-shadow:0 0 10px rgba(245, 158, 11, 0.5); }
+    .leader-rank-silver { background:#94a3b8;color:white; }
+    .leader-rank-bronze { background:#b45309;color:white; }
+    .leader-rank-default { background:var(--sf);border:1px solid var(--bd);color:var(--tx2); }
     @media (max-width: 767px) {
+        #leaderboard-page {
+            padding-bottom: 10px;
+        }
+        #leaderboard-page .sr-page-hero {
+            margin-bottom: 12px;
+        }
+        #leaderboard-page .sr-page-hero-title {
+            font-size: 1.15rem !important;
+            line-height: 1.18;
+        }
+        #leaderboard-page .sr-page-hero-title svg {
+            width: 28px;
+            height: 28px;
+            padding: 5px;
+            border-radius: 9px;
+            background: rgba(245, 158, 11, 0.12);
+            color: #f59e0b;
+        }
+        #leaderboard-page .sr-page-hero-subtitle {
+            font-size: 0.78rem !important;
+            line-height: 1.4;
+        }
         #leaderboard-page .premium-panel {
-            padding: 14px !important;
+            padding: 10px !important;
             border-radius: 14px !important;
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+            background: transparent;
+            border: 0;
+        }
+        #leaderboard-page .table-responsive {
+            overflow: visible !important;
+        }
+        #leaderboard-page table {
+            margin-bottom: 0;
         }
         #leaderboard-page table,
         #leaderboard-page tbody,
@@ -42,13 +85,21 @@
         }
         #leaderboard-page .leaderboard-row {
             display: grid;
-            grid-template-columns: 42px minmax(0, 1fr);
+            grid-template-columns: 42px minmax(0, 1fr) auto;
             gap: 8px 10px;
             border: 1px solid var(--bd) !important;
-            border-radius: 12px;
+            border-radius: 14px;
             padding: 10px;
             margin-bottom: 10px;
-            background: var(--bg3) !important;
+            background:
+                linear-gradient(135deg, rgba(59,130,246,0.06), rgba(245,158,11,0.035)),
+                var(--sf) !important;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.07);
+            align-items: center;
+        }
+        #leaderboard-page .leaderboard-row[style*="59, 130, 246"] {
+            border-color: rgba(96,165,250,0.34) !important;
+            box-shadow: 0 8px 20px rgba(96,165,250,0.12);
         }
         #leaderboard-page .leaderboard-row:hover {
             transform: none;
@@ -59,23 +110,80 @@
             text-align: left !important;
         }
         #leaderboard-page .leaderboard-row td:first-child {
-            grid-row: 1 / span 3;
+            grid-row: 1 / span 2;
+            grid-column: 1;
+        }
+        #leaderboard-page .leader-rank-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 13px;
+            font-size: 0.88rem;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(2) {
+            grid-column: 2 / 4;
         }
         #leaderboard-page .leaderboard-row td:nth-child(2) .d-flex {
             justify-content: flex-start !important;
         }
+        #leaderboard-page .leader-name {
+            text-align: left;
+            min-width: 0;
+        }
+        #leaderboard-page .leader-name-main {
+            font-size: 0.88rem;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 210px;
+        }
+        #leaderboard-page .leader-you-badge {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            margin-top: 3px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(59,130,246,0.12);
+            border: 1px solid rgba(59,130,246,0.22);
+            font-size: 0.62rem !important;
+        }
         #leaderboard-page .leaderboard-row td:nth-child(3) {
-            font-size: 0.86rem !important;
+            grid-column: 2;
+            font-size: 0.78rem !important;
+            font-weight: 800 !important;
+            color: #60a5fa !important;
+            padding: 7px 9px !important;
+            border-radius: 10px !important;
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.16) !important;
         }
         #leaderboard-page .leaderboard-row td:nth-child(3)::before {
             content: "XP: ";
             color: var(--tx3);
             font-weight: 700;
         }
+        #leaderboard-page .leaderboard-row td:nth-child(4) {
+            grid-column: 3;
+        }
         #leaderboard-page .leaderboard-row td:nth-child(4)::before {
-            content: "Streak: ";
+            content: "";
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(4) .badge {
+            padding: 7px 9px;
+            border-radius: 10px;
+            font-size: 0.72rem !important;
+            font-weight: 800;
+            border: 1px solid rgba(248,113,113,0.18);
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(5) {
+            grid-column: 2 / 4;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 2px !important;
             color: var(--tx3);
-            font-weight: 700;
+            font-size: 0.74rem;
         }
         #leaderboard-page .leaderboard-row td:nth-child(5) .d-flex {
             justify-content: flex-start !important;
@@ -85,6 +193,10 @@
             color: var(--tx3);
             font-weight: 700;
             margin-right: 4px;
+        }
+        #leaderboard-page .leaderboard-row td:nth-child(5) .fa-medal {
+            color: #f59e0b;
+            filter: drop-shadow(0 3px 5px rgba(245,158,11,0.22));
         }
     }
 </style>
@@ -124,21 +236,21 @@
                     <tr class="leaderboard-row animate-fade-up" style="border-bottom: 1px solid var(--bd); background-color: {{ Auth::id() == $profile->user_id ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }}; animation-delay: {{ $index * 0.1 }}s">
                         <td class="py-4 align-middle">
                             @if($index == 0)
-                                <div style="width:35px;height:35px;background:#f59e0b;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;box-shadow:0 0 10px rgba(245, 158, 11, 0.5)"><i class="fa-solid fa-trophy"></i></div>
+                                <div class="leader-rank-badge leader-rank-gold"><i class="fa-solid fa-trophy"></i></div>
                             @elseif($index == 1)
-                                <div style="width:35px;height:35px;background:#94a3b8;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;"><i class="fa-solid fa-medal"></i></div>
+                                <div class="leader-rank-badge leader-rank-silver"><i class="fa-solid fa-medal"></i></div>
                             @elseif($index == 2)
-                                <div style="width:35px;height:35px;background:#b45309;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;"><i class="fa-solid fa-medal"></i></div>
+                                <div class="leader-rank-badge leader-rank-bronze"><i class="fa-solid fa-medal"></i></div>
                             @else
-                                <div style="width:35px;height:35px;background:var(--sf);border:1px solid var(--bd);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--tx2)">{{ $index + 1 }}</div>
+                                <div class="leader-rank-badge leader-rank-default">{{ $index + 1 }}</div>
                             @endif
                         </td>
                         <td class="py-4 align-middle">
                             <div class="d-flex align-items-center justify-content-center">
-                                <div class="text-center">
-                                    <div style="font-weight:600;color:var(--tx)">{{ $profile->user->name ?? 'Anonymous User' }}</div>
+                                <div class="text-center leader-name">
+                                    <div class="leader-name-main" style="font-weight:600;color:var(--tx)">{{ $profile->user->name ?? 'Anonymous User' }}</div>
                                     @if(Auth::id() == $profile->user_id)
-                                    <div style="font-size:0.75rem;color:var(--dash-primary);font-weight:600;">You</div>
+                                    <div class="leader-you-badge" style="font-size:0.75rem;color:var(--dash-primary);font-weight:600;">You</div>
                                     @endif
                                 </div>
                             </div>

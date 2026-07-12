@@ -92,15 +92,73 @@
         height: 250px;
         width: 100%;
     }
+
+    .admin-dashboard-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--tx);
+    }
+    .admin-dashboard-title i {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(59, 130, 246, 0.14);
+        color: #3b82f6;
+        margin-right: 0 !important;
+        flex: 0 0 auto;
+    }
+    .mobile-action-btn,
+    .premium-card .btn {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+    }
     
     /* Mobile Responsive Tables to Cards */
     @media (max-width: 767.98px) {
+        #sec-overview {
+            --admin-mobile-gap: 12px;
+        }
+        #sec-overview > .d-flex:first-of-type {
+            margin-bottom: 14px !important;
+        }
+        .admin-dashboard-title {
+            font-size: 1.18rem !important;
+            line-height: 1.2;
+            margin-bottom: 6px !important;
+        }
+        .admin-dashboard-title i {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            font-size: 0.98rem;
+        }
+        .admin-dashboard-subtitle {
+            font-size: 0.78rem !important;
+            line-height: 1.45;
+            max-width: 30rem;
+        }
+        .premium-card {
+            border-radius: 14px !important;
+            padding: 14px !important;
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+        }
+        .premium-card:hover {
+            transform: none;
+        }
         .dashboard-overview-grid {
             display: grid !important;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 12px !important;
+            gap: 10px !important;
             margin-right: 0 !important;
             margin-left: 0 !important;
+            margin-bottom: 14px !important;
         }
         .dashboard-overview-grid > .col-6 {
             width: 100% !important;
@@ -113,25 +171,201 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 8px !important;
+            padding: 10px !important;
             width: 100%;
-            max-width: 160px;
+            max-width: none;
             margin: 0 auto;
+            min-height: 128px;
+            border-radius: 16px !important;
         }
         .overview-card > div:nth-child(1) {
-            font-size: 1.8rem !important;
-            margin-bottom: 6px !important;
+            width: 38px;
+            height: 38px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem !important;
+            margin-bottom: 8px !important;
+            background: rgba(255, 255, 255, 0.06);
         }
         .overview-card > div:nth-child(2) {
-            font-size: 1.4rem !important;
-            margin-bottom: 2px !important;
+            font-size: 1.28rem !important;
+            line-height: 1.1;
+            margin-bottom: 5px !important;
         }
         .overview-card > div:nth-child(3) {
-            font-size: 0.65rem !important;
-            line-height: 1.2;
+            font-size: 0.62rem !important;
+            line-height: 1.25;
             text-align: center;
             word-wrap: break-word;
             white-space: normal;
+            letter-spacing: 0.03em !important;
+        }
+        .row.g-4,
+        .row.g-3 {
+            --bs-gutter-x: var(--admin-mobile-gap);
+            --bs-gutter-y: var(--admin-mobile-gap);
+        }
+        .chart-container {
+            height: 188px !important;
+        }
+        .premium-card h6 {
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 12px !important;
+        }
+        .premium-card .d-flex.justify-content-between.align-items-center.mb-3 {
+            align-items: flex-start !important;
+            gap: 10px;
+        }
+        .premium-card .btn,
+        .mobile-action-btn {
+            min-height: 36px;
+            border-radius: 11px !important;
+            padding: 7px 10px !important;
+            font-size: 0.76rem !important;
+            line-height: 1.15;
+        }
+        .premium-card .btn-sm {
+            min-width: 36px;
+        }
+        .admin-dashboard-mini-action {
+            min-height: 32px !important;
+            min-width: 32px !important;
+            width: auto !important;
+            padding: 6px 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.72rem !important;
+        }
+        .admin-dashboard-icon-action {
+            width: 32px !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            padding: 0 !important;
+            border-radius: 9px !important;
+            font-size: 0.72rem !important;
+            flex: 0 0 32px;
+        }
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            border-radius: 9px;
+            padding: 5px 8px;
+            font-size: 0.68rem;
+            line-height: 1.15;
+            white-space: normal;
+        }
+        #sec-overview .table-responsive {
+            overflow: visible !important;
+        }
+        #sec-overview .custom-table thead {
+            display: none;
+        }
+        #sec-overview .custom-table,
+        #sec-overview .custom-table tbody,
+        #sec-overview .custom-table tr,
+        #sec-overview .custom-table td {
+            display: block;
+            width: 100% !important;
+        }
+        #sec-overview .custom-table tr {
+            border: 1px solid var(--bd);
+            border-radius: 13px;
+            background: var(--bg3);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #sec-overview .custom-table td {
+            border: 0 !important;
+            padding: 7px 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--tx);
+            text-align: right !important;
+        }
+        #sec-overview .custom-table td::before {
+            content: attr(data-label);
+            color: var(--tx3);
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            flex: 0 0 auto;
+            text-align: left;
+        }
+        #sec-overview .custom-table td[colspan] {
+            display: block;
+            text-align: center !important;
+        }
+        #sec-overview .custom-table td[colspan]::before {
+            content: '';
+            display: none;
+        }
+        .activity-timeline {
+            padding-left: 16px;
+        }
+        .activity-item {
+            margin-bottom: 14px;
+        }
+        .activity-item::before {
+            left: -16px;
+            width: 10px;
+            height: 10px;
+        }
+        #commsTabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        #commsTabs .nav-item,
+        #commsTabs .nav-link {
+            width: 100%;
+        }
+        #commsTabs .nav-link {
+            min-height: 40px;
+            font-size: 0.78rem !important;
+        }
+        #announcements > .d-flex {
+            align-items: flex-start !important;
+            gap: 10px;
+            padding: 10px !important;
+        }
+        #announcements > .d-flex > div {
+            min-width: 0;
+            font-size: 0.78rem !important;
+            line-height: 1.35;
+        }
+        .form-select {
+            min-height: 42px;
+            border-radius: 11px;
+            font-size: 0.82rem;
+        }
+        .badge {
+            white-space: normal;
+            line-height: 1.25;
+            padding: 7px 9px;
+            border-radius: 9px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .dashboard-overview-grid {
+            gap: 8px !important;
+        }
+        .overview-card {
+            min-height: 118px;
+            padding: 8px !important;
+        }
+        .overview-card > div:nth-child(2) {
+            font-size: 1.12rem !important;
+        }
+        .overview-card > div:nth-child(3) {
+            font-size: 0.58rem !important;
         }
     }
 </style>
@@ -146,8 +380,8 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie me-2" style="color:#3b82f6;"></i>Admin Dashboard</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">System overview, user analytics, and platform health.</p>
+            <h4 class="admin-dashboard-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie"></i>Admin Dashboard</h4>
+            <p class="admin-dashboard-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">System overview, user analytics, and platform health.</p>
         </div>
     </div>
 
@@ -237,7 +471,7 @@
             <div class="premium-card mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold m-0">Recent Interview Sessions</h6>
-                    <button class="btn btn-sm" style="border-radius:8px;border:1px solid var(--bd);color:var(--tx2);background:var(--bg3);">View All</button>
+                    <a href="{{ route('admin.sessions.index') }}" class="btn btn-sm mobile-action-btn admin-dashboard-mini-action" style="border-radius:8px;border:1px solid var(--bd);color:var(--tx2);background:var(--bg3);"><i class="fa-solid fa-list"></i>View All</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table custom-table mb-0 w-100">
@@ -265,7 +499,7 @@
                                 <td data-label="Score"><span class="fw-bold text-success">{{ $session->score->overall_readiness_score ?? 'N/A' }}%</span></td>
                                 <td data-label="Date" style="color:var(--tx2);">{{ $session->created_at->format('M d, Y') }}</td>
                                 <td data-label="Actions" class="text-end">
-                                    <button class="btn btn-sm" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Session"><i class="fa-solid fa-eye"></i></button>
+                                    <a href="{{ route('admin.sessions.show', $session) }}" class="btn btn-sm admin-dashboard-icon-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Session" aria-label="View Session"><i class="fa-solid fa-eye"></i></a>
                                 </td>
                             </tr>
                             @empty
@@ -597,4 +831,3 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 @endsection
-
