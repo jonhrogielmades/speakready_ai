@@ -289,8 +289,21 @@ function swTab(t) {
     const loginErr = document.getElementById('loginErr');
     const signupErr = document.getElementById('signupErr');
 
-    if (loginPanel) loginPanel.style.display = isL ? 'block' : 'none';
-    if (signupPanel) signupPanel.style.display = isL ? 'none' : 'block';
+    const activePanel = isL ? loginPanel : signupPanel;
+    const inactivePanel = isL ? signupPanel : loginPanel;
+
+    if (activePanel && inactivePanel && inactivePanel.style.display !== 'none') {
+        inactivePanel.classList.add('is-switching-out');
+        window.setTimeout(function () {
+            inactivePanel.style.display = 'none';
+            inactivePanel.classList.remove('is-switching-out');
+            activePanel.style.display = 'block';
+        }, 150);
+    } else {
+        if (loginPanel) loginPanel.style.display = isL ? 'block' : 'none';
+        if (signupPanel) signupPanel.style.display = isL ? 'none' : 'block';
+    }
+
     loginTab?.classList.toggle('on', isL);
     signupTab?.classList.toggle('on', !isL);
     if (loginErr) loginErr.style.display = 'none';

@@ -181,23 +181,12 @@
                 @endif
             </nav>
 
-            <footer class="ucp-footer {{ $isGuestQuickNavigation ? 'ucp-guest-footer' : '' }}">
-                @if ($isGuestQuickNavigation)
-                <div class="ucp-guest-actions">
-                    <button type="button" class="ucp-guest-action ucp-guest-login" data-ucp-action data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">
-                        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
-                        Login
-                    </button>
-                    <button type="button" class="ucp-guest-action ucp-guest-register" data-ucp-action data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
-                        Register
-                        <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
-                    </button>
-                </div>
-                @else
+            @unless ($isGuestQuickNavigation)
+            <footer class="ucp-footer">
                 <span class="ucp-status">14 destinations</span>
                 <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
-                @endif
             </footer>
+            @endunless
         </section>
     </div>
 

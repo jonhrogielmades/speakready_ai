@@ -104,6 +104,358 @@
             opacity: 0.55;
          }
 
+         .auth-modal-close {
+            width: 10px;
+            height: 10px;
+            padding: 6px;
+            margin: 0;
+            opacity: 0.75;
+         }
+
+         html.lm .auth-modal-close {
+            filter: none;
+         }
+
+         html:not(.lm) .auth-modal-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+         }
+
+         #lofc {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            max-width: none !important;
+            height: 100vh !important;
+            height: 100dvh !important;
+            padding-left: 16px !important;
+            padding-right: 16px !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-left: 0 !important;
+            overflow-y: auto;
+            pointer-events: none;
+         }
+
+         #lofc.show {
+            display: grid !important;
+            place-items: center;
+         }
+
+         #lofc .modal-dialog {
+            width: min(100%, 390px);
+            max-width: 390px;
+            margin: 14px auto !important;
+            pointer-events: auto;
+         }
+
+         #lofc .modal-content {
+            max-height: calc(100vh - 28px);
+            max-height: calc(100dvh - 28px);
+            border-radius: 14px !important;
+            border-color: rgba(148, 163, 184, 0.28) !important;
+            box-shadow: 0 14px 42px rgba(15, 23, 42, 0.2) !important;
+            overflow: hidden;
+         }
+
+         #lofc .modal-header {
+            min-height: 58px;
+            padding: 14px 18px;
+         }
+
+         #lofc .modal-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            line-height: 1.1;
+         }
+
+         #lofc .modal-body {
+            padding: 18px 22px 22px !important;
+            overflow-y: auto;
+         }
+
+         #lofc .tab-switch {
+            padding: 3px;
+            margin-bottom: 18px;
+            border-radius: 10px;
+         }
+
+         #lofc .tab-sw-btn {
+            min-height: 36px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+         }
+
+         #lofc .olbl {
+            margin-bottom: 5px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--tx);
+         }
+
+         #lofc .oinp {
+            min-height: 40px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            border-radius: 9px !important;
+            border-color: rgba(148, 163, 184, 0.42) !important;
+            font-size: 0.86rem;
+         }
+
+         #lofc .password-field {
+            margin-bottom: 12px !important;
+         }
+
+         #lofc .password-field .oinp {
+            margin-bottom: 0;
+            padding-right: 40px;
+         }
+
+         #lofc .password-toggle {
+            right: 7px;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+         }
+
+         #lofc .bgrd.btn {
+            min-height: 42px;
+            padding: 9px 14px !important;
+            border-radius: 10px !important;
+            font-size: 0.88rem !important;
+         }
+
+         #lofc .oauth {
+            min-height: 40px;
+            border-radius: 9px;
+            font-size: 0.86rem;
+         }
+
+         #lofc .odiv {
+            margin: 16px 0 14px;
+            font-size: 0.76rem;
+         }
+
+         #lofc p {
+            font-size: 0.76rem !important;
+         }
+
+         #lofc .auth-panel {
+            animation: authPanelIn 0.26s ease both;
+            transform-origin: center top;
+         }
+
+         #lofc .auth-panel.is-switching-out {
+            animation: authPanelOut 0.16s ease both;
+         }
+
+         @keyframes authPanelIn {
+            from {
+               opacity: 0;
+               transform: translateY(8px) scale(0.985);
+            }
+            to {
+               opacity: 1;
+               transform: translateY(0) scale(1);
+            }
+         }
+
+         @keyframes authPanelOut {
+            from {
+               opacity: 1;
+               transform: translateY(0) scale(1);
+            }
+            to {
+               opacity: 0;
+               transform: translateY(-6px) scale(0.99);
+            }
+         }
+
+         @media (prefers-reduced-motion: reduce) {
+            #lofc .auth-panel,
+            #lofc .auth-panel.is-switching-out {
+               animation: none !important;
+            }
+         }
+
+         @media (max-width: 575.98px) {
+            #lofc {
+               padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+               place-items: start center;
+            }
+
+            #lofc .modal-dialog {
+               width: min(100%, 350px);
+               margin: 8px auto !important;
+            }
+
+            #lofc .modal-content {
+               max-height: calc(100dvh - 22px);
+               border-radius: 13px !important;
+            }
+
+            #lofc .modal-header {
+               min-height: 52px;
+               padding: 12px 15px;
+            }
+
+            #lofc .modal-title {
+               font-size: 0.96rem;
+            }
+
+            #lofc .modal-header .logo-i {
+               width: 26px !important;
+               height: 26px !important;
+            }
+
+            #lofc .modal-body {
+               padding: 14px 16px 18px !important;
+            }
+
+            #lofc .tab-switch {
+               margin-bottom: 14px;
+            }
+
+            #lofc .tab-sw-btn {
+               min-height: 34px;
+               font-size: 0.8rem;
+            }
+
+            #lofc .olbl {
+               font-size: 0.73rem;
+            }
+
+            #lofc .oinp,
+            #lofc .oauth {
+               min-height: 38px;
+               font-size: 0.82rem;
+            }
+
+            #lofc .bgrd.btn {
+               min-height: 40px;
+               font-size: 0.84rem !important;
+            }
+
+            #lofc .odiv {
+               margin: 14px 0 12px;
+            }
+
+            #lofc p {
+               margin-top: 14px !important;
+               margin-bottom: 0 !important;
+            }
+         }
+
+         @media (max-width: 380px) {
+            #lofc {
+               padding-left: 10px !important;
+               padding-right: 10px !important;
+            }
+
+            #lofc .modal-dialog {
+               width: 100%;
+            }
+
+            #lofc .modal-body {
+               padding-left: 14px !important;
+               padding-right: 14px !important;
+            }
+         }
+
+         #lofc + .modal-backdrop,
+         .modal-backdrop.show {
+            display: none;
+         }
+
+         .guest-tour-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000000;
+            display: none;
+            background: rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+         }
+
+         .guest-tour-overlay.show {
+            display: block;
+         }
+
+         .guest-tour-card {
+            position: fixed;
+            z-index: 1000004;
+            width: min(300px, calc(100vw - 32px));
+            display: none;
+            padding: 14px;
+            border-radius: 12px;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
+            color: var(--tx);
+            animation: guestTourIn 0.22s ease both;
+         }
+
+         .guest-tour-card h6 {
+            margin: 0 0 6px;
+            font-size: 0.92rem;
+            font-weight: 800;
+         }
+
+         .guest-tour-card p {
+            margin: 0 0 12px;
+            color: var(--tx2);
+            font-size: 0.78rem;
+            line-height: 1.45;
+         }
+
+         .guest-tour-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+         }
+
+         .guest-tour-actions button {
+            min-height: 32px;
+            padding: 7px 11px;
+            border-radius: 8px;
+            font-size: 0.76rem;
+            font-weight: 700;
+         }
+
+         .guest-tour-skip {
+            border: 1px solid var(--bd);
+            background: transparent;
+            color: var(--tx2);
+         }
+
+         .guest-tour-next {
+            border: 0;
+            background: var(--grad);
+            color: #fff;
+         }
+
+         .guest-tour-highlight {
+            position: relative;
+            z-index: 1000003 !important;
+            box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.18), 0 16px 38px rgba(37, 99, 235, 0.24) !important;
+         }
+
+         @keyframes guestTourIn {
+            from { opacity: 0; transform: translateY(8px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+         }
+
+         @media (max-width: 575.98px) {
+            .guest-tour-card {
+               left: 16px !important;
+               right: 16px !important;
+               bottom: 18px !important;
+               top: auto !important;
+               width: auto;
+            }
+         }
+
          @media (max-width: 575.98px) {
             .guest-header-clock { font-size: 0.53rem; }
          }
@@ -826,10 +1178,10 @@
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>
-                     <button class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">
+                     <button class="boc px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">
                      <i class="fa-regular fa-user fa-sm"></i> Login
                      </button>
-                     <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
+                     <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
                      <button class="boc d-lg-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
@@ -876,7 +1228,7 @@
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Start Practicing</button>
+                        <button class="bgrd btn px-4 py-3 fs-6" id="guestGetStartedTourBtn" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
@@ -1660,8 +2012,8 @@
                   <div class="col-6 col-md-3 col-lg-2">
                      <h5 class="footer-heading">Platform</h5>
                      <ul class="list-unstyled footer-links">
-                        <li><a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
-                        <li><a href="#" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
+                        <li><a href="#" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
+                        <li><a href="#" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
                         <li><a href="#">Privacy Policy</a></li>
                         <li><a href="#">Terms of Service</a></li>
                      </ul>
@@ -1690,19 +2042,21 @@
 
 
 
-      <!-- ======================== LOGIN OFFCANVAS ======================== -->
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="lofc">
-         <div class="offcanvas-header">
-            <div class="d-flex align-items-center gap-2">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: transparent; padding: 0;">
-               <h5 class="offcanvas-title mb-0">SpeakReady AI</h5>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" style="filter:invert(1)"></button>
-         </div>
-         <div class="offcanvas-body p-4">
+      <!-- ======================== LOGIN MODAL ======================== -->
+      <div class="modal fade" tabindex="-1" id="lofc" aria-labelledby="authModalTitle" aria-hidden="true" data-bs-backdrop="false">
+         <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;">
+               <div class="modal-header" style="border-bottom:1px solid var(--bd);">
+                  <div class="d-flex align-items-center gap-2">
+                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: transparent; padding: 0;">
+                     <h5 class="modal-title mb-0" id="authModalTitle">SpeakReady AI</h5>
+                  </div>
+                  <button type="button" class="btn-close auth-modal-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body p-4">
             <div class="tab-switch"><button class="tab-sw-btn on" id="tabLogin" onclick="swTab('login')">Log In</button><button class="tab-sw-btn" id="tabSignup" onclick="swTab('signup')">Register</button></div>
             <!-- Login -->
-            <div id="fLogin">
+            <div id="fLogin" class="auth-panel">
                @if(session('success'))
                   <div style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;font-size:0.85rem;margin-bottom:15px;">
                      <i class="fa-solid fa-check-circle me-1"></i> {{ session('success') }}
@@ -1737,11 +2091,9 @@
                </form>
                <div class="odiv">or continue with</div>
                <a href="{{ route('auth.google') }}" class="oauth" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
-
-               <p class="text-center mt-4" style="font-size:.82rem;color:var(--tx3)">Don't have an account? <a href="#" style="color:var(--pur)" onclick="swTab('signup');return false">Register for free</a></p>
             </div>
             <!-- Sign Up -->
-            <div id="fSignup" style="display:none">
+            <div id="fSignup" class="auth-panel" style="display:none">
                <form action="{{ route('register') }}" method="POST">
                   @csrf
                   @if($errors->any() && old('name'))
@@ -1769,14 +2121,8 @@
                </form>
                <div class="odiv">or sign up with</div>
                <a href="{{ route('auth.google') }}" class="oauth" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
-
-               <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">By signing up, you agree to our <a href="#" style="color:var(--pur)">Terms</a> &amp; <a href="#" style="color:var(--pur)">Privacy Policy</a></p>
             </div>
-            <!-- Close Button at Bottom -->
-            <div class="text-center mt-5 mb-3">
-               <button type="button" class="boc d-inline-flex align-items-center justify-content-center" data-bs-dismiss="offcanvas" style="width: 48px; height: 48px; border-radius: 50%; opacity: 0.8;" aria-label="Close">
-                  <i class="fa-solid fa-xmark fs-5"></i>
-               </button>
+               </div>
             </div>
          </div>
       </div>
@@ -1788,6 +2134,16 @@
          <div class="pwa-btn-wrap">
             <button id="pwa-btn-no" class="pwa-btn-no">No</button>
             <button id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
+         </div>
+      </div>
+
+      <div class="guest-tour-overlay" id="guestAuthTourOverlay" aria-hidden="true"></div>
+      <div class="guest-tour-card" id="guestAuthTourCard" role="dialog" aria-modal="true" aria-labelledby="guestAuthTourTitle">
+         <h6 id="guestAuthTourTitle">Click Get Started Free</h6>
+         <p id="guestAuthTourText">Start here to open Login/Register and create your free practice account.</p>
+         <div class="guest-tour-actions">
+            <button type="button" class="guest-tour-skip" id="guestAuthTourSkip">Skip</button>
+            <button type="button" class="guest-tour-next" id="guestAuthTourNext">Got it</button>
          </div>
       </div>
 
@@ -1811,9 +2167,9 @@
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {
-            var myOffcanvas = document.getElementById('lofc');
-            var bsOffcanvas = new bootstrap.Offcanvas(myOffcanvas);
-            bsOffcanvas.show();
+            var authModal = document.getElementById('lofc');
+            var bsModal = new bootstrap.Modal(authModal);
+            bsModal.show();
             @if(old('name'))
                swTab('signup');
             @endif
@@ -1850,6 +2206,106 @@
                      },
                  });
              }
+         });
+      </script>
+      <script>
+         document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('guestGetStartedTourBtn');
+            const authModal = document.getElementById('lofc');
+            const overlay = document.getElementById('guestAuthTourOverlay');
+            const card = document.getElementById('guestAuthTourCard');
+            const title = document.getElementById('guestAuthTourTitle');
+            const text = document.getElementById('guestAuthTourText');
+            const next = document.getElementById('guestAuthTourNext');
+            const skip = document.getElementById('guestAuthTourSkip');
+            let tourActive = false;
+
+            function positionTourCard(target) {
+               if (!card || !target) return;
+               const rect = target.getBoundingClientRect();
+               const cardWidth = Math.min(300, window.innerWidth - 32);
+               const left = Math.min(Math.max(16, rect.left + rect.width / 2 - cardWidth / 2), window.innerWidth - cardWidth - 16);
+               const top = Math.min(rect.bottom + 12, window.innerHeight - 170);
+               card.style.left = `${left}px`;
+               card.style.top = `${top}px`;
+            }
+
+            function clearTourHighlight() {
+               document.querySelectorAll('.guest-tour-highlight').forEach(el => el.classList.remove('guest-tour-highlight'));
+            }
+
+            function closeGuestTour() {
+               tourActive = false;
+               overlay?.classList.remove('show');
+               overlay?.setAttribute('aria-hidden', 'true');
+               if (card) card.style.display = 'none';
+               clearTourHighlight();
+            }
+
+            function showGuestTourStep(target, heading, copy, buttonText) {
+               if (!target || !overlay || !card) return;
+               tourActive = true;
+               clearTourHighlight();
+               target.classList.add('guest-tour-highlight');
+               title.textContent = heading;
+               text.textContent = copy;
+               next.textContent = buttonText;
+               overlay.classList.add('show');
+               overlay.setAttribute('aria-hidden', 'false');
+               card.style.display = 'block';
+               positionTourCard(target);
+            }
+
+            function showStartGuide() {
+               showGuestTourStep(
+                  startBtn,
+                  'Click Get Started Free',
+                  'Use this button to open Login/Register and begin your free interview practice.',
+                  'Got it'
+               );
+            }
+
+            function showAuthGuide() {
+               const tabSwitch = authModal?.querySelector('.tab-switch');
+               showGuestTourStep(
+                  tabSwitch,
+                  'Login or Register',
+                  'Choose Register for a new account, or Log In if you already have one.',
+                  'Done'
+               );
+            }
+
+            startBtn?.addEventListener('click', function() {
+               if (tourActive) {
+                  sessionStorage.setItem('guest_get_started_tour_seen', 'true');
+               }
+            });
+
+            authModal?.addEventListener('shown.bs.modal', function() {
+               if (!sessionStorage.getItem('guest_get_started_tour_seen')) return;
+               if (sessionStorage.getItem('guest_auth_modal_tour_seen')) return;
+               sessionStorage.setItem('guest_auth_modal_tour_seen', 'true');
+               window.setTimeout(showAuthGuide, 140);
+            });
+
+            next?.addEventListener('click', closeGuestTour);
+            skip?.addEventListener('click', closeGuestTour);
+            overlay?.addEventListener('click', closeGuestTour);
+
+            window.addEventListener('resize', function() {
+               if (!tourActive || !card || card.style.display === 'none') return;
+               const target = document.querySelector('.guest-tour-highlight');
+               positionTourCard(target);
+            });
+
+            window.setTimeout(function waitForSplash() {
+               if (!startBtn || sessionStorage.getItem('guest_get_started_tour_seen')) return;
+               if (document.body.classList.contains('guest-splash-pending')) {
+                  window.setTimeout(waitForSplash, 500);
+                  return;
+               }
+               showStartGuide();
+            }, 900);
          });
       </script>
       <!-- PWA Service Worker Registration -->
