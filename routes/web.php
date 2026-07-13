@@ -107,6 +107,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/coach/chat', [UserController::class, 'coachChat'])->name('user.coach.chat');
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
+    Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');

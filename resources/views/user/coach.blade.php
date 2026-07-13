@@ -34,6 +34,60 @@
     .history-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; color: var(--tx3); font-size: .9rem; display: flex; align-items: center; }
     .history-item:hover, .history-item.active { background: rgba(255,255,255,0.05); color: var(--tx); }
     .history-item i { margin-right: 12px; opacity: 0.7; }
+    .coach-actions { position: relative; }
+    .coach-actions-toggle {
+        width: 36px;
+        height: 36px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: transparent;
+        color: var(--tx3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+    }
+    .coach-actions-toggle:hover, .coach-actions-toggle[aria-expanded="true"] {
+        background: rgba(255,255,255,0.06);
+        border-color: var(--bd);
+        color: var(--tx);
+    }
+    .coach-actions-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 30;
+        width: 220px;
+        padding: 6px;
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        background: var(--sf);
+        box-shadow: 0 18px 45px rgba(0,0,0,0.22);
+        display: none;
+    }
+    .coach-actions-menu.open { display: block; }
+    .coach-actions-item {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--tx);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        font-size: .88rem;
+        text-align: left;
+        transition: 0.2s;
+    }
+    .coach-actions-item:hover { background: rgba(255,255,255,0.06); }
+    .coach-actions-item i {
+        width: 16px;
+        text-align: center;
+        color: var(--tx3);
+    }
+    .coach-actions-item.danger { color: #ef4444; }
+    .coach-actions-item.danger i { color: #ef4444; }
 
     /* Mobile-specific: full height chat within the mobile layout */
     @media (max-width: 767px) {
@@ -157,7 +211,25 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-link text-muted"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                    <div class="coach-actions" id="coachActions">
+                        <button class="coach-actions-toggle" id="coachActionsToggle" type="button" aria-label="Open conversation actions" aria-expanded="false" aria-controls="coachActionsMenu" onclick="toggleCoachActions(event)">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        <div class="coach-actions-menu" id="coachActionsMenu" role="menu" aria-labelledby="coachActionsToggle">
+                            <button class="coach-actions-item" type="button" role="menuitem" onclick="newConversation(); closeCoachActions();">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>New conversation</span>
+                            </button>
+                            <button class="coach-actions-item danger" type="button" role="menuitem" onclick="deleteCurrentConversation();">
+                                <i class="fa-solid fa-trash-can"></i>
+                                <span>Delete convo</span>
+                            </button>
+                            <button class="coach-actions-item danger" type="button" role="menuitem" onclick="clearCoachHistory();">
+                                <i class="fa-solid fa-broom"></i>
+                                <span>Clear all history</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -204,6 +276,24 @@
     <script>
         let coachChatHistory = [];
         let currentConversationId = null;
+
+        function toggleCoachActions(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('coachActionsMenu');
+            const toggle = document.getElementById('coachActionsToggle');
+            const willOpen = !menu.classList.contains('open');
+
+            menu.classList.toggle('open', willOpen);
+            toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        }
+
+        function closeCoachActions() {
+            const menu = document.getElementById('coachActionsMenu');
+            const toggle = document.getElementById('coachActionsToggle');
+
+            if (menu) menu.classList.remove('open');
+            if (toggle) toggle.setAttribute('aria-expanded', 'false');
+        }
 
         async function sendMsg() {
             const ta = document.getElementById('chatMsg');
@@ -444,6 +534,7 @@
         }
 
         async function deleteConversation(id) {
+            closeCoachActions();
             if (!confirm('Are you sure you want to delete this conversation?')) return;
             
             try {
@@ -470,10 +561,75 @@
             }
         }
 
+        function deleteCurrentConversation() {
+            if (!currentConversationId) {
+                closeCoachActions();
+                alert('No active conversation to delete.');
+                return;
+            }
+
+            deleteConversation(currentConversationId);
+        }
+
+        async function clearCoachHistory() {
+            closeCoachActions();
+
+            if (!confirm('Are you sure you want to clear all AI Coach conversation history?')) return;
+
+            try {
+                const response = await fetch('{{ route("user.coach.clear") }}', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to clear conversations');
+
+                document.querySelectorAll('.history-item').forEach(item => item.remove());
+                const list = document.getElementById('conversationsList');
+                if (list) {
+                    const recentHeading = list.querySelector('div:first-child');
+                    const olderHeading = Array.from(list.children).find(child => child.textContent.trim() === 'Older');
+                    const recentEmpty = document.createElement('div');
+                    recentEmpty.style.cssText = 'padding:0 16px; font-size:.8rem; color:var(--tx3);';
+                    recentEmpty.textContent = 'No recent conversations';
+
+                    const olderEmpty = document.createElement('div');
+                    olderEmpty.style.cssText = 'padding:0 16px; font-size:.8rem; color:var(--tx3);';
+                    olderEmpty.textContent = 'No older conversations';
+
+                    if (recentHeading && !recentHeading.nextElementSibling?.textContent.includes('No recent')) {
+                        recentHeading.insertAdjacentElement('afterend', recentEmpty);
+                    }
+                    if (olderHeading && !olderHeading.nextElementSibling?.textContent.includes('No older')) {
+                        olderHeading.insertAdjacentElement('afterend', olderEmpty);
+                    }
+                }
+                newConversation();
+            } catch (error) {
+                console.error(error);
+                alert('Could not clear conversation history');
+            }
+        }
+
         document.getElementById('chatMsg').addEventListener('keypress', function (e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMsg();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            const actions = document.getElementById('coachActions');
+            if (actions && !actions.contains(event.target)) {
+                closeCoachActions();
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeCoachActions();
             }
         });
     </script>

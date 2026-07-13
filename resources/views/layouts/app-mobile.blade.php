@@ -1879,22 +1879,6 @@
          </div>
       </nav>
 
-      <button
-         type="button"
-         class="ucp-mobile-launcher"
-         data-ucp-open
-         data-ucp-context="user"
-         data-ucp-storage-key="speakready.ucp-launcher-position.v1"
-         aria-label="Open quick navigation"
-         aria-haspopup="dialog"
-         aria-controls="userCommandPalette"
-         aria-expanded="false">
-         <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-      </button>
-
-      <span id="ucpMobileLauncherStatus" class="visually-hidden" aria-live="polite"></span>
-
-      @include('partials.user-command-palette')
       @include('partials.viewport-mobile-cookie')
 
 

@@ -142,7 +142,7 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('class="mob-nav-item mob-nav-primary ', $content);
     }
 
-    public function test_user_mobile_shell_includes_movable_quick_navigation_destinations(): void
+    public function test_user_mobile_shell_does_not_render_quick_navigation_launcher(): void
     {
         $user = User::factory()->create([
             'is_admin' => false,
@@ -156,25 +156,13 @@ class MobileLayoutTest extends TestCase
             ->get(route('dashboard'));
 
         $response->assertOk()
-            ->assertSee('class="ucp-mobile-launcher"', false)
-            ->assertSee('data-ucp-context="user"', false)
-            ->assertSee('id="userCommandPalette"', false)
-            ->assertSee('id="userCommandList"', false)
-            ->assertSee('id="ucp-destination-dashboard"', false)
-            ->assertSee('id="ucp-destination-account"', false)
-            ->assertSee('14 destinations')
+            ->assertDontSee('class="ucp-mobile-launcher"', false)
+            ->assertDontSee('data-ucp-context="user"', false)
+            ->assertDontSee('id="userCommandPalette"', false)
+            ->assertDontSee('id="userCommandList"', false)
+            ->assertDontSee('id="ucp-destination-dashboard"', false)
+            ->assertDontSee('id="ucp-destination-account"', false)
+            ->assertDontSee('14 destinations')
             ->assertDontSee('data-ucp-search', false);
-
-        $this->assertMatchesRegularExpression(
-            '/class="ucp-mobile-launcher".*?data-ucp-context="user".*?<i class="fa-solid fa-bolt"/s',
-            $response->getContent()
-        );
-
-        $launcherScript = file_get_contents(public_path('js/user-ui.js'));
-
-        $this->assertIsString($launcherScript);
-        $this->assertStringContainsString('setupMovableLauncher', $launcherScript);
-        $this->assertStringContainsString('snapToNearestEdge', $launcherScript);
-        $this->assertStringContainsString('speakready.ucp-launcher-position.v1', $launcherScript);
     }
 }

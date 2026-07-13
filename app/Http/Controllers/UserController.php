@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Setting;
 use App\Services\AIService;
+use App\Services\CoachLanguageService;
 use App\Services\CsvExportService;
 use App\Services\TranscriptService;
 use Illuminate\Http\Request;
@@ -55,6 +56,24 @@ class UserController extends Controller
             'cost' => 500,
             'type' => 'technical',
             'icon' => 'fa-arrow-up-right-dots',
+        ],
+    ];
+
+    private const SPEAKREADY_DEVELOPERS = [
+        [
+            'name' => 'Jonh Rogiel M. Tumanda',
+            'role' => 'Lead Programmer',
+            'responsibilities' => 'Core Code, Databases, and APIs.',
+        ],
+        [
+            'name' => 'Karyl G. Gesto',
+            'role' => 'Manuscript Editor',
+            'responsibilities' => 'Technical Writing, Documentation, and Compliance.',
+        ],
+        [
+            'name' => 'Eva Mae C. Cabilic',
+            'role' => 'QA Tester',
+            'responsibilities' => 'Bug Hunting, Test Cases, and UX Stability.',
         ],
     ];
 
@@ -892,12 +911,13 @@ class UserController extends Controller
         return view('user.coach', compact('recentConversations', 'olderConversations')); 
     }
     
-    public function coachChat(Request $request) {
+    public function coachChat(Request $request, CoachLanguageService $coachLanguages)
+    {
         $request->validate([
             'message' => 'required|string',
             'history' => 'array',
             'provider' => 'nullable|string',
-            'conversation_id' => 'nullable|integer'
+            'conversation_id' => 'nullable|integer',
         ]);
 
         $message = $request->input('message');
@@ -905,10 +925,10 @@ class UserController extends Controller
         $provider = $request->input('provider', env('AI_PROVIDER', 'gemini'));
         $conversation_id = $request->input('conversation_id');
 
-        if (!$conversation_id) {
+        if (! $conversation_id) {
             $conversation = \App\Models\ChatbotConversation::create([
                 'user_id' => Auth::id(),
-                'title' => substr($message, 0, 30) . (strlen($message) > 30 ? '...' : '')
+                'title' => substr($message, 0, 30).(strlen($message) > 30 ? '...' : ''),
             ]);
             $conversation_id = $conversation->id;
         } else {
@@ -919,28 +939,208 @@ class UserController extends Controller
         \App\Models\ChatbotMessage::create([
             'chatbot_conversation_id' => $conversation_id,
             'role' => 'user',
-            'content' => $message
+            'content' => $message,
         ]);
 
-        $languageConfig = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
-        $systemPrompt = 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
-        if (($languageConfig['code'] ?? 'en') !== 'en') {
-            $systemPrompt .= ' Reply in ' . ($languageConfig['ai_label'] ?? $languageConfig['label']) . ' unless the user explicitly asks for another language.';
-        }
+        $preferredLanguage = Setting::preferredLanguageFor(Auth::user())
+            ?? (Setting::languageConfig()['code'] ?? CoachLanguageService::ENGLISH);
+        $responseLanguage = $coachLanguages->detect($message, $history, $preferredLanguage);
 
-        $response = AIService::chatMessage($message, $history, $provider, $systemPrompt);
+        if ($this->isSpeakReadyDeveloperQuestion($message)) {
+            $response = $this->speakReadyDeveloperCreditsResponse($responseLanguage);
+        } else {
+            $systemPrompt = 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+            $systemPrompt .= ' You may also answer direct questions about SpeakReady AI developer credits. If asked who developed, built, created, or maintains SpeakReady AI, answer using these official credits: '.$this->speakReadyDeveloperCreditsPrompt().' Do not invent additional team members or roles.';
+            $systemPrompt .= ' '.$coachLanguages->promptInstruction($responseLanguage);
+
+            $response = AIService::chatMessage($message, $history, $provider, $systemPrompt);
+        }
 
         \App\Models\ChatbotMessage::create([
             'chatbot_conversation_id' => $conversation_id,
             'role' => 'ai',
-            'content' => $response
+            'content' => $response,
         ]);
 
         return response()->json([
             'response' => $response,
+            'language' => $responseLanguage,
             'conversation_id' => $conversation_id,
-            'title' => $conversation->title
+            'title' => $conversation->title,
         ]);
+    }
+
+    private function isSpeakReadyDeveloperQuestion(string $message): bool
+    {
+        $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $message) ?? $message));
+
+        $developerTerms = [
+            'developer',
+            'developers',
+            'creator',
+            'creators',
+            'jonh',
+            'rogiel',
+            'tumanda',
+            'karyl',
+            'gesto',
+            'eva mae',
+            'eva',
+            'cabilic',
+            'programmer',
+            'programmers',
+            'team',
+            'made',
+            'built',
+            'created',
+            'developed',
+            'gumawa',
+            'bumuo',
+            'lumikha',
+            'tagagawa',
+            'naghimo',
+            'mihimo',
+            'nagbuhat',
+        ];
+
+        $identityTerms = [
+            'who',
+            'name',
+            'names',
+            'role',
+            'roles',
+            'responsibility',
+            'responsibilities',
+            'list',
+            'meet',
+            'credit',
+            'credits',
+            'tell',
+            'show',
+            'about',
+            'sino',
+            'ano',
+            'pangalan',
+            'tungkulin',
+            'ipakilala',
+            'sabihin',
+            'kinsa',
+            'unsa',
+            'ngalan',
+            'papel',
+            'ipaila',
+            'isulti',
+        ];
+
+        $systemTerms = [
+            'speakready',
+            'speakready ai',
+            'this system',
+            'the system',
+            'this app',
+            'the app',
+            'application',
+            'platform',
+            'project',
+            'website',
+            'sistema',
+            'sistemang ito',
+            'aplikasyong ito',
+            'kini nga sistema',
+            'ani nga sistema',
+        ];
+
+        $hasDeveloperTerm = $this->containsAny($normalized, $developerTerms);
+        $hasIdentityTerm = $this->containsAny($normalized, $identityTerms);
+        $hasSystemTerm = $this->containsAny($normalized, $systemTerms);
+
+        return $hasDeveloperTerm && $hasIdentityTerm && ($hasSystemTerm || ! str_contains($normalized, 'interview'));
+    }
+
+    private function containsAny(string $haystack, array $needles): bool
+    {
+        foreach ($needles as $needle) {
+            if (str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function speakReadyDeveloperCreditsResponse(string $language): string
+    {
+        if ($language !== CoachLanguageService::ENGLISH) {
+            return $this->localizedSpeakReadyDeveloperCreditsResponse($language);
+        }
+
+        $response = "The developers of SpeakReady AI are:\n\n";
+
+        foreach (self::SPEAKREADY_DEVELOPERS as $developer) {
+            $response .= "**{$developer['name']}**\n";
+            $response .= "{$developer['role']}\n";
+            $response .= "{$developer['responsibilities']}\n\n";
+        }
+
+        return trim($response);
+    }
+
+    private function localizedSpeakReadyDeveloperCreditsResponse(string $language): string
+    {
+        $copy = match ($language) {
+            CoachLanguageService::CEBUANO => [
+                'intro' => 'Mao kini ang mga developer sa SpeakReady AI:',
+                'role_label' => 'Papel',
+                'responsibilities_label' => 'Mga responsibilidad',
+                'responsibilities' => [
+                    'Core code, mga database, ug mga API.',
+                    'Teknikal nga pagsulat, dokumentasyon, ug pagsunod sa mga lagda.',
+                    'Pagpangita og mga bug, paghimo og mga test case, ug kalig-on sa UX.',
+                ],
+            ],
+            CoachLanguageService::TAGLISH => [
+                'intro' => 'Ito ang developer team ng SpeakReady AI:',
+                'role_label' => 'Role',
+                'responsibilities_label' => 'Main responsibilities',
+                'responsibilities' => [
+                    'Core code, databases, at APIs.',
+                    'Technical writing, documentation, at compliance.',
+                    'Bug hunting, test cases, at UX stability.',
+                ],
+            ],
+            default => [
+                'intro' => 'Ang mga developer ng SpeakReady AI ay:',
+                'role_label' => 'Tungkulin',
+                'responsibilities_label' => 'Mga responsibilidad',
+                'responsibilities' => [
+                    'Core code, mga database, at mga API.',
+                    'Teknikal na pagsulat, dokumentasyon, at pagsunod sa mga pamantayan.',
+                    'Paghahanap ng mga bug, paggawa ng mga test case, at katatagan ng UX.',
+                ],
+            ],
+        };
+
+        $response = $copy['intro']."\n\n";
+
+        foreach (self::SPEAKREADY_DEVELOPERS as $index => $developer) {
+            $responsibilities = $copy['responsibilities'][$index] ?? $developer['responsibilities'];
+            $response .= "**{$developer['name']}**\n";
+            $response .= "**{$copy['role_label']}:** {$developer['role']}\n";
+            $response .= "**{$copy['responsibilities_label']}:** {$responsibilities}\n\n";
+        }
+
+        return trim($response);
+    }
+
+    private function speakReadyDeveloperCreditsPrompt(): string
+    {
+        $credits = [];
+
+        foreach (self::SPEAKREADY_DEVELOPERS as $developer) {
+            $credits[] = "{$developer['name']} - {$developer['role']} ({$developer['responsibilities']})";
+        }
+
+        return implode('; ', $credits).'.';
     }
 
     public function loadCoachConversation($id) {
@@ -952,7 +1152,18 @@ class UserController extends Controller
 
     public function deleteCoachConversation($id) {
         $conversation = \App\Models\ChatbotConversation::where('user_id', Auth::id())->findOrFail($id);
+        \App\Models\ChatbotMessage::where('chatbot_conversation_id', $conversation->id)->delete();
         $conversation->delete();
+        return response()->json(['success' => true]);
+    }
+
+    public function clearCoachConversations()
+    {
+        $conversationIds = \App\Models\ChatbotConversation::where('user_id', Auth::id())->pluck('id');
+
+        \App\Models\ChatbotMessage::whereIn('chatbot_conversation_id', $conversationIds)->delete();
+        \App\Models\ChatbotConversation::whereIn('id', $conversationIds)->delete();
+
         return response()->json(['success' => true]);
     }
 
