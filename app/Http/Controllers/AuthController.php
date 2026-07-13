@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ActivityLogger;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Profile;
@@ -60,6 +61,8 @@ class AuthController extends Controller
             }
 
             $request->session()->regenerate();
+            $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in', $request->ip());
+
             if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
             }
@@ -91,6 +94,12 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+
+        if ($user) {
+            $this->logAuthenticationActivity($user, 'user_logged_out', 'logged out', $request->ip());
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -181,6 +190,8 @@ class AuthController extends Controller
                 ])->withInput(['email' => $user->email]);
             }
 
+            $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in with Google', request()->ip());
+
             if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
             }
@@ -190,5 +201,16 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Log::error('Google login failed: ' . $e->getMessage(), ['exception' => $e]);
             return redirect('/')->withErrors(['email' => 'Failed to login with Google: ' . $e->getMessage()]);
         }
+    }
+
+    private function logAuthenticationActivity(User $user, string $action, string $activity, ?string $ipAddress): void
+    {
+        ActivityLogger::log(
+            $user,
+            $action,
+            "{$user->name} ({$user->email}) {$activity}.",
+            $ipAddress,
+            false
+        );
     }
 }

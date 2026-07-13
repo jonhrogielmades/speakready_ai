@@ -2683,6 +2683,63 @@
 
       <script>
           let adminLastSeenActivityId = localStorage.getItem('admin_last_seen_activity_id') || 0;
+          let adminActivityNotificationsReady = false;
+
+          function rememberLatestAdminActivity(activities) {
+              if (!Array.isArray(activities) || activities.length === 0) return;
+
+              const latestId = Math.max(...activities.map(activity => Number(activity.id) || 0));
+              if (latestId > Number(adminLastSeenActivityId || 0)) {
+                  adminLastSeenActivityId = latestId;
+                  localStorage.setItem('admin_last_seen_activity_id', latestId);
+              }
+          }
+
+          function requestAdminPwaNotificationPermission() {
+              if (!('Notification' in window)) return;
+
+              if (Notification.permission === 'default') {
+                  Notification.requestPermission().catch(() => {});
+              }
+          }
+
+          function showAdminPwaNotification(activity) {
+              if (!activity || !('Notification' in window) || Notification.permission !== 'granted') return;
+
+              const payload = {
+                  type: 'SHOW_ADMIN_ACTIVITY_NOTIFICATION',
+                  title: activity.title || 'Admin activity',
+                  body: activity.body || 'A user activity was recorded.',
+                  url: activity.url || '{{ route('admin.dashboard') }}',
+                  tag: `admin-activity-${activity.id}`,
+              };
+
+              if (navigator.serviceWorker?.controller) {
+                  navigator.serviceWorker.controller.postMessage(payload);
+                  return;
+              }
+
+              navigator.serviceWorker?.ready
+                  .then(registration => registration.active?.postMessage(payload))
+                  .catch(() => {});
+          }
+
+          function notifyNewAdminAuthActivities(activities) {
+              if (!Array.isArray(activities) || activities.length === 0) return;
+
+              const newActivities = activities
+                  .filter(activity => Number(activity.id) > Number(adminLastSeenActivityId || 0))
+                  .sort((a, b) => Number(a.id) - Number(b.id));
+
+              if (!adminActivityNotificationsReady) {
+                  adminActivityNotificationsReady = true;
+                  rememberLatestAdminActivity(activities);
+                  return;
+              }
+
+              newActivities.forEach(showAdminPwaNotification);
+              rememberLatestAdminActivity(activities);
+          }
 
           function fetchAdminActivities() {
               fetch(`{{ route('admin.api.latest-activities') }}`)
@@ -2702,6 +2759,8 @@
                           if(countEl) { countEl.style.display = 'none'; }
                           if(badgeEl) { badgeEl.style.display = 'none'; }
                       }
+
+                      notifyNewAdminAuthActivities(data.auth_activities);
                   })
                   .catch(err => console.error('Error fetching activities:', err));
           }
@@ -2763,6 +2822,7 @@
           }
 
           document.addEventListener('DOMContentLoaded', function() {
+              requestAdminPwaNotificationPermission();
               fetchAdminActivities();
               setInterval(fetchAdminActivities, 15000);
           });

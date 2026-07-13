@@ -1151,6 +1151,18 @@ EOT;
         $activitiesQuery = \App\Models\ActivityLog::with('user')->orderBy('id', 'desc');
         $latestActivities = $activitiesQuery->take(15)->get();
         $newCount = \App\Models\ActivityLog::whereNull('read_at')->count();
+        $authActivities = $latestActivities
+            ->whereNull('read_at')
+            ->whereIn('action', ['user_logged_in', 'user_logged_out'])
+            ->values()
+            ->map(function ($activity) {
+                return [
+                    'id' => $activity->id,
+                    'title' => $activity->action === 'user_logged_out' ? 'User logged out' : 'User logged in',
+                    'body' => $activity->description ?: ($activity->user ? $activity->user->name : 'A user activity was recorded.'),
+                    'url' => route('admin.dashboard'),
+                ];
+            });
 
         $html = '';
         if ($latestActivities->isEmpty()) {
@@ -1181,6 +1193,7 @@ EOT;
         return response()->json([
             'html' => $html,
             'new_count' => $newCount,
+            'auth_activities' => $authActivities,
         ]);
     }
 

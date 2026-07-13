@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speakready-pwa-v7';
+const CACHE_NAME = 'speakready-pwa-v8';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -33,5 +33,47 @@ self.addEventListener('fetch', event => {
       .catch(() => {
         return caches.match(event.request);
       })
+  );
+});
+
+self.addEventListener('message', event => {
+  const data = event.data || {};
+
+  if (data.type !== 'SHOW_ADMIN_ACTIVITY_NOTIFICATION') return;
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'SpeakReady AI', {
+      body: data.body || 'New admin activity.',
+      icon: '/img/app-icon-192.png',
+      badge: '/img/app-icon-192.png',
+      tag: data.tag || 'admin-activity',
+      renotify: true,
+      data: {
+        url: data.url || '/admin/dashboard',
+      },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || '/admin/dashboard';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+
+      return undefined;
+    })
   );
 });
