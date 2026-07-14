@@ -89,6 +89,73 @@
         color:#60a5fa;
         font-size:1.55rem;
     }
+    #notifications-page .notifications-pagination {
+        margin-top: 14px !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    #notifications-page .notifications-pagination nav {
+        width: auto;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    #notifications-page .notifications-pagination .pagination {
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+        align-items: center;
+    }
+    #notifications-page .notifications-pagination .page-item {
+        margin: 0 !important;
+    }
+    #notifications-page .notifications-pagination .page-link,
+    #notifications-page .notifications-pagination span.page-link {
+        width: auto !important;
+        min-width: 38px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 0 12px !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--bd) !important;
+        background: var(--sf) !important;
+        color: var(--tx) !important;
+        font-size: 0.84rem !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: none !important;
+    }
+    #notifications-page .notifications-pagination .page-item.active .page-link {
+        background: var(--pur) !important;
+        border-color: var(--pur) !important;
+        color: #fff !important;
+    }
+    #notifications-page .notifications-pagination .page-item.disabled .page-link {
+        opacity: 0.55;
+    }
+    #notifications-page .notifications-pagination svg,
+    #notifications-page .notifications-pagination .page-link svg {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    #notifications-page .notifications-pagination p,
+    #notifications-page .notifications-pagination .text-sm {
+        width: 100%;
+        margin: 0 !important;
+        text-align: center;
+        color: var(--tx3) !important;
+        font-size: 0.78rem !important;
+        line-height: 1.35 !important;
+        position: static !important;
+    }
     @media (max-width: 767px) {
         #notifications-page {
             --notif-mobile-radius: 16px;
@@ -303,8 +370,8 @@
         @endforelse
     </div>
     
-    <div class="mt-4 d-flex justify-content-center">
-        {{ $notifications->links() }}
+    <div class="notifications-pagination mt-4 d-flex justify-content-center">
+        {{ $notifications->links('pagination::bootstrap-5') }}
     </div>
 </div>
 

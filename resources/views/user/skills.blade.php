@@ -44,6 +44,21 @@
             padding: 12px !important;
             border-radius: 14px !important;
         }
+        #skill-trees-page .skill-xp-overview {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-left: 0;
+            margin-right: 0;
+            overflow: hidden;
+        }
+        #skill-trees-page .skill-xp-overview > [class*="col-"] {
+            flex: none !important;
+            max-width: none !important;
+            width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
         #skill-trees-page .stat-card [style*="width:50px"] {
             width: 34px !important;
             height: 34px !important;
@@ -55,10 +70,17 @@
             font-size: 0.62rem !important;
             line-height: 1.15;
             letter-spacing: 0 !important;
+            margin-bottom: 4px !important;
+            overflow-wrap: anywhere;
         }
         #skill-trees-page .stat-card h3 {
             font-size: 1.05rem;
             line-height: 1.12;
+        }
+        #skill-trees-page .stat-card h3 span {
+            display: inline;
+            font-size: 0.62rem !important;
+            line-height: 1.1;
         }
         #skill-trees-page h5 {
             font-size: 0.98rem;
@@ -143,7 +165,7 @@
     </div>
 
     <!-- Skill XP Overview -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 skill-xp-overview">
         <div class="col-6 col-md-3 animate-fade-up" style="animation-delay: 0.1s;">
             <div class="card stat-card premium-panel text-center" style="border:none;padding:24px;">
                 <div style="width:50px;height:50px;background:rgba(59,130,246,0.1);color:#3b82f6;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:20px;">

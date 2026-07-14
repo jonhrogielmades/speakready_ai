@@ -57,13 +57,15 @@
         top: calc(100% + 8px);
         right: 0;
         z-index: 30;
-        width: 220px;
+        width: min(320px, calc(100vw - 28px));
+        max-height: min(70dvh, 520px);
         padding: 6px;
         border: 1px solid var(--bd);
         border-radius: 12px;
         background: var(--sf);
         box-shadow: 0 18px 45px rgba(0,0,0,0.22);
         display: none;
+        overflow-y: auto;
     }
     .coach-actions-menu.open { display: block; }
     .coach-actions-item {
@@ -88,6 +90,54 @@
     }
     .coach-actions-item.danger { color: #ef4444; }
     .coach-actions-item.danger i { color: #ef4444; }
+    .coach-actions-divider {
+        height: 1px;
+        background: var(--bd);
+        margin: 6px;
+    }
+    .coach-actions-heading {
+        padding: 8px 10px 5px;
+        color: var(--tx3);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0;
+    }
+    .coach-actions-history {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--tx2);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        text-align: left;
+        transition: 0.2s;
+    }
+    .coach-actions-history:hover {
+        background: rgba(255,255,255,0.06);
+        color: var(--tx);
+    }
+    .coach-actions-history i {
+        width: 16px;
+        color: var(--tx3);
+        text-align: center;
+        flex: 0 0 16px;
+    }
+    .coach-actions-history span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.82rem;
+    }
+    .coach-actions-empty {
+        padding: 8px 10px 10px;
+        color: var(--tx3);
+        font-size: 0.78rem;
+    }
 
     /* Mobile-specific: full height chat within the mobile layout */
     @media (max-width: 767px) {
@@ -202,11 +252,8 @@
             <!-- Header -->
             <div style="padding:16px 24px; border-bottom:1px solid var(--bd); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02)">
                 <div class="d-flex align-items-center">
-                    <div style="width:40px;height:40px;background:var(--pur);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;margin-right:16px;font-size:1.2rem">
-                        <i class="fa-solid fa-robot"></i>
-                    </div>
                     <div>
-                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;"><i class="fa-solid fa-robot me-2"></i>SpeakReady AI Coach</h6>
+                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">SpeakReady AI Coach</h6>
                         <span style="font-size:.75rem;color:#34d399"><i class="fa-solid fa-circle text-success" style="font-size:.5rem;margin-right:4px"></i>Online</span>
                     </div>
                 </div>
@@ -220,6 +267,26 @@
                                 <i class="fa-solid fa-plus"></i>
                                 <span>New conversation</span>
                             </button>
+                            <div class="coach-actions-divider"></div>
+                            <div class="coach-actions-heading">Recent history</div>
+                            @forelse($recentConversations as $conv)
+                                <button class="coach-actions-history" type="button" role="menuitem" onclick="loadConversation({{ $conv->id }}); closeCoachActions();">
+                                    <i class="fa-regular fa-message"></i>
+                                    <span>{{ $conv->title ?: 'New Conversation' }}</span>
+                                </button>
+                            @empty
+                                <div class="coach-actions-empty">No recent conversations</div>
+                            @endforelse
+                            <div class="coach-actions-heading">Older history</div>
+                            @forelse($olderConversations as $conv)
+                                <button class="coach-actions-history" type="button" role="menuitem" onclick="loadConversation({{ $conv->id }}); closeCoachActions();">
+                                    <i class="fa-regular fa-clock"></i>
+                                    <span>{{ $conv->title ?: 'New Conversation' }}</span>
+                                </button>
+                            @empty
+                                <div class="coach-actions-empty">No older conversations</div>
+                            @endforelse
+                            <div class="coach-actions-divider"></div>
                             <button class="coach-actions-item danger" type="button" role="menuitem" onclick="deleteCurrentConversation();">
                                 <i class="fa-solid fa-trash-can"></i>
                                 <span>Delete convo</span>

@@ -29,6 +29,111 @@
     .db-filter-input { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .db-filter-input:focus, .db-filter-input:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15) !important; background: var(--sf) !important; }
     .input-group.db-filter-input:focus-within { border-radius: 8px; border: 1px solid var(--pur) !important; }
+    #feedback-filters .feedback-search-wrap {
+        overflow: hidden;
+        border: 1px solid var(--bd);
+        background: var(--bg);
+        border-radius: 8px;
+    }
+    #feedback-filters .feedback-search-wrap .input-group-text,
+    #feedback-filters .feedback-search-wrap .form-control {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+    #feedback-filters .feedback-search-wrap .input-group-text,
+    #feedback-filters .feedback-search-wrap .form-control {
+        border-radius: 0 !important;
+    }
+    .feedback-empty-state {
+        display: block;
+        width: 100%;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        background: rgba(96, 165, 250, 0.08);
+        color: var(--tx3);
+        font-size: 0.82rem;
+        line-height: 1.45;
+        padding: 14px;
+        text-align: left;
+    }
+
+    @media (max-width: 1199px) {
+        .feedback-history-head {
+            display: block !important;
+        }
+
+        .feedback-history-head h5 {
+            margin-bottom: 12px !important;
+        }
+
+        #feedback-filters {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 8px !important;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        #feedback-filters #categoryFilter {
+            grid-column: 1 / -1;
+            display: block;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            min-height: 42px;
+        }
+
+        #feedback-filters #sortDateBtn {
+            grid-column: 1 / -1;
+            width: 100% !important;
+            min-width: 0;
+            min-height: 42px;
+            padding: 8px 9px;
+            font-size: 0.72rem;
+            white-space: nowrap;
+        }
+
+        #feedback-filters .feedback-search-wrap {
+            grid-column: 1 / -1;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0;
+            min-height: 42px;
+        }
+
+        #feedback-filters .feedback-search-wrap .input-group-text {
+            padding-left: 10px;
+            padding-right: 7px;
+        }
+
+        #feedback-filters #feedbackSearch {
+            min-width: 0;
+            font-size: 0.76rem;
+            padding-left: 4px;
+        }
+
+        #feedback-filters form {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+
+        #feedback-filters form .btn {
+            width: 100%;
+            min-height: 42px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        #feedback-filters #sortDateBtn {
+            font-size: 0.68rem;
+            padding-inline: 7px;
+        }
+
+        #feedback-filters #feedbackSearch {
+            font-size: 0.72rem;
+        }
+    }
 </style>
 @include('partials.page-hero-styles')
 
@@ -53,7 +158,7 @@
     </div>
 
     <div class="premium-panel">
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="feedback-history-head d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <h5 style="color:var(--tx);margin:0;font-weight:bold;">Feedback History</h5>
             <div id="feedback-filters" class="d-flex gap-2 flex-wrap">
                 <select id="categoryFilter" class="form-select border-0 db-filter-input" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
@@ -72,7 +177,7 @@
                         </button>
                     </form>
                 @endif
-                <div class="input-group db-filter-input" style="width:250px; background:var(--bg); border-radius:8px;">
+                <div class="input-group db-filter-input feedback-search-wrap" style="width:250px;">
                     <span class="input-group-text border-0" style="background:transparent;color:var(--tx3);border-radius:8px 0 0 8px;"><i class="fa-solid fa-search"></i></span>
                     <input type="text" id="feedbackSearch" class="form-control border-0 db-filter-input" placeholder="Search Feedback..." style="background:transparent;color:var(--tx);border-radius:0 8px 8px 0; outline:none; box-shadow:none !important;">
                 </div>
@@ -127,7 +232,9 @@
                     @endforeach
                     @if($sessions->count() == 0)
                     <tr>
-                        <td colspan="5" class="text-center py-4" style="color:var(--tx3);font-style:italic;">No feedback available yet. Complete a mock interview to generate detailed feedback!</td>
+                        <td colspan="5" class="border-0 py-3">
+                            <span class="feedback-empty-state">No feedback available yet. Complete a mock interview to generate detailed feedback!</span>
+                        </td>
                     </tr>
                     @endif
                 </tbody>
@@ -218,5 +325,3 @@
 </script>
 @endpush
 @endsection
-
-

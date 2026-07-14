@@ -28,6 +28,59 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    .profile-crop-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(2, 6, 23, 0.62);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .profile-crop-modal.open {
+        display: flex;
+    }
+    .profile-crop-dialog {
+        width: min(420px, 100%);
+        border: 1px solid var(--bd);
+        border-radius: 18px;
+        background: var(--sf);
+        box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+        padding: 18px;
+    }
+    .profile-crop-frame {
+        width: 100%;
+        aspect-ratio: 1;
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        background: var(--bg3);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 14px 0;
+    }
+    .profile-crop-frame canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        cursor: move;
+        touch-action: none;
+    }
+    .profile-crop-controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .profile-crop-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+    }
     @media (max-width: 767px) {
         #account-page .premium-panel {
             padding: 14px !important;
@@ -152,18 +205,19 @@
                         @if(Auth::user()->profile_photo_path)
                             <div class="account-photo-avatar" style="width:80px;height:80px;border-radius:24px;overflow:hidden;margin-right:24px;border:1px solid var(--bd)">
                                 @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
-                                    <img src="{{ Auth::user()->profile_photo_path }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
+                                    <img id="profilePhotoPreview" src="{{ Auth::user()->profile_photo_path }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
                                 @else
-                                    <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
+                                    <img id="profilePhotoPreview" src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Profile Photo" style="width:100%;height:100%;object-fit:cover;">
                                 @endif
                             </div>
                         @else
-                            <div class="account-photo-avatar" style="width:80px;height:80px;background:var(--pur);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;margin-right:24px">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            <div class="account-photo-avatar" style="width:80px;height:80px;background:var(--pur);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;margin-right:24px;overflow:hidden;">
+                                <img id="profilePhotoPreview" src="" alt="Profile Photo preview" style="width:100%;height:100%;object-fit:cover;display:none;">
+                                <span id="profilePhotoInitial">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
                             </div>
                         @endif
                         <div class="account-photo-actions">
-                            <input type="file" name="profile_photo" id="profile_photo" class="d-none" accept="image/png, image/jpeg, image/gif" onchange="document.getElementById('photo-filename').textContent = this.files[0].name">
+                            <input type="file" name="profile_photo" id="profile_photo" class="d-none" accept="image/png, image/jpeg, image/gif">
                             <button type="button" class="btn btn-outline-primary btn-sm mb-2" style="border-radius:8px" onclick="document.getElementById('profile_photo').click()">Upload New Picture</button>
                             <div style="font-size:.8rem;color:var(--tx3)" id="photo-filename">JPG, GIF or PNG. Max size of 2MB.</div>
                         </div>
@@ -238,7 +292,150 @@
     </div>
 </div>
 
+<div class="profile-crop-modal" id="profileCropModal" aria-hidden="true">
+    <div class="profile-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="profileCropTitle">
+        <h6 id="profileCropTitle" style="color:var(--tx);font-weight:800;margin:0;">Crop Profile Picture</h6>
+        <div class="profile-crop-frame">
+            <canvas id="profileCropCanvas" width="320" height="320"></canvas>
+        </div>
+        <div class="profile-crop-controls">
+            <label class="olbl" for="profileCropZoom" style="margin:0;">Zoom</label>
+            <input type="range" id="profileCropZoom" min="1" max="3" step="0.01" value="1" class="form-range">
+        </div>
+        <div class="profile-crop-actions">
+            <button type="button" class="btn btn-outline-secondary" onclick="cancelProfileCrop()">Cancel</button>
+            <button type="button" class="btn bgrd" onclick="applyProfileCrop()">Use Crop</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    const profileInput = document.getElementById('profile_photo');
+    const profilePreview = document.getElementById('profilePhotoPreview');
+    const cropModal = document.getElementById('profileCropModal');
+    const cropCanvas = document.getElementById('profileCropCanvas');
+    const cropZoom = document.getElementById('profileCropZoom');
+    const cropCtx = cropCanvas ? cropCanvas.getContext('2d') : null;
+    let cropImage = null;
+    let cropSourceName = 'profile-photo.jpg';
+    let cropScale = 1;
+    let cropOffsetX = 0;
+    let cropOffsetY = 0;
+    let cropDragging = false;
+    let cropLastX = 0;
+    let cropLastY = 0;
+
+    function drawProfileCrop() {
+        if (!cropCtx || !cropImage) return;
+        const size = cropCanvas.width;
+        cropCtx.clearRect(0, 0, size, size);
+        cropCtx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg3') || '#111827';
+        cropCtx.fillRect(0, 0, size, size);
+
+        const baseScale = Math.max(size / cropImage.width, size / cropImage.height);
+        const scale = baseScale * cropScale;
+        const width = cropImage.width * scale;
+        const height = cropImage.height * scale;
+        const minX = size - width;
+        const minY = size - height;
+        cropOffsetX = Math.min(0, Math.max(minX, cropOffsetX));
+        cropOffsetY = Math.min(0, Math.max(minY, cropOffsetY));
+        cropCtx.drawImage(cropImage, cropOffsetX, cropOffsetY, width, height);
+    }
+
+    function openProfileCrop(file) {
+        if (!file) return;
+        cropSourceName = file.name || 'profile-photo.jpg';
+        document.getElementById('photo-filename').textContent = cropSourceName;
+        const reader = new FileReader();
+        reader.onload = event => {
+            cropImage = new Image();
+            cropImage.onload = () => {
+                cropScale = 1;
+                cropZoom.value = '1';
+                const size = cropCanvas.width;
+                const baseScale = Math.max(size / cropImage.width, size / cropImage.height);
+                cropOffsetX = (size - cropImage.width * baseScale) / 2;
+                cropOffsetY = (size - cropImage.height * baseScale) / 2;
+                cropModal.classList.add('open');
+                cropModal.setAttribute('aria-hidden', 'false');
+                drawProfileCrop();
+            };
+            cropImage.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function cancelProfileCrop() {
+        cropModal.classList.remove('open');
+        cropModal.setAttribute('aria-hidden', 'true');
+        if (profileInput) profileInput.value = '';
+        document.getElementById('photo-filename').textContent = 'JPG, GIF or PNG. Max size of 2MB.';
+    }
+
+    function applyProfileCrop() {
+        if (!cropCanvas || !profileInput) return;
+        cropCanvas.toBlob(blob => {
+            if (!blob) return;
+            const file = new File([blob], cropSourceName.replace(/\.[^.]+$/, '') + '-cropped.jpg', { type: 'image/jpeg' });
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            profileInput.files = transfer.files;
+
+            const previewUrl = URL.createObjectURL(file);
+            if (profilePreview) {
+                profilePreview.src = previewUrl;
+                profilePreview.style.display = 'block';
+                const initial = document.getElementById('profilePhotoInitial');
+                if (initial) initial.style.display = 'none';
+            }
+            document.getElementById('photo-filename').textContent = file.name;
+            cropModal.classList.remove('open');
+            cropModal.setAttribute('aria-hidden', 'true');
+        }, 'image/jpeg', 0.9);
+    }
+
+    if (profileInput) {
+        profileInput.addEventListener('change', function () {
+            openProfileCrop(this.files && this.files[0]);
+        });
+    }
+
+    if (cropZoom) {
+        cropZoom.addEventListener('input', function () {
+            cropScale = parseFloat(this.value) || 1;
+            drawProfileCrop();
+        });
+    }
+
+    if (cropCanvas) {
+        const pointerPosition = event => {
+            const rect = cropCanvas.getBoundingClientRect();
+            return {
+                x: (event.clientX - rect.left) * (cropCanvas.width / rect.width),
+                y: (event.clientY - rect.top) * (cropCanvas.height / rect.height)
+            };
+        };
+        cropCanvas.addEventListener('pointerdown', event => {
+            cropDragging = true;
+            const pos = pointerPosition(event);
+            cropLastX = pos.x;
+            cropLastY = pos.y;
+            cropCanvas.setPointerCapture(event.pointerId);
+        });
+        cropCanvas.addEventListener('pointermove', event => {
+            if (!cropDragging) return;
+            const pos = pointerPosition(event);
+            cropOffsetX += pos.x - cropLastX;
+            cropOffsetY += pos.y - cropLastY;
+            cropLastX = pos.x;
+            cropLastY = pos.y;
+            drawProfileCrop();
+        });
+        cropCanvas.addEventListener('pointerup', () => { cropDragging = false; });
+        cropCanvas.addEventListener('pointercancel', () => { cropDragging = false; });
+    }
+
     function togglePasswordVisibility(inputId, btn) {
         const input = document.getElementById(inputId);
         const icon = btn.querySelector('i');

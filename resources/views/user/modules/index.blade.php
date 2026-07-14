@@ -56,6 +56,9 @@
         border-color: var(--pur);
         box-shadow: 0 8px 25px rgba(139,92,246,0.3);
     }
+    .module-topic-select-wrap {
+        display: none;
+    }
     
     .db-top-search { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .db-top-search:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf) !important; }
@@ -90,22 +93,34 @@
             gap: 9px;
         }
         #interview-modules-page #nav-pills-container {
-            flex-wrap: nowrap !important;
-            overflow-x: auto;
-            padding-bottom: 8px !important;
-            margin-bottom: 12px !important;
-            scrollbar-width: none;
+            display: none !important;
         }
-        #interview-modules-page #nav-pills-container::-webkit-scrollbar {
-            display: none;
+        #interview-modules-page .module-topic-select-wrap {
+            display: block;
+            margin-bottom: 12px;
         }
-        #interview-modules-page .ll-nav-pill {
-            flex: 0 0 auto;
-            min-height: 40px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            white-space: nowrap;
+        #interview-modules-page .module-topic-select-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--tx3);
+            font-size: 0.72rem;
+            font-weight: 800;
+            margin-bottom: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0;
+        }
+        #interview-modules-page .module-topic-select {
+            width: 100%;
+            min-height: 44px;
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            background: var(--bg3);
+            color: var(--tx);
+            padding: 10px 12px;
+            font-weight: 700;
+            font-size: 0.86rem;
+            outline: none;
         }
         #interview-modules-page .module-card {
             border-radius: 14px !important;
@@ -190,6 +205,15 @@
     </div>
 
     <!-- Sub-Navigation -->
+    <div class="module-topic-select-wrap">
+        <select id="moduleTopicSelect" class="module-topic-select" aria-label="Select module topic">
+            <option value="{{ route('user.modules.index', array_filter(['search' => request('search')])) }}" {{ !request('category') ? 'selected' : '' }}>All Topics</option>
+            @foreach($categories as $category)
+                <option value="{{ route('user.modules.index', array_filter(['category' => $category, 'search' => request('search')])) }}" {{ request('category') == $category ? 'selected' : '' }}>{{ $category }}</option>
+            @endforeach
+        </select>
+    </div>
+
     <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
         <a href="{{ route('user.modules.index') }}" class="ll-nav-pill {{ !request('category') ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-layer-group"></i> All Topics</a>
         @foreach($categories as $category)
@@ -248,5 +272,19 @@
         </div>
     @endif
 </div>
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const topicSelect = document.getElementById('moduleTopicSelect');
+        if (!topicSelect) return;
+
+        topicSelect.addEventListener('change', function () {
+            if (this.value) {
+                window.location.href = this.value;
+            }
+        });
+    });
+</script>
+@endpush
 @endsection
 

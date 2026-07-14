@@ -225,6 +225,24 @@
             border-radius: 8px;
             font-size: 0.56rem;
         }
+        #voice-rehearsal-page .voice-suggestion-head {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-bottom: 4px;
+        }
+        #voice-rehearsal-page .voice-suggestion-head i {
+            flex: 0 0 18px;
+            width: 18px;
+            margin-top: 0 !important;
+            text-align: center;
+        }
+        #voice-rehearsal-page .voice-suggestion-title {
+            min-width: 0;
+            margin: 0;
+            line-height: 1.25;
+        }
     }
 </style>
 @include('partials.page-hero-styles')
@@ -462,30 +480,30 @@
                     <h6 class="fw-bold mb-4"><i class="fa-solid fa-lightbulb me-2" style="color:#fbbf24;"></i> AI Practice Suggestions</h6>
                     
                     <div class="p-3 mb-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                        <div class="d-flex gap-3">
-                            <i class="fa-solid fa-gauge-high" style="color:#60a5fa;margin-top:4px;"></i>
-                            <div>
-                                <div style="font-weight:600;font-size:0.9rem;">Pace Yourself</div>
-                                <div style="font-size:0.8rem;color:var(--tx2);">Your average pace is 165 WPM. Try taking slight pauses between sentences.</div>
+                        <div>
+                            <div class="voice-suggestion-head">
+                                <i class="fa-solid fa-gauge-high" style="color:#60a5fa;"></i>
+                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Pace Yourself</div>
                             </div>
+                            <div style="font-size:0.8rem;color:var(--tx2);">Your average pace is 165 WPM. Try taking slight pauses between sentences.</div>
                         </div>
                     </div>
                     <div class="p-3 mb-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                        <div class="d-flex gap-3">
-                            <i class="fa-solid fa-comment-slash" style="color:#f87171;margin-top:4px;"></i>
-                            <div>
-                                <div style="font-weight:600;font-size:0.9rem;">Reduce Fillers</div>
-                                <div style="font-size:0.8rem;color:var(--tx2);">You used "Um" 12 times last session. Try silent pauses instead of filler words.</div>
+                        <div>
+                            <div class="voice-suggestion-head">
+                                <i class="fa-solid fa-comment-slash" style="color:#f87171;"></i>
+                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Reduce Fillers</div>
                             </div>
+                            <div style="font-size:0.8rem;color:var(--tx2);">You used "Um" 12 times last session. Try silent pauses instead of filler words.</div>
                         </div>
                     </div>
                     <div class="p-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                        <div class="d-flex gap-3">
-                            <i class="fa-solid fa-briefcase" style="color:#34d399;margin-top:4px;"></i>
-                            <div>
-                                <div style="font-weight:600;font-size:0.9rem;">Focus on Technical</div>
-                                <div style="font-size:0.8rem;color:var(--tx2);">Your clarity drops on technical questions. Practice the 'Technical' category next.</div>
+                        <div>
+                            <div class="voice-suggestion-head">
+                                <i class="fa-solid fa-briefcase" style="color:#34d399;"></i>
+                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Focus on Technical</div>
                             </div>
+                            <div style="font-size:0.8rem;color:var(--tx2);">Your clarity drops on technical questions. Practice the 'Technical' category next.</div>
                         </div>
                     </div>
                 </div>

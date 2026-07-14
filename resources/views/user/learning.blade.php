@@ -70,6 +70,9 @@
         border-color: var(--pur);
         box-shadow: 0 8px 25px rgba(139,92,246,0.3);
     }
+    .learning-category-select-wrap {
+        display: none;
+    }
     .ll-category-list {
         background: var(--sf);
         border: 1px solid var(--bd);
@@ -308,10 +311,23 @@
             border-radius: 12px !important;
         }
         #learning-games-page #nav-pills-container {
-            flex-wrap: nowrap !important;
-            overflow-x: auto;
-            margin-bottom: 12px !important;
-            scrollbar-width: none;
+            display: none !important;
+        }
+        #learning-games-page .learning-category-select-wrap {
+            display: block;
+            margin-bottom: 12px;
+        }
+        #learning-games-page .learning-category-select {
+            width: 100%;
+            min-height: 44px;
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            background: var(--bg3);
+            color: var(--tx);
+            padding: 10px 12px;
+            font-weight: 700;
+            font-size: 0.86rem;
+            outline: none;
         }
         .level-path-line {
             left: 20px;
@@ -401,12 +417,6 @@
             height: 50px;
             font-size: 1.2rem;
         }
-        #nav-pills-container {
-            padding-bottom: 10px;
-        }
-        #nav-pills-container::-webkit-scrollbar {
-            display: none;
-        }
     }
 </style>
 @include('partials.page-hero-styles')
@@ -437,6 +447,14 @@
     </div>
 
     <!-- Sub-Navigation -->
+    <div class="learning-category-select-wrap">
+        <select id="learningCategorySelect" class="learning-category-select" aria-label="Select learning category">
+            @foreach($categories as $category)
+                <option value="{{ route('user.learning', ['category_id' => $category->id]) }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->title }}</option>
+            @endforeach
+        </select>
+    </div>
+
     <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
         @foreach($categories as $category)
             <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
@@ -666,6 +684,17 @@
 
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const categorySelect = document.getElementById('learningCategorySelect');
+        if (!categorySelect) return;
+
+        categorySelect.addEventListener('change', function () {
+            if (this.value) {
+                window.location.href = this.value;
+            }
+        });
+    });
+
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
