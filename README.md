@@ -5,9 +5,9 @@ SpeakReady AI is a comprehensive web application for interview preparation. Foll
 ## Requirements
 
 Before you begin, ensure you have the following installed on your machine:
-- **PHP** 8.1 or higher
-- **Composer** (Dependency Manager for PHP)
-- **Node.js** & **npm** (JavaScript runtime and package manager)
+- **PHP** 8.2 or higher
+- **Composer** (Dependency Manager for PHP). Make sure `php` is available on PATH before running `composer install`.
+- **Node.js** 20.19 or higher, or 22.12 or higher, with **npm** 10 or higher
 - **MySQL** (or any preferred database)
 - **Git**
 
@@ -31,6 +31,8 @@ composer install
 # Install JavaScript/CSS dependencies
 npm install
 ```
+
+If you are using Laragon and `composer install` fails with `php is not recognized`, open Laragon's terminal or add Laragon's active PHP folder to PATH before running Composer.
 
 ### 3. Configure Environment Variables
 Copy the example environment file to create your active `.env` file:

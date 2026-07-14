@@ -32,7 +32,7 @@ class AuthController extends Controller
             'total_sessions' => 0,
         ]);
 
-        Auth::login($user);
+        Auth::login($user, true);
 
         if ($user->is_admin) {
             return redirect()->route('admin.dashboard');
@@ -42,12 +42,20 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $validated = $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
+            'remember' => 'sometimes|boolean',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        $credentials = [
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ];
+
+        $rememberDevice = $request->boolean('remember', true);
+
+        if (Auth::attempt($credentials, $rememberDevice)) {
             $user = Auth::user();
             
             if (in_array($user->status, ['inactive', 'suspended'])) {
@@ -174,7 +182,7 @@ class AuthController extends Controller
                 }
             }
 
-            Auth::login($user);
+            Auth::login($user, true);
 
             // Send an email notification for the Google login
             // Temporarily disabled to prevent 504 Gateway Timeout if SMTP is not configured or blocked on Render

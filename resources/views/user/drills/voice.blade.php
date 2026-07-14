@@ -124,12 +124,16 @@
             margin-bottom: 18px !important;
             border-radius: 16px !important;
         }
-        #voice-rehearsal-page .d-flex.justify-content-center.gap-3.mb-4 {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        #voice-rehearsal-page .voice-recorder-controls {
+            display: flex !important;
+            flex-wrap: wrap;
+            justify-content: center !important;
+            align-items: center;
             gap: 8px !important;
         }
-        #voice-rehearsal-page .d-flex.justify-content-center.gap-3.mb-4 .btn {
+        #voice-rehearsal-page .voice-recorder-controls .btn {
+            width: auto !important;
+            min-width: 140px;
             padding: 9px 10px !important;
             min-height: 42px;
             display: inline-flex;
@@ -140,6 +144,19 @@
         #voice-rehearsal-page .stat-box {
             padding: 11px 7px;
             border-radius: 12px;
+        }
+        #voice-rehearsal-page .row.g-2.mb-4 {
+            display: flex;
+            flex-wrap: nowrap;
+            margin-left: -4px;
+            margin-right: -4px;
+        }
+        #voice-rehearsal-page .row.g-2.mb-4 > .col-4 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+            width: 33.333333%;
+            padding-left: 4px;
+            padding-right: 4px;
         }
         #voice-rehearsal-page .stat-val {
             font-size: 1.05rem;
@@ -163,6 +180,50 @@
             grid-template-columns: 1fr;
             gap: 8px;
             align-items: stretch !important;
+        }
+        #voice-rehearsal-page .voice-history-table {
+            table-layout: fixed !important;
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+        #voice-rehearsal-page .voice-history-table th,
+        #voice-rehearsal-page .voice-history-table td {
+            padding: 10px 5px !important;
+            vertical-align: middle !important;
+            white-space: normal !important;
+            overflow-wrap: normal !important;
+            word-break: normal !important;
+            text-align: center;
+            font-size: 0.72rem !important;
+        }
+        #voice-rehearsal-page .voice-history-table th {
+            white-space: nowrap !important;
+            font-size: 0.68rem !important;
+        }
+        #voice-rehearsal-page .voice-history-table th:first-child,
+        #voice-rehearsal-page .voice-history-table td:first-child {
+            width: 18%;
+            text-align: left;
+        }
+        #voice-rehearsal-page .voice-history-table th:nth-child(2),
+        #voice-rehearsal-page .voice-history-table td:nth-child(2) {
+            width: 34%;
+        }
+        #voice-rehearsal-page .voice-history-table th:nth-child(3),
+        #voice-rehearsal-page .voice-history-table td:nth-child(3),
+        #voice-rehearsal-page .voice-history-table th:nth-child(4),
+        #voice-rehearsal-page .voice-history-table td:nth-child(4),
+        #voice-rehearsal-page .voice-history-table th:nth-child(5),
+        #voice-rehearsal-page .voice-history-table td:nth-child(5) {
+            width: 16%;
+        }
+        #voice-rehearsal-page .voice-history-table .badge {
+            max-width: 100%;
+            white-space: normal;
+            line-height: 1.08;
+            padding: 4px 5px;
+            border-radius: 8px;
+            font-size: 0.56rem;
         }
     }
 </style>
@@ -237,7 +298,7 @@
                     </div>
 
                     <!-- Controls -->
-                    <div class="d-flex justify-content-center gap-3 mb-4">
+                    <div class="voice-recorder-controls d-flex justify-content-center gap-3 mb-4">
                         <button id="btnStart" class="btn btn-shine" style="background:var(--dash-primary, #60a5fa);color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);" onclick="startRec()"><i class="fa-solid fa-play me-2"></i> Start</button>
                         <button id="btnPause" class="btn btn-warning" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="pauseRec()"><i class="fa-solid fa-pause me-2"></i> Pause</button>
                         <button id="btnResume" class="btn btn-info" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="resumeRec()"><i class="fa-solid fa-play me-2"></i> Resume</button>
@@ -377,7 +438,7 @@
                         <button class="btn btn-sm btn-outline-primary" style="border-radius:8px;" onclick="downloadReport()"><i class="fa-solid fa-download me-1"></i> Download Report (PDF)</button>
                     </div>
                     <div class="table-responsive">
-                        <table class="table custom-table">
+                        <table class="table custom-table voice-history-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>

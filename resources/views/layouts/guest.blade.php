@@ -2086,6 +2086,11 @@
                         <i class="fa-solid fa-eye-slash"></i>
                      </button>
                   </div>
+                  <div class="form-check mb-3" style="margin-top:-4px;">
+                     <input type="hidden" name="remember" value="0">
+                     <input class="form-check-input" type="checkbox" name="remember" value="1" id="loginRemember" checked>
+                     <label class="form-check-label" for="loginRemember" style="font-size:.8rem;color:var(--tx2);">Keep me signed in on this device</label>
+                  </div>
                   <div class="text-end mb-3" style="margin-top:-8px"><a href="#" style="font-size:.8rem;color:var(--pur)">Forgot password?</a></div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>

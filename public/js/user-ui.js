@@ -493,13 +493,19 @@
                     : null;
 
                 if (actionTarget && focusReturn && focusReturn.isConnected) {
-                    actionTarget.addEventListener('hidden.bs.offcanvas', function () {
+                    var restoreActionFocus = function () {
                         window.requestAnimationFrame(function () {
                             if (focusReturn.isConnected && typeof focusReturn.focus === 'function') {
                                 focusReturn.focus({ preventScroll: true });
                             }
                         });
-                    }, { once: true });
+                    };
+
+                    if (action.getAttribute('data-bs-toggle') === 'modal') {
+                        actionTarget.addEventListener('hidden.bs.modal', restoreActionFocus, { once: true });
+                    } else {
+                        actionTarget.addEventListener('hidden.bs.offcanvas', restoreActionFocus, { once: true });
+                    }
                 }
 
                 closePalette({ restoreFocus: !actionTarget });

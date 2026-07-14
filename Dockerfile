@@ -1,9 +1,12 @@
 FROM php:8.2-fpm
 
+ARG NODE_MAJOR=22
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    ca-certificates \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -12,9 +15,9 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     nginx \
-    nodejs \
-    npm \
     dos2unix \
+    && curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions

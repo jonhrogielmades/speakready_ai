@@ -1,4 +1,19 @@
-const CACHE_NAME = 'speakready-pwa-v8';
+const CACHE_NAME = 'speakready-pwa-v9';
+const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
+
+function isSameOrigin(requestUrl) {
+  return new URL(requestUrl).origin === self.location.origin;
+}
+
+function isHtmlNavigation(request) {
+  return request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html');
+}
+
+function isCacheableStaticAsset(request) {
+  if (!isSameOrigin(request.url)) return false;
+
+  return STATIC_ASSET_PATTERN.test(new URL(request.url).pathname);
+}
 
 self.addEventListener('install', event => {
   self.skipWaiting();
@@ -21,18 +36,28 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
+  if (isHtmlNavigation(event.request)) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+
+  if (!isCacheableStaticAsset(event.request)) return;
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) return cachedResponse;
+
+      return fetch(event.request).then(response => {
+        if (!response || !response.ok) return response;
+
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then(cache => {
           cache.put(event.request, responseClone);
         });
+
         return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
+      });
+    })
   );
 });
 
