@@ -783,7 +783,7 @@ function startSpeechRecognitionEngine() {
 
 if (BrowserSpeechRecognition) {
     recognition = new BrowserSpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = !mobileSpeechSurface;
     recognition.interimResults = true;
     recognition.lang = speechLocale;
     recognition.maxAlternatives = 3;
@@ -957,7 +957,7 @@ async function ensureMicrophoneAccess() {
 }
 
 function shouldCaptureAudioPlayback() {
-    return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+    return !mobileSpeechSurface && Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
 }
 
 function preferredAudioMimeType() {
@@ -1048,30 +1048,29 @@ async function startRec() {
     updateUIState();
     setTranscriptionStatus('Preparing microphone', '#fbbf24');
 
-    if (mobileSpeechSurface && !shouldCaptureAudioPlayback()) {
-        const microphoneReady = await ensureMicrophoneAccess();
-        if (!microphoneReady) {
-            await stopRec(false);
-            setTranscriptionStatus('Microphone permission is required', '#f87171');
+    if (mobileSpeechSurface) {
+        startSpeechRecognitionEngine();
+        if (recognitionActive) {
+            setTranscriptionStatus('Listening - speak now');
+        }
+        setPlaybackStatus('Playback recording is disabled on mobile so speech detection can use the microphone.', '#fbbf24');
+    } else {
+        if (shouldCaptureAudioPlayback()) {
+            await initAudioRec();
+        } else {
+            mediaRecorder = null;
+            releaseMediaStream();
+            setPlaybackStatus('Playback recording is unavailable in this browser.', '#fbbf24');
+        }
+
+        if (!isRec) {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
             return;
         }
-    }
-
-    if (shouldCaptureAudioPlayback()) {
-        await initAudioRec();
-    } else {
-        mediaRecorder = null;
-        releaseMediaStream();
-        setPlaybackStatus('Playback recording is unavailable in this browser.', '#fbbf24');
-    }
-
-    if (!isRec) {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        return;
-    }
-    startSpeechRecognitionEngine();
-    if (recognitionActive) {
-        setTranscriptionStatus('Listening - speak now');
+        startSpeechRecognitionEngine();
+        if (recognitionActive) {
+            setTranscriptionStatus('Listening - speak now');
+        }
     }
 
     clearInterval(timer);
