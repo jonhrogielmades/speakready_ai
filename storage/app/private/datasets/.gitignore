@@ -1,0 +1,13 @@
+*
+!.gitignore
+!README.md
+!manifests/
+!manifests/.gitignore
+!raw/
+!raw/.gitignore
+!normalized/
+!normalized/.gitignore
+!quarantine/
+!quarantine/.gitignore
+!evals/
+!evals/.gitignore
