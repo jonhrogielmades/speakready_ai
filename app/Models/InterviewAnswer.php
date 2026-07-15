@@ -31,11 +31,17 @@ class InterviewAnswer extends Model
         'clarity_score',
         'relevance_score',
         'confidence_score',
+        'delivery_stability_score',
+        'self_reported_confidence',
+        'scoring_confidence',
         'grammar_score',
         'audit_status',
         'flagged_reason',
         'star_analysis',
         'recommendation_text',
+        'evidence_map',
+        'rubric_level',
+        'improved_answer_source',
     ];
 
     protected $casts = [
@@ -43,6 +49,7 @@ class InterviewAnswer extends Model
         'transcript_timeline' => 'array',
         'is_skipped' => 'boolean',
         'timed_out' => 'boolean',
+        'evidence_map' => 'array',
     ];
 
     public function question()

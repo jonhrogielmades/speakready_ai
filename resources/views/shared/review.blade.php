@@ -1,4 +1,4 @@
-@extends(Auth::check() ? (isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app') : 'layouts.guest')
+@extends('layouts.public-review')
 @section('title', 'Interview Results')
 
 @section('content')
@@ -18,7 +18,7 @@
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
-            <h4 style="color:var(--tx);font-weight:700">Interview Results: {{ $sessionRecord->user->name ?? 'Candidate' }}</h4>
+            <h4 style="color:var(--tx);font-weight:700">Interview Results: {{ $sessionRecord->share_hide_sensitive ? 'Candidate' : ($sessionRecord->user->name ?? 'Candidate') }}</h4>
             <div class="d-flex gap-3 mt-2" style="font-size:0.9rem;color:var(--tx3)">
                 <span><i class="fa-regular fa-calendar me-1"></i> {{ $sessionRecord->created_at->format('M d, Y') }}</span>
                 <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'Job Interview' }}</span>
@@ -31,17 +31,25 @@
             <div class="text-start">
                 @php 
                     $overall = $sessionRecord->score->overall_readiness_score ?? 0;
-                    if($overall >= 90) { $rating = 'Excellent'; $color = '#10b981'; }
-                    elseif($overall >= 70) { $rating = 'Good'; $color = '#3b82f6'; }
-                    elseif($overall >= 50) { $rating = 'Fair'; $color = '#f59e0b'; }
-                    else { $rating = 'Needs Improvement'; $color = '#ef4444'; }
+                    $rating = $sessionRecord->score->readiness_band
+                        ?: ($overall >= 80 ? 'Ready for Simulation' : ($overall >= 60 ? 'Nearly Ready' : 'Developing'));
+                    $color = $overall >= 80 ? '#10b981' : ($overall >= 60 ? '#3b82f6' : '#f59e0b');
                 @endphp
                 <div class="d-flex align-items-center gap-2 d-md-block">
                     <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
                     <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
+                    @if(($sessionRecord->score->score_version ?? 1) >= 2)
+                        <div style="font-size:.72rem;color:var(--tx3);margin-top:4px;">Rubric v{{ $sessionRecord->score->score_version }} · score confidence {{ $sessionRecord->score->scoring_confidence ?? 0 }}%</div>
+                    @endif
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="alert mb-4" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:var(--tx);border-radius:14px;">
+        <i class="fa-solid fa-shield-halved me-2 text-primary"></i>
+        Private review link{{ $sessionRecord->share_expires_at ? ' · expires '.$sessionRecord->share_expires_at->format('M d, Y g:i A') : '' }}.
+        @if(!$sessionRecord->score_eligible) This is coached-practice feedback and is not readiness evidence. @endif
     </div>
 
     <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
@@ -101,8 +109,8 @@
                         ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
                         ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 0, 'color' => '#8b5cf6'],
                         ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
-                        ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score ?? 0, 'color' => '#ef4444'],
-                        ['name' => 'Body Language', 'score' => $sessionRecord->score->body_language_score ?? 0, 'color' => '#ec4899']
+                        ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'],
+                        ['name' => 'Job Evidence Match', 'score' => $sessionRecord->score->job_evidence_match_score ?? 0, 'color' => '#ec4899']
                     ];
                 @endphp
                 <div class="row g-4">
@@ -179,7 +187,7 @@
                 @endforelse
             </div>
         </div>
-        @if($sessionRecord->share_token)
+        @if($sessionRecord->share_token && data_get($sessionRecord->share_permissions, 'comment', true))
         <div class="col-lg-5">
             <form action="{{ route('shared.mentor-comments.store', $sessionRecord->share_token) }}" method="POST" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 @csrf
@@ -244,8 +252,8 @@
                                 || ($answer->voice_duration ?? 0) > 0
                                 || ($answer->filler_words_count ?? 0) > 0
                                 || ($answer->confidence_score ?? 0) > 0;
-                            $hasBodyLanguageMetrics = ($answer->eye_contact_score ?? 0) > 0
-                                || ($answer->posture_score ?? 0) > 0;
+                            $hasLegacyBodyLanguageMetrics = ($sessionRecord->score->body_language_included ?? false)
+                                && (($answer->eye_contact_score ?? 0) > 0 || ($answer->posture_score ?? 0) > 0);
                         @endphp
 
                         <!-- Feature 11: Voice Rehearsal Feedback -->
@@ -265,8 +273,8 @@
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Confidence</div>
-                                    <div style="color:{{ ($answer->confidence_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->confidence_score ?? 0 }}%</div>
+                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Delivery Stability</div>
+                                    <div style="color:{{ ($answer->delivery_stability_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->delivery_stability_score ?? 0 }}%</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
@@ -279,8 +287,8 @@
 
                         @endif
 
-                        <!-- Feature 16: Body Language Breakdown -->
-                        @if($hasBodyLanguageMetrics)
+                        @if($hasLegacyBodyLanguageMetrics)
+                        <div class="mb-2" style="color:var(--tx3);font-size:.8rem;">Legacy camera estimates — excluded from current readiness scoring.</div>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(236,72,153,0.05);border-radius:12px;border:1px solid rgba(236,72,153,0.2);">
@@ -305,6 +313,28 @@
                             <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
                             <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback ?: 'No AI feedback was generated for this answer.' }}</p>
                         </div>
+
+                        @php $evidenceMap = is_array($answer->evidence_map) ? $answer->evidence_map : []; @endphp
+                        @if(!empty($evidenceMap) || $answer->rubric_level)
+                            <div class="mb-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                                    <h6 style="color:#10b981;font-weight:800;margin:0;"><i class="fa-solid fa-scale-balanced me-2"></i>Why this score</h6>
+                                    @if($answer->rubric_level)<span class="badge bg-success">{{ $answer->rubric_level }}</span>@endif
+                                </div>
+                                @if(!empty($evidenceMap['supporting_excerpts']))
+                                    <strong style="color:var(--tx);font-size:.85rem;">Supporting evidence</strong>
+                                    <ul style="color:var(--tx);line-height:1.6;margin-top:8px;">
+                                        @foreach($evidenceMap['supporting_excerpts'] as $excerpt)<li>“{{ $excerpt }}”</li>@endforeach
+                                    </ul>
+                                @endif
+                                @if(!empty($evidenceMap['missing_evidence']))
+                                    <strong style="color:var(--tx);font-size:.85rem;">Evidence to add</strong>
+                                    <ul style="color:var(--tx);line-height:1.6;margin:8px 0 0;">
+                                        @foreach($evidenceMap['missing_evidence'] as $missing)<li>{{ $missing }}</li>@endforeach
+                                    </ul>
+                                @endif
+                            </div>
+                        @endif
 
                         @php
                             $starAnalysis = is_array($answer->star_analysis) ? $answer->star_analysis : [];
@@ -351,10 +381,11 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Improved Answer</label>
+                                <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Fact-Grounded Revision Template</label>
                                 <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
                                     {{ $answer->better_sample_answer ?: 'No improved answer was generated for this response.' }}
                                 </div>
+                                <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Built only from the candidate's supplied answer; placeholders require verified facts.</div>
                             </div>
                         </div>
 

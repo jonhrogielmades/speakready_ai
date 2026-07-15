@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
 use App\Models\ActivityLog;
+use App\Models\Category;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
@@ -314,10 +314,10 @@ class AdminReliabilityTest extends TestCase
             'session.files' => $sessionPath,
         ]);
 
-        File::put($sessionPath . DIRECTORY_SEPARATOR . 'current-session', 'login_web_test|i:' . $onlineUser->id . ';');
-        File::put($sessionPath . DIRECTORY_SEPARATOR . 'stale-session', 'login_web_test|i:' . $staleUser->id . ';');
-        touch($sessionPath . DIRECTORY_SEPARATOR . 'current-session', now()->timestamp);
-        touch($sessionPath . DIRECTORY_SEPARATOR . 'stale-session', now()->subMinutes(10)->timestamp);
+        File::put($sessionPath.DIRECTORY_SEPARATOR.'current-session', 'login_web_test|i:'.$onlineUser->id.';');
+        File::put($sessionPath.DIRECTORY_SEPARATOR.'stale-session', 'login_web_test|i:'.$staleUser->id.';');
+        touch($sessionPath.DIRECTORY_SEPARATOR.'current-session', now()->timestamp);
+        touch($sessionPath.DIRECTORY_SEPARATOR.'stale-session', now()->subMinutes(10)->timestamp);
 
         $this->actingAs($admin)
             ->get(route('admin.dashboard'))
@@ -593,13 +593,18 @@ class AdminReliabilityTest extends TestCase
             ->post(route('admin.feedback.verify', $answer), [
                 'clarity_score' => 80,
                 'relevance_score' => 81,
-                'confidence_score' => 82,
+                'delivery_stability_score' => 82,
                 'grammar_score' => 83,
                 'star_analysis' => '{"situation":"clear","result":"measurable"}',
                 'audit_status' => 'approved',
                 'notes' => 'Verified after review.',
             ])
             ->assertRedirect(route('admin.feedback.show', $answer));
+
+        $this->assertDatabaseHas('interview_answers', [
+            'id' => $answer->id,
+            'delivery_stability_score' => 82,
+        ]);
 
         $this->assertSame([
             'situation' => 'clear',

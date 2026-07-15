@@ -2,21 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
+use App\Helpers\ActivityLogger;
+use App\Models\Category;
+use App\Models\ChatbotConversation;
+use App\Models\ChatbotMessage;
+use App\Models\ExperienceStory;
+use App\Models\Feedback;
+use App\Models\GameLevel;
+use App\Models\GameProgress;
+use App\Models\InterviewSession;
+use App\Models\LearningModule;
+use App\Models\LearningProgress;
+use App\Models\Profile;
+use App\Models\Question;
+use App\Models\ReadinessProfile;
+use App\Models\Score;
 use App\Models\Setting;
+use App\Models\VoiceSession;
 use App\Services\AIService;
 use App\Services\CoachLanguageService;
 use App\Services\CsvExportService;
 use App\Services\TranscriptService;
+use App\Services\TrustworthyAssessmentService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use App\Models\InterviewSession;
-use App\Models\Question;
-use App\Models\Score;
-use App\Helpers\ActivityLogger;
 
 class UserController extends Controller
 {
@@ -25,7 +39,8 @@ class UserController extends Controller
         'Relevance' => 'relevance_score',
         'Grammar' => 'grammar_score',
         'Professionalism' => 'professionalism_score',
-        'Confidence' => 'confidence_score',
+        'Delivery Stability' => 'delivery_stability_score',
+        'Job Evidence Match' => 'job_evidence_match_score',
     ];
 
     private const SKILL_PERKS = [
@@ -77,29 +92,33 @@ class UserController extends Controller
         ],
     ];
 
-    public function dashboard() {
+    public function dashboard()
+    {
         $user_id = Auth::id();
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user_id]);
-        
+        $profile = Profile::firstOrCreate(['user_id' => $user_id]);
+
         // Base query for completed sessions
-        $completedSessions = \App\Models\InterviewSession::where('user_id', $user_id)
-                            ->where('interview_sessions.status', 'completed');
-                            
+        $completedSessions = InterviewSession::where('user_id', $user_id)
+            ->where('interview_sessions.status', 'completed');
+
         $totalSessions = $completedSessions->count();
 
         $recentSessions = (clone $completedSessions)
-                            ->with(['category', 'score'])
-                            ->orderBy('created_at', 'desc')
-                            ->take(5)
-                            ->get();
+            ->with(['category', 'score'])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
 
         // Calculate Average Scores
-        $scoresQuery = \App\Models\Score::whereHas('session', function($q) use ($user_id) {
+        $scoresQuery = Score::whereHas('session', function ($q) use ($user_id) {
             $q->where('user_id', $user_id)->where('interview_sessions.status', 'completed');
+        })->where(function ($query) {
+            $query->where('assessment_mode', 'legacy')
+                ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
         });
-        
+
         $avgScore = $scoresQuery->avg('overall_readiness_score') ?? 0;
-        
+
         // Update Profile readiness score if it differs
         if ($profile->readiness_score != round($avgScore)) {
             $profile->readiness_score = round($avgScore);
@@ -112,100 +131,114 @@ class UserController extends Controller
             'relevance' => round($scoresQuery->avg('relevance_score') ?? 0),
             'grammar' => round($scoresQuery->avg('grammar_score') ?? 0),
             'professionalism' => round($scoresQuery->avg('professionalism_score') ?? 0),
-            'confidence' => round($scoresQuery->avg('confidence_score') ?? 0),
+            'delivery_stability' => round($scoresQuery->avg('delivery_stability_score') ?? 0),
         ];
 
         // Category Performance
-        $categoryPerformance = \App\Models\InterviewSession::where('user_id', $user_id)
+        $categoryPerformance = InterviewSession::where('user_id', $user_id)
             ->where('interview_sessions.status', 'completed')
             ->join('scores', 'interview_sessions.id', '=', 'scores.interview_session_id')
             ->join('categories', 'interview_sessions.category_id', '=', 'categories.id')
+            ->where(function ($query) {
+                $query->where('interview_sessions.score_eligible', true)
+                    ->orWhere('scores.assessment_mode', 'legacy');
+            })
             ->selectRaw('categories.title, AVG(scores.overall_readiness_score) as avg_score')
             ->groupBy('categories.id', 'categories.title')
             ->get()
-            ->map(function($item) {
-                return (object)[
+            ->map(function ($item) {
+                return (object) [
                     'name' => $item->title,
-                    'score' => round($item->avg_score)
+                    'score' => round($item->avg_score),
                 ];
             });
 
         // AI Feedback Parsing (Get recent top strengths and areas for improvement)
-        $recentFeedbacks = \App\Models\Feedback::whereHas('session', function($q) use ($user_id) {
+        $recentFeedbacks = Feedback::whereHas('session', function ($q) use ($user_id) {
             $q->where('user_id', $user_id)->where('status', 'completed');
         })->orderBy('created_at', 'desc')->take(5)->get();
-        
+
         // Extract AI feedback summary dynamically
         $aiFeedback = [
             'strengths' => [],
-            'improvements' => []
+            'improvements' => [],
         ];
-        
+
         // Loop through recent feedbacks to pick out strengths and improvements
         // Assuming feedback contains json fields for strengths and improvements if it existed.
         // For now, since we just have general feedback score metrics, we'll keep it empty unless data exists.
         if ($recentFeedbacks->count() > 0) {
             $latestS = $recentFeedbacks->first()->session->score;
-            if($latestS) {
+            if ($latestS) {
                 $skillsList = [
-                    'Clarity' => $latestS->clarity_score ?? 0, 
-                    'Relevance' => $latestS->relevance_score ?? 0, 
-                    'Grammar' => $latestS->grammar_score ?? 0, 
-                    'Professionalism' => $latestS->professionalism_score ?? 0, 
-                    'Confidence' => $latestS->confidence_score ?? 0
+                    'Clarity' => $latestS->clarity_score ?? 0,
+                    'Relevance' => $latestS->relevance_score ?? 0,
+                    'Grammar' => $latestS->grammar_score ?? 0,
+                    'Professionalism' => $latestS->professionalism_score ?? 0,
+                    'Delivery Stability' => $latestS->delivery_stability_score ?? 0,
+                    'Job Evidence Match' => $latestS->job_evidence_match_score ?? 0,
                 ];
-                foreach($skillsList as $sName => $sVal) {
-                    if($sVal >= 80) $aiFeedback['strengths'][] = $sName;
-                    else $aiFeedback['improvements'][] = $sName;
+                foreach ($skillsList as $sName => $sVal) {
+                    if ($sVal >= 80) {
+                        $aiFeedback['strengths'][] = $sName;
+                    } else {
+                        $aiFeedback['improvements'][] = $sName;
+                    }
                 }
             }
         }
-        
+
         // Gamification Data from Profile
         $currentStreak = $profile->current_streak ?? 0;
         $experiencePoints = $profile->experience_points ?? 0;
-        
+
         $badgesEarned = [];
-        if (!empty($profile->badges_earned)) {
+        if (! empty($profile->badges_earned)) {
             $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         }
 
         // Modules and Progress (Dynamic)
-        $learningProgress = \App\Models\LearningProgress::with('learningModule')
+        $learningProgress = LearningProgress::with('learningModule')
             ->where('user_id', $user_id)
             ->orderBy('updated_at', 'desc')
             ->take(3)
             ->get();
-            
+
         $learningLabProgress = collect([]);
-        foreach($learningProgress as $prog) {
-            if($prog->learningModule) {
+        foreach ($learningProgress as $prog) {
+            if ($prog->learningModule) {
                 // Map status to a color or use progress percentage
                 $color = $prog->progress_percentage == 100 ? '#34d399' : '#3b82f6';
-                $learningLabProgress->push((object)[
+                $learningLabProgress->push((object) [
                     'title' => $prog->learningModule->title,
                     'icon' => 'fa-book-open',
                     'color' => $color,
-                    'progress' => $prog->progress_percentage ?? 0
+                    'progress' => $prog->progress_percentage ?? 0,
                 ]);
             }
         }
-        
+
         // Notifications
         $userObj = Auth::user();
         $recentNotifications = $userObj->notifications ? $userObj->notifications()->take(3)->get() : collect([]);
 
         // Dynamic Upcoming Goal
         $currentGoalScore = (ceil($avgScore / 10) * 10);
-        if ($currentGoalScore == $avgScore) $currentGoalScore += 10;
-        if ($currentGoalScore > 100) $currentGoalScore = 100;
-        if ($currentGoalScore < 50) $currentGoalScore = 50;
-        
-        $upcomingGoal = (object)[
-            'title' => 'Reach ' . $currentGoalScore . '% Readiness',
+        if ($currentGoalScore == $avgScore) {
+            $currentGoalScore += 10;
+        }
+        if ($currentGoalScore > 100) {
+            $currentGoalScore = 100;
+        }
+        if ($currentGoalScore < 50) {
+            $currentGoalScore = 50;
+        }
+
+        $upcomingGoal = (object) [
+            'title' => 'Reach '.$currentGoalScore.'% Readiness',
             'current' => round($avgScore),
             'target' => $currentGoalScore,
-            'percent' => $currentGoalScore > 0 ? (round($avgScore) / $currentGoalScore) * 100 : 0
+            'percent' => $currentGoalScore > 0 ? (round($avgScore) / $currentGoalScore) * 100 : 0,
         ];
 
         // Dynamic AI Recommendations
@@ -215,10 +248,10 @@ class UserController extends Controller
             if ($categoryPerformance->count() > 0) {
                 $weakestCat = $categoryPerformance->sortBy('score')->first();
                 if ($weakestCat) {
-                    $aiRecommendations->push((object)[
+                    $aiRecommendations->push((object) [
                         'icon' => 'fa-bullseye',
                         'color' => 'var(--dash-primary)',
-                        'text' => 'Practice more "' . $weakestCat->name . '" interviews'
+                        'text' => 'Practice more "'.$weakestCat->name.'" interviews',
                     ]);
                 }
             }
@@ -227,45 +260,47 @@ class UserController extends Controller
                 'Clarity' => $radarData['clarity'],
                 'Relevance' => $radarData['relevance'],
                 'Grammar' => $radarData['grammar'],
-                'Professionalism' => $radarData['professionalism']
+                'Professionalism' => $radarData['professionalism'],
             ];
             asort($radarScores);
             $weakestSkill = key($radarScores);
-            
-            $aiRecommendations->push((object)[
+
+            $aiRecommendations->push((object) [
                 'icon' => 'fa-star',
                 'color' => 'var(--dash-success)',
-                'text' => 'Focus on improving your ' . $weakestSkill
+                'text' => 'Focus on improving your '.$weakestSkill,
             ]);
         }
 
         // Get past scores for chart
         $scoreTrend = (clone $completedSessions)
-                            ->with('score')
-                            ->orderBy('created_at', 'asc')
-                            ->take(10)
-                            ->get()
-                            ->map(function ($session) {
-                                return [
-                                    'date' => $session->created_at->format('M d'),
-                                    'score' => $session->score ? $session->score->overall_readiness_score : 0
-                                ];
-                            });
+            ->with('score')
+            ->orderBy('created_at', 'asc')
+            ->take(10)
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'date' => $session->created_at->format('M d'),
+                    'score' => $session->score ? $session->score->overall_readiness_score : 0,
+                ];
+            });
 
         return view('dashboard', compact(
             'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
-            'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned', 
+            'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
             'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations'
         ));
     }
-    public function progress() { 
+
+    public function progress()
+    {
         $userId = Auth::id();
 
         $sessions = InterviewSession::where('user_id', $userId)
-                        ->where('interview_sessions.status', 'completed')
-                        ->with(['score', 'category', 'feedback'])
-                        ->orderBy('created_at', 'asc')
-                        ->get();
+            ->where('interview_sessions.status', 'completed')
+            ->with(['score', 'category', 'feedback'])
+            ->orderBy('created_at', 'asc')
+            ->get();
         $scoredSessions = $this->scoredSessions($sessions);
         $scoreTrend = $this->scoreTrendFor($scoredSessions);
         $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
@@ -276,39 +311,39 @@ class UserController extends Controller
         $skillComparison = $this->skillComparisonFor($scoredSessions);
         $latestSkillSummary = $this->skillSummaryFor($scoredSessions->last()?->score);
 
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $userId]);
-        
-        $voiceSessions = \App\Models\VoiceSession::where('user_id', $userId)
-                            ->orderBy('created_at', 'asc')
-                            ->get();
+        $profile = Profile::firstOrCreate(['user_id' => $userId]);
+
+        $voiceSessions = VoiceSession::where('user_id', $userId)
+            ->orderBy('created_at', 'asc')
+            ->get();
         $voiceSummary = $this->voiceSummaryFor($voiceSessions);
-                            
-        $learningProgress = \App\Models\LearningProgress::with('learningModule')
-                            ->where('user_id', $userId)
-                            ->orderBy('updated_at', 'desc')
-                            ->get();
-                            
+
+        $learningProgress = LearningProgress::with('learningModule')
+            ->where('user_id', $userId)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
         $currentStreak = $profile->current_streak ?? 0;
         $longestStreak = max((int) ($profile->longest_streak ?? 0), (int) $currentStreak);
-        $totalPracticeDays = \App\Models\InterviewSession::where('user_id', $userId)
-                            ->where('status', 'completed')
-                            ->selectRaw('DATE(created_at) as date')
-                            ->distinct()
-                            ->get()
-                            ->count();
-                            
+        $totalPracticeDays = InterviewSession::where('user_id', $userId)
+            ->where('status', 'completed')
+            ->selectRaw('DATE(created_at) as date')
+            ->distinct()
+            ->get()
+            ->count();
+
         $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         $badges = [
-            (object)['title' => 'First Interview', 'icon' => 'fa-medal', 'unlocked' => in_array('First Interview', $badgesEarned)],
-            (object)['title' => '3-Day Streak', 'icon' => 'fa-fire', 'unlocked' => in_array('3-Day Streak', $badgesEarned)],
-            (object)['title' => 'STAR Master', 'icon' => 'fa-star', 'unlocked' => in_array('STAR Master', $badgesEarned)],
-            (object)['title' => 'Top Comm', 'icon' => 'fa-bullhorn', 'unlocked' => in_array('Top Comm', $badgesEarned)],
+            (object) ['title' => 'First Interview', 'icon' => 'fa-medal', 'unlocked' => in_array('First Interview', $badgesEarned)],
+            (object) ['title' => '3-Day Streak', 'icon' => 'fa-fire', 'unlocked' => in_array('3-Day Streak', $badgesEarned)],
+            (object) ['title' => 'STAR Master', 'icon' => 'fa-star', 'unlocked' => in_array('STAR Master', $badgesEarned)],
+            (object) ['title' => 'Top Comm', 'icon' => 'fa-bullhorn', 'unlocked' => in_array('Top Comm', $badgesEarned)],
         ];
-        
+
         $currentScore = $scoreTrend->isNotEmpty() ? (int) round($scoreTrend->avg('score')) : 0;
         if ($scoreTrend->isEmpty()) {
             $goals = [
-                (object)[
+                (object) [
                     'title' => 'Complete your first scored interview',
                     'description' => 'Finish a mock interview to unlock readiness tracking',
                     'progress' => 0,
@@ -316,13 +351,19 @@ class UserController extends Controller
             ];
         } else {
             $goalTarget = (ceil($currentScore / 10) * 10);
-            if ($goalTarget == $currentScore) $goalTarget += 10;
-            if ($goalTarget > 100) $goalTarget = 100;
-            if ($goalTarget < 50) $goalTarget = 50;
+            if ($goalTarget == $currentScore) {
+                $goalTarget += 10;
+            }
+            if ($goalTarget > 100) {
+                $goalTarget = 100;
+            }
+            if ($goalTarget < 50) {
+                $goalTarget = 50;
+            }
 
             $goals = [
-                (object)[
-                    'title' => 'Reach ' . $goalTarget . '% Readiness',
+                (object) [
+                    'title' => 'Reach '.$goalTarget.'% Readiness',
                     'description' => 'Complete interviews to boost your average score',
                     'progress' => $goalTarget > 0 ? $this->barWidth((int) round(($currentScore / $goalTarget) * 100)) : 0,
                 ],
@@ -348,7 +389,8 @@ class UserController extends Controller
         ));
     }
 
-    public function feedback() { 
+    public function feedback()
+    {
         $baseQuery = InterviewSession::where('user_id', Auth::id())
             ->where('interview_sessions.status', 'completed');
 
@@ -369,22 +411,23 @@ class UserController extends Controller
         return view('user.feedback', compact('sessions', 'feedbackCategories'));
     }
 
-    public function review($id) { 
+    public function review($id)
+    {
         $sessionRecord = InterviewSession::where('user_id', Auth::id())
-                        ->where('id', $id)
-                        ->with([
-                            'category',
-                            'answers' => function ($query) {
-                                $query->whereNull('retry_of_answer_id')
-                                    ->with(['question', 'retryAttempts']);
-                            },
-                            'score',
-                            'feedback',
-                            'mentorReviewComments',
-                            'jobApplication',
-                            'interviewPack',
-                        ])
-                        ->firstOrFail();
+            ->where('id', $id)
+            ->with([
+                'category',
+                'answers' => function ($query) {
+                    $query->whereNull('retry_of_answer_id')
+                        ->with(['question', 'retryAttempts']);
+                },
+                'score',
+                'feedback',
+                'mentorReviewComments',
+                'jobApplication',
+                'interviewPack',
+            ])
+            ->firstOrFail();
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
         return view('user.review', compact('sessionRecord', 'comparisonRows'));
@@ -396,7 +439,7 @@ class UserController extends Controller
 
         $session->load(['category', 'score', 'feedback', 'answers.question']);
         $answers = $session->answers->whereNull('retry_of_answer_id')->values();
-        $fileName = 'interview_session_' . $session->id . '_' . now()->format('Ymd_His') . '.csv';
+        $fileName = 'interview_session_'.$session->id.'_'.now()->format('Ymd_His').'.csv';
 
         return response()->stream(function () use ($session, $answers) {
             $stream = fopen('php://output', 'w');
@@ -515,7 +558,7 @@ class UserController extends Controller
 
     private function comparisonRowsFor(InterviewSession $session): array
     {
-        if (!$session->score) {
+        if (! $session->score) {
             return [];
         }
 
@@ -523,11 +566,15 @@ class UserController extends Controller
             ->where('status', 'completed')
             ->where('id', '!=', $session->id)
             ->where('created_at', '<', $session->created_at)
+            ->where(function ($query) {
+                $query->where('score_eligible', true)
+                    ->orWhereHas('score', fn ($score) => $score->where('assessment_mode', 'legacy'));
+            })
             ->with('score')
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$previousSession || !$previousSession->score) {
+        if (! $previousSession || ! $previousSession->score) {
             return [];
         }
 
@@ -536,7 +583,8 @@ class UserController extends Controller
             'Relevance' => 'relevance_score',
             'Grammar' => 'grammar_score',
             'Professionalism' => 'professionalism_score',
-            'Confidence' => 'confidence_score',
+            'Delivery Stability' => 'delivery_stability_score',
+            'Job Evidence Match' => 'job_evidence_match_score',
             'Overall' => 'overall_readiness_score',
         ];
 
@@ -559,7 +607,8 @@ class UserController extends Controller
     private function scoredSessions($sessions)
     {
         return $sessions
-            ->filter(fn ($session) => $this->scoreValue($session->score, 'overall_readiness_score') !== null)
+            ->filter(fn ($session) => ($session->score_eligible || $session->score?->assessment_mode === 'legacy')
+                && $this->scoreValue($session->score, 'overall_readiness_score') !== null)
             ->values();
     }
 
@@ -606,7 +655,7 @@ class UserController extends Controller
 
     private function readinessMovementFor(?InterviewSession $current, ?InterviewSession $previous): ?object
     {
-        if (!$current || !$previous) {
+        if (! $current || ! $previous) {
             return null;
         }
 
@@ -623,10 +672,10 @@ class UserController extends Controller
             'current' => $currentScore,
             'previous' => $previousScore,
             'delta' => $delta,
-            'label' => ($delta > 0 ? '+' : '') . $delta . '%',
+            'label' => ($delta > 0 ? '+' : '').$delta.'%',
             'trend_html' => $delta >= 0
                 ? "improved by <strong class='text-primary'>{$delta}%</strong>"
-                : "dropped by <strong class='text-danger'>" . abs($delta) . "%</strong>",
+                : "dropped by <strong class='text-danger'>".abs($delta).'%</strong>',
         ];
     }
 
@@ -666,7 +715,7 @@ class UserController extends Controller
         }
 
         return (object) [
-            'has_data' => !empty($metrics),
+            'has_data' => ! empty($metrics),
             'metrics' => $metrics,
             'strengths' => $strengths,
             'weaknesses' => $weaknesses,
@@ -688,7 +737,7 @@ class UserController extends Controller
 
     private function scoreComparisonRowsFor(?InterviewSession $baseline, ?InterviewSession $current, ?array $metrics = null): array
     {
-        if (!$baseline || !$current || (int) $baseline->id === (int) $current->id) {
+        if (! $baseline || ! $current || (int) $baseline->id === (int) $current->id) {
             return [];
         }
 
@@ -726,18 +775,15 @@ class UserController extends Controller
         $previousScore = $this->scoreValue($previous?->score, 'overall_readiness_score');
         $delta = $previousScore === null ? null : $currentScore - $previousScore;
 
-        if ($currentScore >= 90) {
-            $rating = 'Excellent';
+        if ($currentScore >= 80) {
+            $rating = 'Ready for Simulation';
             $color = '#10b981';
-        } elseif ($currentScore >= 70) {
-            $rating = 'Good';
+        } elseif ($currentScore >= 60) {
+            $rating = 'Nearly Ready';
             $color = '#3b82f6';
-        } elseif ($currentScore >= 50) {
-            $rating = 'Fair';
-            $color = '#f59e0b';
         } else {
-            $rating = 'Needs Improvement';
-            $color = '#ef4444';
+            $rating = 'Developing';
+            $color = '#f59e0b';
         }
 
         $deltaColor = '#64748b';
@@ -751,7 +797,7 @@ class UserController extends Controller
             'current' => $currentScore,
             'previous' => $previousScore,
             'delta' => $delta,
-            'delta_label' => $delta === null ? 'N/A' : (($delta > 0 ? '+' : '') . $delta . '%'),
+            'delta_label' => $delta === null ? 'N/A' : (($delta > 0 ? '+' : '').$delta.'%'),
             'rating' => $rating,
             'color' => $color,
             'delta_color' => $deltaColor,
@@ -802,13 +848,13 @@ class UserController extends Controller
 
     private function scoreValue(?Score $score, string $field): ?int
     {
-        if (!$score) {
+        if (! $score) {
             return null;
         }
 
         $value = $score->{$field} ?? null;
 
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return null;
         }
 
@@ -826,7 +872,7 @@ class UserController extends Controller
 
     private function syncInterviewProfileStats(int $userId): void
     {
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $userId]);
+        $profile = Profile::firstOrCreate(['user_id' => $userId]);
 
         $completedSessions = InterviewSession::where('user_id', $userId)
             ->where('status', 'completed');
@@ -836,6 +882,9 @@ class UserController extends Controller
         $averageScore = Score::whereHas('session', function ($query) use ($userId) {
             $query->where('user_id', $userId)
                 ->where('status', 'completed');
+        })->where(function ($query) {
+            $query->where('assessment_mode', 'legacy')
+                ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
         })->avg('overall_readiness_score');
 
         $profile->readiness_score = round($averageScore ?? 0);
@@ -846,7 +895,7 @@ class UserController extends Controller
             ->orderBy('practice_date')
             ->pluck('practice_date')
             ->filter()
-            ->map(fn($date) => Carbon::parse($date)->toDateString())
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
             ->unique()
             ->values();
 
@@ -897,46 +946,46 @@ class UserController extends Controller
         return $longest;
     }
 
-    public function coach() { 
-        $recentConversations = \App\Models\ChatbotConversation::where('user_id', Auth::id())
+    public function coach()
+    {
+        $recentConversations = ChatbotConversation::where('user_id', Auth::id())
             ->where('updated_at', '>=', now()->subDays(7))
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        $olderConversations = \App\Models\ChatbotConversation::where('user_id', Auth::id())
+        $olderConversations = ChatbotConversation::where('user_id', Auth::id())
             ->where('updated_at', '<', now()->subDays(7))
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('user.coach', compact('recentConversations', 'olderConversations')); 
+        return view('user.coach', compact('recentConversations', 'olderConversations'));
     }
-    
+
     public function coachChat(Request $request, CoachLanguageService $coachLanguages)
     {
         $request->validate([
             'message' => 'required|string',
             'history' => 'array',
-            'provider' => 'nullable|string',
             'conversation_id' => 'nullable|integer',
         ]);
 
         $message = $request->input('message');
         $history = $request->input('history', []);
-        $provider = $request->input('provider', env('AI_PROVIDER', 'gemini'));
+        $provider = env('AI_PROVIDER', 'gemini');
         $conversation_id = $request->input('conversation_id');
 
         if (! $conversation_id) {
-            $conversation = \App\Models\ChatbotConversation::create([
+            $conversation = ChatbotConversation::create([
                 'user_id' => Auth::id(),
                 'title' => substr($message, 0, 30).(strlen($message) > 30 ? '...' : ''),
             ]);
             $conversation_id = $conversation->id;
         } else {
-            $conversation = \App\Models\ChatbotConversation::where('user_id', Auth::id())->findOrFail($conversation_id);
+            $conversation = ChatbotConversation::where('user_id', Auth::id())->findOrFail($conversation_id);
             $conversation->touch();
         }
 
-        \App\Models\ChatbotMessage::create([
+        ChatbotMessage::create([
             'chatbot_conversation_id' => $conversation_id,
             'role' => 'user',
             'content' => $message,
@@ -949,14 +998,29 @@ class UserController extends Controller
         if ($this->isSpeakReadyDeveloperQuestion($message)) {
             $response = $this->speakReadyDeveloperCreditsResponse($responseLanguage);
         } else {
-            $systemPrompt = 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+            $latestTwin = ReadinessProfile::where('user_id', Auth::id())->latest('calibrated_at')->first();
+            $storyContext = ExperienceStory::where('user_id', Auth::id())->where('facts_confirmed', true)
+                ->latest()->limit(8)->get()->map(fn ($story) => [
+                    'id' => $story->id,
+                    'title' => $story->title,
+                    'competencies' => $story->competency_tags ?? [],
+                    'verified_facts' => $story->verified_facts ?? [],
+                    'metrics' => $story->metrics ?? [],
+                ])->all();
+            $systemPrompt = 'You are the unified SpeakReady Readiness Coach. Help with job-specific competency preparation, verified STAR stories, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals—not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
+            $systemPrompt .= ' Current readiness context: '.json_encode([
+                'target_role' => $latestTwin?->target_role,
+                'competencies' => $latestTwin?->competency_map ?? [],
+                'next_actions' => $latestTwin?->next_actions ?? [],
+                'verified_story_index' => $storyContext,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR).'.';
             $systemPrompt .= ' You may also answer direct questions about SpeakReady AI developer credits. If asked who developed, built, created, or maintains SpeakReady AI, answer using these official credits: '.$this->speakReadyDeveloperCreditsPrompt().' Do not invent additional team members or roles.';
             $systemPrompt .= ' '.$coachLanguages->promptInstruction($responseLanguage);
 
             $response = AIService::chatMessage($message, $history, $provider, $systemPrompt);
         }
 
-        \App\Models\ChatbotMessage::create([
+        ChatbotMessage::create([
             'chatbot_conversation_id' => $conversation_id,
             'role' => 'ai',
             'content' => $response,
@@ -1143,59 +1207,64 @@ class UserController extends Controller
         return implode('; ', $credits).'.';
     }
 
-    public function loadCoachConversation($id) {
-        $conversation = \App\Models\ChatbotConversation::where('user_id', Auth::id())
+    public function loadCoachConversation($id)
+    {
+        $conversation = ChatbotConversation::where('user_id', Auth::id())
             ->with('messages')
             ->findOrFail($id);
+
         return response()->json(['conversation' => $conversation]);
     }
 
-    public function deleteCoachConversation($id) {
-        $conversation = \App\Models\ChatbotConversation::where('user_id', Auth::id())->findOrFail($id);
-        \App\Models\ChatbotMessage::where('chatbot_conversation_id', $conversation->id)->delete();
+    public function deleteCoachConversation($id)
+    {
+        $conversation = ChatbotConversation::where('user_id', Auth::id())->findOrFail($id);
+        ChatbotMessage::where('chatbot_conversation_id', $conversation->id)->delete();
         $conversation->delete();
+
         return response()->json(['success' => true]);
     }
 
     public function clearCoachConversations()
     {
-        $conversationIds = \App\Models\ChatbotConversation::where('user_id', Auth::id())->pluck('id');
+        $conversationIds = ChatbotConversation::where('user_id', Auth::id())->pluck('id');
 
-        \App\Models\ChatbotMessage::whereIn('chatbot_conversation_id', $conversationIds)->delete();
-        \App\Models\ChatbotConversation::whereIn('id', $conversationIds)->delete();
+        ChatbotMessage::whereIn('chatbot_conversation_id', $conversationIds)->delete();
+        ChatbotConversation::whereIn('id', $conversationIds)->delete();
 
         return response()->json(['success' => true]);
     }
 
-    public function learning(Request $request) { 
-        $user = \Illuminate\Support\Facades\Auth::user();
+    public function learning(Request $request)
+    {
+        $user = Auth::user();
         $profile = $user->profile()->firstOrCreate([]);
-        
-        $categories = \App\Models\Category::where('status', 'active')
+
+        $categories = Category::where('status', 'active')
             ->where('type', 'game')
             ->orderBy('sort_order')
             ->orderBy('title')
             ->get();
-        
-        if (!$request->has('category_id') && $categories->count() > 0) {
+
+        if (! $request->has('category_id') && $categories->count() > 0) {
             return redirect()->route('user.learning', ['category_id' => $categories->first()->id]);
         }
 
-        if ($request->has('category_id') && !$categories->contains('id', (int) $request->category_id)) {
+        if ($request->has('category_id') && ! $categories->contains('id', (int) $request->category_id)) {
             return redirect()
                 ->route('user.learning')
                 ->with('error', 'That learning category is no longer available.');
         }
-        
-        $query = \App\Models\GameLevel::orderBy('level_number', 'asc');
+
+        $query = GameLevel::orderBy('level_number', 'asc');
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
         $gameLevels = $query->get();
-        
-        $gameProgress = \App\Models\GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
-        
-        return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories')); 
+
+        $gameProgress = GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
+
+        return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories'));
     }
 
     public function learningAssistant()
@@ -1205,14 +1274,17 @@ class UserController extends Controller
             ->with('message', 'Your AI learning assistant is available in the Interview Coach.');
     }
 
-    public function voiceRehearsal() { 
-        $history = \App\Models\VoiceSession::where('user_id', Auth::id())
-                        ->orderBy('created_at', 'desc')
-                        ->get();
-        return view('user.drills.voice', compact('history')); 
+    public function voiceRehearsal()
+    {
+        $history = VoiceSession::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('user.drills.voice', compact('history'));
     }
 
-    public function analyzeVoiceSession(Request $request) {
+    public function analyzeVoiceSession(Request $request)
+    {
         $validated = $request->validate([
             'prompt' => 'required|string|max:5000',
             'transcript' => 'required|string|max:20000',
@@ -1227,11 +1299,17 @@ class UserController extends Controller
             $provider,
             Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()))
         );
+        $assessment = app(TrustworthyAssessmentService::class);
+        $analysis['improved_answer'] = $assessment->groundedRevisionTemplate(
+            $transcript,
+            $assessment->answerEvidence($transcript, $analysis['weaknesses'] ?? null)
+        );
 
         return response()->json($analysis);
     }
 
-    public function saveVoiceSession(Request $request) {
+    public function saveVoiceSession(Request $request)
+    {
         $validated = $request->validate([
             'category' => 'nullable|string|max:120',
             'prompt' => 'nullable|string|max:5000',
@@ -1251,7 +1329,7 @@ class UserController extends Controller
 
         $metrics = $this->voiceSessionMetrics($validated);
 
-        $session = \App\Models\VoiceSession::create([
+        $session = VoiceSession::create([
             'user_id' => Auth::id(),
             'category' => $validated['category'] ?? null,
             'prompt' => $validated['prompt'] ?? null,
@@ -1268,7 +1346,7 @@ class UserController extends Controller
         ]);
 
         // Calculate some basic gamification points
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
         $profile->experience_points += 10;
         $profile->save();
 
@@ -1277,20 +1355,22 @@ class UserController extends Controller
             'session' => [
                 'date' => $session->created_at->format('M d'),
                 'category' => $session->category,
-                'clarity' => $session->clarity_score . '%',
+                'clarity' => $session->clarity_score.'%',
                 'wpm' => $session->wpm,
                 'fillers' => $session->filler_words,
-            ]
+            ],
         ]);
     }
-    public function reports() { 
+
+    public function reports()
+    {
         $user = Auth::user();
-        
+
         $sessions = InterviewSession::where('user_id', Auth::id())
-                        ->where('interview_sessions.status', 'completed')
-                        ->with(['score', 'category'])
-                        ->orderBy('created_at', 'asc')
-                        ->get();
+            ->where('interview_sessions.status', 'completed')
+            ->with(['score', 'category'])
+            ->orderBy('created_at', 'asc')
+            ->get();
         $scoredSessions = $this->scoredSessions($sessions);
 
         $latestSession = $scoredSessions->last();
@@ -1301,11 +1381,11 @@ class UserController extends Controller
         $latestPerformanceMetrics = $this->scoreBreakdownFor($latestSession?->score);
         $comparisonRows = $this->scoreComparisonRowsFor($firstSession, $latestSession);
         $feedbackSummary = $this->skillSummaryFor($latestSession?->score);
-        
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
 
-        $latestVoice = \App\Models\VoiceSession::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
-        $voiceData = (object)[
+        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+
+        $latestVoice = VoiceSession::where('user_id', Auth::id())->orderBy('created_at', 'desc')->first();
+        $voiceData = (object) [
             'has_data' => (bool) $latestVoice,
             'wpm' => $latestVoice?->speaking_pace,
             'confidence' => $latestVoice?->confidence_score,
@@ -1314,8 +1394,8 @@ class UserController extends Controller
             'filler_words' => $latestVoice?->filler_words,
         ];
 
-        $learningProgress = \App\Models\LearningProgress::where('user_id', Auth::id())->get();
-        $learningModulesTotal = \App\Models\LearningModule::count();
+        $learningProgress = LearningProgress::where('user_id', Auth::id())->get();
+        $learningModulesTotal = LearningModule::count();
         $moduleProgress = $learningProgress
             ->filter(fn ($progress) => $progress->learning_module_id !== null)
             ->groupBy('learning_module_id')
@@ -1324,7 +1404,7 @@ class UserController extends Controller
             ->pluck('quiz_score')
             ->filter(fn ($score) => is_numeric($score));
 
-        $learningData = (object)[
+        $learningData = (object) [
             'lessons_completed' => $moduleProgress->filter(fn ($progress) => $progress >= 100)->count(),
             'lessons_total' => $learningModulesTotal,
             'videos_watched' => $moduleProgress->filter(fn ($progress) => $progress > 0)->count(),
@@ -1337,14 +1417,14 @@ class UserController extends Controller
         // Dynamic Achievements
         $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         $achievements = [
-            (object)['title' => 'First Interview', 'icon' => 'fa-medal', 'color' => '#f59e0b', 'unlocked' => in_array('First Interview', $badgesEarned)],
-            (object)['title' => 'STAR Master', 'icon' => 'fa-star', 'color' => '#10b981', 'unlocked' => in_array('STAR Master', $badgesEarned)],
-            (object)['title' => 'Comm. Expert', 'icon' => 'fa-comments', 'color' => '#3b82f6', 'unlocked' => in_array('Comm. Expert', $badgesEarned)],
-            (object)['title' => '30-Day Streak', 'icon' => 'fa-fire', 'color' => '#ef4444', 'unlocked' => in_array('30-Day Streak', $badgesEarned)],
-            (object)['title' => 'Champion', 'icon' => 'fa-trophy', 'color' => '#8b5cf6', 'unlocked' => in_array('Champion', $badgesEarned)],
+            (object) ['title' => 'First Interview', 'icon' => 'fa-medal', 'color' => '#f59e0b', 'unlocked' => in_array('First Interview', $badgesEarned)],
+            (object) ['title' => 'STAR Master', 'icon' => 'fa-star', 'color' => '#10b981', 'unlocked' => in_array('STAR Master', $badgesEarned)],
+            (object) ['title' => 'Comm. Expert', 'icon' => 'fa-comments', 'color' => '#3b82f6', 'unlocked' => in_array('Comm. Expert', $badgesEarned)],
+            (object) ['title' => '30-Day Streak', 'icon' => 'fa-fire', 'color' => '#ef4444', 'unlocked' => in_array('30-Day Streak', $badgesEarned)],
+            (object) ['title' => 'Champion', 'icon' => 'fa-trophy', 'color' => '#8b5cf6', 'unlocked' => in_array('Champion', $badgesEarned)],
         ];
-        $achievements = collect($achievements)->filter(fn($ach) => $ach->unlocked)->values()->all();
-        
+        $achievements = collect($achievements)->filter(fn ($ach) => $ach->unlocked)->values()->all();
+
         $scoreTrend = $this->scoreTrendFor($scoredSessions);
         $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
 
@@ -1367,51 +1447,68 @@ class UserController extends Controller
             'categoryPerf'
         ));
     }
-    public function notifications() { 
+
+    public function notifications()
+    {
         $notifications = Auth::user()->notifications()->paginate(15);
-        return view('user.notifications', compact('notifications')); 
+
+        return view('user.notifications', compact('notifications'));
     }
 
-    public function fetchNotifications() {
+    public function fetchNotifications()
+    {
         $user = Auth::user();
         $unreadCount = $user->unreadNotifications->count();
         $notifications = $user->notifications()->take(5)->get();
 
         return response()->json([
             'unreadCount' => $unreadCount,
-            'notifications' => $notifications
+            'notifications' => $notifications,
         ]);
     }
 
-    public function markNotificationAsRead($id) {
+    public function markNotificationAsRead($id)
+    {
         $notification = Auth::user()->notifications()->where('id', $id)->first();
         if ($notification) {
             $notification->markAsRead();
+
             return response()->json(['success' => true]);
         }
+
         return response()->json(['success' => false], 404);
     }
 
-    public function markAllNotificationsAsRead() {
+    public function markAllNotificationsAsRead()
+    {
         Auth::user()->unreadNotifications->markAsRead();
+
         return response()->json(['success' => true]);
     }
 
-    public function clearAllNotifications() {
+    public function clearAllNotifications()
+    {
         Auth::user()->notifications()->delete();
+
         return response()->json(['success' => true]);
     }
 
-    public function deleteNotification($id) {
+    public function deleteNotification($id)
+    {
         $notification = Auth::user()->notifications()->where('id', $id)->first();
         if ($notification) {
             $notification->delete();
+
             return response()->json(['success' => true]);
         }
+
         return response()->json(['success' => false], 404);
     }
 
-    public function account() { return view('user.account'); }
+    public function account()
+    {
+        return view('user.account');
+    }
 
     public function updateLanguage(Request $request)
     {
@@ -1459,7 +1556,7 @@ class UserController extends Controller
         $missing = [];
 
         foreach ($texts as $text) {
-            $cacheKey = 'ui_translation:' . $languageCode . ':' . sha1($text);
+            $cacheKey = 'ui_translation:'.$languageCode.':'.sha1($text);
             $cached = Cache::get($cacheKey);
 
             if (is_string($cached) && $cached !== '') {
@@ -1469,7 +1566,7 @@ class UserController extends Controller
             }
         }
 
-        if (!empty($missing)) {
+        if (! empty($missing)) {
             $generated = AIService::translateInterfaceTexts(
                 $missing,
                 $languageConfig,
@@ -1479,7 +1576,7 @@ class UserController extends Controller
             foreach ($missing as $text) {
                 $translated = trim((string) ($generated[$text] ?? $text));
                 $translations[$text] = $translated !== '' ? $translated : $text;
-                Cache::put('ui_translation:' . $languageCode . ':' . sha1($text), $translations[$text], now()->addDays(30));
+                Cache::put('ui_translation:'.$languageCode.':'.sha1($text), $translations[$text], now()->addDays(30));
             }
         }
 
@@ -1489,7 +1586,8 @@ class UserController extends Controller
         ]);
     }
 
-    public function updateProfile(Request $request) {
+    public function updateProfile(Request $request)
+    {
         $user = Auth::user();
 
         $request->validate([
@@ -1507,7 +1605,7 @@ class UserController extends Controller
             $image = $request->file('profile_photo');
             $imageData = base64_encode(file_get_contents($image->getRealPath()));
             $mimeType = $image->getClientMimeType();
-            $user->profile_photo_path = 'data:' . $mimeType . ';base64,' . $imageData;
+            $user->profile_photo_path = 'data:'.$mimeType.';base64,'.$imageData;
         }
 
         $user->save();
@@ -1524,7 +1622,8 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Profile updated successfully.');
     }
 
-    public function updatePassword(Request $request) {
+    public function updatePassword(Request $request)
+    {
         $request->validate([
             'current_password' => 'required|current_password',
             'new_password' => 'required|string|min:8',
@@ -1532,7 +1631,7 @@ class UserController extends Controller
         ]);
 
         $user = Auth::user();
-        $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        $user->password = Hash::make($request->new_password);
         $user->save();
 
         ActivityLogger::log(
@@ -1547,23 +1646,27 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Password updated successfully.');
     }
 
-    public function deleteAccount(Request $request) {
+    public function deleteAccount(Request $request)
+    {
         $user = Auth::user();
         Auth::logout();
         $user->delete(); // Soft delete as configured in User model
 
         return redirect('/')->with('success', 'Your account has been deleted.');
     }
-    public function skills() {
+
+    public function skills()
+    {
         $user = Auth::user();
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => $user->id]);
-        
+        $profile = Profile::firstOrCreate(['user_id' => $user->id]);
+
         $perks = self::SKILL_PERKS;
 
         return view('user.skills', compact('profile', 'perks'));
     }
 
-    public function unlockPerk(Request $request) {
+    public function unlockPerk(Request $request)
+    {
         $validated = $request->validate([
             'perk_id' => ['required', 'string', Rule::in(array_keys(self::SKILL_PERKS))],
         ]);
@@ -1572,16 +1675,16 @@ class UserController extends Controller
         $perk = self::SKILL_PERKS[$perkId];
 
         $result = DB::transaction(function () use ($perkId, $perk) {
-            $profile = \App\Models\Profile::where('user_id', Auth::id())->lockForUpdate()->first();
-            if (!$profile) {
-                $profile = \App\Models\Profile::create(['user_id' => Auth::id()]);
+            $profile = Profile::where('user_id', Auth::id())->lockForUpdate()->first();
+            if (! $profile) {
+                $profile = Profile::create(['user_id' => Auth::id()]);
             }
 
             if ($profile->hasPerk($perkId)) {
                 return ['success' => false, 'message' => 'Perk already unlocked.', 'status' => 400];
             }
 
-            $xpColumn = $perk['type'] . '_xp';
+            $xpColumn = $perk['type'].'_xp';
             $cost = (int) $perk['cost'];
             $availableXp = (int) ($profile->{$xpColumn} ?? 0);
 
@@ -1607,7 +1710,7 @@ class UserController extends Controller
             ActivityLogger::log(
                 Auth::user(),
                 'perk_unlocked',
-                "You unlocked a new skill perk!",
+                'You unlocked a new skill perk!',
                 $request->ip(),
                 true,
                 ['title' => 'Perk Unlocked', 'icon' => 'fa-unlock', 'type' => 'success']
@@ -1701,41 +1804,49 @@ class UserController extends Controller
 
     private function clampInt($value, int $min, int $max): int
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return $min;
         }
 
         return max($min, min($max, (int) round($value)));
     }
 
-    public function leaderboard() {
-        $topUsers = \App\Models\Profile::with('user')
-            ->where('experience_points', '>', 0)
-            ->orderBy('experience_points', 'desc')
-            ->limit(20)
+    public function personalMastery()
+    {
+        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $eligibleScores = Score::whereHas('session', fn ($query) => $query->where('user_id', Auth::id()))
+            ->where(function ($query) {
+                $query->where('assessment_mode', 'legacy')
+                    ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
+            })
+            ->latest()
             ->get();
-            
-        return view('user.leaderboard', compact('topUsers'));
+        $personalBest = (int) ($eligibleScores->max('overall_readiness_score') ?? 0);
+        $latest = (int) ($eligibleScores->first()?->overall_readiness_score ?? 0);
+        $baseline = (int) ($eligibleScores->last()?->overall_readiness_score ?? 0);
+
+        return view('user.personal-mastery', compact('profile', 'personalBest', 'latest', 'baseline', 'eligibleScores'));
     }
 
-    public function modules(Request $request) {
-        $categories = \App\Models\LearningModule::where('status', 'published')
+    public function modules(Request $request)
+    {
+        $categories = LearningModule::where('status', 'published')
             ->select('category')
             ->distinct()
             ->whereNotNull('category')
             ->where('category', '!=', '')
             ->pluck('category');
-        
-        $query = \App\Models\LearningModule::where('status', 'published');
-        
+
+        $query = LearningModule::where('status', 'published');
+
         if ($request->has('category') && $request->category != '') {
             $query->where('category', $request->category);
         }
-        
+
         if ($request->has('search') && $request->search != '') {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -1744,9 +1855,10 @@ class UserController extends Controller
         return view('user.modules.index', compact('modules', 'categories'));
     }
 
-    public function moduleShow($id) {
-        $module = \App\Models\LearningModule::with(['chapters', 'resources', 'quizzes', 'activities'])->where('status', 'published')->findOrFail($id);
-        
+    public function moduleShow($id)
+    {
+        $module = LearningModule::with(['chapters', 'resources', 'quizzes', 'activities'])->where('status', 'published')->findOrFail($id);
+
         // Track view
         $module->increment('views');
 

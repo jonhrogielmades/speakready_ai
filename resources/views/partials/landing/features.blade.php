@@ -37,8 +37,8 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Get personalized advice and strategies from your AI mentor.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Readiness Twin &amp; Story Vault</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Map role competencies to verified stories, assessments, outcomes, and adaptive next steps.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">
@@ -52,14 +52,14 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(16,185,129,.15);color:#10b981"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Actionable insights on content, tone, and delivery.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Evidence-linked rubrics, score confidence, and fact-grounded revision templates.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(234,179,8,.15);color:#eab308"><i class="fa-solid fa-trophy fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Leaderboard</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Compete with peers and track your ranking in the community.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Personal Mastery</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Track your own assessment baseline, personal best, and competency growth.</p>
                      </div>
                   </div>
                </div>

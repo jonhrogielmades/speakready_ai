@@ -26,6 +26,10 @@ class InterviewSession extends Model
         'question_types',
         'ai_assistance_level',
         'live_feedback_mode',
+        'assessment_mode',
+        'interview_format',
+        'accommodation_profile',
+        'score_eligible',
         'pressure_mode',
         'status',
         'notes',
@@ -36,6 +40,10 @@ class InterviewSession extends Model
         'is_archived',
         'flag_reason',
         'share_token',
+        'share_expires_at',
+        'share_password_hash',
+        'share_permissions',
+        'share_hide_sensitive',
         'is_public',
     ];
 
@@ -48,6 +56,11 @@ class InterviewSession extends Model
         'num_questions' => 'integer',
         'time_limit' => 'integer',
         'action_plan' => 'array',
+        'accommodation_profile' => 'array',
+        'score_eligible' => 'boolean',
+        'share_expires_at' => 'datetime',
+        'share_permissions' => 'array',
+        'share_hide_sensitive' => 'boolean',
     ];
 
     public function user()
@@ -88,5 +101,15 @@ class InterviewSession extends Model
     public function mentorReviewComments()
     {
         return $this->hasMany(MentorReviewComment::class);
+    }
+
+    public function outcomes()
+    {
+        return $this->hasMany(InterviewOutcome::class);
+    }
+
+    public function shareIsActive(): bool
+    {
+        return $this->is_public && (!$this->share_expires_at || $this->share_expires_at->isFuture());
     }
 }

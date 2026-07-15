@@ -19,9 +19,14 @@ class JobApplication extends Model
         'source_url',
         'resume_text',
         'job_description',
+        'competency_map',
         'match_score',
+        'evidence_match_score',
         'matched_keywords',
         'missing_keywords',
+        'evidence_matches',
+        'evidence_gaps',
+        'future_skills',
         'smart_plan',
         'notes',
     ];
@@ -29,8 +34,13 @@ class JobApplication extends Model
     protected $casts = [
         'interview_date' => 'date',
         'match_score' => 'integer',
+        'evidence_match_score' => 'integer',
         'matched_keywords' => 'array',
         'missing_keywords' => 'array',
+        'evidence_matches' => 'array',
+        'evidence_gaps' => 'array',
+        'competency_map' => 'array',
+        'future_skills' => 'array',
         'smart_plan' => 'array',
     ];
 
@@ -47,5 +57,15 @@ class JobApplication extends Model
     public function planItems()
     {
         return $this->hasMany(PracticePlanItem::class);
+    }
+
+    public function readinessProfile()
+    {
+        return $this->hasOne(ReadinessProfile::class);
+    }
+
+    public function outcomes()
+    {
+        return $this->hasMany(InterviewOutcome::class);
     }
 }

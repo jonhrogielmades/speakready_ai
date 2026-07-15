@@ -539,20 +539,18 @@
                 </div>
                 <div class="col-md-6">
                     <div class="premium-card h-100">
-                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy me-2 text-warning"></i>Leaderboard</h6>
-                        @forelse($leaderboard as $index => $score)
-                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:{{ $index === 0 ? 'rgba(251,191,36,0.1)' : 'var(--bg3)' }};border:1px solid {{ $index === 0 ? 'rgba(251,191,36,0.3)' : 'transparent' }};">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="fw-bold" style="color:{{ $index === 0 ? '#fbbf24' : 'var(--tx3)' }};width:20px;">{{ $index + 1 }}</span>
-                                <div style="width:30px;height:30px;border-radius:50%;background:#{{ $index === 0 ? '3b82f6' : ($index === 1 ? '3b82f6' : '10b981') }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">
-                                    {{ strtoupper(substr($score->user_name, 0, 2)) }}
-                                </div>
-                                <span style="font-size:0.9rem;">{{ $score->user_name }}</span>
+                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-scale-balanced me-2 text-warning"></i>Assessment Quality</h6>
+                        <p class="small mb-3" style="color:var(--tx3);">Anonymous readiness-band distribution from score-eligible and legacy assessments.</p>
+                        @forelse($readinessBandSummary as $band)
+                        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
+                            <div>
+                                <span style="font-size:0.9rem;font-weight:700;">{{ $band->band }}</span>
+                                <div style="font-size:.72rem;color:var(--tx3);">Average score confidence {{ $band->scoring_confidence }}%</div>
                             </div>
-                            <span class="fw-bold text-success">{{ $score->overall_readiness_score }}%</span>
+                            <span class="fw-bold text-primary">{{ $band->count }} assessments</span>
                         </div>
                         @empty
-                        <div class="text-center text-muted mt-4">No scores available yet.</div>
+                        <div class="text-center text-muted mt-4">No eligible assessments available yet.</div>
                         @endforelse
                     </div>
                 </div>

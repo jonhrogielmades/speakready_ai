@@ -160,8 +160,8 @@
 
                 <a id="ucp-destination-leaderboard" class="ucp-result" href="{{ route('user.leaderboard') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Leaderboard</strong><small>Compare progress with the community</small></span>
-                    <span class="ucp-result-group">Community</span>
+                    <span class="ucp-result-copy"><strong>Personal Mastery</strong><small>Compare with your own assessment baseline</small></span>
+                    <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 

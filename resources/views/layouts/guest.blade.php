@@ -1393,7 +1393,7 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for any interview scenario. By simulating realistic interviews, it provides immediate, actionable feedback on your answers, delivery, and body language to solve the problem of interview anxiety and lack of practice.</p>
+                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for varied interview scenarios. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="d-flex flex-wrap gap-2 mb-4">
@@ -1470,15 +1470,15 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-file-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Advanced Personalization</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Upload a resume, paste a job description, and choose company personas for sharper role-specific questions.</p>
+                         <h3 class="fs-6 fw-bold mb-2">Readiness Digital Twin</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Map role competencies to verified stories, assessment evidence, real outcomes, and the next best practice task.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.15s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal Studio</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Improve pacing, clarity, confidence, and filler-word control with dedicated voice drills and history analytics.</p>
+                         <p style="font-size:.85rem;color:var(--tx2)">Improve pacing, clarity, delivery stability, and filler-word control without treating speaking style as personality.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
@@ -1498,15 +1498,15 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Coach</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Chat with a focused interview coach for resume refinement, behavioral practice, and preparation strategy.</p>
+                         <h3 class="fs-6 fw-bold mb-2">Story Vault &amp; Readiness Coach</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Build reusable verified STAR evidence and get one context-aware coach that never invents achievements.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(16,185,129,.15);color:#10b981"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Review evidence-linked feedback, per-question scores, better sample answers, and follow-up questions.</p>
+                         <p style="font-size:.85rem;color:var(--tx2)">See evidence-linked rubrics, score confidence, fact-grounded revision templates, and targeted follow-ups.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.4s">
@@ -1520,7 +1520,7 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(6,182,212,.15);color:#06b6d4"><i class="fa-solid fa-folder-open fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Build portfolio reports, print detailed reviews, and create secure public links for mentors or peers.</p>
+                         <p style="font-size:.85rem;color:var(--tx2)">Print detailed reviews and create expiring, password-protected links with reviewer permissions.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">
@@ -1533,8 +1533,8 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.55s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(234,179,8,.15);color:#eab308"><i class="fa-solid fa-trophy fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Leaderboard</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Compare progress with the community through rankings powered by practice activity and performance.</p>
+                         <h3 class="fs-6 fw-bold mb-2">Personal Mastery</h3>
+                         <p style="font-size:.85rem;color:var(--tx2)">Compare only against your own assessment baseline, personal best, and competency growth.</p>
                      </div>
                   </div>
                </div>
@@ -1589,7 +1589,7 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Track Your Progress</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Monitor your growth, earn achievements, and climb the leaderboard.</p>
+                         <p style="font-size:.875rem;color:var(--tx2)">Monitor competency growth, real interview outcomes, and your personal assessment baseline.</p>
                      </div>
                   </div>
                </div>
@@ -1755,12 +1755,12 @@
                                            <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Detailed summaries and exportable reports of your performance.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 9: Leaderboard -->
+                                    <!-- Slide 9: Personal Mastery -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-trophy fa-4x mb-4" style="color:#eab308"></i>
-                                           <h3 class="fs-3 fw-bold">Leaderboard</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Compete with peers and track your ranking in the community.</p>
+                                            <h3 class="fs-3 fw-bold">Personal Mastery</h3>
+                                            <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track your own baseline, personal best, and score-eligible assessment growth.</p>
                                        </div>
                                    </div>
                                </div>
@@ -1793,13 +1793,13 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">How does AI feedback work?</button></h2>
                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Our AI models analyze your voice, transcript, and body language (if camera is enabled) to evaluate the structure of your answers, clarity, tone, and confidence, providing instant, personalized feedback.</div>
+                               <div class="accordion-body">SpeakReady evaluates answer relevance, clarity, professionalism, applicable STAR evidence, and job evidence using a versioned rubric. Delivery signals and optional camera-framing prompts are coaching aids and do not affect readiness scores.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3">Is my data secure?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Yes. We prioritize your privacy. All your interview recordings and transcripts are encrypted and strictly used for your personal feedback. They are never shared publicly.</div>
+                               <div class="accordion-body">Interview records are private by default. When you choose to share a review, you can set an expiry, optional password, reviewer permissions, and hide sensitive identity or application context.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

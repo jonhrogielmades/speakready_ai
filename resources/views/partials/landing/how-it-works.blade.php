@@ -46,7 +46,7 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Track Your Progress</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Monitor your growth, earn achievements, and climb the leaderboard.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Monitor competency growth, real outcomes, and your personal assessment baseline.</p>
                      </div>
                   </div>
                </div>

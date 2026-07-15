@@ -9,6 +9,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\MentorReviewController;
+use App\Http\Controllers\ReadinessController;
 use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,7 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 
 // Public Shared Session Route
 Route::get('/shared/{token}', [InterviewController::class, 'sharedReview'])->name('shared.review');
+Route::post('/shared/{token}/unlock', [InterviewController::class, 'unlockSharedReview'])->name('shared.unlock');
 Route::post('/shared/{token}/mentor-comments', [MentorReviewController::class, 'store'])->name('shared.mentor-comments.store');
 
 // Contact Form Route
@@ -108,6 +110,14 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');
+    Route::get('/readiness', [ReadinessController::class, 'index'])->name('user.readiness.index');
+    Route::post('/readiness/applications/{application}/refresh', [ReadinessController::class, 'refresh'])->name('user.readiness.refresh');
+    Route::post('/readiness/stories', [ReadinessController::class, 'storeStory'])->name('user.readiness.stories.store');
+    Route::put('/readiness/stories/{story}', [ReadinessController::class, 'updateStory'])->name('user.readiness.stories.update');
+    Route::delete('/readiness/stories/{story}', [ReadinessController::class, 'destroyStory'])->name('user.readiness.stories.destroy');
+    Route::post('/readiness/outcomes', [ReadinessController::class, 'storeOutcome'])->name('user.readiness.outcomes.store');
+    Route::delete('/readiness/outcomes/{outcome}', [ReadinessController::class, 'destroyOutcome'])->name('user.readiness.outcomes.destroy');
+    Route::post('/readiness/preferences', [ReadinessController::class, 'updateInclusivePreferences'])->name('user.readiness.preferences');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
@@ -130,7 +140,8 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/session/{id}', [UserController::class, 'destroySession'])->name('user.sessions.destroy');
     Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->name('user.sessions.clear');
     Route::get('/reports', [UserController::class, 'reports'])->name('user.reports');
-    Route::get('/community/leaderboard', [UserController::class, 'leaderboard'])->name('user.leaderboard');
+    Route::get('/personal-mastery', [UserController::class, 'personalMastery'])->name('user.leaderboard');
+    Route::redirect('/community/leaderboard', '/personal-mastery', 301);
 });
 
 // Admin Routes

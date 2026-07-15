@@ -198,7 +198,7 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6V5a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 12h16M10 12v2h4v-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
                     Job Tracker
                 </h4>
-                <p class="sr-page-hero-subtitle">Track target roles, measure resume fit, and follow a smart 7-day practice plan.</p>
+                <p class="sr-page-hero-subtitle">Track target roles, map verifiable job evidence, and follow an adaptive readiness plan.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -212,7 +212,7 @@
         $totalApplications = $applications->count();
         $activeApplications = $applications->whereNotIn('status', ['rejected', 'archived'])->count();
         $upcomingInterviews = $applications->filter(fn ($application) => $application->interview_date && $application->interview_date->isFuture())->count();
-        $averageMatch = $totalApplications ? round($applications->avg('match_score')) : 0;
+        $averageMatch = $totalApplications ? round($applications->avg(fn ($application) => $application->evidence_match_score ?? $application->match_score)) : 0;
         $totalPlanItems = $applications->flatMap->planItems->count();
         $completedPlanItems = $applications->flatMap->planItems->whereNotNull('completed_at')->count();
         $overallPlanProgress = $totalPlanItems ? round(($completedPlanItems / $totalPlanItems) * 100) : 0;
@@ -232,7 +232,7 @@
             <div class="tracker-stat-value">{{ $upcomingInterviews }}</div>
         </div>
         <div class="tracker-stat">
-            <div class="tracker-stat-label">Avg Match</div>
+            <div class="tracker-stat-label">Avg Evidence Match</div>
             <div class="tracker-stat-value">{{ $averageMatch }}%</div>
         </div>
         <div class="tracker-stat">
@@ -324,8 +324,8 @@
                             </div>
                         </div>
                         <div class="tracker-actions">
-                            <div class="match-ring" style="--score: {{ $application->match_score }}%;">
-                                <span>{{ $application->match_score }}%</span>
+                            <div class="match-ring" title="Share of role competencies with resume evidence" style="--score: {{ $application->evidence_match_score ?? $application->match_score }}%;">
+                                <span>{{ $application->evidence_match_score ?? $application->match_score }}%</span>
                             </div>
                             <div class="d-flex flex-column gap-2">
                                 <a href="{{ route('user.applications.practice', $application) }}" class="btn btn-primary btn-sm" style="border-radius:10px;font-weight:800;">
@@ -344,26 +344,26 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <div style="color:var(--tx);font-weight:800;font-size:.86rem;margin-bottom:7px;">Matched Keywords</div>
-                            @forelse(array_slice($application->matched_keywords ?? [], 0, 8) as $keyword)
+                            <div style="color:var(--tx);font-weight:800;font-size:.86rem;margin-bottom:7px;">Competencies with Evidence</div>
+                            @forelse(array_slice($application->evidence_matches ?? $application->matched_keywords ?? [], 0, 8) as $keyword)
                                 <span class="keyword-chip good">{{ $keyword }}</span>
                             @empty
-                                <span style="color:var(--tx3);font-size:.84rem;">No matches yet. Add resume and job description text.</span>
+                                <span style="color:var(--tx3);font-size:.84rem;">No supporting evidence yet. Add resume and job-description text.</span>
                             @endforelse
                         </div>
                         <div class="col-md-6">
-                            <div style="color:var(--tx);font-weight:800;font-size:.86rem;margin-bottom:7px;">Missing Keywords</div>
-                            @forelse(array_slice($application->missing_keywords ?? [], 0, 8) as $keyword)
+                            <div style="color:var(--tx);font-weight:800;font-size:.86rem;margin-bottom:7px;">Evidence Gaps</div>
+                            @forelse(array_slice($application->evidence_gaps ?? $application->missing_keywords ?? [], 0, 8) as $keyword)
                                 <span class="keyword-chip miss">{{ $keyword }}</span>
                             @empty
-                                <span style="color:var(--tx3);font-size:.84rem;">No missing keywords detected.</span>
+                                <span style="color:var(--tx3);font-size:.84rem;">No role-competency evidence gaps detected.</span>
                             @endforelse
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <div class="d-flex justify-content-between mb-2">
-                            <strong style="color:var(--tx);">7-Day Smart Practice Plan</strong>
+                            <strong style="color:var(--tx);">Adaptive Readiness Plan</strong>
                             <span style="color:#10b981;font-weight:900;">{{ $progress }}%</span>
                         </div>
                         <div class="progress" style="height:8px;background:var(--bd);border-radius:999px;">
@@ -460,15 +460,15 @@ function togglePlanItem(itemId, checkbox) {
 
         const stepsMobile = [
             { element: '#job-tracker-summary', popover: { title: 'Tracker Snapshot', description: 'See tracked jobs, active applications, upcoming interviews, and plan progress.', side: 'bottom', align: 'start' }},
-            { element: '#job-tracker-form', popover: { title: 'Add Target Job', description: 'Paste the job, resume, and job description to generate a match score and plan.', side: 'top', align: 'start' }},
-            { element: '.tracker-application-card', popover: { title: 'Application Card', description: 'Review stage, match score, missing keywords, and the smart practice plan.', side: 'top', align: 'start' }},
+            { element: '#job-tracker-form', popover: { title: 'Add Target Job', description: 'Paste the resume and job description to map competencies, evidence gaps, and an adaptive plan.', side: 'top', align: 'start' }},
+            { element: '.tracker-application-card', popover: { title: 'Application Card', description: 'Review stage, job-evidence match, competency gaps, and the adaptive plan.', side: 'top', align: 'start' }},
             { element: '.plan-item', popover: { title: 'Practice Tasks', description: 'Check off each task as you work through the role-specific preparation plan.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
             { element: '#job-tracker-summary', popover: { title: 'Tracker Snapshot', description: 'See tracked jobs, active applications, upcoming interviews, and plan progress.', side: 'bottom', align: 'start' }},
-            { element: '#job-tracker-form', popover: { title: 'Add Target Job', description: 'Paste the job, resume, and job description to generate a match score and plan.', side: 'right', align: 'start' }},
-            { element: '.tracker-application-card', popover: { title: 'Application Card', description: 'Review stage, match score, missing keywords, and the smart practice plan.', side: 'left', align: 'start' }},
+            { element: '#job-tracker-form', popover: { title: 'Add Target Job', description: 'Paste the resume and job description to map competencies, evidence gaps, and an adaptive plan.', side: 'right', align: 'start' }},
+            { element: '.tracker-application-card', popover: { title: 'Application Card', description: 'Review stage, job-evidence match, competency gaps, and the adaptive plan.', side: 'left', align: 'start' }},
             { element: '.plan-item', popover: { title: 'Practice Tasks', description: 'Check off each task as you work through the role-specific preparation plan.', side: 'top', align: 'start' }}
         ];
 

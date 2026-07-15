@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\InterviewAnswer;
 use App\Models\FeedbackAuditLog;
 use App\Models\FeedbackComplaint;
+use App\Models\InterviewAnswer;
 use App\Services\CsvExportService;
+use Illuminate\Http\Request;
 
 class AdminFeedbackController extends Controller
 {
@@ -36,13 +36,13 @@ class AdminFeedbackController extends Controller
             ->with(['question', 'interviewSession.user'])
             ->latest()
             ->get();
-        $fileName = 'feedback_audit_' . now()->format('Ymd_His') . '.csv';
+        $fileName = 'feedback_audit_'.now()->format('Ymd_His').'.csv';
 
         return response()->stream(function () use ($feedbacks) {
             $stream = fopen('php://output', 'w');
             CsvExportService::writeRow($stream, [
                 'Answer ID', 'Session ID', 'User', 'Question', 'Answer Score', 'Clarity',
-                'Relevance', 'Grammar', 'Confidence', 'Audit Status', 'AI Feedback', 'Created At',
+                'Relevance', 'Grammar', 'Delivery Stability (Non-Scoring)', 'Audit Status', 'AI Feedback', 'Created At',
             ]);
 
             foreach ($feedbacks as $feedback) {
@@ -55,7 +55,7 @@ class AdminFeedbackController extends Controller
                     $feedback->clarity_score,
                     $feedback->relevance_score,
                     $feedback->grammar_score,
-                    $feedback->confidence_score,
+                    $feedback->delivery_stability_score,
                     $feedback->audit_status,
                     $feedback->ai_feedback,
                     optional($feedback->created_at)->toDateTimeString(),
@@ -73,6 +73,7 @@ class AdminFeedbackController extends Controller
     public function show(InterviewAnswer $answer)
     {
         $answer->load(['question', 'auditLogs.admin', 'complaints.user']);
+
         return view('admin.feedback.show', compact('answer'));
     }
 
@@ -81,7 +82,7 @@ class AdminFeedbackController extends Controller
         $validated = $request->validate([
             'clarity_score' => 'required|integer|min:0|max:100',
             'relevance_score' => 'required|integer|min:0|max:100',
-            'confidence_score' => 'required|integer|min:0|max:100',
+            'delivery_stability_score' => 'required|integer|min:0|max:100',
             'grammar_score' => 'required|integer|min:0|max:100',
             'notes' => 'nullable|string',
             'audit_status' => 'required|string|in:approved,under_review,flagged,archived',
@@ -92,7 +93,7 @@ class AdminFeedbackController extends Controller
             $answer->star_analysis
         );
 
-        if (!$starAnalysisIsValid) {
+        if (! $starAnalysisIsValid) {
             return back()
                 ->withErrors(['star_analysis' => 'STAR analysis must be valid JSON.'])
                 ->withInput();
@@ -103,7 +104,7 @@ class AdminFeedbackController extends Controller
         $answer->update([
             'clarity_score' => $validated['clarity_score'],
             'relevance_score' => $validated['relevance_score'],
-            'confidence_score' => $validated['confidence_score'],
+            'delivery_stability_score' => $validated['delivery_stability_score'],
             'grammar_score' => $validated['grammar_score'],
             'star_analysis' => $starAnalysis,
             'audit_status' => $validated['audit_status'],
@@ -172,6 +173,7 @@ class AdminFeedbackController extends Controller
     public function complaints()
     {
         $complaints = FeedbackComplaint::with(['user', 'interviewAnswer.question'])->latest()->paginate(15);
+
         return view('admin.feedback.complaints', compact('complaints'));
     }
 
@@ -185,7 +187,7 @@ class AdminFeedbackController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->string('search')->toString();
-            $query->whereHas('question', fn ($question) => $question->where('question_text', 'like', '%' . $search . '%'));
+            $query->whereHas('question', fn ($question) => $question->where('question_text', 'like', '%'.$search.'%'));
         }
 
         return $query;
@@ -211,7 +213,7 @@ class AdminFeedbackController extends Controller
             return [true, $fallback];
         }
 
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             return [false, $fallback];
         }
 

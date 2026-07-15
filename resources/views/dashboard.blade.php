@@ -1912,7 +1912,7 @@ document.addEventListener("DOMContentLoaded", function() {
         new Chart(radarCanvas.getContext('2d'), {
             type: 'radar',
             data: {
-                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Confidence'],
+                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Delivery Stability'],
                 datasets: [{
                     label: 'Score Level',
                     data: [
@@ -1920,7 +1920,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         {{ $radarData['relevance'] ?? 0 }},
                         {{ $radarData['grammar'] ?? 0 }},
                         {{ $radarData['professionalism'] ?? 0 }},
-                        {{ $radarData['confidence'] ?? 0 }}
+                        {{ $radarData['delivery_stability'] ?? 0 }}
                     ],
                     backgroundColor: 'rgba(34, 197, 94, 0.16)',
                     borderColor: '#22c55e',

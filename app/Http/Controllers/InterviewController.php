@@ -2,27 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Helpers\ActivityLogger;
 use App\Models\Category;
-use App\Models\InterviewSession;
+use App\Models\Feedback;
+use App\Models\GameLevel;
+use App\Models\GameProgress;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewPack;
+use App\Models\InterviewSession;
 use App\Models\JobApplication;
+use App\Models\Profile;
 use App\Models\Question;
+use App\Models\Score;
 use App\Models\Setting;
+use App\Services\AIService;
 use App\Services\CareerPlanService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\ReadinessTwinService;
 use App\Services\TranscriptService;
+use App\Services\TrustworthyAssessmentService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use App\Helpers\ActivityLogger;
 
 class InterviewController extends Controller
 {
     public function start(Request $request)
     {
-        if (!Auth::check()) abort(403);
+        if (! Auth::check()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'category_id' => [
@@ -54,19 +66,25 @@ class InterviewController extends Controller
             'ai_assistance_level' => ['nullable', Rule::in(['beginner', 'standard', 'challenge'])],
             'live_feedback_mode' => ['nullable', Rule::in(['coaching', 'real_interview'])],
             'pressure_mode' => 'nullable|boolean',
-            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
+            'interview_format' => ['nullable', Rule::in(['standard', 'hr_screen', 'hiring_manager', 'panel', 'phone', 'asynchronous', 'technical', 'case', 'presentation'])],
+            'camera_coaching' => 'nullable|boolean',
+            'separate_language_scoring' => 'nullable|boolean',
+            'extended_time' => 'nullable|boolean',
+            'captions' => 'nullable|boolean',
+            'reduced_distraction' => 'nullable|boolean',
+            'simplified_questions' => 'nullable|boolean',
         ]);
 
         $category = Category::findOrFail($validated['category_id']);
-        $application = !empty($validated['job_application_id'])
+        $application = ! empty($validated['job_application_id'])
             ? JobApplication::where('user_id', Auth::id())->findOrFail($validated['job_application_id'])
             : null;
-        $pack = !empty($validated['interview_pack_id'])
+        $pack = ! empty($validated['interview_pack_id'])
             ? InterviewPack::where('status', 'active')->findOrFail($validated['interview_pack_id'])
             : null;
 
         $position = $validated['target_position'];
-        if ($position === 'Other' && !empty($validated['custom_position'])) {
+        if ($position === 'Other' && ! empty($validated['custom_position'])) {
             $position = $validated['custom_position'];
         }
 
@@ -78,7 +96,7 @@ class InterviewController extends Controller
 
         $questionTypes = $validated['question_types'] ?? [];
         if ($pack) {
-            $questionTypes = !empty($questionTypes) ? $questionTypes : ($pack->question_types ?? []);
+            $questionTypes = ! empty($questionTypes) ? $questionTypes : ($pack->question_types ?? []);
             $validated['interview_focus'] = $validated['interview_focus'] ?? $pack->interview_focus;
             $validated['company_persona'] = ($validated['company_persona'] ?? null) ?: $pack->company_persona;
             $validated['difficulty'] = in_array($pack->difficulty, ['easy', 'medium', 'hard'], true)
@@ -94,7 +112,22 @@ class InterviewController extends Controller
             $validated['time_limit'] = (int) ($validated['time_limit'] ?? 0) > 0 ? $validated['time_limit'] : 2;
         }
 
-        $provider = $validated['ai_provider'] ?? 'openai';
+        // Provider choice is an administrator concern. Users receive the same versioned rubric
+        // regardless of which healthy provider the configured fallback chain selects.
+        $provider = env('AI_PROVIDER', 'gemini');
+        $profilePreferences = Profile::firstOrCreate(['user_id' => Auth::id()])->inclusive_preferences ?? [];
+        $accommodationProfile = [
+            'camera_coaching' => filter_var($validated['camera_coaching'] ?? data_get($profilePreferences, 'camera_coaching', false), FILTER_VALIDATE_BOOLEAN),
+            'separate_language_scoring' => filter_var($validated['separate_language_scoring'] ?? data_get($profilePreferences, 'separate_language_scoring', false), FILTER_VALIDATE_BOOLEAN),
+            'extended_time' => filter_var($validated['extended_time'] ?? data_get($profilePreferences, 'extended_time', false), FILTER_VALIDATE_BOOLEAN),
+            'captions' => filter_var($validated['captions'] ?? data_get($profilePreferences, 'captions', false), FILTER_VALIDATE_BOOLEAN),
+            'reduced_distraction' => filter_var($validated['reduced_distraction'] ?? data_get($profilePreferences, 'reduced_distraction', false), FILTER_VALIDATE_BOOLEAN),
+            'simplified_questions' => filter_var($validated['simplified_questions'] ?? data_get($profilePreferences, 'simplified_questions', false), FILTER_VALIDATE_BOOLEAN),
+        ];
+        if ($accommodationProfile['extended_time'] && (int) ($validated['time_limit'] ?? 0) > 0) {
+            $validated['time_limit'] = min(3, (int) $validated['time_limit'] + 1);
+        }
+        $assessmentMode = ($validated['live_feedback_mode'] ?? 'coaching') === 'real_interview' ? 'assessment' : 'coached';
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
@@ -112,18 +145,38 @@ class InterviewController extends Controller
             'company_persona' => $validated['company_persona'] ?? null,
             'interviewer_strictness' => $validated['interviewer_strictness'] ?? 'neutral',
             'time_limit' => $validated['time_limit'] ?? 0,
-            'question_types' => !empty($questionTypes) ? json_encode($questionTypes) : null,
+            'question_types' => ! empty($questionTypes) ? json_encode($questionTypes) : null,
             'ai_assistance_level' => $validated['ai_assistance_level'] ?? 'standard',
             'live_feedback_mode' => $validated['live_feedback_mode'] ?? 'coaching',
+            'assessment_mode' => $assessmentMode,
+            'interview_format' => $validated['interview_format'] ?? 'standard',
+            'accommodation_profile' => $accommodationProfile,
+            'score_eligible' => $assessmentMode === 'assessment',
             'pressure_mode' => $pressureMode,
             'status' => 'in_progress',
         ]);
 
-        if ($provider !== 'local') {
+        if ($pack && ! empty($pack->sample_questions)) {
+            $sampleQuestions = array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5));
+            $sampleQuestions = $this->localizedQuestionTexts($sampleQuestions, $provider);
+
+            foreach ($sampleQuestions as $idx => $qText) {
+                $this->createInterviewQuestion(
+                    $session,
+                    $category,
+                    $qText,
+                    $validated['difficulty'],
+                    $questionTypes,
+                    $idx
+                );
+            }
+        }
+
+        if ($provider !== 'local' && ! Question::where('interview_session_id', $session->id)->exists()) {
             $dataset = QuestionDatasetProvider::forCategory($category);
             $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
 
-            $generated = \App\Services\AIService::generateQuestions(
+            $generated = AIService::generateQuestions(
                 1, // Only generate the first question upfront for the real-time loop
                 $position,
                 $validated['difficulty'],
@@ -136,7 +189,9 @@ class InterviewController extends Controller
                 $validated['ai_assistance_level'] ?? 'standard',
                 $validated['interviewer_strictness'] ?? 'neutral',
                 $dataset,
-                $this->currentLanguageConfig()
+                $this->currentLanguageConfig(),
+                $validated['interview_format'] ?? 'standard',
+                $accommodationProfile['simplified_questions']
             );
 
             if (is_array($generated)) {
@@ -153,23 +208,9 @@ class InterviewController extends Controller
                     );
                 }
             }
-        } elseif ($pack && !empty($pack->sample_questions)) {
-            $sampleQuestions = array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5));
-            $sampleQuestions = $this->localizedQuestionTexts($sampleQuestions, $provider);
-
-            foreach ($sampleQuestions as $idx => $qText) {
-                $this->createInterviewQuestion(
-                    $session,
-                    $category,
-                    $qText,
-                    $validated['difficulty'],
-                    $questionTypes,
-                    $idx
-                );
-            }
         }
 
-        if (!Question::where('interview_session_id', $session->id)->exists()) {
+        if (! Question::where('interview_session_id', $session->id)->exists()) {
             $fallbackQuestions = $this->fallbackQuestionTextsForSession($session, $questionTypes, (int) ($validated['num_questions'] ?? 5));
             $fallbackQuestions = $this->localizedQuestionTexts($fallbackQuestions, $provider);
 
@@ -185,7 +226,7 @@ class InterviewController extends Controller
             }
         }
 
-        if (!Question::where('interview_session_id', $session->id)->exists()) {
+        if (! Question::where('interview_session_id', $session->id)->exists()) {
             Log::warning('Interview setup used built-in fallback questions because no AI, pack, or bank questions were available.', [
                 'session_id' => $session->id,
                 'category_id' => $category->id,
@@ -222,7 +263,9 @@ class InterviewController extends Controller
     public function answer(Request $request)
     {
         $session = $this->activeInterviewSession();
-        if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
 
         $validated = $request->validate([
             'question_id' => 'required|exists:questions,id',
@@ -237,13 +280,14 @@ class InterviewController extends Controller
             'filler_words_count' => 'nullable|integer|min:0|max:500',
             'pause_count' => 'nullable|integer|min:0|max:500',
             'confidence_score' => 'nullable|integer|min:0|max:100',
+            'self_reported_confidence' => 'nullable|integer|min:0|max:100',
             'eye_contact_score' => 'nullable|integer|min:0|max:100',
             'posture_score' => 'nullable|integer|min:0|max:100',
             'notes' => 'nullable|string|max:10000',
         ]);
 
         $question = $this->questionForSession($validated['question_id'], $session);
-        if (!$question) {
+        if (! $question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
 
@@ -265,6 +309,8 @@ class InterviewController extends Controller
             'filler_words_count' => $deliveryMetrics['filler_words_count'],
             'pause_count' => $deliveryMetrics['pause_count'],
             'confidence_score' => $deliveryMetrics['confidence_score'],
+            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
             'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
             'posture_score' => $deliveryMetrics['posture_score'],
         ]);
@@ -279,7 +325,9 @@ class InterviewController extends Controller
     public function saveSessionState(Request $request)
     {
         $session = $this->activeInterviewSession();
-        if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
 
         $validated = $request->validate([
             'notes' => 'nullable|string|max:10000',
@@ -301,7 +349,9 @@ class InterviewController extends Controller
     public function chatReply(Request $request)
     {
         $session = $this->activeInterviewSession();
-        if (!$session) return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
 
         $validated = $request->validate([
             'answer_text' => 'required|string|max:20000',
@@ -316,19 +366,19 @@ class InterviewController extends Controller
             'filler_words_count' => 'nullable|integer|min:0|max:500',
             'pause_count' => 'nullable|integer|min:0|max:500',
             'confidence_score' => 'nullable|integer|min:0|max:100',
+            'self_reported_confidence' => 'nullable|integer|min:0|max:100',
             'eye_contact_score' => 'nullable|integer|min:0|max:100',
             'posture_score' => 'nullable|integer|min:0|max:100',
-            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
             'is_final_question' => 'nullable',
         ]);
 
         $question = $this->questionForSession($validated['question_id'], $session);
-        if (!$question) {
+        if (! $question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
-        
+
         // 1. Save User's Answer
         $answer = InterviewAnswer::create([
             'interview_session_id' => $session->id,
@@ -344,6 +394,8 @@ class InterviewController extends Controller
             'filler_words_count' => $deliveryMetrics['filler_words_count'],
             'pause_count' => $deliveryMetrics['pause_count'],
             'confidence_score' => $deliveryMetrics['confidence_score'],
+            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
             'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
             'posture_score' => $deliveryMetrics['posture_score'],
         ]);
@@ -356,17 +408,17 @@ class InterviewController extends Controller
             ->map(function ($ans) {
                 return [
                     'question' => $ans->question->question_text ?? '',
-                    'answer' => $ans->answer_text
+                    'answer' => $ans->answer_text,
                 ];
             })->toArray();
 
         // 3. Generate Follow-up via AI
-        $provider = $validated['ai_provider'] ?? session('active_interview_provider', 'openai');
+        $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
         $isFinal = filter_var($validated['is_final_question'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $followUpText = \App\Services\AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal, $this->currentLanguageConfig());
+        $followUpText = AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal, $this->currentLanguageConfig());
 
-        if (!$followUpText) {
-            $followUpText = "Thank you for sharing that. Could you tell me more about your experience in this field?"; // fallback
+        if (! $followUpText) {
+            $followUpText = 'Thank you for sharing that. Could you tell me more about your experience in this field?'; // fallback
         }
 
         // 4. Save new AI Question
@@ -390,19 +442,20 @@ class InterviewController extends Controller
         return response()->json([
             'success' => true,
             'next_question_id' => $newQuestion->id,
-            'next_question_text' => $newQuestion->question_text
+            'next_question_text' => $newQuestion->question_text,
         ]);
     }
 
     public function finish(Request $request)
     {
-        if (!Auth::check()) abort(403);
+        if (! Auth::check()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'session_id' => 'required|exists:interview_sessions,id',
             'duration_seconds' => 'nullable|integer|min:0|max:28800',
             'notes' => 'nullable|string|max:10000',
-            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
         ]);
 
         if ((int) session('active_interview_id') !== (int) $validated['session_id']) {
@@ -416,11 +469,11 @@ class InterviewController extends Controller
             'notes' => $validated['notes'] ?? $session->notes,
         ]);
 
-        $answers = \App\Models\InterviewAnswer::with('question')
+        $answers = InterviewAnswer::with('question')
             ->where('interview_session_id', $session->id)
             ->whereNull('retry_of_answer_id')
             ->get();
-        
+
         $answersData = $answers->map(function ($answer) {
             return [
                 'id' => $answer->id,
@@ -438,13 +491,16 @@ class InterviewController extends Controller
             'ai_assistance_level' => $session->ai_assistance_level,
             'interviewer_strictness' => $session->interviewer_strictness,
             'pressure_mode' => (bool) $session->pressure_mode,
+            'interview_format' => $session->interview_format,
+            'assessment_mode' => $session->assessment_mode,
+            'accommodation_profile' => $session->accommodation_profile,
             'target_language' => $this->currentLanguageConfig(),
         ];
 
         // Game Level specific modifiers
         $gameLevel = null;
         if (session('game_level_id')) {
-            $gameLevel = \App\Models\GameLevel::find(session('game_level_id'));
+            $gameLevel = GameLevel::find(session('game_level_id'));
             if ($gameLevel) {
                 if ($gameLevel->banned_words) {
                     $sessionData['banned_words'] = $gameLevel->banned_words;
@@ -455,13 +511,18 @@ class InterviewController extends Controller
             }
         }
 
-        // Generate feedback with the selected provider first, then validated provider fallbacks.
-        $feedbackProvider = $validated['ai_provider'] ?? session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
-        $aiFeedback = \App\Services\AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
+        // Provider routing is controlled by the configured primary/fallback chain, not by users.
+        $feedbackProvider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+        $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
+        $assessment = app(TrustworthyAssessmentService::class);
 
-        $totalClarity = 0; $totalRelevance = 0; $totalGrammar = 0; $totalProf = 0;
-        $totalBodyLang = 0; $totalConfidence = 0;
-        
+        $totalClarity = 0;
+        $totalRelevance = 0;
+        $totalGrammar = 0;
+        $totalProf = 0;
+        $totalBodyLang = 0;
+        $totalConfidence = 0;
+
         foreach ($answers as $answer) {
             $totalBodyLang += ($answer->eye_contact_score + $answer->posture_score) / 2;
             $totalConfidence += $answer->confidence_score > 0 ? $this->scoreValue($answer->confidence_score) : 0;
@@ -483,23 +544,40 @@ class InterviewController extends Controller
                 $g = $this->scoreValue($qFeedback['grammar_score'] ?? 0);
                 $p = $this->scoreValue($qFeedback['professionalism_score'] ?? 0);
                 $qScore = $this->scoreValue($qFeedback['score'] ?? round(($c + $r + $g + $p) / 4));
-                
-                $totalClarity += $c; $totalRelevance += $r; $totalGrammar += $g; $totalProf += $p;
 
+                $totalClarity += $c;
+                $totalRelevance += $r;
+                $totalGrammar += $g;
+                $totalProf += $p;
+
+                $evidence = $assessment->answerEvidence($answer->answer_text ?? '', $qFeedback['ai_feedback'] ?? null);
+                $rubric = $assessment->rubricLevel($qScore);
                 $answer->update([
                     'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
-                    'better_sample_answer' => $qFeedback['better_sample_answer'] ?? '',
+                    'better_sample_answer' => $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence),
                     'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
                     'clarity_score' => $c,
                     'relevance_score' => $r,
                     'grammar_score' => $g,
                     'score' => $qScore,
+                    'scoring_confidence' => 80,
+                    'evidence_map' => $evidence,
+                    'rubric_level' => $rubric['level'],
+                    'recommendation_text' => $rubric['next_level'],
+                    'improved_answer_source' => 'candidate_facts',
                 ]);
             } else {
                 // Do not invent positive scores when AI scoring fails.
-                $c = 0; $r = 0; $g = 0; $p = 0; $qScore = 0;
-                
-                $totalClarity += $c; $totalRelevance += $r; $totalGrammar += $g; $totalProf += $p;
+                $c = 0;
+                $r = 0;
+                $g = 0;
+                $p = 0;
+                $qScore = 0;
+
+                $totalClarity += $c;
+                $totalRelevance += $r;
+                $totalGrammar += $g;
+                $totalProf += $p;
 
                 $answer->update([
                     'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
@@ -508,7 +586,11 @@ class InterviewController extends Controller
                     'clarity_score' => 0,
                     'relevance_score' => 0,
                     'grammar_score' => 0,
-                    'score' => $qScore
+                    'score' => $qScore,
+                    'scoring_confidence' => 0,
+                    'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? ''),
+                    'rubric_level' => 'Unscored',
+                    'improved_answer_source' => 'unavailable',
                 ]);
             }
         }
@@ -518,58 +600,59 @@ class InterviewController extends Controller
         $relevance = round($totalRelevance / $count);
         $grammar = round($totalGrammar / $count);
         $prof = round($totalProf / $count);
-        $bodyLang = round($totalBodyLang / $count);
+        $bodyLang = data_get($session->accommodation_profile, 'camera_coaching', false)
+            ? round($totalBodyLang / $count)
+            : 0;
         $conf = round($totalConfidence / $count);
-        
-        $sFeedback = $aiFeedback['session_feedback'] ?? null;
-        $overall = $this->scoreValue($sFeedback['overall_readiness_score'] ?? round(($clarity + $relevance + $grammar + $prof + $bodyLang + $conf) / 6));
 
-        // Game perks affect level progression, never the stored assessment score.
-        $profile = \App\Models\Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $sFeedback = $aiFeedback['session_feedback'] ?? null;
+        $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
+        $fullTranscript = implode(' ', array_column($answersData, 'answer'));
+        $jobEvidence = app(ReadinessTwinService::class)->analyzeTexts(
+            $fullTranscript,
+            $session->job_description,
+            $session->target_position
+        );
+        $jobEvidenceScore = $jobEvidence['score'];
+        $metadata = $assessment->sessionMetadata($session, $answers->fresh(['question']), [
+            'clarity' => $clarity,
+            'relevance' => $relevance,
+            'grammar' => $grammar,
+            'professionalism' => $prof,
+        ], $starScore, $jobEvidenceScore);
+        $overall = $metadata['overall'];
+
+        // Game perks affect game progression, never the stored assessment score.
+        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
         $gameResultScore = $overall;
         if ($gameLevel && $profile->hasPerk('first_impressions')) {
             $gameResultScore = min(100, $gameResultScore + 5);
         }
 
-        $atsScore = 0;
-        if (!empty($session->job_description)) {
-            $jdClean = preg_replace('/[^a-zA-Z]/', ' ', strtolower($session->job_description));
-            $jdWords = array_unique(str_word_count($jdClean, 1));
-            $stopWords = ['about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'aren', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'cannot', 'could', 'couldn', 'did', 'didn', 'do', 'does', 'doesn', 'doing', 'don', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'hadn', 'has', 'hasn', 'have', 'haven', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'if', 'in', 'into', 'is', 'isn', 'it', 'its', 'itself', 'let', 'me', 'more', 'most', 'mustn', 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', 'shan', 'she', 'should', 'shouldn', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'wasn', 'we', 'were', 'weren', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'with', 'would', 'wouldn', 'you', 'your', 'yours', 'yourself', 'yourselves', 'please', 'required', 'skills', 'experience', 'looking', 'years', 'working', 'ability'];
-            
-            $jdKeywords = array_filter($jdWords, function($word) use ($stopWords) {
-                return strlen($word) > 4 && !in_array($word, $stopWords);
-            });
-            
-            if (count($jdKeywords) > 0) {
-                $fullTranscript = strtolower(implode(' ', array_column($answersData, 'answer')));
-                $matchedCount = 0;
-                foreach ($jdKeywords as $keyword) {
-                    if (strpos($fullTranscript, $keyword) !== false) {
-                        $matchedCount++;
-                    }
-                }
-                $atsScore = (int) round(($matchedCount / count($jdKeywords)) * 100);
-            }
-        }
-        
-        $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
-
-        $scoreRecord = \App\Models\Score::create([
+        $scoreRecord = Score::create([
             'interview_session_id' => $session->id,
+            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+            'assessment_mode' => $session->assessment_mode,
             'clarity_score' => $clarity,
             'relevance_score' => $relevance,
             'grammar_score' => $grammar,
             'professionalism_score' => $prof,
             'body_language_score' => $bodyLang,
             'confidence_score' => $conf,
+            'delivery_stability_score' => $metadata['delivery_stability'],
             'overall_readiness_score' => $overall,
-            'ats_match_score' => $atsScore,
+            'readiness_band' => $metadata['readiness_band'],
+            'scoring_confidence' => $metadata['scoring_confidence'],
+            'ats_match_score' => $jobEvidenceScore,
+            'job_evidence_match_score' => $jobEvidenceScore,
             'star_method_score' => $starScore,
+            'evidence_map' => $metadata['evidence_map'],
+            'rubric' => $metadata['rubric'],
+            'body_language_included' => false,
         ]);
 
         // Generate Session-level Feedback from AI
-        $feedbackRecord = \App\Models\Feedback::create([
+        $feedbackRecord = Feedback::create([
             'interview_session_id' => $session->id,
             'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
             'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
@@ -590,9 +673,9 @@ class InterviewController extends Controller
                 $session->jobApplication->update(['status' => 'interviewing']);
             }
         }
-        
+
         $badges = [];
-        if (!empty($profile->badges_earned)) {
+        if (! empty($profile->badges_earned)) {
             $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         }
 
@@ -607,36 +690,36 @@ class InterviewController extends Controller
                 $baseReward = round($baseReward * 1.2);
             }
             $xpEarned = $baseReward;
-            $progress = \App\Models\GameProgress::where('user_id', Auth::id())
-                            ->where('game_level_id', $gameLevel->id)->first();
-                            
+            $progress = GameProgress::where('user_id', Auth::id())
+                ->where('game_level_id', $gameLevel->id)->first();
+
             if ($progress) {
                 if ($gameResultScore >= $gameLevel->required_score) {
                     $progress->status = 'completed';
                     $gameStatus = 'victory';
-                    
+
                     // Unlock next level
-                    $nextLevel = \App\Models\GameLevel::where('category_id', $gameLevel->category_id)
+                    $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
                         ->where('level_number', $gameLevel->level_number + 1)
                         ->first();
                     if ($nextLevel) {
-                        \App\Models\GameProgress::firstOrCreate(
+                        GameProgress::firstOrCreate(
                             ['user_id' => Auth::id(), 'game_level_id' => $nextLevel->id],
                             ['status' => 'active', 'best_score' => 0]
                         );
                     }
 
                     // Add Custom Badge and Skill XP if victorious
-                    if ($gameLevel->custom_badge_name && !in_array($gameLevel->custom_badge_name, $badges)) {
+                    if ($gameLevel->custom_badge_name && ! in_array($gameLevel->custom_badge_name, $badges)) {
                         $badges[] = $gameLevel->custom_badge_name;
                     }
                     if ($gameLevel->skill_xp_amount > 0) {
                         $skillType = strtolower(str_replace(' ', '_', $gameLevel->skill_xp_type));
                         if (in_array($skillType, ['leadership', 'communication', 'technical', 'problem_solving'])) {
-                            $col = $skillType . '_xp';
+                            $col = $skillType.'_xp';
                             $profile->$col += $gameLevel->skill_xp_amount;
                         } else {
-                            $xpEarned += $gameLevel->skill_xp_amount; 
+                            $xpEarned += $gameLevel->skill_xp_amount;
                         }
                     }
 
@@ -651,14 +734,14 @@ class InterviewController extends Controller
         }
 
         $badges = [];
-        if (!empty($profile->badges_earned)) {
+        if (! empty($profile->badges_earned)) {
             $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         }
 
-        if ($profile->total_sessions == 0 && !in_array('First Interview', $badges)) {
+        if ($profile->total_sessions == 0 && ! in_array('First Interview', $badges)) {
             $badges[] = 'First Interview';
         }
-        
+
         $today = now()->format('Y-m-d');
         if ($profile->last_activity_date != $today) {
             $yesterday = now()->subDay()->format('Y-m-d');
@@ -673,13 +756,13 @@ class InterviewController extends Controller
         if ($profile->current_streak > $profile->longest_streak) {
             $profile->longest_streak = $profile->current_streak;
         }
-        
-        if ($profile->current_streak >= 3 && !in_array('3-Day Streak', $badges)) {
+
+        if ($profile->current_streak >= 3 && ! in_array('3-Day Streak', $badges)) {
             $badges[] = '3-Day Streak';
         }
 
         $profile->experience_points += $xpEarned;
-        
+
         // Level up logic (every 1000 XP = 1 Level)
         $newLevel = max(1, floor($profile->experience_points / 1000) + 1);
         if ($newLevel > ($profile->player_level ?? 1)) {
@@ -688,7 +771,10 @@ class InterviewController extends Controller
 
         $profile->badges_earned = $badges;
         $profile->total_sessions += 1;
-        $profile->readiness_score = $overall;
+        // Coached sessions remain useful practice, but only uncoached assessments update readiness.
+        if ($session->score_eligible) {
+            $profile->readiness_score = $overall;
+        }
         $profile->save();
 
         session()->forget('active_interview_id');
@@ -706,6 +792,7 @@ class InterviewController extends Controller
 
         if ($gameLevelId) {
             $msg = $gameStatus === 'victory' ? 'Victory! You cleared the Game Level!' : 'Defeat! You did not reach the required score. Try again!';
+
             return redirect()->route('user.learning')->with($gameStatus === 'victory' ? 'success' : 'error', $msg);
         }
 
@@ -714,7 +801,9 @@ class InterviewController extends Controller
 
     public function retryAnswer(Request $request, InterviewAnswer $answer)
     {
-        if (!Auth::check()) abort(403);
+        if (! Auth::check()) {
+            abort(403);
+        }
 
         $answer->load(['question', 'interviewSession']);
         $session = InterviewSession::where('user_id', Auth::id())
@@ -734,10 +823,10 @@ class InterviewController extends Controller
             'filler_words_count' => 'nullable|integer|min:0|max:500',
             'pause_count' => 'nullable|integer|min:0|max:500',
             'confidence_score' => 'nullable|integer|min:0|max:100',
+            'self_reported_confidence' => 'nullable|integer|min:0|max:100',
             'eye_contact_score' => 'nullable|integer|min:0|max:100',
             'posture_score' => 'nullable|integer|min:0|max:100',
             'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
-            'ai_provider' => ['nullable', Rule::in(['local', 'gemini', 'cohere', 'groq', 'openrouter', 'claude', 'wisdomgate', 'openai'])],
         ]);
 
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
@@ -759,12 +848,14 @@ class InterviewController extends Controller
             'filler_words_count' => $deliveryMetrics['filler_words_count'],
             'pause_count' => $deliveryMetrics['pause_count'],
             'confidence_score' => $deliveryMetrics['confidence_score'],
+            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
             'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
             'posture_score' => $deliveryMetrics['posture_score'],
         ]);
 
-        $provider = $validated['ai_provider'] ?? session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
-        $feedback = \App\Services\AIService::generateFeedback([
+        $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+        $feedback = AIService::generateFeedback([
             'target_position' => $session->target_position,
             'difficulty' => $session->difficulty,
             'target_language' => $this->currentLanguageConfig(),
@@ -778,14 +869,23 @@ class InterviewController extends Controller
 
         $qFeedback = $feedback['per_question_feedback'][0] ?? null;
         if ($qFeedback) {
+            $assessment = app(TrustworthyAssessmentService::class);
+            $retryScore = $this->scoreValue($qFeedback['score'] ?? 0);
+            $evidence = $assessment->answerEvidence($retry->answer_text ?? '', $qFeedback['ai_feedback'] ?? null);
+            $rubric = $assessment->rubricLevel($retryScore);
             $retry->update([
                 'ai_feedback' => $qFeedback['ai_feedback'] ?? '',
-                'better_sample_answer' => $qFeedback['better_sample_answer'] ?? '',
+                'better_sample_answer' => $assessment->groundedRevisionTemplate($retry->answer_text ?? '', $evidence),
                 'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
                 'clarity_score' => $this->scoreValue($qFeedback['clarity_score'] ?? 0),
                 'relevance_score' => $this->scoreValue($qFeedback['relevance_score'] ?? 0),
                 'grammar_score' => $this->scoreValue($qFeedback['grammar_score'] ?? 0),
-                'score' => $this->scoreValue($qFeedback['score'] ?? 0),
+                'score' => $retryScore,
+                'scoring_confidence' => 80,
+                'evidence_map' => $evidence,
+                'rubric_level' => $rubric['level'],
+                'recommendation_text' => $rubric['next_level'],
+                'improved_answer_source' => 'candidate_facts',
             ]);
         }
 
@@ -799,6 +899,10 @@ class InterviewController extends Controller
             'relevance_score' => $retry->relevance_score ?? 0,
             'grammar_score' => $retry->grammar_score ?? 0,
             'confidence_score' => $retry->confidence_score ?? 0,
+            'delivery_stability_score' => $retry->delivery_stability_score,
+            'scoring_confidence' => $retry->scoring_confidence,
+            'rubric_level' => $retry->rubric_level,
+            'evidence_map' => $retry->evidence_map,
             'ai_feedback' => $retry->ai_feedback ?: 'Retry saved. Feedback was not available.',
             'better_sample_answer' => $retry->better_sample_answer ?: '',
             'follow_up_question' => $retry->follow_up_question ?: '',
@@ -818,14 +922,20 @@ class InterviewController extends Controller
         $fillerWords = $this->clampInt($input['filler_words_count'] ?? 0, 0, 500);
         $pauseCount = $this->clampInt($input['pause_count'] ?? 0, 0, 500);
 
+        $deliveryStability = app(TrustworthyAssessmentService::class)
+            ->deliveryStability($answerText, $wpm, $fillerWords, $pauseCount, $voiceDuration);
+        $session = $this->activeInterviewSession();
+        $cameraCoaching = (bool) data_get($session?->accommodation_profile, 'camera_coaching', false);
+
         return [
             'wpm' => $wpm,
             'voice_duration' => $voiceDuration,
             'filler_words_count' => $fillerWords,
             'pause_count' => $pauseCount,
             'confidence_score' => $this->estimatedAnswerConfidence($answerText, $wpm, $fillerWords, $pauseCount, $voiceDuration),
-            'eye_contact_score' => $this->scoreValue($input['eye_contact_score'] ?? 0),
-            'posture_score' => $this->scoreValue($input['posture_score'] ?? 0),
+            'delivery_stability_score' => $deliveryStability,
+            'eye_contact_score' => $cameraCoaching ? $this->scoreValue($input['eye_contact_score'] ?? 0) : 0,
+            'posture_score' => $cameraCoaching ? $this->scoreValue($input['posture_score'] ?? 0) : 0,
         ];
     }
 
@@ -836,6 +946,7 @@ class InterviewController extends Controller
         }
 
         $decoded = json_decode($payload, true);
+
         return is_array($decoded) ? $decoded : null;
     }
 
@@ -852,7 +963,7 @@ class InterviewController extends Controller
         $questionText = trim((string) $questionText);
         $categoryId = $category?->id ?? $session->category_id;
 
-        if ($questionText === '' || !$categoryId) {
+        if ($questionText === '' || ! $categoryId) {
             return null;
         }
 
@@ -884,7 +995,7 @@ class InterviewController extends Controller
             ->whereNull('interview_session_id')
             ->where('status', 'active')
             ->where('difficulty', $session->difficulty)
-            ->when(!empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes));
+            ->when(! empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes));
 
         $questions = $query->inRandomOrder()->limit($limit)->pluck('question_text')->all();
 
@@ -892,7 +1003,7 @@ class InterviewController extends Controller
             $questions = Question::where('category_id', $session->category_id)
                 ->whereNull('interview_session_id')
                 ->where('status', 'active')
-                ->when(!empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes))
+                ->when(! empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes))
                 ->inRandomOrder()
                 ->limit($limit)
                 ->pluck('question_text')
@@ -912,31 +1023,31 @@ class InterviewController extends Controller
         $templates = [
             'Behavioral' => [
                 "Tell me about a recent project that best shows your readiness for {$position}.",
-                "Describe a time you received difficult feedback and how you used it to improve.",
-                "Tell me about a time you had to work with a teammate or stakeholder with a different point of view.",
-                "Describe a situation where you had to take ownership without being explicitly asked.",
-                "Tell me about a mistake you made at work or school and what changed afterward.",
+                'Describe a time you received difficult feedback and how you used it to improve.',
+                'Tell me about a time you had to work with a teammate or stakeholder with a different point of view.',
+                'Describe a situation where you had to take ownership without being explicitly asked.',
+                'Tell me about a mistake you made at work or school and what changed afterward.',
             ],
             'Situational' => [
                 "If you joined as {$position} and found unclear priorities in your first week, how would you respond?",
-                "Imagine a deadline is at risk because requirements changed late. What would you do first?",
-                "How would you handle a stakeholder who disagrees with your recommendation?",
+                'Imagine a deadline is at risk because requirements changed late. What would you do first?',
+                'How would you handle a stakeholder who disagrees with your recommendation?',
                 "If {$persona} asked you to explain a complex decision to a non-technical audience, how would you structure it?",
-                "What would you do if you noticed a quality issue shortly before delivery?",
+                'What would you do if you noticed a quality issue shortly before delivery?',
             ],
             'Technical' => [
                 "Walk me through the technical strengths that make you a fit for {$position}.",
-                "Describe a technical problem you solved and the tradeoffs behind your approach.",
-                "How do you validate that your work is reliable before handing it off?",
+                'Describe a technical problem you solved and the tradeoffs behind your approach.',
+                'How do you validate that your work is reliable before handing it off?',
                 "Tell me about a tool, framework, or process you would use to improve outcomes in {$focus}.",
-                "How do you debug an issue when the root cause is not obvious?",
+                'How do you debug an issue when the root cause is not obvious?',
             ],
             'Personal' => [
                 "Why are you interested in {$position} right now?",
                 "What strengths would you bring to {$persona}, and where are you still growing?",
-                "How do you stay motivated when work becomes repetitive or ambiguous?",
-                "What kind of team environment helps you do your best work?",
-                "What do you want the interviewer to remember about you after this conversation?",
+                'How do you stay motivated when work becomes repetitive or ambiguous?',
+                'What kind of team environment helps you do your best work?',
+                'What do you want the interviewer to remember about you after this conversation?',
             ],
         ];
 
@@ -970,7 +1081,7 @@ class InterviewController extends Controller
             return $questions;
         }
 
-        $translations = \App\Services\AIService::translateInterfaceTexts($questions, $languageConfig, $provider);
+        $translations = AIService::translateInterfaceTexts($questions, $languageConfig, $provider);
 
         return array_map(fn ($question) => $translations[$question] ?? $question, $questions);
     }
@@ -1035,7 +1146,7 @@ class InterviewController extends Controller
     private function questionTypeForIndex(string $questionText, array $selectedTypes, int $index): string
     {
         $selectedTypes = array_values(array_filter($selectedTypes));
-        if (!empty($selectedTypes)) {
+        if (! empty($selectedTypes)) {
             return $selectedTypes[$index % count($selectedTypes)];
         }
 
@@ -1054,17 +1165,16 @@ class InterviewController extends Controller
         return 'Behavioral';
     }
 
-    private function buildActionPlan(InterviewSession $session, \App\Models\Score $score, \App\Models\Feedback $feedback, $answers): array
+    private function buildActionPlan(InterviewSession $session, Score $score, Feedback $feedback, $answers): array
     {
         $metrics = [
             'Clarity' => (int) ($score->clarity_score ?? 0),
             'Relevance' => (int) ($score->relevance_score ?? 0),
             'Grammar' => (int) ($score->grammar_score ?? 0),
             'Professionalism' => (int) ($score->professionalism_score ?? 0),
-            'Confidence' => (int) ($score->confidence_score ?? 0),
-            'Body Language' => (int) ($score->body_language_score ?? 0),
+            'Delivery Stability' => (int) ($score->delivery_stability_score ?? 0),
             'STAR Method' => (int) ($score->star_method_score ?? 0),
-            'Job Match' => (int) ($score->ats_match_score ?? 0),
+            'Job Evidence Match' => (int) ($score->job_evidence_match_score ?? 0),
         ];
 
         asort($metrics);
@@ -1106,10 +1216,9 @@ class InterviewController extends Controller
             'Relevance' => 'Before answering, restate the question goal in one sentence and connect every example to that goal.',
             'Grammar' => 'Practice slower delivery and shorter sentences, then review the transcript for awkward phrasing.',
             'Professionalism' => 'Replace casual phrases with concise interview language and emphasize ownership.',
-            'Confidence' => 'Record the same answer twice, reducing pauses and filler words on the second attempt.',
-            'Body Language' => 'Practice with camera on and keep your face centered while answering one timed question.',
+            'Delivery Stability' => 'Record the same answer twice, then compare pace, fillers, pauses, and completion without treating them as personality or confidence.',
             'STAR Method' => 'Retry a behavioral answer and explicitly include Situation, Task, Action, and Result.',
-            'Job Match' => 'Highlight two skills from the job description and add one matching proof point from your experience.',
+            'Job Evidence Match' => 'Add a verified story that proves one required competency from the job description.',
             default => 'Retry the lowest-scoring answer and make the improvement measurable.',
         };
     }
@@ -1117,8 +1226,8 @@ class InterviewController extends Controller
     private function recommendedQuestionTypes(string $weakestSkill, InterviewSession $session): array
     {
         return match ($weakestSkill) {
-            'STAR Method', 'Clarity', 'Confidence' => ['Behavioral', 'Situational'],
-            'Job Match', 'Relevance' => ['Technical', 'Situational'],
+            'STAR Method', 'Clarity', 'Delivery Stability' => ['Behavioral', 'Situational'],
+            'Job Evidence Match', 'Relevance' => ['Technical', 'Situational'],
             'Professionalism', 'Grammar' => ['Personal', 'Behavioral'],
             default => $this->decodeQuestionTypes($session->question_types) ?: ['Behavioral', 'Situational'],
         };
@@ -1126,7 +1235,7 @@ class InterviewController extends Controller
 
     private function recommendedPathsFor(string $weakestSkill): array
     {
-        if (in_array($weakestSkill, ['Confidence', 'Grammar', 'Body Language'], true)) {
+        if (in_array($weakestSkill, ['Delivery Stability', 'Grammar'], true)) {
             return [
                 ['label' => 'Voice Drill', 'url' => route('user.drills.voice')],
                 ['label' => 'Mock Interview', 'url' => route('interview.setup')],
@@ -1148,11 +1257,12 @@ class InterviewController extends Controller
 
     private function decodeQuestionTypes(?string $questionTypes): array
     {
-        if (!$questionTypes) {
+        if (! $questionTypes) {
             return [];
         }
 
         $decoded = json_decode($questionTypes, true);
+
         return is_array($decoded) ? array_values(array_filter($decoded)) : [];
     }
 
@@ -1188,7 +1298,7 @@ class InterviewController extends Controller
 
     private function clampInt($value, int $min, int $max): int
     {
-        if (!is_numeric($value)) {
+        if (! is_numeric($value)) {
             return $min;
         }
 
@@ -1198,7 +1308,7 @@ class InterviewController extends Controller
     private function activeInterviewSession(): ?InterviewSession
     {
         $sessionId = session('active_interview_id');
-        if (!$sessionId || !Auth::check()) {
+        if (! $sessionId || ! Auth::check()) {
             return null;
         }
 
@@ -1207,9 +1317,9 @@ class InterviewController extends Controller
             ->find($sessionId);
     }
 
-    private function questionForSession($questionId, InterviewSession $session): ?\App\Models\Question
+    private function questionForSession($questionId, InterviewSession $session): ?Question
     {
-        return \App\Models\Question::where('id', $questionId)
+        return Question::where('id', $questionId)
             ->where(function ($query) use ($session) {
                 $query->where('interview_session_id', $session->id)
                     ->orWhere(function ($query) use ($session) {
@@ -1223,7 +1333,7 @@ class InterviewController extends Controller
 
     private function scoreValue($score): int
     {
-        if (!is_numeric($score)) {
+        if (! is_numeric($score)) {
             return 0;
         }
 
@@ -1248,30 +1358,56 @@ class InterviewController extends Controller
             ->firstOrFail();
 
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
-            
+
         return view('shared.review', compact('sessionRecord', 'comparisonRows'));
     }
 
     public function toggleShare(Request $request, $id)
     {
         $session = InterviewSession::where('user_id', Auth::id())->findOrFail($id);
-        
-        $session->is_public = !$session->is_public;
-        
-        if ($session->is_public && empty($session->share_token)) {
-            $session->share_token = \Illuminate\Support\Str::uuid()->toString();
+
+        $validated = $request->validate([
+            'enabled' => 'nullable|boolean',
+            'expires_in_days' => ['nullable', 'integer', Rule::in([1, 7, 30])],
+            'password' => 'nullable|string|min:6|max:100',
+            'allow_comments' => 'nullable|boolean',
+            'hide_sensitive' => 'nullable|boolean',
+        ]);
+        $enabled = array_key_exists('enabled', $validated)
+            ? (bool) $validated['enabled']
+            : ! $session->is_public;
+        $session->is_public = $enabled;
+
+        if ($enabled && empty($session->share_token)) {
+            $session->share_token = Str::uuid()->toString();
         }
-        
+        if ($enabled) {
+            $session->share_expires_at = now()->addDays((int) ($validated['expires_in_days'] ?? 7));
+            if (! empty($validated['password'])) {
+                $session->share_password_hash = Hash::make($validated['password']);
+            } else {
+                $session->share_password_hash = null;
+            }
+            $session->share_permissions = [
+                'view' => true,
+                'comment' => (bool) ($validated['allow_comments'] ?? true),
+            ];
+            $session->share_hide_sensitive = (bool) ($validated['hide_sensitive'] ?? true);
+        } else {
+            $session->share_expires_at = now();
+        }
         $session->save();
-        
+
         return response()->json([
-            'success' => true, 
-            'is_public' => $session->is_public, 
-            'share_url' => $session->is_public ? route('shared.review', $session->share_token) : null
+            'success' => true,
+            'is_public' => $session->is_public,
+            'share_url' => $session->is_public ? route('shared.review', $session->share_token) : null,
+            'expires_at' => optional($session->share_expires_at)->toIso8601String(),
+            'hide_sensitive' => $session->share_hide_sensitive,
         ]);
     }
 
-    public function sharedReview($token)
+    public function sharedReview(Request $request, $token)
     {
         $sessionRecord = InterviewSession::where('share_token', $token)
             ->where('is_public', true)
@@ -1288,14 +1424,32 @@ class InterviewController extends Controller
             ])
             ->firstOrFail();
 
+        abort_unless($sessionRecord->shareIsActive(), 410, 'This private review link has expired.');
+        if ($sessionRecord->share_password_hash && ! $request->session()->get("shared_review.{$token}")) {
+            return view('shared.unlock', compact('sessionRecord'));
+        }
+
         $comparisonRows = [];
-            
+
         return view('shared.review', compact('sessionRecord', 'comparisonRows'));
+    }
+
+    public function unlockSharedReview(Request $request, string $token)
+    {
+        $sessionRecord = InterviewSession::where('share_token', $token)->where('is_public', true)->firstOrFail();
+        abort_unless($sessionRecord->shareIsActive(), 410, 'This private review link has expired.');
+        $validated = $request->validate(['password' => 'required|string|max:100']);
+        if (! $sessionRecord->share_password_hash || ! Hash::check($validated['password'], $sessionRecord->share_password_hash)) {
+            return back()->withErrors(['password' => 'The review password is incorrect.']);
+        }
+        $request->session()->put("shared_review.{$token}", true);
+
+        return redirect()->route('shared.review', $token);
     }
 
     private function comparisonRowsFor(InterviewSession $session): array
     {
-        if (!$session->score) {
+        if (! $session->score || (! $session->score_eligible && $session->score->assessment_mode !== 'legacy')) {
             return [];
         }
 
@@ -1303,11 +1457,15 @@ class InterviewController extends Controller
             ->where('status', 'completed')
             ->where('id', '!=', $session->id)
             ->where('created_at', '<', $session->created_at)
+            ->where(function ($query) {
+                $query->where('score_eligible', true)
+                    ->orWhereHas('score', fn ($score) => $score->where('assessment_mode', 'legacy'));
+            })
             ->with('score')
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$previousSession || !$previousSession->score) {
+        if (! $previousSession || ! $previousSession->score) {
             return [];
         }
 
@@ -1316,7 +1474,8 @@ class InterviewController extends Controller
             'Relevance' => 'relevance_score',
             'Grammar' => 'grammar_score',
             'Professionalism' => 'professionalism_score',
-            'Confidence' => 'confidence_score',
+            'Delivery Stability' => 'delivery_stability_score',
+            'Job Evidence Match' => 'job_evidence_match_score',
             'Overall' => 'overall_readiness_score',
         ];
 

@@ -55,7 +55,7 @@ class UserApplicationController extends Controller
             ['title' => 'Application Added', 'icon' => 'fa-briefcase', 'type' => 'success']
         );
 
-        return redirect()->route('user.applications.index')->with('success', 'Job application added with a smart practice plan.');
+        return redirect()->route('user.applications.index')->with('success', 'Job application added with a competency map and adaptive readiness plan.');
     }
 
     public function update(Request $request, JobApplication $application, CareerPlanService $careerPlan)
@@ -75,7 +75,7 @@ class UserApplicationController extends Controller
         $application->save();
         $careerPlan->syncPracticePlan($application);
 
-        return redirect()->route('user.applications.index')->with('success', 'Application tracker and plan updated.');
+        return redirect()->route('user.applications.index')->with('success', 'Application evidence map and adaptive plan updated.');
     }
 
     public function destroy(JobApplication $application)

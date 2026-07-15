@@ -293,10 +293,10 @@
                             </div>
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
-                                    <span><i class="fa-solid fa-face-smile-beam me-2" style="color:#a855f7;"></i>Confidence</span>
-                                    <span class="fw-bold">{{ $performance->confidence_score }}%</span>
+                                    <span><i class="fa-solid fa-wave-square me-2" style="color:#a855f7;"></i>Delivery Stability</span>
+                                    <span class="fw-bold">{{ $performance->delivery_stability_score ?? 0 }}%</span>
                                 </div>
-                                <div class="progress-track"><div class="progress-fill" style="width:{{ $performance->confidence_score }}%;background:#a855f7;"></div></div>
+                                <div class="progress-track"><div class="progress-fill" style="width:{{ $performance->delivery_stability_score ?? 0 }}%;background:#a855f7;"></div></div>
                             </div>
                         </div>
                     </div>

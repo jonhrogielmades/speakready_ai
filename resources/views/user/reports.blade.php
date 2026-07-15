@@ -349,7 +349,7 @@
                     </div>
                     <div class="col-4 border-end px-1 px-sm-3" style="border-color:var(--bd)!important;">
                         <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->confidence === null ? 'N/A' : $voiceData->confidence . '%' }}</div>
-                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Confidence</div>
+                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Delivery Stability</div>
                     </div>
                     <div class="col-4 px-1 px-sm-3">
                         <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:#ef4444;">{{ $voiceData->filler_words ?? 'N/A' }}</div>

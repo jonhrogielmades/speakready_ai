@@ -132,6 +132,9 @@ class GameController extends Controller
             'interview_focus' => $interviewFocus,
             'company_persona' => $level->ai_persona, // Inject persona
             'time_limit' => $timeLimit, // Inject time limit
+            'assessment_mode' => 'coached',
+            'score_eligible' => false,
+            'accommodation_profile' => $profile->inclusive_preferences ?? [],
             'status' => 'in_progress',
         ]);
 

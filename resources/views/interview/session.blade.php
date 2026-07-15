@@ -523,7 +523,7 @@
                             </svg>
                             Interview Workspace
                         </h4>
-                        <p class="sr-page-hero-subtitle">Practice with your AI interviewer and answer each question with confidence.</p>
+                        <p class="sr-page-hero-subtitle">Practice role-specific questions and build answers supported by evidence.</p>
                     </div>
                 </div>
                 <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -568,9 +568,11 @@
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
                     <!-- Mobile Picture-in-Picture Camera -->
+                    @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
                     <div class="d-block d-lg-none mobile-camera-pip">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                     </div>
+                    @endif
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
@@ -656,6 +658,11 @@
                             <!-- Chat bubbles will go here -->
                         </div>
                         <textarea id="answerTextarea" class="oinp mb-2" style="min-height:80px;font-size:.95rem" placeholder="Type your answer here, or use voice to auto-transcribe..."></textarea>
+                        <div class="p-3 mb-3" style="border:1px solid var(--bd);border-radius:12px;background:var(--bg3)">
+                            <div class="d-flex justify-content-between gap-2 mb-2"><label for="selfConfidenceRange" style="font-size:.8rem;font-weight:700;color:var(--tx)">How prepared did you feel for this question?</label><span id="selfConfidenceValue" class="badge text-bg-secondary">50%</span></div>
+                            <input id="selfConfidenceRange" type="range" min="0" max="100" value="50" class="form-range" oninput="document.getElementById('selfConfidenceValue').textContent=this.value+'%'">
+                            <div style="font-size:.72rem;color:var(--tx3)">This is your self-report. It is shown separately from delivery stability and is not inferred from your face or voice.</div>
+                        </div>
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
@@ -672,9 +679,10 @@
             <!-- Side Panels -->
             <div class="col-lg-4">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
-                <!-- Camera Presence (Hidden on mobile since it's inside the AI panel now) -->
+                <!-- Optional descriptive camera coach; never used in readiness scoring. -->
+                @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
                 <div class="panel d-none d-lg-block animate-fade-up delay-100" id="cameraPanel">
-                    <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Camera Presence</div>
+                    <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Optional Camera Coach</div>
                     <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
                         <video id="userCamera" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
                         <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
@@ -682,16 +690,18 @@
                         </div>
                         <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#34d399"><i class="fa-solid fa-circle text-success pulse-anim" style="font-size:.5rem;margin-right:4px"></i> AI Track</div>
                     </div>
-                    <div class="stat-row"><span>Eye Contact</span><span id="stEyeContact" class="text-success"><i class="fa-solid fa-check me-1"></i>Good</span></div>
-                    <div class="stat-row mb-0"><span>Posture</span><span id="stPosture" class="text-success"><i class="fa-solid fa-check me-1"></i>Good</span></div>
+                    <div class="stat-row"><span>Face in frame</span><span id="stEyeContact" class="text-secondary">Waiting</span></div>
+                    <div class="stat-row mb-0"><span>Detection quality</span><span id="stPosture" class="text-secondary">Not scored</span></div>
+                    <div class="small mt-2" style="color:var(--tx3)">Framing feedback is descriptive and excluded from readiness.</div>
                 </div>
+                @endif
 
                 <!-- AI Visualizer Panel -->
                 <div class="panel animate-fade-up delay-200 coaching-only" id="liveFeedbackPanel">
-                    <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> Live Readiness</div>
+                    <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> Live Practice Signals</div>
                     <div class="text-center mb-3">
                         <div style="font-size:2rem;font-weight:700;color:#34d399" id="overallReadiness">--%</div>
-                        <div style="font-size:.75rem;color:var(--tx3)">Real-time Readiness</div>
+                        <div style="font-size:.75rem;color:var(--tx3)">Coaching estimate—not an assessment</div>
                     </div>
                     <div class="stat-row"><span>Clarity</span><span id="metClarity">--%</span></div>
                     <div class="stat-row"><span>Relevance</span><span id="metRelevance">--%</span></div>
@@ -764,6 +774,7 @@
             const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit ?? 0) * 60) }};
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
+            const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
             const savedSessionState = @json($savedStateForUi ?? []);
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
             currentQIdx = Math.max(0, Math.min(currentQIdx, Math.max(0, questions.length - 1)));
@@ -787,9 +798,10 @@
                 voice_duration: 0,
                 filler_words: 0,
                 pause_count: 0,
-                confidence_score: 85,
-                eye_contact_score: 90,
-                    posture_score: 90,
+                confidence_score: 0,
+                self_reported_confidence: 50,
+                eye_contact_score: 0,
+                    posture_score: 0,
                     transcript_timeline: []
                 };
             }
@@ -803,7 +815,7 @@
                 });
             }
 
-            // Voice and Body Language state
+            // Voice state and optional, non-scoring camera-framing state
             let recognition = null;
             let recognitionActive = false;
             let shouldAutoRestartRecognition = false;
@@ -1054,6 +1066,7 @@
             }
             
             async function trackBodyLanguage() {
+                if (!cameraCoachingEnabled) return;
                 const video = document.getElementById('userCamera');
                 if (!video || !video.srcObject) return;
                 
@@ -1061,38 +1074,15 @@
                     const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
                     
                     if (detection) {
-                        // Face is visible
-                        const landmarks = detection.landmarks;
-                        const nose = landmarks.getNose()[0];
-                        const leftEye = landmarks.getLeftEye()[0];
-                        const rightEye = landmarks.getRightEye()[0];
-                        
-                        // Calculate Head Yaw/Pitch to detect looking away
-                        const eyeDist = Math.abs(leftEye.x - rightEye.x);
-                        const noseDistLeft = Math.abs(leftEye.x - nose.x);
-                        const ratio = noseDistLeft / eyeDist;
-                        
-                        // If nose is too close to left or right eye, user is looking away
-                        const eyeGood = (ratio > 0.3 && ratio < 0.7);
-                        if (!eyeGood) answersData[currentQIdx].eye_contact_score = Math.max(40, answersData[currentQIdx].eye_contact_score - 5);
-                        
-                        // Posture logic: if nose Y is extremely low compared to the frame, slouching
-                        const postGood = (nose.y < video.videoHeight * 0.7);
-                        if (!postGood) answersData[currentQIdx].posture_score = Math.max(40, answersData[currentQIdx].posture_score - 2); 
-
-                        document.getElementById('stEyeContact').innerHTML = eyeGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Looking Away';
-                        document.getElementById('stEyeContact').className = eyeGood ? 'text-success' : 'text-warning';
-                        document.getElementById('stPosture').innerHTML = postGood ? '<i class="fa-solid fa-check me-1"></i>Good' : '<i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i>Slouching';
-                        document.getElementById('stPosture').className = postGood ? 'text-success' : 'text-warning';
+                        document.getElementById('stEyeContact').innerHTML = '<i class="fa-solid fa-check me-1"></i>Visible';
+                        document.getElementById('stEyeContact').className = 'text-success';
+                        document.getElementById('stPosture').textContent = 'Available · not scored';
+                        document.getElementById('stPosture').className = 'text-secondary';
                     } else {
-                        // No face detected
-                        document.getElementById('stEyeContact').innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i>No Face Detected';
-                        document.getElementById('stEyeContact').className = 'text-danger';
-                        document.getElementById('stPosture').innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i>No Face Detected';
-                        document.getElementById('stPosture').className = 'text-danger';
-                        
-                        answersData[currentQIdx].eye_contact_score = Math.max(40, answersData[currentQIdx].eye_contact_score - 5);
-                        answersData[currentQIdx].posture_score = Math.max(40, answersData[currentQIdx].posture_score - 5);
+                        document.getElementById('stEyeContact').textContent = 'Outside frame / unavailable';
+                        document.getElementById('stEyeContact').className = 'text-warning';
+                        document.getElementById('stPosture').textContent = 'Excluded from scoring';
+                        document.getElementById('stPosture').className = 'text-secondary';
                     }
                 } catch(e) {
                     console.error("Tracking error", e);
@@ -1312,7 +1302,7 @@
                 document.getElementById('interviewControls').style.opacity = '1';
                 document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
-                initCamera();
+                if (cameraCoachingEnabled) initCamera();
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
@@ -1371,6 +1361,8 @@
 
                 // Restore answer state if navigated back (though disabled in chat mode)
                 document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
+                document.getElementById('selfConfidenceRange').value = answersData[idx]?.self_reported_confidence ?? 50;
+                document.getElementById('selfConfidenceValue').textContent = (answersData[idx]?.self_reported_confidence ?? 50) + '%';
                 resetSpeechRecognitionBufferFromTextarea();
                 lastTimelineCaptureAt = 0;
                 
@@ -1667,20 +1659,15 @@
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
 
-                    // Body Language Tracking Logic via face-api.js
-                    if (recTimerSeconds % 2 === 0) {
+                    // Optional camera-framing guidance is descriptive and never affects readiness scoring.
+                    if (cameraCoachingEnabled && recTimerSeconds % 2 === 0) {
                         trackBodyLanguage();
                     }
-                    
-                    // Confidence Score Calc
-                    let conf = 100 - (answersData[currentQIdx].filler_words * 2) - (answersData[currentQIdx].pause_count * 5);
-                    if(wpm < 100) conf -= 10;
-                    else if(wpm > 160) conf -= 5;
-                    answersData[currentQIdx].confidence_score = Math.max(0, Math.min(100, conf));
 
                 }, 1000);
 
-                document.getElementById('faceScannerBox').style.display = 'block';
+                const scannerBox = document.getElementById('faceScannerBox');
+                if (scannerBox) scannerBox.style.display = 'block';
             }
 
             function toggleRecordingPause() {
@@ -1743,6 +1730,8 @@
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
                 formData.append('pause_count', answersData[currentQIdx].pause_count);
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
+                answersData[currentQIdx].self_reported_confidence = Number(document.getElementById('selfConfidenceRange')?.value ?? 50);
+                formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
                 formData.append('notes', document.getElementById('sessionNotes').value);
@@ -1877,6 +1866,8 @@
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
                 formData.append('pause_count', answersData[currentQIdx].pause_count);
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
+                answersData[currentQIdx].self_reported_confidence = Number(document.getElementById('selfConfidenceRange')?.value ?? 50);
+                formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
 
@@ -1957,16 +1948,19 @@
     @endif
 </div>
 
+@if(isset($sessionRecord) && (bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
-    // Load face-api models
-    Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
-        faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
-    ]).then(() => {
-        console.log("Face-api models loaded");
-    }).catch(err => console.error("Error loading models", err));
+    if (cameraCoachingEnabled) {
+        Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
+            faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
+        ]).then(() => {
+            console.log("Optional camera-framing models loaded");
+        }).catch(err => console.error("Error loading optional camera models", err));
+    }
 </script>
+@endif
 
 @push('scripts')
 <script>
@@ -1976,8 +1970,8 @@
         const stepsMobile = [
             { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Camera analysis checks eye contact and posture when available.', side: 'top', align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'top', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Use private framing prompts if helpful. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'Practice Signals', description: 'Use these live prompts for practice; the final evidence-linked assessment is produced after the session.', side: 'top', align: 'start' }},
             { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
             { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
         ];
@@ -1985,8 +1979,8 @@
         const stepsDesktop = [
             { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Body Language', description: 'Camera analysis checks eye contact and posture when available.', side: 'left', align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'Live Readiness', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'left', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Use private framing prompts if helpful. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }},
+            { element: '#overallReadiness', popover: { title: 'Practice Signals', description: 'Use these live prompts for practice; the final evidence-linked assessment is produced after the session.', side: 'left', align: 'start' }},
             { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
             { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
         ];
@@ -1994,8 +1988,8 @@
         const onboardingTour = window.createSpeakReadyTour({
             completionKey: 'onboarding_completed_interview_session',
             serverDetectedMobile: @json($isMobile),
-            stepsMobile,
-            stepsDesktop,
+            stepsMobile: stepsMobile.filter(step => document.querySelector(step.element)),
+            stepsDesktop: stepsDesktop.filter(step => document.querySelector(step.element)),
             autoStart: false,
         });
         

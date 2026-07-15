@@ -7,7 +7,7 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for any interview scenario. By simulating realistic interviews, it provides immediate, actionable feedback on your answers, delivery, and body language to solve the problem of interview anxiety and lack of practice.</p>
+                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for varied interview scenarios. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
                      
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="d-flex flex-wrap gap-2 mb-4">

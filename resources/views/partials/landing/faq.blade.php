@@ -17,13 +17,13 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">How does AI feedback work?</button></h2>
                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Our AI models analyze your voice, transcript, and body language (if camera is enabled) to evaluate the structure of your answers, clarity, tone, and confidence, providing instant, personalized feedback.</div>
+                              <div class="accordion-body">SpeakReady evaluates relevance, clarity, professionalism, applicable STAR evidence, and job evidence with a versioned rubric. Delivery and optional camera-framing prompts are coaching aids, not readiness scores.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3">Is my data secure?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Yes. We prioritize your privacy. All your interview recordings and transcripts are encrypted and strictly used for your personal feedback. They are never shared publicly.</div>
+                              <div class="accordion-body">Interview records are private by default. Optional review links can expire, use a password, restrict comments, and hide sensitive identity or application context.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

@@ -747,7 +747,7 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_stt" value="true" {{ $settingChecked('vr_stt') }}></div>
                             </div>
                             <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Confidence Analysis</h6></div>
+                                <div><h6 class="mb-1 text-white">Enable Delivery Stability Analysis</h6></div>
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="vr_confidence" value="true" {{ $settingChecked('vr_confidence') }}></div>
                             </div>
                             <div class="custom-switch-container">
@@ -778,7 +778,7 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_enable" value="true" {{ $settingChecked('aic_enable') }}></div>
                             </div>
                             <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Sample Answer Generation</h6></div>
+                                <div><h6 class="mb-1 text-white">Enable Fact-Grounded Revision Guidance</h6></div>
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="aic_sample" value="true" {{ $settingChecked('aic_sample') }}></div>
                             </div>
                             <div class="custom-switch-container">
@@ -843,34 +843,33 @@
                 <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
-                            <p class="text-muted mb-4">Adjust the weight distribution for calculating the overall readiness score. Ensure total equals 100%.</p>
+                            <p class="text-muted mb-4">Rubric v2 is versioned so every candidate is assessed consistently. Delivery stability and self-reported preparedness are shown separately and never change the readiness score.</p>
                             
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Communication (%)</label>
-                                    <input type="number" class="form-control" name="rs_comm" value="{{ $settings['rs_comm'] ?? '30' }}">
+                                    <label class="form-label">Clarity (%)</label>
+                                    <input type="number" class="form-control" value="25" disabled>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Relevance (%)</label>
-                                    <input type="number" class="form-control" name="rs_rel" value="{{ $settings['rs_rel'] ?? '25' }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Confidence (%)</label>
-                                    <input type="number" class="form-control" name="rs_conf" value="{{ $settings['rs_conf'] ?? '20' }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Grammar (%)</label>
-                                    <input type="number" class="form-control" name="rs_gram" value="{{ $settings['rs_gram'] ?? '15' }}">
+                                    <input type="number" class="form-control" value="35" disabled>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Professionalism (%)</label>
-                                    <input type="number" class="form-control" name="rs_prof" value="{{ $settings['rs_prof'] ?? '10' }}">
+                                    <input type="number" class="form-control" value="20" disabled>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Grammar (%)</label>
+                                    <input type="number" class="form-control" value="10" disabled>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">STAR, when applicable (%)</label>
+                                    <input type="number" class="form-control" value="10" disabled>
                                 </div>
                             </div>
             </div>
             <div class="modal-footer border-top-0 pt-3" style="border-color: var(--bd, rgba(255,255,255,0.1)) !important;">
-                <button type="button" class="btn px-4" data-bs-dismiss="modal" style="background: rgba(255,255,255,0.05); color: var(--tx2, #ccc); border-radius: 12px; font-weight: 600;">Cancel</button>
-                <button type="submit" class="btn btn-primary px-4" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);"><i class="fa-solid fa-floppy-disk me-2"></i>Save</button>
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal" style="background: #3b82f6; border: none; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">Close</button>
             </div>
         </div>
     </div>

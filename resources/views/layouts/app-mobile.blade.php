@@ -1777,9 +1777,10 @@
                <a href="{{ route('user.packs.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('user.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i><span>Packs</span></a>
                <a href="{{ route('user.drills.voice') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i><span>Voice Drill</span></a>
                <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Learning</span></a>
-               <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>AI Coach</span></a>
+               <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Coach</span></a>
+               <a href="{{ route('user.readiness.index') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.readiness.*') ? 'active' : '' }}"><i class="fa-solid fa-shield-heart"></i><span>Readiness</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
-               <a href="{{ route('user.leaderboard') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-trophy"></i><span>Leaderboard</span></a>
+               <a href="{{ route('user.leaderboard') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i><span>Mastery</span></a>
                <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
                </div>
@@ -1866,7 +1867,7 @@
                <span class="mob-nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
                <span>Feedback</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.applications.*', 'user.packs.*', 'user.drills.voice', 'user.learning*', 'user.coach*', 'user.reports', 'user.leaderboard') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.applications.*', 'user.packs.*', 'user.drills.voice', 'user.learning*', 'user.coach*', 'user.readiness.*', 'user.reports', 'user.leaderboard') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"

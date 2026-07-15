@@ -12,6 +12,11 @@ class MentorReviewController extends Controller
         $session = InterviewSession::where('share_token', $token)
             ->where('is_public', true)
             ->firstOrFail();
+        abort_unless($session->shareIsActive(), 410, 'This private review link has expired.');
+        abort_unless((bool) data_get($session->share_permissions, 'comment', true), 403, 'Comments are disabled for this review.');
+        if ($session->share_password_hash && !$request->session()->get("shared_review.{$token}")) {
+            abort(403, 'Unlock the review before commenting.');
+        }
 
         $validated = $request->validate([
             'reviewer_name' => 'required|string|max:120',

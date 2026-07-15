@@ -66,7 +66,7 @@
                     <hr>
                     
                     <div class="mt-4">
-                        <strong class="d-block mb-2 text-primary"><i class="fa-solid fa-lightbulb me-2"></i>Better Sample Answer</strong>
+                        <strong class="d-block mb-2 text-primary"><i class="fa-solid fa-shield-halved me-2"></i>Fact-Grounded Revision Template</strong>
                         <div class="p-3 rounded" style="background: rgba(59, 130, 246, 0.05); border: 1px dashed rgba(59, 130, 246, 0.3);">
                             <p class="mb-0 fst-italic" style="color: var(--tx);">{{ $answer->better_sample_answer ?? 'N/A' }}</p>
                         </div>
@@ -97,8 +97,8 @@
                                 <input type="number" name="relevance_score" class="form-control" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);" value="{{ $answer->relevance_score ?? 0 }}" min="0" max="100">
                             </div>
                             <div class="col-6">
-                                <label class="form-label small" style="color: var(--tx3);">Confidence Score</label>
-                                <input type="number" name="confidence_score" class="form-control" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);" value="{{ $answer->confidence_score ?? 0 }}" min="0" max="100">
+                                <label class="form-label small" style="color: var(--tx3);">Delivery Stability (non-scoring)</label>
+                                <input type="number" name="delivery_stability_score" class="form-control" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);" value="{{ $answer->delivery_stability_score ?? 0 }}" min="0" max="100">
                             </div>
                             <div class="col-6">
                                 <label class="form-label small" style="color: var(--tx3);">Grammar Score</label>

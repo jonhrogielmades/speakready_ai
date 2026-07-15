@@ -15,6 +15,7 @@ class Profile extends Model
         'readiness_score',
         'profile_picture',
         'personal_information',
+        'inclusive_preferences',
         'experience_points',
         'player_level',
         'current_streak',
@@ -46,6 +47,7 @@ class Profile extends Model
         'problem_solving_xp' => 'integer',
         'unlocked_perks' => 'array',
         'badges_earned' => 'array',
+        'inclusive_preferences' => 'array',
     ];
 
     public function user()

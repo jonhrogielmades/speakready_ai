@@ -76,14 +76,16 @@
             <div class="text-start">
                 @php 
                     $overall = $sessionRecord->score->overall_readiness_score ?? 0;
-                    if($overall >= 90) { $rating = 'Excellent'; $color = '#10b981'; }
-                    elseif($overall >= 70) { $rating = 'Good'; $color = '#3b82f6'; }
-                    elseif($overall >= 50) { $rating = 'Fair'; $color = '#f59e0b'; }
-                    else { $rating = 'Needs Improvement'; $color = '#ef4444'; }
+                    $rating = $sessionRecord->score->readiness_band
+                        ?: ($overall >= 80 ? 'Ready for Simulation' : ($overall >= 60 ? 'Nearly Ready' : 'Developing'));
+                    $color = $overall >= 80 ? '#10b981' : ($overall >= 60 ? '#3b82f6' : '#f59e0b');
                 @endphp
                 <div class="d-flex align-items-center gap-2 d-md-block">
                     <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
                     <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
+                    @if(($sessionRecord->score->score_version ?? 1) >= 2)
+                        <div style="font-size:.72rem;color:var(--tx3);margin-top:4px;">Rubric v{{ $sessionRecord->score->score_version }} · score confidence {{ $sessionRecord->score->scoring_confidence ?? 0 }}%</div>
+                    @endif
                 </div>
             </div>
             <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto">
@@ -100,6 +102,13 @@
             </div>
         </div>
     </div>
+
+    @if(!$sessionRecord->score_eligible)
+        <div class="alert mb-4" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:var(--tx);border-radius:14px;">
+            <i class="fa-solid fa-circle-info me-2 text-primary"></i>
+            This was a coached practice session. Its feedback remains available, but it is not used as readiness evidence. Complete an assessment-mode session without live coaching for a calibrated score.
+        </div>
+    @endif
 
     <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
     <div class="row mb-4">
@@ -235,8 +244,8 @@
                         ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
                         ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 0, 'color' => '#8b5cf6'],
                         ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
-                        ['name' => 'Confidence', 'score' => $sessionRecord->score->confidence_score ?? 0, 'color' => '#ef4444'],
-                        ['name' => 'Body Language', 'score' => $sessionRecord->score->body_language_score ?? 0, 'color' => '#ec4899']
+                        ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'],
+                        ['name' => 'Job Evidence Match', 'score' => $sessionRecord->score->job_evidence_match_score ?? 0, 'color' => '#ec4899']
                     ];
                 @endphp
                 <div class="row g-4">
@@ -327,8 +336,8 @@
                                 || ($answer->voice_duration ?? 0) > 0
                                 || ($answer->filler_words_count ?? 0) > 0
                                 || ($answer->confidence_score ?? 0) > 0;
-                            $hasBodyLanguageMetrics = ($answer->eye_contact_score ?? 0) > 0
-                                || ($answer->posture_score ?? 0) > 0;
+                            $hasLegacyBodyLanguageMetrics = ($sessionRecord->score->body_language_included ?? false)
+                                && (($answer->eye_contact_score ?? 0) > 0 || ($answer->posture_score ?? 0) > 0);
                         @endphp
 
                         <!-- Feature 11: Voice Rehearsal Feedback -->
@@ -348,8 +357,8 @@
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Confidence</div>
-                                    <div style="color:{{ ($answer->confidence_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->confidence_score ?? 0 }}%</div>
+                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Delivery Stability</div>
+                                    <div style="color:{{ ($answer->delivery_stability_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->delivery_stability_score ?? 0 }}%</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
@@ -362,8 +371,9 @@
 
                         @endif
 
-                        <!-- Feature 16: Body Language Breakdown -->
-                        @if($hasBodyLanguageMetrics)
+                        {{-- Legacy-only visual estimates are shown for historical transparency, never as readiness evidence. --}}
+                        @if($hasLegacyBodyLanguageMetrics)
+                        <div class="mb-2" style="color:var(--tx3);font-size:.8rem;">Legacy camera estimates — excluded from the current readiness score.</div>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(236,72,153,0.05);border-radius:12px;border:1px solid rgba(236,72,153,0.2);">
@@ -382,6 +392,12 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
+
+                        @if(($answer->self_reported_confidence ?? 0) > 0)
+                            <div class="mb-4" style="color:var(--tx3);font-size:.88rem;">
+                                <i class="fa-regular fa-face-smile me-1"></i>Self-reported preparedness after answering: <strong style="color:var(--tx);">{{ $answer->self_reported_confidence }}/100</strong>. This reflection is kept separate from automated scoring.
+                            </div>
                         @endif
 
                         @php
@@ -403,6 +419,28 @@
                             <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
                             <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback ?: 'No AI feedback was generated for this answer.' }}</p>
                         </div>
+
+                        @php $evidenceMap = is_array($answer->evidence_map) ? $answer->evidence_map : []; @endphp
+                        @if(!empty($evidenceMap) || $answer->rubric_level)
+                            <div class="mb-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                                    <h6 style="color:#10b981;font-weight:800;margin:0;"><i class="fa-solid fa-scale-balanced me-2"></i>Why this score</h6>
+                                    @if($answer->rubric_level)<span class="retry-chip">{{ $answer->rubric_level }}</span>@endif
+                                </div>
+                                @if(!empty($evidenceMap['supporting_excerpts']))
+                                    <div style="color:var(--tx3);font-size:.8rem;font-weight:800;text-transform:uppercase;">Evidence found</div>
+                                    <ul style="color:var(--tx);line-height:1.6;margin-top:8px;">
+                                        @foreach($evidenceMap['supporting_excerpts'] as $excerpt)<li>“{{ $excerpt }}”</li>@endforeach
+                                    </ul>
+                                @endif
+                                @if(!empty($evidenceMap['missing_evidence']))
+                                    <div style="color:var(--tx3);font-size:.8rem;font-weight:800;text-transform:uppercase;">Evidence to add</div>
+                                    <ul style="color:var(--tx);line-height:1.6;margin:8px 0 0;">
+                                        @foreach($evidenceMap['missing_evidence'] as $missing)<li>{{ $missing }}</li>@endforeach
+                                    </ul>
+                                @endif
+                            </div>
+                        @endif
 
                         @php
                             $starAnalysis = is_array($answer->star_analysis) ? $answer->star_analysis : [];
@@ -449,10 +487,11 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Improved Answer</label>
+                                <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Fact-Grounded Revision Template</label>
                                 <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
                                     {{ $answer->better_sample_answer ?: 'No improved answer was generated for this response.' }}
                                 </div>
+                                <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Uses your answer as the source. Replace placeholders only with facts you can verify.</div>
                             </div>
                         </div>
 
@@ -485,7 +524,7 @@
                                         </div>
                                         <div class="retry-meta">
                                             <span class="retry-chip">Score {{ $retry->score ?? 0 }}%</span>
-                                            <span class="retry-chip">Confidence {{ $retry->confidence_score ?? 0 }}%</span>
+                                            <span class="retry-chip">Delivery Stability {{ $retry->delivery_stability_score ?? 0 }}%</span>
                                         </div>
                                     </div>
                                     @if($retry->ai_feedback)
@@ -531,27 +570,104 @@
 
 </div>
 
+<div class="modal fade" id="secureShareModal" tabindex="-1" aria-labelledby="secureShareLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--sf);border:1px solid var(--bd);color:var(--tx);border-radius:18px;">
+            <div class="modal-header" style="border-color:var(--bd);">
+                <div>
+                    <h5 class="modal-title" id="secureShareLabel" style="font-weight:800;"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Secure Review Link</h5>
+                    <div style="color:var(--tx3);font-size:.82rem;">Set an expiry, access password, and reviewer permissions.</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label fw-bold">Link expires after</label>
+                <select class="form-select mb-3" id="shareExpiry" style="background:var(--bg);border-color:var(--bd);color:var(--tx);">
+                    <option value="1">1 day</option>
+                    <option value="7" selected>7 days</option>
+                    <option value="30">30 days</option>
+                </select>
+                <label class="form-label fw-bold">Password <span style="color:var(--tx3);font-weight:400;">(optional, at least 6 characters)</span></label>
+                <input class="form-control mb-3" id="sharePassword" type="password" minlength="6" autocomplete="new-password" placeholder="Leave blank for no password" style="background:var(--bg);border-color:var(--bd);color:var(--tx);">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="shareComments" checked>
+                    <label class="form-check-label" for="shareComments">Allow mentor or peer comments</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="shareHideSensitive" checked>
+                    <label class="form-check-label" for="shareHideSensitive">Hide identity and sensitive application context</label>
+                </div>
+                <div class="alert alert-danger mt-3 mb-0" id="shareError" style="display:none;"></div>
+            </div>
+            <div class="modal-footer" style="border-color:var(--bd);">
+                @if($sessionRecord->is_public)
+                    <button class="btn btn-outline-danger me-auto" type="button" onclick="saveShare(false)">Disable current link</button>
+                @endif
+                <button class="btn btn-primary" type="button" id="saveShareButton" onclick="saveShare(true)"><i class="fa-solid fa-link me-1"></i>Create / Update Link</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function toggleShare() {
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('secureShareModal')).show();
+}
+
+function saveShare(enabled) {
+    const errorBox = document.getElementById('shareError');
+    const button = document.getElementById('saveShareButton');
+    errorBox.style.display = 'none';
+    if (enabled) {
+        const password = document.getElementById('sharePassword').value;
+        if (password && password.length < 6) {
+            errorBox.textContent = 'The optional password must contain at least 6 characters.';
+            errorBox.style.display = 'block';
+            return;
+        }
+    }
+    button.disabled = true;
     fetch('{{ route('interview.toggleShare', $sessionRecord->id) }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
+        },
+        body: JSON.stringify({
+            enabled,
+            expires_in_days: Number(document.getElementById('shareExpiry').value),
+            password: document.getElementById('sharePassword').value || null,
+            allow_comments: document.getElementById('shareComments').checked,
+            hide_sensitive: document.getElementById('shareHideSensitive').checked
+        })
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || Object.values(data.errors || {}).flat()[0] || 'Unable to update the link.');
+        return data;
+    })
     .then(data => {
         if (data.success) {
             if (data.is_public) {
-                prompt('Your session is now public! Copy this link to share:', data.share_url);
+                const expiry = data.expires_at ? new Date(data.expires_at).toLocaleString() : 'the selected time';
+                if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(data.share_url).then(() => alert(`Secure link copied. It expires ${expiry}.`));
+                } else {
+                    prompt(`Copy this secure link. It expires ${expiry}:`, data.share_url);
+                }
                 document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Shared Link';
             } else {
                 alert('Session is now private. The previous link is disabled.');
                 document.getElementById('btnShareSession').innerHTML = '<i class="fa-solid fa-share-nodes me-2"></i>Share Session';
             }
+            bootstrap.Modal.getInstance(document.getElementById('secureShareModal'))?.hide();
         }
-    });
+    })
+    .catch(error => {
+        errorBox.textContent = error.message || 'Unable to update the secure link.';
+        errorBox.style.display = 'block';
+    })
+    .finally(() => { button.disabled = false; });
 }
 
 const retryTimers = {};
@@ -666,7 +782,7 @@ function submitRetry(answerId) {
                 <div class="d-flex flex-wrap gap-2 mb-2">
                     <span class="retry-chip">Attempt ${retryEscape(data.attempt_number)}</span>
                     <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
-                    <span class="retry-chip">Confidence ${retryEscape(data.confidence_score)}%</span>
+                    <span class="retry-chip">Delivery Stability ${retryEscape(data.delivery_stability_score ?? 0)}%</span>
                 </div>
                 <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.ai_feedback)}</p>
             </div>

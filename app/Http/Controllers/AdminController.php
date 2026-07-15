@@ -35,28 +35,36 @@ class AdminController extends Controller
             ->take(5)
             ->get();
             
-        // Top users based on highest score
-        $leaderboard = \App\Models\Score::select('scores.*', 'users.name as user_name', 'users.id as user_id', 'users.email')
-            ->join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
-            ->join('users', 'interview_sessions.user_id', '=', 'users.id')
-            ->orderBy('scores.overall_readiness_score', 'desc')
-            ->take(3)
-            ->get();
+        $eligibleScoresQuery = \App\Models\Score::where(function ($query) {
+            $query->where('assessment_mode', 'legacy')
+                ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
+        });
+        $readinessBandSummary = (clone $eligibleScoresQuery)->get()
+            ->groupBy(fn ($score) => $score->readiness_band ?: 'Legacy')
+            ->map(fn ($scores, $band) => (object) [
+                'band' => $band,
+                'count' => $scores->count(),
+                'scoring_confidence' => (int) round($scores->avg('scoring_confidence') ?? 0),
+            ])->values();
 
         // Users needing support (< 60 score)
         $usersNeedingSupport = \App\Models\Score::select('scores.*', 'users.name as user_name', 'users.id as user_id')
             ->join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
             ->join('users', 'interview_sessions.user_id', '=', 'users.id')
             ->where('scores.overall_readiness_score', '<', 60)
+            ->where(function ($query) {
+                $query->where('scores.assessment_mode', 'legacy')
+                    ->orWhere('interview_sessions.score_eligible', true);
+            })
             ->orderBy('scores.overall_readiness_score', 'asc')
             ->take(3)
             ->get();
 
         // Avg performance metrics
-        $avgClarity = round(\App\Models\Score::avg('clarity_score') ?? 0);
-        $avgRelevance = round(\App\Models\Score::avg('relevance_score') ?? 0);
-        $avgGrammar = round(\App\Models\Score::avg('grammar_score') ?? 0);
-        $avgProfessionalism = round(\App\Models\Score::avg('professionalism_score') ?? 0);
+        $avgClarity = round((clone $eligibleScoresQuery)->avg('clarity_score') ?? 0);
+        $avgRelevance = round((clone $eligibleScoresQuery)->avg('relevance_score') ?? 0);
+        $avgGrammar = round((clone $eligibleScoresQuery)->avg('grammar_score') ?? 0);
+        $avgProfessionalism = round((clone $eligibleScoresQuery)->avg('professionalism_score') ?? 0);
 
         $recentActivities = \App\Models\ActivityLog::orderBy('created_at', 'desc')->take(4)->get()->map(function($activity) {
             return [
@@ -99,7 +107,7 @@ class AdminController extends Controller
             'aiFeedbacksCount',
             'modulesCompletedCount',
             'recentSessions',
-            'leaderboard',
+            'readinessBandSummary',
             'usersNeedingSupport',
             'avgClarity',
             'avgRelevance',

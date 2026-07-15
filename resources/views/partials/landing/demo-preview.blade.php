@@ -76,12 +76,12 @@
                                            <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Detailed summaries and exportable reports of your performance.</p>
                                        </div>
                                    </div>
-                                   <!-- Slide 9: Leaderboard -->
+                                   <!-- Slide 9: Personal Mastery -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-trophy fa-4x mb-4" style="color:#eab308"></i>
-                                           <h3 class="fs-3 fw-bold">Leaderboard</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Compete with peers and track your ranking in the community.</p>
+                                           <h3 class="fs-3 fw-bold">Personal Mastery</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track your own baseline, personal best, and score-eligible assessment growth.</p>
                                        </div>
                                    </div>
                                </div>

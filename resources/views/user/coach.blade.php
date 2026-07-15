@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'AI Coach')
+@section('title', 'Readiness Coach')
 
 @section('content')
 <style>
@@ -195,7 +195,7 @@
             <div class="sr-page-hero-copy">
                 <h4 class="sr-page-hero-title text-gradient-primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1v-6H7v-1a5 5 0 0 1 10 0v1h-3v6h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    AI Coach
+                    Readiness Coach
                 </h4>
                 <p class="sr-page-hero-subtitle">Ask for interview advice, resume feedback, and focused practice guidance.</p>
             </div>
@@ -253,7 +253,7 @@
             <div style="padding:16px 24px; border-bottom:1px solid var(--bd); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02)">
                 <div class="d-flex align-items-center">
                     <div>
-                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">SpeakReady AI Coach</h6>
+                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">SpeakReady Readiness Coach</h6>
                         <span style="font-size:.75rem;color:#34d399"><i class="fa-solid fa-circle text-success" style="font-size:.5rem;margin-right:4px"></i>Online</span>
                     </div>
                 </div>
@@ -311,7 +311,7 @@
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div class="chat-bubble bubble-ai">
-                        Hello {{ Auth::user()->name }}! I'm your dedicated SpeakReady AI Coach. I'm here to help you prepare for your interviews, refine your resume, or practice specific behavioral questions. How can I assist you today?
+                        Hello {{ Auth::user()->name }}! I can use your competency map and verified story index to explain scores, rehearse truthful answers, and prepare your next job-specific practice step. I will never invent experience for you.
                     </div>
                 </div>
                 
@@ -330,11 +330,11 @@
             <!-- Input Area -->
             <div class="chat-input-area" id="coach-input-area">
                 <div class="chat-input-wrapper">
-                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your AI Coach anything..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your Readiness Coach about a score, story, competency, or target job..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     <button class="chat-send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
                 <div style="text-align:center;margin-top:12px;font-size:.7rem;color:var(--tx3)">
-                    AI Coach can make mistakes. Always verify critical advice before real interviews.
+                    The coach can make mistakes. Verify advice and keep every personal claim truthful.
                 </div>
             </div>
         </div>

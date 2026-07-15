@@ -364,7 +364,7 @@
                     <div class="premium-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
                         <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> AI Assessment</h6>
                         
-                        <!-- Clarity & Confidence -->
+                        <!-- Clarity & Delivery Stability -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="text-center w-50">
                                 <div style="font-size:2rem;font-weight:800;color:#34d399;" id="resClarity">--%</div>
@@ -373,7 +373,7 @@
                             <div style="width:1px;height:40px;background:var(--bd);"></div>
                             <div class="text-center w-50">
                                 <div style="font-size:1.2rem;font-weight:700;color:#60a5fa;" id="resConfidence">--</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Confidence</div>
+                                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Delivery Stability</div>
                             </div>
                         </div>
 
@@ -421,17 +421,18 @@
             </div>
         </div>
         
-        <!-- Sample Answer Comparison (Feature 12) -->
+        <!-- Fact-grounded revision comparison -->
         <div id="comparisonPanel" class="premium-card mt-4" style="display:none;">
-            <h5 class="fw-bold mb-4"><i class="fa-solid fa-code-compare me-2" style="color:#60a5fa;"></i> Sample Answer Comparison</h5>
+            <h5 class="fw-bold mb-4"><i class="fa-solid fa-code-compare me-2" style="color:#60a5fa;"></i> Fact-Grounded Revision</h5>
             <div class="row g-4">
                 <div class="col-md-6">
                     <h6 style="color:var(--tx2);font-size:0.9rem;">Your Answer</h6>
                     <div id="compUser" class="p-3" style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;font-size:0.95rem;color:var(--tx);min-height:100px;"></div>
                 </div>
                 <div class="col-md-6">
-                    <h6 style="color:#60a5fa;font-size:0.9rem;">AI Improved Version</h6>
+                    <h6 style="color:#60a5fa;font-size:0.9rem;">Revision Template</h6>
                     <div id="compAI" class="p-3" style="background:rgba(96,165,250,0.05);border:1px solid rgba(96,165,250,0.2);border-radius:12px;font-size:0.95rem;color:var(--tx);min-height:100px;"></div>
+                    <div class="mt-2" style="color:var(--tx3);font-size:.78rem;">Uses your transcript as its source. Fill placeholders only with facts you can verify.</div>
                 </div>
             </div>
         </div>
@@ -1104,7 +1105,7 @@ async function generateAnalysis() {
     document.getElementById('resWeak').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
     document.getElementById('comparisonPanel').style.display = 'block';
     document.getElementById('compUser').textContent = transcript;
-    document.getElementById('compAI').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating improved answer...';
+    document.getElementById('compAI').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Building a grounded revision template...';
 
     // Fetch AI Analysis
     try {
@@ -1126,7 +1127,7 @@ async function generateAnalysis() {
         // Populate AI Feedback
         document.getElementById('resStrengths').innerText = data.strengths || "AI strengths analysis was unavailable for this recording.";
         document.getElementById('resWeak').innerText = data.weaknesses || "AI improvement analysis was unavailable. Review the transcript, pace, and filler-word count before relying on this session.";
-        document.getElementById('compAI').textContent = data.improved_answer || "AI improved answer was unavailable for this recording.";
+        document.getElementById('compAI').textContent = data.improved_answer || "A grounded revision template was unavailable for this recording.";
         
         // Store for saving
         window.currentAnalysis = {
@@ -1147,7 +1148,7 @@ async function generateAnalysis() {
         console.error("Analysis Error:", error);
         document.getElementById('resStrengths').innerText = "Failed to load analysis.";
         document.getElementById('resWeak').innerText = "Failed to load analysis.";
-        document.getElementById('compAI').innerText = "Failed to load AI improved version.";
+        document.getElementById('compAI').innerText = "Failed to build the grounded revision template.";
         window.currentAnalysis = null;
         window.analysisTranscript = null;
         return false;

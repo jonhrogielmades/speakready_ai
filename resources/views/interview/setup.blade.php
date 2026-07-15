@@ -12,7 +12,7 @@
         'live_feedback_mode' => old('live_feedback_mode', $selectedPack?->pressure_mode ? 'real_interview' : 'coaching'),
         'response_mode' => old('response_mode', 'voice'),
         'company_persona' => old('company_persona', $selectedPack?->company_persona ?? ''),
-        'ai_provider' => old('ai_provider', 'gemini'),
+        'interview_format' => old('interview_format', 'standard'),
     ];
     $selectedQuestionTypes = old('question_types', $selectedPack?->question_types ?? ['Behavioral', 'Situational']);
 @endphp
@@ -620,7 +620,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="desc-text">Use your saved resume, job description, and 7-day plan context.</div>
+                            <div class="desc-text">Use your saved resume, job description, competency twin, and adaptive plan.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="olbl">Interview Pack</label>
@@ -635,17 +635,10 @@
                             <div class="desc-text"><a href="{{ route('user.packs.index') }}" style="color:#60a5fa;text-decoration:none;">Browse packs</a> for company and role-specific drills.</div>
                         </div>
                         <div class="col-md-12">
-                            <label class="olbl">Questions & AI Provider</label>
-                            <select class="oinp setup-input" name="ai_provider" id="valProvider">
-                                <option value="local" {{ $setupDefaults['ai_provider'] === 'local' ? 'selected' : '' }}>Local</option>
-                                <option value="gemini" {{ $setupDefaults['ai_provider'] === 'gemini' ? 'selected' : '' }}>Gemini</option>
-                                <option value="cohere" {{ $setupDefaults['ai_provider'] === 'cohere' ? 'selected' : '' }}>Cohere</option>
-                                <option value="groq" {{ $setupDefaults['ai_provider'] === 'groq' ? 'selected' : '' }}>Groq</option>
-                                <option value="openrouter" {{ $setupDefaults['ai_provider'] === 'openrouter' ? 'selected' : '' }}>OpenRouter</option>
-                                <option value="claude" {{ $setupDefaults['ai_provider'] === 'claude' ? 'selected' : '' }}>Claude (Anthropic)</option>
-                                <option value="wisdomgate" {{ $setupDefaults['ai_provider'] === 'wisdomgate' ? 'selected' : '' }}>WisdomGate</option>
-                                <option value="openai" {{ $setupDefaults['ai_provider'] === 'openai' ? 'selected' : '' }}>OpenAI</option>
-                            </select>
+                            <div class="setup-chip-panel">
+                                <strong style="color:var(--tx)"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Automatic calibrated AI routing</strong>
+                                <div class="desc-text">SpeakReady selects a healthy provider automatically and applies the same versioned scoring rubric. Provider choice no longer changes the user setup.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -726,7 +719,45 @@
                                 <option value="3" {{ $setupDefaults['time_limit'] === '3' ? 'selected' : '' }}>3 Minutes per Question</option>
                             </select>
                         </div>
+                        <div class="col-md-12">
+                            <label class="olbl">Interview Format Laboratory</label>
+                            <select class="oinp setup-input" name="interview_format" id="valInterviewFormat">
+                                @foreach([
+                                    'standard' => 'Standard live interview',
+                                    'hr_screen' => 'HR screening',
+                                    'hiring_manager' => 'Hiring manager',
+                                    'panel' => 'Multi-perspective panel',
+                                    'phone' => 'Telephone interview',
+                                    'asynchronous' => 'One-way recorded interview',
+                                    'technical' => 'Technical deep dive',
+                                    'case' => 'Case interview',
+                                    'presentation' => 'Presentation defense',
+                                ] as $formatValue => $formatLabel)
+                                    <option value="{{ $formatValue }}" {{ $setupDefaults['interview_format'] === $formatValue ? 'selected' : '' }}>{{ $formatLabel }}</option>
+                                @endforeach
+                            </select>
+                            <div class="desc-text">Feedback is adjusted to the selected format; camera behavior remains optional.</div>
+                        </div>
                     </div>
+                </div>
+
+                <div class="setup-panel animate-fade-up delay-300" id="panel-inclusive">
+                    <h5 style="font-weight:700;margin-bottom:10px;color:var(--tx)"><i class="fa-solid fa-universal-access me-2 text-info"></i> Inclusive Practice Conditions</h5>
+                    <p class="desc-text mb-3">Choose conditions that give you an accurate opportunity to demonstrate job-related ability. These settings are recorded with the assessment.</p>
+                    @php $inclusive = Auth::user()->profile?->inclusive_preferences ?? []; @endphp
+                    <div class="cbx-grid">
+                        @foreach([
+                            'camera_coaching' => 'Optional camera framing coach',
+                            'separate_language_scoring' => 'Separate language mechanics',
+                            'extended_time' => 'Extended response time',
+                            'captions' => 'Captions / transcript controls',
+                            'reduced_distraction' => 'Reduced-distraction workspace',
+                            'simplified_questions' => 'Clearer question wording',
+                        ] as $preferenceKey => $preferenceLabel)
+                            <label class="custom-cbx"><input type="checkbox" name="{{ $preferenceKey }}" value="1" {{ old($preferenceKey, data_get($inclusive, $preferenceKey, false)) ? 'checked' : '' }}> {{ $preferenceLabel }}</label>
+                        @endforeach
+                    </div>
+                    <div class="desc-text mt-3"><strong>Important:</strong> eye contact and posture are never included in the readiness score. Camera coaching only reports framing and detection availability.</div>
                 </div>
 
                 <!-- Content & Assistance -->
@@ -782,7 +813,7 @@
                     <div class="row g-4 mb-4">
                         <div class="col-md-12">
                             <label class="olbl">Company Persona Simulator</label>
-                            <p style="font-size:.75rem;color:var(--tx3);margin-top:-4px;margin-bottom:8px;">Have the AI simulate the specific interview style of top companies.</p>
+                            <p style="font-size:.75rem;color:var(--tx3);margin-top:-4px;margin-bottom:8px;">Practice a general style inspired by public interview guidance; this is not an exact representation of any employer.</p>
                             <input type="hidden" name="company_persona" id="valPersona" value="{{ $setupDefaults['company_persona'] }}" class="setup-input">
                             <div class="persona-grid">
                                 <div class="persona-card {{ $setupDefaults['company_persona'] === '' ? 'selected' : '' }}" onclick="selectPersona(this, '')">
@@ -918,10 +949,6 @@
                             <span class="summary-val" id="sumPersona">Standard</span>
                         </div>
                         <div class="summary-row">
-                            <span class="summary-label">AI Provider:</span>
-                            <span class="summary-val" id="sumProvider">Gemini</span>
-                        </div>
-                        <div class="summary-row">
                             <span class="summary-label">Est. Duration:</span>
                             <span class="summary-val text-success" id="sumDuration">15 Minutes</span>
                         </div>
@@ -1020,12 +1047,6 @@
         const personaInput = document.getElementById('valPersona');
         if (personaInput) {
             document.getElementById('sumPersona').innerText = personaInput.value || 'Standard';
-        }
-
-        // Provider
-        const provider = document.getElementById('valProvider');
-        if (provider) {
-            document.getElementById('sumProvider').innerText = provider.options[provider.selectedIndex].text;
         }
 
         // Estimated Duration
@@ -1216,7 +1237,7 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, tracked job, interview pack, and AI provider.', side: 'top', align: 'center' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, tracked job, and interview pack.', side: 'top', align: 'center' }},
             { element: '#valApplication', popover: { title: 'Tracked Application', description: 'Attach a job from Job Tracker to reuse its resume, job description, and role context.', side: 'bottom', align: 'start' }},
             { element: '#valPack', popover: { title: 'Interview Pack', description: 'Apply a ready-made company or role simulation with preset focus, difficulty, and questions.', side: 'bottom', align: 'start' }},
             { element: '#panel-advanced', popover: { title: 'Personalization', description: 'Add your resume, job description, or company context for role-specific questions.', side: 'top', align: 'center' }},
@@ -1228,7 +1249,7 @@
         ];
 
         const stepsDesktop = [
-            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, tracked job, interview pack, and AI provider.', side: 'top', align: 'center' }},
+            { element: '#panel-basic', popover: { title: 'Basic Information', description: 'Choose the interview category, target position, tracked job, and interview pack.', side: 'top', align: 'center' }},
             { element: '#valApplication', popover: { title: 'Tracked Application', description: 'Attach a job from Job Tracker to reuse its resume, job description, and role context.', side: 'bottom', align: 'start' }},
             { element: '#valPack', popover: { title: 'Interview Pack', description: 'Apply a ready-made company or role simulation with preset focus, difficulty, and questions.', side: 'bottom', align: 'start' }},
             { element: '#panel-advanced', popover: { title: 'Personalization', description: 'Add your resume, job description, or company context for role-specific questions.', side: 'top', align: 'center' }},
