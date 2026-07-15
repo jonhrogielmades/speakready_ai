@@ -1449,7 +1449,7 @@ class InterviewController extends Controller
 
     private function comparisonRowsFor(InterviewSession $session): array
     {
-        if (! $session->score || (! $session->score_eligible && $session->score->assessment_mode !== 'legacy')) {
+        if (! $session->score || ! $session->readinessScoreEligible()) {
             return [];
         }
 
@@ -1457,10 +1457,7 @@ class InterviewController extends Controller
             ->where('status', 'completed')
             ->where('id', '!=', $session->id)
             ->where('created_at', '<', $session->created_at)
-            ->where(function ($query) {
-                $query->where('score_eligible', true)
-                    ->orWhereHas('score', fn ($score) => $score->where('assessment_mode', 'legacy'));
-            })
+            ->readinessEligible()
             ->with('score')
             ->orderBy('created_at', 'desc')
             ->first();

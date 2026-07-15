@@ -35,10 +35,7 @@ class AdminController extends Controller
             ->take(5)
             ->get();
             
-        $eligibleScoresQuery = \App\Models\Score::where(function ($query) {
-            $query->where('assessment_mode', 'legacy')
-                ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
-        });
+        $eligibleScoresQuery = \App\Models\Score::readinessEligible();
         $readinessBandSummary = (clone $eligibleScoresQuery)->get()
             ->groupBy(fn ($score) => $score->readiness_band ?: 'Legacy')
             ->map(fn ($scores, $band) => (object) [
@@ -52,10 +49,7 @@ class AdminController extends Controller
             ->join('interview_sessions', 'scores.interview_session_id', '=', 'interview_sessions.id')
             ->join('users', 'interview_sessions.user_id', '=', 'users.id')
             ->where('scores.overall_readiness_score', '<', 60)
-            ->where(function ($query) {
-                $query->where('scores.assessment_mode', 'legacy')
-                    ->orWhere('interview_sessions.score_eligible', true);
-            })
+            ->readinessEligible()
             ->orderBy('scores.overall_readiness_score', 'asc')
             ->take(3)
             ->get();

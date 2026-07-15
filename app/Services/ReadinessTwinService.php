@@ -240,7 +240,7 @@ class ReadinessTwinService
 
     private function practiceScoreFor(string $competency, Collection $sessions): int
     {
-        $scores = $sessions->filter(fn ($session) => $session->score && ($session->score_eligible || $session->score->assessment_mode === 'legacy'))
+        $scores = $sessions->filter(fn ($session) => $session->score && $session->readinessScoreEligible())
             ->take(5)
             ->map(function ($session) use ($competency) {
                 return match ($competency) {

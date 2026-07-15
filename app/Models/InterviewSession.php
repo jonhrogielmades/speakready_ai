@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class InterviewSession extends Model
 {
@@ -62,6 +63,43 @@ class InterviewSession extends Model
         'share_permissions' => 'array',
         'share_hide_sensitive' => 'boolean',
     ];
+
+    public function scopeReadinessEligible($query)
+    {
+        return self::applyReadinessEligibility($query);
+    }
+
+    public static function applyReadinessEligibility($query, string $table = 'interview_sessions')
+    {
+        $hasScoreEligible = Schema::hasColumn('interview_sessions', 'score_eligible');
+        $hasAssessmentMode = Schema::hasColumn('interview_sessions', 'assessment_mode');
+
+        if (! $hasAssessmentMode) {
+            return $query;
+        }
+
+        return $query->where(function ($inner) use ($table, $hasScoreEligible, $hasAssessmentMode) {
+            if ($hasScoreEligible) {
+                $inner->where($table.'.score_eligible', true);
+            }
+
+            if ($hasAssessmentMode) {
+                $method = $hasScoreEligible ? 'orWhere' : 'where';
+                $inner->{$method}($table.'.assessment_mode', 'legacy');
+            }
+        });
+    }
+
+    public function readinessScoreEligible(): bool
+    {
+        return (bool) ($this->getRawOriginal('score_eligible') ?? false)
+            || $this->assessment_mode === 'legacy';
+    }
+
+    public function getAssessmentModeAttribute($value): string
+    {
+        return $value ?: 'legacy';
+    }
 
     public function user()
     {

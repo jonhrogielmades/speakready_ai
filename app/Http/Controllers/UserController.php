@@ -111,10 +111,9 @@ class UserController extends Controller
 
         // Calculate Average Scores
         $scoresQuery = Score::whereHas('session', function ($q) use ($user_id) {
-            $q->where('user_id', $user_id)->where('interview_sessions.status', 'completed');
-        })->where(function ($query) {
-            $query->where('assessment_mode', 'legacy')
-                ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
+            $q->where('user_id', $user_id)
+                ->where('interview_sessions.status', 'completed')
+                ->readinessEligible();
         });
 
         $avgScore = $scoresQuery->avg('overall_readiness_score') ?? 0;
@@ -139,10 +138,7 @@ class UserController extends Controller
             ->where('interview_sessions.status', 'completed')
             ->join('scores', 'interview_sessions.id', '=', 'scores.interview_session_id')
             ->join('categories', 'interview_sessions.category_id', '=', 'categories.id')
-            ->where(function ($query) {
-                $query->where('interview_sessions.score_eligible', true)
-                    ->orWhere('scores.assessment_mode', 'legacy');
-            })
+            ->readinessEligible()
             ->selectRaw('categories.title, AVG(scores.overall_readiness_score) as avg_score')
             ->groupBy('categories.id', 'categories.title')
             ->get()
@@ -566,10 +562,7 @@ class UserController extends Controller
             ->where('status', 'completed')
             ->where('id', '!=', $session->id)
             ->where('created_at', '<', $session->created_at)
-            ->where(function ($query) {
-                $query->where('score_eligible', true)
-                    ->orWhereHas('score', fn ($score) => $score->where('assessment_mode', 'legacy'));
-            })
+            ->readinessEligible()
             ->with('score')
             ->orderBy('created_at', 'desc')
             ->first();
@@ -607,7 +600,7 @@ class UserController extends Controller
     private function scoredSessions($sessions)
     {
         return $sessions
-            ->filter(fn ($session) => ($session->score_eligible || $session->score?->assessment_mode === 'legacy')
+            ->filter(fn ($session) => $session->readinessScoreEligible()
                 && $this->scoreValue($session->score, 'overall_readiness_score') !== null)
             ->values();
     }
@@ -881,10 +874,8 @@ class UserController extends Controller
 
         $averageScore = Score::whereHas('session', function ($query) use ($userId) {
             $query->where('user_id', $userId)
-                ->where('status', 'completed');
-        })->where(function ($query) {
-            $query->where('assessment_mode', 'legacy')
-                ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
+                ->where('status', 'completed')
+                ->readinessEligible();
         })->avg('overall_readiness_score');
 
         $profile->readiness_score = round($averageScore ?? 0);
@@ -1815,10 +1806,7 @@ class UserController extends Controller
     {
         $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
         $eligibleScores = Score::whereHas('session', fn ($query) => $query->where('user_id', Auth::id()))
-            ->where(function ($query) {
-                $query->where('assessment_mode', 'legacy')
-                    ->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
-            })
+            ->readinessEligible()
             ->latest()
             ->get();
         $personalBest = (int) ($eligibleScores->max('overall_readiness_score') ?? 0);

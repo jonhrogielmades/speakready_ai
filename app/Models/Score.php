@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Score extends Model
 {
@@ -36,6 +37,30 @@ class Score extends Model
         'rubric' => 'array',
         'body_language_included' => 'boolean',
     ];
+
+    public function scopeReadinessEligible($query)
+    {
+        if (Schema::hasColumn('interview_sessions', 'assessment_mode')) {
+            return $query->whereHas('session', fn ($session) => $session->readinessEligible());
+        }
+
+        if (Schema::hasColumn('scores', 'assessment_mode')) {
+            return $query->where(function ($inner) {
+                $inner->where('assessment_mode', 'legacy');
+
+                if (Schema::hasColumn('interview_sessions', 'score_eligible')) {
+                    $inner->orWhereHas('session', fn ($session) => $session->where('score_eligible', true));
+                }
+            });
+        }
+
+        return $query;
+    }
+
+    public function getAssessmentModeAttribute($value): string
+    {
+        return $value ?: 'legacy';
+    }
 
     public function session()
     {

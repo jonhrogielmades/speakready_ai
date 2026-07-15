@@ -206,12 +206,6 @@ return new class extends Migration
             if (Schema::hasColumn('scores', 'assessment_mode')) {
                 DB::table('scores')->whereNull('assessment_mode')->update(['assessment_mode' => 'legacy']);
             }
-
-            if (Schema::hasColumn('scores', 'readiness_band')) {
-                DB::table('scores')->whereNull('readiness_band')->update([
-                    'readiness_band' => DB::raw("CASE WHEN overall_readiness_score >= 80 THEN 'Ready for Simulation' WHEN overall_readiness_score >= 60 THEN 'Nearly Ready' ELSE 'Developing' END"),
-                ]);
-            }
         }
 
         if (Schema::hasTable('interview_sessions') && Schema::hasColumn('interview_sessions', 'assessment_mode')) {
@@ -221,50 +215,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        $this->dropColumnsIfPresent('scores', [
-            'score_version', 'assessment_mode', 'readiness_band', 'scoring_confidence',
-            'delivery_stability_score', 'job_evidence_match_score', 'evidence_map', 'rubric',
-            'body_language_included',
-        ]);
-
-        $this->dropColumnsIfPresent('interview_answers', [
-            'delivery_stability_score', 'self_reported_confidence', 'scoring_confidence',
-            'evidence_map', 'rubric_level', 'improved_answer_source',
-        ]);
-
-        $this->dropColumnsIfPresent('interview_sessions', [
-            'assessment_mode', 'interview_format', 'accommodation_profile', 'score_eligible',
-            'share_expires_at', 'share_password_hash', 'share_permissions', 'share_hide_sensitive',
-        ]);
-
-        $this->dropColumnsIfPresent('job_applications', [
-            'competency_map', 'evidence_match_score', 'evidence_matches', 'evidence_gaps', 'future_skills',
-        ]);
-
-        $this->dropColumnsIfPresent('profiles', ['inclusive_preferences']);
-
-        Schema::dropIfExists('interview_outcomes');
-        Schema::dropIfExists('experience_stories');
-        Schema::dropIfExists('readiness_profiles');
-    }
-
-    private function dropColumnsIfPresent(string $tableName, array $columns): void
-    {
-        if (! Schema::hasTable($tableName)) {
-            return;
-        }
-
-        $existingColumns = array_values(array_filter(
-            $columns,
-            fn (string $column) => Schema::hasColumn($tableName, $column)
-        ));
-
-        if ($existingColumns === []) {
-            return;
-        }
-
-        Schema::table($tableName, function (Blueprint $table) use ($existingColumns) {
-            $table->dropColumn($existingColumns);
-        });
+        // Repair-only migration. Do not drop current production columns on rollback.
     }
 };
