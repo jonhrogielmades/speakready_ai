@@ -24,7 +24,7 @@
     <div class="rt-hero mb-4">
         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
             <div>
-                <span class="rt-chip mb-2"><i class="fa-solid fa-shield-heart"></i> Outcome-validated preparation</span>
+                <span class="rt-chip mb-2"><i class="fa-solid fa-user-shield"></i> Outcome-validated preparation</span>
                 <h3 class="rt-title">Interview Readiness Twin</h3>
                 <p class="rt-muted mb-0 mt-2">Build verified evidence, master job-specific competencies, use inclusive assessment settings, and learn from real interviews.</p>
             </div>
