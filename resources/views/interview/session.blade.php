@@ -828,6 +828,8 @@
             let liveSpeechInterim = '';
             let lastCommittedSpeech = '';
             let lastCommittedAt = 0;
+            let microphoneStream = null;
+            let microphoneReadyPromise = null;
 
             const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
@@ -977,6 +979,37 @@
                 }
             }
 
+            async function ensureMicrophoneReady() {
+                if (microphoneStream && microphoneStream.active) return true;
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return true;
+
+                if (!microphoneReadyPromise) {
+                    microphoneReadyPromise = navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    }).then(stream => {
+                        microphoneStream = stream;
+                        return true;
+                    }).catch(error => {
+                        microphoneStream = null;
+                        throw error;
+                    }).finally(() => {
+                        microphoneReadyPromise = null;
+                    });
+                }
+
+                return microphoneReadyPromise;
+            }
+
+            function releaseMicrophoneStream() {
+                if (!microphoneStream) return;
+                microphoneStream.getTracks().forEach(track => track.stop());
+                microphoneStream = null;
+            }
+
             function finalizeInterimTranscript() {
                 if (!liveSpeechInterim) return;
                 commitSpeechSegment(liveSpeechInterim);
@@ -1031,6 +1064,8 @@
                     console.warn('Speech recognition error:', event.error || event);
                     if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
                         shouldAutoRestartRecognition = false;
+                    } else if (event.error === 'no-speech' && isRecording) {
+                        shouldAutoRestartRecognition = true;
                     }
                 };
 

@@ -564,6 +564,13 @@ let audioObjectUrl = null;
 let audioChunks = [];
 const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
+const serverDetectedMobile = @json($isMobile);
+const mobileSpeechSurface = serverDetectedMobile
+    || window.matchMedia('(max-width: 767px)').matches
+    || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+let recognitionStopResolver = null;
+let recognitionStopTimer = null;
+let stopInProgress = false;
 
 const fillerWordsList = ['you know', 'i mean', 'um', 'uh', 'erm', 'hmm', 'like', 'actually', 'basically', 'literally'];
 const duplicateSafeWordSet = new Set([
@@ -697,6 +704,31 @@ function setTranscriptionStatus(message, color = '#34d399') {
     status.style.display = message ? 'inline-block' : 'none';
 }
 
+function resolveRecognitionStopWaiter() {
+    if (recognitionStopTimer) {
+        clearTimeout(recognitionStopTimer);
+        recognitionStopTimer = null;
+    }
+
+    if (recognitionStopResolver) {
+        const resolve = recognitionStopResolver;
+        recognitionStopResolver = null;
+        resolve();
+    }
+}
+
+function waitForRecognitionStop(timeoutMs = mobileSpeechSurface ? 1600 : 800) {
+    return new Promise(resolve => {
+        resolveRecognitionStopWaiter();
+        recognitionStopResolver = resolve;
+        recognitionStopTimer = setTimeout(resolveRecognitionStopWaiter, timeoutMs);
+
+        if (!recognitionActive) {
+            setTimeout(resolveRecognitionStopWaiter, mobileSpeechSurface ? 450 : 200);
+        }
+    });
+}
+
 function startSpeechRecognitionEngine() {
     if (!recognition || recognitionActive || !isRec || isPaused || !shouldAutoRestartRecognition) return;
 
@@ -749,10 +781,15 @@ if (BrowserSpeechRecognition) {
         if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(error)) {
             shouldAutoRestartRecognition = false;
             const message = error === 'audio-capture' ? 'Microphone unavailable' : 'Microphone permission denied';
-            setTimeout(() => {
-                stopRec(false);
+            setTimeout(async () => {
+                await stopRec(false);
                 setTranscriptionStatus(message, '#f87171');
             }, 0);
+        } else if (error === 'no-speech') {
+            recognitionRestartDelay = 500;
+            if (isRec && !isPaused) {
+                setTranscriptionStatus('Still listening - speak close to the mic', '#fbbf24');
+            }
         } else if (error === 'network') {
             recognitionRestartDelay = 1500;
             setTranscriptionStatus('Reconnecting transcription', '#fbbf24');
@@ -764,6 +801,7 @@ if (BrowserSpeechRecognition) {
         if (shouldAutoRestartRecognition && isRec && !isPaused) {
             setTimeout(startSpeechRecognitionEngine, recognitionRestartDelay);
         }
+        resolveRecognitionStopWaiter();
     };
 }
 
@@ -837,6 +875,31 @@ function releaseMediaStream(stream = mediaStream) {
     }
 }
 
+async function ensureMicrophoneAccess() {
+    if (!navigator.mediaDevices?.getUserMedia) return true;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }
+        });
+        releaseMediaStream(stream);
+        return true;
+    } catch (error) {
+        console.error('Microphone access failed:', error);
+        const denied = error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
+        setTranscriptionStatus(denied ? 'Microphone permission denied' : 'Microphone unavailable', '#f87171');
+        return false;
+    }
+}
+
+function shouldCaptureAudioPlayback() {
+    return !mobileSpeechSurface;
+}
+
 async function initAudioRec() {
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return false;
 
@@ -878,7 +941,7 @@ async function initAudioRec() {
 
 async function startRec() {
     if (!recognition) return alert("Speech recognition is not supported in this browser.");
-    if (isRec) return;
+    if (isRec || stopInProgress) return;
 
     isRec = true;
     isPaused = false;
@@ -902,12 +965,32 @@ async function startRec() {
     document.getElementById('audioPlayback').src = "";
 
     updateUIState();
-    await initAudioRec();
+    setTranscriptionStatus('Preparing microphone', '#fbbf24');
+
+    if (mobileSpeechSurface) {
+        const microphoneReady = await ensureMicrophoneAccess();
+        if (!microphoneReady) {
+            await stopRec(false);
+            setTranscriptionStatus('Microphone permission is required', '#f87171');
+            return;
+        }
+    }
+
+    if (shouldCaptureAudioPlayback()) {
+        await initAudioRec();
+    } else {
+        mediaRecorder = null;
+        releaseMediaStream();
+    }
+
     if (!isRec) {
         if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
         return;
     }
     startSpeechRecognitionEngine();
+    if (recognitionActive) {
+        setTranscriptionStatus('Listening - speak now');
+    }
 
     clearInterval(timer);
     timer = setInterval(updateTimer, 1000);
@@ -941,35 +1024,52 @@ function resumeRec() {
     updateUIState();
 }
 
-function stopRec(shouldAnalyze = true) {
-    finalizeInterimTranscript();
-    shouldAutoRestartRecognition = false;
-    isRec = false;
-    isPaused = false;
-    if (recognition && recognitionActive) {
-        try {
-            recognition.stop();
-        } catch (error) {
-            console.error('Speech recognition failed to stop:', error);
-        }
-    }
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-    } else {
-        releaseMediaStream();
-    }
-    clearInterval(timer);
-    processTranscript(mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim));
-    updateUIState();
-    
-    document.getElementById('transcriptView').setAttribute('contenteditable', 'true');
-    document.getElementById('editHint').style.display = 'block';
+async function stopRec(shouldAnalyze = true) {
+    if (stopInProgress) return false;
+    stopInProgress = true;
 
-    if (shouldAnalyze) generateAnalysis();
+    try {
+        finalizeInterimTranscript();
+        shouldAutoRestartRecognition = false;
+        isRec = false;
+        isPaused = false;
+        const recognitionSettled = recognition ? waitForRecognitionStop() : Promise.resolve();
+
+        if (recognition && recognitionActive) {
+            try {
+                recognition.stop();
+            } catch (error) {
+                console.error('Speech recognition failed to stop:', error);
+                resolveRecognitionStopWaiter();
+            }
+        } else {
+            resolveRecognitionStopWaiter();
+        }
+
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop();
+        } else {
+            releaseMediaStream();
+        }
+        clearInterval(timer);
+
+        await recognitionSettled;
+        finalizeInterimTranscript();
+        processTranscript(mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim));
+        updateUIState();
+
+        document.getElementById('transcriptView').setAttribute('contenteditable', 'true');
+        document.getElementById('editHint').style.display = 'block';
+
+        if (shouldAnalyze) return generateAnalysis();
+        return true;
+    } finally {
+        stopInProgress = false;
+    }
 }
 
-function resetRec() {
-    stopRec(false);
+async function resetRec() {
+    await stopRec(false);
     document.getElementById('timeDisp').innerText = "0:00";
     document.getElementById('wpmDisp').innerText = "0";
     document.getElementById('fillerDisp').innerText = "0";
