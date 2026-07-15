@@ -132,6 +132,7 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
+    Route::post('/drills/voice/prompt', [UserController::class, 'generateVoicePrompt'])->name('user.drills.voice.prompt');
     Route::post('/drills/voice/analyze', [UserController::class, 'analyzeVoiceSession'])->name('user.drills.voice.analyze');
     Route::post('/drills/voice/save', [UserController::class, 'saveVoiceSession'])->name('user.drills.voice.save');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');

@@ -1287,6 +1287,49 @@ class UserController extends Controller
         return view('user.drills.voice', compact('history'));
     }
 
+    public function generateVoicePrompt(Request $request)
+    {
+        $validated = $request->validate([
+            'category' => 'required|string|max:120',
+        ]);
+
+        $category = trim($validated['category']);
+        $provider = env('AI_PROVIDER', 'gemini');
+        $targetLanguage = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
+
+        $questions = AIService::generateQuestions(
+            1,
+            $this->voicePromptPositionFor($category),
+            'Medium',
+            $this->voicePromptFocusFor($category),
+            $provider,
+            null,
+            null,
+            null,
+            $this->voicePromptQuestionTypesFor($category),
+            'standard',
+            'neutral',
+            null,
+            $targetLanguage,
+            'standard',
+            false
+        );
+
+        $prompt = trim((string) ($questions[0] ?? ''));
+        $source = 'ai';
+
+        if ($prompt === '') {
+            $prompt = $this->fallbackVoicePrompt($category);
+            $source = 'fallback';
+        }
+
+        return response()->json([
+            'success' => true,
+            'prompt' => $prompt,
+            'source' => $source,
+        ]);
+    }
+
     public function analyzeVoiceSession(Request $request)
     {
         $validated = $request->validate([
@@ -1763,6 +1806,77 @@ class UserController extends Controller
             'clarity_score' => $clarity,
             'confidence_score' => $confidence,
         ];
+    }
+
+    private function voicePromptPositionFor(string $category): string
+    {
+        return match ($category) {
+            'Technical' => 'technical interview candidate',
+            'Scholarship' => 'scholarship applicant',
+            default => 'job interview candidate',
+        };
+    }
+
+    private function voicePromptFocusFor(string $category): string
+    {
+        return match ($category) {
+            'Tell Me About Yourself' => 'introductory personal pitch, motivation, and role fit',
+            'Strengths and Weaknesses' => 'self-awareness, growth mindset, and concrete evidence',
+            'Leadership' => 'leadership, ownership, conflict handling, and team impact',
+            'Problem Solving' => 'problem solving, prioritization, ambiguity, and decision making',
+            'Technical' => 'technical communication, debugging process, systems thinking, and tradeoffs',
+            'Scholarship' => 'academic goals, service, resilience, and scholarship fit',
+            default => $category.' interview practice',
+        };
+    }
+
+    private function voicePromptQuestionTypesFor(string $category): array
+    {
+        return match ($category) {
+            'Technical' => ['technical', 'situational'],
+            'Tell Me About Yourself' => ['general', 'behavioral'],
+            default => ['behavioral', 'situational'],
+        };
+    }
+
+    private function fallbackVoicePrompt(string $category): string
+    {
+        $prompts = [
+            'Tell Me About Yourself' => [
+                'Walk me through your background and connect it to the role you are preparing for.',
+                'What should an interviewer remember about you after your first two minutes?',
+                'How would you summarize your strengths, experience, and next career goal?',
+            ],
+            'Strengths and Weaknesses' => [
+                'What is one strength you can prove with a specific example?',
+                'Tell me about a weakness you are actively improving and what changed because of that work.',
+                'Describe feedback you received and how you used it to improve.',
+            ],
+            'Leadership' => [
+                'Tell me about a time you led a team through uncertainty.',
+                'Describe a situation where you had to resolve conflict while keeping the work moving.',
+                'Give an example of how you motivated others toward a shared goal.',
+            ],
+            'Problem Solving' => [
+                'Tell me about a complex problem you solved with limited information.',
+                'Describe a time you had competing deadlines and how you chose what to do first.',
+                'Give an example of a decision you made under pressure and what you learned.',
+            ],
+            'Technical' => [
+                'Explain a technical concept from your experience to a non-technical interviewer.',
+                'Walk me through your debugging process when the cause is unclear.',
+                'Describe a technical tradeoff you made and how you evaluated it.',
+            ],
+            'Scholarship' => [
+                'Why does this scholarship fit your academic and career plan?',
+                'Tell me about a challenge that shaped your goals and how you responded.',
+                'Describe how you will contribute to your school or community if selected.',
+            ],
+        ];
+
+        $categoryPrompts = $prompts[$category] ?? $prompts['Tell Me About Yourself'];
+
+        return $categoryPrompts[array_rand($categoryPrompts)];
     }
 
     private function estimatedVoiceClarity(int $wordCount, int $fillerWords, int $wpm): int

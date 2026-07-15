@@ -7,6 +7,13 @@
     $preferences = $profile->inclusive_preferences ?? [];
 @endphp
 <style>
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
     .rt-hero,.rt-card{background:var(--sf);border:1px solid var(--bd);border-radius:18px;box-shadow:0 12px 35px rgba(15,23,42,.08)}
     .rt-hero{padding:24px;background:linear-gradient(120deg,rgba(59,130,246,.13),rgba(139,92,246,.08)),var(--sf)}
     .rt-card{padding:22px;height:100%}.rt-title{font-weight:850;color:var(--tx);margin:0}.rt-muted{color:var(--tx3)}
@@ -18,21 +25,80 @@
     .rt-empty{padding:28px;text-align:center;color:var(--tx3);border:1px dashed var(--bd);border-radius:14px}
     .rt-tabs{display:flex;gap:8px;overflow:auto;padding-bottom:4px}.rt-tabs a{white-space:nowrap;text-decoration:none;padding:9px 13px;border-radius:10px;background:var(--bg3);color:var(--tx3);font-weight:700}.rt-tabs a.active{background:#3b82f6;color:white}
     details.rt-details summary{cursor:pointer;color:#60a5fa;font-weight:750}
+    #readiness-twin-page .sr-page-hero {
+        border-color: rgba(99, 102, 241, 0.28);
+        background:
+            radial-gradient(circle at 90% 28%, rgba(99, 102, 241, 0.22), transparent 27%),
+            linear-gradient(110deg, rgba(59, 130, 246, 0.13), rgba(139, 92, 246, 0.06)),
+            var(--sf);
+    }
+    #readiness-twin-page .sr-page-hero-subtitle {
+        max-width: 780px;
+    }
+    #readiness-twin-page .readiness-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    #readiness-twin-page .readiness-hero-actions .btn {
+        min-height: 38px;
+        border-radius: 11px;
+        font-weight: 700;
+    }
+    @media (max-width: 767px) {
+        #readiness-twin-page .readiness-hero-actions {
+            max-width: calc(100vw - 154px);
+            gap: 6px;
+            margin-top: 9px;
+        }
+        #readiness-twin-page .readiness-hero-actions .btn {
+            width: 100%;
+            min-height: 34px;
+            padding: 6px 8px;
+            font-size: 0.72rem;
+        }
+    }
 </style>
+@include('partials.page-hero-styles')
 
-<div class="db-section active">
-    <div class="rt-hero mb-4">
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-            <div>
-                <span class="rt-chip mb-2"><i class="fa-solid fa-user-shield"></i> Outcome-validated preparation</span>
-                <h3 class="rt-title">Interview Readiness Twin</h3>
-                <p class="rt-muted mb-0 mt-2">Build verified evidence, master job-specific competencies, use inclusive assessment settings, and learn from real interviews.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-outline-primary" href="{{ route('user.coach') }}"><i class="fa-solid fa-robot me-2"></i>Readiness Coach</a>
-                <a class="btn btn-primary" href="{{ route('interview.setup', $selectedApplication ? ['application' => $selectedApplication->id] : []) }}"><i class="fa-solid fa-play me-2"></i>Practice</a>
+<div class="db-section active" id="readiness-twin-page">
+    <div class="sr-page-hero">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <h4 class="sr-page-hero-title text-gradient-primary">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3 5 6v5c0 4.7 2.9 8.5 7 10 4.1-1.5 7-5.3 7-10V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="m9 12 2 2 4-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Interview Readiness Twin
+                </h4>
+                <p class="sr-page-hero-subtitle">Build verified evidence, master job-specific competencies, use inclusive assessment settings, and learn from real interviews.</p>
+                <div class="readiness-hero-actions">
+                    <a class="btn btn-outline-primary" href="{{ route('user.coach') }}"><i class="fa-solid fa-robot me-2"></i>Readiness Coach</a>
+                    <a class="btn btn-primary" href="{{ route('interview.setup', $selectedApplication ? ['application' => $selectedApplication->id] : []) }}"><i class="fa-solid fa-play me-2"></i>Practice</a>
+                </div>
             </div>
         </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
+            <defs>
+                <linearGradient id="readinessTwinPanel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#DBEAFE"/>
+                    <stop offset="1" stop-color="#EEF2FF"/>
+                </linearGradient>
+                <linearGradient id="readinessTwinCore" x1="70" y1="32" x2="158" y2="124" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#3B82F6"/>
+                    <stop offset="1" stop-color="#8B5CF6"/>
+                </linearGradient>
+            </defs>
+            <rect x="32" y="22" width="156" height="106" rx="20" fill="url(#readinessTwinPanel)" stroke="#BFDBFE" stroke-width="3"/>
+            <path d="M110 38 78 51v25c0 27 17 47 32 54 15-7 32-27 32-54V51l-32-13Z" fill="url(#readinessTwinCore)"/>
+            <path d="m96 82 11 11 23-30" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M54 54h23M50 76h24M52 98h28M149 58h20M150 80h25M143 103h30" stroke="#93C5FD" stroke-width="6" stroke-linecap="round" opacity=".72"/>
+            <circle cx="58" cy="38" r="12" fill="#22C55E"/>
+            <circle cx="170" cy="112" r="14" fill="#F59E0B"/>
+            <path d="M30 135c32-10 68-10 104 0s60 8 82-4" fill="none" stroke="#A5B4FC" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+        </svg>
     </div>
 
     @if(session('success'))

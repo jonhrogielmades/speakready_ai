@@ -285,7 +285,7 @@
                             <option value="Technical">Technical Questions</option>
                             <option value="Scholarship">Scholarship Questions</option>
                         </select>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="randomizePrompt()" style="border-radius:8px;"><i class="fa-solid fa-shuffle"></i> Randomize</button>
+                        <button id="btnRandomizePrompt" class="btn btn-sm btn-outline-secondary" onclick="randomizePrompt()" style="border-radius:8px;"><i class="fa-solid fa-shuffle"></i> Randomize</button>
                     </div>
 
                     <div class="text-center mb-5">
@@ -413,6 +413,7 @@
                         <div class="mb-4">
                             <h6 style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;margin-bottom:8px;">Playback</h6>
                             <audio id="audioPlayback" controls style="width:100%;height:40px;outline:none;" class="mb-2"></audio>
+                            <div id="playbackStatus" style="font-size:0.76rem;color:var(--tx3);">Playback appears after you stop recording.</div>
                         </div>
 
                         <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:600;border-radius:12px;border:none;box-shadow:0 4px 15px rgba(52,211,153,0.4);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
@@ -526,8 +527,8 @@ document.querySelectorAll('.nav-link').forEach(link => {
     });
 });
 
-// Local practice prompt bank
-const prompts = {
+// AI-backed practice prompt bank with a local fallback for provider outages.
+const fallbackPrompts = {
     "Tell Me About Yourself": ["Walk me through your resume.", "How would you describe yourself in three words?", "What is your biggest professional achievement?"],
     "Strengths and Weaknesses": ["What is your greatest weakness?", "What are your top three strengths?", "Tell me about a time you failed."],
     "Leadership": ["Tell me about a time you showed leadership.", "How do you handle conflict in a team?", "Describe a situation where you had to motivate others."],
@@ -536,11 +537,48 @@ const prompts = {
     "Scholarship": ["Why do you deserve this scholarship?", "How will this scholarship help you achieve your goals?", "Describe a community service project you led."]
 };
 
-function randomizePrompt() {
+function localFallbackPrompt(category) {
+    const list = fallbackPrompts[category] || fallbackPrompts["Tell Me About Yourself"];
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+async function randomizePrompt() {
     const cat = document.getElementById('categorySelect').value;
-    const list = prompts[cat] || prompts["Tell Me About Yourself"];
-    const rand = list[Math.floor(Math.random() * list.length)];
-    document.getElementById('promptText').innerText = `"${rand}"`;
+    const promptEl = document.getElementById('promptText');
+    const btn = document.getElementById('btnRandomizePrompt');
+    const originalBtn = btn ? btn.innerHTML : '';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating';
+    }
+    promptEl.innerText = '"Generating an AI practice question..."';
+
+    try {
+        const response = await fetch("{{ route('user.drills.voice.prompt') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ category: cat })
+        });
+        if (!response.ok) throw new Error(`Prompt generation failed with status ${response.status}`);
+
+        const data = await response.json();
+        const prompt = cleanTranscriptText(data.prompt || '');
+        if (!prompt) throw new Error('AI returned an empty prompt');
+
+        promptEl.innerText = `"${prompt}"`;
+    } catch (error) {
+        console.error('AI prompt generation failed:', error);
+        promptEl.innerText = `"${localFallbackPrompt(cat)}"`;
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtn || '<i class="fa-solid fa-shuffle"></i> Randomize';
+        }
+    }
 }
 document.getElementById('categorySelect').addEventListener('change', randomizePrompt);
 
@@ -866,6 +904,28 @@ function updateWPM() {
     }
 }
 
+function setPlaybackStatus(message, color = 'var(--tx3)') {
+    const status = document.getElementById('playbackStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.style.color = color;
+}
+
+function clearAudioPlayback() {
+    if (audioObjectUrl) {
+        URL.revokeObjectURL(audioObjectUrl);
+        audioObjectUrl = null;
+    }
+
+    const playback = document.getElementById('audioPlayback');
+    if (playback) {
+        playback.removeAttribute('src');
+        playback.load();
+    }
+
+    setPlaybackStatus('Playback appears after you stop recording.');
+}
+
 function releaseMediaStream(stream = mediaStream) {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -897,7 +957,18 @@ async function ensureMicrophoneAccess() {
 }
 
 function shouldCaptureAudioPlayback() {
-    return !mobileSpeechSurface;
+    return Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+}
+
+function preferredAudioMimeType() {
+    if (!window.MediaRecorder || typeof MediaRecorder.isTypeSupported !== 'function') return '';
+
+    return [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/mpeg'
+    ].find(type => MediaRecorder.isTypeSupported(type)) || '';
 }
 
 async function initAudioRec() {
@@ -913,9 +984,7 @@ async function initAudioRec() {
         });
         mediaStream = stream;
         const recordingChunks = audioChunks;
-        const preferredType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-            ? 'audio/webm;codecs=opus'
-            : '';
+        const preferredType = preferredAudioMimeType();
         const recorder = preferredType
             ? new MediaRecorder(stream, { mimeType: preferredType })
             : new MediaRecorder(stream);
@@ -925,16 +994,28 @@ async function initAudioRec() {
         };
         recorder.onstop = () => {
             if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl);
-            const audioBlob = new Blob(recordingChunks, { type: recorder.mimeType || 'audio/webm' });
-            audioObjectUrl = URL.createObjectURL(audioBlob);
-            document.getElementById('audioPlayback').src = audioObjectUrl;
+            audioObjectUrl = null;
+
+            if (recordingChunks.length > 0) {
+                const audioBlob = new Blob(recordingChunks, { type: recorder.mimeType || preferredType || 'audio/webm' });
+                audioObjectUrl = URL.createObjectURL(audioBlob);
+                const playback = document.getElementById('audioPlayback');
+                playback.src = audioObjectUrl;
+                playback.load();
+                setPlaybackStatus('Playback ready.', '#34d399');
+            } else {
+                setPlaybackStatus('No playback audio was captured for this recording.', '#fbbf24');
+            }
+
             releaseMediaStream(stream);
         };
         recorder.start(1000);
+        setPlaybackStatus('Recording playback audio...');
         return true;
     } catch (error) {
         console.error('Audio recording failed:', error);
         releaseMediaStream();
+        setPlaybackStatus('Playback recording is unavailable in this browser.', '#fbbf24');
         return false;
     }
 }
@@ -962,12 +1043,12 @@ async function startRec() {
     document.getElementById('transcriptView').innerHTML = "";
     document.getElementById('transcriptView').setAttribute('contenteditable', 'false');
     document.getElementById('editHint').style.display = 'none';
-    document.getElementById('audioPlayback').src = "";
+    clearAudioPlayback();
 
     updateUIState();
     setTranscriptionStatus('Preparing microphone', '#fbbf24');
 
-    if (mobileSpeechSurface) {
+    if (mobileSpeechSurface && !shouldCaptureAudioPlayback()) {
         const microphoneReady = await ensureMicrophoneAccess();
         if (!microphoneReady) {
             await stopRec(false);
@@ -981,6 +1062,7 @@ async function startRec() {
     } else {
         mediaRecorder = null;
         releaseMediaStream();
+        setPlaybackStatus('Playback recording is unavailable in this browser.', '#fbbf24');
     }
 
     if (!isRec) {
@@ -1154,6 +1236,26 @@ function currentVoiceMetrics() {
     };
 }
 
+function localAnalysisPayload(clarity, confidence, wpm) {
+    const tooShort = wordCount < 20;
+
+    return {
+        ai_feedback_strengths: tooShort
+            ? 'The transcript was saved, but it is too brief for reliable AI strengths feedback.'
+            : 'Saved with local delivery metrics. Review the transcript for structure, examples, and measurable results.',
+        ai_feedback_weaknesses: tooShort
+            ? 'Add a fuller answer with a clear situation, action, and result before relying on coaching feedback.'
+            : 'AI feedback was unavailable. Use the WPM, filler count, and transcript to identify the next practice focus.',
+        ai_improved_answer: 'AI revision was unavailable. Build a stronger answer from your transcript by naming the situation, your task, the specific actions you took, and the result without inventing new facts.',
+        clarity_score: clarity,
+        confidence_score: confidence,
+        speaking_pace: wpm,
+        filler_words: fillerCount,
+        wpm: wpm,
+        duration_seconds: seconds
+    };
+}
+
 async function generateAnalysis() {
     if (!isRec) {
         transcript = collapseRepeatedSpeech(transcriptEditorText());
@@ -1246,12 +1348,13 @@ async function generateAnalysis() {
 
     } catch (error) {
         console.error("Analysis Error:", error);
-        document.getElementById('resStrengths').innerText = "Failed to load analysis.";
-        document.getElementById('resWeak').innerText = "Failed to load analysis.";
-        document.getElementById('compAI').innerText = "Failed to build the grounded revision template.";
-        window.currentAnalysis = null;
-        window.analysisTranscript = null;
-        return false;
+        const fallback = localAnalysisPayload(clarity, confScore, wpm);
+        document.getElementById('resStrengths').innerText = fallback.ai_feedback_strengths;
+        document.getElementById('resWeak').innerText = fallback.ai_feedback_weaknesses;
+        document.getElementById('compAI').innerText = fallback.ai_improved_answer;
+        window.currentAnalysis = fallback;
+        window.analysisTranscript = transcript;
+        return true;
     }
 }
 
@@ -1292,11 +1395,15 @@ async function saveSession() {
         });
 
         const data = await response.json();
+        if (!response.ok) throw new Error(data.message || `Save failed with status ${response.status}`);
         
         if (data.success) {
             alert("Session saved successfully to your History!");
             
             // Append to history table
+            const emptyHistory = document.querySelector('#historyTable td[colspan="5"]');
+            if (emptyHistory) emptyHistory.closest('tr')?.remove();
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="color:var(--tx2);font-size:0.9rem;">${data.session.date}</td>
@@ -1313,7 +1420,7 @@ async function saveSession() {
         }
     } catch (error) {
         console.error("Save Error:", error);
-        alert("An error occurred while saving.");
+        alert(error.message || "An error occurred while saving.");
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
