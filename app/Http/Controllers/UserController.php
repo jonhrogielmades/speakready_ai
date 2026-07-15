@@ -116,7 +116,7 @@ class UserController extends Controller
                 ->readinessEligible();
         });
 
-        $avgScore = $scoresQuery->avg('overall_readiness_score') ?? 0;
+        $avgScore = $this->averageScoreColumn($scoresQuery, 'overall_readiness_score');
 
         // Update Profile readiness score if it differs
         if ($profile->readiness_score != round($avgScore)) {
@@ -126,11 +126,11 @@ class UserController extends Controller
 
         // Radar Data Averages
         $radarData = [
-            'clarity' => round($scoresQuery->avg('clarity_score') ?? 0),
-            'relevance' => round($scoresQuery->avg('relevance_score') ?? 0),
-            'grammar' => round($scoresQuery->avg('grammar_score') ?? 0),
-            'professionalism' => round($scoresQuery->avg('professionalism_score') ?? 0),
-            'delivery_stability' => round($scoresQuery->avg('delivery_stability_score') ?? 0),
+            'clarity' => round($this->averageScoreColumn($scoresQuery, 'clarity_score')),
+            'relevance' => round($this->averageScoreColumn($scoresQuery, 'relevance_score')),
+            'grammar' => round($this->averageScoreColumn($scoresQuery, 'grammar_score')),
+            'professionalism' => round($this->averageScoreColumn($scoresQuery, 'professionalism_score')),
+            'delivery_stability' => round($this->averageScoreColumn($scoresQuery, 'delivery_stability_score')),
         ];
 
         // Category Performance
@@ -852,6 +852,15 @@ class UserController extends Controller
         }
 
         return (int) round((float) $value);
+    }
+
+    private function averageScoreColumn($query, string $column): float
+    {
+        if (! Score::hasColumn($column)) {
+            return 0.0;
+        }
+
+        return (float) ((clone $query)->avg($column) ?? 0);
     }
 
     private function barWidth(?int $value): int

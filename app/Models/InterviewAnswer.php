@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class InterviewAnswer extends Model
 {
@@ -51,6 +52,26 @@ class InterviewAnswer extends Model
         'timed_out' => 'boolean',
         'evidence_map' => 'array',
     ];
+
+    public static function hasColumn(string $column): bool
+    {
+        static $columns = null;
+
+        $columns ??= Schema::hasTable('interview_answers')
+            ? array_flip(Schema::getColumnListing('interview_answers'))
+            : [];
+
+        return isset($columns[$column]);
+    }
+
+    public function setAttribute($key, $value)
+    {
+        if ($this->isFillable($key) && ! self::hasColumn($key)) {
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
+    }
 
     public function question()
     {

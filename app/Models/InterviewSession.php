@@ -64,6 +64,17 @@ class InterviewSession extends Model
         'share_hide_sensitive' => 'boolean',
     ];
 
+    public static function hasColumn(string $column): bool
+    {
+        static $columns = null;
+
+        $columns ??= Schema::hasTable('interview_sessions')
+            ? array_flip(Schema::getColumnListing('interview_sessions'))
+            : [];
+
+        return isset($columns[$column]);
+    }
+
     public function scopeReadinessEligible($query)
     {
         return self::applyReadinessEligibility($query);
@@ -94,6 +105,15 @@ class InterviewSession extends Model
     {
         return (bool) ($this->getRawOriginal('score_eligible') ?? false)
             || $this->assessment_mode === 'legacy';
+    }
+
+    public function setAttribute($key, $value)
+    {
+        if ($this->isFillable($key) && ! self::hasColumn($key)) {
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
     }
 
     public function getAssessmentModeAttribute($value): string

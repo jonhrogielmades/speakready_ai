@@ -38,6 +38,17 @@ class Score extends Model
         'body_language_included' => 'boolean',
     ];
 
+    public static function hasColumn(string $column): bool
+    {
+        static $columns = null;
+
+        $columns ??= Schema::hasTable('scores')
+            ? array_flip(Schema::getColumnListing('scores'))
+            : [];
+
+        return isset($columns[$column]);
+    }
+
     public function scopeReadinessEligible($query)
     {
         if (Schema::hasColumn('interview_sessions', 'assessment_mode')) {
@@ -55,6 +66,15 @@ class Score extends Model
         }
 
         return $query;
+    }
+
+    public function setAttribute($key, $value)
+    {
+        if ($this->isFillable($key) && ! self::hasColumn($key)) {
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
     }
 
     public function getAssessmentModeAttribute($value): string
