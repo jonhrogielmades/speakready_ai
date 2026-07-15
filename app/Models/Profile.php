@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Profile extends Model
 {
@@ -49,6 +50,26 @@ class Profile extends Model
         'badges_earned' => 'array',
         'inclusive_preferences' => 'array',
     ];
+
+    public static function hasColumn(string $column): bool
+    {
+        static $columns = null;
+
+        $columns ??= Schema::hasTable('profiles')
+            ? array_flip(Schema::getColumnListing('profiles'))
+            : [];
+
+        return isset($columns[$column]);
+    }
+
+    public function setAttribute($key, $value)
+    {
+        if ($this->isFillable($key) && ! self::hasColumn($key)) {
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
+    }
 
     public function user()
     {

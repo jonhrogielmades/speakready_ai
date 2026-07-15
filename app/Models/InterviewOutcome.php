@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class InterviewOutcome extends Model
 {
@@ -22,6 +23,22 @@ class InterviewOutcome extends Model
         'confidence_after' => 'integer',
         'allow_anonymous_learning' => 'boolean',
     ];
+
+    public static function tableExists(): bool
+    {
+        static $exists = null;
+
+        return $exists ??= Schema::hasTable('interview_outcomes');
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if (! self::tableExists()) {
+            abort(404);
+        }
+
+        return parent::resolveRouteBinding($value, $field);
+    }
 
     public function user()
     {

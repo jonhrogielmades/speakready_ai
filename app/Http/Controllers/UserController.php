@@ -998,15 +998,19 @@ class UserController extends Controller
         if ($this->isSpeakReadyDeveloperQuestion($message)) {
             $response = $this->speakReadyDeveloperCreditsResponse($responseLanguage);
         } else {
-            $latestTwin = ReadinessProfile::where('user_id', Auth::id())->latest('calibrated_at')->first();
-            $storyContext = ExperienceStory::where('user_id', Auth::id())->where('facts_confirmed', true)
-                ->latest()->limit(8)->get()->map(fn ($story) => [
-                    'id' => $story->id,
-                    'title' => $story->title,
-                    'competencies' => $story->competency_tags ?? [],
-                    'verified_facts' => $story->verified_facts ?? [],
-                    'metrics' => $story->metrics ?? [],
-                ])->all();
+            $latestTwin = ReadinessProfile::tableExists()
+                ? ReadinessProfile::where('user_id', Auth::id())->latest('calibrated_at')->first()
+                : null;
+            $storyContext = ExperienceStory::tableExists()
+                ? ExperienceStory::where('user_id', Auth::id())->where('facts_confirmed', true)
+                    ->latest()->limit(8)->get()->map(fn ($story) => [
+                        'id' => $story->id,
+                        'title' => $story->title,
+                        'competencies' => $story->competency_tags ?? [],
+                        'verified_facts' => $story->verified_facts ?? [],
+                        'metrics' => $story->metrics ?? [],
+                    ])->all()
+                : [];
             $systemPrompt = 'You are the unified SpeakReady Readiness Coach. Help with job-specific competency preparation, verified STAR stories, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals—not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
             $systemPrompt .= ' Current readiness context: '.json_encode([
                 'target_role' => $latestTwin?->target_role,

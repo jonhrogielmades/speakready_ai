@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class JobApplication extends Model
 {
@@ -43,6 +44,26 @@ class JobApplication extends Model
         'future_skills' => 'array',
         'smart_plan' => 'array',
     ];
+
+    public static function hasColumn(string $column): bool
+    {
+        static $columns = null;
+
+        $columns ??= Schema::hasTable('job_applications')
+            ? array_flip(Schema::getColumnListing('job_applications'))
+            : [];
+
+        return isset($columns[$column]);
+    }
+
+    public function setAttribute($key, $value)
+    {
+        if ($this->isFillable($key) && ! self::hasColumn($key)) {
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
+    }
 
     public function user()
     {

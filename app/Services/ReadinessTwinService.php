@@ -65,9 +65,13 @@ class ReadinessTwinService
     public function refreshForApplication(JobApplication $application): ReadinessProfile
     {
         $analysis = $this->analyzeTexts($application->resume_text, $application->job_description, $application->job_title);
-        $stories = ExperienceStory::where('user_id', $application->user_id)->get();
+        $stories = ExperienceStory::tableExists()
+            ? ExperienceStory::where('user_id', $application->user_id)->get()
+            : collect();
         $sessions = $application->sessions()->where('status', 'completed')->with('score')->latest()->get();
-        $outcomes = InterviewOutcome::where('job_application_id', $application->id)->latest()->get();
+        $outcomes = InterviewOutcome::tableExists()
+            ? InterviewOutcome::where('job_application_id', $application->id)->latest()->get()
+            : collect();
 
         $map = collect($analysis['competencies'])->map(function (array $competency) use ($stories, $sessions, $outcomes) {
             $storyEvidence = $this->storyEvidenceFor($competency, $stories);
@@ -94,23 +98,29 @@ class ReadinessTwinService
             'task' => $item['next_drill'],
         ])->all();
 
-        $profile = ReadinessProfile::updateOrCreate(
-            ['user_id' => $application->user_id, 'job_application_id' => $application->id],
-            [
-                'target_role' => $application->job_title,
-                'competency_map' => $map,
-                'mastery_snapshot' => [
-                    'average' => (int) round(collect($map)->avg('mastery') ?? 0),
-                    'strongest' => collect($map)->sortByDesc('mastery')->first()['name'] ?? null,
-                    'weakest' => collect($map)->first()['name'] ?? null,
-                    'outcomes_recorded' => $outcomes->count(),
-                ],
-                'future_skills' => $analysis['future_skills'],
-                'next_actions' => $nextActions,
-                'version' => 1,
-                'calibrated_at' => now(),
-            ]
-        );
+        $profileData = [
+            'user_id' => $application->user_id,
+            'job_application_id' => $application->id,
+            'target_role' => $application->job_title,
+            'competency_map' => $map,
+            'mastery_snapshot' => [
+                'average' => (int) round(collect($map)->avg('mastery') ?? 0),
+                'strongest' => collect($map)->sortByDesc('mastery')->first()['name'] ?? null,
+                'weakest' => collect($map)->first()['name'] ?? null,
+                'outcomes_recorded' => $outcomes->count(),
+            ],
+            'future_skills' => $analysis['future_skills'],
+            'next_actions' => $nextActions,
+            'version' => 1,
+            'calibrated_at' => now(),
+        ];
+
+        $profile = ReadinessProfile::tableExists()
+            ? ReadinessProfile::updateOrCreate(
+                ['user_id' => $application->user_id, 'job_application_id' => $application->id],
+                $profileData
+            )
+            : new ReadinessProfile($profileData);
 
         $application->update([
             'match_score' => $analysis['score'], // Retained for legacy screens and exports.

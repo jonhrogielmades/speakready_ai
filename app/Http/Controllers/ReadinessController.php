@@ -6,6 +6,7 @@ use App\Models\ExperienceStory;
 use App\Models\InterviewOutcome;
 use App\Models\JobApplication;
 use App\Models\Profile;
+use App\Models\ReadinessProfile;
 use App\Services\ReadinessTwinService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,32 +16,52 @@ class ReadinessController extends Controller
 {
     public function index(Request $request, ReadinessTwinService $twins)
     {
+        $relations = ['planItems' => fn ($query) => $query->orderBy('due_date')];
+        if (ReadinessProfile::tableExists()) {
+            $relations[] = 'readinessProfile';
+        }
+        if (InterviewOutcome::tableExists()) {
+            $relations[] = 'outcomes';
+        }
+
         $applications = JobApplication::where('user_id', Auth::id())
-            ->with(['readinessProfile', 'outcomes', 'planItems' => fn ($query) => $query->orderBy('due_date')])
+            ->with($relations)
             ->orderByRaw('CASE WHEN interview_date IS NULL THEN 1 ELSE 0 END')
             ->orderBy('interview_date')
             ->latest('updated_at')
             ->get();
 
+        if (! ReadinessProfile::tableExists()) {
+            $applications->each(fn ($application) => $application->setRelation('readinessProfile', null));
+        }
+        if (! InterviewOutcome::tableExists()) {
+            $applications->each(fn ($application) => $application->setRelation('outcomes', collect()));
+        }
+
         $selectedApplication = $request->integer('application')
             ? $applications->firstWhere('id', $request->integer('application'))
             : $applications->first();
 
-        if ($selectedApplication && ! $selectedApplication->readinessProfile) {
+        if ($selectedApplication && ReadinessProfile::tableExists() && ! $selectedApplication->readinessProfile) {
             $twins->syncAdaptivePlan($selectedApplication);
             $selectedApplication->load(['readinessProfile', 'planItems']);
         }
 
-        $stories = ExperienceStory::where('user_id', Auth::id())->latest()->get();
-        $outcomes = InterviewOutcome::where('user_id', Auth::id())
-            ->with(['jobApplication', 'interviewSession.score'])
-            ->latest('interview_date')
-            ->latest()
-            ->get();
+        $stories = ExperienceStory::tableExists()
+            ? ExperienceStory::where('user_id', Auth::id())->latest()->get()
+            : collect();
+        $outcomes = InterviewOutcome::tableExists()
+            ? InterviewOutcome::where('user_id', Auth::id())
+                ->with(['jobApplication', 'interviewSession.score'])
+                ->latest('interview_date')
+                ->latest()
+                ->get()
+            : collect();
         $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $readinessStorageAvailable = ExperienceStory::tableExists() && InterviewOutcome::tableExists();
 
         return view('user.readiness.index', compact(
-            'applications', 'selectedApplication', 'stories', 'outcomes', 'profile'
+            'applications', 'selectedApplication', 'stories', 'outcomes', 'profile', 'readinessStorageAvailable'
         ));
     }
 
@@ -55,6 +76,10 @@ class ReadinessController extends Controller
 
     public function storeStory(Request $request, ReadinessTwinService $twins)
     {
+        if (! ExperienceStory::tableExists()) {
+            return back()->with('error', 'Readiness story storage is being prepared. Please try again after the deployment finishes.');
+        }
+
         $validated = $this->validatedStory($request);
         $story = ExperienceStory::create(array_merge($validated, ['user_id' => Auth::id()]));
         $this->refreshApplications($twins);
@@ -64,6 +89,10 @@ class ReadinessController extends Controller
 
     public function updateStory(Request $request, ExperienceStory $story, ReadinessTwinService $twins)
     {
+        if (! ExperienceStory::tableExists()) {
+            return back()->with('error', 'Readiness story storage is being prepared. Please try again after the deployment finishes.');
+        }
+
         $this->authorizeStory($story);
         $story->update($this->validatedStory($request));
         $this->refreshApplications($twins);
@@ -73,6 +102,10 @@ class ReadinessController extends Controller
 
     public function destroyStory(ExperienceStory $story, ReadinessTwinService $twins)
     {
+        if (! ExperienceStory::tableExists()) {
+            return back()->with('error', 'Readiness story storage is being prepared. Please try again after the deployment finishes.');
+        }
+
         $this->authorizeStory($story);
         $story->delete();
         $this->refreshApplications($twins);
@@ -82,7 +115,11 @@ class ReadinessController extends Controller
 
     public function storeOutcome(Request $request, ReadinessTwinService $twins)
     {
-        $validated = $request->validate([
+        if (! InterviewOutcome::tableExists()) {
+            return back()->with('error', 'Interview outcome storage is being prepared. Please try again after the deployment finishes.');
+        }
+
+        $rules = [
             'job_application_id' => [
                 'nullable',
                 Rule::exists('job_applications', 'id')->where('user_id', Auth::id()),
@@ -98,13 +135,18 @@ class ReadinessController extends Controller
             'questions_asked_text' => 'nullable|string|max:12000',
             'surprise_topics_text' => 'nullable|string|max:5000',
             'useful_story_ids' => 'nullable|array',
-            'useful_story_ids.*' => [Rule::exists('experience_stories', 'id')->where('user_id', Auth::id())],
             'recruiter_feedback' => 'nullable|string|max:8000',
             'reflection' => 'nullable|string|max:8000',
             'confidence_before' => 'nullable|integer|min:0|max:100',
             'confidence_after' => 'nullable|integer|min:0|max:100',
             'allow_anonymous_learning' => 'nullable|boolean',
-        ]);
+        ];
+
+        if (ExperienceStory::tableExists()) {
+            $rules['useful_story_ids.*'] = [Rule::exists('experience_stories', 'id')->where('user_id', Auth::id())];
+        }
+
+        $validated = $request->validate($rules);
 
         $outcome = InterviewOutcome::create([
             'user_id' => Auth::id(),
@@ -140,6 +182,10 @@ class ReadinessController extends Controller
 
     public function destroyOutcome(InterviewOutcome $outcome, ReadinessTwinService $twins)
     {
+        if (! InterviewOutcome::tableExists()) {
+            return back()->with('error', 'Interview outcome storage is being prepared. Please try again after the deployment finishes.');
+        }
+
         abort_unless((int) $outcome->user_id === (int) Auth::id(), 403);
         $application = $outcome->jobApplication;
         $outcome->delete();

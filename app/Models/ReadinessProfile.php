@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class ReadinessProfile extends Model
 {
@@ -19,6 +20,13 @@ class ReadinessProfile extends Model
         'version' => 'integer',
         'calibrated_at' => 'datetime',
     ];
+
+    public static function tableExists(): bool
+    {
+        static $exists = null;
+
+        return $exists ??= Schema::hasTable('readiness_profiles');
+    }
 
     public function user()
     {
