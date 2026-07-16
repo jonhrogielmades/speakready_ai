@@ -7,7 +7,9 @@ use App\Models\GameLevel;
 use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\User;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class LearningGameGuidanceTest extends TestCase
@@ -93,6 +95,45 @@ class LearningGameGuidanceTest extends TestCase
             ->assertSee('Make the action and result more specific before retrying.');
     }
 
+    public function test_admin_game_generate_tolerates_missing_optional_generation_columns(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $category = $this->category(['type' => 'game']);
+
+        $this->dropGameLevelColumns([
+            'skill_focus',
+            'learning_objective',
+            'success_criteria',
+            'retry_hint',
+            'ai_persona',
+            'ai_custom_prompt',
+            'time_limit_seconds',
+            'banned_words',
+            'target_tone',
+            'custom_badge_name',
+            'skill_xp_type',
+            'skill_xp_amount',
+        ]);
+
+        $this->withAiProviderPriority('unsupported', function () use ($admin, $category): void {
+            $this->actingAs($admin)
+                ->post(route('admin.game.generate'), [
+                    'topic' => 'Schema Drift',
+                    'level_number' => 7,
+                    'num_levels' => 1,
+                    'category_id' => $category->id,
+                ])
+                ->assertRedirect(route('admin.game'))
+                ->assertSessionHas('success');
+        });
+
+        $this->assertDatabaseHas('game_levels', [
+            'category_id' => $category->id,
+            'level_number' => 7,
+            'title' => 'Beginner Schema Drift Challenge',
+        ]);
+    }
+
     public function test_success_criteria_are_parsed_as_a_clean_checklist(): void
     {
         $level = new GameLevel([
@@ -135,5 +176,34 @@ class LearningGameGuidanceTest extends TestCase
             'energy_cost' => 1,
             'is_hidden' => false,
         ], $overrides));
+    }
+
+    private function dropGameLevelColumns(array $columns): void
+    {
+        foreach ($columns as $column) {
+            if (! Schema::hasColumn('game_levels', $column)) {
+                continue;
+            }
+
+            Schema::table('game_levels', function (Blueprint $table) use ($column): void {
+                $table->dropColumn($column);
+            });
+        }
+    }
+
+    private function withAiProviderPriority(string $priority, callable $callback): void
+    {
+        $previous = getenv('INTERVIEW_CHATBOT_PROVIDER_PRIORITY');
+        putenv("INTERVIEW_CHATBOT_PROVIDER_PRIORITY={$priority}");
+
+        try {
+            $callback();
+        } finally {
+            if ($previous === false) {
+                putenv('INTERVIEW_CHATBOT_PROVIDER_PRIORITY');
+            } else {
+                putenv("INTERVIEW_CHATBOT_PROVIDER_PRIORITY={$previous}");
+            }
+        }
     }
 }

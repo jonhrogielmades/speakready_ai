@@ -7,10 +7,13 @@ use App\Models\Category;
 use App\Services\AIService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class AdminGameController extends Controller
 {
+    private ?array $gameLevelColumns = null;
+
     public function index()
     {
         $levels = GameLevel::with(['progress', 'category'])->orderBy('level_number', 'asc')->get();
@@ -31,22 +34,20 @@ class AdminGameController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate($this->validationRules(null, $request->category_id));
-        $data = $request->all();
+        $data = $request->validate($this->validationRules(null, $request->category_id));
         $data['is_hidden'] = $request->has('is_hidden');
 
-        GameLevel::create($data);
+        GameLevel::create($this->gameLevelDataForCurrentSchema($data));
 
         return redirect()->route('admin.game')->with('success', 'Learning Game created successfully.');
     }
 
     public function update(Request $request, GameLevel $arena_level)
     {
-        $request->validate($this->validationRules($arena_level->id, $request->category_id));
-        $data = $request->all();
+        $data = $request->validate($this->validationRules($arena_level->id, $request->category_id));
         $data['is_hidden'] = $request->has('is_hidden');
 
-        $arena_level->update($data);
+        $arena_level->update($this->gameLevelDataForCurrentSchema($data));
 
         return redirect()->route('admin.game')->with('success', 'Learning Game updated successfully.');
     }
@@ -113,7 +114,7 @@ class AdminGameController extends Controller
                 if ($difficulty == 'intermediate') $gameData['required_score'] = max(70, min(85, $gameData['required_score']));
                 if ($difficulty == 'advanced') $gameData['required_score'] = max(85, min(100, $gameData['required_score']));
 
-                GameLevel::create($gameData);
+                GameLevel::create($this->gameLevelDataForCurrentSchema($gameData));
                 $generatedCount++;
             }
         }
@@ -189,6 +190,47 @@ class AdminGameController extends Controller
         $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount'] ?? $fallback['skill_xp_amount']));
 
         return $gameData;
+    }
+
+    private function gameLevelDataForCurrentSchema(array $data): array
+    {
+        $columns = $this->currentGameLevelColumns();
+
+        if ($columns === []) {
+            return $data;
+        }
+
+        $allowedColumns = array_flip($columns);
+        $filtered = array_intersect_key($data, $allowedColumns);
+        $omittedFillableColumns = array_values(array_intersect(
+            array_diff(array_keys($data), array_keys($filtered)),
+            (new GameLevel())->getFillable()
+        ));
+
+        if ($omittedFillableColumns !== []) {
+            Log::warning('Skipped unavailable game level columns while saving admin game data.', [
+                'columns' => $omittedFillableColumns,
+            ]);
+        }
+
+        return $filtered;
+    }
+
+    private function currentGameLevelColumns(): array
+    {
+        if ($this->gameLevelColumns !== null) {
+            return $this->gameLevelColumns;
+        }
+
+        try {
+            return $this->gameLevelColumns = Schema::getColumnListing((new GameLevel())->getTable());
+        } catch (\Throwable $e) {
+            Log::warning('Unable to inspect game level columns before saving admin game data.', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->gameLevelColumns = [];
+        }
     }
 
     private function fallbackGameData(string $topic, string $difficulty): array
