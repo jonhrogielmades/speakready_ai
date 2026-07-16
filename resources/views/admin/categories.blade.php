@@ -1,11 +1,64 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <style>
-    #addCategoryModal .form-check-input:checked,
-    [id^="editCategoryModal"] .form-check-input:checked {
-        background-color: #2563eb !important;
+    #addCategoryModal .form-check-input,
+    [id^="editCategoryModal"] .form-check-input {
+        position: absolute !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        margin: 0 !important;
+        opacity: 0 !important;
+        cursor: pointer;
+    }
+    #addCategoryModal .form-check,
+    [id^="editCategoryModal"] .form-check {
+        position: relative;
+    }
+    #addCategoryModal .form-check-label,
+    [id^="editCategoryModal"] .form-check-label {
+        position: relative;
+        min-height: 18px;
+        padding-left: 26px;
+        cursor: pointer;
+    }
+    #addCategoryModal .form-check-label::before,
+    [id^="editCategoryModal"] .form-check-label::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+    }
+    #addCategoryModal .form-check-label::after,
+    [id^="editCategoryModal"] .form-check-label::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 50%;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        transform: translateY(-50%) scale(0);
+        background: #ffffff;
+        transition: transform 0.15s ease;
+    }
+    #addCategoryModal .form-check-input:checked + .form-check-label::before,
+    [id^="editCategoryModal"] .form-check-input:checked + .form-check-label::before {
+        background: #2563eb;
         border-color: #60a5fa !important;
         box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.22) !important;
+    }
+    #addCategoryModal .form-check-input:checked + .form-check-label::after,
+    [id^="editCategoryModal"] .form-check-input:checked + .form-check-label::after {
+        transform: translateY(-50%) scale(1);
     }
     #addCategoryModal .form-check-input:focus,
     [id^="editCategoryModal"] .form-check-input:focus {
@@ -58,6 +111,7 @@
             min-width: 0;
             margin: 0 !important;
             line-height: 1.3;
+            padding-left: 26px;
             overflow-wrap: normal;
             word-break: normal;
         }

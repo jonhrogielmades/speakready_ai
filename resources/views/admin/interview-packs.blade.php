@@ -335,10 +335,10 @@
     @endif
 
     <div class="row g-3 mb-4">
-        <div class="col-6 col-lg-3"><div class="stat-card"><span>Total Packs</span><strong>{{ $stats['total'] }}</strong></div></div>
-        <div class="col-6 col-lg-3"><div class="stat-card"><span>Active For Users</span><strong>{{ $stats['active'] }}</strong></div></div>
-        <div class="col-6 col-lg-3"><div class="stat-card"><span>Pressure Mode</span><strong>{{ $stats['pressure'] }}</strong></div></div>
-        <div class="col-6 col-lg-3"><div class="stat-card"><span>Used In Sessions</span><strong>{{ $stats['used_sessions'] }}</strong></div></div>
+        <div class="col-6"><div class="stat-card"><span>Total Packs</span><strong>{{ $stats['total'] }}</strong></div></div>
+        <div class="col-6"><div class="stat-card"><span>Active For Users</span><strong>{{ $stats['active'] }}</strong></div></div>
+        <div class="col-6"><div class="stat-card"><span>Pressure Mode</span><strong>{{ $stats['pressure'] }}</strong></div></div>
+        <div class="col-6"><div class="stat-card"><span>Used In Sessions</span><strong>{{ $stats['used_sessions'] }}</strong></div></div>
     </div>
 
     <div class="pack-panel">
