@@ -171,8 +171,10 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertSee('pack-mobile-card', false)
             ->assertSee('Mobile Support Pack')
             ->assertSee('Mobile Co')
-            ->assertSee('body.admin-mobile-shell .modal.pack-form-modal .form-check-input', false)
-            ->assertSee('width: 42px !important', false)
+            ->assertSee('pack-pressure-check', false)
+            ->assertSee('body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-input', false)
+            ->assertSee('width: 18px !important', false)
+            ->assertSee('background-color: #0ea5e9 !important', false)
             ->assertSee('for="addPackModal_name"', false)
             ->assertSee('id="addPackModal_pressure_mode"', false);
     }

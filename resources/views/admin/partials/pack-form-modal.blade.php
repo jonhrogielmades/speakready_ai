@@ -91,9 +91,9 @@
                         <textarea id="{{ $fieldId('description') }}" class="form-control" name="description" rows="2">{{ $fieldValue('description', $pack->description ?? '') }}</textarea>
                     </div>
                     <div class="col-12">
-                        <div class="form-check form-switch">
-                            <input id="{{ $fieldId('pressure_mode') }}" class="form-check-input" type="checkbox" name="pressure_mode" value="1" @checked($pressureModeChecked)>
-                            <label class="form-check-label" for="{{ $fieldId('pressure_mode') }}">Enable pressure mode defaults for users</label>
+                        <div class="form-check pack-pressure-check">
+                            <input id="{{ $fieldId('pressure_mode') }}" class="form-check-input pack-pressure-input" type="checkbox" name="pressure_mode" value="1" @checked($pressureModeChecked)>
+                            <label class="form-check-label pack-pressure-label" for="{{ $fieldId('pressure_mode') }}">Enable pressure mode defaults for users</label>
                         </div>
                     </div>
                 </div>

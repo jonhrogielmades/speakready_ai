@@ -514,33 +514,48 @@
             body.admin-mobile-shell .modal.pack-form-modal textarea.form-control {
                 min-height: 74px !important;
             }
-            body.admin-mobile-shell .modal.pack-form-modal .form-check {
+            body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-check {
                 display: flex !important;
                 align-items: center;
                 gap: 10px;
                 min-height: 46px;
                 margin: 2px 0 0 !important;
-                padding: 10px 12px !important;
+                padding: 9px 10px !important;
                 border: 1px solid var(--bd);
                 border-radius: 12px;
                 background: var(--bg3);
             }
-            body.admin-mobile-shell .modal.pack-form-modal .form-check-input {
+            body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-input {
+                accent-color: #0ea5e9;
                 flex: 0 0 auto !important;
-                width: 42px !important;
-                min-width: 42px !important;
-                max-width: 42px !important;
-                height: 24px !important;
-                min-height: 24px !important;
+                width: 18px !important;
+                min-width: 18px !important;
+                max-width: 18px !important;
+                height: 18px !important;
+                min-height: 18px !important;
                 margin: 0 !important;
-                border-radius: 999px !important;
+                border-radius: 5px !important;
                 padding: 0 !important;
+                border: 2px solid #93c5fd !important;
+                background-color: #eaf2ff !important;
+                background-size: 12px 12px !important;
+                cursor: pointer;
             }
-            body.admin-mobile-shell .modal.pack-form-modal .form-check-label {
+            body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-input:checked {
+                background-color: #0ea5e9 !important;
+                border-color: #0284c7 !important;
+                box-shadow: 0 0 0 3px rgba(14, 165, 233, .18) !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-input:focus {
+                border-color: #0284c7 !important;
+                box-shadow: 0 0 0 3px rgba(14, 165, 233, .22) !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-label {
                 margin: 0 !important;
-                font-size: .86rem;
-                line-height: 1.35;
+                font-size: .8rem;
+                line-height: 1.25;
                 text-align: left;
+                cursor: pointer;
             }
             body.admin-mobile-shell .modal.pack-form-modal .modal-footer {
                 display: grid !important;
