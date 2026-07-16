@@ -152,7 +152,7 @@
                     <div class="display-5 fw-bold text-primary">{{ data_get($twin?->mastery_snapshot, 'average', 0) }}%</div>
                     <div class="rt-muted mb-3">Competency mastery—not a promise of hiring success.</div>
                     <div class="rt-list">
-                        <div class="rt-list-item"><small class="rt-muted">Job evidence match</small><div class="fw-bold" style="color:var(--tx)">{{ $selectedApplication->evidence_match_score }}%</div></div>
+                        <div class="rt-list-item"><small class="rt-muted">Job evidence match</small><div class="fw-bold" style="color:var(--tx)">{{ $selectedApplication->evidence_match_score ?? $selectedApplication->match_score ?? 0 }}%</div></div>
                         <div class="rt-list-item"><small class="rt-muted">Strongest</small><div class="fw-bold text-success">{{ data_get($twin?->mastery_snapshot, 'strongest', 'Not enough data') }}</div></div>
                         <div class="rt-list-item"><small class="rt-muted">Next focus</small><div class="fw-bold text-warning">{{ data_get($twin?->mastery_snapshot, 'weakest', 'Add evidence') }}</div></div>
                     </div>

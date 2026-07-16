@@ -13,6 +13,7 @@ use App\Models\ReadinessProfile;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class AdminNewFeatureConnectionTest extends TestCase
@@ -126,6 +127,33 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertSee('Northstar Labs')
             ->assertSee('Reliability project')
             ->assertSee('Technical panel');
+    }
+
+    public function test_admin_readiness_dashboard_falls_back_when_evidence_score_column_is_missing(): void
+    {
+        Schema::table('job_applications', function ($table) {
+            $table->dropColumn('evidence_match_score');
+        });
+
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active', 'name' => 'Legacy Schema User']);
+
+        JobApplication::create([
+            'user_id' => $user->id,
+            'company_name' => 'Legacy Co',
+            'job_title' => 'Support Associate',
+            'status' => 'tracking',
+            'match_score' => 64,
+            'resume_text' => 'Supported customers and documented fixes.',
+            'job_description' => 'Support customers and communicate clearly.',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.readiness.index'))
+            ->assertOk()
+            ->assertSee('Legacy Schema User')
+            ->assertSee('Legacy Co')
+            ->assertSee('64%');
     }
 
     public function test_admin_can_support_manage_user_readiness_records(): void

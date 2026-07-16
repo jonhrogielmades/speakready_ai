@@ -47,13 +47,12 @@ class JobApplication extends Model
 
     public static function hasColumn(string $column): bool
     {
-        static $columns = null;
-
-        $columns ??= Schema::hasTable('job_applications')
-            ? array_flip(Schema::getColumnListing('job_applications'))
-            : [];
-
-        return isset($columns[$column]);
+        try {
+            return Schema::hasTable('job_applications')
+                && Schema::hasColumn('job_applications', $column);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function setAttribute($key, $value)

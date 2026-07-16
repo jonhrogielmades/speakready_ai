@@ -39,6 +39,8 @@ class AdminReadinessController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $hasEvidenceScore = JobApplication::hasColumn('evidence_match_score');
+
         $stats = [
             'applications' => JobApplication::count(),
             'readiness_profiles' => ReadinessProfile::tableExists() ? ReadinessProfile::count() : 0,
@@ -46,7 +48,7 @@ class AdminReadinessController extends Controller
             'outcomes' => InterviewOutcome::tableExists() ? InterviewOutcome::count() : 0,
             'open_plan_items' => PracticePlanItem::whereNull('completed_at')->count(),
             'avg_match' => (int) round(JobApplication::avg('match_score') ?? 0),
-            'avg_evidence' => (int) round(JobApplication::avg('evidence_match_score') ?? 0),
+            'avg_evidence' => (int) round(JobApplication::avg($hasEvidenceScore ? 'evidence_match_score' : 'match_score') ?? 0),
         ];
 
         $recentStories = ExperienceStory::tableExists()

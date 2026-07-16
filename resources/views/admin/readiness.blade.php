@@ -174,7 +174,7 @@
                             </td>
                             <td>
                                 <span class="badge bg-primary">Match {{ (int) $application->match_score }}%</span>
-                                <span class="badge bg-info">Evidence {{ (int) ($application->evidence_match_score ?? 0) }}%</span>
+                                <span class="badge bg-info">Evidence {{ (int) ($application->evidence_match_score ?? $application->match_score ?? 0) }}%</span>
                                 <div class="item-meta">
                                     Twin {{ $application->readinessProfile ? 'calibrated' : 'pending' }}
                                 </div>
