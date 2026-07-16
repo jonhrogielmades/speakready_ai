@@ -335,7 +335,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-2">
                             <label class="olbl">Level #</label>
-                            <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" required>
+                            <input class="oinp w-100" type="number" name="level_number" value="{{ $level->level_number }}" min="1" max="100" required>
                         </div>
                         <div class="col-md-3">
                             <label class="olbl">Personal Improvement</label>
@@ -500,11 +500,11 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
                             <label class="olbl">Start Level #</label>
-                            <input class="oinp w-100" type="number" name="level_number" required placeholder="e.g. {{ count($levels) + 1 }}">
+                            <input class="oinp w-100" type="number" name="level_number" min="1" max="100" required placeholder="e.g. {{ min(count($levels) + 1, 100) }}">
                         </div>
                         <div class="col-md-4">
                             <label class="olbl">Levels to Generate</label>
-                            <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="30" required>
+                            <input class="oinp w-100" type="number" name="num_levels" value="1" min="1" max="100" required>
                         </div>
                         <div class="col-md-5">
                             <label class="olbl">Personal Improvement</label>
@@ -523,7 +523,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-info px-4 text-white" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Generating...';">Generate Game</button>
+                    <button type="submit" class="btn btn-info px-4 text-white" onclick="this.innerHTML='<i class=\'fa-solid fa-spinner fa-spin\'></i> Generating...';">Generate Games</button>
                 </div>
             </form>
         </div>
@@ -545,7 +545,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-2">
                             <label class="olbl">Level #</label>
-                            <input class="oinp w-100" type="number" name="level_number" required>
+                            <input class="oinp w-100" type="number" name="level_number" min="1" max="100" required>
                         </div>
                         <div class="col-md-3">
                             <label class="olbl">Personal Improvement</label>

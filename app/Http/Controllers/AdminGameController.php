@@ -12,6 +12,9 @@ use Illuminate\Validation\Rule;
 
 class AdminGameController extends Controller
 {
+    private const MAX_LEVEL_NUMBER = 100;
+    private const MAX_LEVELS_PER_GENERATION = 100;
+
     private ?array $gameLevelColumns = null;
 
     public function index()
@@ -60,36 +63,38 @@ class AdminGameController extends Controller
 
     public function generate(Request $request)
     {
-        // Extend max execution time since generating 30 levels could take 1-2 minutes
-        set_time_limit(300);
+        // Extend max execution time since generating up to 100 levels can take several minutes.
+        set_time_limit(900);
 
-        $request->validate([
+        $validated = $request->validate([
             'topic' => 'required|string|max:255',
-            'level_number' => 'required|integer',
-            'num_levels' => 'required|integer|min:1|max:30',
+            'level_number' => 'required|integer|min:1|max:'.self::MAX_LEVEL_NUMBER,
+            'num_levels' => 'required|integer|min:1|max:'.self::MAX_LEVELS_PER_GENERATION,
             'category_id' => ['required', Rule::exists('categories', 'id')->where('type', 'game')],
         ]);
 
-        $startLevel = $request->level_number;
-        $numLevels = $request->num_levels;
-        $topic = $request->topic;
+        $startLevel = (int) $validated['level_number'];
+        $numLevels = (int) $validated['num_levels'];
+        $topic = $validated['topic'];
+        $categoryId = (int) $validated['category_id'];
         
         $difficulties = ['beginner', 'intermediate', 'advanced'];
         $generatedCount = 0;
+        $currentLevelNum = $startLevel;
 
-        for ($i = 0; $i < $numLevels; $i++) {
-            $currentLevelNum = $startLevel + $i;
-            
-            // Skip if level number already exists in this category to avoid unique constraint violation
-            if (GameLevel::where('level_number', $currentLevelNum)->where('category_id', $request->category_id)->exists()) {
+        for ($checkedLevels = 0; $generatedCount < $numLevels && $checkedLevels < self::MAX_LEVEL_NUMBER; $checkedLevels++) {
+            // Skip existing level numbers in this category, then keep scanning for open slots.
+            if (GameLevel::where('level_number', $currentLevelNum)->where('category_id', $categoryId)->exists()) {
+                $currentLevelNum = $this->nextLevelNumber($currentLevelNum);
                 continue;
             }
 
             // Cycle through difficulties to ensure variation
-            $difficulty = $difficulties[$i % 3];
+            $difficulty = $difficulties[$generatedCount % count($difficulties)];
+            $generationNumber = $generatedCount + 1;
             
             // Modify topic slightly to inform AI of difficulty
-            $promptTopic = "{$topic}. Design this specifically for {$difficulty} difficulty level.";
+            $promptTopic = "{$topic}. Design this specifically for {$difficulty} difficulty level. This is generated level {$generationNumber} of {$numLevels}; make it distinct from the other levels in the set.";
             
             try {
                 $gameData = AIService::generateGame($promptTopic);
@@ -102,11 +107,11 @@ class AdminGameController extends Controller
                 $gameData = null;
             }
 
-            $gameData = $this->normalizeGeneratedGameData($gameData, $topic, $difficulty);
+            $gameData = $this->normalizeGeneratedGameData($gameData, $topic, $difficulty, $generationNumber, $numLevels);
 
             if ($gameData) {
                 $gameData['level_number'] = $currentLevelNum;
-                $gameData['category_id'] = $request->category_id;
+                $gameData['category_id'] = $categoryId;
                 $gameData['difficulty'] = $difficulty; // Force the difficulty
                 
                 // Adjust score based on difficulty
@@ -117,10 +122,16 @@ class AdminGameController extends Controller
                 GameLevel::create($this->gameLevelDataForCurrentSchema($gameData));
                 $generatedCount++;
             }
+
+            $currentLevelNum = $this->nextLevelNumber($currentLevelNum);
         }
 
         if ($generatedCount === 0) {
-            return redirect()->route('admin.game')->with('error', 'Failed to generate games. Maybe the level numbers already exist or the AI timed out.');
+            return redirect()->route('admin.game')->with('error', 'No open level slots are available between levels 1 and 100 for this category.');
+        }
+
+        if ($generatedCount < $numLevels) {
+            return redirect()->route('admin.game')->with('success', "Generated {$generatedCount} of {$numLevels} requested Learning Game(s). Only {$generatedCount} open slot(s) were available between levels 1 and 100.");
         }
 
         return redirect()->route('admin.game')->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
@@ -137,7 +148,7 @@ class AdminGameController extends Controller
         }
 
         return [
-            'level_number' => ['required', 'integer', $uniqueRule],
+            'level_number' => ['required', 'integer', 'min:1', 'max:'.self::MAX_LEVEL_NUMBER, $uniqueRule],
             'category_id' => ['required', Rule::exists('categories', 'id')->where('type', 'game')],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -163,9 +174,9 @@ class AdminGameController extends Controller
         ];
     }
 
-    private function normalizeGeneratedGameData(?array $gameData, string $topic, string $difficulty): array
+    private function normalizeGeneratedGameData(?array $gameData, string $topic, string $difficulty, ?int $generationNumber = null, ?int $totalLevels = null): array
     {
-        $fallback = $this->fallbackGameData($topic, $difficulty);
+        $fallback = $this->fallbackGameData($topic, $difficulty, $generationNumber, $totalLevels);
         $gameData = is_array($gameData) ? array_merge($fallback, $gameData) : $fallback;
 
         $gameData['title'] = $this->cleanText($gameData['title'] ?? $fallback['title'], $fallback['title'], 255);
@@ -190,6 +201,11 @@ class AdminGameController extends Controller
         $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount'] ?? $fallback['skill_xp_amount']));
 
         return $gameData;
+    }
+
+    private function nextLevelNumber(int $currentLevelNumber): int
+    {
+        return $currentLevelNumber >= self::MAX_LEVEL_NUMBER ? 1 : $currentLevelNumber + 1;
     }
 
     private function gameLevelDataForCurrentSchema(array $data): array
@@ -233,14 +249,18 @@ class AdminGameController extends Controller
         }
     }
 
-    private function fallbackGameData(string $topic, string $difficulty): array
+    private function fallbackGameData(string $topic, string $difficulty, ?int $generationNumber = null, ?int $totalLevels = null): array
     {
         $topic = $this->cleanText($topic, 'Communication Practice', 120);
         $titleDifficulty = ucfirst($difficulty);
+        $titleSuffix = $generationNumber && $totalLevels && $totalLevels > 1 ? " {$generationNumber}" : '';
+        $partContext = $generationNumber && $totalLevels && $totalLevels > 1
+            ? " This is part {$generationNumber} of {$totalLevels} in the generated set."
+            : '';
 
         return [
-            'title' => "{$titleDifficulty} {$topic} Challenge",
-            'description' => "A structured practice level for improving {$topic} through focused interview-style prompts.",
+            'title' => "{$titleDifficulty} {$topic} Challenge{$titleSuffix}",
+            'description' => "A structured practice level for improving {$topic} through focused interview-style prompts.{$partContext}",
             'mission_text' => "1. Describe your current challenge with {$topic}.\n2. Share one specific example where this skill mattered.\n3. Explain the action you took.\n4. Name the result or lesson learned.\n5. Describe how you will improve next time.",
             'target_position' => 'Better Communication',
             'skill_focus' => $this->skillFocusForTopic($topic),

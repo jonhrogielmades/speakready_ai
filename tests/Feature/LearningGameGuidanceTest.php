@@ -134,6 +134,36 @@ class LearningGameGuidanceTest extends TestCase
         ]);
     }
 
+    public function test_admin_game_generate_creates_requested_count_while_skipping_existing_levels(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $category = $this->category(['type' => 'game']);
+        $this->gameLevel($category, ['level_number' => 7, 'title' => 'Existing Level 7']);
+        $this->gameLevel($category, ['level_number' => 8, 'title' => 'Existing Level 8']);
+
+        $this->withAiProviderPriority('unsupported', function () use ($admin, $category): void {
+            $this->actingAs($admin)
+                ->post(route('admin.game.generate'), [
+                    'topic' => 'Interview Confidence',
+                    'level_number' => 7,
+                    'num_levels' => 30,
+                    'category_id' => $category->id,
+                ])
+                ->assertRedirect(route('admin.game'))
+                ->assertSessionHas('success', 'Successfully generated 30 Learning Game(s)!');
+        });
+
+        $generatedLevelNumbers = GameLevel::where('category_id', $category->id)
+            ->whereBetween('level_number', [9, 38])
+            ->orderBy('level_number')
+            ->pluck('level_number')
+            ->all();
+
+        $this->assertCount(30, $generatedLevelNumbers);
+        $this->assertSame(range(9, 38), $generatedLevelNumbers);
+        $this->assertSame(32, GameLevel::where('category_id', $category->id)->count());
+    }
+
     public function test_success_criteria_are_parsed_as_a_clean_checklist(): void
     {
         $level = new GameLevel([
