@@ -948,6 +948,10 @@ class UserController extends Controller
 
     public function coach()
     {
+        if (! Setting::enabled('aic_enable')) {
+            return redirect()->route('dashboard')->with('error', 'The AI coach is currently disabled by the administrator.');
+        }
+
         $recentConversations = ChatbotConversation::where('user_id', Auth::id())
             ->where('updated_at', '>=', now()->subDays(7))
             ->orderBy('updated_at', 'desc')
@@ -963,6 +967,13 @@ class UserController extends Controller
 
     public function coachChat(Request $request, CoachLanguageService $coachLanguages)
     {
+        if (! Setting::enabled('aic_enable')) {
+            return response()->json([
+                'response' => 'The AI coach is currently disabled by the administrator.',
+                'error' => 'coach_disabled',
+            ], 403);
+        }
+
         $request->validate([
             'message' => 'required|string',
             'history' => 'array',
@@ -1260,7 +1271,7 @@ class UserController extends Controller
                 ->with('error', 'That learning category is no longer available.');
         }
 
-        $query = GameLevel::orderBy('level_number', 'asc');
+        $query = GameLevel::where('is_hidden', false)->orderBy('level_number', 'asc');
         if ($request->has('category_id')) {
             $query->where('category_id', $request->category_id);
         }
@@ -1280,6 +1291,10 @@ class UserController extends Controller
 
     public function voiceRehearsal()
     {
+        if (! Setting::enabled('vr_recording')) {
+            return redirect()->route('dashboard')->with('error', 'Voice rehearsal is currently disabled by the administrator.');
+        }
+
         $history = VoiceSession::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->get();
@@ -1289,6 +1304,10 @@ class UserController extends Controller
 
     public function generateVoicePrompt(Request $request)
     {
+        if (! Setting::enabled('vr_recording')) {
+            return response()->json(['error' => 'Voice rehearsal is currently disabled by the administrator.'], 403);
+        }
+
         $validated = $request->validate([
             'category' => 'required|string|max:120',
         ]);
@@ -1332,6 +1351,10 @@ class UserController extends Controller
 
     public function analyzeVoiceSession(Request $request)
     {
+        if (! Setting::enabled('vr_recording')) {
+            return response()->json(['error' => 'Voice rehearsal is currently disabled by the administrator.'], 403);
+        }
+
         $validated = $request->validate([
             'prompt' => 'required|string|max:5000',
             'transcript' => 'required|string|max:20000',
@@ -1357,6 +1380,10 @@ class UserController extends Controller
 
     public function saveVoiceSession(Request $request)
     {
+        if (! Setting::enabled('vr_recording')) {
+            return response()->json(['error' => 'Voice rehearsal is currently disabled by the administrator.'], 403);
+        }
+
         $validated = $request->validate([
             'category' => 'nullable|string|max:120',
             'prompt' => 'nullable|string|max:5000',
@@ -1945,6 +1972,10 @@ class UserController extends Controller
 
     public function modules(Request $request)
     {
+        if (! Setting::enabled('ll_modules')) {
+            return redirect()->route('dashboard')->with('error', 'Learning modules are currently disabled by the administrator.');
+        }
+
         $categories = LearningModule::where('status', 'published')
             ->select('category')
             ->distinct()
@@ -1972,7 +2003,15 @@ class UserController extends Controller
 
     public function moduleShow($id)
     {
+        if (! Setting::enabled('ll_modules')) {
+            abort(404);
+        }
+
         $module = LearningModule::with(['chapters', 'resources', 'quizzes', 'activities'])->where('status', 'published')->findOrFail($id);
+
+        if (! Setting::enabled('ll_quizzes')) {
+            $module->setRelation('quizzes', collect());
+        }
 
         // Track view
         $module->increment('views');

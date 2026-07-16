@@ -1,0 +1,294 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Category;
+use App\Models\ExperienceStory;
+use App\Models\GameLevel;
+use App\Models\InterviewOutcome;
+use App\Models\InterviewPack;
+use App\Models\JobApplication;
+use App\Models\Profile;
+use App\Models\ReadinessProfile;
+use App\Models\Setting;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AdminNewFeatureConnectionTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_created_interview_pack_is_available_and_applied_on_user_side(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['type' => 'core']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.packs.store'), [
+                'name' => 'Healthcare Support Panel',
+                'slug' => 'healthcare-support-panel',
+                'company' => 'North Clinic',
+                'role_family' => 'Healthcare',
+                'difficulty' => 'hard',
+                'interview_focus' => 'Empathy',
+                'company_persona' => 'Clinical Hiring Panel',
+                'question_types_text' => "Behavioral\nSituational",
+                'sample_questions_text' => "Tell me about a time you calmed an upset patient.\nHow do you prioritize urgent service requests?",
+                'description' => 'Healthcare support interview practice.',
+                'pressure_mode' => '1',
+                'status' => 'active',
+            ])
+            ->assertRedirect(route('admin.packs.index'));
+
+        $pack = InterviewPack::where('slug', 'healthcare-support-panel')->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('user.packs.index'))
+            ->assertOk()
+            ->assertSee('Healthcare Support Panel')
+            ->assertSee('North Clinic');
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), [
+                'category_id' => $category->id,
+                'interview_pack_id' => $pack->id,
+                'target_position' => 'Healthcare Support Associate',
+                'difficulty' => 'medium',
+                'num_questions' => 5,
+                'response_mode' => 'text',
+                'interview_focus' => 'General Practice',
+            ])
+            ->assertRedirect(route('interview.session'));
+
+        $this->assertDatabaseHas('interview_sessions', [
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'interview_pack_id' => $pack->id,
+            'difficulty' => 'hard',
+            'pressure_mode' => true,
+            'company_persona' => 'Clinical Hiring Panel',
+        ]);
+
+        $this->assertDatabaseHas('questions', [
+            'category_id' => $category->id,
+            'question_text' => 'Tell me about a time you calmed an upset patient.',
+        ]);
+    }
+
+    public function test_admin_readiness_dashboard_surfaces_new_career_features(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active', 'name' => 'Career Candidate']);
+        $application = JobApplication::create([
+            'user_id' => $user->id,
+            'company_name' => 'Northstar Labs',
+            'job_title' => 'Software Engineer',
+            'status' => 'interviewing',
+            'match_score' => 82,
+            'evidence_match_score' => 76,
+            'resume_text' => 'Built reliable APIs.',
+            'job_description' => 'Build software and improve reliability.',
+        ]);
+
+        ReadinessProfile::create([
+            'user_id' => $user->id,
+            'job_application_id' => $application->id,
+            'target_role' => 'Software Engineer',
+            'competency_map' => ['Reliability'],
+            'calibrated_at' => now(),
+        ]);
+
+        ExperienceStory::create([
+            'user_id' => $user->id,
+            'title' => 'Reliability project',
+            'context_type' => 'work',
+            'action' => 'Implemented caching and load tests.',
+            'facts_confirmed' => true,
+            'visibility' => 'private',
+        ]);
+
+        InterviewOutcome::create([
+            'user_id' => $user->id,
+            'job_application_id' => $application->id,
+            'interview_date' => now()->toDateString(),
+            'interview_format' => 'panel',
+            'result' => 'advanced',
+            'stage' => 'Technical panel',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.readiness.index'))
+            ->assertOk()
+            ->assertSee('Readiness Careers')
+            ->assertSee('Career Candidate')
+            ->assertSee('Northstar Labs')
+            ->assertSee('Reliability project')
+            ->assertSee('Technical panel');
+    }
+
+    public function test_admin_can_support_manage_user_readiness_records(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $application = JobApplication::create([
+            'user_id' => $user->id,
+            'company_name' => 'Acme Health',
+            'job_title' => 'Support Analyst',
+            'status' => 'tracking',
+            'resume_text' => 'Handled support tickets and improved documentation.',
+            'job_description' => 'Support users, communicate clearly, and improve service quality.',
+        ]);
+        $story = ExperienceStory::create([
+            'user_id' => $user->id,
+            'title' => 'Documentation improvement',
+            'context_type' => 'work',
+            'action' => 'I rewrote the onboarding documentation.',
+            'result' => 'Reduced repeat questions.',
+            'facts_confirmed' => false,
+            'visibility' => 'private',
+        ]);
+        $outcome = InterviewOutcome::create([
+            'user_id' => $user->id,
+            'job_application_id' => $application->id,
+            'interview_date' => now()->toDateString(),
+            'interview_format' => 'video',
+            'result' => 'pending',
+            'stage' => 'HR screen',
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.readiness.applications.update', $application), [
+                'status' => 'interviewing',
+                'interview_stage' => 'Technical panel',
+                'interview_date' => now()->addWeek()->toDateString(),
+                'notes' => 'Needs panel prep support.',
+            ])
+            ->assertRedirect(route('admin.readiness.index'));
+
+        $this->assertDatabaseHas('job_applications', [
+            'id' => $application->id,
+            'status' => 'interviewing',
+            'interview_stage' => 'Technical panel',
+            'notes' => 'Needs panel prep support.',
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.readiness.stories.update', $story), [
+                'facts_confirmed' => '1',
+                'visibility' => 'support_review',
+            ])
+            ->assertRedirect(route('admin.readiness.index'));
+
+        $this->assertDatabaseHas('experience_stories', [
+            'id' => $story->id,
+            'facts_confirmed' => true,
+            'visibility' => 'support_review',
+        ]);
+        $this->assertDatabaseHas('readiness_profiles', [
+            'user_id' => $user->id,
+            'job_application_id' => $application->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.readiness.outcomes.update', $outcome), [
+                'result' => 'offer',
+                'stage' => 'Final interview',
+                'allow_anonymous_learning' => '1',
+            ])
+            ->assertRedirect(route('admin.readiness.index'));
+
+        $this->assertDatabaseHas('interview_outcomes', [
+            'id' => $outcome->id,
+            'result' => 'offer',
+            'stage' => 'Final interview',
+            'allow_anonymous_learning' => true,
+        ]);
+        $this->assertDatabaseHas('job_applications', [
+            'id' => $application->id,
+            'status' => 'offer',
+        ]);
+    }
+
+    public function test_hidden_learning_games_do_not_render_on_user_side(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        $category = $this->category(['type' => 'game']);
+
+        $this->gameLevel($category, ['title' => 'Visible Confidence Sprint', 'level_number' => 1, 'is_hidden' => false]);
+        $this->gameLevel($category, ['title' => 'Hidden Draft Challenge', 'level_number' => 2, 'is_hidden' => true]);
+
+        $this->actingAs($user)
+            ->get(route('user.learning', ['category_id' => $category->id]))
+            ->assertOk()
+            ->assertSee('Visible Confidence Sprint')
+            ->assertDontSee('Hidden Draft Challenge');
+    }
+
+    public function test_admin_settings_toggles_are_enforced_on_user_features(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id]);
+
+        Setting::setVal('aic_enable', false, 'general', 'boolean');
+        $this->actingAs($user)
+            ->get(route('user.coach'))
+            ->assertRedirect(route('dashboard'));
+        $this->actingAs($user)
+            ->postJson(route('user.coach.chat'), ['message' => 'Help me prepare.', 'history' => []])
+            ->assertStatus(403)
+            ->assertJsonPath('error', 'coach_disabled');
+
+        Setting::setVal('vr_recording', false, 'general', 'boolean');
+        $this->actingAs($user)
+            ->get(route('user.drills.voice'))
+            ->assertRedirect(route('dashboard'));
+        $this->actingAs($user)
+            ->postJson(route('user.drills.voice.save'), ['category' => 'Behavioral'])
+            ->assertStatus(403);
+
+        Setting::setVal('ll_modules', false, 'general', 'boolean');
+        $this->actingAs($user)
+            ->get(route('user.modules.index'))
+            ->assertRedirect(route('dashboard'));
+
+        Setting::setVal('acc_registration', false, 'general', 'boolean');
+        $this->post(route('register'), [
+            'name' => 'Blocked User',
+            'email' => 'blocked@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertDatabaseMissing('users', ['email' => 'blocked@example.com']);
+    }
+
+    private function category(array $overrides = []): Category
+    {
+        return Category::create(array_merge([
+            'title' => 'Behavioral '.uniqid(),
+            'description' => 'Practice category',
+            'status' => 'active',
+            'type' => 'core',
+        ], $overrides));
+    }
+
+    private function gameLevel(Category $category, array $overrides = []): GameLevel
+    {
+        return GameLevel::create(array_merge([
+            'category_id' => $category->id,
+            'level_number' => 1,
+            'title' => 'Practice Challenge',
+            'description' => 'Practice clear responses.',
+            'mission_text' => '1. Introduce yourself clearly.',
+            'target_position' => 'Better Communication',
+            'difficulty' => 'beginner',
+            'required_score' => 60,
+            'xp_reward' => 100,
+            'energy_cost' => 1,
+            'is_hidden' => false,
+        ], $overrides));
+    }
+}

@@ -73,6 +73,11 @@ class Setting extends Model
         return $setting->value ?? $default;
     }
 
+    public static function enabled(string $key, bool $default = true): bool
+    {
+        return (bool) self::getVal($key, $default);
+    }
+
     public static function supportedLanguages(): array
     {
         return self::SUPPORTED_LANGUAGES;

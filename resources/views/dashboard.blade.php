@@ -1373,7 +1373,7 @@
                 <div class="sr-hero-inner">
                     <div class="sr-user-row">
                         <div class="sr-welcome-copy">
-                            <h3 class="sr-title" id="dashboard-welcome-title">Good day! <span class="sr-title-name">{{ $welcomeName }}</span><span class="sr-wave" aria-hidden="true">&#128075;</span></h3>
+                            <h3 class="sr-title" id="dashboard-welcome-title">Hi! <span class="sr-title-name">{{ $welcomeName }}</span><span class="sr-wave" aria-hidden="true">&#128075;</span></h3>
                             <p class="sr-subtitle">Track readiness, progress, and coaching to ace your next interview.</p>
                         </div>
                     </div>

@@ -2493,6 +2493,7 @@
                   <a href="{{ route('admin.users.index') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i><span>Users</span></a>
                   <a href="{{ route('admin.categories') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i><span>Categories</span></a>
                   <a href="{{ route('admin.questions') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i><span>Questions</span></a>
+                  <a href="{{ route('admin.packs.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i><span>Packs</span></a>
                   <a href="{{ route('admin.modules') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i><span>Modules</span></a>
                   <a href="{{ route('admin.game') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Games</span></a>
                </div>
@@ -2501,6 +2502,7 @@
                <div class="mob-profile-grid">
                   <a href="{{ route('admin.sessions.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.sessions.index') || request()->routeIs('admin.sessions.show') || request()->routeIs('admin.sessions.review') ? 'active' : '' }}"><i class="fa-solid fa-video"></i><span>Sessions</span></a>
                   <a href="{{ route('admin.sessions.archive') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>Archive</span></a>
+                  <a href="{{ route('admin.readiness.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.readiness.*') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i><span>Readiness</span></a>
                   <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.index') || request()->routeIs('admin.feedback.show') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>Feedback</span></a>
                   <a href="{{ route('admin.feedback.complaints') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i><span>Complaints</span></a>
                   <a href="{{ route('admin.contacts.index') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>

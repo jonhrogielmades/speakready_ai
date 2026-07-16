@@ -348,6 +348,10 @@ class InterviewController extends Controller
 
     public function chatReply(Request $request)
     {
+        if (! Setting::enabled('int_follow_up')) {
+            return response()->json(['error' => 'Follow-up coaching is disabled by the administrator.'], 403);
+        }
+
         $session = $this->activeInterviewSession();
         if (! $session) {
             return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);

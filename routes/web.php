@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminInterviewPackController;
+use App\Http\Controllers\AdminReadinessController;
 use App\Http\Controllers\AdminSessionController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\AdminUserController;
@@ -187,6 +189,20 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/questions/import', [AdminController::class, 'importQuestions'])->name('admin.questions.import');
     Route::post('/admin/questions/import-dataset', [AdminController::class, 'importDataset'])->name('admin.questions.import-dataset');
     Route::get('/admin/questions/export', [AdminController::class, 'exportQuestions'])->name('admin.questions.export');
+
+    Route::prefix('admin/interview-packs')->name('admin.packs.')->group(function () {
+        Route::get('/', [AdminInterviewPackController::class, 'index'])->name('index');
+        Route::post('/', [AdminInterviewPackController::class, 'store'])->name('store');
+        Route::put('/{pack}', [AdminInterviewPackController::class, 'update'])->name('update');
+        Route::delete('/{pack}', [AdminInterviewPackController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::prefix('admin/readiness')->name('admin.readiness.')->group(function () {
+        Route::get('/', [AdminReadinessController::class, 'index'])->name('index');
+        Route::patch('/applications/{application}', [AdminReadinessController::class, 'updateApplication'])->name('applications.update');
+        Route::patch('/stories/{story}', [AdminReadinessController::class, 'updateStory'])->name('stories.update');
+        Route::patch('/outcomes/{outcome}', [AdminReadinessController::class, 'updateOutcome'])->name('outcomes.update');
+    });
 
     Route::get('/admin/modules', [AdminController::class, 'modulesDashboard'])->name('admin.modules');
 

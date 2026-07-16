@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Announcement;
 use App\Notifications\SystemNotification;
@@ -23,6 +24,12 @@ class AdminNotificationController extends Controller
 
     public function store(Request $request)
     {
+        if (! Setting::enabled('notif_sys')) {
+            return redirect()
+                ->route('admin.notifications.index')
+                ->with('error', 'System notifications are disabled in admin settings.');
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'message' => 'required|string',

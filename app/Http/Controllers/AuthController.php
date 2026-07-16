@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Profile;
@@ -13,6 +14,12 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        if (! Setting::enabled('acc_registration')) {
+            return back()->withErrors([
+                'email' => 'New account registration is currently disabled by the administrator.',
+            ])->withInput($request->only('name', 'email'));
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -155,6 +162,12 @@ class AuthController extends Controller
             }
 
             if (!$user) {
+                if (! Setting::enabled('acc_registration')) {
+                    return redirect('/')->withErrors([
+                        'email' => 'New account registration is currently disabled by the administrator.',
+                    ])->withInput(['email' => $googleUser->email]);
+                }
+
                 $user = User::create([
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
