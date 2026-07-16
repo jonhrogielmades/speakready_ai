@@ -1553,6 +1553,7 @@
             @include('partials.admin-motion-title-svg')
          </div>
       </div>
+      @stack('modals')
 
       <style>
          @media (max-width: 767px) {

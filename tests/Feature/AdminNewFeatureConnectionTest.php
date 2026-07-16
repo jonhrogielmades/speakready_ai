@@ -103,13 +103,22 @@ class AdminNewFeatureConnectionTest extends TestCase
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
 
-        $this->actingAs($admin)
-            ->get(route('admin.packs.index'))
+        $response = $this->actingAs($admin)->get(route('admin.packs.index'));
+        $html = $response->baseResponse->getContent();
+
+        $response
             ->assertOk()
             ->assertSee('pack-form-modal', false)
             ->assertSee('modal-dialog modal-lg modal-dialog-scrollable', false)
+            ->assertSee('body.admin-shell .modal.pack-form-modal', false)
             ->assertSee('height: calc(100dvh - 32px) !important', false)
             ->assertSee('overflow-y: auto', false);
+
+        $this->assertStringNotContainsString('#sec-admin-packs .pack-form-modal', $html);
+        $this->assertGreaterThan(
+            strpos($html, 'id="sec-admin-packs"'),
+            strpos($html, 'id="addPackModal"')
+        );
     }
 
     public function test_admin_readiness_dashboard_surfaces_new_career_features(): void

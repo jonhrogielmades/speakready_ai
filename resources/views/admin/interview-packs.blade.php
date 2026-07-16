@@ -70,7 +70,8 @@
             font-size: 1.65rem;
             margin-top: 6px;
         }
-        #sec-admin-packs .pack-form-modal .modal-dialog {
+        body.admin-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable,
+        body.admin-mobile-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable {
             width: min(980px, calc(100vw - 32px));
             max-width: min(980px, calc(100vw - 32px));
             margin: 16px auto !important;
@@ -79,17 +80,21 @@
             display: flex !important;
             align-items: stretch !important;
         }
-        #sec-admin-packs .pack-form-modal .modal-content {
+        body.admin-shell .modal.pack-form-modal .modal-content,
+        body.admin-mobile-shell .modal.pack-form-modal .modal-content {
             height: 100% !important;
             max-height: 100% !important;
             display: flex;
             flex-direction: column;
         }
-        #sec-admin-packs .pack-form-modal .modal-header,
-        #sec-admin-packs .pack-form-modal .modal-footer {
+        body.admin-shell .modal.pack-form-modal .modal-header,
+        body.admin-shell .modal.pack-form-modal .modal-footer,
+        body.admin-mobile-shell .modal.pack-form-modal .modal-header,
+        body.admin-mobile-shell .modal.pack-form-modal .modal-footer {
             flex: 0 0 auto;
         }
-        #sec-admin-packs .pack-form-modal .modal-body {
+        body.admin-shell .modal.pack-form-modal .modal-body,
+        body.admin-mobile-shell .modal.pack-form-modal .modal-body {
             flex: 1 1 auto;
             min-height: 0;
             max-height: none !important;
@@ -97,21 +102,26 @@
             overflow-x: hidden;
             padding: 18px 20px;
         }
-        #sec-admin-packs .pack-form-modal .modal-footer {
+        body.admin-shell .modal.pack-form-modal .modal-footer,
+        body.admin-mobile-shell .modal.pack-form-modal .modal-footer {
             position: static;
             bottom: auto;
             z-index: 2;
         }
-        #sec-admin-packs .pack-form-modal .form-label {
+        body.admin-shell .modal.pack-form-modal .form-label,
+        body.admin-mobile-shell .modal.pack-form-modal .form-label {
             margin-bottom: 5px;
             font-size: .86rem;
             font-weight: 800;
         }
-        #sec-admin-packs .pack-form-modal .form-control,
-        #sec-admin-packs .pack-form-modal .form-select {
+        body.admin-shell .modal.pack-form-modal .form-control,
+        body.admin-shell .modal.pack-form-modal .form-select,
+        body.admin-mobile-shell .modal.pack-form-modal .form-control,
+        body.admin-mobile-shell .modal.pack-form-modal .form-select {
             min-height: 44px;
         }
-        #sec-admin-packs .pack-form-modal textarea.form-control {
+        body.admin-shell .modal.pack-form-modal textarea.form-control,
+        body.admin-mobile-shell .modal.pack-form-modal textarea.form-control {
             min-height: auto;
         }
         @media (max-width: 991.98px) {
@@ -123,14 +133,16 @@
                 grid-template-columns: 1fr;
                 width: 100%;
             }
-            #sec-admin-packs .pack-form-modal .modal-dialog {
+            body.admin-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable,
+            body.admin-mobile-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable {
                 width: calc(100vw - 18px);
                 max-width: calc(100vw - 18px);
                 margin: 9px auto !important;
                 height: calc(100dvh - 18px) !important;
                 min-height: 0 !important;
             }
-            #sec-admin-packs .pack-form-modal .modal-content {
+            body.admin-shell .modal.pack-form-modal .modal-content,
+            body.admin-mobile-shell .modal.pack-form-modal .modal-content {
                 max-height: 100% !important;
             }
         }
@@ -234,14 +246,16 @@
             {{ $packs->links('pagination::bootstrap-5') }}
         </div>
     </div>
+</div>
+@endsection
 
+@push('modals')
     @include('admin.partials.pack-form-modal', ['modalId' => 'addPackModal', 'title' => 'Add Interview Pack', 'action' => route('admin.packs.store'), 'method' => 'POST', 'pack' => null])
 
     @foreach($packs as $pack)
         @include('admin.partials.pack-form-modal', ['modalId' => 'editPackModal'.$pack->id, 'title' => 'Edit Interview Pack', 'action' => route('admin.packs.update', $pack), 'method' => 'PUT', 'pack' => $pack])
     @endforeach
-</div>
-@endsection
+@endpush
 
 @if($errors->any() && old('_pack_modal_id'))
     @push('scripts')
