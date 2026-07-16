@@ -145,6 +145,38 @@ class AdminNewFeatureConnectionTest extends TestCase
         );
     }
 
+    public function test_interview_pack_mobile_ui_uses_cards_and_compact_switch(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        InterviewPack::create([
+            'name' => 'Mobile Support Pack',
+            'slug' => 'mobile-support-pack',
+            'company' => 'Mobile Co',
+            'role_family' => 'Support',
+            'difficulty' => 'medium',
+            'interview_focus' => 'Communication',
+            'question_types' => ['Behavioral', 'Situational'],
+            'sample_questions' => ['Tell me about a time you helped a customer.'],
+            'status' => 'active',
+            'pressure_mode' => false,
+        ]);
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->actingAs($admin)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('admin.packs.index'))
+            ->assertOk()
+            ->assertSee('pack-table-wrap', false)
+            ->assertSee('pack-mobile-list', false)
+            ->assertSee('pack-mobile-card', false)
+            ->assertSee('Mobile Support Pack')
+            ->assertSee('Mobile Co')
+            ->assertSee('body.admin-mobile-shell .modal.pack-form-modal .form-check-input', false)
+            ->assertSee('width: 42px !important', false)
+            ->assertSee('for="addPackModal_name"', false)
+            ->assertSee('id="addPackModal_pressure_mode"', false);
+    }
+
     public function test_admin_readiness_dashboard_surfaces_new_career_features(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

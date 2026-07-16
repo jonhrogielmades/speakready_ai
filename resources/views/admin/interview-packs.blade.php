@@ -50,6 +50,9 @@
             flex-wrap: wrap;
             gap: 6px;
         }
+        #sec-admin-packs .pack-mobile-list {
+            display: none;
+        }
         #sec-admin-packs .stat-card {
             background: var(--sf);
             border: 1px solid var(--bd);
@@ -133,6 +136,9 @@
                 grid-template-columns: 1fr;
                 width: 100%;
             }
+            #sec-admin-packs .pack-filters .btn {
+                width: 100%;
+            }
             body.admin-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable,
             body.admin-mobile-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable {
                 width: calc(100vw - 18px);
@@ -144,6 +150,136 @@
             body.admin-shell .modal.pack-form-modal .modal-content,
             body.admin-mobile-shell .modal.pack-form-modal .modal-content {
                 max-height: 100% !important;
+            }
+        }
+        @media (max-width: 767.98px) {
+            #sec-admin-packs .pack-panel {
+                border-radius: 12px;
+                overflow: visible;
+                background: transparent;
+                border: 0;
+            }
+            #sec-admin-packs .pack-panel-header {
+                padding: 14px;
+                border: 1px solid var(--bd);
+                border-radius: 12px;
+                background: var(--sf);
+                margin-bottom: 12px;
+            }
+            #sec-admin-packs .pack-table-wrap {
+                display: none !important;
+            }
+            #sec-admin-packs .pack-mobile-list {
+                display: grid;
+                gap: 12px;
+            }
+            #sec-admin-packs .pack-mobile-card {
+                background: var(--sf);
+                border: 1px solid var(--bd);
+                border-radius: 12px;
+                padding: 14px;
+                box-shadow: 0 10px 26px rgba(15, 23, 42, .08);
+            }
+            #sec-admin-packs .pack-mobile-head {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            #sec-admin-packs .pack-mobile-title {
+                min-width: 0;
+                color: var(--tx);
+                font-weight: 800;
+                font-size: .94rem;
+                line-height: 1.2;
+                overflow-wrap: anywhere;
+            }
+            #sec-admin-packs .pack-mobile-slug {
+                color: var(--tx3);
+                font-size: .72rem;
+                line-height: 1.25;
+                text-align: right;
+                overflow-wrap: anywhere;
+                max-width: 42%;
+            }
+            #sec-admin-packs .pack-mobile-meta {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+                margin-bottom: 12px;
+            }
+            #sec-admin-packs .pack-mobile-field {
+                min-width: 0;
+                padding: 10px;
+                border-radius: 10px;
+                background: var(--bg3);
+                border: 1px solid color-mix(in srgb, var(--bd) 80%, transparent);
+            }
+            #sec-admin-packs .pack-mobile-field span {
+                display: block;
+                color: var(--tx3);
+                font-size: .66rem;
+                font-weight: 800;
+                letter-spacing: .04em;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+            #sec-admin-packs .pack-mobile-field strong {
+                display: block;
+                color: var(--tx);
+                font-size: .8rem;
+                line-height: 1.25;
+                overflow-wrap: anywhere;
+            }
+            #sec-admin-packs .pack-mobile-badges {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+            #sec-admin-packs .pack-mobile-actions {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+            #sec-admin-packs .pack-mobile-actions form {
+                margin: 0;
+            }
+            #sec-admin-packs .pack-mobile-actions .btn {
+                width: 100%;
+                min-height: 42px;
+                border-radius: 10px !important;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+            #sec-admin-packs .pack-mobile-empty {
+                border: 1px solid var(--bd);
+                border-radius: 12px;
+                padding: 28px 14px;
+                text-align: center;
+                color: var(--tx3);
+                background: var(--sf);
+            }
+            #sec-admin-packs .pack-pagination {
+                border: 1px solid var(--bd) !important;
+                border-radius: 12px;
+                background: var(--sf);
+                margin-top: 12px;
+            }
+        }
+        @media (max-width: 380px) {
+            #sec-admin-packs .pack-mobile-head {
+                flex-direction: column;
+                gap: 4px;
+            }
+            #sec-admin-packs .pack-mobile-slug {
+                max-width: 100%;
+                text-align: left;
+            }
+            #sec-admin-packs .pack-mobile-meta {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -188,7 +324,7 @@
                 <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-filter me-1"></i> Filter</button>
             </form>
         </div>
-        <div class="table-responsive">
+        <div class="table-responsive pack-table-wrap">
             <table class="table pack-table mb-0">
                 <thead>
                     <tr>
@@ -242,7 +378,61 @@
                 </tbody>
             </table>
         </div>
-        <div class="p-3 border-top" style="border-color:var(--bd)!important">
+        <div class="pack-mobile-list">
+            @forelse($packs as $pack)
+                <article class="pack-mobile-card">
+                    <div class="pack-mobile-head">
+                        <div class="pack-mobile-title">{{ $pack->name }}</div>
+                        <div class="pack-mobile-slug">{{ $pack->slug }}</div>
+                    </div>
+                    <div class="pack-mobile-badges">
+                        <span class="badge bg-{{ $pack->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($pack->status) }}</span>
+                        <span class="badge bg-{{ $pack->pressure_mode ? 'danger' : 'info' }}">{{ $pack->pressure_mode ? 'Pressure' : 'Standard' }}</span>
+                    </div>
+                    <div class="pack-mobile-meta">
+                        <div class="pack-mobile-field">
+                            <span>Audience</span>
+                            <strong>{{ $pack->company ?: 'General' }}</strong>
+                        </div>
+                        <div class="pack-mobile-field">
+                            <span>Role</span>
+                            <strong>{{ $pack->role_family ?: 'Any role' }}</strong>
+                        </div>
+                        <div class="pack-mobile-field">
+                            <span>Mode</span>
+                            <strong>{{ ucfirst($pack->difficulty) }} / {{ $pack->interview_focus }}</strong>
+                        </div>
+                        <div class="pack-mobile-field">
+                            <span>Questions</span>
+                            <strong>{{ count($pack->sample_questions ?? []) }} samples</strong>
+                        </div>
+                        <div class="pack-mobile-field">
+                            <span>Types</span>
+                            <strong>{{ implode(', ', $pack->question_types ?? []) ?: 'General' }}</strong>
+                        </div>
+                        <div class="pack-mobile-field">
+                            <span>Sessions</span>
+                            <strong>{{ $pack->sessions_count }}</strong>
+                        </div>
+                    </div>
+                    <div class="pack-mobile-actions">
+                        <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editPackModal{{ $pack->id }}" aria-label="Edit {{ $pack->name }}">
+                            <i class="fa-solid fa-pen me-1"></i> Edit
+                        </button>
+                        <form action="{{ route('admin.packs.destroy', $pack) }}" method="POST" onsubmit="return confirm('Remove this interview pack from the admin library?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Delete {{ $pack->name }}">
+                                <i class="fa-solid fa-trash me-1"></i> Delete
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            @empty
+                <div class="pack-mobile-empty">No interview packs found.</div>
+            @endforelse
+        </div>
+        <div class="p-3 border-top pack-pagination" style="border-color:var(--bd)!important">
             {{ $packs->links('pagination::bootstrap-5') }}
         </div>
     </div>
@@ -294,12 +484,13 @@
                 max-height: none !important;
                 overflow-y: auto !important;
                 overflow-x: hidden !important;
-                padding: 14px !important;
+                padding: 18px 14px 14px !important;
+                scroll-padding-top: 16px;
             }
             body.admin-mobile-shell .modal.pack-form-modal .modal-body .row {
                 margin-left: -5px !important;
                 margin-right: -5px !important;
-                --bs-gutter-y: .75rem;
+                --bs-gutter-y: .82rem;
             }
             body.admin-mobile-shell .modal.pack-form-modal .modal-body .row > [class*="col-"] {
                 min-width: 0;
@@ -307,9 +498,14 @@
                 padding-right: 5px !important;
             }
             body.admin-mobile-shell .modal.pack-form-modal .form-label {
-                margin-bottom: 4px;
-                font-size: .78rem;
+                display: block !important;
+                margin: 0 0 5px !important;
+                color: var(--tx) !important;
+                -webkit-text-fill-color: var(--tx) !important;
+                font-size: .76rem;
                 line-height: 1.2;
+                font-weight: 800;
+                opacity: 1 !important;
             }
             body.admin-mobile-shell .modal.pack-form-modal :is(.form-control, .form-select) {
                 min-height: 42px !important;
@@ -319,12 +515,32 @@
                 min-height: 74px !important;
             }
             body.admin-mobile-shell .modal.pack-form-modal .form-check {
-                align-items: flex-start;
-                gap: 8px;
+                display: flex !important;
+                align-items: center;
+                gap: 10px;
+                min-height: 46px;
+                margin: 2px 0 0 !important;
+                padding: 10px 12px !important;
+                border: 1px solid var(--bd);
+                border-radius: 12px;
+                background: var(--bg3);
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .form-check-input {
+                flex: 0 0 auto !important;
+                width: 42px !important;
+                min-width: 42px !important;
+                max-width: 42px !important;
+                height: 24px !important;
+                min-height: 24px !important;
+                margin: 0 !important;
+                border-radius: 999px !important;
+                padding: 0 !important;
             }
             body.admin-mobile-shell .modal.pack-form-modal .form-check-label {
+                margin: 0 !important;
                 font-size: .86rem;
                 line-height: 1.35;
+                text-align: left;
             }
             body.admin-mobile-shell .modal.pack-form-modal .modal-footer {
                 display: grid !important;
