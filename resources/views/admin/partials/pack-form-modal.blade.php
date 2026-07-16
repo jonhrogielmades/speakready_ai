@@ -5,8 +5,8 @@
     $sampleQuestionsText = $pack ? implode("\n", $pack->sample_questions ?? []) : '';
     $pressureModeChecked = $useOldInput ? old('pressure_mode') : ($pack->pressure_mode ?? false);
 @endphp
-<div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $modalId }}Title" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+<div class="modal fade pack-form-modal" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $modalId }}Title" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <form class="modal-content" action="{{ $action }}" method="POST">
             @csrf
             <input type="hidden" name="_pack_modal_id" value="{{ $modalId }}">
@@ -79,15 +79,15 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Question Types</label>
-                        <textarea class="form-control" name="question_types_text" rows="4" placeholder="Behavioral&#10;Situational">{{ $fieldValue('question_types_text', $questionTypesText) }}</textarea>
+                        <textarea class="form-control" name="question_types_text" rows="3" placeholder="Behavioral&#10;Situational">{{ $fieldValue('question_types_text', $questionTypesText) }}</textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Sample Questions</label>
-                        <textarea class="form-control" name="sample_questions_text" rows="4" placeholder="Tell me about a time...">{{ $fieldValue('sample_questions_text', $sampleQuestionsText) }}</textarea>
+                        <textarea class="form-control" name="sample_questions_text" rows="3" placeholder="Tell me about a time...">{{ $fieldValue('sample_questions_text', $sampleQuestionsText) }}</textarea>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3">{{ $fieldValue('description', $pack->description ?? '') }}</textarea>
+                        <textarea class="form-control" name="description" rows="2">{{ $fieldValue('description', $pack->description ?? '') }}</textarea>
                     </div>
                     <div class="col-12">
                         <div class="form-check form-switch">

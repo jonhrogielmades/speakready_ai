@@ -70,6 +70,50 @@
             font-size: 1.65rem;
             margin-top: 6px;
         }
+        #sec-admin-packs .pack-form-modal .modal-dialog {
+            width: min(980px, calc(100vw - 32px));
+            max-width: min(980px, calc(100vw - 32px));
+            margin: 16px auto !important;
+            height: calc(100dvh - 32px) !important;
+            min-height: 0 !important;
+            display: flex !important;
+            align-items: stretch !important;
+        }
+        #sec-admin-packs .pack-form-modal .modal-content {
+            height: 100% !important;
+            max-height: 100% !important;
+            display: flex;
+            flex-direction: column;
+        }
+        #sec-admin-packs .pack-form-modal .modal-header,
+        #sec-admin-packs .pack-form-modal .modal-footer {
+            flex: 0 0 auto;
+        }
+        #sec-admin-packs .pack-form-modal .modal-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none !important;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 18px 20px;
+        }
+        #sec-admin-packs .pack-form-modal .modal-footer {
+            position: static;
+            bottom: auto;
+            z-index: 2;
+        }
+        #sec-admin-packs .pack-form-modal .form-label {
+            margin-bottom: 5px;
+            font-size: .86rem;
+            font-weight: 800;
+        }
+        #sec-admin-packs .pack-form-modal .form-control,
+        #sec-admin-packs .pack-form-modal .form-select {
+            min-height: 44px;
+        }
+        #sec-admin-packs .pack-form-modal textarea.form-control {
+            min-height: auto;
+        }
         @media (max-width: 991.98px) {
             #sec-admin-packs .pack-panel-header {
                 align-items: flex-start;
@@ -78,6 +122,16 @@
             #sec-admin-packs .pack-filters {
                 grid-template-columns: 1fr;
                 width: 100%;
+            }
+            #sec-admin-packs .pack-form-modal .modal-dialog {
+                width: calc(100vw - 18px);
+                max-width: calc(100vw - 18px);
+                margin: 9px auto !important;
+                height: calc(100dvh - 18px) !important;
+                min-height: 0 !important;
+            }
+            #sec-admin-packs .pack-form-modal .modal-content {
+                max-height: 100% !important;
             }
         }
     </style>

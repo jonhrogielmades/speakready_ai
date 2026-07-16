@@ -99,6 +99,19 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertSee('getElementById("addPackModal")', false);
     }
 
+    public function test_interview_pack_modal_uses_viewport_bound_scrollable_layout(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packs.index'))
+            ->assertOk()
+            ->assertSee('pack-form-modal', false)
+            ->assertSee('modal-dialog modal-lg modal-dialog-scrollable', false)
+            ->assertSee('height: calc(100dvh - 32px) !important', false)
+            ->assertSee('overflow-y: auto', false);
+    }
+
     public function test_admin_readiness_dashboard_surfaces_new_career_features(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
