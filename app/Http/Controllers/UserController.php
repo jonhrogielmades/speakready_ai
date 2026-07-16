@@ -6,7 +6,6 @@ use App\Helpers\ActivityLogger;
 use App\Models\Category;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotMessage;
-use App\Models\ExperienceStory;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
@@ -15,13 +14,13 @@ use App\Models\LearningModule;
 use App\Models\LearningProgress;
 use App\Models\Profile;
 use App\Models\Question;
-use App\Models\ReadinessProfile;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\VoiceSession;
 use App\Services\AIService;
 use App\Services\CoachLanguageService;
 use App\Services\CsvExportService;
+use App\Services\LearningRecommendationService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use Carbon\Carbon;
@@ -237,36 +236,7 @@ class UserController extends Controller
             'percent' => $currentGoalScore > 0 ? (round($avgScore) / $currentGoalScore) * 100 : 0,
         ];
 
-        // Dynamic AI Recommendations
-        $aiRecommendations = collect([]);
-        if ($totalSessions > 0) {
-            // Find weakest category
-            if ($categoryPerformance->count() > 0) {
-                $weakestCat = $categoryPerformance->sortBy('score')->first();
-                if ($weakestCat) {
-                    $aiRecommendations->push((object) [
-                        'icon' => 'fa-bullseye',
-                        'color' => 'var(--dash-primary)',
-                        'text' => 'Practice more "'.$weakestCat->name.'" interviews',
-                    ]);
-                }
-            }
-            // Find weakest radar skill
-            $radarScores = [
-                'Clarity' => $radarData['clarity'],
-                'Relevance' => $radarData['relevance'],
-                'Grammar' => $radarData['grammar'],
-                'Professionalism' => $radarData['professionalism'],
-            ];
-            asort($radarScores);
-            $weakestSkill = key($radarScores);
-
-            $aiRecommendations->push((object) [
-                'icon' => 'fa-star',
-                'color' => 'var(--dash-success)',
-                'text' => 'Focus on improving your '.$weakestSkill,
-            ]);
-        }
+        $aiRecommendations = app(LearningRecommendationService::class)->forUser($user_id, 3);
 
         // Get past scores for chart
         $scoreTrend = (clone $completedSessions)
@@ -318,6 +288,7 @@ class UserController extends Controller
             ->where('user_id', $userId)
             ->orderBy('updated_at', 'desc')
             ->get();
+        $moduleRecommendations = app(LearningRecommendationService::class)->forUser($userId, 3);
 
         $currentStreak = $profile->current_streak ?? 0;
         $longestStreak = max((int) ($profile->longest_streak ?? 0), (int) $currentStreak);
@@ -377,6 +348,7 @@ class UserController extends Controller
             'voiceSessions',
             'voiceSummary',
             'learningProgress',
+            'moduleRecommendations',
             'currentStreak',
             'longestStreak',
             'totalPracticeDays',
@@ -1009,26 +981,7 @@ class UserController extends Controller
         if ($this->isSpeakReadyDeveloperQuestion($message)) {
             $response = $this->speakReadyDeveloperCreditsResponse($responseLanguage);
         } else {
-            $latestTwin = ReadinessProfile::tableExists()
-                ? ReadinessProfile::where('user_id', Auth::id())->latest('calibrated_at')->first()
-                : null;
-            $storyContext = ExperienceStory::tableExists()
-                ? ExperienceStory::where('user_id', Auth::id())->where('facts_confirmed', true)
-                    ->latest()->limit(8)->get()->map(fn ($story) => [
-                        'id' => $story->id,
-                        'title' => $story->title,
-                        'competencies' => $story->competency_tags ?? [],
-                        'verified_facts' => $story->verified_facts ?? [],
-                        'metrics' => $story->metrics ?? [],
-                    ])->all()
-                : [];
-            $systemPrompt = 'You are the unified SpeakReady Readiness Coach. Help with job-specific competency preparation, verified STAR stories, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals—not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
-            $systemPrompt .= ' Current readiness context: '.json_encode([
-                'target_role' => $latestTwin?->target_role,
-                'competencies' => $latestTwin?->competency_map ?? [],
-                'next_actions' => $latestTwin?->next_actions ?? [],
-                'verified_story_index' => $storyContext,
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR).'.';
+            $systemPrompt = 'You are the unified SpeakReady Readiness Coach. Help with job-specific preparation, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals, not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
             $systemPrompt .= ' You may also answer direct questions about SpeakReady AI developer credits. If asked who developed, built, created, or maintains SpeakReady AI, answer using these official credits: '.$this->speakReadyDeveloperCreditsPrompt().' Do not invent additional team members or roles.';
             $systemPrompt .= ' '.$coachLanguages->promptInstruction($responseLanguage);
 
@@ -1997,8 +1950,10 @@ class UserController extends Controller
         }
 
         $modules = $query->orderBy('created_at', 'desc')->paginate(12);
+        $moduleRecommendations = app(LearningRecommendationService::class)->forUser(Auth::id(), 3);
+        $learningPaths = app(LearningRecommendationService::class)->learningPathsForUser(Auth::id());
 
-        return view('user.modules.index', compact('modules', 'categories'));
+        return view('user.modules.index', compact('modules', 'categories', 'moduleRecommendations', 'learningPaths'));
     }
 
     public function moduleShow($id)
@@ -2007,7 +1962,7 @@ class UserController extends Controller
             abort(404);
         }
 
-        $module = LearningModule::with(['chapters', 'resources', 'quizzes', 'activities'])->where('status', 'published')->findOrFail($id);
+        $module = LearningModule::with(['chapters', 'resources', 'quizzes.questions', 'activities'])->where('status', 'published')->findOrFail($id);
 
         if (! Setting::enabled('ll_quizzes')) {
             $module->setRelation('quizzes', collect());
@@ -2015,7 +1970,62 @@ class UserController extends Controller
 
         // Track view
         $module->increment('views');
+        $moduleProgress = LearningProgress::firstOrNew([
+            'user_id' => Auth::id(),
+            'learning_module_id' => $module->id,
+        ]);
+        $moduleRecommendations = app(LearningRecommendationService::class)
+            ->forUser(Auth::id(), 4)
+            ->filter(fn ($recommendation) => $recommendation->module->id !== $module->id)
+            ->take(3)
+            ->values();
 
-        return view('user.modules.show', compact('module'));
+        return view('user.modules.show', compact('module', 'moduleProgress', 'moduleRecommendations'));
+    }
+
+    public function updateModuleProgress(Request $request, $id)
+    {
+        if (! Setting::enabled('ll_modules')) {
+            abort(404);
+        }
+
+        $module = LearningModule::where('status', 'published')->findOrFail($id);
+
+        $validated = $request->validate([
+            'progress_percentage' => 'required|integer|min:0|max:100',
+            'quiz_score' => 'nullable|integer|min:0|max:100',
+            'learning_hours' => 'nullable|numeric|min:0|max:1000',
+        ]);
+
+        $progressPercentage = (int) $validated['progress_percentage'];
+        $status = $progressPercentage >= 100
+            ? 'completed'
+            : ($progressPercentage > 0 ? 'in_progress' : 'enrolled');
+
+        $progress = LearningProgress::firstOrNew([
+            'user_id' => Auth::id(),
+            'learning_module_id' => $module->id,
+        ]);
+
+        $progress->status = $status;
+        $progress->progress_percentage = $progressPercentage;
+
+        if (array_key_exists('quiz_score', $validated)) {
+            $progress->quiz_score = $validated['quiz_score'];
+        }
+
+        if (array_key_exists('learning_hours', $validated)) {
+            $progress->learning_hours = $validated['learning_hours'];
+        } elseif (! $progress->exists) {
+            $progress->learning_hours = 0;
+        }
+
+        $progress->save();
+
+        $message = $status === 'completed'
+            ? 'Module marked as completed. Nice work keeping your learning trail honest.'
+            : 'Module progress updated.';
+
+        return redirect()->route('user.modules.show', $module->id)->with('success', $message);
     }
 }

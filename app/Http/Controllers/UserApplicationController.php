@@ -38,8 +38,13 @@ class UserApplicationController extends Controller
         $application = JobApplication::create(array_merge($validated, [
             'user_id' => Auth::id(),
             'match_score' => $analysis['score'],
+            'evidence_match_score' => $analysis['score'],
             'matched_keywords' => $analysis['matched'],
             'missing_keywords' => $analysis['missing'],
+            'evidence_matches' => $analysis['matched'],
+            'evidence_gaps' => $analysis['missing'],
+            'competency_map' => $analysis['competencies'],
+            'future_skills' => $analysis['future_skills'],
         ]));
 
         $application->smart_plan = $careerPlan->buildSmartPlan($application);
@@ -55,7 +60,7 @@ class UserApplicationController extends Controller
             ['title' => 'Application Added', 'icon' => 'fa-briefcase', 'type' => 'success']
         );
 
-        return redirect()->route('user.applications.index')->with('success', 'Job application added with a competency map and adaptive readiness plan.');
+        return redirect()->route('user.applications.index')->with('success', 'Job application added with an evidence map and practice plan.');
     }
 
     public function update(Request $request, JobApplication $application, CareerPlanService $careerPlan)
@@ -67,15 +72,20 @@ class UserApplicationController extends Controller
 
         $application->update(array_merge($validated, [
             'match_score' => $analysis['score'],
+            'evidence_match_score' => $analysis['score'],
             'matched_keywords' => $analysis['matched'],
             'missing_keywords' => $analysis['missing'],
+            'evidence_matches' => $analysis['matched'],
+            'evidence_gaps' => $analysis['missing'],
+            'competency_map' => $analysis['competencies'],
+            'future_skills' => $analysis['future_skills'],
         ]));
 
         $application->smart_plan = $careerPlan->buildSmartPlan($application);
         $application->save();
         $careerPlan->syncPracticePlan($application);
 
-        return redirect()->route('user.applications.index')->with('success', 'Application evidence map and adaptive plan updated.');
+        return redirect()->route('user.applications.index')->with('success', 'Application evidence map and practice plan updated.');
     }
 
     public function destroy(JobApplication $application)

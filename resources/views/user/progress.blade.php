@@ -777,6 +777,22 @@
                     </div>
                 </div>
                 @endif
+                @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
+                <div class="mt-4 pt-3" style="border-top:1px solid var(--bd);">
+                    <h6 style="color:var(--tx);font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-lightbulb me-2" style="color:#f59e0b"></i>Recommended Next</h6>
+                    @foreach($moduleRecommendations as $recommendation)
+                        <a href="{{ $recommendation->url }}" class="d-flex gap-3 align-items-start mb-2 p-2" style="text-decoration:none;border:1px solid var(--bd);border-radius:12px;background:var(--bg3);">
+                            <div style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:{{ $recommendation->color }};background:rgba(59,130,246,0.12);flex:0 0 34px;">
+                                <i class="fa-solid {{ $recommendation->icon }}"></i>
+                            </div>
+                            <div style="min-width:0;">
+                                <div style="color:var(--tx);font-weight:800;font-size:0.86rem;line-height:1.3;">{{ $recommendation->module->title }}</div>
+                                <div style="color:var(--tx3);font-size:0.76rem;line-height:1.35;">{{ $recommendation->reason }}</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+                @endif
             </div>
         </div>
 

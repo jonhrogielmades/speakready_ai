@@ -16,6 +16,10 @@ class GameLevel extends Model
         'description',
         'mission_text',
         'target_position',
+        'skill_focus',
+        'learning_objective',
+        'success_criteria',
+        'retry_hint',
         'difficulty',
         'required_score',
         'xp_reward',
@@ -54,26 +58,42 @@ class GameLevel extends Model
 
     public function getParsedQuestionsAttribute()
     {
-        if (!$this->mission_text) {
+        if (! $this->mission_text) {
             return ["Please begin your response."];
         }
-        
-        $normalizedMissionText = str_replace(["\r\n", "\r", '\n'], "\n", $this->mission_text);
-        $normalizedMissionText = preg_replace('/\s+(\d+[\.\)])\s+/', "\n$1 ", $normalizedMissionText);
-        
-        $lines = array_filter(array_map('trim', explode("\n", $normalizedMissionText)));
+
+        $questions = $this->parseNumberedLines($this->mission_text);
+
+        if (empty($questions)) {
+            $questions = ["Please begin your response."];
+        }
+
+        return $questions;
+    }
+
+    public function getParsedSuccessCriteriaAttribute(): array
+    {
+        if (! $this->success_criteria) {
+            return [];
+        }
+
+        return $this->parseNumberedLines($this->success_criteria);
+    }
+
+    private function parseNumberedLines(string $text): array
+    {
+        $normalizedText = str_replace(["\r\n", "\r", '\n'], "\n", $text);
+        $normalizedText = preg_replace('/\s+(\d+[\.\)]|[-*])\s+/', "\n$1 ", $normalizedText);
+
+        $lines = array_filter(array_map('trim', explode("\n", $normalizedText)));
         $questions = [];
         foreach ($lines as $line) {
-            $cleanLine = trim(preg_replace('/^\d+[\.\)]\s*/', '', $line));
+            $cleanLine = trim(preg_replace('/^(\d+[\.\)]|[-*])\s*/', '', $line));
             if (!empty($cleanLine)) {
                 $questions[] = $cleanLine;
             }
         }
-        
-        if (empty($questions)) {
-            $questions = ["Please begin your response."];
-        }
-        
+
         return $questions;
     }
 }

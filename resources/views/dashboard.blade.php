@@ -1615,10 +1615,15 @@
                     @if(isset($aiRecommendations) && count($aiRecommendations) > 0)
                         <div class="sr-rec-list">
                             @foreach($aiRecommendations as $rec)
-                                <div class="sr-rec-item">
+                                <a href="{{ $rec->url ?? route('user.modules.index') }}" class="sr-rec-item" style="text-decoration:none;color:inherit;">
                                     <div class="sr-rec-icon" style="--accent: {{ $rec->color }}"><i class="fa-solid {{ $rec->icon }}"></i></div>
-                                    <div style="font-size:.88rem;font-weight:700;color:var(--tx2);line-height:1.45">{{ $rec->text }}</div>
-                                </div>
+                                    <div style="min-width:0;">
+                                        <div style="font-size:.88rem;font-weight:800;color:var(--tx);line-height:1.35">{{ $rec->text }}</div>
+                                        @if(!empty($rec->reason))
+                                            <div style="font-size:.76rem;font-weight:600;color:var(--tx3);line-height:1.35;margin-top:4px;">{{ $rec->reason }}</div>
+                                        @endif
+                                    </div>
+                                </a>
                             @endforeach
                         </div>
                     @else

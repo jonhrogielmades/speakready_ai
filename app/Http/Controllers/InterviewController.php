@@ -18,7 +18,6 @@ use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\CareerPlanService;
 use App\Services\QuestionDatasetProvider;
-use App\Services\ReadinessTwinService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Http\Request;
@@ -512,6 +511,10 @@ class InterviewController extends Controller
                 if ($gameLevel->target_tone) {
                     $sessionData['target_tone'] = $gameLevel->target_tone;
                 }
+                $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
+                $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
+                $sessionData['game_success_criteria'] = $gameLevel->success_criteria;
+                $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
             }
         }
 
@@ -612,7 +615,7 @@ class InterviewController extends Controller
         $sFeedback = $aiFeedback['session_feedback'] ?? null;
         $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
         $fullTranscript = implode(' ', array_column($answersData, 'answer'));
-        $jobEvidence = app(ReadinessTwinService::class)->analyzeTexts(
+        $jobEvidence = app(CareerPlanService::class)->analyzeMatch(
             $fullTranscript,
             $session->job_description,
             $session->target_position
@@ -795,7 +798,13 @@ class InterviewController extends Controller
         );
 
         if ($gameLevelId) {
-            $msg = $gameStatus === 'victory' ? 'Victory! You cleared the Game Level!' : 'Defeat! You did not reach the required score. Try again!';
+            if ($gameStatus === 'victory') {
+                $msg = 'Victory! You cleared the Game Level with '.$gameResultScore.'%.';
+            } else {
+                $target = $gameLevel ? $gameLevel->required_score : 0;
+                $hint = $gameLevel && $gameLevel->retry_hint ? ' Focus: '.$gameLevel->retry_hint : '';
+                $msg = 'You scored '.$gameResultScore.'% and need '.$target.'% to clear this level.'.$hint;
+            }
 
             return redirect()->route('user.learning')->with($gameStatus === 'victory' ? 'success' : 'error', $msg);
         }

@@ -83,7 +83,6 @@
                <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> Readiness Coach</a>
                
                <div class="db-nav-section">Performance</div>
-               <a href="{{ route('user.readiness.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.readiness.*') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i> Readiness Twin</a>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress Tracking</a>
                <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Center</a>
                <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> Reports</a>

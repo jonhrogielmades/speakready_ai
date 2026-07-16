@@ -620,7 +620,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <div class="desc-text">Use your saved resume, job description, competency twin, and adaptive plan.</div>
+                            <div class="desc-text">Use your saved resume, job description, and practice plan.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="olbl">Interview Pack</label>

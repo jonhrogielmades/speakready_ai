@@ -78,14 +78,4 @@ class JobApplication extends Model
     {
         return $this->hasMany(PracticePlanItem::class);
     }
-
-    public function readinessProfile()
-    {
-        return $this->hasOne(ReadinessProfile::class);
-    }
-
-    public function outcomes()
-    {
-        return $this->hasMany(InterviewOutcome::class);
-    }
 }

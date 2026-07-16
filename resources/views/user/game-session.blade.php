@@ -26,6 +26,12 @@
     /* Circular Audio Spectrum */
     .circular-spectrum { position: absolute; top: 50%; left: 50%; width: 0; height: 0; display: none; z-index: 5; }
     .circular-spectrum .spectrum-bar { position: absolute; bottom: 0; left: -4px; width: 8px; background: linear-gradient(to top, #8b5cf6, #34d399); border-radius: 4px; transform-origin: bottom center; height: 6px; transition: height 0.05s ease-out; box-shadow: 0 0 12px rgba(52,211,153,0.6); }
+    .session-nav-row { display:flex;align-items:stretch;gap:8px;width:100%; }
+    .session-nav-row .btn { min-height:38px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;min-width:0; }
+    .session-nav-icon { flex:0 0 44px;padding-left:0 !important;padding-right:0 !important; }
+    .session-nav-skip { flex:0 0 84px;padding-left:10px !important;padding-right:10px !important; }
+    .session-nav-next { flex:1 1 auto;padding-left:14px !important;padding-right:14px !important; }
+    .session-nav-next .next-label-short { display:none; }
     
     /* Responsive overrides */
     @media (max-width: 768px) {
@@ -34,6 +40,24 @@
         .ai-avatar-panel { height: 260px !important; }
         .panel { padding: 15px; }
         .panel-title { font-size: 0.9rem; }
+    }
+
+    @media (max-width: 420px) {
+        .session-nav-row { gap:6px; }
+        .session-nav-row .btn { min-height:34px;font-size:0.82rem; }
+        .session-nav-icon { flex-basis:38px; }
+        .session-nav-skip { flex-basis:68px; }
+        .session-nav-next { padding-left:8px !important;padding-right:8px !important; }
+        .session-nav-next .next-label-full { display:none; }
+        .session-nav-next .next-label-short { display:inline; }
+        .session-nav-next i { margin-left:0.35rem !important; }
+    }
+
+    @media (max-width: 340px) {
+        .session-nav-row { gap:4px; }
+        .session-nav-icon { flex-basis:34px; }
+        .session-nav-skip { flex-basis:60px;font-size:0.78rem; }
+        .session-nav-next { font-size:0.78rem; }
     }
 </style>
 
@@ -115,6 +139,9 @@
                     <span class="badge" style="background:var(--pur);color:#fff;font-size:0.8rem;"><i class="fa-solid fa-gamepad me-1"></i> LEARNING GAME</span>
                     <h4 style="font-size:1.4rem;font-weight:800;margin:0;color:var(--tx)">Level {{ $gameLevel->level_number }}: {{ $gameLevel->title }}</h4>
                 </div>
+                @if($gameLevel->learning_objective)
+                    <div style="font-size:0.86rem;color:var(--tx2);line-height:1.45;max-width:760px;">{{ $gameLevel->learning_objective }}</div>
+                @endif
 
             </div>
             
@@ -181,15 +208,11 @@
                 <!-- Answer Response System -->
                 <div class="panel mb-4">
                     <!-- Navigation Buttons -->
-                    <div class="row g-2 pb-3 mb-3 border-bottom align-items-center" style="border-color:var(--bd) !important">
-                        <div class="col-12 col-sm-auto d-flex gap-2">
-                            <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()"><i class="fa-solid fa-volume-high"></i></button>
-                            <button type="button" class="btn btn-outline-secondary flex-fill prev-btn-class" onclick="prevQuestion()" disabled><i class="fa-solid fa-arrow-left"></i></button>
-                            <button type="button" class="btn btn-outline-warning flex-fill skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
-                        </div>
-                        <div class="col-12 col-sm-auto ms-sm-auto d-flex">
-                            <button type="button" class="bgrd btn px-4 w-100 next-btn-class text-white" onclick="submitAnswer()">Next Question <i class="fa-solid fa-arrow-right ms-2"></i></button>
-                        </div>
+                    <div class="session-nav-row pb-3 mb-3 border-bottom" style="border-color:var(--bd) !important">
+                        <button type="button" class="btn btn-outline-info session-nav-icon" onclick="repeatQuestion()" aria-label="Repeat question" title="Repeat question"><i class="fa-solid fa-volume-high"></i></button>
+                        <button type="button" class="btn btn-outline-secondary session-nav-icon prev-btn-class" onclick="prevQuestion()" disabled aria-label="Previous question" title="Previous question"><i class="fa-solid fa-arrow-left"></i></button>
+                        <button type="button" class="btn btn-outline-warning session-nav-skip skip-btn-class" onclick="skipQuestion()">Skip <i class="fa-solid fa-forward-step ms-1"></i></button>
+                        <button type="button" class="bgrd btn session-nav-next next-btn-class text-white" onclick="submitAnswer()"><span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right ms-2"></i></button>
                     </div>
 
                     <div class="panel-title">
@@ -252,6 +275,36 @@
                     </div>
                     <div class="stat-row"><span>Face in frame</span><span id="stEyeContact">Waiting</span></div>
                     <div class="stat-row mb-0"><span>Camera status</span><span id="stPosture">Optional · not scored</span></div>
+                </div>
+                @endif
+
+                @if($gameLevel->skill_focus || $gameLevel->learning_objective || $gameLevel->parsed_success_criteria || $gameLevel->retry_hint)
+                <div class="panel">
+                    <div class="panel-title"><i class="fa-solid fa-bullseye me-2"></i> Challenge Brief</div>
+                    @if($gameLevel->skill_focus)
+                        <div class="badge mb-3" style="background:rgba(56,189,248,0.12);color:#38bdf8;border:1px solid rgba(56,189,248,0.35);padding:8px 10px;font-size:0.82rem;">
+                            <i class="fa-solid fa-graduation-cap me-1"></i> {{ $gameLevel->skill_focus }}
+                        </div>
+                    @endif
+                    @if($gameLevel->learning_objective)
+                        <div style="font-size:0.84rem;color:var(--tx2);line-height:1.5;margin-bottom:14px;">{{ $gameLevel->learning_objective }}</div>
+                    @endif
+                    @if($gameLevel->parsed_success_criteria)
+                        <div style="font-size:0.78rem;color:var(--tx3);font-weight:700;margin-bottom:8px;text-transform:uppercase;">Success checklist</div>
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            @foreach($gameLevel->parsed_success_criteria as $criterion)
+                                <div style="display:flex;gap:8px;align-items:flex-start;font-size:0.82rem;color:var(--tx2);line-height:1.4;">
+                                    <i class="fa-solid fa-check" style="color:#34d399;margin-top:2px;"></i>
+                                    <span>{{ $criterion }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if($gameLevel->retry_hint)
+                        <div style="font-size:0.82rem;color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.28);border-radius:8px;padding:10px;line-height:1.45;">
+                            <i class="fa-solid fa-lightbulb me-1"></i>{{ $gameLevel->retry_hint }}
+                        </div>
+                    @endif
                 </div>
                 @endif
 
@@ -737,13 +790,13 @@
                 
                 if (idx === questions.length - 1) {
                     document.querySelectorAll('.next-btn-class').forEach(el => {
-                        el.innerHTML = 'Finish Interview <i class="fa-solid fa-flag-checkered ms-2"></i>';
+                        el.innerHTML = '<span class="next-label-full">Finish Interview</span><span class="next-label-short">Finish</span><i class="fa-solid fa-flag-checkered ms-2"></i>';
                         el.classList.add('btn-success');
                         el.classList.remove('bgrd', 'btn-primary');
                     });
                 } else {
                     document.querySelectorAll('.next-btn-class').forEach(el => {
-                        el.innerHTML = 'Next Question <i class="fa-solid fa-arrow-right ms-2"></i>';
+                        el.innerHTML = '<span class="next-label-full">Next Question</span><span class="next-label-short">Next</span><i class="fa-solid fa-arrow-right ms-2"></i>';
                         el.classList.add('bgrd');
                         el.classList.remove('btn-success');
                     });

@@ -142,6 +142,10 @@ class AdminGameController extends Controller
             'description' => 'nullable|string',
             'mission_text' => 'nullable|string',
             'target_position' => 'required|string|max:255',
+            'skill_focus' => 'nullable|string|max:255',
+            'learning_objective' => 'nullable|string|max:1000',
+            'success_criteria' => 'nullable|string|max:2000',
+            'retry_hint' => 'nullable|string|max:1000',
             'difficulty' => 'required|string|max:255',
             'required_score' => 'required|integer|min:0|max:100',
             'xp_reward' => 'required|integer|min:0',
@@ -167,6 +171,10 @@ class AdminGameController extends Controller
         $gameData['description'] = $this->cleanText($gameData['description'] ?? $fallback['description'], $fallback['description'], 1000);
         $gameData['mission_text'] = $this->cleanText($gameData['mission_text'] ?? $fallback['mission_text'], $fallback['mission_text'], 3000);
         $gameData['target_position'] = $this->cleanText($gameData['target_position'] ?? $fallback['target_position'], $fallback['target_position'], 255);
+        $gameData['skill_focus'] = $this->cleanText($gameData['skill_focus'] ?? $fallback['skill_focus'], $fallback['skill_focus'], 255);
+        $gameData['learning_objective'] = $this->cleanText($gameData['learning_objective'] ?? $fallback['learning_objective'], $fallback['learning_objective'], 1000);
+        $gameData['success_criteria'] = $this->cleanText($gameData['success_criteria'] ?? $fallback['success_criteria'], $fallback['success_criteria'], 2000);
+        $gameData['retry_hint'] = $this->cleanText($gameData['retry_hint'] ?? $fallback['retry_hint'], $fallback['retry_hint'], 1000);
         $gameData['ai_persona'] = $this->cleanText($gameData['ai_persona'] ?? $fallback['ai_persona'], $fallback['ai_persona'], 255);
         $gameData['ai_custom_prompt'] = $this->cleanText($gameData['ai_custom_prompt'] ?? $fallback['ai_custom_prompt'], $fallback['ai_custom_prompt'], 3000);
         $gameData['banned_words'] = $this->cleanText($gameData['banned_words'] ?? $fallback['banned_words'], $fallback['banned_words'], 255);
@@ -193,6 +201,10 @@ class AdminGameController extends Controller
             'description' => "A structured practice level for improving {$topic} through focused interview-style prompts.",
             'mission_text' => "1. Describe your current challenge with {$topic}.\n2. Share one specific example where this skill mattered.\n3. Explain the action you took.\n4. Name the result or lesson learned.\n5. Describe how you will improve next time.",
             'target_position' => 'Better Communication',
+            'skill_focus' => $this->skillFocusForTopic($topic),
+            'learning_objective' => "Practice {$topic} in a realistic interview answer while keeping the response clear, specific, and professionally structured.",
+            'success_criteria' => "1. Answer the question directly.\n2. Use a concrete example instead of general statements.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional and confident.",
+            'retry_hint' => 'On the next attempt, choose one real example first, then answer in this order: context, responsibility, action, result.',
             'difficulty' => $difficulty,
             'required_score' => $difficulty === 'advanced' ? 90 : ($difficulty === 'intermediate' ? 78 : 60),
             'xp_reward' => $difficulty === 'advanced' ? 750 : ($difficulty === 'intermediate' ? 600 : 450),
@@ -206,6 +218,20 @@ class AdminGameController extends Controller
             'skill_xp_type' => 'Communication',
             'skill_xp_amount' => $difficulty === 'advanced' ? 75 : 50,
         ];
+    }
+
+    private function skillFocusForTopic(string $topic): string
+    {
+        $topic = strtolower($topic);
+
+        return match (true) {
+            str_contains($topic, 'star'), str_contains($topic, 'behavior') => 'STAR Method',
+            str_contains($topic, 'technical'), str_contains($topic, 'problem') => 'Problem Solving',
+            str_contains($topic, 'lead'), str_contains($topic, 'team') => 'Leadership',
+            str_contains($topic, 'grammar'), str_contains($topic, 'sentence') => 'Grammar',
+            str_contains($topic, 'confidence'), str_contains($topic, 'shy'), str_contains($topic, 'speaking') => 'Confidence',
+            default => 'Communication',
+        };
     }
 
     private function cleanText(?string $value, string $fallback, int $limit = 255): string

@@ -9,65 +9,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (! Schema::hasTable('readiness_profiles')) {
-            Schema::create('readiness_profiles', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('job_application_id')->nullable()->constrained()->cascadeOnDelete();
-                $table->string('target_role');
-                $table->json('competency_map')->nullable();
-                $table->json('mastery_snapshot')->nullable();
-                $table->json('future_skills')->nullable();
-                $table->json('next_actions')->nullable();
-                $table->unsignedInteger('version')->default(1);
-                $table->timestamp('calibrated_at')->nullable();
-                $table->timestamps();
-                $table->index(['user_id', 'job_application_id']);
-            });
-        }
-
-        if (! Schema::hasTable('experience_stories')) {
-            Schema::create('experience_stories', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-                $table->string('title');
-                $table->string('context_type')->default('work');
-                $table->text('situation')->nullable();
-                $table->text('task')->nullable();
-                $table->text('action')->nullable();
-                $table->text('result')->nullable();
-                $table->json('verified_facts')->nullable();
-                $table->json('metrics')->nullable();
-                $table->json('competency_tags')->nullable();
-                $table->boolean('facts_confirmed')->default(false);
-                $table->string('visibility')->default('private');
-                $table->timestamps();
-                $table->index(['user_id', 'facts_confirmed']);
-            });
-        }
-
-        if (! Schema::hasTable('interview_outcomes')) {
-            Schema::create('interview_outcomes', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('job_application_id')->nullable()->constrained()->nullOnDelete();
-                $table->foreignId('interview_session_id')->nullable()->constrained('interview_sessions')->nullOnDelete();
-                $table->date('interview_date')->nullable();
-                $table->string('interview_format')->default('live');
-                $table->string('stage')->nullable();
-                $table->string('result')->default('pending');
-                $table->json('questions_asked')->nullable();
-                $table->json('surprise_topics')->nullable();
-                $table->json('useful_story_ids')->nullable();
-                $table->text('recruiter_feedback')->nullable();
-                $table->text('reflection')->nullable();
-                $table->unsignedTinyInteger('confidence_before')->nullable();
-                $table->unsignedTinyInteger('confidence_after')->nullable();
-                $table->boolean('allow_anonymous_learning')->default(false);
-                $table->timestamps();
-            });
-        }
-
         if (Schema::hasTable('profiles')) {
             Schema::table('profiles', function (Blueprint $table) {
                 if (! Schema::hasColumn('profiles', 'inclusive_preferences')) {

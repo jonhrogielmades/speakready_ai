@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminInterviewPackController;
-use App\Http\Controllers\AdminReadinessController;
 use App\Http\Controllers\AdminSessionController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\AdminUserController;
@@ -11,7 +10,6 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\MentorReviewController;
-use App\Http\Controllers\ReadinessController;
 use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -112,20 +110,13 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
     Route::delete('/coach/conversation/{id}', [UserController::class, 'deleteCoachConversation'])->name('user.coach.delete');
     Route::delete('/coach/conversations', [UserController::class, 'clearCoachConversations'])->name('user.coach.clear');
-    Route::get('/readiness', [ReadinessController::class, 'index'])->name('user.readiness.index');
-    Route::post('/readiness/applications/{application}/refresh', [ReadinessController::class, 'refresh'])->name('user.readiness.refresh');
-    Route::post('/readiness/stories', [ReadinessController::class, 'storeStory'])->name('user.readiness.stories.store');
-    Route::put('/readiness/stories/{story}', [ReadinessController::class, 'updateStory'])->name('user.readiness.stories.update');
-    Route::delete('/readiness/stories/{story}', [ReadinessController::class, 'destroyStory'])->name('user.readiness.stories.destroy');
-    Route::post('/readiness/outcomes', [ReadinessController::class, 'storeOutcome'])->name('user.readiness.outcomes.store');
-    Route::delete('/readiness/outcomes/{outcome}', [ReadinessController::class, 'destroyOutcome'])->name('user.readiness.outcomes.destroy');
-    Route::post('/readiness/preferences', [ReadinessController::class, 'updateInclusivePreferences'])->name('user.readiness.preferences');
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
 
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');
+    Route::post('/modules/{id}/progress', [UserController::class, 'updateModuleProgress'])->name('user.modules.progress');
     Route::get('/modules/{id}', [UserController::class, 'moduleShow'])->name('user.modules.show');
 
     // Arena Gamification Routes
@@ -196,13 +187,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/generate', [AdminInterviewPackController::class, 'generate'])->name('generate');
         Route::put('/{pack}', [AdminInterviewPackController::class, 'update'])->name('update');
         Route::delete('/{pack}', [AdminInterviewPackController::class, 'destroy'])->name('destroy');
-    });
-
-    Route::prefix('admin/readiness')->name('admin.readiness.')->group(function () {
-        Route::get('/', [AdminReadinessController::class, 'index'])->name('index');
-        Route::patch('/applications/{application}', [AdminReadinessController::class, 'updateApplication'])->name('applications.update');
-        Route::patch('/stories/{story}', [AdminReadinessController::class, 'updateStory'])->name('stories.update');
-        Route::patch('/outcomes/{outcome}', [AdminReadinessController::class, 'updateOutcome'])->name('outcomes.update');
     });
 
     Route::get('/admin/modules', [AdminController::class, 'modulesDashboard'])->name('admin.modules');

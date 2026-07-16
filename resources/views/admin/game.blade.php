@@ -248,6 +248,16 @@
                                     <span class="badge bg-secondary" style="font-size:0.65rem;">{{ $level->category ? $level->category->title : 'No Personal Improvement' }}</span> 
                                     <span>{{ $level->target_position }} &bull; {{ ucfirst($level->difficulty) }}</span>
                                 </div>
+                                @if($level->skill_focus || $level->learning_objective)
+                                    <div style="font-size:0.74rem;color:var(--tx3);margin-top:6px;line-height:1.4;">
+                                        @if($level->skill_focus)
+                                            <span style="color:#38bdf8;font-weight:700;"><i class="fa-solid fa-bullseye me-1"></i>{{ $level->skill_focus }}</span>
+                                        @endif
+                                        @if($level->learning_objective)
+                                            <span>{{ $level->skill_focus ? ' - ' : '' }}{{ Str::limit($level->learning_objective, 90) }}</span>
+                                        @endif
+                                    </div>
+                                @endif
                                 @if($level->prerequisiteLevel)
                                     <div style="font-size:0.7rem;color:#f59e0b;margin-top:4px;"><i class="fa-solid fa-lock text-warning"></i> Prereq: Lvl {{ $level->prerequisiteLevel->level_number }}</div>
                                 @endif
@@ -386,6 +396,28 @@
                     <div class="mb-4">
                         <label class="olbl">Questions (For the user to answer)</label>
                         <textarea class="oinp w-100" name="mission_text" rows="2">{{ $level->mission_text }}</textarea>
+                    </div>
+
+                    <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Learning Guidance</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="olbl">Skill Focus</label>
+                            <input class="oinp w-100" type="text" name="skill_focus" value="{{ $level->skill_focus }}" placeholder="e.g. STAR Method, Clarity">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="olbl">Learning Objective</label>
+                            <textarea class="oinp w-100" name="learning_objective" rows="2" placeholder="What should the learner improve in this level?">{{ $level->learning_objective }}</textarea>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="olbl">Success Criteria</label>
+                            <textarea class="oinp w-100" name="success_criteria" rows="4" placeholder="1. Answer directly&#10;2. Use a concrete example&#10;3. Include a result">{{ $level->success_criteria }}</textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="olbl">Retry Hint</label>
+                            <textarea class="oinp w-100" name="retry_hint" rows="4" placeholder="Short advice shown when the learner needs another attempt">{{ $level->retry_hint }}</textarea>
+                        </div>
                     </div>
 
                     <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>
@@ -572,6 +604,28 @@
                     <div class="mb-4">
                         <label class="olbl">Questions (For the user to answer)</label>
                         <textarea class="oinp w-100" name="mission_text" rows="2" placeholder="List the questions for the user..."></textarea>
+                    </div>
+
+                    <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">Learning Guidance</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="olbl">Skill Focus</label>
+                            <input class="oinp w-100" type="text" name="skill_focus" placeholder="e.g. STAR Method, Clarity">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="olbl">Learning Objective</label>
+                            <textarea class="oinp w-100" name="learning_objective" rows="2" placeholder="What should the learner improve in this level?"></textarea>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="olbl">Success Criteria</label>
+                            <textarea class="oinp w-100" name="success_criteria" rows="4" placeholder="1. Answer directly&#10;2. Use a concrete example&#10;3. Include a result"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="olbl">Retry Hint</label>
+                            <textarea class="oinp w-100" name="retry_hint" rows="4" placeholder="Short advice shown when the learner needs another attempt"></textarea>
+                        </div>
                     </div>
 
                     <h6 style="color:var(--adm); border-bottom:1px solid var(--bd); padding-bottom:8px; margin-bottom:16px;">AI Settings & Modifiers</h6>

@@ -59,6 +59,95 @@
     .module-topic-select-wrap {
         display: none;
     }
+
+    .module-smart-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 22px;
+        box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+    }
+    .module-smart-title {
+        color: var(--tx);
+        font-weight: 800;
+        margin: 0;
+        font-size: 1rem;
+    }
+    .module-smart-subtitle {
+        color: var(--tx3);
+        margin: 4px 0 0;
+        font-size: 0.86rem;
+    }
+    .module-rec-grid,
+    .module-path-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 14px;
+    }
+    .module-rec-item,
+    .module-path-item {
+        display: flex;
+        gap: 12px;
+        min-width: 0;
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        background: var(--bg3);
+        padding: 12px;
+        color: inherit;
+        text-decoration: none;
+    }
+    .module-rec-item:hover,
+    .module-path-item:hover {
+        border-color: var(--pur);
+        color: inherit;
+    }
+    .module-rec-icon {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--rec-color, #3b82f6);
+        background: rgba(59, 130, 246, 0.12);
+    }
+    .module-rec-copy,
+    .module-path-copy {
+        min-width: 0;
+    }
+    .module-rec-copy strong,
+    .module-path-copy strong {
+        display: block;
+        color: var(--tx);
+        font-size: 0.88rem;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+    }
+    .module-rec-copy span,
+    .module-path-copy span {
+        display: block;
+        color: var(--tx3);
+        font-size: 0.78rem;
+        line-height: 1.35;
+        margin-top: 4px;
+    }
+    .module-path-progress {
+        height: 7px;
+        border-radius: 999px;
+        background: var(--bd);
+        overflow: hidden;
+        margin-top: 8px;
+    }
+    .module-path-progress span {
+        display: block;
+        height: 100%;
+        width: var(--path-progress, 0%);
+        background: #06b6d4;
+        border-radius: inherit;
+    }
     
     .db-top-search { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .db-top-search:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf) !important; }
@@ -94,6 +183,14 @@
         }
         #interview-modules-page #nav-pills-container {
             display: none !important;
+        }
+        #interview-modules-page .module-rec-grid,
+        #interview-modules-page .module-path-grid {
+            grid-template-columns: 1fr;
+        }
+        #interview-modules-page .module-smart-panel {
+            padding: 14px;
+            border-radius: 14px;
         }
         #interview-modules-page .module-topic-select-wrap {
             display: block;
@@ -220,6 +317,48 @@
             <a href="{{ route('user.modules.index', ['category' => $category]) }}" class="ll-nav-pill {{ request('category') == $category ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category }}</a>
         @endforeach
     </div>
+
+    @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
+        <section class="module-smart-panel" aria-labelledby="module-recommendations-title">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                <div>
+                    <h5 id="module-recommendations-title" class="module-smart-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#f59e0b"></i>Recommended For You</h5>
+                    <p class="module-smart-subtitle">Suggested from your latest scores, feedback, and current module progress.</p>
+                </div>
+                <a href="{{ route('user.progress') }}" class="btn btn-sm" style="border:1px solid var(--bd);color:var(--tx2);border-radius:10px;font-weight:700;">View Progress</a>
+            </div>
+            <div class="module-rec-grid">
+                @foreach($moduleRecommendations as $recommendation)
+                    <a href="{{ $recommendation->url }}" class="module-rec-item">
+                        <div class="module-rec-icon" style="--rec-color: {{ $recommendation->color }}"><i class="fa-solid {{ $recommendation->icon }}"></i></div>
+                        <div class="module-rec-copy">
+                            <strong>{{ $recommendation->module->title }}</strong>
+                            <span>{{ $recommendation->reason }}</span>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
+    @if(isset($learningPaths) && $learningPaths->count() > 0)
+        <section class="module-smart-panel" aria-labelledby="module-paths-title">
+            <h5 id="module-paths-title" class="module-smart-title"><i class="fa-solid fa-route me-2" style="color:#06b6d4"></i>Learning Paths</h5>
+            <p class="module-smart-subtitle">Track completion by topic so learners can move through preparation in a clearer order.</p>
+            <div class="module-path-grid">
+                @foreach($learningPaths->take(6) as $path)
+                    <a href="{{ $path->url }}" class="module-path-item">
+                        <div class="module-rec-icon" style="--rec-color:#06b6d4"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="module-path-copy">
+                            <strong>{{ $path->title }}</strong>
+                            <span>{{ $path->completed }}/{{ $path->total }} modules completed</span>
+                            <div class="module-path-progress" aria-label="{{ $path->progress }}% complete"><span style="--path-progress: {{ $path->progress }}%"></span></div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     <div class="row g-4 mb-4">
         @forelse($modules as $index => $module)

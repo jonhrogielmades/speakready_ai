@@ -325,6 +325,21 @@ class AIService
             $prompt .= "CRITICAL MODIFIER - TARGET TONE: The user was instructed to answer with a '".$sessionData['target_tone']."' tone. Evaluate if they achieved this tone. If they did not, lower their score and advise them in the feedback.\n";
         }
 
+        $gameLearningContext = array_filter([
+            'Skill focus' => $sessionData['game_skill_focus'] ?? null,
+            'Learning objective' => $sessionData['game_learning_objective'] ?? null,
+            'Success criteria' => $sessionData['game_success_criteria'] ?? null,
+            'Retry hint' => $sessionData['game_retry_hint'] ?? null,
+        ]);
+
+        if ($gameLearningContext !== []) {
+            $prompt .= "\nLEARNING GAME CONTEXT:\n";
+            foreach ($gameLearningContext as $label => $value) {
+                $prompt .= $label.': '.$value."\n";
+            }
+            $prompt .= "Use this context when writing feedback and improvement_suggestions. Keep scoring evidence-based and do not award points for criteria the candidate did not demonstrate.\n";
+        }
+
         $transcript = array_map(static function (array $answer): array {
             return [
                 'id' => $answer['id'] ?? null,
@@ -655,6 +670,10 @@ The JSON structure MUST be exactly like this:
   "description": "String, 1-2 sentences setting the scene",
   "mission_text": "String, 5-10 specific questions the user needs to answer in this challenge. Format them as a numbered list. DO NOT write this as a mission, just list the questions.",
   "target_position": "String, the personal improvement goal e.g., 'Better Communication', 'Public Speaking'",
+  "skill_focus": "String, the main interview skill trained, e.g., 'STAR Method', 'Clarity', 'Confidence', 'Professionalism'",
+  "learning_objective": "String, one concrete learning objective that explains what the learner should improve in this level",
+  "success_criteria": "String, 4-6 numbered checklist items describing what a successful response must include",
+  "retry_hint": "String, short actionable advice shown if the learner needs to retry",
   "difficulty": "String, either 'beginner', 'intermediate', or 'advanced'",
   "required_score": 80, // Integer between 50 and 100
   "xp_reward": 500, // Integer

@@ -622,9 +622,23 @@
                                 </div>
                                 
                                 <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:10px;line-height:1.5">{{ $level->description }}</p>
+
+                                @if($level->skill_focus || $level->learning_objective)
+                                    <div style="background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.18);border-radius:10px;padding:12px;margin-bottom:12px;">
+                                        @if($level->skill_focus)
+                                            <div style="font-size:0.78rem;color:#38bdf8;font-weight:800;text-transform:uppercase;letter-spacing:0;margin-bottom:4px;"><i class="fa-solid fa-bullseye me-1"></i>{{ $level->skill_focus }}</div>
+                                        @endif
+                                        @if($level->learning_objective)
+                                            <div style="font-size:0.84rem;color:var(--tx2);line-height:1.45;">{{ $level->learning_objective }}</div>
+                                        @endif
+                                    </div>
+                                @endif
                                 
                                 @if($status === 'active' || $status === 'completed')
                                     <div class="d-flex flex-wrap gap-2 mb-{{ $status==='active' ? '20' : '0' }}px">
+                                        @if($level->skill_focus)
+                                            <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-graduation-cap text-info me-1"></i> {{ $level->skill_focus }}</span>
+                                        @endif
                                         @if($level->time_limit_seconds)
                                             <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-clock text-danger me-1"></i> {{ $level->time_limit_seconds }}s</span>
                                         @endif
@@ -646,6 +660,17 @@
                                 @if($status === 'active')
                                     <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
                                         <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count($level->parsed_questions) }} Questions</div>
+                                        @if($level->parsed_success_criteria)
+                                            <div style="margin-top:12px;">
+                                                <div style="font-size:0.78rem;color:var(--tx3);font-weight:700;margin-bottom:6px;">Success checklist</div>
+                                                @foreach($level->parsed_success_criteria as $criterion)
+                                                    <div style="font-size:0.78rem;color:var(--tx2);line-height:1.4;margin-bottom:4px;"><i class="fa-solid fa-check text-success me-1"></i>{{ $criterion }}</div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                        @if($score > 0 && ! $isCompleted)
+                                            <div style="margin-top:12px;font-size:0.78rem;color:#f59e0b;font-weight:700;"><i class="fa-solid fa-arrow-trend-up me-1"></i> Best attempt: {{ $score }}%</div>
+                                        @endif
                                         <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
                                     </div>
                                     <form action="{{ route('user.game.start', $level->id) }}" method="POST">

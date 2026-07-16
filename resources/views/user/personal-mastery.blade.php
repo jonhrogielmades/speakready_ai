@@ -83,7 +83,7 @@
     <div class="p-4 mt-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:16px">
         <h5 class="fw-bold" style="color:var(--tx)">What counts here?</h5>
         <p style="color:var(--tx3)">Only uncoached, score-eligible assessments and clearly labelled legacy sessions contribute. Coached practice remains visible in your history but does not change this mastery baseline.</p>
-        <a class="btn btn-primary" href="{{ route('user.readiness.index') }}">Open Readiness Twin</a>
+        <a class="btn btn-primary" href="{{ route('user.progress') }}">Open Progress Tracking</a>
     </div>
 </div>
 @endsection

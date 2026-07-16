@@ -93,8 +93,17 @@ class GameController extends Controller
         $profile->energy = max(0, $profile->energy - $energyCost);
         $profile->save();
 
-        // Combine mission text and custom prompt
-        $interviewFocus = $level->mission_text;
+        // Combine mission text, learning goal, and custom prompt for game-mode coaching.
+        $interviewFocus = trim((string) $level->mission_text);
+        $learningContext = array_filter([
+            $level->skill_focus ? 'Skill focus: '.$level->skill_focus : null,
+            $level->learning_objective ? 'Learning objective: '.$level->learning_objective : null,
+            $level->success_criteria ? 'Success criteria: '.$level->success_criteria : null,
+            $level->retry_hint ? 'Retry hint: '.$level->retry_hint : null,
+        ]);
+        if ($learningContext !== []) {
+            $interviewFocus .= "\n\nLEARNING GAME CONTEXT:\n".implode("\n", $learningContext);
+        }
         if ($level->ai_custom_prompt) {
             $interviewFocus .= "\n\nCRITICAL HIDDEN AI INSTRUCTION: " . $level->ai_custom_prompt;
         }

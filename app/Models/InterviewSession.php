@@ -161,11 +161,6 @@ class InterviewSession extends Model
         return $this->hasMany(MentorReviewComment::class);
     }
 
-    public function outcomes()
-    {
-        return $this->hasMany(InterviewOutcome::class);
-    }
-
     public function shareIsActive(): bool
     {
         return $this->is_public && (!$this->share_expires_at || $this->share_expires_at->isFuture());
