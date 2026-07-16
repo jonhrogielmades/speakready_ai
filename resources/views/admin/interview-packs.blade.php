@@ -188,3 +188,16 @@
     @endforeach
 </div>
 @endsection
+
+@if($errors->any() && old('_pack_modal_id'))
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const modal = document.getElementById(@json(old('_pack_modal_id')));
+                if (modal && window.bootstrap && window.bootstrap.Modal) {
+                    window.bootstrap.Modal.getOrCreateInstance(modal).show();
+                }
+            });
+        </script>
+    @endpush
+@endif

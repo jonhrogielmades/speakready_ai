@@ -78,6 +78,27 @@ class AdminNewFeatureConnectionTest extends TestCase
         ]);
     }
 
+    public function test_add_interview_pack_modal_reopens_with_scoped_validation_errors(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->followingRedirects()
+            ->from(route('admin.packs.index'))
+            ->post(route('admin.packs.store'), [
+                '_pack_modal_id' => 'addPackModal',
+                'name' => '',
+                'status' => 'active',
+                'difficulty' => 'medium',
+                'interview_focus' => '',
+                'question_types_text' => 'Behavioral',
+            ])
+            ->assertOk()
+            ->assertSee('Please fix the highlighted fields')
+            ->assertSee('Behavioral')
+            ->assertSee('getElementById("addPackModal")', false);
+    }
+
     public function test_admin_readiness_dashboard_surfaces_new_career_features(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
