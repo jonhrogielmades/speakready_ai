@@ -176,6 +176,8 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertSee('body.admin-mobile-shell .modal.pack-form-modal .pack-pressure-input', false)
             ->assertSee('width: 18px !important', false)
             ->assertSee('background-color: #0ea5e9 !important', false)
+            ->assertSee('#sec-admin-packs .pack-header-actions', false)
+            ->assertSee('grid-template-columns: repeat(2, minmax(0, 1fr))', false)
             ->assertSee('for="addPackModal_name"', false)
             ->assertSee('id="addPackModal_pressure_mode"', false);
     }

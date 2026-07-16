@@ -299,7 +299,15 @@
                 grid-template-columns: 1fr;
             }
             #sec-admin-packs .pack-header-actions {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+            #sec-admin-packs .pack-header-actions .btn {
+                min-width: 0;
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+                font-size: .84rem;
+                white-space: nowrap;
             }
         }
     </style>
