@@ -53,6 +53,11 @@
         #sec-admin-packs .pack-mobile-list {
             display: none;
         }
+        #sec-admin-packs .pack-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
         #sec-admin-packs .stat-card {
             background: var(--sf);
             border: 1px solid var(--bd);
@@ -138,6 +143,18 @@
             }
             #sec-admin-packs .pack-filters .btn {
                 width: 100%;
+            }
+            #sec-admin-packs .pack-header-actions {
+                width: 100%;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            #sec-admin-packs .pack-header-actions .btn {
+                width: 100%;
+                min-height: 42px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
             }
             body.admin-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable,
             body.admin-mobile-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable {
@@ -281,6 +298,9 @@
             #sec-admin-packs .pack-mobile-meta {
                 grid-template-columns: 1fr;
             }
+            #sec-admin-packs .pack-header-actions {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 
@@ -289,9 +309,14 @@
             <h4 style="font-size:1.4rem;font-weight:800;margin-bottom:4px">Interview Packs</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Publish company, role, and pressure-mode packs directly into the user practice setup.</p>
         </div>
-        <button class="bgrd btn px-3 py-2" data-bs-toggle="modal" data-bs-target="#addPackModal">
-            <i class="fa-solid fa-plus me-1"></i> Add Pack
-        </button>
+        <div class="pack-header-actions">
+            <button class="btn btn-outline-primary px-3 py-2" data-bs-toggle="modal" data-bs-target="#generatePackModal">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate
+            </button>
+            <button class="bgrd btn px-3 py-2" data-bs-toggle="modal" data-bs-target="#addPackModal">
+                <i class="fa-solid fa-plus me-1"></i> Add Pack
+            </button>
+        </div>
     </div>
 
     @if(session('success'))
@@ -440,6 +465,104 @@
 @endsection
 
 @push('modals')
+    @php($generateModalHasErrors = old('_pack_modal_id') === 'generatePackModal')
+    <div class="modal fade pack-form-modal" id="generatePackModal" tabindex="-1" aria-labelledby="generatePackModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <form class="modal-content" action="{{ route('admin.packs.generate') }}" method="POST">
+                @csrf
+                <input type="hidden" name="_pack_modal_id" value="generatePackModal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generatePackModalTitle">AI Generate Interview Packs</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if($generateModalHasErrors && $errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Please fix the highlighted fields.</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="generatePackTargetRole">Target Role</label>
+                            <input id="generatePackTargetRole" class="form-control @if($generateModalHasErrors && $errors->has('target_role')) is-invalid @endif" name="target_role" value="{{ old('target_role') }}" placeholder="Customer Service Representative" required>
+                            @if($generateModalHasErrors && $errors->has('target_role'))
+                                <div class="invalid-feedback">{{ $errors->first('target_role') }}</div>
+                            @endif
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="generatePackCompany">Company</label>
+                            <input id="generatePackCompany" class="form-control" name="company" value="{{ old('company') }}" placeholder="Optional">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="generatePackRoleFamily">Role Family</label>
+                            <input id="generatePackRoleFamily" class="form-control" name="role_family" value="{{ old('role_family') }}" placeholder="Support">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="generatePackDifficulty">Difficulty</label>
+                            <select id="generatePackDifficulty" class="form-select" name="difficulty" required>
+                                @foreach(['easy', 'medium', 'hard'] as $difficulty)
+                                    <option value="{{ $difficulty }}" @selected(old('difficulty', 'medium') === $difficulty)>{{ ucfirst($difficulty) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" for="generatePackFocus">Interview Focus</label>
+                            <input id="generatePackFocus" class="form-control @if($generateModalHasErrors && $errors->has('interview_focus')) is-invalid @endif" name="interview_focus" value="{{ old('interview_focus', 'Communication Skills') }}" required>
+                            @if($generateModalHasErrors && $errors->has('interview_focus'))
+                                <div class="invalid-feedback">{{ $errors->first('interview_focus') }}</div>
+                            @endif
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="generatePackCount">Packs</label>
+                            <input id="generatePackCount" class="form-control" type="number" min="1" max="5" name="pack_count" value="{{ old('pack_count', 1) }}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="generateQuestionCount">Questions</label>
+                            <input id="generateQuestionCount" class="form-control" type="number" min="3" max="10" name="question_count" value="{{ old('question_count', 5) }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="generatePackStatus">Status</label>
+                            <select id="generatePackStatus" class="form-select" name="status" required>
+                                <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
+                                <option value="inactive" @selected(old('status') === 'inactive')>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="generatePackProvider">AI Provider</label>
+                            <select id="generatePackProvider" class="form-select" name="ai_provider">
+                                <option value="" @selected(old('ai_provider') === null)>Default</option>
+                                @foreach(['gemini' => 'Gemini', 'openai' => 'OpenAI', 'claude' => 'Claude', 'groq' => 'Groq', 'openrouter' => 'OpenRouter', 'wisdomgate' => 'WisdomGate', 'cohere' => 'Cohere'] as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('ai_provider') === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="generatePackContext">Context</label>
+                            <input id="generatePackContext" class="form-control" name="context" value="{{ old('context') }}" placeholder="Hiring priorities, tools, industry, or competencies">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check pack-pressure-check">
+                                <input id="generatePackPressureMode" class="form-check-input pack-pressure-input" type="checkbox" name="pressure_mode" value="1" @checked(old('pressure_mode'))>
+                                <label class="form-check-label pack-pressure-label" for="generatePackPressureMode">Enable pressure mode defaults for generated packs</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate Packs
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     @include('admin.partials.pack-form-modal', ['modalId' => 'addPackModal', 'title' => 'Add Interview Pack', 'action' => route('admin.packs.store'), 'method' => 'POST', 'pack' => null])
 
     @foreach($packs as $pack)

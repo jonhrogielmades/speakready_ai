@@ -193,6 +193,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::prefix('admin/interview-packs')->name('admin.packs.')->group(function () {
         Route::get('/', [AdminInterviewPackController::class, 'index'])->name('index');
         Route::post('/', [AdminInterviewPackController::class, 'store'])->name('store');
+        Route::post('/generate', [AdminInterviewPackController::class, 'generate'])->name('generate');
         Route::put('/{pack}', [AdminInterviewPackController::class, 'update'])->name('update');
         Route::delete('/{pack}', [AdminInterviewPackController::class, 'destroy'])->name('destroy');
     });

@@ -13,6 +13,7 @@ use App\Models\ReadinessProfile;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -177,6 +178,130 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertSee('background-color: #0ea5e9 !important', false)
             ->assertSee('for="addPackModal_name"', false)
             ->assertSee('id="addPackModal_pressure_mode"', false);
+    }
+
+    public function test_admin_can_ai_generate_interview_pack_from_provider_json(): void
+    {
+        $this->withAiProviderPriority('openai,gemini', function (): void {
+            Http::fake([
+                'https://api.openai.com/*' => Http::response([
+                    'choices' => [[
+                        'message' => [
+                            'content' => json_encode([
+                                'packs' => [[
+                                    'name' => 'Wrong Provider Pack',
+                                    'slug' => 'wrong-provider-pack',
+                                ]],
+                            ]),
+                        ],
+                    ]],
+                ], 200),
+                'https://generativelanguage.googleapis.com/*' => Http::response([
+                    'candidates' => [[
+                        'content' => [
+                            'parts' => [[
+                                'text' => json_encode([
+                                    'packs' => [[
+                                        'name' => 'AI Customer Support Evidence Pack',
+                                        'slug' => 'ai-customer-support-evidence-pack',
+                                        'company' => 'Acme Support',
+                                        'role_family' => 'Customer Support',
+                                        'difficulty' => 'hard',
+                                        'interview_focus' => 'Customer Recovery',
+                                        'company_persona' => 'Customer support hiring panel',
+                                        'question_types' => ['Behavioral', 'Situational'],
+                                        'sample_questions' => [
+                                            'Tell me about a time you recovered a dissatisfied customer.',
+                                            'How would you prioritize two urgent customer escalations?',
+                                            'Describe a time you used feedback to improve service quality.',
+                                        ],
+                                        'description' => 'Role-specific customer recovery practice.',
+                                    ]],
+                                ]),
+                            ]],
+                        ],
+                    ]],
+                ], 200),
+            ]);
+
+            $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+            $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+            $this->actingAs($admin)
+                ->post(route('admin.packs.generate'), [
+                    '_pack_modal_id' => 'generatePackModal',
+                    'target_role' => 'Customer Support Representative',
+                    'company' => 'Acme Support',
+                    'role_family' => 'Customer Support',
+                    'difficulty' => 'hard',
+                    'interview_focus' => 'Customer Recovery',
+                    'pack_count' => 2,
+                    'question_count' => 3,
+                    'status' => 'active',
+                    'pressure_mode' => '1',
+                    'ai_provider' => 'gemini',
+                ])
+                ->assertRedirect(route('admin.packs.index'));
+
+            $pack = InterviewPack::where('slug', 'ai-customer-support-evidence-pack')->firstOrFail();
+
+            $this->assertSame('AI Customer Support Evidence Pack', $pack->name);
+            $this->assertSame('hard', $pack->difficulty);
+            $this->assertTrue($pack->pressure_mode);
+            $this->assertSame(['Behavioral', 'Situational'], $pack->question_types);
+            $this->assertCount(3, $pack->sample_questions);
+            $this->assertCount(2, InterviewPack::where('company', 'Acme Support')->get());
+
+            $this->actingAs($user)
+                ->get(route('user.packs.index'))
+                ->assertOk()
+                ->assertSee('AI Customer Support Evidence Pack')
+                ->assertSee('Acme Support');
+
+            Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
+        });
+    }
+
+    public function test_admin_ai_generate_interview_pack_uses_reliable_fallback_when_ai_is_unavailable(): void
+    {
+        $this->withAiProviderPriority('unsupported', function (): void {
+            $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+            $this->actingAs($admin)
+                ->post(route('admin.packs.generate'), [
+                    '_pack_modal_id' => 'generatePackModal',
+                    'target_role' => 'Technical Support Analyst',
+                    'company' => 'Northstar Labs',
+                    'role_family' => 'Technical Support',
+                    'difficulty' => 'medium',
+                    'interview_focus' => 'Problem Solving',
+                    'pack_count' => 2,
+                    'question_count' => 4,
+                    'status' => 'inactive',
+                ])
+                ->assertRedirect(route('admin.packs.index'));
+
+            $packs = InterviewPack::where('company', 'Northstar Labs')->orderBy('name')->get();
+
+            $this->assertCount(2, $packs);
+            $this->assertTrue($packs->every(fn (InterviewPack $pack) => $pack->status === 'inactive'));
+            $this->assertTrue($packs->every(fn (InterviewPack $pack) => count($pack->sample_questions) === 4));
+            $this->assertTrue($packs->every(fn (InterviewPack $pack) => in_array('Situational', $pack->question_types, true)));
+        });
+    }
+
+    public function test_admin_interview_pack_page_exposes_ai_generate_modal(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packs.index'))
+            ->assertOk()
+            ->assertSee('AI Generate', false)
+            ->assertSee('id="generatePackModal"', false)
+            ->assertSee('action="'.route('admin.packs.generate').'"', false)
+            ->assertSee('name="target_role"', false)
+            ->assertSee('name="question_count"', false);
     }
 
     public function test_admin_readiness_dashboard_surfaces_new_career_features(): void
@@ -419,5 +544,21 @@ class AdminNewFeatureConnectionTest extends TestCase
             'energy_cost' => 1,
             'is_hidden' => false,
         ], $overrides));
+    }
+
+    private function withAiProviderPriority(string $priority, callable $callback): void
+    {
+        $previous = getenv('INTERVIEW_CHATBOT_PROVIDER_PRIORITY');
+        putenv("INTERVIEW_CHATBOT_PROVIDER_PRIORITY={$priority}");
+
+        try {
+            $callback();
+        } finally {
+            if ($previous === false) {
+                putenv('INTERVIEW_CHATBOT_PROVIDER_PRIORITY');
+            } else {
+                putenv("INTERVIEW_CHATBOT_PROVIDER_PRIORITY={$previous}");
+            }
+        }
     }
 }

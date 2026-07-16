@@ -1880,16 +1880,22 @@ PROMPT;
 
     public static function generateJson($prompt, $provider = 'gemini')
     {
-        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere');
-        $providers = array_filter(array_map('trim', explode(',', $priorityString)));
-        if (empty($providers)) {
-            $providers = [$provider, 'gemini', 'groq', 'claude', 'openrouter', 'wisdomgate', 'cohere'];
-        }
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,openai,groq,claude,openrouter,wisdomgate,cohere');
+        $providers = array_merge(
+            [$provider],
+            array_map('trim', explode(',', $priorityString)),
+            ['gemini', 'openai', 'groq', 'claude', 'openrouter', 'wisdomgate', 'cohere']
+        );
+        $providers = array_values(array_unique(array_filter(
+            array_map(fn ($name) => self::normalizeProviderName($name), $providers)
+        )));
 
         foreach ($providers as $currentProvider) {
             try {
                 $response = [];
                 switch ($currentProvider) {
+                    case 'openai': $response = self::callOpenAI($prompt, 'Return only one valid JSON object that matches the requested schema.');
+                        break;
                     case 'gemini': $response = self::callGemini($prompt);
                         break;
                     case 'cohere': $response = self::callCohere($prompt);
