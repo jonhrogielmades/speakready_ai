@@ -23,6 +23,17 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
+# Allow long-running admin generation requests without PHP-FPM ending the worker first.
+RUN { \
+        echo "max_execution_time=3600"; \
+        echo "max_input_time=3600"; \
+        echo "memory_limit=512M"; \
+    } > /usr/local/etc/php/conf.d/99-render-timeouts.ini \
+    && { \
+        echo "[www]"; \
+        echo "request_terminate_timeout = 3600s"; \
+    } > /usr/local/etc/php-fpm.d/zz-render-timeouts.conf
+
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 

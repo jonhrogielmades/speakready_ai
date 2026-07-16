@@ -14,6 +14,7 @@ class AdminGameController extends Controller
 {
     private const MAX_LEVEL_NUMBER = 100;
     private const MAX_LEVELS_PER_GENERATION = 100;
+    private const DEFAULT_GAME_GENERATION_BATCH_SIZE = 5;
 
     private ?array $gameLevelColumns = null;
 
@@ -63,8 +64,8 @@ class AdminGameController extends Controller
 
     public function generate(Request $request)
     {
-        // Extend max execution time since generating up to 100 levels can take several minutes.
-        set_time_limit(900);
+        // Extend max execution time since generating up to 100 AI-backed levels can be slow.
+        set_time_limit(3600);
 
         $validated = $request->validate([
             'topic' => 'required|string|max:255',
@@ -77,40 +78,33 @@ class AdminGameController extends Controller
         $numLevels = (int) $validated['num_levels'];
         $topic = $validated['topic'];
         $categoryId = (int) $validated['category_id'];
-        
-        $difficulties = ['beginner', 'intermediate', 'advanced'];
+
+        $levelSlots = $this->openLevelSlots($categoryId, $startLevel, $numLevels);
         $generatedCount = 0;
-        $currentLevelNum = $startLevel;
 
-        for ($checkedLevels = 0; $generatedCount < $numLevels && $checkedLevels < self::MAX_LEVEL_NUMBER; $checkedLevels++) {
-            // Skip existing level numbers in this category, then keep scanning for open slots.
-            if (GameLevel::where('level_number', $currentLevelNum)->where('category_id', $categoryId)->exists()) {
-                $currentLevelNum = $this->nextLevelNumber($currentLevelNum);
-                continue;
-            }
+        foreach (array_chunk($levelSlots, $this->gameGenerationBatchSize()) as $slotBatch) {
+            $aiDrafts = [];
 
-            // Cycle through difficulties to ensure variation
-            $difficulty = $difficulties[$generatedCount % count($difficulties)];
-            $generationNumber = $generatedCount + 1;
-            
-            // Modify topic slightly to inform AI of difficulty
-            $promptTopic = "{$topic}. Design this specifically for {$difficulty} difficulty level. This is generated level {$generationNumber} of {$numLevels}; make it distinct from the other levels in the set.";
-            
             try {
-                $gameData = AIService::generateGame($promptTopic);
+                $aiDrafts = AIService::generateGames($topic, $slotBatch);
             } catch (\Throwable $e) {
-                Log::warning('Learning Game generation failed; using fallback content.', [
+                Log::warning('Learning Game batch generation failed; using fallback content.', [
                     'topic' => $topic,
-                    'level_number' => $currentLevelNum,
+                    'levels' => array_column($slotBatch, 'level_number'),
                     'error' => $e->getMessage(),
                 ]);
-                $gameData = null;
             }
 
-            $gameData = $this->normalizeGeneratedGameData($gameData, $topic, $difficulty, $generationNumber, $numLevels);
+            $aiDraftsByGenerationNumber = $this->keyGeneratedGamesByGenerationNumber($aiDrafts);
 
-            if ($gameData) {
-                $gameData['level_number'] = $currentLevelNum;
+            foreach ($slotBatch as $slot) {
+                $generationNumber = (int) $slot['generation_number'];
+                $difficulty = (string) $slot['difficulty'];
+                $gameData = $aiDraftsByGenerationNumber[$generationNumber] ?? null;
+
+                $gameData = $this->normalizeGeneratedGameData($gameData, $topic, $difficulty, $generationNumber, $numLevels);
+
+                $gameData['level_number'] = $slot['level_number'];
                 $gameData['category_id'] = $categoryId;
                 $gameData['difficulty'] = $difficulty; // Force the difficulty
                 
@@ -122,8 +116,6 @@ class AdminGameController extends Controller
                 GameLevel::create($this->gameLevelDataForCurrentSchema($gameData));
                 $generatedCount++;
             }
-
-            $currentLevelNum = $this->nextLevelNumber($currentLevelNum);
         }
 
         if ($generatedCount === 0) {
@@ -135,6 +127,71 @@ class AdminGameController extends Controller
         }
 
         return redirect()->route('admin.game')->with('success', "Successfully generated {$generatedCount} Learning Game(s)!");
+    }
+
+    private function openLevelSlots(int $categoryId, int $startLevel, int $requestedLevels): array
+    {
+        $existingLevelNumbers = GameLevel::where('category_id', $categoryId)
+            ->whereBetween('level_number', [1, self::MAX_LEVEL_NUMBER])
+            ->pluck('level_number')
+            ->mapWithKeys(fn ($levelNumber) => [(int) $levelNumber => true]);
+
+        $slots = [];
+        $currentLevelNumber = $startLevel;
+
+        for ($checkedLevels = 0; count($slots) < $requestedLevels && $checkedLevels < self::MAX_LEVEL_NUMBER; $checkedLevels++) {
+            if (! $existingLevelNumbers->has($currentLevelNumber)) {
+                $generationNumber = count($slots) + 1;
+
+                $slots[] = [
+                    'level_number' => $currentLevelNumber,
+                    'difficulty' => $this->difficultyForGeneration($generationNumber),
+                    'generation_number' => $generationNumber,
+                    'total_levels' => $requestedLevels,
+                ];
+            }
+
+            $currentLevelNumber = $this->nextLevelNumber($currentLevelNumber);
+        }
+
+        return $slots;
+    }
+
+    private function difficultyForGeneration(int $generationNumber): string
+    {
+        $difficulties = ['beginner', 'intermediate', 'advanced'];
+
+        return $difficulties[($generationNumber - 1) % count($difficulties)];
+    }
+
+    private function gameGenerationBatchSize(): int
+    {
+        return max(1, min(10, (int) env('AI_GAME_BATCH_SIZE', self::DEFAULT_GAME_GENERATION_BATCH_SIZE)));
+    }
+
+    private function keyGeneratedGamesByGenerationNumber(array $aiDrafts): array
+    {
+        $levels = $aiDrafts['levels'] ?? $aiDrafts;
+
+        if (! is_array($levels)) {
+            return [];
+        }
+
+        $keyedDrafts = [];
+
+        foreach ($levels as $index => $draft) {
+            if (! is_array($draft)) {
+                continue;
+            }
+
+            $generationNumber = (int) ($draft['generation_number'] ?? ($index + 1));
+
+            if ($generationNumber > 0) {
+                $keyedDrafts[$generationNumber] = $draft;
+            }
+        }
+
+        return $keyedDrafts;
     }
 
     private function validationRules($id = null, $categoryId = null)

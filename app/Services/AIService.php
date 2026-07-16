@@ -733,6 +733,88 @@ EOT;
         return null;
     }
 
+    public static function generateGames(string $topic, array $levelSpecs, string $provider = 'gemini'): array
+    {
+        if (empty($levelSpecs) || self::externalAiDisabledForTests()) {
+            return [];
+        }
+
+        $totalLevelSpecs = count($levelSpecs);
+        $levelSpecs = array_values(array_map(function (array $spec) use ($totalLevelSpecs): array {
+            return [
+                'generation_number' => (int) ($spec['generation_number'] ?? 0),
+                'level_number' => (int) ($spec['level_number'] ?? 0),
+                'difficulty' => (string) ($spec['difficulty'] ?? 'beginner'),
+                'total_levels' => (int) ($spec['total_levels'] ?? $totalLevelSpecs),
+            ];
+        }, $levelSpecs));
+
+        $prompt = "You are an expert Gamification and Interview Design AI. Create multiple distinct Interview Learning Game levels based on the topic: '{$topic}'.\n";
+        $prompt .= "Return ONLY a valid JSON object. Do not include markdown formatting or explanations.\n";
+        $prompt .= "Create exactly one level for each item in this level_specs JSON array:\n";
+        $prompt .= json_encode($levelSpecs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n\n";
+        $prompt .= <<<'EOT'
+The JSON structure MUST be exactly:
+{
+  "levels": [
+    {
+      "generation_number": 1,
+      "title": "String, a catchy gamified title",
+      "description": "String, 1-2 sentences setting the scene",
+      "mission_text": "String, 5 specific interview questions as a numbered list",
+      "target_position": "String, the personal improvement goal e.g., 'Better Communication', 'Public Speaking'",
+      "skill_focus": "String, the main interview skill trained, e.g., 'STAR Method', 'Clarity', 'Confidence', 'Professionalism'",
+      "learning_objective": "String, one concrete learning objective",
+      "success_criteria": "String, 4-6 numbered checklist items",
+      "retry_hint": "String, short actionable retry advice",
+      "difficulty": "String, match the requested difficulty exactly",
+      "required_score": 80,
+      "xp_reward": 500,
+      "energy_cost": 1,
+      "ai_persona": "String, the persona of the interviewer",
+      "ai_custom_prompt": "String, hidden prompt instructions for the AI on how to act",
+      "time_limit_seconds": 120,
+      "banned_words": "String, comma separated filler words, or null",
+      "target_tone": "String, desired tone, or null",
+      "custom_badge_name": "String, a badge name, or null",
+      "skill_xp_type": "String, e.g., 'Leadership', 'Technical', 'Communication', or null",
+      "skill_xp_amount": 50
+    }
+  ]
+}
+Rules:
+- Include every requested generation_number exactly once.
+- Make titles, questions, success criteria, and retry hints meaningfully different across levels.
+- Keep each mission_text to exactly 5 numbered interview questions.
+- Keep content professional, concise, and useful for interview practice.
+EOT;
+
+        $priorityString = env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,claude,openrouter,wisdomgate,cohere,openai');
+        $providers = array_values(array_unique(array_filter(array_map(
+            fn ($name) => self::normalizeProviderName($name),
+            array_merge([$provider], explode(',', $priorityString))
+        ))));
+
+        foreach ($providers as $currentProvider) {
+            if (! self::providerHasCredentials($currentProvider)) {
+                continue;
+            }
+
+            try {
+                $response = self::callStructuredProvider($currentProvider, $prompt);
+                $levels = $response['levels'] ?? [];
+
+                if (is_array($levels) && $levels !== []) {
+                    return ['levels' => $levels];
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Learning Game batch generation failed on {$currentProvider}: ".$e->getMessage());
+            }
+        }
+
+        return [];
+    }
+
     public static function analyzeVoiceRehearsal($questionPrompt, $transcript, $provider = 'gemini', $targetLanguage = null)
     {
         $prompt = "You are an expert Speech and Interview Coach evaluating a candidate's verbal response to an interview question.\n";
