@@ -257,6 +257,107 @@
     @endforeach
 @endpush
 
+@push('late-styles')
+    <style>
+        @media (max-width: 991.98px) {
+            body.admin-mobile-shell .modal.pack-form-modal.show {
+                align-items: stretch !important;
+                justify-content: center !important;
+                padding: calc(var(--mob-safe-top, 0px) + 8px) 8px calc(var(--mob-nav-h, 64px) + var(--mob-safe-bottom, 0px) + 8px) !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-dialog.modal-lg.modal-dialog-scrollable {
+                width: min(100%, 520px) !important;
+                max-width: min(100%, 520px) !important;
+                height: calc(100dvh - var(--mob-nav-h, 64px) - var(--mob-safe-top, 0px) - var(--mob-safe-bottom, 0px) - 16px) !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                margin: 0 auto !important;
+                display: flex !important;
+                align-items: stretch !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-content {
+                height: 100% !important;
+                max-height: 100% !important;
+                border-radius: 14px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-header {
+                min-height: 56px;
+                padding: 12px 14px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-title {
+                font-size: .98rem;
+                line-height: 1.25;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-body {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding: 14px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-body .row {
+                margin-left: -5px !important;
+                margin-right: -5px !important;
+                --bs-gutter-y: .75rem;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-body .row > [class*="col-"] {
+                min-width: 0;
+                padding-left: 5px !important;
+                padding-right: 5px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .form-label {
+                margin-bottom: 4px;
+                font-size: .78rem;
+                line-height: 1.2;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal :is(.form-control, .form-select) {
+                min-height: 42px !important;
+                font-size: .92rem;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal textarea.form-control {
+                min-height: 74px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .form-check {
+                align-items: flex-start;
+                gap: 8px;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .form-check-label {
+                font-size: .86rem;
+                line-height: 1.35;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-footer {
+                display: grid !important;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                padding: 10px 14px 12px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-footer .btn,
+            body.admin-mobile-shell .modal.pack-form-modal .modal-footer button {
+                min-height: 44px !important;
+                font-size: .84rem !important;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 380px) {
+            body.admin-mobile-shell .modal.pack-form-modal .modal-title {
+                font-size: .92rem;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-body {
+                padding: 12px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-footer {
+                padding-inline: 12px !important;
+            }
+            body.admin-mobile-shell .modal.pack-form-modal .modal-footer .btn,
+            body.admin-mobile-shell .modal.pack-form-modal .modal-footer button {
+                font-size: .78rem !important;
+            }
+        }
+    </style>
+@endpush
+
 @if($errors->any() && old('_pack_modal_id'))
     @push('scripts')
         <script>

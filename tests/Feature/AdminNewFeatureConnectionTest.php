@@ -121,6 +121,30 @@ class AdminNewFeatureConnectionTest extends TestCase
         );
     }
 
+    public function test_interview_pack_modal_has_mobile_safe_area_overrides(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $response = $this->actingAs($admin)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('admin.packs.index'));
+        $html = $response->baseResponse->getContent();
+
+        $response
+            ->assertOk()
+            ->assertSee('id="mob-content"', false)
+            ->assertSee('id="mob-bottom-nav"', false)
+            ->assertSee('body.admin-mobile-shell .modal.pack-form-modal.show', false)
+            ->assertSee('calc(100dvh - var(--mob-nav-h, 64px)', false)
+            ->assertSee('textarea.form-control', false);
+
+        $this->assertGreaterThan(
+            strpos($html, 'body.admin-mobile-shell .modal .modal-dialog.modal-dialog-scrollable'),
+            strpos($html, 'body.admin-mobile-shell .modal.pack-form-modal.show')
+        );
+    }
+
     public function test_admin_readiness_dashboard_surfaces_new_career_features(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

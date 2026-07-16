@@ -2831,6 +2831,7 @@
           });
       </script>
 
+      @stack('late-styles')
       @stack('scripts')
       @include('layouts.logout-transition')
    </body>
