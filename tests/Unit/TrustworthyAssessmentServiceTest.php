@@ -2,7 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Models\InterviewAnswer;
+use App\Models\InterviewSession;
+use App\Models\Question;
 use App\Services\TrustworthyAssessmentService;
+use Illuminate\Support\Collection;
 use PHPUnit\Framework\TestCase;
 
 class TrustworthyAssessmentServiceTest extends TestCase
@@ -68,5 +72,31 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertStringContainsString($answer, $revision);
         $this->assertStringContainsString('Add only a truthful, verified result', $revision);
         $this->assertStringNotContainsString('increased revenue', $revision);
+    }
+
+    public function test_session_confidence_respects_answer_scoring_confidence(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $session = new InterviewSession;
+        $session->setRawAttributes(['accommodation_profile' => '[]'], true);
+        $answer = new InterviewAnswer;
+        $answer->setRawAttributes([
+            'id' => 10,
+            'answer_text' => 'I coordinated a checklist update and shared it with the support team.',
+            'ai_feedback' => 'Evidence-grounded feedback.',
+            'scoring_confidence' => 45,
+            'is_skipped' => false,
+        ], true);
+        $answer->setRelation('question', new Question(['type' => 'Technical']));
+
+        $metadata = $service->sessionMetadata($session, new Collection([$answer]), [
+            'clarity' => 70,
+            'relevance' => 70,
+            'grammar' => 70,
+            'professionalism' => 70,
+        ], 0, 0);
+
+        $this->assertSame(40, $metadata['scoring_confidence']);
+        $this->assertLessThanOrEqual(45, $metadata['scoring_confidence']);
     }
 }

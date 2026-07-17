@@ -250,6 +250,8 @@ class InterviewController extends Controller
             'question_id' => 'required|exists:questions,id',
             'answer_text' => 'nullable|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
+            'paste_event_count' => 'nullable|integer|min:0|max:500',
+            'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
             'is_skipped' => 'nullable',
             'timed_out' => 'nullable',
@@ -278,26 +280,37 @@ class InterviewController extends Controller
         $isSkipped = filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN);
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
+        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
+        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
 
-        InterviewAnswer::create([
-            'interview_session_id' => $session->id,
-            'question_id' => $question->id,
-            'answer_text' => $answerText,
-            'transcript_timeline' => $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null),
-            'response_mode' => $validated['response_mode'] ?? 'text',
-            'is_skipped' => $isSkipped,
-            'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
-            'wpm' => $deliveryMetrics['wpm'],
-            'voice_duration' => $deliveryMetrics['voice_duration'],
-            'filler_words_count' => $deliveryMetrics['filler_words_count'],
-            'pause_count' => $deliveryMetrics['pause_count'],
-            'confidence_score' => $deliveryMetrics['confidence_score'],
-            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
-            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
-            'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
-            'posture_score' => $deliveryMetrics['posture_score'],
-        ]);
+        InterviewAnswer::updateOrCreate(
+            [
+                'interview_session_id' => $session->id,
+                'question_id' => $question->id,
+                'retry_of_answer_id' => null,
+            ],
+            array_merge([
+                'answer_text' => $answerText,
+                'transcript_timeline' => $transcriptTimeline,
+                'paste_event_count' => $integrity['paste_event_count'],
+                'pasted_character_count' => $integrity['pasted_character_count'],
+                'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
+                'answer_integrity_flags' => $integrity['answer_integrity_flags'],
+                'response_mode' => $validated['response_mode'] ?? 'text',
+                'is_skipped' => $isSkipped,
+                'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
+                'wpm' => $deliveryMetrics['wpm'],
+                'voice_duration' => $deliveryMetrics['voice_duration'],
+                'filler_words_count' => $deliveryMetrics['filler_words_count'],
+                'pause_count' => $deliveryMetrics['pause_count'],
+                'confidence_score' => $deliveryMetrics['confidence_score'],
+                'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+                'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
+                'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
+                'posture_score' => $deliveryMetrics['posture_score'],
+            ], $this->integrityAuditFields($integrity))
+        );
 
         if (array_key_exists('notes', $validated)) {
             $session->update(['notes' => $validated['notes']]);
@@ -332,18 +345,18 @@ class InterviewController extends Controller
 
     public function chatReply(Request $request)
     {
-        if (! Setting::enabled('int_follow_up')) {
-            return response()->json(['error' => 'Follow-up coaching is disabled by the administrator.'], 403);
-        }
-
         $session = $this->activeInterviewSession();
         if (! $session) {
             return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
         }
+        $followUpEnabled = Setting::enabled('int_follow_up');
 
         $validated = $request->validate([
             'answer_text' => 'required|string|max:20000',
+            'conversation_context' => 'nullable|string|max:50000',
             'transcript_timeline' => 'nullable|string|max:50000',
+            'paste_event_count' => 'nullable|integer|min:0|max:500',
+            'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'question_id' => 'required|exists:questions,id',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
             'is_skipped' => 'nullable',
@@ -366,31 +379,46 @@ class InterviewController extends Controller
         }
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
+        $conversationContext = $this->normalizedConversationContextFrom(
+            $this->jsonPayloadFrom($validated['conversation_context'] ?? null)
+        );
+        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
+        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
 
         // 1. Save User's Answer
-        $answer = InterviewAnswer::create([
-            'interview_session_id' => $session->id,
-            'question_id' => $question->id,
-            'answer_text' => $answerText,
-            'transcript_timeline' => $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null),
-            'response_mode' => $validated['response_mode'] ?? 'text',
-            'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
-            'wpm' => $deliveryMetrics['wpm'],
-            'voice_duration' => $deliveryMetrics['voice_duration'],
-            'filler_words_count' => $deliveryMetrics['filler_words_count'],
-            'pause_count' => $deliveryMetrics['pause_count'],
-            'confidence_score' => $deliveryMetrics['confidence_score'],
-            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
-            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
-            'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
-            'posture_score' => $deliveryMetrics['posture_score'],
-        ]);
+        $answer = InterviewAnswer::updateOrCreate(
+            [
+                'interview_session_id' => $session->id,
+                'question_id' => $question->id,
+                'retry_of_answer_id' => null,
+            ],
+            array_merge([
+                'answer_text' => $answerText,
+                'transcript_timeline' => $transcriptTimeline,
+                'paste_event_count' => $integrity['paste_event_count'],
+                'pasted_character_count' => $integrity['pasted_character_count'],
+                'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
+                'answer_integrity_flags' => $integrity['answer_integrity_flags'],
+                'response_mode' => $validated['response_mode'] ?? 'text',
+                'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
+                'wpm' => $deliveryMetrics['wpm'],
+                'voice_duration' => $deliveryMetrics['voice_duration'],
+                'filler_words_count' => $deliveryMetrics['filler_words_count'],
+                'pause_count' => $deliveryMetrics['pause_count'],
+                'confidence_score' => $deliveryMetrics['confidence_score'],
+                'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+                'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
+                'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
+                'posture_score' => $deliveryMetrics['posture_score'],
+            ], $this->integrityAuditFields($integrity))
+        );
 
         // 2. Fetch Conversation History
         $history = InterviewAnswer::with('question')
             ->where('interview_session_id', $session->id)
+            ->whereNull('retry_of_answer_id')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(function ($ans) {
@@ -403,7 +431,13 @@ class InterviewController extends Controller
         // 3. Generate Follow-up via AI
         $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
         $isFinal = filter_var($validated['is_final_question'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $followUpText = AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal, $this->currentLanguageConfig());
+        if (! $followUpEnabled) {
+            $provider = 'local';
+        }
+
+        $followUpText = $followUpEnabled
+            ? AIService::generateChatReply($session, $history, $answerText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext)
+            : AIService::fallbackInterviewReply($session, $history, $answerText, $isFinal);
 
         if (! $followUpText) {
             $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
@@ -425,6 +459,14 @@ class InterviewController extends Controller
             $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
             $provider !== 'local'
         );
+
+        if (! $newQuestion) {
+            return response()->json(['error' => 'Unable to prepare the next interview question.'], 500);
+        }
+
+        $session->update([
+            'current_question_index' => max(0, $questionIndex),
+        ]);
 
         return response()->json([
             'success' => true,
@@ -598,7 +640,7 @@ class InterviewController extends Controller
                     'relevance_score' => $r,
                     'grammar_score' => $g,
                     'score' => $qScore,
-                    'scoring_confidence' => 80,
+                    'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? 80),
                     'evidence_map' => $evidence,
                     'rubric_level' => $rubric['level'],
                     'recommendation_text' => $rubric['next_level'],
@@ -842,6 +884,8 @@ class InterviewController extends Controller
         $validated = $request->validate([
             'answer_text' => 'required|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
+            'paste_event_count' => 'nullable|integer|min:0|max:500',
+            'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
             'wpm' => 'nullable|integer|min:0|max:400',
             'voice_duration' => 'nullable|integer|min:0|max:7200',
@@ -856,16 +900,22 @@ class InterviewController extends Controller
 
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
         $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
+        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
+        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
         $nextAttempt = ((int) InterviewAnswer::where('retry_of_answer_id', $answer->id)->max('attempt_number')) + 1;
         $nextAttempt = max(2, $nextAttempt);
 
-        $retry = InterviewAnswer::create([
+        $retry = InterviewAnswer::create(array_merge([
             'interview_session_id' => $session->id,
             'retry_of_answer_id' => $answer->id,
             'attempt_number' => $nextAttempt,
             'question_id' => $answer->question_id,
             'answer_text' => $answerText,
-            'transcript_timeline' => $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null),
+            'transcript_timeline' => $transcriptTimeline,
+            'paste_event_count' => $integrity['paste_event_count'],
+            'pasted_character_count' => $integrity['pasted_character_count'],
+            'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
+            'answer_integrity_flags' => $integrity['answer_integrity_flags'],
             'response_mode' => $validated['response_mode'] ?? 'text',
             'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
             'wpm' => $deliveryMetrics['wpm'],
@@ -877,7 +927,7 @@ class InterviewController extends Controller
             'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
             'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
             'posture_score' => $deliveryMetrics['posture_score'],
-        ]);
+        ], $this->integrityAuditFields($integrity)));
 
         $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
         $feedback = AIService::generateFeedback([
@@ -964,6 +1014,169 @@ class InterviewController extends Controller
         ];
     }
 
+    private function answerIntegrityFrom(array $input, string $answerText, ?array $timeline): array
+    {
+        $wordCount = TranscriptService::wordCount($answerText);
+        $charCount = strlen($answerText);
+        $elapsedSeconds = $this->clampInt($input['elapsed_seconds'] ?? 0, 0, 7200);
+        $voiceDuration = $this->clampInt($input['voice_duration'] ?? 0, 0, 7200);
+        [$timelinePasteCount, $timelinePastedChars] = $this->pasteSignalsFromTimeline($timeline);
+
+        $pasteEventCount = max(
+            $this->clampInt($input['paste_event_count'] ?? 0, 0, 500),
+            $timelinePasteCount
+        );
+        $pastedCharacterCount = max(
+            $this->clampInt($input['pasted_character_count'] ?? 0, 0, 20000),
+            $timelinePastedChars
+        );
+
+        $largePasteDetected = $pasteEventCount > 0
+            && ($pastedCharacterCount >= 80 || ($charCount > 0 && $pastedCharacterCount >= (int) round($charCount * 0.35)));
+        $rapidLongAnswer = $wordCount >= 70
+            && $elapsedSeconds > 0
+            && $elapsedSeconds <= max(18, (int) floor($wordCount / 4))
+            && $voiceDuration <= 0;
+        $copyPasteDetected = $pasteEventCount > 0 || $rapidLongAnswer;
+        $aiLikelihood = $this->aiGeneratedLikelihood($answerText, $copyPasteDetected, $elapsedSeconds, $voiceDuration);
+
+        $signals = [];
+        if ($pasteEventCount > 0) {
+            $signals[] = 'paste_event_recorded';
+        }
+        if ($largePasteDetected) {
+            $signals[] = 'large_paste_volume';
+        }
+        if ($rapidLongAnswer) {
+            $signals[] = 'rapid_long_text_entry';
+        }
+        if ($aiLikelihood >= 70) {
+            $signals[] = 'possible_ai_generated_answer';
+        } elseif ($aiLikelihood >= 50) {
+            $signals[] = 'ai_template_language';
+        }
+
+        return [
+            'paste_event_count' => $pasteEventCount,
+            'pasted_character_count' => $pastedCharacterCount,
+            'ai_generated_likelihood' => $aiLikelihood,
+            'answer_integrity_flags' => [
+                'copy_paste_detected' => $copyPasteDetected,
+                'large_paste_detected' => $largePasteDetected,
+                'rapid_long_answer' => $rapidLongAnswer,
+                'possible_ai_generated_answer' => $aiLikelihood >= 70,
+                'ai_template_likelihood' => $aiLikelihood,
+                'signals' => $signals,
+            ],
+        ];
+    }
+
+    private function pasteSignalsFromTimeline(?array $timeline): array
+    {
+        $count = 0;
+        $chars = 0;
+
+        foreach ($timeline ?? [] as $point) {
+            if (! is_array($point)) {
+                continue;
+            }
+
+            $event = (string) ($point['event'] ?? '');
+            if (in_array($event, ['paste', 'large_paste'], true)) {
+                $count++;
+                $chars += $this->clampInt($point['pasted_chars'] ?? 0, 0, 20000);
+            }
+        }
+
+        return [$count, $chars];
+    }
+
+    private function aiGeneratedLikelihood(string $answerText, bool $copyPasteDetected, int $elapsedSeconds, int $voiceDuration): int
+    {
+        $wordCount = TranscriptService::wordCount($answerText);
+        if ($wordCount === 0) {
+            return 0;
+        }
+
+        $lower = Str::lower($answerText);
+        if (Str::contains($lower, ['as an ai', 'as a language model', 'i do not have personal experiences'])) {
+            return 95;
+        }
+
+        $score = 0;
+        $aiPhrasePatterns = [
+            '/\bleverage\b/i',
+            '/\butili[sz]e\b/i',
+            '/\bfoster\b/i',
+            '/\bstreamline\b/i',
+            '/\brobust\b/i',
+            '/\bcomprehensive\b/i',
+            '/\bstakeholders?\b/i',
+            '/\bmeasurable outcomes?\b/i',
+            '/\bbest practices?\b/i',
+            '/\bcontinuous improvement\b/i',
+            '/\bin conclusion\b/i',
+            '/\bfurthermore\b/i',
+            '/\bmoreover\b/i',
+            '/\bin addition\b/i',
+            '/\boverall\b/i',
+            '/\bmy approach would be\b/i',
+            '/\bI would ensure\b/i',
+            '/\bI would focus on\b/i',
+        ];
+
+        $phraseHits = 0;
+        foreach ($aiPhrasePatterns as $pattern) {
+            $phraseHits += preg_match($pattern, $answerText) ? 1 : 0;
+        }
+        $score += min(34, $phraseHits * 7);
+
+        $sentenceCount = max(1, preg_match_all('/[.!?]+/', $answerText) ?: 1);
+        $averageSentenceWords = $wordCount / $sentenceCount;
+        if ($wordCount >= 80 && $sentenceCount >= 4 && $averageSentenceWords >= 14 && $averageSentenceWords <= 28) {
+            $score += 12;
+        }
+        if ($wordCount >= 90 && ! preg_match('/\b(um|uh|like|you know|I mean)\b/i', $answerText)) {
+            $score += 8;
+        }
+        if (! preg_match('/\b\d+(?:\.\d+)?%?|\bpercent\b|\bminutes?\b|\bdays?\b|\bhours?\b|\bPHP\b|\bpesos?\b/i', $answerText)) {
+            $score += 8;
+        }
+        if (! preg_match('/\bI\s+(led|owned|built|created|resolved|improved|reduced|increased|delivered|designed|implemented|organized|managed|tested|analyzed|coordinated|handled|supported|communicated)\b/i', $answerText)) {
+            $score += 10;
+        }
+        if ($copyPasteDetected && $wordCount >= 50) {
+            $score += 12;
+        }
+        if ($wordCount >= 70 && $elapsedSeconds > 0 && $elapsedSeconds <= max(18, (int) floor($wordCount / 4)) && $voiceDuration <= 0) {
+            $score += 16;
+        }
+
+        return $this->scoreValue($score);
+    }
+
+    private function integrityAuditFields(array $integrity): array
+    {
+        $flags = $integrity['answer_integrity_flags'] ?? [];
+        $reasons = [];
+
+        if ((bool) ($flags['copy_paste_detected'] ?? false)) {
+            $reasons[] = 'copy/paste activity detected';
+        }
+        if ((bool) ($flags['possible_ai_generated_answer'] ?? false)) {
+            $reasons[] = 'possible AI-generated answer pattern detected';
+        }
+
+        if ($reasons === []) {
+            return [];
+        }
+
+        return [
+            'audit_status' => 'flagged',
+            'flagged_reason' => 'Integrity review suggested: '.implode('; ', $reasons).'.',
+        ];
+    }
+
     private function jsonPayloadFrom(?string $payload): ?array
     {
         if ($payload === null || trim($payload) === '') {
@@ -973,6 +1186,35 @@ class InterviewController extends Controller
         $decoded = json_decode($payload, true);
 
         return is_array($decoded) ? $decoded : null;
+    }
+
+    private function normalizedConversationContextFrom(?array $payload): array
+    {
+        if ($payload === null) {
+            return [];
+        }
+
+        $messages = [];
+        foreach (array_slice($payload, -16) as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $role = Str::lower((string) ($item['role'] ?? ''));
+            $role = in_array($role, ['interviewer', 'user', 'candidate', 'ai'], true) ? $role : '';
+            $text = trim((string) ($item['text'] ?? $item['content'] ?? ''));
+
+            if ($role === '' || $text === '') {
+                continue;
+            }
+
+            $messages[] = [
+                'role' => $role === 'ai' ? 'interviewer' : ($role === 'candidate' ? 'user' : $role),
+                'content' => Str::limit(preg_replace('/\s+/u', ' ', $text) ?? $text, 400, ''),
+            ];
+        }
+
+        return $messages;
     }
 
     private function createInterviewQuestion(
@@ -1191,6 +1433,12 @@ class InterviewController extends Controller
             return $questionText;
         }
 
+        if (preg_match('/^(.+[.!])\s+([^.!?]+\?)$/s', $questionText, $matches)) {
+            $finalQuestion = rtrim(trim($matches[2]), '?');
+
+            return trim($matches[1]).' '.$finalQuestion.' for '.$rolePhrase.'?';
+        }
+
         return 'For your target position of '.$position.', '.lcfirst($questionText);
     }
 
@@ -1236,33 +1484,13 @@ class InterviewController extends Controller
 
     private function aiGeneratedQuestionSourceMetadata(array $sourceMetadata, string $provider): array
     {
-        $providerName = $this->providerDisplayName($provider);
         $sourceName = trim((string) ($sourceMetadata['source_name'] ?? ''));
-        $displayName = "User AI Generated ({$providerName})";
-
-        if ($sourceName !== '') {
-            $displayName .= " via {$sourceName}";
-        }
 
         return [
-            'source_name' => mb_substr($displayName, 0, 255),
+            'source_name' => mb_substr($sourceName !== '' ? $sourceName : 'Curated Philippines interview source', 0, 255),
             'source_url' => $sourceMetadata['source_url'] ?? null,
-            'source_type' => 'ai_generated_user',
+            'source_type' => 'ai_adapted_source_backed',
         ];
-    }
-
-    private function providerDisplayName(?string $provider): string
-    {
-        return match (strtolower(trim((string) $provider))) {
-            'openai' => 'OpenAI',
-            'gemini' => 'Gemini',
-            'groq' => 'Groq',
-            'claude' => 'Claude',
-            'openrouter' => 'OpenRouter',
-            'wisdomgate' => 'WisdomGate',
-            'cohere' => 'Cohere',
-            default => ucfirst((string) $provider ?: 'AI Provider'),
-        };
     }
 
     private function questionTypeForIndex(string $questionText, array $selectedTypes, int $index): string

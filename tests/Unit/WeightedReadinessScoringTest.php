@@ -48,7 +48,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(80, $score);
     }
 
-    public function test_it_recalculates_question_and_session_scores_from_validated_components(): void
+    public function test_it_recalculates_question_and_session_scores_from_evidence_guarded_components(): void
     {
         $answers = [
             [
@@ -74,11 +74,12 @@ class WeightedReadinessScoringTest extends TestCase
 
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, []]);
 
-        $this->assertSame(82, $normalized['per_question_feedback'][0]['score']);
+        $this->assertSame(60, $normalized['per_question_feedback'][0]['score']);
         $this->assertSame(0, $normalized['per_question_feedback'][0]['star_method_score']);
-        $this->assertSame(68, $normalized['per_question_feedback'][1]['score']);
-        $this->assertSame(72, $normalized['session_feedback']['overall_readiness_score']);
+        $this->assertSame(60, $normalized['per_question_feedback'][1]['score']);
+        $this->assertSame(59, $normalized['session_feedback']['overall_readiness_score']);
         $this->assertSame(40, $normalized['session_feedback']['star_method_score']);
+        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['per_question_feedback'][0]['ai_feedback']);
     }
 
     public function test_it_rejects_duplicate_extra_and_out_of_range_provider_scores(): void
@@ -129,6 +130,57 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(10, $normalized['score']);
         $this->assertSame(10, $normalized['star_method_score']);
         $this->assertLessThanOrEqual(10, $normalized['relevance_score']);
+    }
+
+    public function test_it_uses_bounded_local_scores_when_provider_feedback_is_missing(): void
+    {
+        $answers = [[
+            'id' => 31,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a time you improved a support process.',
+            'answer' => 'During my internship, I was responsible for checking support tickets every morning. I organized repeated issues, coordinated with my supervisor, and improved the handoff checklist so the team resolved common requests faster.',
+        ]];
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[], $answers, [
+            'target_position' => 'Support Specialist',
+        ]]);
+
+        $item = $normalized['per_question_feedback'][0];
+
+        $this->assertGreaterThan(0, $item['score']);
+        $this->assertGreaterThan(0, $item['clarity_score']);
+        $this->assertGreaterThan(0, $item['relevance_score']);
+        $this->assertSame(50, $item['scoring_confidence']);
+        $this->assertStringContainsString('provider did not return enough evidence-linked feedback', $item['ai_feedback']);
+    }
+
+    public function test_it_replaces_unsupported_provider_feedback_and_caps_scores(): void
+    {
+        $answer = [
+            'id' => 32,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a time you improved a support process.',
+            'answer' => 'I checked support tickets each morning and coordinated repeated issues with my supervisor.',
+        ];
+        $feedback = $this->feedbackItem(
+            id: 32,
+            score: 98,
+            clarity: 95,
+            relevance: 95,
+            grammar: 95,
+            professionalism: 95,
+            starApplicable: true,
+            starScore: 100
+        );
+        $feedback['ai_feedback'] = 'You increased customer satisfaction by 50% and delivered a measurable business impact.';
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertLessThanOrEqual(78, $normalized['score']);
+        $this->assertLessThan(100, $normalized['star_method_score']);
+        $this->assertStringNotContainsString('50%', $normalized['ai_feedback']);
+        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
+        $this->assertStringContainsString('did not explain the final result', $normalized['ai_feedback']);
     }
 
     private function feedbackItem(

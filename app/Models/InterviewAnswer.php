@@ -15,6 +15,10 @@ class InterviewAnswer extends Model
         'question_id',
         'answer_text',
         'transcript_timeline',
+        'paste_event_count',
+        'pasted_character_count',
+        'ai_generated_likelihood',
+        'answer_integrity_flags',
         'response_mode',
         'ai_feedback',
         'better_sample_answer',
@@ -48,6 +52,7 @@ class InterviewAnswer extends Model
     protected $casts = [
         'star_analysis' => 'array',
         'transcript_timeline' => 'array',
+        'answer_integrity_flags' => 'array',
         'is_skipped' => 'boolean',
         'timed_out' => 'boolean',
         'evidence_map' => 'array',

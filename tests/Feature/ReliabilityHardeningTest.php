@@ -10,6 +10,7 @@ use App\Models\InterviewSession;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -112,7 +113,7 @@ class ReliabilityHardeningTest extends TestCase
             'interview_session_id' => null,
             'category_id' => $category->id,
             'question_text' => $roleAlignedQuestionText,
-            'source_type' => 'ai_generated_user',
+            'source_type' => 'ai_adapted_source_backed',
         ]);
     }
 
@@ -124,17 +125,22 @@ class ReliabilityHardeningTest extends TestCase
         $question = $this->question($category, ['interview_session_id' => $session->id]);
         $followUpText = 'What tradeoff would you make differently if you handled that project again?';
         $roleAlignedFollowUpText = 'For your target position of Developer, what tradeoff would you make differently if you handled that project again?';
+        $capturedPrompt = '';
 
         Http::fake([
-            'api.openai.com/*' => Http::response([
-                'choices' => [
-                    [
-                        'message' => [
-                            'content' => $followUpText,
+            'api.openai.com/*' => function ($request) use ($followUpText, &$capturedPrompt) {
+                $capturedPrompt = data_get($request->data(), 'messages.1.content', '');
+
+                return Http::response([
+                    'choices' => [
+                        [
+                            'message' => [
+                                'content' => $followUpText,
+                            ],
                         ],
                     ],
-                ],
-            ], 200),
+                ], 200);
+            },
         ]);
 
         $this->actingAs($user)
@@ -145,6 +151,10 @@ class ReliabilityHardeningTest extends TestCase
             ->postJson(route('interview.chatReply'), [
                 'question_id' => $question->id,
                 'answer_text' => 'I coordinated the release, found the issue, and shipped a fix.',
+                'conversation_context' => json_encode([
+                    ['role' => 'interviewer', 'text' => 'Tell me about a release you owned.'],
+                    ['role' => 'user', 'text' => 'I coordinated QA with the deployment team before launch.'],
+                ]),
                 'response_mode' => 'text',
                 'ai_provider' => 'openai',
             ])
@@ -153,6 +163,10 @@ class ReliabilityHardeningTest extends TestCase
                 'success' => true,
                 'next_question_text' => $roleAlignedFollowUpText,
             ]);
+
+        $this->assertStringContainsString('RECENT INTERVIEW CHAT JSON', $capturedPrompt);
+        $this->assertStringContainsString('deployment team', $capturedPrompt);
+        $this->assertStringContainsString('LATEST CANDIDATE ANSWER TO RESPOND TO', $capturedPrompt);
 
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => $session->id,
@@ -164,8 +178,79 @@ class ReliabilityHardeningTest extends TestCase
             'interview_session_id' => null,
             'category_id' => $category->id,
             'question_text' => $roleAlignedFollowUpText,
-            'source_type' => 'ai_generated_user',
+            'source_type' => 'ai_adapted_source_backed',
         ]);
+    }
+
+    public function test_interview_advances_with_answer_based_local_followup_when_ai_followups_are_disabled(): void
+    {
+        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
+        $firstQuestion = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a release you owned.',
+        ]);
+        $secondQuestion = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'How would you verify a production fix before handoff?',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.chatReply'), [
+                'question_id' => $firstQuestion->id,
+                'answer_text' => 'I owned a small release, coordinated QA, and communicated the rollback plan with the deployment team before launch.',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('source_type', 'ai_adapted_source_backed')
+            ->assertJsonPath('next_question_text', fn (string $text) => str_contains($text, 'You mentioned you owned a small release')
+                && str_contains($text, 'What result')
+                && str_contains($text, 'Developer role'));
+
+        $this->assertNotSame($secondQuestion->id, $response->json('next_question_id'));
+
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $firstQuestion->id,
+        ]);
+        $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_interview_session_renders_human_opening_and_closing_conversation_flow(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category, [
+            'target_position' => 'Developer',
+            'num_questions' => 2,
+            'live_feedback_mode' => 'real_interview',
+        ]);
+        $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a system you improved.',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->get(route('interview.session'))
+            ->assertOk()
+            ->assertSee('openingConversationText', false)
+            ->assertSee('beginOpeningConversation', false)
+            ->assertSee('closingConversationText', false)
+            ->assertSee('concludeAndFinishInterview', false)
+            ->assertSee('playClosingConversationAndSubmit', false)
+            ->assertSee('onclick="concludeAndFinishInterview({ saveDraft: true })"', false)
+            ->assertSee('saveCurrentAnswer(false, false)', false)
+            ->assertSee('conversation_context', false)
+            ->assertSee('sessionTargetPosition', false);
     }
 
     public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void

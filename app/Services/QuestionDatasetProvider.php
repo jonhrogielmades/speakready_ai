@@ -403,7 +403,7 @@ class QuestionDatasetProvider
             . "Description: {$dataset['description']}\n"
             . "Trusted public sources:\n{$sources}\n"
             . "Representative question patterns:\n{$examples}\n"
-            . "Rules: Generate Philippines-relevant practice questions grounded in these sources. Do not claim to reproduce confidential, leaked, or actual protected exam items. If the source is an official FAQ or competency standard, adapt it into an interview-practice question.";
+            . "Rules: Generate Philippines-relevant practice questions grounded in these sources. Do not claim the wording is a direct quote from a source unless it exactly is. Do not claim to reproduce confidential, leaked, or actual protected exam items. If the source is an official FAQ or competency standard, adapt the same topic or competency into an interview-practice question.";
     }
 
     public static function sourceMetadata(array $dataset): array

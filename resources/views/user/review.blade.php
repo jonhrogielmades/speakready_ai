@@ -415,6 +415,33 @@
                             </div>
                         @endif
 
+                        @php
+                            $integrityFlags = is_array($answer->answer_integrity_flags) ? $answer->answer_integrity_flags : [];
+                            $integritySignals = array_values(array_filter((array) ($integrityFlags['signals'] ?? [])));
+                            $pasteEventCount = (int) ($answer->paste_event_count ?? 0);
+                            $pastedCharacterCount = (int) ($answer->pasted_character_count ?? 0);
+                            $aiGeneratedLikelihood = (int) ($answer->ai_generated_likelihood ?? 0);
+                            $hasIntegritySignals = $pasteEventCount > 0 || $pastedCharacterCount > 0 || $aiGeneratedLikelihood >= 50 || ! empty($integritySignals);
+                        @endphp
+                        @if($hasIntegritySignals)
+                            <div class="mb-4 p-4" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);border-radius:12px;">
+                                <h6 style="color:#f59e0b;font-weight:bold;margin-bottom:10px;"><i class="fa-solid fa-shield-halved me-2"></i>Answer Integrity Signals</h6>
+                                <p style="color:var(--tx3);font-size:.86rem;line-height:1.55;margin-bottom:12px;">These are review signals, not proof of misconduct. Use them to understand whether the answer may need a closer human check.</p>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">Paste events: <strong>{{ $pasteEventCount }}</strong></div></div>
+                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">Pasted chars: <strong>{{ $pastedCharacterCount }}</strong></div></div>
+                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">AI-template likelihood: <strong>{{ $aiGeneratedLikelihood }}%</strong></div></div>
+                                </div>
+                                @if(!empty($integritySignals))
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        @foreach($integritySignals as $signal)
+                                            <span class="badge" style="background:rgba(245,158,11,.16);color:#f59e0b;border:1px solid rgba(245,158,11,.28);">{{ str_replace('_', ' ', $signal) }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
                             <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
                             <p style="color:var(--tx);font-size:0.95rem;line-height:1.7;margin:0;">{{ $answer->ai_feedback ?: 'No AI feedback was generated for this answer.' }}</p>

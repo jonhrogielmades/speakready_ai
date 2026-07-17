@@ -50,6 +50,29 @@
                     <div class="p-3 rounded" style="border-left: 4px solid var(--danger-tx); background: var(--bg); color: var(--tx);">
                         <p class="mb-0" style="white-space: pre-line;">{{ $answer->answer_text ?? 'No answer text provided.' }}</p>
                     </div>
+
+                    @php
+                        $integrityFlags = is_array($answer->answer_integrity_flags) ? $answer->answer_integrity_flags : [];
+                        $integritySignals = array_values(array_filter((array) ($integrityFlags['signals'] ?? [])));
+                        $pasteEventCount = (int) ($answer->paste_event_count ?? 0);
+                        $pastedCharacterCount = (int) ($answer->pasted_character_count ?? 0);
+                        $aiGeneratedLikelihood = (int) ($answer->ai_generated_likelihood ?? 0);
+                        $hasIntegritySignals = $pasteEventCount > 0 || $pastedCharacterCount > 0 || $aiGeneratedLikelihood >= 50 || ! empty($integritySignals);
+                    @endphp
+                    @if($hasIntegritySignals)
+                        <div class="mt-3 p-3 rounded" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);">
+                            <strong class="d-block mb-2" style="color:#f59e0b;"><i class="fa-solid fa-shield-halved me-2"></i>Answer Integrity Signals</strong>
+                            <p class="small mb-2" style="color:var(--tx3);">Signals are not proof of misconduct; they mark answers that may need human review.</p>
+                            <div class="d-flex flex-wrap gap-2 small" style="color:var(--tx);">
+                                <span class="badge bg-warning text-dark">Paste events: {{ $pasteEventCount }}</span>
+                                <span class="badge bg-warning text-dark">Pasted chars: {{ $pastedCharacterCount }}</span>
+                                <span class="badge bg-warning text-dark">AI-template likelihood: {{ $aiGeneratedLikelihood }}%</span>
+                                @foreach($integritySignals as $signal)
+                                    <span class="badge" style="background:rgba(245,158,11,.16);color:#f59e0b;border:1px solid rgba(245,158,11,.28);">{{ str_replace('_', ' ', $signal) }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 

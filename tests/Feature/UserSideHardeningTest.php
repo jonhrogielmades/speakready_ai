@@ -364,6 +364,42 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
+    public function test_interview_answer_records_copy_paste_and_ai_integrity_signals(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.answer'), [
+                'question_id' => $question->id,
+                'answer_text' => 'As an AI language model, I would leverage best practices to streamline a robust and comprehensive process for stakeholders while ensuring measurable outcomes and continuous improvement.',
+                'paste_event_count' => 1,
+                'pasted_character_count' => 180,
+                'elapsed_seconds' => 6,
+                'transcript_timeline' => json_encode([
+                    ['at' => 5, 'event' => 'large_paste', 'words' => 24, 'chars' => 180, 'pasted_chars' => 180],
+                ]),
+            ])
+            ->assertOk();
+
+        $answer = InterviewAnswer::where('interview_session_id', $session->id)
+            ->where('question_id', $question->id)
+            ->firstOrFail();
+
+        $this->assertSame(1, $answer->paste_event_count);
+        $this->assertSame(180, $answer->pasted_character_count);
+        $this->assertGreaterThanOrEqual(70, $answer->ai_generated_likelihood);
+        $this->assertTrue($answer->answer_integrity_flags['copy_paste_detected']);
+        $this->assertTrue($answer->answer_integrity_flags['possible_ai_generated_answer']);
+        $this->assertContains('large_paste_volume', $answer->answer_integrity_flags['signals']);
+        $this->assertSame('flagged', $answer->audit_status);
+        $this->assertStringContainsString('copy/paste activity detected', $answer->flagged_reason);
+        $this->assertStringContainsString('possible AI-generated answer pattern detected', $answer->flagged_reason);
+    }
+
     public function test_game_start_stops_when_energy_is_empty_after_today_refill(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

@@ -117,6 +117,10 @@ class TrustworthyAssessmentService
         if ($answers->contains(fn ($answer) => empty($answer->ai_feedback))) {
             $confidence = max(20, $confidence - 25);
         }
+        $answerConfidences = $answers->pluck('scoring_confidence')->filter(fn ($value) => is_numeric($value) && (int) $value > 0);
+        if ($answerConfidences->isNotEmpty()) {
+            $confidence = min($confidence, (int) round($answerConfidences->avg()));
+        }
         $deliveryScores = $answers->pluck('delivery_stability_score')->filter(fn ($value) => $value !== null);
         $starApplicable = $answers->contains(fn ($answer) => strtolower((string) $answer->question?->type) === 'behavioral');
         $languageScoring = ! ((bool) data_get($session->accommodation_profile, 'separate_language_scoring', false));

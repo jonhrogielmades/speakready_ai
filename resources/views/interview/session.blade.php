@@ -141,6 +141,46 @@
     .question-source-line { display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,.72);font-size:.68rem;font-weight:700;margin-top:7px;max-width:100%; }
     .question-source-line a { color:rgba(191,219,254,.95);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
     .question-source-line a:hover { color:#fff;text-decoration:underline; }
+    .question-caption-overlay {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        z-index: 60;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+    }
+    .question-caption-line {
+        min-height: 2.45em;
+        max-width: min(88%, 640px);
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.72);
+        color: #fff;
+        font-size: clamp(0.72rem, 1.2vw, 0.88rem);
+        font-weight: 800;
+        line-height: 1.35;
+        text-align: center;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+        opacity: 0;
+        transform: translateY(8px);
+        transition: opacity 160ms ease, transform 160ms ease;
+    }
+    .question-caption-line.has-caption {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .question-caption-word {
+        display: inline-block;
+        margin: 0 0.08em;
+        opacity: 0.72;
+    }
+    .question-caption-word.active {
+        color: #fde68a;
+        opacity: 1;
+    }
     .ai-question-card {
         margin-top: calc(var(--session-gap) * -0.45);
         margin-bottom: var(--session-gap);
@@ -154,8 +194,29 @@
         background: var(--pur);
         color: #fff;
         font-size: 0.72rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .interviewer-panel-badge {
+        position: absolute;
+        top: calc(50% - 88px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 55;
+        background: var(--pur);
+        color: #fff;
+        font-size: 0.72rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: calc(100% - 150px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     #aiQuestionText {
+        display: none;
         color: #fff;
         font-size: 0.9rem;
         font-weight: 700;
@@ -177,6 +238,23 @@
     /* Responsive overrides */
     @media (max-width: 768px) {
         #sec-interview-session { --session-gap: 12px; }
+        .question-caption-overlay {
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+        }
+        .question-caption-line {
+            min-height: 2.3em;
+            max-width: 94%;
+            padding: 5px 10px;
+            font-size: clamp(0.66rem, 2.8vw, 0.78rem);
+            line-height: 1.32;
+        }
+        .interviewer-panel-badge {
+            top: calc(50% - 86px);
+            max-width: calc(100% - 28px);
+            font-size: 0.66rem;
+        }
         #sec-interview-session > .interview-session-header {
             margin-bottom: 12px !important;
             text-align: center;
@@ -524,7 +602,9 @@
                 $selectedQuestionTypes = json_decode($sessionRecord->question_types ?? '[]', true);
                 $selectedQuestionTypes = is_array($selectedQuestionTypes) ? array_values(array_filter($selectedQuestionTypes)) : [];
                 // Try to find questions specifically generated for this session first
-                $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)->get();
+                $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)
+                    ->orderBy('id')
+                    ->get();
                 
                 // Fallback to local category questions if none were specifically generated
                 if ($questions->isEmpty()) {
@@ -566,6 +646,7 @@
                     ?? (object) [
                         'source_name' => data_get($sourcePack, 'sources.0.name'),
                         'source_url' => data_get($sourcePack, 'sources.0.url'),
+                        'source_type' => $sourcePack['source_type'] ?? 'dataset',
                     ];
             } else {
                 $questions = collect([]);
@@ -591,6 +672,7 @@
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
                     </div>
+                    <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> Philippines interviewer</span>
                     <div class="question-timer-anchor">
                         <span class="session-chip" id="questionTimerChip"><i class="fa-regular fa-clock"></i><span id="perQuestionTimer">Self-paced</span></span>
                     </div>
@@ -615,14 +697,16 @@
                             @endfor
                         </div>
                     </div>
+                    <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
+                        <div id="questionCaptionText" class="question-caption-line"></div>
+                    </div>
                 </div>
 
                 <div class="ai-question-card animate-fade-up delay-150">
-                    <div class="d-flex justify-content-start align-items-end gap-3">
-                        <div>
-                            <span class="badge mb-2 interviewer-badge"><i class="fa-solid fa-bolt me-1"></i> Philippines interviewer</span>
+                    <div class="d-flex justify-content-center align-items-end gap-3 text-center">
+                        <div class="w-100">
                             <div id="aiQuestionText">Loading your first question...</div>
-                            <div id="aiQuestionSource" class="question-source-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}"></div>
+                            <div id="aiQuestionSource" class="question-source-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}" data-default-type="{{ $primarySource->source_type ?? 'dataset' }}"></div>
                         </div>
                     </div>
                 </div>
@@ -632,7 +716,7 @@
                     <!-- Left: Navigation / Secondary -->
                     <div class="d-flex gap-2 w-100 flex-fill">
                         <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
-                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="finishInterview()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="concludeAndFinishInterview({ saveDraft: true })" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
                     </div>
                     
                     <!-- Right: Primary Actions (Mic + Send) -->
@@ -786,16 +870,23 @@
         </form>
 
         <script>
-            const questions = {!! json_encode($questions) !!};
+            const savedSessionState = @json($savedStateForUi ?? []);
+            const initialQuestions = {!! json_encode($questions) !!};
+            const savedQuestionSequence = Array.isArray(savedSessionState.questions)
+                ? savedSessionState.questions.filter(question => question && question.id && question.question_text)
+                : [];
+            let questions = savedQuestionSequence.length > 0 ? savedQuestionSequence : initialQuestions;
             const interviewSessionId = {{ (int) $sessionRecord->id }};
-            const totalQuestions = {{ $num }};
+            const targetQuestionCount = Math.max({{ $num }}, 1);
+            const sessionTargetPosition = @json($sessionRecord->target_position ?? 'this role');
+            const sessionScenarioLabel = @json($scenarioLabel ?? 'Philippines Interview');
+            const sessionDifficultyLabel = @json(ucfirst((string) ($sessionRecord->difficulty ?? 'medium')));
             const responseMode = "{{ $sessionRecord->response_mode }}";
             const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit ?? 0) * 60) }};
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
             const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
-            const savedSessionState = @json($savedStateForUi ?? []);
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
             currentQIdx = Math.max(0, Math.min(currentQIdx, Math.max(0, questions.length - 1)));
             let timerSeconds = Number(savedSessionState.timerSeconds ?? {{ (int) ($sessionRecord->duration_seconds ?? 0) }}) || 0;
@@ -806,6 +897,7 @@
             let lastTimelineCaptureAt = 0;
             let chatHistory = Array.isArray(savedSessionState.chatHistory) ? savedSessionState.chatHistory : [];
             let stateSaveDebounce = null;
+            let interviewEnding = false;
             
             // Answers state
             function defaultAnswerState() {
@@ -822,6 +914,8 @@
                 self_reported_confidence: 50,
                 eye_contact_score: 0,
                     posture_score: 0,
+                    paste_event_count: 0,
+                    pasted_character_count: 0,
                     transcript_timeline: []
                 };
             }
@@ -1214,22 +1308,76 @@
                 }
             }
 
+            function captionWordsFor(text) {
+                const words = [];
+                const pattern = /\S+/g;
+                let match;
+
+                while ((match = pattern.exec(String(text || ''))) !== null) {
+                    words.push({
+                        text: match[0],
+                        start: match.index,
+                        end: match.index + match[0].length,
+                    });
+                }
+
+                return words;
+            }
+
+            function renderQuestionCaption(words, activeIndex) {
+                const caption = document.getElementById('questionCaptionText');
+                if (!caption) return;
+
+                if (!words.length || activeIndex < 0) {
+                    caption.classList.remove('has-caption');
+                    caption.innerHTML = '';
+                    return;
+                }
+
+                const safeIndex = Math.min(activeIndex, words.length - 1);
+                const windowSize = 7;
+                const start = Math.max(0, Math.min(safeIndex - Math.floor(windowSize / 2), Math.max(0, words.length - windowSize)));
+                const visibleWords = words.slice(start, start + windowSize);
+
+                caption.innerHTML = '';
+                visibleWords.forEach((word, offset) => {
+                    const span = document.createElement('span');
+                    span.className = 'question-caption-word' + (start + offset === safeIndex ? ' active' : '');
+                    span.textContent = word.text;
+                    caption.appendChild(span);
+                });
+                caption.classList.add('has-caption');
+            }
+
+            function wordIndexFromChar(words, charIndex) {
+                const safeChar = Number(charIndex) || 0;
+                const found = words.findIndex(word => safeChar >= word.start && safeChar < word.end);
+                if (found >= 0) return found;
+
+                for (let idx = words.length - 1; idx >= 0; idx--) {
+                    if (words[idx].start <= safeChar) return idx;
+                }
+
+                return 0;
+            }
+
             function startSpeakingUi(text, boundaryAware = false) {
                 clearCaptionInterval();
                 document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
                 document.getElementById('aiAvatarHead').style.borderColor = '#34d399';
-                document.getElementById('aiQuestionText').innerText = '';
+                document.getElementById('aiQuestionText').innerText = text;
 
-                const words = String(text || '').split(/\s+/).filter(Boolean);
-                let currentWordIdx = 0;
+                const words = captionWordsFor(text);
+                let currentWordIdx = -1;
                 let boundaryFired = false;
+                renderQuestionCaption(words, currentWordIdx);
 
                 captionInterval = setInterval(() => {
                     if (boundaryAware && boundaryFired) return;
 
-                    if (currentWordIdx < words.length) {
+                    if (currentWordIdx < words.length - 1) {
                         currentWordIdx++;
-                        document.getElementById('aiQuestionText').innerText = words.slice(0, currentWordIdx).join(' ');
+                        renderQuestionCaption(words, currentWordIdx);
                         currentAmplitude = 1.0;
                     } else {
                         clearCaptionInterval();
@@ -1247,9 +1395,13 @@
                 }, 50);
 
                 return {
-                    markBoundary: () => {
+                    markBoundary: (charIndex = null) => {
                         boundaryFired = true;
                         clearCaptionInterval();
+                        currentWordIdx = charIndex === null
+                            ? Math.min(currentWordIdx + 1, words.length - 1)
+                            : wordIndexFromChar(words, charIndex);
+                        renderQuestionCaption(words, currentWordIdx);
                     },
                 };
             }
@@ -1262,9 +1414,12 @@
                 if (visualizerInterval) clearInterval(visualizerInterval);
                 visualizerInterval = null;
                 clearCaptionInterval();
+                renderQuestionCaption([], -1);
                 document.getElementById('aiQuestionText').innerText = text;
-                if (startTimerAfterSpeech) startQuestionTimer();
-                scheduleAutoTranscriptionStart(token);
+                if (startTimerAfterSpeech) {
+                    startQuestionTimer();
+                    scheduleAutoTranscriptionStart(token);
+                }
             }
 
             function cancelQuestionAudio() {
@@ -1282,6 +1437,7 @@
                     window.speechSynthesis.cancel();
                 }
                 clearCaptionInterval();
+                renderQuestionCaption([], -1);
                 if (visualizerInterval) clearInterval(visualizerInterval);
                 visualizerInterval = null;
             }
@@ -1375,12 +1531,9 @@
 
                     utterance.onboundary = function(e) {
                         if(e.name === 'word') {
-                            if (speechUi) speechUi.markBoundary();
+                            if (speechUi) speechUi.markBoundary(e.charIndex);
 
                             currentAmplitude = 1.0;
-                            let end = text.indexOf(' ', e.charIndex);
-                            if (end === -1) end = text.length;
-                            document.getElementById('aiQuestionText').innerText = text.substring(0, end);
                         }
                     };
 
@@ -1400,7 +1553,7 @@
                 } else {
                     document.getElementById('aiQuestionText').innerText = text;
                     if (startTimerAfterSpeech) startQuestionTimer();
-                    scheduleAutoTranscriptionStart(token);
+                    if (startTimerAfterSpeech) scheduleAutoTranscriptionStart(token);
                 }
             }
 
@@ -1480,7 +1633,7 @@
                 }
             }
 
-            function captureTranscriptTimeline(eventName = 'progress', force = false) {
+            function captureTranscriptTimeline(eventName = 'progress', force = false, extra = {}) {
                 if (!answersData[currentQIdx]) return;
                 const elapsed = getQuestionElapsedSeconds();
                 if (!force && elapsed === lastTimelineCaptureAt) return;
@@ -1491,8 +1644,27 @@
                     at: elapsed,
                     event: eventName,
                     words: text.trim().split(/\s+/).filter(Boolean).length,
-                    chars: text.length
+                    chars: text.length,
+                    ...extra
                 });
+            }
+
+            function handleAnswerPaste(event) {
+                if (!answersData[currentQIdx]) return;
+
+                const clipboard = event.clipboardData || window.clipboardData;
+                const pastedText = clipboard ? (clipboard.getData('text') || clipboard.getData('Text') || '') : '';
+                const pastedChars = pastedText.length;
+
+                answersData[currentQIdx].paste_event_count = (answersData[currentQIdx].paste_event_count || 0) + 1;
+                answersData[currentQIdx].pasted_character_count = (answersData[currentQIdx].pasted_character_count || 0) + pastedChars;
+
+                setTimeout(() => {
+                    captureTranscriptTimeline(pastedChars >= 80 ? 'large_paste' : 'paste', true, {
+                        pasted_chars: pastedChars
+                    });
+                    triggerAnalysis();
+                }, 0);
             }
 
             function handleQuestionTimeout() {
@@ -1512,6 +1684,112 @@
                 if (!Array.isArray(chatHistory) || chatHistory.length === 0) return false;
                 chatHistory.forEach(item => appendChatMessage(item.role, item.text, false));
                 return true;
+            }
+
+            function questionSnapshot() {
+                return questions.map(question => ({
+                    id: question.id,
+                    question_text: question.question_text,
+                    source_name: question.source_name || '',
+                    source_url: question.source_url || '',
+                    source_type: question.source_type || ''
+                }));
+            }
+
+            function naturalDelayFor(text, minimum = 2200, maximum = 5200) {
+                const words = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+                return Math.max(minimum, Math.min(maximum, 900 + (words * 115)));
+            }
+
+            function pluralizeQuestionCount() {
+                return targetQuestionCount === 1 ? '1 question' : `${targetQuestionCount} questions`;
+            }
+
+            function openingConversationText() {
+                const modeLine = liveFeedbackMode === 'real_interview'
+                    ? 'I will keep this like a real interview and save detailed feedback until the end.'
+                    : 'I will keep the conversation realistic and ask follow-ups based on what you answer.';
+
+                return `Hi, thanks for joining today. I will be your interviewer for this ${sessionScenarioLabel}, focused on the ${sessionTargetPosition} role. We will go through ${pluralizeQuestionCount()} at ${sessionDifficultyLabel} level. ${modeLine} Answer naturally with real examples. Let us start with the first question.`;
+            }
+
+            function closingConversationText() {
+                return `Thank you for walking me through your answers today. That covers my questions for this ${sessionTargetPosition} interview. I will close the session now, and your feedback will be prepared from the evidence in your responses.`;
+            }
+
+            function setAnswerInputEnabled(enabled) {
+                const textarea = document.getElementById('answerTextarea');
+                if (textarea) textarea.disabled = !enabled;
+                document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = !enabled);
+            }
+
+            function showInterviewerConversation(text, counterText = null) {
+                const qText = document.getElementById('aiQuestionText');
+                if (qText) qText.innerText = text;
+
+                const qCounter = document.getElementById('qCounter');
+                if (qCounter && counterText) qCounter.innerText = counterText;
+
+                const sourceLine = document.getElementById('aiQuestionSource');
+                if (sourceLine) {
+                    sourceLine.innerHTML = '';
+                    sourceLine.style.display = 'none';
+                }
+            }
+
+            function beginOpeningConversation() {
+                const introText = openingConversationText();
+                setAnswerInputEnabled(false);
+                appendChatMessage('interviewer', introText);
+                showInterviewerConversation(introText, 'Intro');
+                speakQuestion(introText, { startTimerAfterSpeech: false });
+
+                setTimeout(() => {
+                    setAnswerInputEnabled(true);
+                    loadQuestion(currentQIdx, { append: true });
+                }, naturalDelayFor(introText, 2500, 5000));
+            }
+
+            function playClosingConversationAndSubmit() {
+                const closingText = closingConversationText();
+                setAnswerInputEnabled(false);
+                appendChatMessage('interviewer', closingText);
+                showInterviewerConversation(closingText, 'Done');
+                speakQuestion(closingText, { startTimerAfterSpeech: false });
+
+                setTimeout(() => {
+                    finishInterview();
+                }, naturalDelayFor(closingText, 2600, 4800));
+            }
+
+            function concludeAndFinishInterview(options = {}) {
+                if (interviewEnding) return;
+
+                const shouldSaveDraft = options.saveDraft === true;
+                const draftText = (document.getElementById('answerTextarea')?.value || '').trim();
+
+                if (isRecording) stopRecording();
+
+                if (shouldSaveDraft && draftText && questions[currentQIdx] && answersData[currentQIdx]) {
+                    interviewEnding = true;
+                    setAnswerInputEnabled(false);
+                    answersData[currentQIdx].text = draftText;
+                    answersData[currentQIdx].is_skipped = false;
+                    answersData[currentQIdx].timed_out = false;
+
+                    saveCurrentAnswer(false, false)
+                        .then(() => playClosingConversationAndSubmit())
+                        .catch(error => {
+                            console.error(error);
+                            interviewEnding = false;
+                            setAnswerInputEnabled(true);
+                            alert('We could not save your current answer. Please try again before ending the session.');
+                        });
+                    return;
+                }
+
+                interviewEnding = true;
+                playClosingConversationAndSubmit();
             }
 
             function startInterviewSession() {
@@ -1556,9 +1834,15 @@
                 }
 
                 const restoredChat = restoreChatHistory();
-                loadQuestion(currentQIdx, { append: !restoredChat });
+                if (!restoredChat && currentQIdx === 0) {
+                    beginOpeningConversation();
+                } else {
+                    loadQuestion(currentQIdx, { append: !restoredChat });
+                }
                 
-                document.getElementById('answerTextarea').addEventListener('input', triggerAnalysis);
+                const answerTextarea = document.getElementById('answerTextarea');
+                answerTextarea.addEventListener('input', triggerAnalysis);
+                answerTextarea.addEventListener('paste', handleAnswerPaste);
                 document.getElementById('sessionNotes').addEventListener('input', scheduleStateSave);
                 document.addEventListener('visibilitychange', () => {
                     if (document.visibilityState === 'hidden') autoSaveState();
@@ -1569,9 +1853,10 @@
                 currentQIdx = idx;
                 const q = questions[idx];
                 if (!q) return;
+                setAnswerInputEnabled(true);
                 
                 document.getElementById('aiQuestionText').innerText = '...';
-                document.getElementById('qCounter').innerText = (idx + 1) + '/' + totalQuestions;
+                document.getElementById('qCounter').innerText = Math.min(idx + 1, targetQuestionCount) + '/' + targetQuestionCount;
                 updateQuestionSource(q);
 
                 // Append AI question to chat log if it's the first time seeing it
@@ -1596,7 +1881,9 @@
                 const sourceLine = document.getElementById('aiQuestionSource');
                 if (!sourceLine) return;
 
-                const name = question?.source_name || sourceLine.dataset.defaultName || '';
+                const sourceType = question?.source_type || sourceLine.dataset.defaultType || '';
+                const isAiAdapted = /ai|adapted|generated/i.test(sourceType);
+                const name = trustedSourceDisplayName(question?.source_name || sourceLine.dataset.defaultName || '', isAiAdapted);
                 const url = question?.source_url || sourceLine.dataset.defaultUrl || '';
                 sourceLine.innerHTML = '';
 
@@ -1609,9 +1896,12 @@
                 const icon = document.createElement('i');
                 icon.className = 'fa-solid fa-link';
                 const label = document.createElement('span');
-                label.textContent = 'Source:';
+                label.textContent = isAiAdapted ? 'AI-adapted from:' : 'Source:';
                 const value = url ? document.createElement('a') : document.createElement('span');
                 value.textContent = name;
+                value.title = isAiAdapted
+                    ? 'The question is AI-adapted from the same topic/content area, not copied word for word.'
+                    : 'Trusted source used for this question set.';
 
                 if (url) {
                     value.href = url;
@@ -1620,6 +1910,20 @@
                 }
 
                 sourceLine.append(icon, label, value);
+            }
+
+            function trustedSourceDisplayName(sourceName, isAiAdapted) {
+                let cleanName = String(sourceName || '').trim();
+                cleanName = cleanName.replace(/^User AI Generated\s*\([^)]+\)\s*via\s*/i, '');
+                cleanName = cleanName.replace(/^AI Generated\s*\([^)]+\)\s*via\s*/i, '');
+                cleanName = cleanName.replace(/^User AI Generated\s*\([^)]+\)\s*$/i, '');
+                cleanName = cleanName.replace(/^AI Generated\s*\([^)]+\)\s*$/i, '');
+
+                if (!cleanName && isAiAdapted) {
+                    return 'trusted Philippines interview source';
+                }
+
+                return cleanName;
             }
 
             function repeatQuestion() {
@@ -1972,6 +2276,8 @@
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answersData[currentQIdx].text);
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
+                formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);
+                formData.append('pasted_character_count', answersData[currentQIdx].pasted_character_count || 0);
                 formData.append('is_skipped', isSkipped);
                 formData.append('timed_out', timedOut);
                 formData.append('elapsed_seconds', answersData[currentQIdx].elapsed_seconds || getQuestionElapsedSeconds());
@@ -2015,6 +2321,7 @@
                     has_started: true,
                     currentQIdx,
                     timerSeconds,
+                    questions: questionSnapshot(),
                     answersData,
                     chatHistory,
                     updated_at: new Date().toISOString()
@@ -2062,6 +2369,21 @@
                 }
             }
 
+            function placeNextQuestion(question) {
+                const nextQuestionIndex = currentQIdx + 1;
+                if (nextQuestionIndex < questions.length) {
+                    questions[nextQuestionIndex] = question;
+                } else {
+                    questions.push(question);
+                }
+
+                while (answersData.length < questions.length) {
+                    answersData.push(defaultAnswerState());
+                }
+
+                return nextQuestionIndex;
+            }
+
             function submitAnswer(options = {}) {
                 if(isRecording) stopRecording();
                 
@@ -2082,10 +2404,10 @@
                 // Optimistically append user answer to chat
                 appendChatMessage('user', answerText);
 
-                if (currentQIdx >= totalQuestions - 1) {
+                if (currentQIdx >= targetQuestionCount - 1) {
                     document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = true);
                     saveCurrentAnswer(wasSkipped, timedOut).then(() => {
-                        finishInterview();
+                        concludeAndFinishInterview();
                     }).catch(error => {
                         console.error(error);
                         document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
@@ -2118,7 +2440,10 @@
                 formData.append('session_id', interviewSessionId);
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answerText);
+                formData.append('conversation_context', JSON.stringify(chatHistory.slice(-16)));
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
+                formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);
+                formData.append('pasted_character_count', answersData[currentQIdx].pasted_character_count || 0);
                 formData.append('is_skipped', wasSkipped);
                 formData.append('timed_out', timedOut);
                 formData.append('elapsed_seconds', answersData[currentQIdx].elapsed_seconds || getQuestionElapsedSeconds());
@@ -2133,7 +2458,7 @@
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
 
-                formData.append('is_final_question', (currentQIdx === totalQuestions - 2));
+                formData.append('is_final_question', (currentQIdx >= targetQuestionCount - 2));
 
                 fetch('{{ route("interview.chatReply") }}', {
                     method: 'POST',
@@ -2154,10 +2479,8 @@
                             source_url: data.source_url || '',
                             source_type: data.source_type || ''
                         };
-                        questions.push(newQ);
-                        
-                        answersData.push(defaultAnswerState());
-                        currentQIdx++;
+                        const nextQuestionIndex = placeNextQuestion(newQ);
+                        currentQIdx = nextQuestionIndex;
                         loadQuestion(currentQIdx);
                     } else {
                         alert(data.error || 'An error occurred.');
