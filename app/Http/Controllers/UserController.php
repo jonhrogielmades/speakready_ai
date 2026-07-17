@@ -1010,6 +1010,7 @@ class UserController extends Controller
         } else {
             $systemPrompt = 'You are the unified SpeakReady Readiness Coach for Philippines-focused interview preparation. Help with local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship/admission interviews, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions in the Philippine context. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, salary figure, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals, not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
             $systemPrompt .= ' You may also answer direct questions about SpeakReady AI developer credits. If asked who developed, built, created, or maintains SpeakReady AI, answer using these official credits: '.$this->speakReadyDeveloperCreditsPrompt().' Do not invent additional team members or roles.';
+            $systemPrompt .= ' Format every coaching reply for easy reading in a chat bubble: start with a brief direct answer, then use short labeled sections when helpful, with clear bullets or numbered steps. Keep paragraphs to one or two sentences, avoid long blocks of text, and do not use tables.';
             $systemPrompt .= ' '.$coachLanguages->promptInstruction($responseLanguage);
 
             $response = AIService::chatMessage($message, $history, $provider, $systemPrompt);
@@ -1234,6 +1235,7 @@ class UserController extends Controller
     {
         $user = Auth::user();
         $profile = $user->profile()->firstOrCreate([]);
+        $this->refreshChallengeEnergyIfNeeded($profile);
 
         $categories = Category::where('status', 'active')
             ->where('type', 'game')
@@ -1260,6 +1262,20 @@ class UserController extends Controller
         $gameProgress = GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
 
         return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories'));
+    }
+
+    private function refreshChallengeEnergyIfNeeded(Profile $profile): void
+    {
+        $maxEnergy = 10;
+        $lastRefill = $profile->energy_last_refilled_at;
+
+        if ($lastRefill && $lastRefill->isSameDay(now())) {
+            return;
+        }
+
+        $profile->energy = max((int) ($profile->energy ?? 0), $maxEnergy);
+        $profile->energy_last_refilled_at = now();
+        $profile->save();
     }
 
     public function learningAssistant()

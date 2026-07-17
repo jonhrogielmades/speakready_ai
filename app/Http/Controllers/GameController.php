@@ -17,6 +17,8 @@ use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
+    private const MAX_ENERGY = 10;
+
     public function startLevel(Request $request, $id)
     {
         $level = GameLevel::with('category')->findOrFail($id);
@@ -159,7 +161,7 @@ class GameController extends Controller
 
     private function refreshEnergyIfNeeded(\App\Models\Profile $profile): void
     {
-        $maxEnergy = 3;
+        $maxEnergy = self::MAX_ENERGY;
         $lastRefill = $profile->energy_last_refilled_at;
 
         if ($lastRefill && $lastRefill->isSameDay(now())) {

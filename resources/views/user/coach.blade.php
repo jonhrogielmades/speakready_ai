@@ -23,6 +23,33 @@
     .chat-bubble { max-width: 80%; padding: 16px 20px; border-radius: 20px; font-size: .95rem; line-height: 1.5; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     .bubble-ai { background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.05) 100%); border: 1px solid rgba(139,92,246,0.2); border-bottom-left-radius: 4px; color: var(--tx); align-self: flex-start; box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); }
     .bubble-user { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #fff; border-bottom-right-radius: 4px; align-self: flex-end; border: none; }
+    .ai-response { display: grid; gap: 10px; line-height: 1.62; }
+    .ai-response p { margin: 0; }
+    .ai-response strong { color: var(--tx); font-weight: 800; }
+    .ai-response em { color: var(--tx2); font-style: italic; }
+    .ai-response .ai-section-title {
+        display: block;
+        margin-top: 2px;
+        color: #60a5fa;
+        font-size: .78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0;
+    }
+    .ai-response ul, .ai-response ol {
+        margin: 0;
+        padding-left: 1.15rem;
+        display: grid;
+        gap: 7px;
+    }
+    .ai-response li { padding-left: 2px; }
+    .ai-response code {
+        padding: 1px 5px;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.08);
+        color: var(--tx);
+        font-size: .88em;
+    }
 
     .chat-input-area { padding: 20px; border-top: 1px solid var(--bd); background: rgba(255,255,255,0.02); flex-shrink: 0; }
     .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--bg3); border: 1px solid var(--bd); border-radius: 16px; padding: 8px 16px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -163,6 +190,7 @@
         .chat-messages { padding: 12px; gap: 10px; }
         .chat-input-area { padding: 10px 12px; }
         .chat-bubble { max-width: 92%; padding: 10px 13px; font-size: 0.84rem; line-height: 1.45; }
+        .ai-response { gap: 8px; line-height: 1.55; }
         .chat-input-wrapper {
             padding: 7px 8px 7px 12px;
             border-radius: 14px;
@@ -500,15 +528,72 @@
                  .replace(/'/g, "&#039;");
         }
 
-        function formatMarkdown(text) {
-            // Escape HTML first to prevent XSS
-            let formatted = escapeHtml(text);
-            
-            // Very basic markdown formatting for chat bubble
-            return formatted
+        function formatInlineMarkdown(text) {
+            return escapeHtml(text)
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>');
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        }
+
+        function flushList(listItems, ordered, parts) {
+            if (!listItems.length) return;
+
+            const tag = ordered ? 'ol' : 'ul';
+            parts.push(`<${tag}>${listItems.map(item => `<li>${formatInlineMarkdown(item)}</li>`).join('')}</${tag}>`);
+            listItems.length = 0;
+        }
+
+        function formatMarkdown(text) {
+            const normalized = String(text || '')
+                .replace(/\r\n/g, '\n')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
+
+            if (!normalized) return '<div class="ai-response"><p>No response yet.</p></div>';
+
+            const parts = [];
+            const listItems = [];
+            let listOrdered = false;
+
+            normalized.split('\n').forEach(rawLine => {
+                const line = rawLine.trim();
+
+                if (!line) {
+                    flushList(listItems, listOrdered, parts);
+                    return;
+                }
+
+                const bullet = line.match(/^[-*]\s+(.+)$/);
+                const numbered = line.match(/^\d+[.)]\s+(.+)$/);
+
+                if (bullet || numbered) {
+                    const ordered = Boolean(numbered);
+
+                    if (listItems.length && ordered !== listOrdered) {
+                        flushList(listItems, listOrdered, parts);
+                    }
+
+                    listOrdered = ordered;
+                    listItems.push((bullet || numbered)[1]);
+                    return;
+                }
+
+                flushList(listItems, listOrdered, parts);
+
+                const plainHeading = line.match(/^\*\*([^*]{2,60})\*\*:?\s*$/);
+                const colonHeading = line.match(/^([A-Za-z][A-Za-z\s/&-]{2,48}):$/);
+
+                if (plainHeading || colonHeading) {
+                    parts.push(`<span class="ai-section-title">${formatInlineMarkdown((plainHeading || colonHeading)[1])}</span>`);
+                    return;
+                }
+
+                parts.push(`<p>${formatInlineMarkdown(line)}</p>`);
+            });
+
+            flushList(listItems, listOrdered, parts);
+
+            return `<div class="ai-response">${parts.join('')}</div>`;
         }
         
         function newConversation() {

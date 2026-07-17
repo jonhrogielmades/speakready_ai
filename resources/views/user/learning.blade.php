@@ -708,7 +708,7 @@
                     <i class="fa-solid fa-heart"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile?->energy ?? 3 }} <span style="font-size:1rem; color:var(--tx3);">/ 3</span></div>
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile?->energy ?? 10 }} <span style="font-size:1rem; color:var(--tx3);">/ 10</span></div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Energy</div>
                 </div>
             </div>
@@ -747,7 +747,7 @@
             
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 style="font-weight:700;color:var(--tx);margin:0">Philippines Challenge Journey</h5>
-                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile?->energy ?? 3 }} / 3 Lives</span>
+                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile?->energy ?? 10 }} / 10 Lives</span>
             </div>
 
             <div class="level-path-container" id="modules-list">
