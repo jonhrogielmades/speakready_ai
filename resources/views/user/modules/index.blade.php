@@ -1,5 +1,5 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Interview Modules')
+@section('title', 'Philippines Interview Modules')
 
 @section('content')
 <style>
@@ -281,9 +281,9 @@
             <div class="sr-page-hero-copy">
                 <h4 class="sr-page-hero-title text-gradient-primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 0-3 3V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 8h7M8 12h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Interview Modules
+                    Philippines Interview Modules
                 </h4>
-                <p class="sr-page-hero-subtitle">Learn key concepts, review study materials, and prepare for your interviews.</p>
+                <p class="sr-page-hero-subtitle">Study lessons tied to Philippines interview scenarios, answer evidence, and practical communication skills.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -294,7 +294,7 @@
     <div class="sr-page-actions">
         <form action="{{ route('user.modules.index') }}" method="GET" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
             <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search modules..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Philippines modules..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
             @if(request('category'))
                 <input type="hidden" name="category" value="{{ request('category') }}">
             @endif
@@ -323,7 +323,7 @@
             <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                 <div>
                     <h5 id="module-recommendations-title" class="module-smart-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#f59e0b"></i>Recommended For You</h5>
-                    <p class="module-smart-subtitle">Suggested from your latest scores, feedback, and current module progress.</p>
+                    <p class="module-smart-subtitle">Suggested from your latest Philippines interview scores, feedback, and module progress.</p>
                 </div>
                 <a href="{{ route('user.progress') }}" class="btn btn-sm" style="border:1px solid var(--bd);color:var(--tx2);border-radius:10px;font-weight:700;">View Progress</a>
             </div>
@@ -344,7 +344,7 @@
     @if(isset($learningPaths) && $learningPaths->count() > 0)
         <section class="module-smart-panel" aria-labelledby="module-paths-title">
             <h5 id="module-paths-title" class="module-smart-title"><i class="fa-solid fa-route me-2" style="color:#06b6d4"></i>Learning Paths</h5>
-            <p class="module-smart-subtitle">Track completion by topic so learners can move through preparation in a clearer order.</p>
+            <p class="module-smart-subtitle">Track completion by topic so your Philippines interview preparation stays ordered.</p>
             <div class="module-path-grid">
                 @foreach($learningPaths->take(6) as $path)
                     <a href="{{ $path->url }}" class="module-path-item">
@@ -389,7 +389,7 @@
                                 <i class="fa-solid fa-eye me-1"></i> {{ number_format($module->views) }} views
                             </div>
                             <a href="{{ route('user.modules.show', $module->id) }}" class="btn btn-sm btn-shine" style="background:var(--dash-primary, #60a5fa); color:#fff; border-radius:10px; font-weight:600; box-shadow:0 4px 15px rgba(96,165,250,0.3); border:none; padding:8px 16px;">
-                                Start Learning <i class="fa-solid fa-arrow-right ms-1"></i>
+                                Open Module <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
                     </div>
@@ -399,7 +399,7 @@
             <div class="col-12">
                 <div class="text-center py-5" style="background:var(--bg2); border-radius:16px; border:1px solid var(--bd);">
                     <i class="fa-solid fa-folder-open fa-3x mb-3" style="color:var(--bd)"></i>
-                    <h5 style="color:var(--tx3)">No modules found in this category.</h5>
+                    <h5 style="color:var(--tx3)">No modules found for this topic.</h5>
                 </div>
             </div>
         @endforelse

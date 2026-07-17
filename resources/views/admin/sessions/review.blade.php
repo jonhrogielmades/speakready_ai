@@ -84,8 +84,8 @@
             <a href="{{ route('admin.sessions.show', $session->id) }}" class="text-decoration-none" style="color:var(--tx2);font-size:0.9rem;">
                 <i class="fa-solid fa-arrow-left me-1"></i> Back to Details
             </a>
-            <h4 class="fw-bold mb-1 mt-2">Q&A Review & AI Feedback</h4>
-            <p style="font-size:0.9rem;color:var(--tx2);margin:0;">Audit interview quality, evaluate user responses, and monitor AI feedback.</p>
+            <h4 class="fw-bold mb-1 mt-2">Philippines Interview Q&A Review & AI Feedback</h4>
+            <p style="font-size:0.9rem;color:var(--tx2);margin:0;">Audit Philippine interview quality, evaluate user responses, and monitor AI feedback.</p>
         </div>
         <span class="stat-badge primary">Session #{{ $session->id }}</span>
     </div>
@@ -93,7 +93,7 @@
     <!-- AI Feedback Monitoring -->
     @if($session->feedback)
     <div class="premium-card mb-4" style="border-left: 4px solid #3b82f6;">
-        <h6 class="fw-bold mb-3"><i class="fa-solid fa-robot me-2 text-primary"></i>AI Overall Session Feedback</h6>
+        <h6 class="fw-bold mb-3"><i class="fa-solid fa-robot me-2 text-primary"></i>AI Overall Philippines Interview Feedback</h6>
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="mb-3">
@@ -127,7 +127,7 @@
     </div>
     @else
     <div class="alert alert-warning" style="background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">
-        <i class="fa-solid fa-circle-exclamation me-2"></i> Overall AI Feedback has not been generated for this session.
+        <i class="fa-solid fa-circle-exclamation me-2"></i> Overall AI feedback has not been generated for this Philippines interview session.
     </div>
     @endif
 
@@ -148,7 +148,7 @@
             <div class="qa-body">
                 <div class="row g-4">
                     <div class="col-lg-6">
-                        <label style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;">Question Text</label>
+                        <label style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;">PH Interview Question Text</label>
                         <p style="color:var(--tx2);font-size:0.95rem;">{{ $answer->question->content ?? 'Content unavailable.' }}</p>
 
                         <label style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-top:15px;">User's Answer</label>

@@ -45,28 +45,28 @@ class UserController extends Controller
     private const SKILL_PERKS = [
         'energy_efficiency' => [
             'name' => 'Energy Efficiency',
-            'description' => 'Reduces the energy cost of all Learning Games by 1.',
+            'description' => 'Reduces the energy cost of all PH Challenges by 1.',
             'cost' => 500,
             'type' => 'leadership',
             'icon' => 'fa-bolt',
         ],
         'first_impressions' => [
             'name' => 'First Impressions',
-            'description' => 'Starts every game with a +5 baseline score buffer.',
+            'description' => 'Starts every PH Challenge with a +5 baseline score buffer.',
             'cost' => 500,
             'type' => 'communication',
             'icon' => 'fa-handshake',
         ],
         'time_extension' => [
             'name' => 'Time Extension',
-            'description' => 'Grants an extra 30 seconds on all timed game levels.',
+            'description' => 'Grants an extra 30 seconds on all timed PH Challenge levels.',
             'cost' => 500,
             'type' => 'problem_solving',
             'icon' => 'fa-hourglass-half',
         ],
         'xp_boost' => [
             'name' => 'XP Boost',
-            'description' => 'Permanently increases general XP earned from games by 20%.',
+            'description' => 'Permanently increases general XP earned from PH Challenges by 20%.',
             'cost' => 500,
             'type' => 'technical',
             'icon' => 'fa-arrow-up-right-dots',
@@ -267,6 +267,11 @@ class UserController extends Controller
             ->with(['score', 'category', 'feedback'])
             ->orderBy('created_at', 'asc')
             ->get();
+        $sessions->transform(function ($session) {
+            $session->practice_scenario = $this->practiceScenarioLabel($session);
+
+            return $session;
+        });
         $scoredSessions = $this->scoredSessions($sessions);
         $scoreTrend = $this->scoreTrendFor($scoredSessions);
         $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
@@ -312,7 +317,7 @@ class UserController extends Controller
             $goals = [
                 (object) [
                     'title' => 'Complete your first scored interview',
-                    'description' => 'Finish a mock interview to unlock readiness tracking',
+                    'description' => 'Finish a Philippines practice interview to unlock readiness tracking',
                     'progress' => 0,
                 ],
             ];
@@ -366,6 +371,11 @@ class UserController extends Controller
             ->with(['category', 'score', 'feedback'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+        $sessions->getCollection()->transform(function ($session) {
+            $session->practice_scenario = $this->practiceScenarioLabel($session);
+
+            return $session;
+        });
 
         $feedbackCategories = (clone $baseQuery)
             ->with('category')
@@ -392,8 +402,6 @@ class UserController extends Controller
                 'score',
                 'feedback',
                 'mentorReviewComments',
-                'jobApplication',
-                'interviewPack',
             ])
             ->firstOrFail();
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
@@ -411,8 +419,9 @@ class UserController extends Controller
 
         return response()->stream(function () use ($session, $answers) {
             $stream = fopen('php://output', 'w');
+            $scenarioLabel = $this->practiceScenarioLabel($session);
             CsvExportService::writeRow($stream, [
-                'Session ID', 'Date', 'Position', 'Category', 'Question', 'Answer', 'Answer Score',
+                'Session ID', 'Date', 'Position', 'Scenario', 'Question', 'Answer', 'Answer Score',
                 'Clarity', 'Relevance', 'Grammar', 'Overall Readiness', 'AI Feedback',
             ]);
 
@@ -421,7 +430,7 @@ class UserController extends Controller
                     $session->id,
                     optional($session->created_at)->toDateTimeString(),
                     $session->target_position,
-                    $session->category?->title,
+                    $scenarioLabel,
                     '', '', '', '', '', '',
                     $session->score?->overall_readiness_score,
                     '',
@@ -432,7 +441,7 @@ class UserController extends Controller
                         $session->id,
                         optional($session->created_at)->toDateTimeString(),
                         $session->target_position,
-                        $session->category?->title,
+                        $scenarioLabel,
                         $answer->question?->question_text,
                         $answer->answer_text,
                         $answer->score,
@@ -616,6 +625,24 @@ class UserController extends Controller
             ->map(fn ($rows) => (int) round($rows->avg('score')))
             ->sortKeys()
             ->all();
+    }
+
+    private function practiceScenarioLabel(?InterviewSession $session): string
+    {
+        if (! $session) {
+            return 'Philippines Interview';
+        }
+
+        $focus = strtolower((string) $session->interview_focus);
+        $category = strtolower((string) ($session->category?->title ?? ''));
+
+        return match (true) {
+            str_contains($focus, 'bpo'), str_contains($focus, 'customer support'), str_contains($focus, 'contact center'), str_contains($category, 'communication') => 'BPO / Customer Support Interview',
+            str_contains($focus, 'it / programming'), str_contains($focus, 'programming'), str_contains($focus, 'software'), str_contains($focus, 'technical'), str_contains($category, 'it'), str_contains($category, 'program') => 'IT / Programming Interview',
+            str_contains($focus, 'scholarship'), str_contains($category, 'scholar') => 'Scholarship Interview',
+            str_contains($focus, 'college'), str_contains($focus, 'admission'), str_contains($category, 'college'), str_contains($category, 'admission') => 'College Admission Interview',
+            default => 'General Job Interview',
+        };
     }
 
     private function readinessMovementFor(?InterviewSession $current, ?InterviewSession $previous): ?object
@@ -981,7 +1008,7 @@ class UserController extends Controller
         if ($this->isSpeakReadyDeveloperQuestion($message)) {
             $response = $this->speakReadyDeveloperCreditsResponse($responseLanguage);
         } else {
-            $systemPrompt = 'You are the unified SpeakReady Readiness Coach. Help with job-specific preparation, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals, not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
+            $systemPrompt = 'You are the unified SpeakReady Readiness Coach for Philippines-focused interview preparation. Help with local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship/admission interviews, score explanations, resume evidence, inclusive practice, interview reflection, and career transitions in the Philippine context. Provide concise, actionable guidance. Never invent an achievement, metric, employer fact, salary figure, or personal experience. When evidence is missing, ask the user to provide or verify it. Treat camera, accent, speaking style, and delivery metrics as optional coaching signals, not personality, confidence, or employability judgments. Explain that readiness is a practice indicator, not a hiring prediction. You MUST limit responses to interview preparation, resumes, job applications, and career coaching.';
             $systemPrompt .= ' You may also answer direct questions about SpeakReady AI developer credits. If asked who developed, built, created, or maintains SpeakReady AI, answer using these official credits: '.$this->speakReadyDeveloperCreditsPrompt().' Do not invent additional team members or roles.';
             $systemPrompt .= ' '.$coachLanguages->promptInstruction($responseLanguage);
 
@@ -1251,6 +1278,11 @@ class UserController extends Controller
         $history = VoiceSession::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->get();
+        $history->transform(function ($session) {
+            $session->practice_scenario = $this->voiceScenarioLabel($session->category);
+
+            return $session;
+        });
 
         return view('user.drills.voice', compact('history'));
     }
@@ -1381,7 +1413,7 @@ class UserController extends Controller
             'success' => true,
             'session' => [
                 'date' => $session->created_at->format('M d'),
-                'category' => $session->category,
+                'category' => $this->voiceScenarioLabel($session->category),
                 'clarity' => $session->clarity_score.'%',
                 'wpm' => $session->wpm,
                 'fillers' => $session->filler_words,
@@ -1454,6 +1486,7 @@ class UserController extends Controller
 
         $scoreTrend = $this->scoreTrendFor($scoredSessions);
         $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
+        $latestScenarioLabel = $this->practiceScenarioLabel($latestSession);
 
         return view('user.reports', compact(
             'user',
@@ -1471,7 +1504,8 @@ class UserController extends Controller
             'learningData',
             'achievements',
             'scoreTrend',
-            'categoryPerf'
+            'categoryPerf',
+            'latestScenarioLabel'
         ));
     }
 
@@ -1791,22 +1825,22 @@ class UserController extends Controller
     private function voicePromptPositionFor(string $category): string
     {
         return match ($category) {
-            'Technical' => 'technical interview candidate',
-            'Scholarship' => 'scholarship applicant',
-            default => 'job interview candidate',
+            'Technical' => 'Philippines IT or technical interview candidate',
+            'Scholarship' => 'Philippines scholarship or admission applicant',
+            default => 'Philippines job interview candidate',
         };
     }
 
     private function voicePromptFocusFor(string $category): string
     {
         return match ($category) {
-            'Tell Me About Yourself' => 'introductory personal pitch, motivation, and role fit',
-            'Strengths and Weaknesses' => 'self-awareness, growth mindset, and concrete evidence',
-            'Leadership' => 'leadership, ownership, conflict handling, and team impact',
-            'Problem Solving' => 'problem solving, prioritization, ambiguity, and decision making',
-            'Technical' => 'technical communication, debugging process, systems thinking, and tradeoffs',
-            'Scholarship' => 'academic goals, service, resilience, and scholarship fit',
-            default => $category.' interview practice',
+            'Tell Me About Yourself' => 'Philippines interview self-introduction, motivation, and role fit',
+            'Strengths and Weaknesses' => 'Philippines interview self-awareness, growth mindset, and concrete evidence',
+            'Leadership' => 'Philippines workplace leadership, ownership, conflict handling, and team impact',
+            'Problem Solving' => 'Philippines workplace problem solving, prioritization, ambiguity, and decision making',
+            'Technical' => 'Philippines IT interview technical communication, debugging process, systems thinking, and tradeoffs',
+            'Scholarship' => 'Philippines scholarship or admission goals, service, resilience, and program fit',
+            default => 'Philippines '.$category.' interview practice',
         };
     }
 
@@ -1823,40 +1857,53 @@ class UserController extends Controller
     {
         $prompts = [
             'Tell Me About Yourself' => [
-                'Walk me through your background and connect it to the role you are preparing for.',
-                'What should an interviewer remember about you after your first two minutes?',
-                'How would you summarize your strengths, experience, and next career goal?',
+                'Walk me through your background and connect it to the Philippines role or program you are preparing for.',
+                'What should a Philippine interviewer remember about you after your first two minutes?',
+                'How would you summarize your strengths, experience, and next career goal in the Philippine context?',
             ],
             'Strengths and Weaknesses' => [
-                'What is one strength you can prove with a specific example?',
+                'What is one strength you can prove with a specific school, internship, freelance, or work example?',
                 'Tell me about a weakness you are actively improving and what changed because of that work.',
-                'Describe feedback you received and how you used it to improve.',
+                'Describe feedback you received from a teacher, supervisor, client, or team lead and how you used it to improve.',
             ],
             'Leadership' => [
-                'Tell me about a time you led a team through uncertainty.',
+                'Tell me about a time you led a team through uncertainty in school, work, internship, or community work.',
                 'Describe a situation where you had to resolve conflict while keeping the work moving.',
-                'Give an example of how you motivated others toward a shared goal.',
+                'Give an example of how you motivated others toward a shared goal in a Philippine team setting.',
             ],
             'Problem Solving' => [
-                'Tell me about a complex problem you solved with limited information.',
+                'Tell me about a complex problem you solved with limited information in school, work, or training.',
                 'Describe a time you had competing deadlines and how you chose what to do first.',
-                'Give an example of a decision you made under pressure and what you learned.',
+                'How would you handle a Philippine interviewer asking about salary expectations, schedule, or work setup?',
             ],
             'Technical' => [
-                'Explain a technical concept from your experience to a non-technical interviewer.',
+                'Explain a technical concept from your experience to a non-technical Philippine interviewer.',
                 'Walk me through your debugging process when the cause is unclear.',
-                'Describe a technical tradeoff you made and how you evaluated it.',
+                'Describe a technical tradeoff you made for a class, client, employer, or startup project and how you evaluated it.',
             ],
             'Scholarship' => [
-                'Why does this scholarship fit your academic and career plan?',
+                'Why does this Philippine scholarship or admission program fit your academic and career plan?',
                 'Tell me about a challenge that shaped your goals and how you responded.',
-                'Describe how you will contribute to your school or community if selected.',
+                'Describe how you will contribute to your school, community, or the Philippines if selected.',
             ],
         ];
 
         $categoryPrompts = $prompts[$category] ?? $prompts['Tell Me About Yourself'];
 
         return $categoryPrompts[array_rand($categoryPrompts)];
+    }
+
+    private function voiceScenarioLabel(?string $category): string
+    {
+        return match ((string) $category) {
+            'Tell Me About Yourself' => 'General Job Interview',
+            'Strengths and Weaknesses' => 'Strengths & Weaknesses',
+            'Leadership' => 'Leadership / Teamwork',
+            'Problem Solving' => 'Problem Solving',
+            'Technical' => 'IT / Technical Interview',
+            'Scholarship' => 'Scholarship / Admission',
+            default => $category ?: 'General Job Interview',
+        };
     }
 
     private function estimatedVoiceClarity(int $wordCount, int $fillerWords, int $wpm): int

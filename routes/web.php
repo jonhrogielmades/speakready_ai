@@ -1,16 +1,13 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\AdminInterviewPackController;
 use App\Http\Controllers\AdminSessionController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
-use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\MentorReviewController;
-use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -52,21 +49,12 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
-        $categories = \App\Models\Category::where('status', 'active')->where('type', 'core')->get();
-        $applications = \App\Models\JobApplication::where('user_id', Auth::id())
-            ->orderByRaw('CASE WHEN interview_date IS NULL THEN 1 ELSE 0 END')
-            ->orderBy('interview_date')
-            ->orderByDesc('updated_at')
+        $categories = \App\Models\Category::where('status', 'active')
+            ->orderBy('title')
             ->get();
-        $packs = \App\Models\InterviewPack::where('status', 'active')->orderBy('name')->get();
-        $selectedApplication = request('application')
-            ? $applications->firstWhere('id', (int) request('application'))
-            : null;
-        $selectedPack = request('pack')
-            ? $packs->firstWhere('id', (int) request('pack'))
-            : null;
+        $sourcePacks = \App\Services\QuestionDatasetProvider::all();
 
-        return view('interview.setup', compact('categories', 'applications', 'packs', 'selectedApplication', 'selectedPack'));
+        return view('interview.setup', compact('categories', 'sourcePacks'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
@@ -76,6 +64,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/interview/start', [InterviewController::class, 'start'])->name('interview.start');
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
+    Route::post('/interview/speech', [InterviewController::class, 'speech'])->name('interview.speech');
     Route::post('/interview/save-state', [InterviewController::class, 'saveSessionState'])->name('interview.saveState');
     Route::post('/interview/finish', [InterviewController::class, 'finish'])->name('interview.finish');
     Route::get('/interview/{id}/review', [InterviewController::class, 'review'])->name('interview.review');
@@ -97,14 +86,6 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/notifications/{id}/read', [UserController::class, 'markNotificationAsRead'])->name('user.notifications.read');
     Route::delete('/notifications/{id}', [UserController::class, 'deleteNotification'])->name('user.notifications.delete');
     Route::get('/feedback', [UserController::class, 'feedback'])->name('user.feedback');
-    Route::get('/applications', [UserApplicationController::class, 'index'])->name('user.applications.index');
-    Route::post('/applications', [UserApplicationController::class, 'store'])->name('user.applications.store');
-    Route::put('/applications/{application}', [UserApplicationController::class, 'update'])->name('user.applications.update');
-    Route::delete('/applications/{application}', [UserApplicationController::class, 'destroy'])->name('user.applications.destroy');
-    Route::get('/applications/{application}/practice', [UserApplicationController::class, 'practice'])->name('user.applications.practice');
-    Route::post('/practice-plan/{item}/toggle', [UserApplicationController::class, 'togglePlanItem'])->name('user.practice-plan.toggle');
-    Route::get('/interview-packs', [InterviewPackController::class, 'index'])->name('user.packs.index');
-    Route::get('/interview-packs/{pack}/practice', [InterviewPackController::class, 'practice'])->name('user.packs.practice');
     Route::get('/coach', [UserController::class, 'coach'])->name('user.coach');
     Route::post('/coach/chat', [UserController::class, 'coachChat'])->name('user.coach.chat');
     Route::get('/coach/conversation/{id}', [UserController::class, 'loadCoachConversation'])->name('user.coach.load');
@@ -122,6 +103,9 @@ Route::middleware(['auth', 'user'])->group(function () {
     // Arena Gamification Routes
     Route::post('/game/level/{id}/start', [\App\Http\Controllers\GameController::class, 'startLevel'])->name('user.game.start');
     Route::get('/game/match', [\App\Http\Controllers\GameController::class, 'arenaSession'])->name('user.game.match');
+    Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
+    Route::post('/game/save-state', [\App\Http\Controllers\GameController::class, 'saveState'])->name('user.game.saveState');
+    Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
@@ -180,14 +164,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/admin/questions/import', [AdminController::class, 'importQuestions'])->name('admin.questions.import');
     Route::post('/admin/questions/import-dataset', [AdminController::class, 'importDataset'])->name('admin.questions.import-dataset');
     Route::get('/admin/questions/export', [AdminController::class, 'exportQuestions'])->name('admin.questions.export');
-
-    Route::prefix('admin/interview-packs')->name('admin.packs.')->group(function () {
-        Route::get('/', [AdminInterviewPackController::class, 'index'])->name('index');
-        Route::post('/', [AdminInterviewPackController::class, 'store'])->name('store');
-        Route::post('/generate', [AdminInterviewPackController::class, 'generate'])->name('generate');
-        Route::put('/{pack}', [AdminInterviewPackController::class, 'update'])->name('update');
-        Route::delete('/{pack}', [AdminInterviewPackController::class, 'destroy'])->name('destroy');
-    });
 
     Route::get('/admin/modules', [AdminController::class, 'modulesDashboard'])->name('admin.modules');
 

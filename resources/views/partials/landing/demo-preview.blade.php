@@ -17,15 +17,15 @@
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-gauge-high fa-4x mb-4" style="color:var(--pur)"></i>
                                            <h3 class="fs-3 fw-bold">Overview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your interview sessions and overall readiness.</p>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your Philippine interview sessions and readiness.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 2: Mock Interview -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-microphone-lines fa-4x mb-4" style="color:#34d399"></i>
-                                           <h3 class="fs-3 fw-bold">Mock Interview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking real-world questions.</p>
+                                           <h3 class="fs-3 fw-bold">Philippine Mock Interview</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking Philippine HR, BPO, IT, and fresh graduate questions.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 3: Voice Rehearsal -->
@@ -41,7 +41,7 @@
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-book-open fa-4x mb-4" style="color:#ef4444"></i>
                                            <h3 class="fs-3 fw-bold">Learning Lab</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials to master any interview.</p>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials for Philippine interview scenarios.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 5: AI Coach -->

@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Feedback Center')
+@section('title', 'Philippines Interview Feedback')
 
 @section('content')
 <style>
@@ -75,7 +75,7 @@
             align-items: stretch;
         }
 
-        #feedback-filters #categoryFilter {
+        #feedback-filters #scenarioFilter {
             grid-column: 1 / -1;
             display: block;
             width: 100% !important;
@@ -145,7 +145,7 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h8M9 3h6l1 3H8l1-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 6H5v15h14V6h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8 14 2 2 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     Feedback Center
                 </h4>
-                <p class="sr-page-hero-subtitle">Review your past interviews and AI-generated insights.</p>
+                <p class="sr-page-hero-subtitle">Review Philippines practice interviews, readiness scores, and answer feedback.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -161,8 +161,8 @@
         <div class="feedback-history-head d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <h5 style="color:var(--tx);margin:0;font-weight:bold;">Feedback History</h5>
             <div id="feedback-filters" class="d-flex gap-2 flex-wrap">
-                <select id="categoryFilter" class="form-select border-0 db-filter-input" style="background:var(--bg);color:var(--tx);width:200px;border-radius:8px;">
-                    <option value="">All Categories</option>
+                <select id="scenarioFilter" class="form-select border-0 db-filter-input" style="background:var(--bg);color:var(--tx);width:220px;border-radius:8px;">
+                    <option value="">All Scenarios</option>
                     @foreach($feedbackCategories as $category)
                         <option value="{{ $category }}">{{ $category }}</option>
                     @endforeach
@@ -189,7 +189,7 @@
                 <thead>
                     <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
                         <th class="border-0">Date</th>
-                        <th class="border-0">Interview Type</th>
+                        <th class="border-0">Practice Scenario</th>
                         <th class="border-0">Score</th>
                         <th class="border-0">Rating</th>
                         <th class="border-0 text-end">Action</th>
@@ -197,9 +197,9 @@
                 </thead>
                 <tbody>
                     @foreach($sessions as $session)
-                    <tr style="border-bottom: 1px solid var(--bd);" data-category="{{ $session->category ? $session->category->title : 'Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
+                    <tr style="border-bottom: 1px solid var(--bd);" data-scenario="{{ $session->practice_scenario ?? 'General Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
                         <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
-                        <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->title : 'Job Interview' }}</td>
+                        <td class="border-0 py-3 fw-bold">{{ $session->practice_scenario ?? 'General Job Interview' }}</td>
                         <td class="border-0 py-3 fw-bold">
                             @if($session->score)
                                 {{ $session->score->overall_readiness_score }}%
@@ -233,7 +233,7 @@
                     @if($sessions->count() == 0)
                     <tr>
                         <td colspan="5" class="border-0 py-3">
-                            <span class="feedback-empty-state">No feedback available yet. Complete a mock interview to generate detailed feedback!</span>
+                            <span class="feedback-empty-state">No feedback available yet. Complete a Philippines practice interview to generate detailed feedback.</span>
                         </td>
                     </tr>
                     @endif
@@ -251,24 +251,24 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('feedbackSearch');
-        const categoryFilter = document.getElementById('categoryFilter');
+        const scenarioFilter = document.getElementById('scenarioFilter');
         const sortBtn = document.getElementById('sortDateBtn');
         const tbody = document.querySelector('#feedbackTable tbody');
         let sortDesc = true;
 
         function filterTable() {
             const search = searchInput.value.toLowerCase();
-            const cat = categoryFilter.value.toLowerCase();
+            const scenario = scenarioFilter.value.toLowerCase();
             const rows = tbody.querySelectorAll('tr');
 
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
-                const rowCat = (row.getAttribute('data-category') || '').toLowerCase();
+                const rowScenario = (row.getAttribute('data-scenario') || '').toLowerCase();
                 
                 const matchesSearch = text.includes(search);
-                const matchesCat = cat === "" || rowCat.includes(cat);
+                const matchesScenario = scenario === "" || rowScenario.includes(scenario);
 
-                if (matchesSearch && matchesCat) {
+                if (matchesSearch && matchesScenario) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -277,7 +277,7 @@
         }
 
         if(searchInput) searchInput.addEventListener('keyup', filterTable);
-        if(categoryFilter) categoryFilter.addEventListener('change', filterTable);
+        if(scenarioFilter) scenarioFilter.addEventListener('change', filterTable);
 
         if(sortBtn) {
             sortBtn.addEventListener('click', function() {
@@ -303,14 +303,14 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by category or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
-            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past mock interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
+            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past Philippines practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
-            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by category or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
-            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past mock interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
+            { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
+            { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past Philippines practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}
         ];
 

@@ -8,15 +8,12 @@ use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
 use App\Models\InterviewAnswer;
-use App\Models\InterviewPack;
 use App\Models\InterviewSession;
-use App\Models\JobApplication;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Services\AIService;
-use App\Services\CareerPlanService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
@@ -37,16 +34,8 @@ class InterviewController extends Controller
 
         $validated = $request->validate([
             'category_id' => [
-                'required',
+                'nullable',
                 Rule::exists('categories', 'id')->where('status', 'active')->where('type', 'core'),
-            ],
-            'job_application_id' => [
-                'nullable',
-                Rule::exists('job_applications', 'id')->where('user_id', Auth::id()),
-            ],
-            'interview_pack_id' => [
-                'nullable',
-                Rule::exists('interview_packs', 'id')->where('status', 'active'),
             ],
             'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
             'target_position' => 'required|string|max:255',
@@ -64,8 +53,8 @@ class InterviewController extends Controller
             'question_types.*' => ['string', Rule::in(['Behavioral', 'Situational', 'Technical', 'Personal'])],
             'ai_assistance_level' => ['nullable', Rule::in(['beginner', 'standard', 'challenge'])],
             'live_feedback_mode' => ['nullable', Rule::in(['coaching', 'real_interview'])],
-            'pressure_mode' => 'nullable|boolean',
             'interview_format' => ['nullable', Rule::in(['standard', 'hr_screen', 'hiring_manager', 'panel', 'phone', 'asynchronous', 'technical', 'case', 'presentation'])],
+            'source_pack_key' => ['nullable', Rule::in(array_keys(QuestionDatasetProvider::all()))],
             'camera_coaching' => 'nullable|boolean',
             'separate_language_scoring' => 'nullable|boolean',
             'extended_time' => 'nullable|boolean',
@@ -74,42 +63,33 @@ class InterviewController extends Controller
             'simplified_questions' => 'nullable|boolean',
         ]);
 
-        $category = Category::findOrFail($validated['category_id']);
-        $application = ! empty($validated['job_application_id'])
-            ? JobApplication::where('user_id', Auth::id())->findOrFail($validated['job_application_id'])
-            : null;
-        $pack = ! empty($validated['interview_pack_id'])
-            ? InterviewPack::where('status', 'active')->findOrFail($validated['interview_pack_id'])
-            : null;
+        $category = ! empty($validated['category_id'])
+            ? Category::where('status', 'active')->where('type', 'core')->findOrFail($validated['category_id'])
+            : Category::where('status', 'active')->where('type', 'core')->where('title', 'Job Interview')->first();
+        $category ??= Category::where('status', 'active')->where('type', 'core')->first();
+
+        if (! $category) {
+            return back()
+                ->withErrors(['category_id' => 'No active interview category is available.'])
+                ->withInput();
+        }
+
+        $dataset = QuestionDatasetProvider::find($validated['source_pack_key'] ?? null)
+            ?? QuestionDatasetProvider::forCategory($category);
+        if (($dataset['country'] ?? null) !== 'Philippines') {
+            return back()
+                ->withErrors(['category_id' => 'Interview setup is limited to Philippines interview practice.'])
+                ->withInput();
+        }
 
         $position = $validated['target_position'];
         if ($position === 'Other' && ! empty($validated['custom_position'])) {
             $position = $validated['custom_position'];
         }
 
-        if ($application) {
-            $position = $position ?: $application->job_title;
-            $validated['resume_text'] = $validated['resume_text'] ?? $application->resume_text;
-            $validated['job_description'] = $validated['job_description'] ?? $application->job_description;
-        }
-
         $questionTypes = $validated['question_types'] ?? [];
-        if ($pack) {
-            $questionTypes = ! empty($questionTypes) ? $questionTypes : ($pack->question_types ?? []);
-            $validated['interview_focus'] = $validated['interview_focus'] ?? $pack->interview_focus;
-            $validated['company_persona'] = ($validated['company_persona'] ?? null) ?: $pack->company_persona;
-            $validated['difficulty'] = in_array($pack->difficulty, ['easy', 'medium', 'hard'], true)
-                ? $pack->difficulty
-                : $validated['difficulty'];
-        }
-
-        $pressureMode = filter_var($validated['pressure_mode'] ?? false, FILTER_VALIDATE_BOOLEAN) || (bool) ($pack?->pressure_mode);
-        if ($pressureMode) {
-            $validated['interviewer_strictness'] = 'strict';
-            $validated['ai_assistance_level'] = 'challenge';
-            $validated['live_feedback_mode'] = 'real_interview';
-            $validated['time_limit'] = (int) ($validated['time_limit'] ?? 0) > 0 ? $validated['time_limit'] : 2;
-        }
+        $validated['interview_focus'] = $this->philippinesInterviewFocus($validated['interview_focus'] ?? null);
+        $validated['company_persona'] = 'Philippines hiring context';
 
         // Provider choice is an administrator concern. Users receive the same versioned rubric
         // regardless of which healthy provider the configured fallback chain selects.
@@ -130,8 +110,6 @@ class InterviewController extends Controller
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
-            'job_application_id' => $application?->id,
-            'interview_pack_id' => $pack?->id,
             'category_id' => $category->id,
             'difficulty' => $validated['difficulty'],
             'target_position' => $position,
@@ -140,7 +118,7 @@ class InterviewController extends Controller
             'num_questions' => $validated['num_questions'] ?? 5,
             'coach_focus_mode' => $validated['coach_focus_mode'] ?? 'balanced',
             'response_mode' => $validated['response_mode'] ?? 'text',
-            'interview_focus' => $validated['interview_focus'] ?? 'General Practice',
+            'interview_focus' => $validated['interview_focus'] ?? 'Philippines Job Interview',
             'company_persona' => $validated['company_persona'] ?? null,
             'interviewer_strictness' => $validated['interviewer_strictness'] ?? 'neutral',
             'time_limit' => $validated['time_limit'] ?? 0,
@@ -151,35 +129,17 @@ class InterviewController extends Controller
             'interview_format' => $validated['interview_format'] ?? 'standard',
             'accommodation_profile' => $accommodationProfile,
             'score_eligible' => $assessmentMode === 'assessment',
-            'pressure_mode' => $pressureMode,
             'status' => 'in_progress',
         ]);
 
-        if ($pack && ! empty($pack->sample_questions)) {
-            $sampleQuestions = array_slice($pack->sample_questions, 0, (int) ($validated['num_questions'] ?? 5));
-            $sampleQuestions = $this->localizedQuestionTexts($sampleQuestions, $provider);
-
-            foreach ($sampleQuestions as $idx => $qText) {
-                $this->createInterviewQuestion(
-                    $session,
-                    $category,
-                    $qText,
-                    $validated['difficulty'],
-                    $questionTypes,
-                    $idx
-                );
-            }
-        }
-
         if ($provider !== 'local' && ! Question::where('interview_session_id', $session->id)->exists()) {
-            $dataset = QuestionDatasetProvider::forCategory($category);
             $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
 
             $generated = AIService::generateQuestions(
                 1, // Only generate the first question upfront for the real-time loop
                 $position,
                 $validated['difficulty'],
-                $validated['interview_focus'] ?? 'General Practice',
+                $validated['interview_focus'] ?? 'Philippines Job Interview',
                 $provider,
                 $validated['resume_text'] ?? null,
                 $validated['job_description'] ?? null,
@@ -206,6 +166,24 @@ class InterviewController extends Controller
                         true
                     );
                 }
+            }
+        }
+
+        if (! Question::where('interview_session_id', $session->id)->exists()) {
+            $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
+            $fallbackQuestions = $this->sourceBackedQuestionTexts($dataset, $questionTypes, (int) ($validated['num_questions'] ?? 5), $validated['difficulty']);
+            $fallbackQuestions = $this->localizedQuestionTexts($fallbackQuestions, $provider);
+
+            foreach ($fallbackQuestions as $idx => $qText) {
+                $this->createInterviewQuestion(
+                    $session,
+                    $category,
+                    $qText,
+                    $validated['difficulty'],
+                    $questionTypes,
+                    $idx,
+                    $sourceMetadata
+                );
             }
         }
 
@@ -244,8 +222,12 @@ class InterviewController extends Controller
             }
         }
 
-        session(['active_interview_id' => $session->id]);
-        session(['active_interview_provider' => $provider]);
+        session()->forget('game_level_id');
+        session([
+            'active_interview_id' => $session->id,
+            'active_interview_provider' => $provider,
+            'active_interview_context' => 'interview',
+        ]);
 
         ActivityLogger::log(
             Auth::user(),
@@ -261,12 +243,8 @@ class InterviewController extends Controller
 
     public function answer(Request $request)
     {
-        $session = $this->activeInterviewSession();
-        if (! $session) {
-            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
-        }
-
         $validated = $request->validate([
+            'session_id' => 'nullable|exists:interview_sessions,id',
             'question_id' => 'required|exists:questions,id',
             'answer_text' => 'nullable|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
@@ -284,6 +262,11 @@ class InterviewController extends Controller
             'posture_score' => 'nullable|integer|min:0|max:100',
             'notes' => 'nullable|string|max:10000',
         ]);
+
+        $session = $this->activeInterviewSession($validated['session_id'] ?? null, $validated['question_id']);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
 
         $question = $this->questionForSession($validated['question_id'], $session);
         if (! $question) {
@@ -425,9 +408,7 @@ class InterviewController extends Controller
         }
 
         // 4. Save new AI Question
-        $dataset = $session->category
-            ? QuestionDatasetProvider::forCategory($session->category)
-            : null;
+        $dataset = $this->datasetForSession($session);
         $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
 
         $questionIndex = InterviewAnswer::where('interview_session_id', $session->id)->count();
@@ -446,7 +427,41 @@ class InterviewController extends Controller
             'success' => true,
             'next_question_id' => $newQuestion->id,
             'next_question_text' => $newQuestion->question_text,
+            'source_name' => $newQuestion->source_name,
+            'source_url' => $newQuestion->source_url,
+            'source_type' => $newQuestion->source_type,
         ]);
+    }
+
+    public function speech(Request $request)
+    {
+        if (! Auth::check()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'session_id' => 'nullable|exists:interview_sessions,id',
+            'question_id' => 'required|exists:questions,id',
+        ]);
+
+        $session = $this->activeInterviewSession($validated['session_id'] ?? null, $validated['question_id']);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
+
+        $question = $this->questionForSession($validated['question_id'], $session);
+        if (! $question) {
+            return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+        }
+
+        $speech = AIService::synthesizeSpeech($question->question_text, $this->currentLanguageConfig());
+        if (! $speech) {
+            return response()->json(['error' => 'AI speech is not available.'], 503);
+        }
+
+        return response($speech['audio'], 200)
+            ->header('Content-Type', $speech['mime_type'])
+            ->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
     public function finish(Request $request)
@@ -461,11 +476,22 @@ class InterviewController extends Controller
             'notes' => 'nullable|string|max:10000',
         ]);
 
-        if ((int) session('active_interview_id') !== (int) $validated['session_id']) {
+        $session = InterviewSession::with('gameLevel')->findOrFail($validated['session_id']);
+        if ((int) $session->user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+        $gameLevel = $this->gameLevelForSession($session);
+
+        if ($session->status === 'completed') {
+            $this->forgetCompletedSessionState($session, $gameLevel);
+
+            return $this->completedSessionRedirect($session, $gameLevel);
+        }
+
+        if ($session->status !== 'in_progress') {
             abort(403);
         }
 
-        $session = InterviewSession::where('user_id', Auth::id())->findOrFail($validated['session_id']);
         $session->update([
             'status' => 'completed',
             'duration_seconds' => $validated['duration_seconds'] ?? $session->duration_seconds,
@@ -491,9 +517,10 @@ class InterviewController extends Controller
             'target_position' => $session->target_position,
             'difficulty' => $session->difficulty,
             'interview_focus' => $session->interview_focus,
+            'company_persona' => $session->company_persona,
+            'country' => 'Philippines',
             'ai_assistance_level' => $session->ai_assistance_level,
             'interviewer_strictness' => $session->interviewer_strictness,
-            'pressure_mode' => (bool) $session->pressure_mode,
             'interview_format' => $session->interview_format,
             'assessment_mode' => $session->assessment_mode,
             'accommodation_profile' => $session->accommodation_profile,
@@ -501,26 +528,27 @@ class InterviewController extends Controller
         ];
 
         // Game Level specific modifiers
-        $gameLevel = null;
-        if (session('game_level_id')) {
-            $gameLevel = GameLevel::find(session('game_level_id'));
-            if ($gameLevel) {
-                if ($gameLevel->banned_words) {
-                    $sessionData['banned_words'] = $gameLevel->banned_words;
-                }
-                if ($gameLevel->target_tone) {
-                    $sessionData['target_tone'] = $gameLevel->target_tone;
-                }
-                $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
-                $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
-                $sessionData['game_success_criteria'] = $gameLevel->success_criteria;
-                $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
+        if ($gameLevel) {
+            if ($gameLevel->banned_words) {
+                $sessionData['banned_words'] = $gameLevel->banned_words;
             }
+            if ($gameLevel->target_tone) {
+                $sessionData['target_tone'] = $gameLevel->target_tone;
+            }
+            $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
+            $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
+            $sessionData['game_success_criteria'] = $gameLevel->success_criteria;
+            $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
         }
 
-        // Provider routing is controlled by the configured primary/fallback chain, not by users.
-        $feedbackProvider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
-        $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
+        // Learning games must finish quickly and cannot wait on external AI retries.
+        if ($gameLevel) {
+            $aiFeedback = $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
+        } else {
+            // Provider routing is controlled by the configured primary/fallback chain, not by users.
+            $feedbackProvider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+            $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
+        }
         $assessment = app(TrustworthyAssessmentService::class);
 
         $totalClarity = 0;
@@ -614,13 +642,7 @@ class InterviewController extends Controller
 
         $sFeedback = $aiFeedback['session_feedback'] ?? null;
         $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
-        $fullTranscript = implode(' ', array_column($answersData, 'answer'));
-        $jobEvidence = app(CareerPlanService::class)->analyzeMatch(
-            $fullTranscript,
-            $session->job_description,
-            $session->target_position
-        );
-        $jobEvidenceScore = $jobEvidence['score'];
+        $jobEvidenceScore = 0;
         $metadata = $assessment->sessionMetadata($session, $answers->fresh(['question']), [
             'clarity' => $clarity,
             'relevance' => $relevance,
@@ -672,15 +694,6 @@ class InterviewController extends Controller
             'session_state' => null,
         ]);
 
-        if ($session->job_application_id) {
-            $session->load('jobApplication');
-            app(CareerPlanService::class)->addPostSessionPlanItems($session);
-
-            if ($session->jobApplication && in_array($session->jobApplication->status, ['tracking', 'applied', 'screening'], true)) {
-                $session->jobApplication->update(['status' => 'interviewing']);
-            }
-        }
-
         $badges = [];
         if (! empty($profile->badges_earned)) {
             $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
@@ -691,16 +704,25 @@ class InterviewController extends Controller
             $xpEarned = round($xpEarned * 1.2);
         }
         $gameStatus = null;
+        $nextLevel = null;
+        $isNewBest = false;
+        $energySpent = null;
         if ($gameLevel) {
+            $energySpent = $this->effectiveGameEnergyCost($gameLevel, $profile);
             $baseReward = $gameLevel->xp_reward;
             if ($profile->hasPerk('xp_boost')) {
                 $baseReward = round($baseReward * 1.2);
             }
             $xpEarned = $baseReward;
-            $progress = GameProgress::where('user_id', Auth::id())
-                ->where('game_level_id', $gameLevel->id)->first();
+            $progress = GameProgress::firstOrCreate(
+                ['user_id' => Auth::id(), 'game_level_id' => $gameLevel->id],
+                ['status' => 'active', 'best_score' => 0]
+            );
 
             if ($progress) {
+                $previousBestScore = (int) ($progress->best_score ?? 0);
+                $isNewBest = $gameResultScore > $previousBestScore;
+
                 if ($gameResultScore >= $gameLevel->required_score) {
                     $progress->status = 'completed';
                     $gameStatus = 'victory';
@@ -738,11 +760,6 @@ class InterviewController extends Controller
                 }
                 $progress->save();
             }
-        }
-
-        $badges = [];
-        if (! empty($profile->badges_earned)) {
-            $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         }
 
         if ($profile->total_sessions == 0 && ! in_array('First Interview', $badges)) {
@@ -783,10 +800,9 @@ class InterviewController extends Controller
             $profile->readiness_score = $overall;
         }
         $profile->save();
+        $profile->refresh();
 
-        session()->forget('active_interview_id');
-        $gameLevelId = session('game_level_id');
-        session()->forget('game_level_id');
+        $this->forgetCompletedSessionState($session, $gameLevel);
 
         ActivityLogger::log(
             Auth::user(),
@@ -797,19 +813,12 @@ class InterviewController extends Controller
             ['title' => 'Interview Completed', 'icon' => 'fa-flag-checkered', 'type' => 'success']
         );
 
-        if ($gameLevelId) {
-            if ($gameStatus === 'victory') {
-                $msg = 'Victory! You cleared the Game Level with '.$gameResultScore.'%.';
-            } else {
-                $target = $gameLevel ? $gameLevel->required_score : 0;
-                $hint = $gameLevel && $gameLevel->retry_hint ? ' Focus: '.$gameLevel->retry_hint : '';
-                $msg = 'You scored '.$gameResultScore.'% and need '.$target.'% to clear this level.'.$hint;
-            }
-
-            return redirect()->route('user.learning')->with($gameStatus === 'victory' ? 'success' : 'error', $msg);
-        }
-
-        return redirect()->route('user.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
+        return $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
+            'xp_earned' => $xpEarned,
+            'energy_spent' => $energySpent,
+            'is_new_best' => $isNewBest,
+            'next_level' => $nextLevel,
+        ]);
     }
 
     public function retryAnswer(Request $request, InterviewAnswer $answer)
@@ -1026,41 +1035,100 @@ class InterviewController extends Controller
         return $questions;
     }
 
+    private function sourceBackedQuestionTexts(array $dataset, array $selectedQuestionTypes, int $limit, string $difficulty): array
+    {
+        $limit = max(1, min(20, $limit));
+        $selectedTypes = array_values(array_filter($selectedQuestionTypes));
+        $difficulty = ucfirst(strtolower($difficulty));
+        $questions = collect($dataset['questions'] ?? []);
+
+        if (! empty($selectedTypes)) {
+            $questions = $questions->filter(fn (array $question) => in_array($question['type'] ?? '', $selectedTypes, true));
+        }
+
+        $difficultyMatched = $questions->filter(fn (array $question) => ($question['difficulty'] ?? 'Medium') === $difficulty);
+        $otherDifficulty = $questions->reject(fn (array $question) => ($question['difficulty'] ?? 'Medium') === $difficulty);
+
+        $questions = $difficultyMatched
+            ->concat($otherDifficulty)
+            ->pluck('question_text')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($questions->isEmpty()) {
+            $questions = collect($dataset['questions'] ?? [])
+                ->pluck('question_text')
+                ->filter()
+                ->values();
+        }
+
+        return $questions->take($limit)->all();
+    }
+
+    private function philippinesInterviewFocus(?string $focus): string
+    {
+        $focus = trim((string) ($focus ?: 'Philippines Job Interview'));
+        $context = Str::contains(Str::lower($focus), ['philipp', 'filipino'])
+            ? $focus
+            : "Philippines interview - {$focus}";
+
+        return Str::limit($context, 120, '');
+    }
+
+    private function datasetForSession(InterviewSession $session): ?array
+    {
+        $focus = Str::lower((string) $session->interview_focus);
+        $key = match (true) {
+            Str::contains($focus, ['bpo', 'customer support', 'contact center']) => 'ph_bpo_communication',
+            Str::contains($focus, ['it / programming', 'programming', 'software', 'technical']) => 'ph_it_programming',
+            Str::contains($focus, ['scholarship']) => 'ph_scholarship',
+            Str::contains($focus, ['college', 'admission']) => 'ph_college_admission',
+            default => null,
+        };
+
+        return QuestionDatasetProvider::find($key)
+            ?? ($session->category ? QuestionDatasetProvider::forCategory($session->category) : null);
+    }
+
     private function builtInFallbackQuestionTexts(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
     {
         $position = trim((string) ($session->target_position ?: 'this role'));
-        $focus = trim((string) ($session->interview_focus ?: 'General Practice'));
+        $focus = trim((string) ($session->interview_focus ?: 'Philippines Job Interview'));
         $persona = trim((string) ($session->company_persona ?: 'the company'));
+        $employer = Str::contains(Str::lower($persona), ['philipp', 'filipino'])
+            ? 'a Philippine employer'
+            : $persona;
         $limit = max(1, min(20, $limit));
 
         $templates = [
             'Behavioral' => [
-                "Tell me about a recent project that best shows your readiness for {$position}.",
-                'Describe a time you received difficult feedback and how you used it to improve.',
-                'Tell me about a time you had to work with a teammate or stakeholder with a different point of view.',
-                'Describe a situation where you had to take ownership without being explicitly asked.',
-                'Tell me about a mistake you made at work or school and what changed afterward.',
+                "Tell me about a school, internship, BPO, freelance, or work project that best shows your readiness for a {$position} role in the Philippines.",
+                'Describe a time you received difficult feedback from a teacher, supervisor, client, or team lead and how you used it to improve.',
+                'Tell me about a time you worked with a Filipino teammate, customer, or stakeholder who had a different point of view.',
+                'Describe a situation where you took ownership even though the task was not fully explained to you.',
+                'Tell me about a mistake you made at work, school, or training and what changed afterward.',
             ],
             'Situational' => [
-                "If you joined as {$position} and found unclear priorities in your first week, how would you respond?",
-                'Imagine a deadline is at risk because requirements changed late. What would you do first?',
-                'How would you handle a stakeholder who disagrees with your recommendation?',
-                "If {$persona} asked you to explain a complex decision to a non-technical audience, how would you structure it?",
-                'What would you do if you noticed a quality issue shortly before delivery?',
+                "If you joined as {$position} in a Philippine workplace and found unclear priorities in your first week, how would you respond?",
+                'Imagine a deadline is at risk because requirements changed late. What would you tell your lead or client first?',
+                'How would you handle a local HR recruiter asking about salary expectations, availability, or work setup?',
+                "If {$employer} asked you to explain a complex decision to a non-technical audience, how would you structure it?",
+                'What would you do if you noticed a quality issue shortly before delivery to a customer or stakeholder?',
             ],
             'Technical' => [
-                "Walk me through the technical strengths that make you a fit for {$position}.",
+                "Walk me through the technical strengths that make you a fit for a {$position} role in the Philippine market.",
                 'Describe a technical problem you solved and the tradeoffs behind your approach.',
-                'How do you validate that your work is reliable before handing it off?',
+                'How do you validate that your work is reliable before handing it off to a teammate, client, or supervisor?',
                 "Tell me about a tool, framework, or process you would use to improve outcomes in {$focus}.",
-                'How do you debug an issue when the root cause is not obvious?',
+                'How do you debug an issue when the root cause is not obvious and the team needs an update quickly?',
             ],
             'Personal' => [
-                "Why are you interested in {$position} right now?",
-                "What strengths would you bring to {$persona}, and where are you still growing?",
-                'How do you stay motivated when work becomes repetitive or ambiguous?',
-                'What kind of team environment helps you do your best work?',
-                'What do you want the interviewer to remember about you after this conversation?',
+                "Why are you interested in a {$position} role in the Philippines right now?",
+                "What strengths would you bring to {$employer}, and where are you still growing?",
+                'How do you stay motivated when work becomes repetitive, high-volume, or ambiguous?',
+                'What Philippine workplace setup helps you do your best work: onsite, hybrid, remote, shifting, or regular hours?',
+                'What do you want a Philippine interviewer to remember about you after this conversation?',
             ],
         ];
 
@@ -1251,20 +1319,20 @@ class InterviewController extends Controller
         if (in_array($weakestSkill, ['Delivery Stability', 'Grammar'], true)) {
             return [
                 ['label' => 'Voice Drill', 'url' => route('user.drills.voice')],
-                ['label' => 'Mock Interview', 'url' => route('interview.setup')],
+                ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
             ];
         }
 
         if (in_array($weakestSkill, ['STAR Method', 'Clarity', 'Relevance'], true)) {
             return [
                 ['label' => 'Interview Modules', 'url' => route('user.modules.index')],
-                ['label' => 'Mock Interview', 'url' => route('interview.setup')],
+                ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
             ];
         }
 
         return [
             ['label' => 'Learning Center', 'url' => route('user.learning')],
-            ['label' => 'Mock Interview', 'url' => route('interview.setup')],
+            ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
         ];
     }
 
@@ -1318,16 +1386,434 @@ class InterviewController extends Controller
         return max($min, min($max, (int) round($value)));
     }
 
-    private function activeInterviewSession(): ?InterviewSession
+    private function activeInterviewSession($sessionId = null, $questionId = null): ?InterviewSession
     {
-        $sessionId = session('active_interview_id');
-        if (! $sessionId || ! Auth::check()) {
+        if (! Auth::check()) {
             return null;
         }
 
-        return InterviewSession::with('category')
-            ->where('user_id', Auth::id())
-            ->find($sessionId);
+        $candidateSessionId = $sessionId ?: session('active_interview_id');
+        if ($candidateSessionId) {
+            $session = InterviewSession::with('category')
+                ->where('user_id', Auth::id())
+                ->where('status', 'in_progress')
+                ->find($candidateSessionId);
+
+            if ($session) {
+                session(['active_interview_id' => $session->id]);
+
+                return $session;
+            }
+        }
+
+        if ($questionId) {
+            $questionSessionId = Question::where('id', $questionId)->value('interview_session_id');
+            if ($questionSessionId) {
+                $session = InterviewSession::with('category')
+                    ->where('user_id', Auth::id())
+                    ->where('status', 'in_progress')
+                    ->find($questionSessionId);
+
+                if ($session) {
+                    session(['active_interview_id' => $session->id]);
+
+                    return $session;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function gameLevelForSession(InterviewSession $session): ?GameLevel
+    {
+        $gameLevelId = InterviewSession::hasColumn('game_level_id')
+            ? (int) ($session->game_level_id ?? 0)
+            : 0;
+
+        if (
+            ! InterviewSession::hasColumn('game_level_id')
+            && ! $gameLevelId
+            && (int) session('active_interview_id') === (int) $session->id
+            && session('active_interview_context') === 'learning_game'
+        ) {
+            $gameLevelId = (int) session('game_level_id');
+        }
+
+        return $gameLevelId > 0 ? GameLevel::find($gameLevelId) : null;
+    }
+
+    private function forgetCompletedSessionState(InterviewSession $session, ?GameLevel $gameLevel): void
+    {
+        if ((int) session('active_interview_id') === (int) $session->id) {
+            session()->forget(['active_interview_id', 'active_interview_provider', 'active_interview_context']);
+        }
+
+        if ($gameLevel && (int) session('game_level_id') === (int) $gameLevel->id) {
+            session()->forget('game_level_id');
+        }
+    }
+
+    private function completedSessionRedirect(
+        InterviewSession $session,
+        ?GameLevel $gameLevel,
+        ?string $gameStatus = null,
+        ?int $gameResultScore = null,
+        array $resultContext = []
+    ) {
+        if ($gameLevel) {
+            $payload = $this->gameResultPayload($session, $gameLevel, $gameStatus, $gameResultScore, $resultContext);
+            $flashKey = $payload['status'] === 'passed' ? 'success' : 'error';
+
+            return redirect()
+                ->route('user.learning', ['category_id' => $gameLevel->category_id])
+                ->with($flashKey, $payload['message'])
+                ->with('game_result', $payload);
+        }
+
+        return redirect()->route('user.review', $session->id)->with('message', 'Interview completed! Here is your AI Feedback.');
+    }
+
+    private function gameResultPayload(
+        InterviewSession $session,
+        GameLevel $gameLevel,
+        ?string $gameStatus,
+        ?int $gameResultScore,
+        array $context = []
+    ): array {
+        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $progress = GameProgress::where('user_id', Auth::id())
+            ->where('game_level_id', $gameLevel->id)
+            ->first();
+
+        if ($gameResultScore === null) {
+            $sessionScore = Score::where('interview_session_id', $session->id)->value('overall_readiness_score');
+            $gameResultScore = max((int) ($progress?->best_score ?? 0), (int) ($sessionScore ?? 0));
+        }
+
+        $passed = $gameStatus === 'victory' || $gameResultScore >= (int) $gameLevel->required_score;
+        $status = $passed ? 'passed' : 'failed';
+        $nextLevel = $context['next_level'] ?? null;
+        if (! $nextLevel && $passed) {
+            $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
+                ->where('level_number', $gameLevel->level_number + 1)
+                ->first();
+        }
+
+        $energySpent = $context['energy_spent'] ?? $this->effectiveGameEnergyCost($gameLevel, $profile);
+        $retryEnergyCost = $this->effectiveGameEnergyCost($gameLevel, $profile);
+        $nextEnergyCost = $nextLevel ? $this->effectiveGameEnergyCost($nextLevel, $profile) : null;
+        $energyRemaining = (int) ($profile->energy ?? 0);
+
+        $message = $passed
+            ? 'Victory! You cleared Level '.$gameLevel->level_number.' with '.$gameResultScore.'%.'
+            : 'You scored '.$gameResultScore.'% and need '.$gameLevel->required_score.'% to clear this level.';
+
+        return [
+            'session_id' => $session->id,
+            'level_id' => $gameLevel->id,
+            'level_number' => (int) $gameLevel->level_number,
+            'level_title' => $gameLevel->title,
+            'skill_focus' => $gameLevel->skill_focus,
+            'learning_objective' => $gameLevel->learning_objective,
+            'success_criteria' => $gameLevel->parsed_success_criteria,
+            'status' => $status,
+            'message' => $message,
+            'score' => (int) $gameResultScore,
+            'required_score' => (int) $gameLevel->required_score,
+            'points_to_goal' => max(0, (int) $gameLevel->required_score - (int) $gameResultScore),
+            'best_score' => (int) ($progress?->best_score ?? $gameResultScore),
+            'is_new_best' => (bool) ($context['is_new_best'] ?? false),
+            'xp_earned' => (int) ($context['xp_earned'] ?? 0),
+            'skill_xp_type' => $gameLevel->skill_xp_type,
+            'skill_xp_amount' => (int) ($passed ? ($gameLevel->skill_xp_amount ?? 0) : 0),
+            'energy_spent' => (int) $energySpent,
+            'energy_remaining' => $energyRemaining,
+            'retry_hint' => $gameLevel->retry_hint,
+            'retry_energy_cost' => (int) $retryEnergyCost,
+            'can_retry' => $energyRemaining >= $retryEnergyCost,
+            'next_level' => $nextLevel ? [
+                'id' => $nextLevel->id,
+                'level_number' => (int) $nextLevel->level_number,
+                'title' => $nextLevel->title,
+                'energy_cost' => (int) $nextEnergyCost,
+                'can_start' => $energyRemaining >= $nextEnergyCost,
+            ] : null,
+        ];
+    }
+
+    private function effectiveGameEnergyCost(GameLevel $level, Profile $profile): int
+    {
+        $energyCost = (int) ($level->energy_cost ?? 0);
+
+        if ($profile->hasPerk('energy_efficiency')) {
+            $energyCost = max(0, $energyCost - 1);
+        }
+
+        return $energyCost;
+    }
+
+    private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array
+    {
+        $perQuestion = collect($answersData)
+            ->map(fn (array $answer) => $this->scoreLearningGameAnswer($answer, $gameLevel, $sessionData))
+            ->values()
+            ->all();
+
+        $overall = (int) round(collect($perQuestion)->avg('score') ?? 0);
+        $starScore = (int) round(collect($perQuestion)->avg('star_method_score') ?? 0);
+        $lowestArea = $this->lowestGameScoreArea($perQuestion);
+
+        return [
+            'per_question_feedback' => $perQuestion,
+            'session_feedback' => [
+                'overall_readiness_score' => $overall,
+                'star_method_score' => $starScore,
+                'strengths' => $overall >= 70
+                    ? 'Your challenge responses included enough structure and relevant detail to show progress.'
+                    : 'You submitted responses for the challenge, giving the scorer material to review.',
+                'weaknesses' => 'The main area to improve is '.$lowestArea.'.',
+                'improvement_suggestions' => $gameLevel->retry_hint
+                    ?: 'Answer each prompt directly, add your specific action, and close with a clear result or lesson learned.',
+            ],
+        ];
+    }
+
+    private function scoreLearningGameAnswer(array $answer, GameLevel $gameLevel, array $sessionData): array
+    {
+        $answerText = trim((string) ($answer['answer'] ?? ''));
+        $questionText = (string) ($answer['question'] ?? '');
+        $isSkipped = (bool) ($answer['is_skipped'] ?? false) || $answerText === '' || $answerText === '(Skipped or no answer)';
+
+        if ($isSkipped) {
+            return [
+                'id' => $answer['id'] ?? null,
+                'score' => 0,
+                'clarity_score' => 0,
+                'relevance_score' => 0,
+                'grammar_score' => 0,
+                'professionalism_score' => 0,
+                'star_applicable' => $this->gameStarIsApplicable($answer, $gameLevel),
+                'star_method_score' => 0,
+                'ai_feedback' => 'No answer was submitted for this challenge prompt, so the level goal was not demonstrated.',
+                'better_sample_answer' => '',
+                'follow_up_question' => 'What specific example could you use to answer this prompt?',
+            ];
+        }
+
+        $wordCount = TranscriptService::wordCount($answerText);
+        $sentenceCount = max(1, preg_match_all('/[.!?]+/', $answerText) ?: 1);
+        $fillerCount = preg_match_all('/\b(um|uh|like|you know|basically|actually|literally|sort of|kind of)\b/i', $answerText) ?: 0;
+        $fillerPenalty = min(18, $fillerCount * 4);
+        $bannedHits = $this->gameBannedWordHits($answerText, (string) ($gameLevel->banned_words ?? ''));
+
+        $criteriaScore = $this->gameCriteriaScore($answerText, $gameLevel->parsed_success_criteria ?? []);
+        $starScore = $this->gameStarScore($answerText);
+        $keywordScore = $this->gameKeywordOverlapScore($answerText, implode(' ', array_filter([
+            $questionText,
+            $gameLevel->skill_focus,
+            $gameLevel->learning_objective,
+            $gameLevel->success_criteria,
+        ])));
+
+        $clarity = $this->clampInt(
+            25
+            + min(38, $wordCount * 1.6)
+            + ($sentenceCount >= 2 ? 10 : 0)
+            + (preg_match('/\b(first|then|because|therefore|so|finally|result|outcome)\b/i', $answerText) ? 8 : 0)
+            - ($wordCount < 15 ? 14 : 0)
+            - $fillerPenalty,
+            0,
+            100
+        );
+
+        $relevance = $this->clampInt(
+            25
+            + $keywordScore
+            + round($criteriaScore * 0.32)
+            + ($wordCount >= 25 ? 10 : 0)
+            - (count($bannedHits) > 0 ? 8 : 0),
+            0,
+            100
+        );
+
+        $grammar = $this->clampInt(
+            45
+            + min(30, $wordCount)
+            + (preg_match('/^[A-Z]/', $answerText) ? 8 : 0)
+            + (preg_match('/[.!?]$/', $answerText) ? 8 : 0)
+            - $fillerPenalty
+            - ($this->hasRepeatedAdjacentWords($answerText) ? 10 : 0),
+            0,
+            100
+        );
+
+        $professionalism = $this->clampInt(
+            72
+            + ($wordCount >= 30 ? 8 : 0)
+            + $this->gameTargetToneBonus($answerText, (string) ($gameLevel->target_tone ?? ''))
+            - $fillerPenalty
+            - (count($bannedHits) * 14)
+            - ($wordCount < 12 ? 18 : 0),
+            0,
+            100
+        );
+
+        $gameStructure = max($criteriaScore, $starScore);
+        $score = $this->clampInt(
+            round(($clarity * 0.24) + ($relevance * 0.34) + ($grammar * 0.14) + ($professionalism * 0.14) + ($gameStructure * 0.14)),
+            0,
+            100
+        );
+
+        $feedbackParts = [
+            "Instant game scoring: your response scored {$score}% against this level's goal.",
+        ];
+        if ($criteriaScore < 70) {
+            $feedbackParts[] = 'Add clearer evidence for the level checklist.';
+        }
+        if ($starScore < 70 && $this->gameStarIsApplicable($answer, $gameLevel)) {
+            $feedbackParts[] = 'Use Situation, Task, Action, and Result more completely.';
+        }
+        if (count($bannedHits) > 0) {
+            $feedbackParts[] = 'Avoid banned words or phrases: '.implode(', ', $bannedHits).'.';
+        }
+
+        return [
+            'id' => $answer['id'] ?? null,
+            'score' => $score,
+            'clarity_score' => $clarity,
+            'relevance_score' => $relevance,
+            'grammar_score' => $grammar,
+            'professionalism_score' => $professionalism,
+            'star_applicable' => $this->gameStarIsApplicable($answer, $gameLevel),
+            'star_method_score' => $starScore,
+            'ai_feedback' => implode(' ', $feedbackParts),
+            'better_sample_answer' => app(TrustworthyAssessmentService::class)->groundedRevisionTemplate($answerText),
+            'follow_up_question' => 'What measurable result or concrete outcome can you add to strengthen this challenge answer?',
+        ];
+    }
+
+    private function lowestGameScoreArea(array $perQuestion): string
+    {
+        $averages = [
+            'clarity' => collect($perQuestion)->avg('clarity_score') ?? 0,
+            'relevance' => collect($perQuestion)->avg('relevance_score') ?? 0,
+            'grammar' => collect($perQuestion)->avg('grammar_score') ?? 0,
+            'professionalism' => collect($perQuestion)->avg('professionalism_score') ?? 0,
+            'STAR structure or level checklist coverage' => collect($perQuestion)->avg('star_method_score') ?? 0,
+        ];
+
+        asort($averages);
+
+        return (string) array_key_first($averages);
+    }
+
+    private function gameCriteriaScore(string $answerText, array $criteria): int
+    {
+        $criteria = array_values(array_filter($criteria));
+        if ($criteria === []) {
+            return $this->gameStarScore($answerText);
+        }
+
+        $scores = [];
+        foreach ($criteria as $criterion) {
+            $keywords = $this->gameKeywords((string) $criterion);
+            if ($keywords === []) {
+                continue;
+            }
+
+            $matched = 0;
+            foreach ($keywords as $keyword) {
+                if (preg_match('/\b'.preg_quote($keyword, '/').'\w*\b/i', $answerText)) {
+                    $matched++;
+                }
+            }
+
+            $scores[] = min(100, (int) round(($matched / max(1, count($keywords))) * 100));
+        }
+
+        return $scores === [] ? 0 : $this->clampInt(array_sum($scores) / count($scores), 0, 100);
+    }
+
+    private function gameKeywordOverlapScore(string $answerText, string $referenceText): int
+    {
+        $answerKeywords = $this->gameKeywords($answerText);
+        $referenceKeywords = $this->gameKeywords($referenceText);
+
+        if ($referenceKeywords === []) {
+            return min(35, TranscriptService::wordCount($answerText));
+        }
+
+        $matched = count(array_intersect($answerKeywords, $referenceKeywords));
+
+        return $this->clampInt(($matched / max(1, count($referenceKeywords))) * 55, 0, 55);
+    }
+
+    private function gameKeywords(string $text): array
+    {
+        $stopWords = [
+            'about', 'after', 'again', 'also', 'answer', 'because', 'before', 'being', 'could', 'during',
+            'their', 'there', 'these', 'those', 'through', 'using', 'what', 'when', 'where', 'which',
+            'while', 'with', 'would', 'your', 'youre', 'challenge', 'level', 'interview',
+        ];
+
+        preg_match_all('/[a-zA-Z][a-zA-Z\-]{3,}/', Str::lower($text), $matches);
+
+        return array_values(array_unique(array_diff($matches[0] ?? [], $stopWords)));
+    }
+
+    private function gameStarIsApplicable(array $answer, GameLevel $gameLevel): bool
+    {
+        return str_contains(Str::lower((string) ($answer['question_type'] ?? '')), 'behavioral')
+            || str_contains(Str::lower((string) ($gameLevel->skill_focus ?? '')), 'star')
+            || preg_match('/\b(describe|tell me about|time when|example|situation)\b/i', (string) ($answer['question'] ?? ''));
+    }
+
+    private function gameStarScore(string $answerText): int
+    {
+        $signals = 0;
+        $signals += preg_match('/\b(situation|context|background|when|while|during)\b/i', $answerText) ? 1 : 0;
+        $signals += preg_match('/\b(task|responsibility|goal|needed|objective|role)\b/i', $answerText) ? 1 : 0;
+        $signals += preg_match('/\b(action|built|created|led|implemented|organized|managed|resolved|improved|coordinated|decided)\b/i', $answerText) ? 1 : 0;
+        $signals += preg_match('/\b(result|outcome|impact|increased|reduced|improved|achieved|delivered|\d+%?|\bpercent\b)\b/i', $answerText) ? 1 : 0;
+
+        return $signals * 25;
+    }
+
+    private function gameBannedWordHits(string $answerText, string $bannedWords): array
+    {
+        $words = preg_split('/[,;\n]+/', $bannedWords, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $hits = [];
+
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word !== '' && preg_match('/\b'.preg_quote($word, '/').'\b/i', $answerText)) {
+                $hits[] = $word;
+            }
+        }
+
+        return array_values(array_unique($hits));
+    }
+
+    private function gameTargetToneBonus(string $answerText, string $tone): int
+    {
+        $tone = Str::lower(trim($tone));
+        if ($tone === '') {
+            return 0;
+        }
+
+        return match (true) {
+            str_contains($tone, 'confident') => preg_match('/\b(I led|I built|I decided|I improved|I delivered|I can|I will)\b/i', $answerText) ? 8 : -6,
+            str_contains($tone, 'empathetic') => preg_match('/\b(team|customer|stakeholder|listen|support|understand)\b/i', $answerText) ? 8 : -6,
+            str_contains($tone, 'professional') => preg_match('/\b(collaborated|prioritized|communicated|resolved|delivered)\b/i', $answerText) ? 8 : -4,
+            default => 0,
+        };
+    }
+
+    private function hasRepeatedAdjacentWords(string $text): bool
+    {
+        return (bool) preg_match('/\b(\w+)\s+\1\b/i', $text);
     }
 
     private function questionForSession($questionId, InterviewSession $session): ?Question

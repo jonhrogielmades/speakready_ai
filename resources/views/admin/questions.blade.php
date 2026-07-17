@@ -3,16 +3,16 @@
 <div class="db-section active" id="sec-admin-questions">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Question Bank</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage interview questions.</p>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Philippines Interview Question Bank</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage practice questions for Philippine hiring, BPO, IT, fresh graduate, scholarship, and admission interviews.</p>
         </div>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-danger py-2" id="btnBulkDelete" style="font-size:.85rem; display:none;" onclick="submitBulkDelete()"><i class="fa-solid fa-trash me-1"></i> Delete Selected</button>
-            <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate via AI</button>
+            <button class="btn btn-outline-info py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#aiGenerateModal"><i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate PH Question</button>
             <a href="{{ route('admin.questions.export') }}" class="btn btn-outline-secondary py-2" style="font-size:.85rem"><i class="fa-solid fa-download me-1"></i> Export</a>
             <button class="btn btn-outline-secondary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#importQuestionsModal"><i class="fa-solid fa-upload me-1"></i> Import</button>
-            <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> Datasets</button>
-            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal" onclick="clearGeneratedQuestionSource()"><i class="fa-solid fa-plus me-1"></i> Add Question</button>
+            <button class="btn btn-outline-primary py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#datasetsModal"><i class="fa-solid fa-globe me-1"></i> PH Source Packs</button>
+            <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addQuestionModal" onclick="clearGeneratedQuestionSource()"><i class="fa-solid fa-plus me-1"></i> Add PH Question</button>
         </div>
     </div>
 
@@ -326,7 +326,7 @@
     <div class="category-filter-mobile mb-4">
         <label class="olbl" for="categoryFilterSelect" style="margin-bottom:8px;">Category</label>
         <select id="categoryFilterSelect" aria-label="Filter questions by category" onchange="filterCategory(this.value)">
-            <option value="all">All Categories ({{ $totalQuestions }} Questions)</option>
+            <option value="all">All PH Categories ({{ $totalQuestions }} Questions)</option>
             @foreach($categories as $c)
                 <option value="{{ $c->id }}">{{ $c->title }} ({{ $c->questions_count }} Questions)</option>
             @endforeach
@@ -336,7 +336,7 @@
     @unless(isset($isMobile) && $isMobile)
     <div class="category-filter-cards d-flex gap-3 mb-4">
         <div class="category-card active" data-category-filter="all" onclick="filterCategory('all')">
-            <h6 style="color:var(--tx); margin:0; font-weight:600;">All Categories</h6>
+            <h6 style="color:var(--tx); margin:0; font-weight:600;">All PH Interview Categories</h6>
             <span class="badge bg-secondary mt-2">{{ $totalQuestions }} Questions</span>
         </div>
         @foreach($categories as $c)
@@ -437,13 +437,13 @@
             <form action="{{ route('admin.questions.update', $q->id) }}" method="POST">
                 @csrf @method('PUT')
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Edit Question</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Edit Philippines Interview Question</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="olbl">Category</label>
+                            <label class="olbl">PH Interview Category</label>
                             <select class="oinp mb-3" name="category_id" required>
                                 @foreach($categories as $c)
                                     <option value="{{ $c->id }}" {{ $c->id == $q->category_id ? 'selected' : '' }}>{{ $c->title }}</option>
@@ -472,14 +472,14 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="olbl">Question Text</label>
+                            <label class="olbl">Philippines Interview Question Text</label>
                             <textarea class="oinp mb-3" name="question_text" rows="2" required>{{ $q->question_text }}</textarea>
 
-                            <label class="olbl">Expected Answer Guide (Helps AI)</label>
-                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. Education, Skills, Experience">{{ $q->expected_guide }}</textarea>
+                            <label class="olbl">Expected Answer Guide (Keeps PH context)</label>
+                            <textarea class="oinp mb-3" name="expected_guide" rows="3" placeholder="e.g. local HR fit, BPO scenario, fresh graduate evidence">{{ $q->expected_guide }}</textarea>
 
                             <label class="olbl">Mapped Skills (Comma separated)</label>
-                            <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Leadership, Communication">
+                            <input class="oinp mb-3" type="text" name="mapped_skills" value="{{ is_array($q->mapped_skills) ? implode(', ', $q->mapped_skills) : '' }}" placeholder="Communication, Professionalism">
 
                             <label class="olbl">Source Name</label>
                             <input class="oinp mb-3" type="text" name="source_name" value="{{ $q->source_name }}" placeholder="e.g. JobStreet Philippines">
@@ -569,13 +569,13 @@
             <form action="{{ route('admin.questions.store') }}" method="POST">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Question</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Philippines Interview Question</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <label class="olbl">Category</label>
+                            <label class="olbl">PH Interview Category</label>
                             <select class="oinp mb-3" name="category_id" id="addCatId" required>
                                 @foreach($categories as $c)
                                     <option value="{{ $c->id }}">{{ $c->title }}</option>
@@ -604,14 +604,14 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="olbl">Question Text</label>
+                            <label class="olbl">Philippines Interview Question Text</label>
                             <textarea class="oinp mb-3" name="question_text" id="addQText" rows="2" required></textarea>
 
-                            <label class="olbl">Expected Answer Guide (Helps AI)</label>
-                            <textarea class="oinp mb-3" name="expected_guide" id="addExpectedGuide" rows="3" placeholder="e.g. Education, Skills, Experience"></textarea>
+                            <label class="olbl">Expected Answer Guide (Keeps PH context)</label>
+                            <textarea class="oinp mb-3" name="expected_guide" id="addExpectedGuide" rows="3" placeholder="e.g. local HR fit, BPO scenario, fresh graduate evidence"></textarea>
 
                             <label class="olbl">Mapped Skills (Comma separated)</label>
-                            <input class="oinp mb-3" type="text" name="mapped_skills" id="addMappedSkills" placeholder="Leadership, Communication">
+                            <input class="oinp mb-3" type="text" name="mapped_skills" id="addMappedSkills" placeholder="Communication, Professionalism, Role Fit">
 
                             <input type="hidden" name="source_name" id="addSourceName">
                             <input type="hidden" name="source_url" id="addSourceUrl">
@@ -640,7 +640,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <p style="color:var(--tx3); font-size:.85rem;">Upload a CSV file. The format should be: <code>Question Text, Type, Difficulty, Category ID, Source Name, Source URL, Source Type</code></p>
+                    <p style="color:var(--tx3); font-size:.85rem;">Upload a CSV file for Philippines interview questions. The format should be: <code>Question Text, Type, Difficulty, Category ID, Source Name, Source URL, Source Type</code></p>
                     <label class="olbl">CSV File</label>
                     <input class="form-control mb-3" style="background:var(--bg);color:var(--tx);border:1px solid var(--bd)" type="file" name="file" accept=".csv" required>
                 </div>
@@ -673,11 +673,11 @@
     <div class="modal-dialog">
         <div class="modal-content" style="border:1px solid var(--bd)">
             <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> AI Generate Question</h5>
+                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles me-2"></i> AI Generate Philippines Interview Question</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
             </div>
             <div class="modal-body">
-                <label class="olbl">Category</label>
+                <label class="olbl">PH Interview Category</label>
                 <select class="oinp mb-3" id="aiCatId">
                     @foreach($categories as $c)
                         <option value="{{ $c->id }}">{{ $c->title }}</option>
@@ -693,13 +693,13 @@
                 </select>
                 <label class="olbl">Reliable Philippines Source Pack</label>
                 <select class="oinp mb-3" id="aiDataset">
-                    <option value="auto">Auto-select from category</option>
+                    <option value="auto">Auto-select from PH category</option>
                     @foreach($datasetPacks ?? [] as $key => $pack)
                         <option value="{{ $key }}">{{ $pack['name'] }}</option>
                     @endforeach
                 </select>
-                <label class="olbl">Target Position/Role</label>
-                <input type="text" class="oinp mb-3" id="aiPosition" placeholder="e.g. Web Developer" value="Software Engineer">
+                <label class="olbl">Target Position/Role in the Philippines</label>
+                <input type="text" class="oinp mb-3" id="aiPosition" placeholder="e.g. BPO Customer Service Representative" value="Software Engineer">
                 <label class="olbl">Difficulty</label>
                 <select class="oinp mb-3" id="aiDiff">
                     <option value="Easy">Easy</option>
@@ -708,7 +708,7 @@
                 </select>
                 
                 <div class="text-end">
-                    <button type="button" class="btn btn-outline-info" onclick="generateAiQuestion()"><i class="fa-solid fa-robot me-1"></i> Generate</button>
+                    <button type="button" class="btn btn-outline-info" onclick="generateAiQuestion()"><i class="fa-solid fa-robot me-1"></i> Generate PH Question</button>
                 </div>
             </div>
         </div>
@@ -720,7 +720,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="border:1px solid var(--bd)">
             <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-globe me-2"></i> Community Datasets</h5>
+                <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-globe me-2"></i> Philippines Interview Source Packs</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
             </div>
             <div class="modal-body">

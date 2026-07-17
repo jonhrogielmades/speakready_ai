@@ -15,7 +15,7 @@ class QuestionDatasetProvider
                 'category' => 'Job Interview',
                 'country' => 'Philippines',
                 'source_type' => 'philippines_career_question_bank',
-                'description' => 'Common interview questions and answer guidance from Philippines career platforms.',
+                'description' => 'Common interview questions and answer guidance from Philippine career platforms.',
                 'sources' => [
                     [
                         'name' => 'JobStreet Philippines Career Advice',
@@ -36,14 +36,14 @@ class QuestionDatasetProvider
                 'default_skills' => ['Communication', 'Role Fit', 'Self Awareness', 'STAR Method'],
                 'questions' => [
                     [
-                        'question_text' => 'Tell me about yourself.',
+                        'question_text' => 'Tell me about yourself and why this role in the Philippines fits your next step.',
                         'type' => 'Personal',
                         'difficulty' => 'Easy',
                         'expected_guide' => 'Summarize relevant background, key skills, one concrete achievement, and why the role fits your next step.',
                         'mapped_skills' => ['Self Introduction', 'Communication', 'Role Fit'],
                     ],
                     [
-                        'question_text' => 'Why should we hire you?',
+                        'question_text' => 'Why should a Philippine employer hire you for this role?',
                         'type' => 'Behavioral',
                         'difficulty' => 'Medium',
                         'expected_guide' => 'Connect role requirements to specific experience, strengths, measurable results, and motivation for the company.',
@@ -64,21 +64,21 @@ class QuestionDatasetProvider
                         'mapped_skills' => ['Self Awareness', 'Growth Mindset', 'Professionalism'],
                     ],
                     [
-                        'question_text' => 'Can you describe a challenge you faced at work and how you solved it?',
+                        'question_text' => 'Can you describe a challenge you faced at work, school, training, or internship and how you solved it?',
                         'type' => 'Behavioral',
                         'difficulty' => 'Medium',
                         'expected_guide' => 'Use STAR: situation, task, action, result. Include ownership, decision-making, and measurable impact.',
                         'mapped_skills' => ['Problem Solving', 'STAR Method', 'Impact'],
                     ],
                     [
-                        'question_text' => 'Where do you see yourself in five years?',
+                        'question_text' => 'Where do you see yourself in five years, and how does this fit your career path in the Philippines?',
                         'type' => 'Personal',
                         'difficulty' => 'Medium',
                         'expected_guide' => 'Show realistic career direction, growth mindset, and alignment with the role and organization.',
                         'mapped_skills' => ['Career Planning', 'Role Fit', 'Commitment'],
                     ],
                     [
-                        'question_text' => 'Why did you leave your previous job?',
+                        'question_text' => 'Why did you leave your previous job, and what are you looking for in your next Philippine workplace?',
                         'type' => 'Situational',
                         'difficulty' => 'Medium',
                         'expected_guide' => 'Keep the answer professional, forward-looking, and focused on growth or better alignment.',
@@ -92,7 +92,7 @@ class QuestionDatasetProvider
                         'mapped_skills' => ['Teamwork', 'Communication', 'STAR Method'],
                     ],
                     [
-                        'question_text' => 'What is your ideal work environment?',
+                        'question_text' => 'What Philippine work setup helps you do your best work: onsite, hybrid, remote, shifting, or regular hours?',
                         'type' => 'Personal',
                         'difficulty' => 'Easy',
                         'expected_guide' => 'Describe preferred working conditions honestly while matching realistic traits of the target workplace.',
@@ -127,7 +127,7 @@ class QuestionDatasetProvider
                 'default_skills' => ['Clarity', 'Listening', 'Customer Service', 'Professionalism'],
                 'questions' => [
                     [
-                        'question_text' => 'How do you handle irate customers?',
+                        'question_text' => 'How do you handle irate customers in a BPO or customer-support setting?',
                         'type' => 'Situational',
                         'difficulty' => 'Medium',
                         'expected_guide' => 'Show empathy, active listening, calm tone, policy awareness, and a clear resolution path.',
@@ -155,7 +155,7 @@ class QuestionDatasetProvider
                         'mapped_skills' => ['Process Discipline', 'Empathy', 'Professionalism'],
                     ],
                     [
-                        'question_text' => 'How do you adapt your communication style for customers with different backgrounds?',
+                        'question_text' => 'How do you adapt your communication style for local or international customers with different backgrounds?',
                         'type' => 'Situational',
                         'difficulty' => 'Hard',
                         'expected_guide' => 'Discuss audience awareness, plain language, tone, pacing, and cultural sensitivity.',
@@ -197,7 +197,7 @@ class QuestionDatasetProvider
                         'mapped_skills' => ['Learning Agility', 'Technical Awareness', 'Initiative'],
                     ],
                     [
-                        'question_text' => 'Tell me about a web development project where you had to balance speed, quality, and maintainability.',
+                        'question_text' => 'Tell me about a web development project for a Philippine class, client, employer, or startup where you had to balance speed, quality, and maintainability.',
                         'type' => 'Behavioral',
                         'difficulty' => 'Hard',
                         'expected_guide' => 'Use STAR and explain constraints, tradeoffs, technical decisions, and measurable outcome.',
@@ -211,7 +211,7 @@ class QuestionDatasetProvider
                         'mapped_skills' => ['Debugging', 'Problem Solving', 'Ownership'],
                     ],
                     [
-                        'question_text' => 'How do you explain a technical tradeoff to a non-technical stakeholder?',
+                        'question_text' => 'How do you explain a technical tradeoff to a non-technical stakeholder, client, or manager in a Philippine workplace?',
                         'type' => 'Situational',
                         'difficulty' => 'Medium',
                         'expected_guide' => 'Use plain language, business impact, options, risks, and recommendation.',

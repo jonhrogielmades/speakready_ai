@@ -6,7 +6,7 @@
       <meta name="theme-color" content="#1a0a0a">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-      <title>SpeakReady AI Admin Portal</title>
+      <title>SpeakReady AI PH Interview Admin Portal</title>
       <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -1489,7 +1489,7 @@
             <span class="mob-admin-logo-ring">
                <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
             </span>
-            <span>SpeakReady AI</span>
+            <span>SpeakReady PH Admin</span>
          </a>
          <div class="mob-header-right">
             <div class="dropdown mob-notification-wrap">
@@ -2431,7 +2431,7 @@
             <a href="{{ route('admin.dashboard') }}"
                class="mob-nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                <i class="fa-solid fa-gauge-high"></i>
-               <span>Dashboard</span>
+               <span>PH Admin</span>
             </a>
             <a href="{{ route('admin.users.index') }}"
                class="mob-nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
@@ -2441,12 +2441,12 @@
             <a href="{{ route('admin.sessions.index') }}"
                class="mob-nav-item {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}">
                <i class="fa-solid fa-video"></i>
-               <span>Sessions</span>
+               <span>PH Sessions</span>
             </a>
             <a href="{{ route('admin.feedback.index') }}"
                class="mob-nav-item {{ request()->routeIs('admin.feedback.*') ? 'active' : '' }}">
                <i class="fa-solid fa-clipboard-check"></i>
-               <span>Feedback</span>
+               <span>PH Audit</span>
             </a>
             <button class="mob-nav-item {{ request()->routeIs('admin.categories', 'admin.questions', 'admin.modules*', 'admin.game*', 'admin.sessions.archive', 'admin.feedback.complaints', 'admin.contacts.*', 'admin.ai.*', 'admin.settings.*') ? 'active' : '' }}"
                     id="mobnav-more"
@@ -2488,22 +2488,21 @@
                   <span>More</span>
                   <button class="mob-profile-close" type="button" onclick="event.stopPropagation(); closeMobileProfile();" aria-label="Close more menu"><i class="fa-solid fa-xmark"></i></button>
                </div>
-               <div class="mob-profile-section-title">Core Modules</div>
+               <div class="mob-profile-section-title">PH Interview Modules</div>
                <div class="mob-profile-grid">
-                  <a href="{{ route('admin.dashboard') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
-                  <a href="{{ route('admin.users.index') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i><span>Users</span></a>
-                  <a href="{{ route('admin.categories') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i><span>Categories</span></a>
-                  <a href="{{ route('admin.questions') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i><span>Questions</span></a>
-                  <a href="{{ route('admin.packs.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.packs.*') ? 'active' : '' }}"><i class="fa-solid fa-layer-group"></i><span>Packs</span></a>
-                  <a href="{{ route('admin.modules') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i><span>Modules</span></a>
-                  <a href="{{ route('admin.game') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Games</span></a>
+                  <a href="{{ route('admin.dashboard') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i><span>PH Dashboard</span></a>
+                   <a href="{{ route('admin.users.index') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i><span>Users</span></a>
+                   <a href="{{ route('admin.categories') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i><span>PH Categories</span></a>
+                   <a href="{{ route('admin.questions') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i><span>PH Questions</span></a>
+                   <a href="{{ route('admin.modules') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i><span>PH Lessons</span></a>
+                  <a href="{{ route('admin.game') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>PH Games</span></a>
                </div>
 
-               <div class="mob-profile-section-title">Monitoring</div>
+               <div class="mob-profile-section-title">PH Interview Monitoring</div>
                <div class="mob-profile-grid">
-                  <a href="{{ route('admin.sessions.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.sessions.index') || request()->routeIs('admin.sessions.show') || request()->routeIs('admin.sessions.review') ? 'active' : '' }}"><i class="fa-solid fa-video"></i><span>Sessions</span></a>
-                  <a href="{{ route('admin.sessions.archive') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>Archive</span></a>
-                  <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.index') || request()->routeIs('admin.feedback.show') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>Feedback</span></a>
+                  <a href="{{ route('admin.sessions.index') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('admin.sessions.index') || request()->routeIs('admin.sessions.show') || request()->routeIs('admin.sessions.review') ? 'active' : '' }}"><i class="fa-solid fa-video"></i><span>PH Sessions</span></a>
+                  <a href="{{ route('admin.sessions.archive') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.sessions.archive') ? 'active' : '' }}"><i class="fa-solid fa-box-archive"></i><span>PH Archive</span></a>
+                  <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.index') || request()->routeIs('admin.feedback.show') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>PH Feedback</span></a>
                   <a href="{{ route('admin.feedback.complaints') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i><span>Complaints</span></a>
                   <a href="{{ route('admin.contacts.index') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>
                   <a href="{{ route('admin.notifications.index') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bullhorn"></i><span>Announcements</span></a>

@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Learning Game')
+@section('title', 'Philippines Interview Challenge')
 @section('content')
 <style>
     .pulse-anim { animation: pulse 1.5s infinite; }
@@ -12,6 +12,9 @@
     .ai-speaking .ai-wave-bar:nth-child(3) { animation-delay: 200ms; }
     .ai-speaking .ai-wave-bar:nth-child(4) { animation-delay: 300ms; }
     .ai-speaking .ai-wave-bar:nth-child(5) { animation-delay: 400ms; }
+    #sec-learning-game-session,
+    #workspaceWrapper,
+    #workspaceRow { min-width:0; }
     .panel { background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;margin-bottom:20px; }
     .panel-title { font-weight:700;margin-bottom:15px;display:flex;align-items:center;font-size:1rem;color:var(--tx); }
     .stat-row { display:flex;justify-content:space-between;margin-bottom:10px;font-size:.85rem;color:var(--tx2); }
@@ -32,62 +35,191 @@
     .session-nav-skip { flex:0 0 84px;padding-left:10px !important;padding-right:10px !important; }
     .session-nav-next { flex:1 1 auto;padding-left:14px !important;padding-right:14px !important; }
     .session-nav-next .next-label-short { display:none; }
+    .hud-title-wrap { min-width:0; }
+    .hud-title-row { min-width:0; }
+    .hud-title { min-width:0;overflow-wrap:anywhere;line-height:1.25; }
+    .hud-badges .badge { white-space:normal;text-align:center; }
+    .ai-question-overlay { position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 70%, transparent 100%);padding:40px 20px 20px 20px; }
+    .ai-question-wrap { display:flex;justify-content:space-between;align-items:flex-end;gap:12px; }
+    .question-counter-badge {
+        position:absolute;
+        top:14px;
+        right:14px;
+        z-index:70;
+        min-width:38px;
+        height:38px;
+        padding:0 9px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:999px;
+        background:#fff;
+        color:#111827;
+        font-size:0.86rem;
+        font-weight:900;
+        line-height:1;
+        box-shadow:0 8px 22px rgba(0,0,0,0.28);
+    }
+    .answer-meta-row { gap:10px; }
+    .challenge-finish-modal .modal-content {
+        background: var(--sf);
+        color: var(--tx);
+        border: 1px solid var(--bd);
+        border-radius: 18px;
+        box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+    }
+    .challenge-finish-modal .modal-body {
+        padding: 30px;
+        text-align: center;
+    }
+    .challenge-score-spinner {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        margin: 0 auto 18px;
+        display: grid;
+        place-items: center;
+        background: rgba(52,211,153,0.12);
+        color: #34d399;
+        border: 1px solid rgba(52,211,153,0.28);
+    }
+    .challenge-score-spinner i { font-size: 1.8rem; }
     
     /* Responsive overrides */
     @media (max-width: 768px) {
+        #sec-learning-game-session { padding-bottom: 18px !important; }
+        #workspaceRow {
+            --bs-gutter-y: 12px;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        #workspaceRow > [class*="col-"] {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .hud-banner {
+            padding: 14px !important;
+            margin-bottom: 14px !important;
+            border-radius: 14px !important;
+            align-items: flex-start !important;
+        }
+        .hud-title-wrap { width:100%; }
+        .hud-title-row {
+            align-items: flex-start !important;
+            flex-wrap: wrap;
+        }
+        .hud-title {
+            font-size: 1.05rem !important;
+            width: 100%;
+        }
+        .hud-badges {
+            width:100%;
+            justify-content:flex-start;
+            gap:7px !important;
+        }
+        .hud-badges .badge {
+            flex:1 1 126px;
+            padding:7px 8px !important;
+            font-size:0.78rem !important;
+            line-height:1.25;
+        }
         .avatar-wrapper { transform: scale(0.7); }
         .circular-spectrum { transform: scale(0.7); }
-        .ai-avatar-panel { height: 260px !important; }
+        .ai-avatar-panel {
+            height: clamp(238px, 44vh, 310px) !important;
+            border-radius: 14px !important;
+            margin-bottom: 12px !important;
+        }
+        .ai-question-overlay { padding:52px 14px 14px !important; }
+        .ai-question-wrap {
+            align-items:flex-start !important;
+            gap:8px !important;
+        }
+        #aiQuestionText {
+            font-size:1rem !important;
+            line-height:1.35 !important;
+            max-height:112px !important;
+        }
+        .question-counter-badge {
+            top:12px;
+            right:12px;
+            min-width:34px;
+            height:34px;
+            padding:0 8px;
+            font-size:0.72rem !important;
+        }
+        .mobile-camera-preview {
+            top:54px !important;
+            right:12px !important;
+            width:72px !important;
+            height:94px !important;
+        }
         .panel { padding: 15px; }
         .panel-title { font-size: 0.9rem; }
+        #answerTextarea { min-height:160px !important; }
+        #holdToTalkBtn {
+            width:104px !important;
+            height:104px !important;
+        }
+        .challenge-finish-modal .modal-dialog {
+            margin: 12px;
+            max-width: calc(100vw - 24px);
+        }
+        .challenge-finish-modal .modal-body { padding:24px 18px; }
+        .challenge-score-spinner {
+            width:58px;
+            height:58px;
+            margin-bottom:14px;
+        }
     }
 
     @media (max-width: 420px) {
-        .session-nav-row { gap:6px; }
+        .session-nav-row {
+            display:grid;
+            grid-template-columns: 38px 38px minmax(58px, 0.75fr) minmax(92px, 1.25fr);
+            gap:6px;
+        }
         .session-nav-row .btn { min-height:34px;font-size:0.82rem; }
-        .session-nav-icon { flex-basis:38px; }
-        .session-nav-skip { flex-basis:68px; }
+        .session-nav-icon,
+        .session-nav-skip,
+        .session-nav-next { width:100%;flex-basis:auto; }
         .session-nav-next { padding-left:8px !important;padding-right:8px !important; }
         .session-nav-next .next-label-full { display:none; }
         .session-nav-next .next-label-short { display:inline; }
         .session-nav-next i { margin-left:0.35rem !important; }
+        .answer-meta-row {
+            flex-direction:column;
+            align-items:flex-start !important;
+            margin-bottom:14px !important;
+        }
+        .panel { border-radius:14px; }
     }
 
     @media (max-width: 340px) {
         .session-nav-row { gap:4px; }
-        .session-nav-icon { flex-basis:34px; }
-        .session-nav-skip { flex-basis:60px;font-size:0.78rem; }
+        .session-nav-icon { font-size:0.78rem; }
+        .session-nav-skip { font-size:0.76rem;padding-left:6px !important;padding-right:6px !important; }
         .session-nav-next { font-size:0.78rem; }
+        .hud-badges .badge { flex-basis:100%; }
     }
 </style>
 
-<div class="db-section active" id="sec-interview-session">
-    @if(session('active_interview_id'))
+<div class="db-section active" id="sec-learning-game-session">
+    @if(session('active_game_session_id'))
         @php
-            $sessionRecord = \App\Models\InterviewSession::with('category')
+            $sessionRecord = \App\Models\GameSession::with('level')
                 ->where('user_id', auth()->id())
-                ->find(session('active_interview_id'));
+                ->find(session('active_game_session_id'));
             if ($sessionRecord) {
                 $cameraCoachingEnabled = (bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false);
-                $num = $sessionRecord->num_questions ?? 5;
-                // Try to find questions specifically generated for this session first
-                $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)->get();
-                
-                // Fallback to local category questions if none were specifically generated
-                if ($questions->isEmpty()) {
-                    // Try to match exact difficulty and active status first
-                    $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
-                        ->where('status', 'active')
-                        ->where('difficulty', $sessionRecord->difficulty)
-                        ->inRandomOrder()->limit($num)->get();
-                        
-                    // If no questions match the difficulty, fallback to any active questions in category
-                    if ($questions->isEmpty()) {
-                        $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
-                            ->where('status', 'active')
-                            ->inRandomOrder()->limit($num)->get();
-                    }
-                }
+                $num = $sessionRecord->num_questions ?? count($sessionRecord->questions ?? []);
+                $questions = collect($sessionRecord->questions ?? [])->values()->map(function ($questionText, $index) {
+                    return (object) [
+                        'id' => $index,
+                        'question_index' => $index,
+                        'question_text' => $questionText,
+                    ];
+                });
             } else {
                 $questions = collect([]);
             }
@@ -134,10 +266,10 @@
 
         <!-- HUD Banner -->
         <div class="hud-banner d-flex flex-wrap justify-content-between align-items-center gap-3">
-            <div>
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="badge" style="background:var(--pur);color:#fff;font-size:0.8rem;"><i class="fa-solid fa-gamepad me-1"></i> LEARNING GAME</span>
-                    <h4 style="font-size:1.4rem;font-weight:800;margin:0;color:var(--tx)">Level {{ $gameLevel->level_number }}: {{ $gameLevel->title }}</h4>
+            <div class="hud-title-wrap">
+                <div class="hud-title-row d-flex align-items-center gap-2 mb-1">
+                    <span class="badge" style="background:var(--pur);color:#fff;font-size:0.8rem;"><i class="fa-solid fa-gamepad me-1"></i> PH CHALLENGE</span>
+                    <h4 class="hud-title" style="font-size:1.4rem;font-weight:800;margin:0;color:var(--tx)">Level {{ $gameLevel->level_number }}: {{ $gameLevel->title }}</h4>
                 </div>
                 @if($gameLevel->learning_objective)
                     <div style="font-size:0.86rem;color:var(--tx2);line-height:1.45;max-width:760px;">{{ $gameLevel->learning_objective }}</div>
@@ -145,7 +277,7 @@
 
             </div>
             
-            <div class="d-flex flex-wrap gap-2 align-items-center">
+            <div class="hud-badges d-flex flex-wrap gap-2 align-items-center">
                 @if($gameLevel->time_limit_seconds)
                     <div class="badge" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;padding:8px 12px;font-size:0.9rem;">
                         <i class="fa-solid fa-stopwatch me-1"></i> <span id="game-timer">{{ $gameLevel->time_limit_seconds }}s</span>
@@ -153,6 +285,9 @@
                 @endif
                 <div class="badge" style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid #34d399;padding:8px 12px;font-size:0.9rem;">
                     <i class="fa-solid fa-bullseye me-1"></i> Goal: {{ $gameLevel->required_score }}%+
+                </div>
+                <div class="badge" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid #60a5fa;padding:8px 12px;font-size:0.9rem;">
+                    <i class="fa-solid fa-clock me-1"></i> <span id="challengeTimer">00:00</span>
                 </div>
 
             </div>
@@ -166,9 +301,10 @@
 
                 <!-- Simulated AI Video Avatar Panel -->
                 <div class="panel p-0 ai-avatar-panel" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:250px;border-radius:18px;margin-bottom:20px;">
+                    <span class="question-counter-badge" id="qCounter">1/10</span>
                     @if($cameraCoachingEnabled)
                     <!-- Optional mobile camera framing preview -->
-                    <div class="d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
+                    <div class="mobile-camera-preview d-block d-lg-none" style="position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6);">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                     </div>
                     @endif
@@ -194,13 +330,12 @@
                         </div>
                     </div>
                     <!-- Overlay Text -->
-                    <div style="position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 70%, transparent 100%);padding:40px 20px 20px 20px;">
-                        <div class="d-flex justify-content-between align-items-end gap-3">
+                    <div class="ai-question-overlay">
+                        <div class="ai-question-wrap">
                             <div style="width: 100%;">
                                 <span class="badge mb-2" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?? 'AI Coach' }}</span>
                                 <div id="aiQuestionText" class="custom-scrollbar" style="color:white;font-size:1.1rem;font-weight:600;line-height:1.4; max-height: 90px; overflow-y: auto; padding-right: 10px;">Loading your first question...</div>
                             </div>
-                            <span class="badge bg-white text-dark" style="font-size:0.8rem;white-space:nowrap;margin-bottom: auto;" id="qCounter">1/10</span>
                         </div>
                     </div>
                 </div>
@@ -217,8 +352,8 @@
 
                     <div class="panel-title">
                         <i class="fa-solid fa-pen-nib me-2"></i> Your Response
-                        @if(session('game_level_id'))
-                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
+                        @if($sessionRecord->game_level_id)
+                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> CHALLENGE MODE</span>
                         @endif
                     </div>
                     
@@ -229,8 +364,7 @@
                                 <span id="recordingTimer" style="font-family:monospace;font-size:1.1rem;color:#f87171;display:none;">00:00</span>
                             </div>
                             
-                            @if(session('game_level_id'))
-                            <!-- Gamified Hold-to-Talk Button -->
+                            @if($sessionRecord->game_level_id)
                             <div class="d-flex justify-content-center py-3">
                                 <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="width:120px; height:120px; border-radius:50%; font-weight:800; border:4px solid #b91c1c; box-shadow: 0 10px 20px rgba(239,68,68,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; user-select:none; touch-action:manipulation;">
                                     <i class="fa-solid fa-microphone fa-2x mb-2"></i>
@@ -248,7 +382,7 @@
 
                         <textarea id="answerTextarea" class="oinp mb-2" style="min-height:200px;font-size:.95rem" placeholder="Type your answer here, or use voice to auto-transcribe..."></textarea>
                         
-                        <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="answer-meta-row d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
                                 <span id="wordCount">0 words</span> • <span id="charCount">0 characters</span>
                                 <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
@@ -341,9 +475,9 @@
                     <div class="stat-row mb-0"><span>Filler Words (Um, Uh)</span><span id="vaFillers" class="text-danger">0</span></div>
                 </div>
 
-                <!-- Interview Notes -->
+                <!-- Challenge Notes -->
                 <div class="panel">
-                    <div class="panel-title"><i class="fa-solid fa-clipboard me-2"></i> Session Notes</div>
+                    <div class="panel-title"><i class="fa-solid fa-clipboard me-2"></i> Challenge Notes</div>
                     <textarea id="sessionNotes" class="oinp" style="min-height:100px;font-size:.85rem;padding:10px" placeholder="Private notes, key reminders, etc..."></textarea>
                 </div>
             </div>
@@ -352,20 +486,37 @@
 
         <!-- Intro container removed for automatic start via get-ready overlay -->
 
-        <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">
+        <form id="finishForm" action="{{ route('user.game.finish') }}" method="POST" style="display:none;">
             @csrf
-            <input type="hidden" name="session_id" value="{{ session('active_interview_id') }}">
+            <input type="hidden" name="game_session_id" value="{{ $sessionRecord->id }}">
             <input type="hidden" name="duration_seconds" id="formDuration">
             <input type="hidden" name="notes" id="formNotes">
         </form>
 
+        <div class="modal fade challenge-finish-modal" id="challengeFinishModal" tabindex="-1" aria-labelledby="challengeFinishModalTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="challenge-score-spinner">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        </div>
+                        <h5 id="challengeFinishModalTitle" style="font-weight:900;margin-bottom:8px;color:var(--tx);">Scoring Challenge</h5>
+                        <p id="challengeFinishStatus" style="margin:0;color:var(--tx2);line-height:1.5;">Saving your final answer...</p>
+                        <div style="margin-top:16px;font-size:0.8rem;color:var(--tx3);">Your result modal will open automatically after scoring.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             const questions = {!! json_encode($questions) !!};
+            const gameSessionId = {{ (int) $sessionRecord->id }};
             const responseMode = "{{ $sessionRecord->response_mode }}";
             const cameraCoachingEnabled = @json($cameraCoachingEnabled);
             let currentQIdx = 0;
             let timerSeconds = 0;
             let timerInterval;
+            let isFinishingChallenge = false;
             
             // Answers state
             let answersData = Array(questions.length).fill().map(() => ({
@@ -734,7 +885,7 @@
                 }
             }
 
-            function startInterviewSession() {
+            function startChallengeSession() {
                 document.getElementById('workspaceWrapper').style.display = 'block';
                 if (cameraCoachingEnabled) initCamera();
                 
@@ -747,7 +898,8 @@
                     timerSeconds++;
                     const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
                     const s = (timerSeconds % 60).toString().padStart(2, '0');
-                    document.getElementById('interviewTimer').innerText = m + ':' + s;
+                    const challengeTimer = document.getElementById('challengeTimer');
+                    if (challengeTimer) challengeTimer.innerText = m + ':' + s;
                     
                     if(timerSeconds % 30 === 0) autoSaveState(); // auto save every 30s
                 }, 1000);
@@ -790,7 +942,7 @@
                 
                 if (idx === questions.length - 1) {
                     document.querySelectorAll('.next-btn-class').forEach(el => {
-                        el.innerHTML = '<span class="next-label-full">Finish Interview</span><span class="next-label-short">Finish</span><i class="fa-solid fa-flag-checkered ms-2"></i>';
+                        el.innerHTML = '<span class="next-label-full">Finish Challenge</span><span class="next-label-short">Finish</span><i class="fa-solid fa-flag-checkered ms-2"></i>';
                         el.classList.add('btn-success');
                         el.classList.remove('bgrd', 'btn-primary');
                     });
@@ -947,7 +1099,8 @@
             function saveCurrentAnswer(isSkipped = false) {
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
-                formData.append('question_id', questions[currentQIdx].id);
+                formData.append('game_session_id', gameSessionId);
+                formData.append('question_index', currentQIdx);
                 formData.append('answer_text', answersData[currentQIdx].text);
                 formData.append('is_skipped', isSkipped);
                 formData.append('response_mode', responseMode);
@@ -960,20 +1113,28 @@
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
                 formData.append('notes', document.getElementById('sessionNotes').value);
 
-                return fetch('{{ route("interview.answer") }}', {
+                return fetch('{{ route("user.game.answer") }}', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Answer save failed with status ' + response.status);
+                    }
+
+                    return response;
                 });
             }
 
             function autoSaveState() {
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
+                formData.append('game_session_id', gameSessionId);
                 formData.append('notes', document.getElementById('sessionNotes').value);
                 formData.append('duration_seconds', timerSeconds);
+                formData.append('current_question_index', currentQIdx);
                 
-                fetch('{{ url("interview/save-state") }}', {
+                fetch('{{ route("user.game.saveState") }}', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -985,24 +1146,48 @@
             }
 
             function submitAnswer() {
+                if (isFinishingChallenge) return;
                 if(isRecording) stopRecording();
+                const isFinalQuestion = currentQIdx >= questions.length - 1;
+                document.querySelectorAll('.next-btn-class, .skip-btn-class').forEach(el => el.disabled = true);
+                if (isFinalQuestion) {
+                    showChallengeFinishModal('Saving your final answer...');
+                }
                 saveCurrentAnswer(false).then(() => {
                     if (currentQIdx < questions.length - 1) {
+                        document.querySelectorAll('.next-btn-class, .skip-btn-class').forEach(el => el.disabled = false);
                         loadQuestion(currentQIdx + 1);
                     } else {
-                        finishInterview();
+                        finishChallenge();
                     }
+                }).catch(error => {
+                    console.error(error);
+                    hideChallengeFinishModal();
+                    document.querySelectorAll('.next-btn-class, .skip-btn-class').forEach(el => el.disabled = false);
+                    alert('We could not save your answer. Please try again before continuing.');
                 });
             }
 
             function skipQuestion() {
+                if (isFinishingChallenge) return;
                 if(isRecording) stopRecording();
+                const isFinalQuestion = currentQIdx >= questions.length - 1;
+                document.querySelectorAll('.next-btn-class, .skip-btn-class').forEach(el => el.disabled = true);
+                if (isFinalQuestion) {
+                    showChallengeFinishModal('Saving this skipped answer...');
+                }
                 saveCurrentAnswer(true).then(() => {
                     if (currentQIdx < questions.length - 1) {
+                        document.querySelectorAll('.next-btn-class, .skip-btn-class').forEach(el => el.disabled = false);
                         loadQuestion(currentQIdx + 1);
                     } else {
-                        finishInterview();
+                        finishChallenge();
                     }
+                }).catch(error => {
+                    console.error(error);
+                    hideChallengeFinishModal();
+                    document.querySelectorAll('.next-btn-class, .skip-btn-class').forEach(el => el.disabled = false);
+                    alert('We could not save your skipped answer. Please try again before continuing.');
                 });
             }
 
@@ -1013,7 +1198,11 @@
                 }
             }
 
-            function finishInterview() {
+            function finishChallenge() {
+                if (isFinishingChallenge) return;
+                isFinishingChallenge = true;
+                showChallengeFinishModal('Scoring your answers and preparing your result modal...');
+                document.querySelectorAll('.next-btn-class, .skip-btn-class, .prev-btn-class').forEach(el => el.disabled = true);
                 let video = document.getElementById('userCamera');
                 if (video && video.srcObject) {
                     video.srcObject.getTracks().forEach(track => track.stop());
@@ -1021,7 +1210,44 @@
                 clearInterval(timerInterval);
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
-                document.getElementById('finishForm').submit();
+                window.setTimeout(() => document.getElementById('finishForm').submit(), 120);
+            }
+
+            function showChallengeFinishModal(message) {
+                const status = document.getElementById('challengeFinishStatus');
+                if (status) status.textContent = message;
+
+                const modalEl = document.getElementById('challengeFinishModal');
+                if (!modalEl) return;
+
+                if (window.bootstrap && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl, {
+                        backdrop: 'static',
+                        keyboard: false
+                    }).show();
+                    return;
+                }
+
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+                modalEl.removeAttribute('aria-hidden');
+                modalEl.setAttribute('aria-modal', 'true');
+            }
+
+            function hideChallengeFinishModal() {
+                isFinishingChallenge = false;
+                const modalEl = document.getElementById('challengeFinishModal');
+                if (!modalEl) return;
+
+                if (window.bootstrap && bootstrap.Modal) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                    return;
+                }
+
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                modalEl.setAttribute('aria-hidden', 'true');
+                modalEl.removeAttribute('aria-modal');
             }
 
             function ucfirst(str) {
@@ -1052,39 +1278,40 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        if (typeof window.createSpeakReadyTour !== 'function') return;
+        let onboardingTour = null;
+        if (typeof window.createSpeakReadyTour === 'function') {
+            const stepsMobile = [
+                { element: '.ai-avatar-panel', popover: { title: 'AI Coach', description: 'The coach presents each Philippines challenge question and guides the session flow.', side: 'bottom', align: 'start' }},
+                { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
+                { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Private framing prompts are optional and never affect readiness or challenge scoring.', side: 'top', align: 'start' }},
+                { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'top', align: 'start' }},
+                { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
+                { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
+            ];
 
-        const stepsMobile = [
-            { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
-            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Private framing prompts are optional and never affect readiness or game scoring.', side: 'top', align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'top', align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
-        ];
+            const stepsDesktop = [
+                { element: '.ai-avatar-panel', popover: { title: 'AI Coach', description: 'The coach presents each Philippines challenge question and guides the session flow.', side: 'right', align: 'start' }},
+                { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
+                { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Private framing prompts are optional and never affect readiness or challenge scoring.', side: 'left', align: 'start' }},
+                { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'left', align: 'start' }},
+                { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
+                { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
+            ];
 
-        const stepsDesktop = [
-            { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
-            { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Private framing prompts are optional and never affect readiness or game scoring.', side: 'left', align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'left', align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
-        ];
-
-        const onboardingTour = window.createSpeakReadyTour({
-            completionKey: 'onboarding_completed_interview_session',
-            serverDetectedMobile: @json($isMobile),
-            stepsMobile,
-            stepsDesktop,
-            autoStart: false,
-        });
+            onboardingTour = window.createSpeakReadyTour({
+                completionKey: 'onboarding_completed_learning_game_session',
+                serverDetectedMobile: @json($isMobile),
+                stepsMobile,
+                stepsDesktop,
+                autoStart: false,
+            });
+        }
         
-        // Expose startOnboardingTour to be called after interview starts
-        const originalStartInterview = window.startInterviewSession;
-        window.startInterviewSession = function() {
-            if (typeof originalStartInterview === 'function') {
-                originalStartInterview.apply(this, arguments);
+        // Expose startOnboardingTour to be called after the challenge starts
+        const originalStartChallenge = window.startChallengeSession;
+        window.startChallengeSession = function() {
+            if (typeof originalStartChallenge === 'function') {
+                originalStartChallenge.apply(this, arguments);
             }
 
             if (onboardingTour && !onboardingTour.isCompleted()) {
@@ -1098,6 +1325,10 @@
         let countdownValue = 3;
         const countdownText = document.getElementById('countdown-text');
         const overlay = document.getElementById('get-ready-overlay');
+        if (!countdownText || !overlay) {
+            window.startChallengeSession();
+            return;
+        }
         
         const countdownInterval = setInterval(() => {
             countdownValue--;
@@ -1115,7 +1346,7 @@
                 overlay.style.transition = 'opacity 0.5s';
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    window.startInterviewSession();
+                    window.startChallengeSession();
                 }, 500);
             }
         }, 1000);

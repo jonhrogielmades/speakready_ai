@@ -17,30 +17,6 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('job_applications')) {
-            Schema::table('job_applications', function (Blueprint $table) {
-                if (! Schema::hasColumn('job_applications', 'competency_map')) {
-                    $table->json('competency_map')->nullable();
-                }
-
-                if (! Schema::hasColumn('job_applications', 'evidence_match_score')) {
-                    $table->unsignedTinyInteger('evidence_match_score')->default(0);
-                }
-
-                if (! Schema::hasColumn('job_applications', 'evidence_matches')) {
-                    $table->json('evidence_matches')->nullable();
-                }
-
-                if (! Schema::hasColumn('job_applications', 'evidence_gaps')) {
-                    $table->json('evidence_gaps')->nullable();
-                }
-
-                if (! Schema::hasColumn('job_applications', 'future_skills')) {
-                    $table->json('future_skills')->nullable();
-                }
-            });
-        }
-
         if (Schema::hasTable('interview_sessions')) {
             Schema::table('interview_sessions', function (Blueprint $table) {
                 if (! Schema::hasColumn('interview_sessions', 'assessment_mode')) {

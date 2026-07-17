@@ -343,7 +343,7 @@
             <div style="width: 64px; height: 64px; border-radius: 18px; background: #ec489915; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; box-shadow: inset 0 0 0 1px #ec489930;">
                 <i class="fa-solid fa-microphone-lines fa-fw fa-2x" style="color: #ec4899;"></i>
             </div>
-            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">Interview</span>
+            <span class="fw-bold mb-2" style="font-size: 1.15rem; color: var(--tx, #fff);">PH Interview</span>
             <span style="font-size: 0.75rem; font-weight: 700; color: var(--tx3, #888); letter-spacing: 1.5px; text-transform: uppercase;">Settings</span>
         </button>
     </div>
@@ -663,7 +663,7 @@
 
                             <h6 class="text-white mt-4 mb-3">User/Candidate Permissions</h6>
                             <div class="row g-3">
-                                @foreach(['View Content', 'Take Interview', 'Delete Own Account', 'Export Reports'] as $i => $perm)
+                                @foreach(['View PH Content', 'Take PH Interview', 'Delete Own Account', 'Export Reports'] as $i => $perm)
                                 <div class="col-md-4">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="role_user_perm_{{$i}}" value="true" {{ $settingChecked('role_user_perm_'.$i) }}>
@@ -681,13 +681,13 @@
     </div>
 </div>
 
-<!-- 4. Interview Settings -->
+<!-- 4. Philippines Interview Settings -->
                     <!-- Modal 4 -->
 <div class="modal fade" id="modal-4" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="background: var(--sf, #1e1e2d); border: 1px solid var(--bd, rgba(255, 255, 255, 0.1)); border-radius: 16px;">
             <div class="modal-header border-bottom-0">
-                <h5 class="modal-title text-white fw-bold">Interview</h5>
+                <h5 class="modal-title text-white fw-bold">Philippines Interview</h5>
                 <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
@@ -809,7 +809,7 @@
             </div>
             <div class="modal-body pt-0">
                             <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Enable Learning Modules</h6></div>
+                                <div><h6 class="mb-1 text-white">Enable PH Interview Learning Modules</h6></div>
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="ll_modules" value="true" {{ $settingChecked('ll_modules') }}></div>
                             </div>
                             <div class="custom-switch-container">
@@ -894,7 +894,7 @@
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_email" value="true" {{ $settingChecked('notif_email') }}></div>
                             </div>
                             <div class="custom-switch-container">
-                                <div><h6 class="mb-1 text-white">Interview Reminders</h6></div>
+                                <div><h6 class="mb-1 text-white">Philippines Interview Reminders</h6></div>
                                 <div class="form-check form-switch fs-4 mb-0"><input class="form-check-input" type="checkbox" name="notif_reminders" value="true" {{ $settingChecked('notif_reminders') }}></div>
                             </div>
                             <div class="custom-switch-container">
@@ -1169,7 +1169,7 @@
             <div class="modal-body pt-0">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Interview Data Retention (Days)</label>
+                                    <label class="form-label">Philippines Interview Data Retention (Days)</label>
                                     <input type="number" class="form-control" name="retention_interview" value="{{ $settings['retention_interview'] ?? '365' }}">
                                 </div>
                                 <div class="col-md-6">

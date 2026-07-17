@@ -917,7 +917,7 @@
             <div class="modal-header pt-0">
                 <ul class="nav nav-tabs border-0 w-100" id="userTabs" role="tablist">
                     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">Overview</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-interviews" type="button">Interviews</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-interviews" type="button">PH Interviews</button></li>
                     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-activity" type="button">Activity Logs</button></li>
                 </ul>
             </div>
@@ -939,11 +939,11 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="premium-card p-3" style="background:linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.1) 100%);">
-                                    <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Interview Statistics</h6>
+                                    <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Philippines Interview Statistics</h6>
                                     <div class="row text-center mb-3">
                                         <div class="col-6 mb-3">
                                             <h3 id="userDetailCompleted" class="fw-bold text-primary mb-0">0</h3>
-                                            <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Interviews Completed</div>
+                                            <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">PH Interviews Completed</div>
                                         </div>
                                         <div class="col-6 mb-3">
                                             <h3 id="userDetailAverage" class="fw-bold text-success mb-0">N/A</h3>
@@ -981,7 +981,7 @@
                                         </tr>
                                     </thead>
                                     <tbody id="userDetailInterviews">
-                                        <tr><td colspan="5" class="text-center text-muted py-3">Select a user to load interview history.</td></tr>
+                                        <tr><td colspan="5" class="text-center text-muted py-3">Select a user to load Philippines interview history.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1308,7 +1308,7 @@
                         <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="${escapeHtml(session.review_url)}">View Feedback</a></td>
                     </tr>
                 `).join('');
-                document.getElementById('userDetailInterviews').innerHTML = interviewRows || '<tr><td colspan="5" class="text-center text-muted py-3">No completed interviews found.</td></tr>';
+                document.getElementById('userDetailInterviews').innerHTML = interviewRows || '<tr><td colspan="5" class="text-center text-muted py-3">No completed Philippines interviews found.</td></tr>';
 
                 const activityRows = (data.activities || []).map(activity => `
                     <div class="timeline-item">

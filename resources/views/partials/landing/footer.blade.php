@@ -7,7 +7,7 @@
                         <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
                         SpeakReady AI
                      </a>
-                     <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Your personal AI interview coach. Practice smarter, interview better, and secure your dream opportunity.</p>
+                     <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Your personal Philippine interview coach. Practice smarter, interview better, and secure your dream opportunity.</p>
                   </div>
                   <div class="col-6 col-md-3 fcol">
                      <h5>Quick Links</h5>

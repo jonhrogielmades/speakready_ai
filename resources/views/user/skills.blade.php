@@ -132,7 +132,7 @@
                     </svg>
                     Skill Trees
                 </h4>
-                <p class="sr-page-hero-subtitle">Unlock powerful perks by earning Skill XP in Learning Games.</p>
+                <p class="sr-page-hero-subtitle">Unlock powerful perks by earning Skill XP in PH Challenges.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -160,7 +160,7 @@
     <div class="sr-page-actions">
         <span class="badge bg-primary d-inline-flex align-items-center justify-content-center" style="font-size:14px;padding:10px 15px;border-radius:12px;">Level {{ $profile->player_level ?? 1 }}</span>
         <a href="{{ route('user.learning') }}" class="btn btn-sm d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;">
-            <i class="fa-solid fa-arrow-left me-1"></i> <span>Learning Games</span>
+            <i class="fa-solid fa-arrow-left me-1"></i> <span>PH Challenges</span>
         </a>
     </div>
 

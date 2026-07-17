@@ -10,8 +10,7 @@ class InterviewSession extends Model
 {
     protected $fillable = [
         'user_id',
-        'job_application_id',
-        'interview_pack_id',
+        'game_level_id',
         'category_id',
         'difficulty',
         'target_position',
@@ -31,7 +30,6 @@ class InterviewSession extends Model
         'interview_format',
         'accommodation_profile',
         'score_eligible',
-        'pressure_mode',
         'status',
         'notes',
         'duration_seconds',
@@ -51,7 +49,6 @@ class InterviewSession extends Model
     protected $casts = [
         'is_archived' => 'boolean',
         'is_public' => 'boolean',
-        'pressure_mode' => 'boolean',
         'duration_seconds' => 'integer',
         'current_question_index' => 'integer',
         'num_questions' => 'integer',
@@ -131,14 +128,9 @@ class InterviewSession extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function jobApplication()
+    public function gameLevel()
     {
-        return $this->belongsTo(JobApplication::class);
-    }
-
-    public function interviewPack()
-    {
-        return $this->belongsTo(InterviewPack::class);
+        return $this->belongsTo(GameLevel::class);
     }
 
     public function answers()

@@ -44,6 +44,10 @@ class AIService
         $prompt .= 'Each question must ask for one clear answer, avoid coaching the candidate, and avoid generic classroom phrasing. ';
         $prompt .= 'Calibrate depth to the difficulty: easy asks for foundational experience, medium asks for evidence and tradeoffs, and hard asks for ambiguity, judgment, impact, and follow-up depth. ';
         $prompt .= self::languageOutputInstruction($targetLanguage, 'all interviewer questions');
+        $contextText = strtolower($focus.' '.$companyPersona.' '.(is_array($datasetContext) ? ($datasetContext['country'] ?? '').' '.($datasetContext['name'] ?? '') : (string) $datasetContext));
+        if (str_contains($contextText, 'philipp') || str_contains($contextText, 'filipino')) {
+            $prompt .= self::philippinesHiringContextInstruction();
+        }
 
         if (! empty($questionTypes)) {
             $types = implode(', ', array_unique(array_filter((array) $questionTypes)));
@@ -58,11 +62,11 @@ class AIService
             $prompt .= 'Use plain, literal wording, avoid compound questions and idioms, and assess the same job-related competency without reducing difficulty. ';
         }
 
-        if ($focus === 'Salary Negotiation') {
-            $prompt .= 'This is a Salary Negotiation simulation. Generate questions and statements that a hiring manager or recruiter would use during a compensation negotiation, including budget constraints, asking for expected salary, and presenting counter-offers. ';
+        if (str_contains(strtolower((string) $focus), 'salary')) {
+            $prompt .= 'This is a Philippine salary-expectation simulation. Generate questions and statements a local HR recruiter or hiring manager would use when discussing expected salary, salary range, benefits, budget constraints, and counter-offers. ';
         }
 
-        if (! empty($companyPersona)) {
+        if (! empty($companyPersona) && ! str_contains(strtolower($companyPersona), 'philipp')) {
             $prompt .= "You must act as an interviewer from '$companyPersona'. Structure your questions according to their specific interview culture (e.g., if Amazon, use Leadership Principles and STAR method focus; if Google, focus on Googlyness and open-ended technical scaling; if McKinsey, use consulting case-like framing). ";
         }
 
@@ -127,6 +131,10 @@ class AIService
         $prompt .= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
         $prompt .= self::interviewStyleInstruction($session->ai_assistance_level ?? 'standard', $session->interviewer_strictness ?? 'neutral');
         $prompt .= self::interviewFormatInstruction($session->interview_format ?? 'standard');
+        $sessionContext = strtolower((string) ($session->interview_focus ?? '').' '.(string) ($session->company_persona ?? ''));
+        if (str_contains($sessionContext, 'philipp') || str_contains($sessionContext, 'filipino')) {
+            $prompt .= self::philippinesHiringContextInstruction();
+        }
         if (data_get($session->accommodation_profile, 'simplified_questions', false)) {
             $prompt .= 'Use plain, literal wording and ask only one idea at a time without lowering the job-related standard. ';
         }
@@ -136,12 +144,12 @@ class AIService
             $prompt .= "The session's requested question types are ".implode(', ', $requestedTypes).". Keep follow-ups aligned with those types unless the candidate's answer requires clarification. ";
         }
 
-        if (! empty($session->company_persona)) {
+        if (! empty($session->company_persona) && ! str_contains(strtolower($session->company_persona), 'philipp')) {
             $prompt .= "You must act as an interviewer from '".$session->company_persona."'. ";
         }
 
-        if (! empty($session->pressure_mode) || ($session->live_feedback_mode ?? null) === 'real_interview') {
-            $prompt .= 'Pressure mode is enabled: behave like a real interview panel, do not reassure or teach, politely interrupt vague answers by asking for proof, and prefer sharper follow-ups about tradeoffs, ownership, mistakes, measurable results, and role-specific judgment. ';
+        if (($session->live_feedback_mode ?? null) === 'real_interview') {
+            $prompt .= 'Real interview mode is enabled: behave like a real interview panel, do not reassure or teach, politely interrupt vague answers by asking for proof, and prefer sharper follow-ups about tradeoffs, ownership, mistakes, measurable results, and role-specific judgment. ';
         }
 
         if (! empty($session->resume_text)) {
@@ -216,6 +224,11 @@ class AIService
         }
 
         return $instruction;
+    }
+
+    private static function philippinesHiringContextInstruction(): string
+    {
+        return 'Keep the interview grounded in Philippine hiring practice: local HR screening, role-fit questions, professionalism, communication clarity, common workplace scenarios in the Philippines, and realistic salary-expectation framing when relevant. Avoid non-Philippine company-specific interview cultures unless the user explicitly provides that employer context. ';
     }
 
     private static function interviewFormatInstruction($format = 'standard'): string
@@ -316,6 +329,14 @@ class AIService
         $prompt .= 'Target Position: '.($sessionData['target_position'] ?? 'General')."\n";
         $prompt .= 'Difficulty: '.($sessionData['difficulty'] ?? 'Medium')."\n\n";
         $prompt .= self::languageOutputInstruction($sessionData['target_language'] ?? null, 'all user-visible JSON string values, including feedback, revision guidance, follow-up questions, strengths, weaknesses, and improvement suggestions')."\n";
+        $contextText = strtolower(
+            (string) ($sessionData['interview_focus'] ?? '').' '.
+            (string) ($sessionData['company_persona'] ?? '').' '.
+            (string) ($sessionData['country'] ?? '')
+        );
+        if (str_contains($contextText, 'philipp') || str_contains($contextText, 'filipino')) {
+            $prompt .= "Evaluation context: This is Philippines-focused interview preparation. Evaluate against Philippine hiring practice, including local HR screening, role fit, professional communication, availability/work-setup questions, BPO or customer-contact expectations when relevant, fresh graduate evidence when relevant, and realistic salary-expectation framing. Do not apply non-Philippine employer-specific norms unless explicitly provided by the user.\n";
+        }
 
         if (isset($sessionData['banned_words']) && ! empty($sessionData['banned_words'])) {
             $prompt .= 'CRITICAL MODIFIER - BANNED WORDS: The user was strictly forbidden from using the following words or phrases: '.$sessionData['banned_words'].". If you detect ANY of these words in their answers, you MUST heavily penalize their professionalism_score and mention it explicitly in their ai_feedback.\n";
@@ -662,6 +683,7 @@ EOT;
     public static function generateGame($topic, $provider = 'gemini')
     {
         $prompt = "You are an expert Gamification and Interview Design AI. Create a highly engaging, gamified Interview Learning Game based on the topic: '$topic'.\n";
+        $prompt .= "Keep the level grounded in Philippine interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship/admission interviews, workplace professionalism, communication clarity, salary expectations, and availability/work-setup scenarios when relevant.\n";
         $prompt .= <<<'EOT'
 Return ONLY a valid JSON object describing the level. Do not include markdown formatting or explanations.
 The JSON structure MUST be exactly like this:
@@ -749,8 +771,9 @@ EOT;
             ];
         }, $levelSpecs));
 
-        $prompt = "You are an expert Gamification and Interview Design AI. Create multiple distinct Interview Learning Game levels based on the topic: '{$topic}'.\n";
+        $prompt = "You are an expert Gamification and Interview Design AI. Create multiple distinct Philippines-focused Interview Learning Game levels based on the topic: '{$topic}'.\n";
         $prompt .= "Return ONLY a valid JSON object. Do not include markdown formatting or explanations.\n";
+        $prompt .= "Keep every level grounded in Philippine interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate interviews, scholarship/admission interviews, workplace professionalism, communication clarity, salary expectations, and availability/work-setup scenarios when relevant.\n";
         $prompt .= "Create exactly one level for each item in this level_specs JSON array:\n";
         $prompt .= json_encode($levelSpecs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n\n";
         $prompt .= <<<'EOT'
@@ -953,6 +976,120 @@ PROMPT;
         }
 
         return collect($texts)->mapWithKeys(fn ($text) => [$text => $text])->all();
+    }
+
+    public static function synthesizeSpeech(string $text, array|string|null $targetLanguage = null): ?array
+    {
+        if (! filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN)) {
+            return null;
+        }
+
+        $text = trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+        $text = function_exists('mb_substr') ? mb_substr($text, 0, 4096, 'UTF-8') : substr($text, 0, 4096);
+        if ($text === '') {
+            return null;
+        }
+
+        $credentials = self::openAiSpeechCredentials();
+        if (! $credentials) {
+            return null;
+        }
+
+        $language = self::languageConfigFrom($targetLanguage);
+        $model = (string) config('services.openai.tts_model', 'gpt-4o-mini-tts');
+        $voice = (string) config('services.openai.tts_voice', 'alloy');
+        $speed = (float) config('services.openai.tts_speed', 0.95);
+        $speed = max(0.25, min(4.0, $speed));
+
+        $payload = [
+            'model' => $model,
+            'input' => $text,
+            'voice' => $voice,
+            'response_format' => 'mp3',
+            'speed' => $speed,
+        ];
+
+        if (! in_array($model, ['tts-1', 'tts-1-hd'], true)) {
+            $target = $language['ai_label'] ?? $language['label'] ?? 'the selected language';
+            $payload['instructions'] = "Speak as a calm, professional interviewer. Use natural {$target} pronunciation and keep company names, role titles, acronyms, and numbers clear.";
+        }
+
+        try {
+            $response = Http::timeout((int) config('services.openai.tts_timeout', 30))
+                ->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))
+                ->withHeaders([
+                    'Authorization' => 'Bearer '.$credentials['api_key'],
+                    'Accept' => 'audio/mpeg',
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($credentials['endpoint'], $payload);
+        } catch (\Throwable $e) {
+            Log::warning('OpenAI Speech Error: '.$e->getMessage());
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::warning('OpenAI Speech Error: '.substr($response->body(), 0, 1000));
+
+            return null;
+        }
+
+        $audio = $response->body();
+        if ($audio === '') {
+            return null;
+        }
+
+        $contentType = trim((string) $response->header('Content-Type', 'audio/mpeg'));
+        $mimeType = str_contains($contentType, ';') ? trim(strstr($contentType, ';', true)) : $contentType;
+
+        return [
+            'audio' => $audio,
+            'mime_type' => $mimeType !== '' ? $mimeType : 'audio/mpeg',
+        ];
+    }
+
+    private static function openAiSpeechCredentials(): ?array
+    {
+        $dbProvider = AiProvider::where('name', 'like', '%OpenAI%')
+            ->where('status', 'active')
+            ->first();
+
+        if ($dbProvider && ! empty($dbProvider->api_key)) {
+            try {
+                $apiKey = Crypt::decryptString($dbProvider->api_key);
+            } catch (\Throwable $e) {
+                Log::warning('OpenAI Speech Error: unable to decrypt provider key.');
+                $apiKey = '';
+            }
+
+            $endpoint = $dbProvider->api_endpoint ?: 'https://api.openai.com/v1';
+        } else {
+            $apiKey = (string) env('OPENAI_API_KEY', '');
+            $endpoint = 'https://api.openai.com/v1';
+        }
+
+        $apiKey = trim($apiKey);
+        if ($apiKey === '') {
+            return null;
+        }
+
+        return [
+            'api_key' => $apiKey,
+            'endpoint' => self::openAiSpeechEndpoint($endpoint),
+        ];
+    }
+
+    private static function openAiSpeechEndpoint(string $configuredEndpoint): string
+    {
+        $endpoint = rtrim(trim($configuredEndpoint) ?: 'https://api.openai.com/v1', '/');
+        if (str_ends_with($endpoint, '/audio/speech')) {
+            return $endpoint;
+        }
+
+        $endpoint = preg_replace('#/(?:chat/completions|responses)$#', '', $endpoint) ?: $endpoint;
+
+        return $endpoint.'/audio/speech';
     }
 
     public static function chatMessage($message, $history = [], $provider = 'gemini', $systemPrompt = null)
@@ -1777,7 +1914,7 @@ PROMPT;
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash-lite');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on Philippine interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, scholarship/admission, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to Philippines-focused interview preparation.';
 
         $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->post($url, [
             'contents' => self::formatHistoryForGemini($message, $history),
@@ -1796,7 +1933,7 @@ PROMPT;
 
     private static function formatHistoryForStandard($message, $history, $systemPrompt = null)
     {
-        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on Philippine interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, scholarship/admission, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to Philippines-focused interview preparation.';
         $messages = [
             ['role' => 'system', 'content' => $sysMsg],
         ];
@@ -1856,7 +1993,7 @@ PROMPT;
             ];
         }
 
-        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on Philippine interview preparation. Provide concise, helpful, and encouraging responses for local interview practice, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to Philippines-focused interview preparation.';
 
         $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
@@ -1937,7 +2074,7 @@ PROMPT;
             'content' => $message,
         ];
 
-        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI. Your goal is to help users prepare for interviews, refine their resumes, and answer behavioral questions. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to interview preparation.';
+        $sysMsg = $systemPrompt ?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on Philippine interview preparation. Help users prepare for local HR screening, BPO/customer support, IT, fresh graduate, scholarship/admission, resume, and behavioral interview scenarios. Provide concise, helpful, and encouraging responses. You MUST strictly limit your responses to interview preparation, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to Philippines-focused interview preparation.';
 
         $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
             'x-api-key' => $apiKey,

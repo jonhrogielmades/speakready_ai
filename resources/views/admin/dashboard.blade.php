@@ -388,8 +388,8 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="admin-dashboard-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie"></i>Admin Dashboard</h4>
-            <p class="admin-dashboard-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">System overview, user analytics, and platform health.</p>
+            <h4 class="admin-dashboard-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie"></i> Philippines Interview Admin Dashboard</h4>
+            <p class="admin-dashboard-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Overview for Philippine interview practice, user analytics, and platform health.</p>
         </div>
     </div>
 
@@ -413,21 +413,21 @@
             <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#60a5fa;margin-bottom:8px;"><i class="fa-solid fa-microphone"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($mockInterviewsCount) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Mock Interviews</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">PH Mock Interviews</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#fbbf24;margin-bottom:8px;"><i class="fa-solid fa-robot"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($aiFeedbacksCount) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">AI Feedbacks</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">PH AI Feedbacks</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card overview-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#f472b6;margin-bottom:8px;"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($modulesCompletedCount) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Modules Completed</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">PH Modules Completed</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
@@ -453,11 +453,11 @@
         <!-- Feature 3: Interview Analytics (Donut Chart) -->
         <div class="col-lg-3">
             <div class="premium-card h-100">
-                <h6 class="fw-bold mb-4">Interview Categories</h6>
+                <h6 class="fw-bold mb-4">Philippines Interview Categories</h6>
                 <div class="chart-container" style="height: 200px;">
                     <canvas id="categoryDonutChart"></canvas>
                 </div>
-                <div class="text-center mt-3" style="font-size: 0.8rem; color:var(--tx2);">Job Interview is the most active.</div>
+                <div class="text-center mt-3" style="font-size: 0.8rem; color:var(--tx2);">Philippines job interview practice is the most active.</div>
             </div>
         </div>
         <!-- Feature 5: Readiness Score Analytics (Bar Chart) -->
@@ -478,7 +478,7 @@
             <!-- Feature 6: Recent Interview Sessions -->
             <div class="premium-card mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold m-0">Recent Interview Sessions</h6>
+                    <h6 class="fw-bold m-0">Recent Philippines Interview Sessions</h6>
                     <a href="{{ route('admin.sessions.index') }}" class="btn btn-sm mobile-action-btn admin-dashboard-mini-action" style="border-radius:8px;border:1px solid var(--bd);color:var(--tx2);background:var(--bg3);"><i class="fa-solid fa-list"></i>View All</a>
                 </div>
                 <div class="table-responsive">
@@ -650,7 +650,7 @@
 
             <!-- Feature 4: Interview Performance Analytics -->
             <div class="premium-card mb-4">
-                <h6 class="fw-bold mb-4">Avg Performance Metrics</h6>
+                <h6 class="fw-bold mb-4">Average PH Interview Performance</h6>
                 
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;"><span>Clarity</span><span class="fw-bold">{{ $avgClarity }}%</span></div>
@@ -693,7 +693,7 @@
 
             <!-- Feature 8: Question Bank Statistics -->
             <div class="premium-card mb-4">
-                <h6 class="fw-bold mb-3">Question Bank Stat</h6>
+                <h6 class="fw-bold mb-3">PH Question Bank Stats</h6>
                 <div class="text-center mb-3">
                     <h3 class="fw-bold text-primary mb-0">500</h3>
                     <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Total Questions</div>
@@ -708,10 +708,10 @@
 
             <!-- Feature 9: Learning Lab Analytics -->
             <div class="premium-card mb-4">
-                <h6 class="fw-bold mb-3">Learning Lab Stats</h6>
+                <h6 class="fw-bold mb-3">PH Interview Learning Stats</h6>
                 <div class="p-2 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
                     <div style="font-size:0.75rem;color:var(--tx3);">Most Viewed & Completed</div>
-                    <div class="fw-bold" style="color:var(--tx);font-size:0.9rem;">Communication Skills</div>
+                    <div class="fw-bold" style="color:var(--tx);font-size:0.9rem;">PH Interview Communication</div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
                     <div style="font-size:0.85rem;color:var(--tx2);">Avg Completion Rate</div>
@@ -724,7 +724,7 @@
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-file-export me-2 text-primary"></i>Generate Reports</h6>
                 <select class="form-select mb-3" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
                     <option>User Reports</option>
-                    <option>Interview Reports</option>
+                    <option>Philippines Interview Reports</option>
                     <option>AI Usage Reports</option>
                     <option>Analytics Reports</option>
                 </select>

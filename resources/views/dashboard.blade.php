@@ -1374,7 +1374,7 @@
                     <div class="sr-user-row">
                         <div class="sr-welcome-copy">
                             <h3 class="sr-title" id="dashboard-welcome-title">Hi! <span class="sr-title-name">{{ $welcomeName }}</span><span class="sr-wave" aria-hidden="true">&#128075;</span></h3>
-                            <p class="sr-subtitle">Track readiness, progress, and coaching to ace your next interview.</p>
+                            <p class="sr-subtitle">Track readiness, progress, and coaching for Philippine job, BPO, IT, fresh graduate, scholarship, and admission interviews.</p>
                         </div>
                     </div>
                     <img class="sr-welcome-art" src="{{ asset('img/dashboard-welcome-target.svg') }}" alt="" aria-hidden="true">
@@ -1428,7 +1428,7 @@
         <section class="sr-card sr-score-panel" aria-label="Readiness score">
             <div class="sr-score-top">
                 <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
-                <span class="sr-chip" style="background:rgba(59,130,246,.11);color:#60a5fa;border:1px solid rgba(59,130,246,.2)">Live score</span>
+                <span class="sr-chip" style="background:rgba(59,130,246,.11);color:#60a5fa;border:1px solid rgba(59,130,246,.2)">PH focus</span>
             </div>
             <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
             <div class="sr-progress mt-3" aria-label="Readiness score"><span style="--value: {{ $scoreVal }}%"></span></div>
@@ -1494,7 +1494,7 @@
                 <div class="sr-card-header">
                     <div>
                         <h5 class="sr-card-title"><i class="fa-solid fa-chart-line me-2" style="color:#60a5fa"></i> Readiness Trend</h5>
-                        <div class="sr-card-kicker">Recent completed sessions, scored from 0 to 100.</div>
+                        <div class="sr-card-kicker">Recent completed Philippine interview sessions, scored from 0 to 100.</div>
                     </div>
                     <span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa;border:1px solid rgba(59,130,246,.18)">Recent 10</span>
                 </div>
@@ -1529,7 +1529,7 @@
                     @else
                         <div class="sr-empty">
                             <i class="fa-solid fa-folder-open"></i>
-                            <div>Complete a session to unlock category performance.</div>
+                            <div>Complete a Philippine interview session to unlock category performance.</div>
                         </div>
                     @endif
                 </section>
@@ -1600,7 +1600,7 @@
                     @else
                         <div class="sr-empty">
                             <i class="fa-solid fa-robot"></i>
-                            <div>Complete an interview to generate AI feedback.</div>
+                            <div>Complete a Philippine interview to generate AI feedback.</div>
                         </div>
                     @endif
                 </section>
@@ -1629,7 +1629,7 @@
                     @else
                         <div class="sr-empty">
                             <i class="fa-solid fa-lightbulb"></i>
-                            <div>Complete a session to get tailored recommendations.</div>
+                            <div>Complete a Philippine interview to get tailored recommendations.</div>
                         </div>
                     @endif
                 </section>
@@ -1639,7 +1639,7 @@
                 <div class="sr-card-header">
                     <div>
                         <h5 class="sr-card-title"><i class="fa-solid fa-clock-rotate-left me-2" style="color:#06b6d4"></i> Recent Sessions</h5>
-                        <div class="sr-card-kicker">Review the latest completed mock interviews.</div>
+                        <div class="sr-card-kicker">Review the latest completed Philippine mock interviews.</div>
                     </div>
                     <div class="sr-recent-actions d-flex align-items-center gap-2 flex-wrap">
                         <a href="{{ route('user.reports') }}" class="sr-btn" style="min-height:36px;padding:7px 12px">View Reports</a>
@@ -1673,7 +1673,7 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</td>
-                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'General' }}</span></td>
+                                    <td><span class="sr-chip" style="background:rgba(59,130,246,.1);color:#60a5fa">{{ $session->category ? $session->category->title : 'Philippines Interview' }}</span></td>
                                     <td><span style="color:{{ $sessionColor }};font-weight:900">{{ $sessionScore }}%</span></td>
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2">
@@ -1690,7 +1690,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start practicing when you are ready.</td>
+                                    <td colspan="4" class="text-center py-4" style="color:var(--tx3)">No recent sessions found. Start Philippine interview practice when you are ready.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -1705,7 +1705,7 @@
                         @endphp
                         <div class="sr-session-card">
                             <div class="sr-session-meta">
-                                <div class="sr-session-title">{{ $session->category ? $session->category->title : 'General Interview' }}</div>
+                                <div class="sr-session-title">{{ $session->category ? $session->category->title : 'Philippines Interview' }}</div>
                                 <div class="sr-session-date">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }}</div>
                             </div>
                             <div class="sr-session-actions d-flex align-items-center gap-2">
@@ -1723,7 +1723,7 @@
                     @empty
                         <div class="sr-empty">
                             <i class="fa-solid fa-calendar-plus"></i>
-                            <div>No recent sessions found. Start practicing when you are ready.</div>
+                            <div>No recent sessions found. Start Philippine interview practice when you are ready.</div>
                         </div>
                     @endforelse
                 </div>
@@ -1745,13 +1745,13 @@
 
             <section id="card-daily-challenge" class="sr-card sr-card-pad sr-challenge-card">
                 <div class="sr-eyebrow"><i class="fa-solid fa-calendar-day"></i> Today&apos;s Challenge</div>
-                <h5 class="sr-card-title"><i class="fa-solid fa-clipboard-question me-2" style="color:#f97316"></i> Answer 3 behavioral questions</h5>
-                <p class="sr-card-kicker mb-3">Earn extra XP, sharpen structure, and keep your practice streak alive.</p>
+                <h5 class="sr-card-title"><i class="fa-solid fa-clipboard-question me-2" style="color:#f97316"></i> Answer 3 Philippine HR questions</h5>
+                <p class="sr-card-kicker mb-3">Earn extra XP, sharpen structure, and practice local role-fit answers.</p>
                 <div class="sr-tag-list mb-3">
                     <span class="sr-tag" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.18);color:#f59e0b">+50 XP</span>
                     <span class="sr-tag" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.18);color:#22c55e">+1 Streak</span>
                 </div>
-                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100"><i class="fa-solid fa-play"></i> Start Challenge</a>
+                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100"><i class="fa-solid fa-play"></i> Start PH Challenge</a>
             </section>
 
             <section class="sr-card sr-card-pad">
@@ -1978,7 +1978,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Open Mock Interview, Job Tracker, Interview Packs, modules, Voice Rehearsal, AI Coach, reports, and more from here.', side: 'right', align: 'start' }},
+            { element: '#dbSidebar', popover: { title: 'Navigation Menu', description: 'Open Philippine Mock Interview, modules, Voice Rehearsal, AI Coach, reports, and more from here.', side: 'right', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay The Tour', description: 'Use this button whenever you want to restart the walkthrough.', side: 'bottom', align: 'center' }},
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your current readiness score, status, average rating, and next target live here.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed sessions, rating, XP, and active practice days at a glance.', side: 'top', align: 'start' }},

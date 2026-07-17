@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\GameLevel;
-use App\Models\InterviewSession;
+use App\Models\GameSession;
 use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -72,19 +72,16 @@ class LearningGameGuidanceTest extends TestCase
             ->post(route('user.game.start', $level))
             ->assertRedirect(route('user.game.match'));
 
-        $session = InterviewSession::where('user_id', $user->id)->latest()->firstOrFail();
+        $session = GameSession::where('user_id', $user->id)->latest()->firstOrFail();
 
         $this->assertStringContainsString('LEARNING GAME CONTEXT', $session->interview_focus);
         $this->assertStringContainsString('Skill focus: STAR Method', $session->interview_focus);
         $this->assertStringContainsString('Success criteria:', $session->interview_focus);
-        $this->assertDatabaseHas('questions', [
-            'interview_session_id' => $session->id,
-            'question_text' => 'Tell me about a time you solved a team conflict.',
-        ]);
+        $this->assertContains('Tell me about a time you solved a team conflict.', $session->questions);
 
         $this->actingAs($user)
             ->withSession([
-                'active_interview_id' => $session->id,
+                'active_game_session_id' => $session->id,
                 'game_level_id' => $level->id,
             ])
             ->get(route('user.game.match'))

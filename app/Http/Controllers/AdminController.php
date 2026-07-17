@@ -391,6 +391,7 @@ class AdminController extends Controller
             ?? QuestionDatasetProvider::forCategory($category);
         $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
         $fallbackQuestion = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
+        $categoryFocus = 'Philippines ' . trim($category->title) . ' interview';
 
         $questionText = null;
         $source = 'fallback';
@@ -401,11 +402,11 @@ class AdminController extends Controller
                     1,
                     $position,
                     $difficulty,
-                    $category->title,
+                    $categoryFocus,
                     $provider,
                     null,
                     null,
-                    null,
+                    'Philippine hiring panel',
                     [],
                     'standard',
                     'neutral',
@@ -430,7 +431,7 @@ class AdminController extends Controller
 
         $questionText = $questionText ?: (
             $provider === 'local'
-                ? $this->fallbackInterviewQuestion($category, $position, $difficulty)
+                ? $this->legacyFallbackInterviewQuestion($category, $position, $difficulty)
                 : ($fallbackQuestion['question_text'] ?? $this->fallbackInterviewQuestion($category, $position, $difficulty))
         );
 
@@ -565,6 +566,20 @@ class AdminController extends Controller
             default => 'realistic',
         };
 
+        return "For a {$targetPosition} role in the Philippines, describe a {$difficultyPrompt} school, internship, BPO, freelance, or workplace situation where you used {$categoryTitle}. What was your responsibility, what actions did you take, and what result would help a local HR interviewer judge your readiness?";
+    }
+
+    private function legacyFallbackInterviewQuestion(Category $category, string $position, string $difficulty): string
+    {
+        $categoryTitle = trim($category->title) ?: 'this skill area';
+        $targetPosition = $position !== '' ? $position : 'your target role';
+
+        $difficultyPrompt = match (strtolower($difficulty)) {
+            'easy' => 'foundational',
+            'hard' => 'complex or high-pressure',
+            default => 'realistic',
+        };
+
         return "For a {$targetPosition} role, describe a {$difficultyPrompt} situation where you used {$categoryTitle}. What was your responsibility, what actions did you take, and what measurable result followed?";
     }
 
@@ -614,7 +629,7 @@ class AdminController extends Controller
 
         foreach ($questionsToImport as $q) {
             $category = Category::firstOrCreate(
-                ['title' => $q['category'] ?? 'Community Datasets'],
+                ['title' => $q['category'] ?? 'Philippines Source Packs', 'type' => 'core'],
                 ['description' => 'Imported from reliable Philippines source packs', 'status' => 'active']
             );
 
@@ -723,7 +738,8 @@ class AdminController extends Controller
         $categories = $this->learningCategoryNames()->implode(', ');
         $categoryInstruction = $categories ? "Choose exactly one of these categories: $categories" : "General";
 
-        $prompt = "Create a comprehensive educational learning module about: " . $request->prompt . ". 
+        $prompt = "Create a comprehensive Philippines-focused interview preparation learning module about: " . $request->prompt . ". 
+        Keep the lessons grounded in Philippine hiring and education interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
         Return ONLY a JSON object with the following structure:
         {
             \"title\": \"Module Title\",
@@ -804,8 +820,9 @@ class AdminController extends Controller
 
     public function autofillModule(LearningModule $module)
     {
-        $prompt = "Create comprehensive content for an educational learning module titled: '" . $module->title . "'. 
+        $prompt = "Create comprehensive Philippines-focused interview preparation content for an educational learning module titled: '" . $module->title . "'. 
         The category is '" . $module->category . "' and difficulty is '" . $module->difficulty . "'.
+        Ground the examples in Philippine hiring and education interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
         Return ONLY a JSON object with the following structure:
         {
             \"description\": \"A professional, detailed summary of the module (3-4 sentences)\",
@@ -965,11 +982,11 @@ class AdminController extends Controller
     {
         $existingChapters = $module->chapters()->orderBy('order')->pluck('title')->implode(', ');
         
-        $prompt = "Generate exactly 1 new chapter for a learning module.
+        $prompt = "Generate exactly 1 new Philippines-focused interview preparation chapter for a learning module.
         Module Title: {$module->title}
         Module Description: {$module->description}
         Existing Chapters: " . ($existingChapters ?: "None yet.") . "
-        Generate the next logical chapter. Provide a JSON response with the following exact keys:
+        Generate the next logical chapter using Philippine hiring or school-interview examples when relevant. Provide a JSON response with the following exact keys:
         {
             \"title\": \"Chapter Title\",
             \"content\": \"Comprehensive HTML formatted lesson content (use h3, p, ul, li). Be detailed.\"
@@ -1005,12 +1022,13 @@ class AdminController extends Controller
     // Quizzes
     public function generateModuleQuiz(Request $request, LearningModule $module)
     {
-        $prompt = "Create a 5-question multiple choice quiz based on the following learning module content.\n";
+        $prompt = "Create a 5-question multiple choice quiz based on the following Philippines-focused interview preparation learning module content.\n";
         $prompt .= "Module Title: " . $module->title . "\n";
         $prompt .= "Module Description: " . $module->description . "\n";
         foreach($module->chapters as $chapter) {
             $prompt .= "Chapter '" . $chapter->title . "' Content: " . strip_tags($chapter->content) . "\n";
         }
+        $prompt .= "Keep every question aligned with Philippine interview preparation and local hiring or education interview expectations.\n";
         
         $prompt .= <<<EOT
 Return ONLY a valid JSON object strictly matching this format. Do not include markdown.
@@ -1237,16 +1255,16 @@ EOT;
 
         if (!$module->gameLevels->contains($request->game_level_id)) {
             $module->gameLevels()->attach($request->game_level_id);
-            return redirect()->back()->with('success', 'Learning Game attached successfully.');
+            return redirect()->back()->with('success', 'Philippines interview learning game attached successfully.');
         }
 
-        return redirect()->back()->with('warning', 'Learning Game is already attached.');
+        return redirect()->back()->with('warning', 'Philippines interview learning game is already attached.');
     }
 
     public function detachGameLevel(LearningModule $module, \App\Models\GameLevel $gameLevel)
     {
         $module->gameLevels()->detach($gameLevel->id);
-        return redirect()->back()->with('success', 'Learning Game detached successfully.');
+        return redirect()->back()->with('success', 'Philippines interview learning game detached successfully.');
     }
 
     private function learningCategoryNames()
@@ -1269,27 +1287,27 @@ EOT;
 
         Category::firstOrCreate(
             ['title' => $title, 'type' => 'learning'],
-            ['description' => 'Learning module category', 'status' => 'active']
+            ['description' => 'Philippines interview learning module category', 'status' => 'active']
         );
     }
 
     private function fallbackModuleData(string $topic): array
     {
-        $topic = $this->cleanFallbackText($topic, 'Interview Readiness');
+        $topic = $this->cleanFallbackText($topic, 'Philippines Interview Readiness');
 
         return [
-            'title' => $this->cleanFallbackText($topic . ' Essentials', 'Interview Readiness Essentials'),
+            'title' => $this->cleanFallbackText($topic . ' Essentials', 'Philippines Interview Readiness Essentials'),
             'category' => 'General',
             'difficulty' => 'Beginner',
-            'description' => "A practical learning module for building confidence and structure around {$topic}.",
+            'description' => "A practical Philippines interview module for building confidence and structure around {$topic}.",
             'chapters' => [
                 [
-                    'title' => 'Foundations',
-                    'content' => "<h3>Foundations</h3><p>Start by defining the skill, the situation where it matters, and the outcome a strong candidate should produce.</p><p>Focus on clear examples, concise wording, and evidence that shows ownership.</p>",
+                    'title' => 'Philippine Interview Foundations',
+                    'content' => "<h3>Philippine Interview Foundations</h3><p>Start by defining the skill, the local situation where it matters, and the outcome a strong candidate should produce for a Philippine HR, school, or hiring panel.</p><p>Focus on clear examples, concise wording, professionalism, and evidence that shows ownership.</p>",
                 ],
                 [
-                    'title' => 'Practice Framework',
-                    'content' => "<h3>Practice Framework</h3><p>Prepare answers with a simple structure: context, action, result, and reflection.</p><ul><li>Use specific details.</li><li>Keep the answer role-relevant.</li><li>Close with measurable impact when possible.</li></ul>",
+                    'title' => 'Local Practice Framework',
+                    'content' => "<h3>Local Practice Framework</h3><p>Prepare answers with a simple structure: context, action, result, and reflection.</p><ul><li>Use specific details from school, internship, BPO, freelance, or workplace experience.</li><li>Keep the answer role-relevant for Philippine employers or admissions panels.</li><li>Close with measurable impact, lessons learned, or readiness for the role when possible.</li></ul>",
                 ],
             ],
         ];
@@ -1297,18 +1315,18 @@ EOT;
 
     private function fallbackModuleAutofillData(LearningModule $module): array
     {
-        $title = $this->cleanFallbackText($module->title, 'Interview Readiness');
+        $title = $this->cleanFallbackText($module->title, 'Philippines Interview Readiness');
 
         return [
-            'description' => "A focused module for practicing {$title} with structured lessons, examples, and review checkpoints.",
+            'description' => "A focused Philippines interview module for practicing {$title} with structured lessons, local examples, and review checkpoints.",
             'chapters' => [
                 [
-                    'title' => 'Core Concepts',
-                    'content' => "<h3>Core Concepts</h3><p>Clarify the main ideas behind {$title} and connect them to real interview expectations.</p><p>Use examples that show judgment, communication, and measurable impact.</p>",
+                    'title' => 'Philippine Interview Expectations',
+                    'content' => "<h3>Philippine Interview Expectations</h3><p>Clarify the main ideas behind {$title} and connect them to local HR, school, BPO, IT, or fresh graduate interview expectations.</p><p>Use examples that show judgment, communication, professionalism, and measurable impact.</p>",
                 ],
                 [
-                    'title' => 'Applied Practice',
-                    'content' => "<h3>Applied Practice</h3><p>Turn the concepts into repeatable practice prompts. Draft one answer, review it for clarity, then revise it to include stronger evidence.</p>",
+                    'title' => 'Applied Local Practice',
+                    'content' => "<h3>Applied Local Practice</h3><p>Turn the concepts into repeatable Philippine interview prompts. Draft one answer, review it for clarity and local relevance, then revise it to include stronger evidence.</p>",
                 ],
             ],
         ];
@@ -1320,8 +1338,8 @@ EOT;
         $title = $this->cleanFallbackText($module->title, 'this module');
 
         return [
-            'title' => "Chapter {$next}: Practice Checkpoint",
-            'content' => "<h3>Practice Checkpoint</h3><p>Review the key idea from {$title}, then write a short answer that explains the situation, your action, and the result.</p><ul><li>Use one concrete example.</li><li>Name your personal contribution.</li><li>End with a lesson or measurable result.</li></ul>",
+            'title' => "Chapter {$next}: Philippine Interview Practice Checkpoint",
+            'content' => "<h3>Philippine Interview Practice Checkpoint</h3><p>Review the key idea from {$title}, then write a short answer for a Philippine HR, school, BPO, IT, or fresh graduate interview that explains the situation, your action, and the result.</p><ul><li>Use one concrete local example.</li><li>Name your personal contribution.</li><li>End with a lesson, measurable result, or reason you are ready for the role.</li></ul>",
         ];
     }
 
@@ -1330,16 +1348,16 @@ EOT;
         $title = $this->cleanFallbackText($module->title, 'the module');
 
         return [
-            'title' => 'Module Assessment Quiz',
+            'title' => 'Philippines Interview Module Assessment Quiz',
             'passing_score' => 80,
             'questions' => [
                 [
-                    'question_text' => "What should a strong answer about {$title} include?",
+                    'question_text' => "What should a strong Philippines interview answer about {$title} include?",
                     'options' => ['A specific example', 'Only a job title', 'A memorized slogan', 'No result or reflection'],
                     'correct_answer' => 'A specific example',
                 ],
                 [
-                    'question_text' => 'Which structure best supports an interview answer?',
+                    'question_text' => 'Which structure best supports a local interview answer?',
                     'options' => ['Context, action, result', 'Greeting only', 'A list of unrelated skills', 'A long apology'],
                     'correct_answer' => 'Context, action, result',
                 ],

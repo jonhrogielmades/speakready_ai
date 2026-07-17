@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Learning Games')
+@section('title', 'Philippines Interview Challenges')
 
 @section('content')
 <style>
@@ -258,6 +258,207 @@
         background: rgba(245,158,11,0.1);
         color: #f59e0b;
     }
+    .learning-notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        width: 100%;
+        border-radius: 14px;
+        padding: 14px 16px;
+        margin-bottom: 18px;
+        font-weight: 700;
+        line-height: 1.42;
+        overflow-wrap: anywhere;
+    }
+    .learning-notice-danger {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #7f1d1d;
+    }
+    .learning-notice-success {
+        background: rgba(16, 185, 129, 0.12);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #047857;
+    }
+    .learning-notice-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 30px;
+        margin-top: 1px;
+        background: rgba(255, 255, 255, 0.6);
+    }
+    .learning-notice-message {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .game-result-modal .modal-dialog {
+        max-width: min(900px, calc(100vw - 24px));
+    }
+    .game-result-modal .modal-content {
+        background: var(--sf);
+        color: var(--tx);
+        border: 1px solid var(--bd);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    }
+    .game-result-hero {
+        padding: 24px;
+        background: linear-gradient(135deg, rgba(59,130,246,0.13), rgba(52,211,153,0.12));
+        border-bottom: 1px solid var(--bd);
+    }
+    .game-result-score {
+        width: 128px;
+        height: 128px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        flex: 0 0 128px;
+        box-shadow: inset 0 0 0 10px rgba(255,255,255,0.45);
+    }
+    .game-result-score-inner {
+        width: 94px;
+        height: 94px;
+        border-radius: 50%;
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .game-result-stat {
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 74px;
+    }
+    .game-result-stat-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--tx3);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+    }
+    .game-result-stat-value {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--tx);
+    }
+    .game-result-checklist {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 7px;
+    }
+    .game-result-checklist li {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 0.86rem;
+        color: var(--tx2);
+    }
+    .game-result-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .game-result-actions form {
+        margin: 0;
+    }
+    .game-result-breakdown-card {
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        padding: 10px;
+        background: var(--sf);
+        min-height: 62px;
+        overflow-wrap: anywhere;
+    }
+    @media (max-width: 576px) {
+        .game-result-modal .modal-dialog {
+            margin: 12px;
+            max-width: calc(100vw - 24px);
+        }
+        .game-result-modal .modal-content {
+            max-height: calc(100dvh - 24px);
+            border-radius: 14px;
+        }
+        .game-result-hero {
+            padding: 18px;
+        }
+        .game-result-score {
+            width: 112px;
+            height: 112px;
+            flex-basis: 112px;
+        }
+        .game-result-score-inner {
+            width: 82px;
+            height: 82px;
+        }
+        #gameResultModalTitle {
+            font-size: 1.08rem;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+        .game-result-modal .modal-body {
+            padding: 16px !important;
+        }
+        .game-result-modal .modal-footer {
+            padding: 0 16px 16px !important;
+        }
+        .game-result-stat {
+            min-height: 68px;
+            padding: 10px;
+        }
+        .game-result-stat-value {
+            font-size: 0.95rem;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+        .game-result-breakdown-card {
+            min-height: 58px;
+            padding: 9px;
+        }
+        .game-result-actions,
+        .game-result-actions .btn,
+        .game-result-actions form {
+            width: 100%;
+        }
+        .game-result-actions {
+            justify-content: stretch;
+        }
+        .game-result-actions .btn {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .game-result-modal .modal-footer [style*="text-align:right"] {
+            text-align: left !important;
+        }
+    }
+    @media (max-width: 380px) {
+        .game-result-breakdown-grid > [class*="col-"] {
+            width: 100%;
+            flex: 0 0 100%;
+        }
+        .game-result-score {
+            width: 102px;
+            height: 102px;
+            flex-basis: 102px;
+        }
+        .game-result-score-inner {
+            width: 76px;
+            height: 76px;
+        }
+    }
     @keyframes pulse-ring {
         0% { box-shadow: 0 0 0 0 rgba(59,130,246, 0.4); }
         70% { box-shadow: 0 0 0 10px rgba(59,130,246, 0); }
@@ -410,6 +611,21 @@
             justify-content: center;
             gap: 6px;
         }
+        #learning-games-page .learning-notice {
+            gap: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 0 0 14px;
+            font-size: 0.84rem;
+            line-height: 1.35;
+        }
+        #learning-games-page .learning-notice-icon {
+            width: 26px;
+            height: 26px;
+            flex-basis: 26px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+        }
         .ll-ai-fab {
             bottom: 80px;
             right: 20px;
@@ -420,6 +636,9 @@
     }
 </style>
 @include('partials.page-hero-styles')
+@php
+    $gameResult = session('game_result');
+@endphp
 
 <div class="db-section active" id="learning-games-page">
     <!-- Header & Navigation -->
@@ -428,9 +647,9 @@
             <div class="sr-page-hero-copy">
                 <h4 class="sr-page-hero-title text-gradient-primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15h10l2 3a2 2 0 0 0 3-2l-1-5a6 6 0 0 0-6-5H9a6 6 0 0 0-6 5l-1 5a2 2 0 0 0 3 2l2-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 11h4M10 9v4M16 10h.01M18 13h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Learning Games
+                    Philippines Interview Challenges
                 </h4>
-                <p class="sr-page-hero-subtitle">Complete challenges, earn XP, and level up your career skills.</p>
+                <p class="sr-page-hero-subtitle">Complete Philippines interview challenges, earn XP, and strengthen practical answer skills.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -441,14 +660,14 @@
     <div class="sr-page-actions">
         <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
             <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-            <input type="text" placeholder="Search quests, skills, topics..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
+            <input type="text" placeholder="Search challenges, skills, scenarios..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
         </div>
         <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-tree me-1" style="color:#10b981"></i> <span>Skill Tree</span></a>
     </div>
 
     <!-- Sub-Navigation -->
     <div class="learning-category-select-wrap">
-        <select id="learningCategorySelect" class="learning-category-select" aria-label="Select learning category">
+        <select id="learningCategorySelect" class="learning-category-select" aria-label="Select challenge path">
             @foreach($categories as $category)
                 <option value="{{ route('user.learning', ['category_id' => $category->id]) }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->title }}</option>
             @endforeach
@@ -527,16 +746,22 @@
         <div class="col-lg-12">
             
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 style="font-weight:700;color:var(--tx);margin:0">Your Interview Journey</h5>
+                <h5 style="font-weight:700;color:var(--tx);margin:0">Philippines Challenge Journey</h5>
                 <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile?->energy ?? 3 }} / 3 Lives</span>
             </div>
 
             <div class="level-path-container" id="modules-list">
-                @if(session('error'))
-                    <div class="alert alert-danger mb-4" style="border-radius:12px; font-weight:600;"><i class="fa-solid fa-triangle-exclamation me-2"></i> {{ session('error') }}</div>
+                @if(session('error') && ! $gameResult)
+                    <div class="learning-notice learning-notice-danger" role="alert">
+                        <span class="learning-notice-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                        <span class="learning-notice-message">{{ session('error') }}</span>
+                    </div>
                 @endif
-                @if(session('success'))
-                    <div class="alert alert-success mb-4" style="border-radius:12px; font-weight:600;"><i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}</div>
+                @if(session('success') && ! $gameResult)
+                    <div class="learning-notice learning-notice-success" role="status">
+                        <span class="learning-notice-icon"><i class="fa-solid fa-circle-check"></i></span>
+                        <span class="learning-notice-message">{{ session('success') }}</span>
+                    </div>
                 @endif
                 
                 <!-- Path Line -->
@@ -696,8 +921,8 @@
                     @endforeach
                 @else
                     <div class="text-center py-5">
-                        <i class="fa-solid fa-ghost fa-3x mb-3" style="color:var(--bd)"></i>
-                        <h5 style="color:var(--tx3)">No Game Levels loaded yet.</h5>
+                        <i class="fa-solid fa-folder-open fa-3x mb-3" style="color:var(--bd)"></i>
+                        <h5 style="color:var(--tx3)">No challenge levels loaded yet.</h5>
                     </div>
                 @endif
             </div>
@@ -705,10 +930,176 @@
     </div>
 </div>
 
+@if($gameResult)
+    @php
+        $resultPassed = ($gameResult['status'] ?? '') === 'passed';
+        $scoreValue = max(0, min(100, (int) ($gameResult['score'] ?? 0)));
+        $scoreColor = $resultPassed ? '#34d399' : '#f59e0b';
+        $nextLevel = $gameResult['next_level'] ?? null;
+    @endphp
+    <div class="modal fade game-result-modal" id="gameResultModal" tabindex="-1" aria-labelledby="gameResultModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="game-result-hero">
+                    <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+                        <div class="game-result-score" style="background: conic-gradient({{ $scoreColor }} {{ $scoreValue }}%, var(--bg3) 0);">
+                            <div class="game-result-score-inner">
+                                <div style="font-size:1.7rem;font-weight:900;color:var(--tx);line-height:1;">{{ $scoreValue }}%</div>
+                                <div style="font-size:0.72rem;font-weight:800;color:var(--tx3);text-transform:uppercase;">Score</div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 text-center text-md-start">
+                            <span class="badge mb-2" style="background:{{ $resultPassed ? 'rgba(52,211,153,0.16);color:#10b981;border:1px solid rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.14);color:#f59e0b;border:1px solid rgba(245,158,11,0.35)' }};padding:7px 11px;border-radius:999px;">
+                                <i class="fa-solid {{ $resultPassed ? 'fa-circle-check' : 'fa-rotate-right' }} me-1"></i>{{ $resultPassed ? 'Passed' : 'Needs Retry' }}
+                            </span>
+                            <h4 id="gameResultModalTitle" style="font-weight:900;margin:0 0 6px;color:var(--tx);">
+                                Level {{ $gameResult['level_number'] ?? '' }}: {{ $gameResult['level_title'] ?? 'Interview Challenge' }}
+                            </h4>
+                            <div style="color:var(--tx2);font-size:0.96rem;line-height:1.5;">
+                                {{ $gameResult['message'] ?? ($resultPassed ? 'Level cleared.' : 'Try again to clear this level.') }}
+                            </div>
+                            @if(! $resultPassed && ! empty($gameResult['retry_hint']))
+                                <div class="mt-2" style="color:#f59e0b;font-size:0.86rem;font-weight:700;">
+                                    <i class="fa-solid fa-lightbulb me-1"></i>{{ $gameResult['retry_hint'] }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="game-result-stat">
+                                <div class="game-result-stat-label">Goal</div>
+                                <div class="game-result-stat-value">{{ $gameResult['required_score'] ?? 0 }}%+</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="game-result-stat">
+                                <div class="game-result-stat-label">Best Score</div>
+                                <div class="game-result-stat-value">{{ $gameResult['best_score'] ?? $scoreValue }}% @if(!empty($gameResult['is_new_best']))<span class="badge text-bg-success ms-1">New</span>@endif</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="game-result-stat">
+                                <div class="game-result-stat-label">Energy</div>
+                                <div class="game-result-stat-value">-{{ $gameResult['energy_spent'] ?? 0 }} <span style="font-size:0.82rem;color:var(--tx3);">left {{ $gameResult['energy_remaining'] ?? 0 }}</span></div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="game-result-stat">
+                                <div class="game-result-stat-label">Reward</div>
+                                <div class="game-result-stat-value">+{{ $gameResult['xp_earned'] ?? 0 }} XP</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if(! $resultPassed)
+                        <div class="mb-4" style="border:1px solid rgba(245,158,11,0.28);background:rgba(245,158,11,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
+                            <strong style="color:#f59e0b;">{{ $gameResult['points_to_goal'] ?? 0 }} more point{{ (int)($gameResult['points_to_goal'] ?? 0) === 1 ? '' : 's' }} needed.</strong>
+                            Retry starts a fresh attempt and costs {{ $gameResult['retry_energy_cost'] ?? 0 }} energy.
+                        </div>
+                    @elseif($nextLevel)
+                        <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
+                            <strong style="color:#10b981;">Next level unlocked:</strong>
+                            Level {{ $nextLevel['level_number'] ?? '' }} - {{ $nextLevel['title'] ?? 'Next Challenge' }}.
+                            Starting it costs {{ $nextLevel['energy_cost'] ?? 0 }} energy.
+                        </div>
+                    @elseif($resultPassed)
+                        <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
+                            <strong style="color:#10b981;">Path complete.</strong> You cleared the last available level in this scenario path.
+                        </div>
+                    @endif
+
+                    @if(!empty($gameResult['skill_focus']) || !empty($gameResult['learning_objective']))
+                        <div class="mb-4" style="border:1px solid var(--bd);border-radius:12px;padding:14px;background:var(--bg3);">
+                            @if(!empty($gameResult['skill_focus']))
+                                <div style="font-size:0.78rem;color:#38bdf8;font-weight:900;text-transform:uppercase;margin-bottom:5px;">
+                                    <i class="fa-solid fa-bullseye me-1"></i>{{ $gameResult['skill_focus'] }}
+                                </div>
+                            @endif
+                            @if(!empty($gameResult['learning_objective']))
+                                <div style="font-size:0.9rem;color:var(--tx2);line-height:1.5;">{{ $gameResult['learning_objective'] }}</div>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if(!empty($gameResult['goal_breakdown']['averages']))
+                        <div class="mb-4" style="border:1px solid var(--bd);border-radius:12px;padding:14px;background:var(--bg3);">
+                            <div style="font-weight:900;color:var(--tx);margin-bottom:10px;">Goal Score Breakdown</div>
+                            <div class="row g-2 game-result-breakdown-grid">
+                                @foreach($gameResult['goal_breakdown']['averages'] as $label => $value)
+                                    <div class="col-6 col-md-4">
+                                        <div class="game-result-breakdown-card">
+                                            <div style="font-size:0.72rem;color:var(--tx3);font-weight:800;text-transform:uppercase;">{{ str_replace('_', ' ', $label) }}</div>
+                                            <div style="font-size:1.05rem;color:var(--tx);font-weight:900;">{{ (int) $value }}%</div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @if(!empty($gameResult['success_criteria']))
+                        <div>
+                            <div style="font-weight:900;color:var(--tx);margin-bottom:10px;">Level Goals</div>
+                            <ul class="game-result-checklist">
+                                @foreach($gameResult['success_criteria'] as $criterion)
+                                    <li><i class="fa-solid fa-check" style="color:#10b981;margin-top:3px;"></i><span>{{ $criterion }}</span></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <div class="game-result-actions">
+                        @if($resultPassed && $nextLevel)
+                            <form action="{{ route('user.game.start', $nextLevel['id']) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-success" {{ empty($nextLevel['can_start']) ? 'disabled' : '' }}>
+                                    <i class="fa-solid fa-forward me-1"></i> Start Next Level
+                                </button>
+                            </form>
+                        @elseif(! $resultPassed)
+                            <form action="{{ route('user.game.start', $gameResult['level_id']) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-warning text-dark" {{ empty($gameResult['can_retry']) ? 'disabled' : '' }}>
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Retry Level
+                                </button>
+                            </form>
+                        @endif
+
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                            Back to Journey
+                        </button>
+                    </div>
+                    @if(($resultPassed && $nextLevel && empty($nextLevel['can_start'])) || (! $resultPassed && empty($gameResult['can_retry'])))
+                        <div class="w-100 mt-2" style="font-size:0.82rem;color:#ef4444;text-align:right;">
+                            <i class="fa-solid fa-heart-crack me-1"></i>Not enough energy. Energy refills daily.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
 
 
 @push('scripts')
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const resultModal = document.getElementById('gameResultModal');
+        if (resultModal && window.bootstrap && bootstrap.Modal) {
+            new bootstrap.Modal(resultModal, {
+                backdrop: 'static',
+                keyboard: true
+            }).show();
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         const categorySelect = document.getElementById('learningCategorySelect');
         if (!categorySelect) return;
@@ -722,16 +1113,17 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
+        if (document.getElementById('gameResultModal')) return;
 
         const stepsMobile = [
-            { element: '#nav-pills-container', popover: { title: 'Learning Categories', description: 'Switch categories to find different challenge paths and topics.', side: 'bottom', align: 'start' }},
+            { element: '#nav-pills-container', popover: { title: 'Challenge Paths', description: 'Switch paths to find different Philippines interview challenges and topics.', side: 'bottom', align: 'start' }},
             { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track level, energy, combo streak, and accuracy while you play.', side: 'top', align: 'start' }},
             { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Choose a level, review its goals and energy cost, then complete levels to unlock more.', side: 'top', align: 'start' }},
             { element: '#btn-skill-tree', popover: { title: 'Skill Tree', description: 'Open the skill tree to spend XP on perks that improve your training loop.', side: 'bottom', align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#nav-pills-container', popover: { title: 'Learning Categories', description: 'Switch categories to find different challenge paths and topics.', side: 'bottom', align: 'start' }},
+            { element: '#nav-pills-container', popover: { title: 'Challenge Paths', description: 'Switch paths to find different Philippines interview challenges and topics.', side: 'bottom', align: 'start' }},
             { element: '#dashboard-stats', popover: { title: 'Player Stats', description: 'Track level, energy, combo streak, and accuracy while you play.', side: 'bottom', align: 'start' }},
             { element: '#modules-list', popover: { title: 'Challenge Path', description: 'Choose a level, review its goals and energy cost, then complete levels to unlock more.', side: 'top', align: 'start' }},
             { element: '#btn-skill-tree', popover: { title: 'Skill Tree', description: 'Open the skill tree to spend XP on perks that improve your training loop.', side: 'bottom', align: 'end' }}

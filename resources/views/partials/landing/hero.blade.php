@@ -58,7 +58,7 @@
                            <div class="dside">
                               <div style="font-size:.64rem;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);padding:0 10px 10px;font-weight:700">Interview Hub</div>
                               <button class="dsi on"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
-                              <button class="dsi"><i class="fa-solid fa-video"></i> Mock Sessions</button>
+                              <button class="dsi"><i class="fa-solid fa-video"></i> PH Mock Sessions</button>
                               <button class="dsi"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
                               <button class="dsi"><i class="fa-solid fa-graduation-cap"></i> Learning Lab</button>
                            </div>
@@ -67,7 +67,7 @@
                                     <div class="col-6 col-sm-3">
                                        <div class="stpill">
                                           <div style="font-size:1.4rem;font-weight:700" class="gt">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0) }}%</div>
-                                          <div style="font-size:.67rem;color:var(--tx3)">Readiness Score</div>
+                                          <div style="font-size:.67rem;color:var(--tx3)">PH Readiness</div>
                                           <div style="font-size:.67rem;color:#34d399;font-weight:600"><i class="fa-solid fa-caret-up me-1"></i>Avg</div>
                                        </div>
                                     </div>
@@ -109,8 +109,8 @@
                                  <div class="col-sm-5">
                                     <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:12px;height:100%;display:flex;flex-direction:column;gap:8px">
                                        <div style="font-size:.71rem;color:var(--tx3);font-weight:600"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pur);box-shadow:0 0 6px var(--pur);margin-right:6px;animation:bpls 2s infinite"></span>AI Feedback</div>
-                                       <div class="cbbl cbus">Tell me about a challenge you faced.</div>
-                                       <div class="cbbl cbai"><strong>Great STAR method usage!</strong> Your response was structured perfectly, but try reducing filler words like 'um'.</div>
+                                       <div class="cbbl cbus">Tell me about a time you handled a difficult customer or teammate.</div>
+                                       <div class="cbbl cbai"><strong>Good STAR structure for a Philippine interview.</strong> Add the specific result or customer impact to make it stronger.</div>
                                     </div>
                                  </div>
                               </div>

@@ -3,11 +3,11 @@
             <div class="container position-relative" style="z-index:1">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">About the System</span>
-                  <h2 class="stitle">Empowering you to <span class="gt">shine in interviews</span></h2>
+                  <h2 class="stitle">Empowering you to <span class="gt">shine in Philippine interviews</span></h2>
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for varied interview scenarios. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
                      
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="d-flex flex-wrap gap-2 mb-4">

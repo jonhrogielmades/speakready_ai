@@ -19,7 +19,7 @@
                         </li>
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-clock"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Practice Anytime, Anywhere</h4><p style="font-size:.85rem;color:var(--tx2)">24/7 access to your personal AI interview coach.</p></div>
+                           <div><h4 class="fs-6 fw-bold mb-1">Practice Anytime, Anywhere</h4><p style="font-size:.85rem;color:var(--tx2)">24/7 access to your personal Philippine interview coach.</p></div>
                         </li>
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-bolt"></i></div>
@@ -27,7 +27,7 @@
                         </li>
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-book-open-reader"></i></div>
-                           <div><h4 class="fs-6 fw-bold mb-1">Learn Professional Techniques</h4><p style="font-size:.85rem;color:var(--tx2)">Master the STAR method and behavioral strategies.</p></div>
+                           <div><h4 class="fs-6 fw-bold mb-1">Learn Philippine Interview Techniques</h4><p style="font-size:.85rem;color:var(--tx2)">Master STAR, role-fit answers, salary expectations, and local HR screening strategies.</p></div>
                         </li>
                         <li class="d-flex align-items-start gap-3">
                            <div class="ftico" style="width:40px;height:40px;font-size:1rem;"><i class="fa-solid fa-chart-pie"></i></div>

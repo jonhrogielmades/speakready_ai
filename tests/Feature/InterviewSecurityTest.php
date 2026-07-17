@@ -3,10 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\AiProvider;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class InterviewSecurityTest extends TestCase
@@ -102,6 +105,93 @@ class InterviewSecurityTest extends TestCase
             ->withSession(['active_interview_id' => $session->id])
             ->post(route('interview.finish'), ['session_id' => $otherSession->id])
             ->assertForbidden();
+    }
+
+    public function test_user_can_request_speech_for_their_active_question(): void
+    {
+        config(['services.openai.tts_enabled' => true]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::response('fake-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('fake-audio');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
+            && $request['model'] === 'gpt-4o-mini-tts'
+            && $request['input'] === $question->question_text);
+    }
+
+    public function test_speech_endpoint_does_not_call_paid_tts_when_disabled(): void
+    {
+        config(['services.openai.tts_enabled' => false]);
+        Http::fake();
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ])
+            ->assertStatus(503);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_user_cannot_request_speech_for_another_users_question(): void
+    {
+        Http::fake();
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $otherSession = $this->sessionFor($otherUser, $category);
+        $otherQuestion = $this->sessionQuestion($otherSession, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $otherQuestion->id,
+            ])
+            ->assertForbidden();
+
+        Http::assertNothingSent();
     }
 
     private function category(): Category

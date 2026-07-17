@@ -305,15 +305,15 @@
     @endif
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Learning Modules</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage your learning content.</p>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Philippines Interview Learning Modules</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage lessons for Philippine HR, BPO, IT, fresh graduate, scholarship, and admission interviews.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <button class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
-                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate PH Module
             </button>
             <button class="bgrd btn px-3 py-2" style="font-size:.85rem" data-bs-toggle="modal" data-bs-target="#addModuleModal">
-                <i class="fa-solid fa-plus me-1"></i> Add Module
+                <i class="fa-solid fa-plus me-1"></i> Add PH Module
             </button>
         </div>
     </div>
@@ -349,11 +349,11 @@
     <!-- Module List Table -->
     <div class="modules-panel">
         <div class="modules-panel-header">
-            <h6 style="margin:0;font-weight:600;">Module List</h6>
+            <h6 style="margin:0;font-weight:600;">Philippines Interview Module List</h6>
             <div class="modules-filters">
-                <input type="text" id="moduleSearch" class="oinp" placeholder="Search Modules...">
+                <input type="text" id="moduleSearch" class="oinp" placeholder="Search PH modules...">
                 <select id="categoryFilter" class="oinp">
-                    <option value="">All Categories</option>
+                    <option value="">All PH Categories</option>
                     @if(isset($categories))
                         @foreach($categories as $cat)
                             <option value="{{ strtolower($cat) }}">{{ $cat }}</option>
@@ -425,12 +425,12 @@
             <form action="{{ route('admin.modules.store') }}" method="POST">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Learning Module</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Philippines Interview Learning Module</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
                     <label class="olbl">Module Title</label>
-                    <input class="oinp mb-3" type="text" name="title" placeholder="e.g. Mastering the STAR Method" required>
+                    <input class="oinp mb-3" type="text" name="title" placeholder="e.g. Answering Tell Me About Yourself in the Philippines" required>
                     
                     <label class="olbl">Category</label>
                     <select class="oinp mb-3" name="category" id="categorySelect" required onchange="if(this.value === 'new_category') { document.getElementById('newCategoryInput').style.display='block'; document.getElementById('newCategoryInput').name='category'; document.getElementById('newCategoryInput').required=true; this.name=''; } else { document.getElementById('newCategoryInput').style.display='none'; document.getElementById('newCategoryInput').name=''; document.getElementById('newCategoryInput').required=false; this.name='category'; }">
@@ -454,7 +454,7 @@
                     </select>
 
                     <label class="olbl">Description</label>
-                    <textarea class="oinp mb-3" name="description" rows="3" placeholder="Short module summary"></textarea>
+                    <textarea class="oinp mb-3" name="description" rows="3" placeholder="Short Philippine interview module summary"></textarea>
 
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="featureSwitch">
@@ -463,7 +463,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Create Module</button>
+                    <button type="submit" class="bgrd btn px-4">Create PH Module</button>
                 </div>
             </form>
         </div>
@@ -477,19 +477,19 @@
             <form action="{{ route('admin.modules.generate') }}" method="POST" id="aiGenerateForm">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>AI Generate Module</h5>
+                    <h5 class="modal-title" style="color:var(--tx)"><i class="fa-solid fa-wand-magic-sparkles text-primary me-2"></i>AI Generate Philippines Interview Module</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
                     <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:20px;">
-                        Enter a topic or prompt, and the AI will automatically generate a complete Learning Module with chapters, category, and description.
+                        Enter a Philippine interview topic or prompt, and the AI will generate a complete module with chapters, category, and description.
                     </p>
-                    <label class="olbl">Topic Prompt</label>
-                    <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. A comprehensive guide on leadership in remote technical teams." required></textarea>
+                    <label class="olbl">Philippines Interview Topic Prompt</label>
+                    <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. BPO customer service interview answers for fresh graduates." required></textarea>
                     
                     <div id="aiLoadingIndicator" style="display:none; text-align:center; padding:15px; border-radius:10px; background:rgba(59,130,246,0.1);">
                         <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size:1.5rem; margin-bottom:10px;"></i>
-                        <h6 style="color:var(--tx); margin:0;">Generating Content...</h6>
+                        <h6 style="color:var(--tx); margin:0;">Generating PH Interview Content...</h6>
                         <p style="color:var(--tx3); font-size:0.8rem; margin:0;">This may take up to 30 seconds.</p>
                     </div>
                 </div>

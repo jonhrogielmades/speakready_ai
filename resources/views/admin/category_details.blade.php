@@ -7,7 +7,7 @@
                 <a href="{{ route('admin.categories') }}" style="color:var(--tx3);text-decoration:none;"><i class="fa-solid fa-arrow-left me-2"></i></a>
                 @if($category->icon)<i class="{{ $category->icon }} me-2"></i>@endif{{ $category->title }}
             </h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">{{ $category->description ?? 'Category Details and Analytics' }}</p>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">{{ $category->description ?? 'Philippines interview category details and analytics' }}</p>
         </div>
         <div>
             @if($category->status == 'active')
@@ -22,19 +22,19 @@
     <div class="row mb-4">
         <div class="col-md-3">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Total Questions</h6>
+                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Total PH Questions</h6>
                 <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $totalQuestions }}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Total Interviews Taken</h6>
+                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Total PH Interviews Taken</h6>
                 <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $totalInterviews }}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;">
-                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Average Score</h6>
+                <h6 style="color:var(--tx3);font-size:.85rem;margin-bottom:8px">Average PH Score</h6>
                 <h3 style="color:var(--tx);margin:0;font-weight:700">{{ $averageScore }}%</h3>
             </div>
         </div>
@@ -50,13 +50,13 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
-                <h5 style="color:var(--tx);font-size:1.1rem;margin-bottom:20px;font-weight:600">Performance Over Time</h5>
+                <h5 style="color:var(--tx);font-size:1.1rem;margin-bottom:20px;font-weight:600">PH Interview Performance Over Time</h5>
                 <canvas id="barChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
         <div class="col-md-4">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
-                <h5 style="color:var(--tx);font-size:1.1rem;margin-bottom:20px;font-weight:600">Question Types</h5>
+                <h5 style="color:var(--tx);font-size:1.1rem;margin-bottom:20px;font-weight:600">PH Question Types</h5>
                 <canvas id="pieChart" style="max-height: 300px;"></canvas>
             </div>
         </div>
@@ -65,14 +65,14 @@
     <!-- Questions Table -->
     <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;overflow-x:auto;">
         <div class="d-flex justify-content-between mb-3">
-            <h5 style="color:var(--tx);font-size:1.1rem;margin:0;font-weight:600">Questions in this Category</h5>
-            <a href="{{ route('admin.questions') }}" class="btn btn-sm btn-outline-primary">Manage Questions</a>
+            <h5 style="color:var(--tx);font-size:1.1rem;margin:0;font-weight:600">Philippines Interview Questions in this Category</h5>
+            <a href="{{ route('admin.questions') }}" class="btn btn-sm btn-outline-primary">Manage PH Questions</a>
         </div>
         <table class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
             <thead>
                 <tr>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">ID</th>
-                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Question Text</th>
+                    <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">PH Question Text</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Type</th>
                     <th style="border-bottom:1px solid var(--bd);color:var(--tx3);font-size:.8rem;font-weight:600">Difficulty</th>
                 </tr>
@@ -92,7 +92,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="text-center" style="border-bottom:none;padding:20px;color:var(--tx3)">No questions found in this category.</td>
+                    <td colspan="4" class="text-center" style="border-bottom:none;padding:20px;color:var(--tx3)">No Philippines interview questions found in this category.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
         data: {
             labels: @json($categoryMonthlyLabels),
             datasets: [{
-                label: 'Interviews Taken',
+                label: 'PH Interviews Taken',
                 data: @json($categoryMonthlyData),
                 backgroundColor: 'rgba(54, 162, 235, 0.6)',
                 borderColor: 'rgba(54, 162, 235, 1)',

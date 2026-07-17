@@ -10,14 +10,14 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:var(--pur)"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Track all your interview sessions and overall readiness in one place.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Track all your Philippine interview sessions and readiness in one place.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">Mock Interview</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Interactive AI avatar asking real-world questions tailored to you.</p>
+                        <h3 class="fs-6 fw-bold mb-2">Philippine Mock Interview</h3>
+                        <p style="font-size:.85rem;color:var(--tx2)">Interactive AI avatar asking Philippine HR, role-fit, BPO, IT, and fresh graduate questions tailored to you.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
@@ -31,14 +31,14 @@
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(239,68,68,.15);color:#ef4444"><i class="fa-solid fa-book-open fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Learning Lab</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Access curated resources and tutorials to master any interview.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Access curated resources and tutorials for Philippine interview scenarios.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">AI Practice Coach</h3>
-                        <p style="font-size:.85rem;color:var(--tx2)">Get focused preparation guidance, score explanations, and next-step practice prompts.</p>
+                        <p style="font-size:.85rem;color:var(--tx2)">Get Philippine preparation guidance, score explanations, and next-step practice prompts.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">

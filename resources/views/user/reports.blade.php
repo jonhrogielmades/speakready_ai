@@ -1,8 +1,8 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Interview Portfolio Report')
+@section('title', 'Philippines Interview Reports')
 
 @section('content')
-<!-- Add print styles specifically for this portfolio report -->
+<!-- Add print styles specifically for this Philippines interview report -->
 <style>
     @media print {
         body { background: #fff !important; }
@@ -97,9 +97,9 @@
             <div class="sr-page-hero-copy">
                 <h4 class="sr-page-hero-title text-gradient-primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 3v5h5M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Reports
+                    Philippines Interview Reports
                 </h4>
-                <p class="sr-page-hero-subtitle">A complete summary of your preparation journey and analytics.</p>
+                <p class="sr-page-hero-subtitle">A focused summary of your Philippines interview practice, readiness, feedback, and learning progress.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -129,7 +129,7 @@
         </div>
         <div>
             <h3 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">{{ $user->name ?? 'Candidate' }}</h3>
-            <p style="color:var(--tx3);margin:0;">SpeakReady AI Preparation Portfolio &bull; Generated on {{ now()->format('F j, Y') }}</p>
+            <p style="color:var(--tx3);margin:0;">SpeakReady AI Philippines Interview Report &bull; Generated on {{ now()->format('F j, Y') }}</p>
         </div>
     </div>
 
@@ -165,8 +165,8 @@
 
                 <div class="row mb-4 bg-light bg-opacity-10 rounded p-3" style="background:var(--bg);">
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
-                        <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Category</small>
-                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->category->title ?? 'Uncategorized' }}</div>
+                        <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Scenario</small>
+                        <div style="color:var(--tx);font-weight:bold;">{{ $latestScenarioLabel }}</div>
                     </div>
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Date</small>
@@ -229,7 +229,7 @@
                 </div>
                 @else
                 <div class="text-center py-4" style="color:var(--tx3);">
-                    <p>Complete at least 2 mock interviews to view performance comparison.</p>
+                    <p>Complete at least 2 Philippines practice interviews to view performance comparison.</p>
                 </div>
                 @endif
             </div>
@@ -272,11 +272,11 @@
                     </div>
                     <div class="col-md-4">
                         <div class="p-3" style="background:rgba(59,130,246,0.05);border-radius:12px;border:1px solid rgba(59,130,246,0.2);height:100%;">
-                            <h6 style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>AI Recommendations</h6>
+                            <h6 style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>Recommended Practice</h6>
                             <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
                                 <li>{{ $primaryRecommendation }}</li>
-                                <li>Review your past AI Feedback</li>
-                                <li>Complete Voice Drills</li>
+                                <li>Review your latest Philippines interview feedback</li>
+                                <li>Complete one focused voice rehearsal</li>
                             </ul>
                         </div>
                     </div>
@@ -302,7 +302,7 @@
         </div>
         <div class="col-md-4">
             <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
-                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-chart-bar text-primary me-2"></i>Category Performance</h5>
+                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-chart-bar text-primary me-2"></i>Scenario Performance</h5>
                 <div style="height:250px;">
                     <canvas id="catChart"></canvas>
                 </div>
@@ -332,7 +332,7 @@
                 @endforeach
                 @else
                 <div class="text-center py-4" style="color:var(--tx3);">
-                    <p>Complete at least 2 mock interviews to track your specific skill improvements.</p>
+                    <p>Complete at least 2 Philippines practice interviews to track your specific skill improvements.</p>
                 </div>
                 @endif
             </div>
@@ -405,12 +405,12 @@
         <h4 style="color:var(--tx);font-weight:bold;">No Scored Portfolio Data Available</h4>
         <p style="color:var(--tx3); margin-bottom: 24px; max-width: 460px; margin-left: auto; margin-right: auto;">
             @if($sessions->count() > 0)
-                You have completed interview records, but none of them have score data yet. Once a scored interview is available, this report will show analytics, comparisons, and feedback summaries.
+                You have completed interview records, but none of them have score data yet. Once a scored Philippines interview is available, this report will show analytics, comparisons, and feedback summaries.
             @else
-                Your portfolio report is generated automatically from scored interview performance. Complete your first mock interview to unlock analytics, comparisons, and personalized AI feedback.
+                Your report is generated automatically from scored Philippines interview performance. Complete your first practice interview to unlock analytics, comparisons, and personalized feedback.
             @endif
         </p>
-        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine px-4 py-2" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-play me-2"></i>Start Mock Interview</a>
+        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine px-4 py-2" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-play me-2"></i>Start Philippine Interview</a>
     </div>
     @endif
 </div>
@@ -456,16 +456,16 @@
             });
         }
 
-        const catPerf = @json($categoryPerf);
+        const scenarioPerf = @json($categoryPerf);
 
         const categoryChart = document.getElementById('catChart');
         if (window.Chart && categoryChart) {
             new Chart(categoryChart, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(catPerf),
+                    labels: Object.keys(scenarioPerf),
                     datasets: [{
-                        data: Object.values(catPerf),
+                        data: Object.values(scenarioPerf),
                         backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
                         borderRadius: 6
                     }]
@@ -545,15 +545,15 @@
 
         const stepsMobile = [
             { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your latest readiness score and improvement since your first interview.', side: 'bottom', align: 'start' }},
-            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest mock interviews.', side: 'bottom', align: 'start' }},
-            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and AI recommendations.', side: 'top', align: 'start' }},
+            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest Philippines interviews.', side: 'bottom', align: 'start' }},
+            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and recommended practice.', side: 'top', align: 'start' }},
             { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track completion across learning modules and voice rehearsal work.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
             { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your latest readiness score and improvement since your first interview.', side: 'bottom', align: 'start' }},
-            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest mock interviews.', side: 'bottom', align: 'start' }},
-            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and AI recommendations.', side: 'top', align: 'start' }},
+            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest Philippines interviews.', side: 'bottom', align: 'start' }},
+            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and recommended practice.', side: 'top', align: 'start' }},
             { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track completion across learning modules and voice rehearsal work.', side: 'top', align: 'end' }}
         ];
 

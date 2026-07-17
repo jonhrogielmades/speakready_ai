@@ -43,7 +43,7 @@ class AdminGameController extends Controller
 
         GameLevel::create($this->gameLevelDataForCurrentSchema($data));
 
-        return redirect()->route('admin.game')->with('success', 'Learning Game created successfully.');
+        return redirect()->route('admin.game')->with('success', 'Philippines interview learning game created successfully.');
     }
 
     public function update(Request $request, GameLevel $arena_level)
@@ -53,13 +53,13 @@ class AdminGameController extends Controller
 
         $arena_level->update($this->gameLevelDataForCurrentSchema($data));
 
-        return redirect()->route('admin.game')->with('success', 'Learning Game updated successfully.');
+        return redirect()->route('admin.game')->with('success', 'Philippines interview learning game updated successfully.');
     }
 
     public function destroy(GameLevel $arena_level)
     {
         $arena_level->delete();
-        return redirect()->route('admin.game')->with('success', 'Learning Game deleted successfully.');
+        return redirect()->route('admin.game')->with('success', 'Philippines interview learning game deleted successfully.');
     }
 
     public function generate(Request $request)
@@ -88,7 +88,7 @@ class AdminGameController extends Controller
             try {
                 $aiDrafts = AIService::generateGames($topic, $slotBatch);
             } catch (\Throwable $e) {
-                Log::warning('Learning Game batch generation failed; using fallback content.', [
+                Log::warning('Philippines interview learning game batch generation failed; using fallback content.', [
                     'topic' => $topic,
                     'levels' => array_column($slotBatch, 'level_number'),
                     'error' => $e->getMessage(),
@@ -308,7 +308,7 @@ class AdminGameController extends Controller
 
     private function fallbackGameData(string $topic, string $difficulty, ?int $generationNumber = null, ?int $totalLevels = null): array
     {
-        $topic = $this->cleanText($topic, 'Communication Practice', 120);
+        $topic = $this->cleanText($topic, 'Philippines Interview Communication Practice', 120);
         $titleDifficulty = ucfirst($difficulty);
         $titleSuffix = $generationNumber && $totalLevels && $totalLevels > 1 ? " {$generationNumber}" : '';
         $partContext = $generationNumber && $totalLevels && $totalLevels > 1
@@ -317,23 +317,23 @@ class AdminGameController extends Controller
 
         return [
             'title' => "{$titleDifficulty} {$topic} Challenge{$titleSuffix}",
-            'description' => "A structured practice level for improving {$topic} through focused interview-style prompts.{$partContext}",
-            'mission_text' => "1. Describe your current challenge with {$topic}.\n2. Share one specific example where this skill mattered.\n3. Explain the action you took.\n4. Name the result or lesson learned.\n5. Describe how you will improve next time.",
-            'target_position' => 'Better Communication',
+            'description' => "A structured practice level for improving {$topic} through Philippines-focused interview prompts.{$partContext}",
+            'mission_text' => "1. In a Philippine interview, how would you describe your current challenge with {$topic}?\n2. Share one school, internship, BPO, freelance, or workplace example where this skill mattered.\n3. Explain the action you personally took.\n4. Name the result, lesson learned, or impact.\n5. Describe how you will improve for your next local interview.",
+            'target_position' => 'Philippines Interview Readiness',
             'skill_focus' => $this->skillFocusForTopic($topic),
-            'learning_objective' => "Practice {$topic} in a realistic interview answer while keeping the response clear, specific, and professionally structured.",
-            'success_criteria' => "1. Answer the question directly.\n2. Use a concrete example instead of general statements.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional and confident.",
-            'retry_hint' => 'On the next attempt, choose one real example first, then answer in this order: context, responsibility, action, result.',
+            'learning_objective' => "Practice {$topic} in a realistic Philippine interview answer while keeping the response clear, specific, and professionally structured.",
+            'success_criteria' => "1. Answer the local interview question directly.\n2. Use a concrete example instead of general statements.\n3. Explain your action or decision clearly.\n4. Include a result, lesson, or next step.\n5. Keep the tone professional, confident, and appropriate for Philippine hiring or school panels.",
+            'retry_hint' => 'On the next attempt, choose one real school, internship, BPO, freelance, or workplace example first, then answer in this order: context, responsibility, action, result.',
             'difficulty' => $difficulty,
             'required_score' => $difficulty === 'advanced' ? 90 : ($difficulty === 'intermediate' ? 78 : 60),
             'xp_reward' => $difficulty === 'advanced' ? 750 : ($difficulty === 'intermediate' ? 600 : 450),
             'energy_cost' => $difficulty === 'advanced' ? 2 : 1,
-            'ai_persona' => 'Supportive Interview Coach',
-            'ai_custom_prompt' => 'Ask clear follow-up questions and evaluate structure, specificity, and confidence.',
+            'ai_persona' => 'Supportive Philippine Interview Coach',
+            'ai_custom_prompt' => 'Ask clear follow-up questions and evaluate structure, specificity, confidence, professionalism, and fit for Philippine interview expectations.',
             'time_limit_seconds' => 120,
             'banned_words' => 'um, like, basically',
             'target_tone' => 'Confident',
-            'custom_badge_name' => "{$titleDifficulty} Communicator",
+            'custom_badge_name' => "{$titleDifficulty} PH Interview Communicator",
             'skill_xp_type' => 'Communication',
             'skill_xp_amount' => $difficulty === 'advanced' ? 75 : 50,
         ];

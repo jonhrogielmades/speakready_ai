@@ -72,7 +72,7 @@ class ReliabilityHardeningTest extends TestCase
     public function test_user_ai_generated_start_question_is_saved_to_admin_question_bank(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $category = $this->category(['title' => 'Software Engineering']);
+        $category = $this->category(['title' => 'Behavioral']);
         $questionText = 'Tell me about a production issue you diagnosed and resolved.';
 
         Http::fake([

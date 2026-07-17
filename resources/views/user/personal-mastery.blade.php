@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Personal Mastery')
+@section('title', 'Philippines Interview Personal Mastery')
 @section('content')
 <style>
     .text-gradient-primary {
@@ -41,9 +41,9 @@
                         <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                         <path d="M7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    Personal Mastery
+                    Philippines Interview Personal Mastery
                 </h4>
-                <p class="sr-page-hero-subtitle">Private progress has replaced global ranking because scores from different roles, languages, difficulties, and practice conditions are not fairly comparable.</p>
+                <p class="sr-page-hero-subtitle">Private Philippines interview progress replaces public ranking because roles, languages, difficulties, and practice conditions are not fairly comparable.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -82,8 +82,8 @@
     </div>
     <div class="p-4 mt-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:16px">
         <h5 class="fw-bold" style="color:var(--tx)">What counts here?</h5>
-        <p style="color:var(--tx3)">Only uncoached, score-eligible assessments and clearly labelled legacy sessions contribute. Coached practice remains visible in your history but does not change this mastery baseline.</p>
-        <a class="btn btn-primary" href="{{ route('user.progress') }}">Open Progress Tracking</a>
+        <p style="color:var(--tx3)">Only uncoached, score-eligible Philippines interview assessments and clearly labelled legacy sessions contribute. Coached practice remains visible in your history but does not change this mastery baseline.</p>
+        <a class="btn btn-primary" href="{{ route('user.progress') }}">Open Philippines Progress</a>
     </div>
 </div>
 @endsection

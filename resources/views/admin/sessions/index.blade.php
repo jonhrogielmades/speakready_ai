@@ -350,8 +350,8 @@
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="session-page-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-video"></i>Session Monitoring</h4>
-            <p class="session-page-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Track and analyze interview session performance and activity.</p>
+            <h4 class="session-page-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-video"></i> Philippines Interview Session Monitoring</h4>
+            <p class="session-page-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Track and analyze Philippine interview practice performance and activity.</p>
         </div>
         <div class="session-header-actions d-flex flex-wrap gap-2">
             <a href="{{ route('admin.sessions.export', request()->query()) }}" class="btn session-top-action" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:12px;">
@@ -364,7 +364,7 @@
             <form action="{{ route('admin.sessions.clear') }}" method="POST" id="clearSessionsForm">
                 @csrf
                 @method('DELETE')
-                <button type="button" class="btn session-top-action" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;border-radius:12px;" data-session-delete-trigger data-session-delete-form="clearSessionsForm" data-session-delete-title="Clear all interview sessions?" data-session-delete-message="This will delete all interview sessions, including archived sessions. This cannot be undone.">
+                <button type="button" class="btn session-top-action" style="background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.35);color:#f87171;border-radius:12px;" data-session-delete-trigger data-session-delete-form="clearSessionsForm" data-session-delete-title="Clear all Philippines interview sessions?" data-session-delete-message="This will delete all Philippines interview sessions, including archived sessions. This cannot be undone.">
                     <i class="fa-solid fa-broom me-2"></i>Clear All
                 </button>
             </form>
@@ -378,7 +378,7 @@
             <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#3b82f6;margin-bottom:8px;"><i class="fa-solid fa-list-ul"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($totalSessions) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Total Sessions</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Total PH Sessions</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
@@ -392,7 +392,7 @@
             <div class="premium-card session-stat-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;color:#10b981;margin-bottom:8px;"><i class="fa-solid fa-check-double"></i></div>
                 <div style="font-size:1.5rem;font-weight:700;">{{ number_format($completedSessions) }}</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Completed</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Completed PH Interviews</div>
             </div>
         </div>
         <div class="col-6 col-md-4 col-xl-2">
@@ -422,7 +422,7 @@
     <div class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="premium-card h-100">
-                <h6 class="fw-bold mb-4">Daily Sessions Trend</h6>
+                <h6 class="fw-bold mb-4">Daily PH Interview Trend</h6>
                 <div class="chart-container">
                     <canvas id="dailySessionChart"></canvas>
                 </div>
@@ -430,7 +430,7 @@
         </div>
         <div class="col-lg-3">
             <div class="premium-card h-100">
-                <h6 class="fw-bold mb-4">Most Used Category</h6>
+                <h6 class="fw-bold mb-4">Most Used PH Category</h6>
                 @if($mostUsedCategory)
                     <div class="text-center mt-4">
                         <div style="font-size:3rem;color:#3b82f6;margin-bottom:10px;"><i class="fa-solid fa-layer-group"></i></div>
@@ -455,12 +455,12 @@
     <!-- Session List -->
     <div class="premium-card mb-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h6 class="fw-bold m-0">All Sessions</h6>
+            <h6 class="fw-bold m-0">All Philippines Interview Sessions</h6>
         </div>
         
         <form method="GET" action="{{ route('admin.sessions.index') }}" class="session-filter-form row g-2 mb-4">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Search user or ID..." value="{{ request('search') }}" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
+                <input type="text" name="search" class="form-control" placeholder="Search user or PH session ID..." value="{{ request('search') }}" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
             </div>
             <div class="col-md-3">
                 <select name="status" class="form-select" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
@@ -543,12 +543,12 @@
                             <a href="{{ route('admin.sessions.show', $session->id) }}" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="View Details" aria-label="View Details"><i class="fa-solid fa-eye"></i></a>
                             <form action="{{ route('admin.sessions.doArchive', $session->id) }}" method="POST" class="d-inline" id="archiveSessionForm{{ $session->id }}">
                                 @csrf
-                                <button type="button" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Archive" aria-label="Archive" data-session-archive-trigger data-session-archive-form="archiveSessionForm{{ $session->id }}" data-session-archive-title="Archive interview session #{{ $session->id }}?" data-session-archive-message="This session will move to the archive and can be restored later."><i class="fa-solid fa-box-archive text-warning"></i></button>
+                                <button type="button" class="btn btn-sm session-row-action" style="background:var(--bg3);color:var(--tx2);border:1px solid var(--bd);" title="Archive" aria-label="Archive" data-session-archive-trigger data-session-archive-form="archiveSessionForm{{ $session->id }}" data-session-archive-title="Archive Philippines interview session #{{ $session->id }}?" data-session-archive-message="This Philippines interview session will move to the archive and can be restored later."><i class="fa-solid fa-box-archive text-warning"></i></button>
                             </form>
                             <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" class="d-inline" id="deleteSessionForm{{ $session->id }}">
                                 @csrf
                                 @method('DELETE')
-                                <button type="button" class="btn btn-sm session-row-action" style="background:var(--bg3);color:#f87171;border:1px solid rgba(248,113,113,0.35);" title="Delete" aria-label="Delete" data-session-delete-trigger data-session-delete-form="deleteSessionForm{{ $session->id }}" data-session-delete-title="Delete interview session #{{ $session->id }}?" data-session-delete-message="This session and its related records will be permanently deleted. This cannot be undone."><i class="fa-solid fa-trash-can"></i></button>
+                                <button type="button" class="btn btn-sm session-row-action" style="background:var(--bg3);color:#f87171;border:1px solid rgba(248,113,113,0.35);" title="Delete" aria-label="Delete" data-session-delete-trigger data-session-delete-form="deleteSessionForm{{ $session->id }}" data-session-delete-title="Delete Philippines interview session #{{ $session->id }}?" data-session-delete-message="This Philippines interview session and its related records will be permanently deleted. This cannot be undone."><i class="fa-solid fa-trash-can"></i></button>
                             </form>
                         </td>
                     </tr>

@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Voice Rehearsal Studio')
+@section('title', 'Philippines Voice Rehearsal')
 
 @section('content')
 <style>
@@ -253,9 +253,9 @@
             <div class="sr-page-hero-copy">
                 <h4 class="sr-page-hero-title text-gradient-primary">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Voice Rehearsal Studio
+                    Philippines Voice Rehearsal
                 </h4>
-                <p class="sr-page-hero-subtitle">Master your delivery, pacing, and tone with AI analysis.</p>
+                <p class="sr-page-hero-subtitle">Practice delivery, pacing, and answer clarity for Philippines interview scenarios.</p>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -278,18 +278,18 @@
                 <div class="premium-card mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
-                            <option value="Tell Me About Yourself">Tell Me About Yourself</option>
+                            <option value="Tell Me About Yourself">General Job Interview</option>
                             <option value="Strengths and Weaknesses">Strengths & Weaknesses</option>
-                            <option value="Leadership">Leadership Questions</option>
+                            <option value="Leadership">Leadership / Teamwork</option>
                             <option value="Problem Solving">Problem Solving</option>
-                            <option value="Technical">Technical Questions</option>
-                            <option value="Scholarship">Scholarship Questions</option>
+                            <option value="Technical">IT / Technical Interview</option>
+                            <option value="Scholarship">Scholarship / Admission</option>
                         </select>
                         <button id="btnRandomizePrompt" class="btn btn-sm btn-outline-secondary" onclick="randomizePrompt()" style="border-radius:8px;"><i class="fa-solid fa-shuffle"></i> Randomize</button>
                     </div>
 
                     <div class="text-center mb-5">
-                        <h5 style="color:#60a5fa;font-size:0.85rem;font-weight:700;letter-spacing:1px;margin-bottom:12px;">PROMPT</h5>
+                        <h5 style="color:#60a5fa;font-size:0.85rem;font-weight:700;letter-spacing:1px;margin-bottom:12px;">PHILIPPINES PROMPT</h5>
                         <h3 id="promptText" style="color:var(--tx);font-weight:600;line-height:1.4;">"Tell me about a time you showed leadership."</h3>
                     </div>
 
@@ -349,10 +349,10 @@
                     <!-- Transcript Box -->
                     <div>
                         <div class="d-flex justify-content-between mb-2">
-                            <label style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase;">Live Transcript</label>
+                            <label style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase;">Live Answer Transcript</label>
                             <span id="transStatus" style="font-size:0.8rem;color:#34d399;display:none;"><i class="fa-solid fa-circle-dot fa-fade me-1"></i> Transcribing</span>
                         </div>
-                        <div id="transcriptView" style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px;min-height:120px;color:var(--tx);font-size:1.05rem;line-height:1.6;white-space:pre-wrap;" contenteditable="false">Your speech will appear here...</div>
+                        <div id="transcriptView" style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px;min-height:120px;color:var(--tx);font-size:1.05rem;line-height:1.6;white-space:pre-wrap;" contenteditable="false">Your answer will appear here...</div>
                         <p class="mt-2" style="font-size:0.8rem;color:var(--tx3);display:none;" id="editHint"><i class="fa-solid fa-pencil me-1"></i> You can edit the transcript above manually before saving.</p>
                     </div>
                 </div>
@@ -362,7 +362,7 @@
             <div class="col-lg-4 animate-fade-up delay-200">
                 <div id="analysisPanel" style="opacity:0.5;pointer-events:none;transition:opacity 0.4s;">
                     <div class="premium-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
-                        <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> AI Assessment</h6>
+                        <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> Practice Assessment</h6>
                         
                         <!-- Clarity & Delivery Stability -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -462,7 +462,7 @@
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Category</th>
+                                    <th>Prompt Scenario</th>
                                     <th>Clarity</th>
                                     <th>WPM</th>
                                     <th>Fillers</th>
@@ -479,7 +479,7 @@
             <div class="col-lg-4 animate-fade-up delay-200">
                 <!-- AI Practice Suggestions -->
                 <div class="premium-card" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(251,191,36,0.05) 100%);">
-                    <h6 class="fw-bold mb-4"><i class="fa-solid fa-lightbulb me-2" style="color:#fbbf24;"></i> AI Practice Suggestions</h6>
+                    <h6 class="fw-bold mb-4"><i class="fa-solid fa-lightbulb me-2" style="color:#fbbf24;"></i> Recommended Voice Practice</h6>
                     
                     <div class="p-3 mb-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
                         <div>
@@ -503,9 +503,9 @@
                         <div>
                             <div class="voice-suggestion-head">
                                 <i class="fa-solid fa-briefcase" style="color:#34d399;"></i>
-                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Focus on Technical</div>
+                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Practice IT / Technical</div>
                             </div>
-                            <div style="font-size:0.8rem;color:var(--tx2);">Your clarity drops on technical questions. Practice the 'Technical' category next.</div>
+                            <div style="font-size:0.8rem;color:var(--tx2);">Your clarity can drop on technical explanations. Practice the IT / Technical scenario next.</div>
                         </div>
                     </div>
                 </div>
@@ -529,13 +529,26 @@ document.querySelectorAll('.nav-link').forEach(link => {
 
 // AI-backed practice prompt bank with a local fallback for provider outages.
 const fallbackPrompts = {
-    "Tell Me About Yourself": ["Walk me through your resume.", "How would you describe yourself in three words?", "What is your biggest professional achievement?"],
-    "Strengths and Weaknesses": ["What is your greatest weakness?", "What are your top three strengths?", "Tell me about a time you failed."],
-    "Leadership": ["Tell me about a time you showed leadership.", "How do you handle conflict in a team?", "Describe a situation where you had to motivate others."],
-    "Problem Solving": ["Tell me about a complex problem you solved.", "How do you handle working under tight deadlines?", "Describe a time you had to make a quick decision."],
-    "Technical": ["Explain a complex technical concept to a non-technical person.", "What is your process for debugging code?", "Describe the architecture of your last project."],
-    "Scholarship": ["Why do you deserve this scholarship?", "How will this scholarship help you achieve your goals?", "Describe a community service project you led."]
+    "Tell Me About Yourself": ["Walk me through your background and connect it to the Philippines role or program you are preparing for.", "What should a Philippine interviewer remember about you after your first two minutes?", "How would you summarize your strengths, experience, and next career goal in the Philippine context?"],
+    "Strengths and Weaknesses": ["What is one strength you can prove with a specific school, internship, freelance, or work example?", "Tell me about a weakness you are actively improving and what changed because of that work.", "Describe feedback you received from a teacher, supervisor, client, or team lead and how you used it to improve."],
+    "Leadership": ["Tell me about a time you led a team through uncertainty in school, work, internship, or community work.", "Describe a situation where you had to resolve conflict while keeping the work moving.", "Give an example of how you motivated others toward a shared goal in a Philippine team setting."],
+    "Problem Solving": ["Tell me about a complex problem you solved with limited information in school, work, or training.", "Describe a time you had competing deadlines and how you chose what to do first.", "How would you handle a Philippine interviewer asking about salary expectations, schedule, or work setup?"],
+    "Technical": ["Explain a technical concept from your experience to a non-technical Philippine interviewer.", "Walk me through your debugging process when the cause is unclear.", "Describe a technical tradeoff you made for a class, client, employer, or startup project and how you evaluated it."],
+    "Scholarship": ["Why does this Philippine scholarship or admission program fit your academic and career plan?", "Tell me about a challenge that shaped your goals and how you responded.", "Describe how you will contribute to your school, community, or the Philippines if selected."]
 };
+
+function voiceScenarioLabel(category) {
+    const labels = {
+        "Tell Me About Yourself": "General Job Interview",
+        "Strengths and Weaknesses": "Strengths & Weaknesses",
+        "Leadership": "Leadership / Teamwork",
+        "Problem Solving": "Problem Solving",
+        "Technical": "IT / Technical Interview",
+        "Scholarship": "Scholarship / Admission"
+    };
+
+    return labels[category] || category || 'General Job Interview';
+}
 
 function localFallbackPrompt(category) {
     const list = fallbackPrompts[category] || fallbackPrompts["Tell Me About Yourself"];
@@ -1194,7 +1207,7 @@ function updateUIState() {
 const transcriptView = document.getElementById('transcriptView');
 function transcriptEditorText() {
     const text = cleanTranscriptText(transcriptView.innerText);
-    return ['Listening...', 'Your speech will appear here...'].includes(text) ? '' : text;
+    return ['Listening...', 'Your speech will appear here...', 'Your answer will appear here...'].includes(text) ? '' : text;
 }
 
 transcriptView.addEventListener('input', () => {
@@ -1435,7 +1448,7 @@ function loadHistory() {
     const histData = {!! json_encode($history->map(function($session) {
         return [
             'd' => $session->created_at->format('M d'),
-            'c' => $session->category ?? 'General',
+            'c' => $session->practice_scenario ?? 'General Job Interview',
             'cl' => ($session->clarity_score ?? 0) . '%',
             'w' => $session->wpm ?? 0,
             'f' => $session->filler_words ?? 0,
@@ -1445,7 +1458,7 @@ function loadHistory() {
 
     let html = '';
     if (histData.length === 0) {
-        html = '<tr><td colspan="5" class="text-center text-muted">No history found. Practice a session to see it here!</td></tr>';
+        html = '<tr><td colspan="5" class="text-center text-muted">No history found. Practice a Philippines voice session to see it here.</td></tr>';
     } else {
         histData.forEach(h => {
             html += `<tr>
@@ -1511,18 +1524,18 @@ document.addEventListener("DOMContentLoaded", function() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a prompt category for this voice rehearsal.', side: 'bottom', align: 'start' }},
+            { element: '#categorySelect', popover: { title: 'Prompt Scenario', description: 'Choose the Philippines interview scenario for this voice rehearsal.', side: 'bottom', align: 'start' }},
             { element: '#btnStart', popover: { title: 'Start Recording', description: 'Record your answer and track pacing, filler words, and transcript quality.', side: 'bottom', align: 'center' }},
             { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech appears here while filler words and keywords are highlighted.', side: 'top', align: 'start' }},
-            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'After recording, AI summarizes pacing, clarity, and next practice actions.', side: 'top', align: 'start' }},
+            { element: '#analysisPanel', popover: { title: 'Practice Assessment', description: 'After recording, review pacing, clarity, and next practice actions.', side: 'top', align: 'start' }},
             { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Use the other tabs to review past sessions, charts, and long-term progress.', side: 'bottom', align: 'end' }}
         ];
 
         const stepsDesktop = [
-            { element: '#categorySelect', popover: { title: 'Select Category', description: 'Choose a prompt category for this voice rehearsal.', side: 'bottom', align: 'start' }},
+            { element: '#categorySelect', popover: { title: 'Prompt Scenario', description: 'Choose the Philippines interview scenario for this voice rehearsal.', side: 'bottom', align: 'start' }},
             { element: '#btnStart', popover: { title: 'Start Recording', description: 'Record your answer and track pacing, filler words, and transcript quality.', side: 'bottom', align: 'center' }},
             { element: '#transcriptView', popover: { title: 'Live Transcript', description: 'Your speech appears here while filler words and keywords are highlighted.', side: 'top', align: 'start' }},
-            { element: '#analysisPanel', popover: { title: 'AI Assessment', description: 'After recording, AI summarizes pacing, clarity, and next practice actions.', side: 'bottom', align: 'start' }},
+            { element: '#analysisPanel', popover: { title: 'Practice Assessment', description: 'After recording, review pacing, clarity, and next practice actions.', side: 'bottom', align: 'start' }},
             { element: '#moduleTabs', popover: { title: 'History & Analytics', description: 'Use the other tabs to review past sessions, charts, and long-term progress.', side: 'bottom', align: 'end' }}
         ];
 

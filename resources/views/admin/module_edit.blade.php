@@ -61,9 +61,9 @@
     @endif
     <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
-            <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="fa-solid fa-arrow-left me-1"></i> Back to Modules</a>
-            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Edit Module: {{ $module->title }}</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage content, resources, and assessments.</p>
+            <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="fa-solid fa-arrow-left me-1"></i> Back to PH Modules</a>
+            <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Edit PH Interview Module: {{ $module->title }}</h4>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage Philippines interview lessons, resources, and assessments.</p>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary px-3 py-2" style="font-size:0.9rem">Status: {{ ucfirst($module->status) }}</span>
@@ -73,10 +73,10 @@
     <!-- Navigation Tabs -->
     <ul class="nav nav-pills mb-4 d-flex flex-wrap gap-2" id="moduleEditTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active oinp" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic" type="button" role="tab" style="width:auto;margin:0;">Basic Info</button>
+            <button class="nav-link active oinp" id="basic-tab" data-bs-toggle="pill" data-bs-target="#basic" type="button" role="tab" style="width:auto;margin:0;">PH Module Info</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin:0;">Chapters & Lessons</button>
+            <button class="nav-link oinp" id="chapters-tab" data-bs-toggle="pill" data-bs-target="#chapters" type="button" role="tab" style="width:auto;margin:0;">PH Lessons</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link oinp" id="resources-tab" data-bs-toggle="pill" data-bs-target="#resources" type="button" role="tab" style="width:auto;margin:0;">Resources</button>
@@ -85,7 +85,7 @@
             <button class="nav-link oinp" id="quizzes-tab" data-bs-toggle="pill" data-bs-target="#quizzes" type="button" role="tab" style="width:auto;margin:0;">Quizzes</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link oinp" id="games-tab" data-bs-toggle="pill" data-bs-target="#games" type="button" role="tab" style="width:auto;margin:0;">Linked Games</button>
+            <button class="nav-link oinp" id="games-tab" data-bs-toggle="pill" data-bs-target="#games" type="button" role="tab" style="width:auto;margin:0;">Linked PH Games</button>
         </li>
 
 
@@ -101,13 +101,13 @@
                     @csrf @method('PUT')
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="olbl">Module Title</label>
+                            <label class="olbl">PH Interview Module Title</label>
                             <input class="oinp w-100" type="text" name="title" value="{{ $module->title }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="olbl">Category</label>
+                            <label class="olbl">PH Interview Category</label>
                             <select class="oinp w-100" name="category" id="editCategorySelect" onchange="if(this.value === 'new_category') { document.getElementById('editNewCategoryInput').style.display='block'; document.getElementById('editNewCategoryInput').name='category'; document.getElementById('editNewCategoryInput').required=true; this.name=''; } else { document.getElementById('editNewCategoryInput').style.display='none'; document.getElementById('editNewCategoryInput').name=''; document.getElementById('editNewCategoryInput').required=false; this.name='category'; }">
-                                <option value="" {{ !$module->category ? 'selected' : '' }}>Select a Category...</option>
+                                <option value="" {{ !$module->category ? 'selected' : '' }}>Select a PH Category...</option>
                                 @if(isset($categories) && count($categories) > 0)
                                     @foreach($categories as $cat)
                                         @if(!empty($cat))
@@ -118,9 +118,9 @@
                                 @if(!empty($module->category) && !($categories ?? collect())->contains($module->category))
                                     <option value="{{ $module->category }}" selected>{{ $module->category }} (Custom)</option>
                                 @endif
-                                <option value="new_category">+ Add New Category</option>
+                                <option value="new_category">+ Add New PH Category</option>
                             </select>
-                            <input type="text" id="editNewCategoryInput" class="oinp w-100 mt-2" placeholder="Enter new category name" style="display: none;">
+                            <input type="text" id="editNewCategoryInput" class="oinp w-100 mt-2" placeholder="Enter new PH category name" style="display: none;">
                         </div>
                     </div>
                     <div class="row mb-3">
@@ -160,15 +160,15 @@
                 <form action="{{ route('admin.modules.chapters.generate', $module->id) }}" method="POST" style="margin:0;">
                     @csrf
                     <button type="submit" class="btn btn-sm" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" onclick="this.innerHTML='<i class=\'fa-solid fa-circle-notch fa-spin me-1\'></i> Generating...'; this.style.pointerEvents='none';">
-                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate Chapter
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate PH Chapter
                     </button>
                 </form>
-                <button class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addChapterModal"><i class="fa-solid fa-plus me-1"></i> Add Chapter</button>
+                <button class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addChapterModal"><i class="fa-solid fa-plus me-1"></i> Add PH Chapter</button>
             </div>
             
             @if($module->chapters->isEmpty())
                 <div class="text-center py-5" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;">
-                    <p style="color:var(--tx3)">No chapters added yet.</p>
+                    <p style="color:var(--tx3)">No Philippines interview chapters added yet.</p>
                 </div>
             @else
                 <div class="accordion" id="chaptersAccordion">
@@ -266,15 +266,15 @@
                 <form action="{{ route('admin.modules.quizzes.generate', $module->id) }}" method="POST" style="margin:0;">
                     @csrf
                     <button type="submit" class="btn btn-sm" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);">
-                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate Quiz
+                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI Generate Quiz (PH)
                     </button>
                 </form>
-                <button class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addQuizModal"><i class="fa-solid fa-plus me-1"></i> Add Quiz</button>
+                <button class="bgrd btn btn-sm" data-bs-toggle="modal" data-bs-target="#addQuizModal"><i class="fa-solid fa-plus me-1"></i> Add PH Quiz</button>
             </div>
 
             @if($module->quizzes->isEmpty())
                 <div class="text-center py-5" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;">
-                    <p style="color:var(--tx3)">No quizzes added yet.</p>
+                    <p style="color:var(--tx3)">No Philippines interview quizzes added yet.</p>
                 </div>
             @else
                 <div class="d-flex flex-column gap-3">
@@ -352,9 +352,9 @@
                 <form action="{{ route('admin.modules.arena-levels.store', $module->id) }}" method="POST" class="row g-3 align-items-end">
                     @csrf
                     <div class="col-md-9">
-                        <label class="olbl">Learning Game</label>
+                        <label class="olbl">PH Interview Learning Game</label>
                         <select class="oinp w-100" name="game_level_id" required>
-                            <option value="" disabled selected>Select a game...</option>
+                            <option value="" disabled selected>Select a PH interview game...</option>
                             @foreach($allGameLevels as $level)
                                 <option value="{{ $level->id }}" {{ $module->gameLevels->contains('id', $level->id) ? 'disabled' : '' }}>
                                     Level {{ $level->level_number }} - {{ $level->title }}{{ $module->gameLevels->contains('id', $level->id) ? ' (attached)' : '' }}
@@ -370,7 +370,7 @@
 
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:20px;overflow-x:auto;">
                 @if($module->gameLevels->isEmpty())
-                    <p class="mb-0 text-center py-4" style="color:var(--tx3)">No games linked yet.</p>
+                    <p class="mb-0 text-center py-4" style="color:var(--tx3)">No PH interview games linked yet.</p>
                 @else
                     <table class="table table-dark table-hover mb-0" style="background:transparent;--bs-table-bg:transparent;--bs-table-color:var(--tx)">
                         <thead>
@@ -410,24 +410,24 @@
             <form action="{{ route('admin.modules.chapters.store', $module->id) }}" method="POST" id="chapterForm">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Chapter</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Philippines Interview Chapter</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="olbl">Chapter Title</label>
+                    <label class="olbl">PH Chapter Title</label>
                     <input class="oinp mb-3 w-100" type="text" name="title" required>
 
                     <label class="olbl">Video URL (Optional YouTube Embed link)</label>
                     <input class="oinp mb-3 w-100" type="text" name="video_url" placeholder="https://www.youtube.com/embed/...">
 
-                    <label class="olbl">Rich Text Lesson Content</label>
+                    <label class="olbl">Philippines Interview Lesson Content</label>
                     <!-- Quill Editor Container -->
                     <div id="editor-container" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
                     <input type="hidden" name="content" id="chapterContent">
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Save Chapter</button>
+                    <button type="submit" class="bgrd btn px-4">Save PH Chapter</button>
                 </div>
             </form>
         </div>
@@ -442,24 +442,24 @@
             <form action="{{ route('admin.modules.chapters.update', $chapter->id) }}" method="POST" id="editChapterForm-{{ $chapter->id }}">
                 @csrf @method('PUT')
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Edit Chapter {{ $chapter->order }}</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Edit PH Chapter {{ $chapter->order }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="olbl">Chapter Title</label>
+                    <label class="olbl">PH Chapter Title</label>
                     <input class="oinp mb-3 w-100" type="text" name="title" value="{{ $chapter->title }}" required>
 
                     <label class="olbl">Video URL (Optional YouTube Embed link)</label>
                     <input class="oinp mb-3 w-100" type="text" name="video_url" value="{{ $chapter->video_url }}" placeholder="https://www.youtube.com/embed/...">
 
-                    <label class="olbl">Rich Text Lesson Content</label>
+                    <label class="olbl">Philippines Interview Lesson Content</label>
                     <!-- Quill Editor Container -->
                     <div id="edit-editor-container-{{ $chapter->id }}" style="height: 250px; background: var(--bg); color: var(--tx); border-radius: 0 0 8px 8px; border: 1px solid var(--bd);"></div>
                     <input type="hidden" name="content" id="editChapterContent-{{ $chapter->id }}" value="{{ $chapter->content }}">
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Update Chapter</button>
+                    <button type="submit" class="bgrd btn px-4">Update PH Chapter</button>
                 </div>
             </form>
         </div>
@@ -474,11 +474,11 @@
             <form action="{{ route('admin.modules.quizzes.store', $module->id) }}" method="POST">
                 @csrf
                 <div class="modal-header" style="border-bottom:1px solid var(--bd)">
-                    <h5 class="modal-title" style="color:var(--tx)">Add Quiz</h5>
+                    <h5 class="modal-title" style="color:var(--tx)">Add Philippines Interview Quiz</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter:invert(1)"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="olbl">Quiz Title</label>
+                    <label class="olbl">PH Quiz Title</label>
                     <input class="oinp mb-3 w-100" type="text" name="title" required>
 
                     <label class="olbl">Passing Score</label>
@@ -486,7 +486,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="bgrd btn px-4">Create Quiz</button>
+                    <button type="submit" class="bgrd btn px-4">Create PH Quiz</button>
                 </div>
             </form>
         </div>

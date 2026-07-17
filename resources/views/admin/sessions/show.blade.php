@@ -145,7 +145,7 @@
 <div class="db-section active" id="sec-admin-session-show">
     <div class="session-show-header d-flex justify-content-between align-items-center mb-4">
         <div class="session-show-heading">
-            <h4 class="fw-bold mb-1 mt-2">Session #{{ $session->id }} Details</h4>
+            <h4 class="fw-bold mb-1 mt-2">Philippines Interview Session #{{ $session->id }} Details</h4>
         </div>
         <div class="session-show-actions d-flex gap-2">
             <a href="{{ route('admin.sessions.index') }}" class="btn btn-outline-secondary" style="border-radius:12px;">
@@ -157,7 +157,7 @@
             <button class="btn btn-danger" style="border-radius:12px;" data-bs-toggle="modal" data-bs-target="#flagModal">
                 <i class="fa-solid fa-flag me-2"></i>Flag Session
             </button>
-            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+            <form action="{{ route('admin.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this Philippines interview session? This cannot be undone.');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger" style="border-radius:12px;">
@@ -188,7 +188,7 @@
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="premium-card h-100">
-                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>Interview Information</h6>
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i> Philippines Interview Information</h6>
                         <table class="table table-borderless mb-0" style="color:var(--tx);">
                             <tbody>
                                 <tr><th style="color:var(--tx3);width:40%;">Session ID</th><td class="fw-bold">#{{ $session->id }}</td></tr>
@@ -226,7 +226,7 @@
                                 </h3>
                             </div>
                             <div class="text-end">
-                                <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;">Readiness Rating</div>
+                                <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;">PH Interview Readiness</div>
                                 <h5 class="fw-bold m-0 text-primary">
                                     @if($performance)
                                         @if($performance->overall_readiness_score >= 90) Excellent
@@ -303,7 +303,7 @@
                 @else
                     <div class="text-center p-4 text-muted border rounded" style="background:var(--bg3);border-color:var(--bd) !important;">
                         <i class="fa-solid fa-chart-bar fa-2x mb-2"></i>
-                        <p class="m-0">No performance data generated for this session.</p>
+                        <p class="m-0">No Philippines interview performance data generated for this session.</p>
                     </div>
                 @endif
             </div>
@@ -327,7 +327,7 @@
                 </div>
                 @if($session->status == 'abandoned')
                 <div class="mt-3 p-3 rounded alert-danger" style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);font-size:0.85rem;">
-                    This session was not properly completed and was marked as abandoned. This could affect the user's completion rate metrics.
+                    This Philippine interview session was not properly completed and was marked as abandoned. This could affect the user's completion rate metrics.
                 </div>
                 @endif
             </div>
@@ -364,13 +364,13 @@
             <form action="{{ route('admin.sessions.flag', $session->id) }}" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <p style="font-size:0.9rem;color:var(--tx2);">Flag this session if you detect unusual activity, AI processing errors, or to manually review extremely low scores.</p>
+                    <p style="font-size:0.9rem;color:var(--tx2);">Flag this Philippines interview session if you detect unusual activity, AI processing errors, or to manually review extremely low scores.</p>
                     <div class="mb-3">
                         <label class="form-label" style="font-size:0.85rem;color:var(--tx3);">Reason for Flagging</label>
                         <select name="flag_reason" class="form-select" style="background:var(--sf);border:1px solid var(--bd);color:var(--tx);" required>
                             <option value="">Select a reason...</option>
                             <option value="Extremely Low Score">Extremely Low Score</option>
-                            <option value="Incomplete Interview Activity">Incomplete Interview Activity</option>
+                            <option value="Incomplete PH Interview Activity">Incomplete PH Interview Activity</option>
                             <option value="Unusual Activity Detected">Unusual Activity Detected</option>
                             <option value="AI Processing Error">AI Processing Error</option>
                             <option value="Inappropriate Content">Inappropriate Content</option>

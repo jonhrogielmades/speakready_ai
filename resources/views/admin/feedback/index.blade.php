@@ -258,8 +258,8 @@
     <!-- Header -->
     <div class="feedback-header d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="feedback-page-title mb-1" style="font-weight: 700; color: var(--tx);"><i class="fa-solid fa-clipboard-check"></i>Feedback Audit Dashboard</h2>
-            <p class="feedback-page-subtitle mb-0" style="color: var(--tx3);">Monitor, review, and evaluate AI-generated feedback quality.</p>
+            <h2 class="feedback-page-title mb-1" style="font-weight: 700; color: var(--tx);"><i class="fa-solid fa-clipboard-check"></i> Philippines Interview Feedback Audit</h2>
+            <p class="feedback-page-subtitle mb-0" style="color: var(--tx3);">Monitor, review, and evaluate AI feedback for Philippine interview practice.</p>
         </div>
         <div class="feedback-header-actions">
             <a href="{{ route('admin.feedback.export', request()->query()) }}" class="btn feedback-export-btn" style="border-radius: 10px; background-color: var(--danger-bg); color: var(--danger-tx); border: 1px solid var(--danger-tx);">
@@ -347,12 +347,12 @@
         <div class="col-md-8">
             <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
-                    <h6 class="fw-bold mb-3" style="color: var(--tx);">Feedback Audit List</h6>
+                    <h6 class="fw-bold mb-3" style="color: var(--tx);">Philippines Interview Feedback Audit List</h6>
                     
                     <!-- Filters -->
                     <form action="{{ route('admin.feedback.index') }}" method="GET" class="feedback-filter-form row g-2 mb-3">
                         <div class="col-md-5">
-                            <input type="text" name="search" class="form-control" placeholder="Search by question..." value="{{ request('search') }}" style="border-radius: 8px;">
+                            <input type="text" name="search" class="form-control" placeholder="Search by PH interview question..." value="{{ request('search') }}" style="border-radius: 8px;">
                         </div>
                         <div class="col-md-4">
                             <select name="status" class="form-select" style="border-radius: 8px;">

@@ -232,7 +232,7 @@
 <div class="db-section active">
     <div class="mb-3">
         <a href="{{ route('user.modules.index') }}" class="btn btn-sm" style="color:var(--tx2); background:transparent; border:1px solid var(--bd); border-radius:8px;">
-            <i class="fa-solid fa-arrow-left me-1"></i> Back to Modules
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to Philippines Modules
         </a>
     </div>
 
@@ -401,7 +401,7 @@
                         <div class="chapter-card h-100 d-flex flex-column">
                             <h5 style="color:var(--tx); font-weight:700; margin-bottom:10px;"><i class="fa-solid fa-dumbbell text-success me-2"></i>{{ $activity->title }}</h5>
                             <p style="color:var(--tx3); font-size:0.9rem; flex:1;">{{ $activity->description }}</p>
-                            <a href="{{ route('interview.setup') }}" class="btn w-100 mt-3" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); font-weight:600; border-radius:8px;">Go to Practice</a>
+                            <a href="{{ route('interview.setup') }}" class="btn w-100 mt-3" style="background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); font-weight:600; border-radius:8px;">Start Philippines Practice</a>
                         </div>
                     </div>
                 @endforeach
@@ -413,7 +413,7 @@
     @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
         <section class="mt-4">
             <h5 style="color:var(--tx);font-weight:800;margin-bottom:4px;"><i class="fa-solid fa-lightbulb me-2" style="color:#f59e0b"></i>Next Helpful Modules</h5>
-            <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:0;">Continue with modules connected to your latest interview feedback.</p>
+            <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:0;">Continue with modules connected to your latest Philippines interview feedback.</p>
             <div class="module-next-grid">
                 @foreach($moduleRecommendations as $recommendation)
                     <a class="module-next-item" href="{{ $recommendation->url }}">

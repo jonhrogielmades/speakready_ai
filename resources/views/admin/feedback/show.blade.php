@@ -5,10 +5,10 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1" style="font-weight: 700; color: var(--tx);">Feedback Details Review</h2>
+            <h2 class="mb-1" style="font-weight: 700; color: var(--tx);">Philippines Interview Feedback Review</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.feedback.index') }}">Feedback Audit</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.feedback.index') }}">PH Feedback Audit</a></li>
                     <li class="breadcrumb-item active" aria-current="page" style="color: var(--tx3);">Audit #{{ $answer->id }}</li>
                 </ol>
             </nav>
@@ -43,7 +43,7 @@
             <!-- QA Section -->
             <div class="card boc mb-4" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
-                    <h6 class="text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--tx3);">Interview Question</h6>
+                    <h6 class="text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--tx3);">Philippines Interview Question</h6>
                     <p class="fs-5 fw-bold mb-4" style="color: var(--tx);">{{ $answer->question ? $answer->question->question_text : 'N/A' }}</p>
 
                     <h6 class="text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--tx3);">User Answer</h6>
@@ -56,7 +56,7 @@
             <!-- AI Feedback Section -->
             <div class="card boc" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">
-                    <h6 class="text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--tx3);">AI Generated Feedback</h6>
+                    <h6 class="text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px; color: var(--tx3);">AI Generated Philippines Interview Feedback</h6>
                     
                     <div class="mb-4">
                         <strong class="d-block mb-2 text-success"><i class="fa-solid fa-thumbs-up me-2"></i>Strengths</strong>
@@ -80,7 +80,7 @@
             <!-- Score Verification Form -->
             <div class="card boc mb-4" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0 px-4">
-                    <h5 class="fw-bold mb-0" style="color: var(--tx);"><i class="fa-solid fa-shield-halved me-2 text-primary"></i> AI Scoring Verification</h5>
+                    <h5 class="fw-bold mb-0" style="color: var(--tx);"><i class="fa-solid fa-shield-halved me-2 text-primary"></i> PH Interview Scoring Verification</h5>
                 </div>
                 <div class="card-body p-4">
                     <form action="{{ route('admin.feedback.verify', $answer) }}" method="POST">

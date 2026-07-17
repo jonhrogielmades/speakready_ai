@@ -37,4 +37,12 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'openai' => [
+        'tts_enabled' => env('AI_TTS_ENABLED', false),
+        'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
+        'tts_voice' => env('OPENAI_TTS_VOICE', 'alloy'),
+        'tts_speed' => env('OPENAI_TTS_SPEED', 0.95),
+        'tts_timeout' => env('AI_TTS_TIMEOUT', 30),
+    ],
+
 ];

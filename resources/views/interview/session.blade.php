@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Interview Workspace')
+@section('title', 'Philippines Interview Workspace')
 @section('content')
 <style>
     .pulse-anim { animation: pulse 1.5s infinite; }
@@ -138,6 +138,10 @@
     .session-chip { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:700;white-space:nowrap;border:1px solid var(--bd);background:var(--bg3);color:var(--tx); }
     .session-chip.warning { border-color:rgba(245,158,11,.45);background:rgba(245,158,11,.12);color:#f59e0b; }
     .session-chip.danger { border-color:rgba(239,68,68,.45);background:rgba(239,68,68,.12);color:#ef4444; }
+    .question-source-line { display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,.72);font-size:.68rem;font-weight:700;margin-top:7px;max-width:100%; }
+    .question-source-line a { color:rgba(191,219,254,.95);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .question-source-line a:hover { color:#fff;text-decoration:underline; }
+    .session-source-line { color:var(--tx3);font-size:.78rem;line-height:1.35;margin:-12px auto 22px;max-width:480px; }
     .real-interview-mode .coaching-only { display:none !important; }
     .recovery-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(52,211,153,.12);color:#34d399;font-weight:700;font-size:.76rem;margin-bottom:14px; }
     .question-timer-anchor { position:absolute;top:15px;right:15px;z-index:55; }
@@ -202,6 +206,10 @@
         }
         .ai-question-overlay {
             padding: 42px 12px 12px !important;
+        }
+        .question-source-line {
+            font-size: 0.6rem !important;
+            margin-top: 5px;
         }
         .ai-question-overlay > .d-flex {
             gap: 0 !important;
@@ -505,6 +513,30 @@
                             ->inRandomOrder()->limit($num)->get();
                     }
                 }
+                $focusText = strtolower((string) $sessionRecord->interview_focus);
+                $sourcePackKey = match (true) {
+                    str_contains($focusText, 'bpo'), str_contains($focusText, 'customer support'), str_contains($focusText, 'contact center') => 'ph_bpo_communication',
+                    str_contains($focusText, 'it / programming'), str_contains($focusText, 'programming'), str_contains($focusText, 'software'), str_contains($focusText, 'technical') => 'ph_it_programming',
+                    str_contains($focusText, 'scholarship') => 'ph_scholarship',
+                    str_contains($focusText, 'college'), str_contains($focusText, 'admission') => 'ph_college_admission',
+                    default => \App\Services\QuestionDatasetProvider::defaultKeyForCategory($sessionRecord->category->title ?? null),
+                };
+                $sourcePack = \App\Services\QuestionDatasetProvider::find($sourcePackKey)
+                    ?? ($sessionRecord->category ? \App\Services\QuestionDatasetProvider::forCategory($sessionRecord->category) : null);
+                $scenarioLabels = [
+                    'ph_job_interview' => 'General Job Interview',
+                    'ph_bpo_communication' => 'BPO / Customer Support Interview',
+                    'ph_it_programming' => 'IT / Programming Interview',
+                    'ph_scholarship' => 'Scholarship Interview',
+                    'ph_college_admission' => 'College Admission Interview',
+                ];
+                $scenarioLabel = $scenarioLabels[$sourcePack['key'] ?? $sourcePackKey] ?? 'Philippines Interview';
+                $sourceNames = collect($sourcePack['sources'] ?? [])->pluck('name')->filter()->take(3)->implode(', ');
+                $primarySource = $questions->first(fn ($question) => filled($question->source_name))
+                    ?? (object) [
+                        'source_name' => data_get($sourcePack, 'sources.0.name'),
+                        'source_url' => data_get($sourcePack, 'sources.0.url'),
+                    ];
             } else {
                 $questions = collect([]);
             }
@@ -521,9 +553,9 @@
                                 <path d="M4 6h16v10H8l-4 4V6Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                                 <path d="M9 10h6M9 13h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             </svg>
-                            Interview Workspace
+                            Philippines Interview Workspace
                         </h4>
-                        <p class="sr-page-hero-subtitle">Practice role-specific questions and build answers supported by evidence.</p>
+                        <p class="sr-page-hero-subtitle">Practice Philippine HR, role-fit, communication, and workplace scenarios with evidence-backed answers.</p>
                     </div>
                 </div>
                 <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -551,10 +583,10 @@
                 </svg>
             </div>
             <div class="sr-page-actions interview-meta-line" style="font-size:.85rem;color:var(--tx3);">
-                <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'General' }}</span>
+                <span><i class="fa-solid fa-flag me-1"></i> {{ $scenarioLabel }}</span>
                 <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
                 <span><i class="fa-solid fa-briefcase me-1"></i> {{ $sessionRecord->target_position ?? 'Standard' }}</span>
-                <span><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
+                <span><i class="fa-regular fa-clock me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
             </div>
         </div>
 
@@ -605,8 +637,9 @@
                     <div class="ai-question-overlay" style="display:block;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px; z-index:20;">
                         <div class="d-flex justify-content-start align-items-end gap-3">
                             <div>
-                                <span class="badge mb-2 interviewer-badge" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> {{ $sessionRecord->company_persona ?: 'Interviewer' }}</span>
+                                <span class="badge mb-2 interviewer-badge" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> Philippines interviewer</span>
                                 <div id="aiQuestionText" style="color:white;font-size:0.85rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
+                                <div id="aiQuestionSource" class="question-source-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}"></div>
                             </div>
                         </div>
                     </div>
@@ -626,7 +659,7 @@
                         
                         <!-- Voice Recording Controls -->
                         <div id="voiceControls" style="display:none; margin:0; padding:0; border:none; background:transparent;">
-                            @if(session('game_level_id'))
+                            @if($sessionRecord->game_level_id)
                                 <button type="button" id="holdToTalkBtn" class="btn btn-danger" style="border-radius:12px; font-weight:700; box-shadow: 0 4px 15px rgba(239,68,68,0.4); padding: 0.5rem 1rem; user-select:none; touch-action:manipulation;">
                                     <i class="fa-solid fa-microphone me-2"></i>HOLD
                                 </button>
@@ -646,7 +679,7 @@
                 <div class="panel mb-4 animate-fade-up delay-200">
                     <div class="panel-title">
                         <i class="fa-solid fa-pen-nib me-2"></i> Your Response
-                        @if(session('game_level_id'))
+                        @if($sessionRecord->game_level_id)
                             <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
                         @endif
                     </div>
@@ -657,7 +690,7 @@
                         <div id="chatTranscriptContainer" style="max-height: 350px; overflow-y: auto; padding: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--bd); display: flex; flex-direction: column; gap: 15px;">
                             <!-- Chat bubbles will go here -->
                         </div>
-                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:80px;font-size:.95rem" placeholder="Type your answer here, or use voice to auto-transcribe..."></textarea>
+                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:80px;font-size:.95rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..."></textarea>
                         <div class="p-3 mb-3" style="border:1px solid var(--bd);border-radius:12px;background:var(--bg3)">
                             <div class="d-flex justify-content-between gap-2 mb-2"><label for="selfConfidenceRange" style="font-size:.8rem;font-weight:700;color:var(--tx)">How prepared did you feel for this question?</label><span id="selfConfidenceValue" class="badge text-bg-secondary">50%</span></div>
                             <input id="selfConfidenceRange" type="range" min="0" max="100" value="50" class="form-range" oninput="document.getElementById('selfConfidenceValue').textContent=this.value+'%'">
@@ -666,7 +699,7 @@
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
-                                <span id="wordCount">0 words</span> • <span id="charCount">0 characters</span>
+                                <span id="wordCount">0 words</span> - <span id="charCount">0 characters</span>
                                 <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
                             </div>
                         </div>
@@ -701,7 +734,7 @@
                     <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> Live Practice Signals</div>
                     <div class="text-center mb-3">
                         <div style="font-size:2rem;font-weight:700;color:#34d399" id="overallReadiness">--%</div>
-                        <div style="font-size:.75rem;color:var(--tx3)">Coaching estimate—not an assessment</div>
+                        <div style="font-size:.75rem;color:var(--tx3)">Coaching estimate - not an assessment</div>
                     </div>
                     <div class="stat-row"><span>Clarity</span><span id="metClarity">--%</span></div>
                     <div class="stat-row"><span>Relevance</span><span id="metRelevance">--%</span></div>
@@ -749,32 +782,37 @@
             <div class="intro-ai-icon" aria-hidden="true">
                 <i class="fa-solid fa-robot"></i>
             </div>
-            <h4 style="color:var(--tx);font-weight:700">{{ $hasSavedInterviewState ? 'Interview Workspace Saved' : 'Interview Workspace Ready' }}</h4>
-            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} questions. Live readiness and STAR analysis will update as you respond.</p>
+            <h4 style="color:var(--tx);font-weight:700">{{ $hasSavedInterviewState ? 'Philippines Interview Saved' : 'Philippines Interview Ready' }}</h4>
+            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} Philippines-focused questions. Live readiness and STAR analysis will update as you respond.</p>
+            @if($sourceNames)
+                <div class="session-source-line"><i class="fa-solid fa-link me-1"></i> Scenario: {{ $scenarioLabel }}. Sources: {{ $sourceNames }}.</div>
+            @endif
             <div class="intro-badge-grid" style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
+                <span class="db-badge" style="background:rgba(14,165,233,.13);color:#38bdf8"><i class="fa-solid fa-flag me-1"></i> {{ $scenarioLabel }}</span>
                 <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
-                <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-bullseye me-1"></i> {{ ucfirst($sessionRecord->coach_focus_mode) }} Focus</span>
                 <span class="db-badge" style="background:rgba(245,158,11,.12);color:#f59e0b"><i class="fa-solid fa-stopwatch me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
-                <span class="db-badge" style="background:rgba(139,92,246,.12);color:#a78bfa"><i class="fa-solid fa-user-tie me-1"></i> {{ ucfirst(str_replace('_', ' ', $sessionRecord->interviewer_strictness ?? 'neutral')) }}</span>
+                <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-list-check me-1"></i> {{ $questions->count() }} Questions</span>
             </div>
-            <button class="btn px-4 py-3 w-100 btn-shine intro-start-btn" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume Interview' : 'Begin Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
+            <button class="btn px-4 py-3 w-100 btn-shine intro-start-btn" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume PH Interview' : 'Begin PH Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
         </div>
 
         <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">
             @csrf
-            <input type="hidden" name="session_id" value="{{ session('active_interview_id') }}">
+            <input type="hidden" name="session_id" value="{{ $sessionRecord->id }}">
             <input type="hidden" name="duration_seconds" id="formDuration">
             <input type="hidden" name="notes" id="formNotes">
         </form>
 
         <script>
             const questions = {!! json_encode($questions) !!};
+            const interviewSessionId = {{ (int) $sessionRecord->id }};
             const totalQuestions = {{ $num }};
             const responseMode = "{{ $sessionRecord->response_mode }}";
             const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit ?? 0) * 60) }};
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
+            const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
             const savedSessionState = @json($savedStateForUi ?? []);
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
             currentQIdx = Math.max(0, Math.min(currentQIdx, Math.max(0, questions.length - 1)));
@@ -1129,6 +1167,10 @@
             let preferredVoice = null;
             let autoStartAfterQuestionTimer = null;
             let questionSpeechToken = 0;
+            let activeQuestionAudio = null;
+            let captionInterval = null;
+            let serverVoiceUnavailable = !serverAiVoiceEnabled;
+            const serverSpeechUrlCache = new Map();
 
             function isVoiceTranscriptionMode() {
                 return responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text';
@@ -1145,11 +1187,36 @@
                 }, 450);
             }
 
+            function speechLocalePriority() {
+                if (speechLanguage === 'fil' || speechLanguage === 'tl') {
+                    return ['fil-PH', 'tl-PH', 'fil', 'tl', 'en-PH', 'en-US', 'en'];
+                }
+
+                if (speechLanguage === 'ceb') {
+                    return ['ceb-PH', 'ceb', 'fil-PH', 'tl-PH', 'fil', 'tl', 'en-PH', 'en-US', 'en'];
+                }
+
+                return [speechLocale, speechLanguage, 'en-PH', 'en-US', 'en'];
+            }
+
+            function voiceMatchesLanguage(voice, language) {
+                const voiceLang = String(voice.lang || '').toLowerCase();
+                const target = String(language || '').toLowerCase();
+                return voiceLang === target || voiceLang.startsWith(target + '-') || target.startsWith(voiceLang + '-');
+            }
+
+            function voiceLooksNatural(voice) {
+                return /google|premium|natural|siri|microsoft|enhanced/i.test(voice.name || '');
+            }
+
             // Initialize preferred voice
             function loadVoices() {
                 let voices = window.speechSynthesis.getVoices();
                 if (voices.length > 0) {
-                    preferredVoice = voices.find(v => v.lang === speechLocale && (v.name.includes('Google') || v.name.includes('Premium') || v.name.includes('Natural') || v.name.includes('Siri'))) || voices.find(v => v.lang === speechLocale) || voices.find(v => v.lang.startsWith(speechLanguage)) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+                    const languagePriority = speechLocalePriority();
+                    preferredVoice = languagePriority
+                        .map(language => voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksNatural(v)) || voices.find(v => voiceMatchesLanguage(v, language)))
+                        .find(Boolean) || voices[0];
                 }
             }
             if ('speechSynthesis' in window) {
@@ -1157,15 +1224,162 @@
                 loadVoices();
             }
 
-            function speakQuestion(text, options = {}) {
-                questionSpeechToken++;
-                const token = questionSpeechToken;
-                const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
+            function clearCaptionInterval() {
+                if (captionInterval) {
+                    clearInterval(captionInterval);
+                    captionInterval = null;
+                }
+            }
 
-                if (isRecording) {
-                    pauseRecording();
+            function startSpeakingUi(text, boundaryAware = false) {
+                clearCaptionInterval();
+                document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
+                document.getElementById('aiAvatarHead').style.borderColor = '#34d399';
+                document.getElementById('aiQuestionText').innerText = '';
+
+                const words = String(text || '').split(/\s+/).filter(Boolean);
+                let currentWordIdx = 0;
+                let boundaryFired = false;
+
+                captionInterval = setInterval(() => {
+                    if (boundaryAware && boundaryFired) return;
+
+                    if (currentWordIdx < words.length) {
+                        currentWordIdx++;
+                        document.getElementById('aiQuestionText').innerText = words.slice(0, currentWordIdx).join(' ');
+                        currentAmplitude = 1.0;
+                    } else {
+                        clearCaptionInterval();
+                    }
+                }, 350);
+
+                if (visualizerInterval) clearInterval(visualizerInterval);
+                const bars = document.querySelectorAll('.spectrum-bar');
+                visualizerInterval = setInterval(() => {
+                    currentAmplitude = Math.max(0.15, currentAmplitude - 0.1);
+                    bars.forEach(bar => {
+                        let h = 6 + (Math.random() * 80 * currentAmplitude);
+                        bar.style.height = h + 'px';
+                    });
+                }, 50);
+
+                return {
+                    markBoundary: () => {
+                        boundaryFired = true;
+                        clearCaptionInterval();
+                    },
+                };
+            }
+
+            function finishSpeakingUi(text, token, startTimerAfterSpeech) {
+                if (token !== questionSpeechToken) return;
+
+                document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
+                document.getElementById('aiAvatarHead').style.borderColor = '#8b5cf6';
+                if (visualizerInterval) clearInterval(visualizerInterval);
+                visualizerInterval = null;
+                clearCaptionInterval();
+                document.getElementById('aiQuestionText').innerText = text;
+                if (startTimerAfterSpeech) startQuestionTimer();
+                scheduleAutoTranscriptionStart(token);
+            }
+
+            function cancelQuestionAudio() {
+                if (activeQuestionAudio) {
+                    activeQuestionAudio.pause();
+                    activeQuestionAudio.removeAttribute('src');
+                    activeQuestionAudio.load();
+                    activeQuestionAudio = null;
+                }
+            }
+
+            function cancelQuestionSpeechOutput() {
+                cancelQuestionAudio();
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                }
+                clearCaptionInterval();
+                if (visualizerInterval) clearInterval(visualizerInterval);
+                visualizerInterval = null;
+            }
+
+            async function serverSpeechUrl(questionId) {
+                if (!questionId || serverVoiceUnavailable) return null;
+
+                const cacheKey = String(questionId);
+                if (serverSpeechUrlCache.has(cacheKey)) {
+                    return serverSpeechUrlCache.get(cacheKey);
                 }
 
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('session_id', interviewSessionId);
+                formData.append('question_id', questionId);
+
+                const response = await fetch('{{ route("interview.speech") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'audio/mpeg',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+
+                if (!response.ok) {
+                    if (response.status === 400 || response.status === 403 || response.status === 503) {
+                        serverVoiceUnavailable = true;
+                    }
+                    return null;
+                }
+
+                const blob = await response.blob();
+                if (!blob || blob.size === 0) return null;
+
+                const url = URL.createObjectURL(blob);
+                serverSpeechUrlCache.set(cacheKey, url);
+
+                return url;
+            }
+
+            async function speakWithServerVoice(text, token, startTimerAfterSpeech, questionId) {
+                if (!window.Audio || !questionId || serverVoiceUnavailable) {
+                    return false;
+                }
+
+                try {
+                    const url = await serverSpeechUrl(questionId);
+                    if (!url || token !== questionSpeechToken) return false;
+
+                    const audio = new Audio(url);
+                    activeQuestionAudio = audio;
+
+                    audio.addEventListener('play', () => {
+                        if (token !== questionSpeechToken) return;
+                        startSpeakingUi(text);
+                    }, { once: true });
+
+                    audio.addEventListener('ended', () => {
+                        activeQuestionAudio = null;
+                        finishSpeakingUi(text, token, startTimerAfterSpeech);
+                    }, { once: true });
+
+                    audio.addEventListener('error', () => {
+                        activeQuestionAudio = null;
+                        finishSpeakingUi(text, token, startTimerAfterSpeech);
+                    }, { once: true });
+
+                    await audio.play();
+
+                    return true;
+                } catch (error) {
+                    console.warn('Server AI voice unavailable, using device voice.', error);
+                    cancelQuestionAudio();
+
+                    return false;
+                }
+            }
+
+            function speakWithDeviceVoice(text, token, startTimerAfterSpeech) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     let utterance = new SpeechSynthesisUtterance(text);
@@ -1174,16 +1388,12 @@
                     utterance.rate = 0.95;
                     utterance.pitch = 1.0;
 
-                    let words = text.split(' ');
-                    let currentWordIdx = 0;
-                    let captionInterval = null;
-                    let boundaryFired = false;
+                    let speechUi = null;
 
                     utterance.onboundary = function(e) {
                         if(e.name === 'word') {
-                            boundaryFired = true;
-                            if (captionInterval) clearInterval(captionInterval);
-                            
+                            if (speechUi) speechUi.markBoundary();
+
                             currentAmplitude = 1.0;
                             let end = text.indexOf(' ', e.charIndex);
                             if (end === -1) end = text.length;
@@ -1192,43 +1402,15 @@
                     };
 
                     utterance.onstart = function() {
-                        document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
-                        document.getElementById('aiAvatarHead').style.borderColor = '#34d399';
-                        document.getElementById('aiQuestionText').innerText = '';
-                        
-                        // Hybrid fallback: uses setInterval ONLY if the perfect 'onboundary' event fails to fire
-                        captionInterval = setInterval(() => {
-                            if (!boundaryFired) {
-                                if (currentWordIdx < words.length) {
-                                    currentWordIdx++;
-                                    document.getElementById('aiQuestionText').innerText = words.slice(0, currentWordIdx).join(' ');
-                                    currentAmplitude = 1.0;
-                                } else {
-                                    clearInterval(captionInterval);
-                                }
-                            }
-                        }, 350); // Fallback estimate
-                        
-                        // Start dynamic JS visualizer
-                        const bars = document.querySelectorAll('.spectrum-bar');
-                        visualizerInterval = setInterval(() => {
-                            currentAmplitude = Math.max(0.15, currentAmplitude - 0.1); // Decay slowly between words
-                            bars.forEach(bar => {
-                                // Calculate random jitter scaled by current word amplitude
-                                let h = 6 + (Math.random() * 80 * currentAmplitude);
-                                bar.style.height = h + 'px';
-                            });
-                        }, 50); // 20 FPS jitter
+                        speechUi = startSpeakingUi(text, true);
                     };
-                    
+
                     utterance.onend = function() {
-                        document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
-                        document.getElementById('aiAvatarHead').style.borderColor = '#8b5cf6';
-                        if(visualizerInterval) clearInterval(visualizerInterval);
-                        if(captionInterval) clearInterval(captionInterval);
-                        document.getElementById('aiQuestionText').innerText = text;
-                        if (startTimerAfterSpeech) startQuestionTimer();
-                        scheduleAutoTranscriptionStart(token);
+                        finishSpeakingUi(text, token, startTimerAfterSpeech);
+                    };
+
+                    utterance.onerror = function() {
+                        finishSpeakingUi(text, token, startTimerAfterSpeech);
                     };
 
                     window.speechSynthesis.speak(utterance);
@@ -1237,6 +1419,25 @@
                     if (startTimerAfterSpeech) startQuestionTimer();
                     scheduleAutoTranscriptionStart(token);
                 }
+            }
+
+            async function speakQuestion(text, options = {}) {
+                questionSpeechToken++;
+                const token = questionSpeechToken;
+                const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
+
+                if (isRecording) {
+                    pauseRecording();
+                }
+
+                cancelQuestionSpeechOutput();
+
+                const usedServerVoice = serverAiVoiceEnabled
+                    ? await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId)
+                    : false;
+                if (usedServerVoice || token !== questionSpeechToken) return;
+
+                speakWithDeviceVoice(text, token, startTimerAfterSpeech);
             }
 
             function formatSeconds(total) {
@@ -1388,6 +1589,7 @@
                 
                 document.getElementById('aiQuestionText').innerText = '...';
                 document.getElementById('qCounter').innerText = (idx + 1) + '/' + totalQuestions;
+                updateQuestionSource(q);
 
                 // Append AI question to chat log if it's the first time seeing it
                 if (options.append !== false) {
@@ -1401,15 +1603,45 @@
                 resetSpeechRecognitionBufferFromTextarea();
                 lastTimelineCaptureAt = 0;
                 
-                speakQuestion(q.question_text, { startTimerAfterSpeech: true });
+                speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
                 
                 triggerAnalysis();
                 scheduleStateSave();
             }
 
+            function updateQuestionSource(question) {
+                const sourceLine = document.getElementById('aiQuestionSource');
+                if (!sourceLine) return;
+
+                const name = question?.source_name || sourceLine.dataset.defaultName || '';
+                const url = question?.source_url || sourceLine.dataset.defaultUrl || '';
+                sourceLine.innerHTML = '';
+
+                if (!name) {
+                    sourceLine.style.display = 'none';
+                    return;
+                }
+
+                sourceLine.style.display = 'inline-flex';
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-link';
+                const label = document.createElement('span');
+                label.textContent = 'Source:';
+                const value = url ? document.createElement('a') : document.createElement('span');
+                value.textContent = name;
+
+                if (url) {
+                    value.href = url;
+                    value.target = '_blank';
+                    value.rel = 'noopener';
+                }
+
+                sourceLine.append(icon, label, value);
+            }
+
             function repeatQuestion() {
                 if(questions && questions[currentQIdx]) {
-                    speakQuestion(questions[currentQIdx].question_text);
+                    speakQuestion(questions[currentQIdx].question_text, { questionId: questions[currentQIdx].id });
                 }
             }
 
@@ -1753,6 +1985,7 @@
                 captureTranscriptTimeline(timedOut ? 'timed_out_submit' : 'submitted', true);
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
+                formData.append('session_id', interviewSessionId);
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answersData[currentQIdx].text);
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
@@ -1775,6 +2008,12 @@
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Answer save failed with status ' + response.status);
+                    }
+
+                    return response;
                 });
             }
 
@@ -1864,6 +2103,10 @@
                     document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = true);
                     saveCurrentAnswer(wasSkipped, timedOut).then(() => {
                         finishInterview();
+                    }).catch(error => {
+                        console.error(error);
+                        document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
+                        alert('We could not save your final answer. Please try again before finishing.');
                     });
                     return;
                 }
@@ -1889,6 +2132,7 @@
                 
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
+                formData.append('session_id', interviewSessionId);
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answerText);
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
@@ -1922,7 +2166,10 @@
                     if (data.success) {
                         const newQ = {
                             id: data.next_question_id,
-                            question_text: data.next_question_text
+                            question_text: data.next_question_text,
+                            source_name: data.source_name || '',
+                            source_url: data.source_url || '',
+                            source_type: data.source_type || ''
                         };
                         questions.push(newQ);
                         
@@ -1957,7 +2204,9 @@
 
             function finishInterview() {
                 stopQuestionTimer();
-                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+                cancelQuestionSpeechOutput();
+                serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));
+                serverSpeechUrlCache.clear();
                 ['userCamera', 'userCameraMobile'].forEach(id => {
                     let video = document.getElementById(id);
                     if (video && video.srcObject) {

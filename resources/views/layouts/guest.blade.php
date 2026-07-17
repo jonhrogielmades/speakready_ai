@@ -1286,7 +1286,7 @@
                               <div class="ui-stat-grid">
                                  <div class="ui-stat">
                                     <div class="ui-stat-value accent">{{ $previewReadiness }}%</div>
-                                    <div class="ui-stat-label">Readiness Score</div>
+                                    <div class="ui-stat-label">PH Readiness</div>
                                     <div class="ui-stat-note"><i class="fa-solid fa-caret-up"></i> Avg</div>
                                  </div>
                                  <div class="ui-stat">
@@ -1313,7 +1313,7 @@
                                  <div class="ui-panel ui-chat">
                                     <div class="ui-panel-title"><span class="ui-pulse"></span>AI Feedback</div>
                                     <div class="ui-bubble user">Tell me about a challenge you faced.</div>
-                                    <div class="ui-bubble ai"><strong>Great STAR method usage!</strong> Your response was structured perfectly, but try reducing filler words like 'um'.</div>
+                                    <div class="ui-bubble ai"><strong>Good STAR structure for a Philippine interview.</strong> Add the specific result or customer impact to make it stronger.</div>
                                  </div>
                               </div>
                            </div>
@@ -1345,7 +1345,7 @@
                                  <div class="ui-stat-grid">
                                     <div class="ui-stat">
                                        <div class="ui-stat-value accent">{{ $previewReadiness }}%</div>
-                                       <div class="ui-stat-label">Readiness Score</div>
+                                       <div class="ui-stat-label">PH Readiness</div>
                                        <div class="ui-stat-note"><i class="fa-solid fa-caret-up"></i> Avg</div>
                                     </div>
                                     <div class="ui-stat">
@@ -1372,7 +1372,7 @@
                                     <div class="ui-panel ui-chat">
                                        <div class="ui-panel-title"><span class="ui-pulse"></span>AI Feedback</div>
                                        <div class="ui-bubble user">Tell me about a challenge you faced.</div>
-                                       <div class="ui-bubble ai"><strong>Great STAR method usage!</strong> Your response was structured perfectly, but try reducing filler words like 'um'.</div>
+                                       <div class="ui-bubble ai"><strong>Good STAR structure for a Philippine interview.</strong> Add the specific result or customer impact to make it stronger.</div>
                                     </div>
                                  </div>
                               </div>
@@ -1393,7 +1393,7 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for varied interview scenarios. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="d-flex flex-wrap gap-2 mb-4">
@@ -1463,7 +1463,7 @@
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
-                        <h3 class="fs-6 fw-bold mb-2">AI Mock Interviews</h3>
+                        <h3 class="fs-6 fw-bold mb-2">Philippine AI Mock Interviews</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
                      </div>
                   </div>
@@ -1546,7 +1546,7 @@
             <div class="container">
                <div class="landing-section-heading mb-5 rv">
                   <span class="slbl">How It Works</span>
-                  <h2 class="stitle">Your journey to <span class="gt">interview mastery</span></h2>
+                  <h2 class="stitle">Your journey to <span class="gt">Philippine interview mastery</span></h2>
                </div>
 
                <div class="row g-4 justify-content-center">
@@ -1561,14 +1561,14 @@
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Configure Your Setup</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Choose your target role, difficulty, and interview type.</p>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose your target role, difficulty, and Philippine interview scenario.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Take a Mock Interview</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Face our interactive AI avatar with real-world questions.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Take a Philippine Mock Interview</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Face our interactive AI avatar with Philippine HR, BPO, IT, and fresh graduate questions.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
@@ -1696,15 +1696,15 @@
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-gauge-high fa-4x mb-4" style="color:var(--pur)"></i>
                                            <h3 class="fs-3 fw-bold">Overview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your interview sessions and overall readiness.</p>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your Philippine interview sessions and readiness.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 2: Mock Interview -->
                                    <div class="swiper-slide text-center">
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-microphone-lines fa-4x mb-4" style="color:#34d399"></i>
-                                           <h3 class="fs-3 fw-bold">Mock Interview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking real-world questions.</p>
+                                           <h3 class="fs-3 fw-bold">Philippine Mock Interview</h3>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking Philippine HR, BPO, IT, and fresh graduate questions.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 3: Voice Rehearsal -->
@@ -1720,7 +1720,7 @@
                                        <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
                                            <i class="fa-solid fa-book-open fa-4x mb-4" style="color:#ef4444"></i>
                                            <h3 class="fs-3 fw-bold">Learning Lab</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials to master any interview.</p>
+                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials for Philippine interview scenarios.</p>
                                        </div>
                                    </div>
                                    <!-- Slide 5: AI Coach -->
@@ -1992,7 +1992,7 @@
                         <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:32px; height:32px; background:transparent; padding:0;">
                         <span style="font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;color:var(--tx)">SpeakReady AI</span>
                      </a>
-                     <p style="font-size:.95rem;color:var(--tx2);line-height:1.7;margin-bottom:1.75rem">Your personal AI interview coach. Practice smarter, interview better, and secure your dream opportunity with confidence.</p>
+                     <p style="font-size:.95rem;color:var(--tx2);line-height:1.7;margin-bottom:1.75rem">Your personal Philippine interview coach. Practice smarter, interview better, and secure your dream opportunity with confidence.</p>
                      <div class="d-flex gap-3">
                          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
                          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="Twitter"><i class="fa-brands fa-twitter"></i></a>

@@ -1,5 +1,5 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
-@section('title', 'Progress Tracking')
+@section('title', 'Philippines Interview Progress')
 
 @section('content')
 <style>
@@ -459,9 +459,9 @@
                         <circle cx="14" cy="13" r="1.5" fill="currentColor"/>
                         <circle cx="19" cy="6" r="1.5" fill="currentColor"/>
                     </svg>
-                    Progress Tracking
+                    Philippines Interview Progress
                 </h4>
-                <p class="progress-hero-subtitle">Visualize your interview readiness improvement over time.</p>
+                <p class="progress-hero-subtitle">Track readiness growth across your Philippines practice scenarios.</p>
             </div>
         </div>
         <svg class="progress-hero-art" viewBox="0 0 220 150" aria-hidden="true" role="img">
@@ -538,7 +538,7 @@
                 <div>
                     <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
                     <p class="mb-0">Your overall readiness score {!! $readinessMovement->trend_html !!} recently. <br>
-                    <strong>Recommended Next Step:</strong> Review your recent feedback to identify specific improvement areas.</p>
+                    <strong>Recommended Next Step:</strong> Review your latest Philippines interview feedback and rehearse the weakest answer again.</p>
                 </div>
             </div>
         </div>
@@ -550,7 +550,7 @@
                 </div>
                 <div>
                     <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
-                    <p class="mb-0">Complete one more scored mock interview to compare readiness movement accurately.</p>
+                    <p class="mb-0">Complete one more scored Philippines practice interview to compare readiness movement accurately.</p>
                 </div>
             </div>
         </div>
@@ -562,7 +562,7 @@
                 </div>
                 <div>
                     <h6 class="mb-1 fw-bold text-primary">AI Progress Insights</h6>
-                    <p class="mb-0">Complete at least 2 mock interviews to generate personalized AI progress insights.</p>
+                    <p class="mb-0">Complete at least 2 Philippines practice interviews to generate personalized progress insights.</p>
                 </div>
             </div>
         </div>
@@ -578,10 +578,10 @@
                 </div>
             </div>
         </div>
-        <!-- Feature 3: Category Performance Analysis -->
+        <!-- Feature 3: Scenario Performance Analysis -->
         <div class="col-md-4 animate-fade-up" id="category-perf" style="animation-delay: 0.7s;">
             <div class="premium-panel" style="height:100%">
-                <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Category Performance</h5>
+                <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Scenario Performance</h5>
                 <div style="height: 250px;">
                     <canvas id="categoryChart"></canvas>
                 </div>
@@ -616,7 +616,7 @@
                 @else
                     <div class="text-center py-5" style="color:var(--tx3);">
                         <i class="fa-solid fa-chart-bar fs-2 mb-3" style="color:var(--bd);"></i>
-                        <p>Complete multiple mock interviews to track your specific skill improvements.</p>
+                        <p>Complete multiple Philippines practice interviews to track your specific skill improvements.</p>
                     </div>
                 @endif
             </div>
@@ -691,7 +691,7 @@
                         <thead>
                             <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
                                 <th class="border-0">Date</th>
-                                <th class="border-0">Category</th>
+                                <th class="border-0">Practice Scenario</th>
                                 <th class="border-0">Score</th>
                                 <th class="border-0">Rating</th>
                                 <th class="border-0 text-end">Action</th>
@@ -701,7 +701,7 @@
                             @foreach($sessions as $session)
                             <tr style="border-bottom: 1px solid var(--bd);">
                                 <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
-                                <td class="border-0 py-3 fw-bold">{{ $session->category ? $session->category->title : 'Job Interview' }}</td>
+                                <td class="border-0 py-3 fw-bold">{{ $session->practice_scenario ?? 'General Job Interview' }}</td>
                                 <td class="border-0 py-3">
                                     @if($session->score)
                                         {{ $session->score->overall_readiness_score }}%
@@ -734,7 +734,7 @@
                             @endforeach
                             @if($sessions->count() == 0)
                             <tr>
-                                <td colspan="5" class="text-center py-4" style="color:var(--tx3);font-style:italic;">No interview records found. Start a mock interview to track your progress!</td>
+                                <td colspan="5" class="text-center py-4" style="color:var(--tx3);font-style:italic;">No interview records found. Start a Philippines practice interview to track your progress.</td>
                             </tr>
                             @endif
                         </tbody>
@@ -844,7 +844,7 @@
                 <h5 style="color:var(--tx);margin-bottom:20px;font-weight:bold;">Practice Activity Calendar</h5>
                 <div class="text-center py-5" style="color:var(--tx3);">
                     <i class="fa-solid fa-calendar-days fs-2 mb-3" style="color:var(--bd);"></i>
-                    <p>Complete your first mock interview to start tracking your daily practice activity!</p>
+                    <p>Complete your first Philippines practice interview to start tracking your daily practice activity.</p>
                 </div>
             </div>
         </div>
@@ -914,7 +914,7 @@
             }
 
             const trendData = @json($scoreTrend);
-            const categoryPerformance = @json($categoryPerf);
+            const scenarioPerformance = @json($categoryPerf);
             
             // Feature 1: Readiness Trend
             const labels = trendData.map(s => s.date);
@@ -956,18 +956,18 @@
                 });
             }
 
-            // Feature 3: Category Performance
+            // Feature 3: Scenario Performance
             if(window.Chart && document.getElementById('categoryChart')) {
-                const categoryLabels = Object.keys(categoryPerformance);
-                const categoryData = Object.values(categoryPerformance);
+                const scenarioLabels = Object.keys(scenarioPerformance);
+                const scenarioData = Object.values(scenarioPerformance);
 
                 new Chart(document.getElementById('categoryChart'), {
                     type: 'bar',
                     data: {
-                        labels: categoryLabels,
+                        labels: scenarioLabels,
                         datasets: [{
                             label: 'Avg Score',
-                            data: categoryData,
+                            data: scenarioData,
                             backgroundColor: [
                                 '#3b82f6',
                                 '#10b981',
@@ -1097,7 +1097,7 @@
             { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
             { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Use trend-based coaching notes to decide what to practice next.', side: 'bottom', align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
-            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'Compare interview categories to find strengths and weak spots.', side: 'top', align: 'start' }},
+            { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare Philippines practice scenarios to find strengths and weak spots.', side: 'top', align: 'start' }},
             { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'top', align: 'start' }},
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
@@ -1112,7 +1112,7 @@
             { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
             { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Use trend-based coaching notes to decide what to practice next.', side: 'bottom', align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
-            { element: '#category-perf', popover: { title: 'Category Breakdown', description: 'Compare interview categories to find strengths and weak spots.', side: 'bottom', align: 'start' }},
+            { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare Philippines practice scenarios to find strengths and weak spots.', side: 'bottom', align: 'start' }},
             { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'right', align: 'start' }},
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},

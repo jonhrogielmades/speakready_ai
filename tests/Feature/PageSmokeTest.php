@@ -8,9 +8,7 @@ use App\Models\ChatbotMessage;
 use App\Models\Contact;
 use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
-use App\Models\InterviewPack;
 use App\Models\InterviewSession;
-use App\Models\JobApplication;
 use App\Models\LearningModule;
 use App\Models\Profile;
 use App\Models\Question;
@@ -25,7 +23,7 @@ class PageSmokeTest extends TestCase
 
     public function test_main_user_pages_render_successfully(): void
     {
-        [$user, $category, $session, $module, $pack, $application, $gameCategory] = $this->seedUserPageData();
+        [$user, $category, $session, $module, $gameCategory] = $this->seedUserPageData();
 
         $routes = [
             route('dashboard'),
@@ -36,8 +34,6 @@ class PageSmokeTest extends TestCase
             route('user.feedback'),
             route('user.progress'),
             route('user.reports'),
-            route('user.applications.index'),
-            route('user.packs.index'),
             route('user.coach'),
             route('user.learning', ['category_id' => $gameCategory->id]),
             route('user.modules.index'),
@@ -63,14 +59,6 @@ class PageSmokeTest extends TestCase
                 "Expected {$url} to render with 200. Redirected to: " . ($response->headers->get('Location') ?: 'n/a')
             );
         }
-
-        $this->actingAs($user)
-            ->get(route('user.applications.practice', $application))
-            ->assertRedirect(route('interview.setup', ['application' => $application->id]));
-
-        $this->actingAs($user)
-            ->get(route('user.packs.practice', $pack))
-            ->assertRedirect(route('interview.setup', ['pack' => $pack->id]));
 
         $conversation = ChatbotConversation::create(['user_id' => $user->id, 'title' => 'Interview preparation']);
         ChatbotMessage::create([
@@ -192,22 +180,6 @@ class PageSmokeTest extends TestCase
             'status' => 'published',
             'category' => 'Interview Skills',
         ]);
-        $pack = InterviewPack::create([
-            'name' => 'Backend Developer Pack',
-            'slug' => 'backend-developer-pack',
-            'company' => 'General',
-            'role_family' => 'Backend Developer',
-            'difficulty' => 'medium',
-            'interview_focus' => 'Technical Knowledge',
-            'question_types' => ['Technical'],
-            'sample_questions' => ['Describe a technical tradeoff you made.'],
-            'status' => 'active',
-        ]);
-        $application = JobApplication::create([
-            'user_id' => $user->id,
-            'company_name' => 'Acme AI',
-            'job_title' => 'Backend Developer',
-        ]);
         $session = $this->completedSession($user, $category);
         $question = $this->question($category, ['interview_session_id' => $session->id]);
         InterviewAnswer::create([
@@ -219,7 +191,7 @@ class PageSmokeTest extends TestCase
         ]);
         $level->learningModules()->attach($module->id);
 
-        return [$user, $category, $session, $module, $pack, $application, $gameCategory];
+        return [$user, $category, $session, $module, $gameCategory];
     }
 
     private function seedAdminPageData(): array
