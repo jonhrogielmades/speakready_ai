@@ -17,7 +17,7 @@ use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
-    private const MAX_ENERGY = 10;
+    private const MAX_ENERGY = 3;
 
     public function startLevel(Request $request, $id)
     {

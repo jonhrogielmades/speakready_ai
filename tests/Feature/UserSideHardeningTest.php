@@ -203,6 +203,9 @@ class UserSideHardeningTest extends TestCase
             'type' => 'Technical',
             'status' => 'active',
         ]);
+        Question::where('interview_session_id', $session->id)
+            ->pluck('question_text')
+            ->each(fn (string $questionText) => $this->assertStringContainsString('Developer', $questionText));
     }
 
     public function test_public_shared_review_accepts_mentor_comment(): void

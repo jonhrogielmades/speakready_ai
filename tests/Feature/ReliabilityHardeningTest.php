@@ -74,6 +74,7 @@ class ReliabilityHardeningTest extends TestCase
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category(['title' => 'Behavioral']);
         $questionText = 'Tell me about a production issue you diagnosed and resolved.';
+        $roleAlignedQuestionText = 'For your target position of Backend Developer, tell me about a production issue you diagnosed and resolved.';
 
         Http::fake([
             'api.openai.com/*' => Http::response([
@@ -104,13 +105,13 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => $session->id,
             'category_id' => $category->id,
-            'question_text' => $questionText,
+            'question_text' => $roleAlignedQuestionText,
         ]);
 
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => null,
             'category_id' => $category->id,
-            'question_text' => $questionText,
+            'question_text' => $roleAlignedQuestionText,
             'source_type' => 'ai_generated_user',
         ]);
     }
@@ -122,6 +123,7 @@ class ReliabilityHardeningTest extends TestCase
         $session = $this->sessionFor($user, $category);
         $question = $this->question($category, ['interview_session_id' => $session->id]);
         $followUpText = 'What tradeoff would you make differently if you handled that project again?';
+        $roleAlignedFollowUpText = 'For your target position of Developer, what tradeoff would you make differently if you handled that project again?';
 
         Http::fake([
             'api.openai.com/*' => Http::response([
@@ -149,19 +151,19 @@ class ReliabilityHardeningTest extends TestCase
             ->assertOk()
             ->assertJson([
                 'success' => true,
-                'next_question_text' => $followUpText,
+                'next_question_text' => $roleAlignedFollowUpText,
             ]);
 
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => $session->id,
             'category_id' => $category->id,
-            'question_text' => $followUpText,
+            'question_text' => $roleAlignedFollowUpText,
         ]);
 
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => null,
             'category_id' => $category->id,
-            'question_text' => $followUpText,
+            'question_text' => $roleAlignedFollowUpText,
             'source_type' => 'ai_generated_user',
         ]);
     }

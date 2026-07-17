@@ -141,11 +141,34 @@
     .question-source-line { display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,.72);font-size:.68rem;font-weight:700;margin-top:7px;max-width:100%; }
     .question-source-line a { color:rgba(191,219,254,.95);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
     .question-source-line a:hover { color:#fff;text-decoration:underline; }
+    .ai-question-card {
+        margin-top: calc(var(--session-gap) * -0.45);
+        margin-bottom: var(--session-gap);
+        padding: 14px 16px;
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
+        box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14));
+    }
+    .ai-question-card .interviewer-badge {
+        background: var(--pur);
+        color: #fff;
+        font-size: 0.72rem;
+    }
+    #aiQuestionText {
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
     .session-source-line { color:var(--tx3);font-size:.78rem;line-height:1.35;margin:-12px auto 22px;max-width:480px; }
     .real-interview-mode .coaching-only { display:none !important; }
     .recovery-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(52,211,153,.12);color:#34d399;font-weight:700;font-size:.76rem;margin-bottom:14px; }
     .question-timer-anchor { position:absolute;top:15px;right:15px;z-index:55; }
-    .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:105px; border-radius:8px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+    .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:80px; border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background:#111827; }
+    .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
+    .mobile-camera-pip video { position:relative;z-index:2; }
+    .mobile-camera-pip.camera-ready .mobile-camera-placeholder { display:none; }
 
     /* Circular Audio Spectrum */
     .circular-spectrum { position: absolute; top: 50%; left: 50%; width: 0; height: 0; display: none; z-index: 5; }
@@ -197,28 +220,30 @@
         .avatar-wrapper { transform: scale(0.62); }
         .circular-spectrum { transform: scale(0.62); }
         .ai-avatar-panel { height: 220px !important; }
-        .ai-avatar-panel .interviewer-badge {
+        .ai-question-card .interviewer-badge {
             border-radius: 999px !important;
             padding: 5px 9px !important;
             font-size: 0.62rem !important;
             font-weight: 800;
             letter-spacing: 0;
         }
-        .ai-question-overlay {
-            padding: 42px 12px 12px !important;
+        .ai-question-card {
+            margin-top: calc(var(--session-gap) * -0.35);
+            padding: 10px 12px;
+            border-radius: 12px;
         }
         .question-source-line {
             font-size: 0.6rem !important;
             margin-top: 5px;
         }
-        .ai-question-overlay > .d-flex {
+        .ai-question-card > .d-flex {
             gap: 0 !important;
         }
         .mobile-camera-pip {
             top: 12px !important;
             right: 12px !important;
-            width: 70px !important;
-            height: 92px !important;
+            width: 66px !important;
+            height: 66px !important;
             border-radius: 10px !important;
             border-width: 1px !important;
         }
@@ -425,7 +450,12 @@
             margin-left: 0.45rem !important;
         }
         .session-chip { width:auto;max-width:100%;justify-content:center; }
-        .question-timer-anchor { top:112px;right:12px; }
+        .question-timer-anchor {
+            top: 12px !important;
+            right: 12px !important;
+            z-index: 60;
+        }
+        .question-timer-anchor { display: none; }
         #aiQuestionText { max-height: 4.5em; overflow-y: auto; }
     }
 
@@ -446,9 +476,9 @@
             font-size: 0.5rem;
         }
         .ai-avatar-panel { height: 204px !important; }
-        .mobile-camera-pip { width: 62px !important; height: 82px !important; }
-        .ai-question-overlay { padding: 38px 10px 10px !important; }
-        .question-timer-anchor { top: 100px; right: 10px; }
+        .mobile-camera-pip { width: 62px !important; height: 62px !important; }
+        .ai-question-card { padding: 10px; }
+        .question-timer-anchor { top: 10px !important; right: 10px !important; }
         .session-chip { padding: 6px 8px; font-size: 0.7rem; }
         #interviewControls { padding: 9px; }
         #interviewControls .btn { font-size: 0.82rem; }
@@ -543,53 +573,6 @@
         @endphp
 
         @if($sessionRecord && $questions->count() > 0)
-        <!-- Header Info -->
-        <div class="interview-session-header">
-            <div class="sr-page-hero">
-                <div class="sr-page-hero-inner">
-                    <div class="sr-page-hero-copy">
-                        <h4 class="sr-page-hero-title text-gradient-primary">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M4 6h16v10H8l-4 4V6Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                                <path d="M9 10h6M9 13h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            Philippines Interview Workspace
-                        </h4>
-                        <p class="sr-page-hero-subtitle">Practice Philippine HR, role-fit, communication, and workplace scenarios with evidence-backed answers.</p>
-                    </div>
-                </div>
-                <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="workspacePanel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#DBEAFE"/>
-                            <stop offset="1" stop-color="#ECFEFF"/>
-                        </linearGradient>
-                        <linearGradient id="workspaceBlue" x1="64" y1="38" x2="164" y2="118" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#3B82F6"/>
-                            <stop offset="1" stop-color="#06B6D4"/>
-                        </linearGradient>
-                    </defs>
-                    <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#workspacePanel)" stroke="#BFDBFE" stroke-width="3"/>
-                    <rect x="58" y="48" width="88" height="58" rx="16" fill="url(#workspaceBlue)"/>
-                    <circle cx="88" cy="77" r="7" fill="#EFF6FF"/>
-                    <circle cx="118" cy="77" r="7" fill="#EFF6FF"/>
-                    <path d="M91 92c8 6 21 6 29 0" stroke="#EFF6FF" stroke-width="5" stroke-linecap="round"/>
-                    <path d="M78 48v-7a28 28 0 0 1 56 0v7" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
-                    <path d="M146 67h28v27h-16l-12 12V67Z" fill="#BAE6FD" stroke="#93C5FD" stroke-width="3" stroke-linejoin="round"/>
-                    <path d="M154 77h12M154 86h8" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
-                    <circle cx="161" cy="47" r="18" fill="#22C55E"/>
-                    <path d="M154 47l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
-                </svg>
-            </div>
-            <div class="sr-page-actions interview-meta-line" style="font-size:.85rem;color:var(--tx3);">
-                <span><i class="fa-solid fa-flag me-1"></i> {{ $scenarioLabel }}</span>
-                <span><i class="fa-solid fa-gauge-high me-1"></i> {{ ucfirst($sessionRecord->difficulty) }}</span>
-                <span><i class="fa-solid fa-briefcase me-1"></i> {{ $sessionRecord->target_position ?? 'Standard' }}</span>
-                <span><i class="fa-regular fa-clock me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
-            </div>
-        </div>
-
         <div id="workspaceWrapper" style="display:none;">
         <div class="row g-4" id="workspaceRow">
             <!-- Main Content Area -->
@@ -600,11 +583,10 @@
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
                     <!-- Mobile Picture-in-Picture Camera -->
-                    @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
                     <div class="d-block d-lg-none mobile-camera-pip">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
+                        <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
                     </div>
-                    @endif
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
@@ -633,14 +615,14 @@
                             @endfor
                         </div>
                     </div>
-                    <!-- Overlay Text -->
-                    <div class="ai-question-overlay" style="display:block;position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);padding:30px 20px 20px 20px; z-index:20;">
-                        <div class="d-flex justify-content-start align-items-end gap-3">
-                            <div>
-                                <span class="badge mb-2 interviewer-badge" style="background:var(--pur);color:white;font-size:0.75rem;"><i class="fa-solid fa-bolt me-1"></i> Philippines interviewer</span>
-                                <div id="aiQuestionText" style="color:white;font-size:0.85rem;font-weight:600;line-height:1.4;">Loading your first question...</div>
-                                <div id="aiQuestionSource" class="question-source-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}"></div>
-                            </div>
+                </div>
+
+                <div class="ai-question-card animate-fade-up delay-150">
+                    <div class="d-flex justify-content-start align-items-end gap-3">
+                        <div>
+                            <span class="badge mb-2 interviewer-badge"><i class="fa-solid fa-bolt me-1"></i> Philippines interviewer</span>
+                            <div id="aiQuestionText">Loading your first question...</div>
+                            <div id="aiQuestionSource" class="question-source-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}"></div>
                         </div>
                     </div>
                 </div>
@@ -1128,6 +1110,7 @@
                             if (mobileVideo) {
                                 mobileVideo.srcObject = stream;
                                 mobileVideo.play();
+                                mobileVideo.closest('.mobile-camera-pip')?.classList.add('camera-ready');
                             }
                         })
                         .catch(function(err) {
@@ -1538,7 +1521,7 @@
                 document.getElementById('interviewControls').style.opacity = '1';
                 document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
-                if (cameraCoachingEnabled) initCamera();
+                if (cameraCoachingEnabled || document.getElementById('userCameraMobile')) initCamera();
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';

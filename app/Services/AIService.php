@@ -38,9 +38,12 @@ class AIService
     {
         $jobDescription = self::truncateText($jobDescription);
         $resumeText = self::truncateText($resumeText);
+        $targetPosition = trim((string) $position) !== '' ? trim((string) $position) : 'the target role';
 
-        $prompt = "Generate $num mock interview questions for a '$position' role. The difficulty level should be '$difficulty'. The interview focus is '$focus'. ";
+        $prompt = "Generate $num mock interview questions for the user's target position: '$targetPosition'. The difficulty level should be '$difficulty'. The interview focus is '$focus'. ";
         $prompt .= 'Make the questions sound like a real live interviewer: concise, natural, role-specific, and professionally probing. ';
+        $prompt .= "Every question must be based on '$targetPosition': mention the role name or directly test responsibilities, tools, situations, deliverables, stakeholders, or competencies expected for that position. ";
+        $prompt .= "Do not output generic interview questions that could apply to any job unless they are rewritten around '$targetPosition'. ";
         $prompt .= 'Each question must ask for one clear answer, avoid coaching the candidate, and avoid generic classroom phrasing. ';
         $prompt .= 'Calibrate depth to the difficulty: easy asks for foundational experience, medium asks for evidence and tradeoffs, and hard asks for ambiguity, judgment, impact, and follow-up depth. ';
         $prompt .= self::languageOutputInstruction($targetLanguage, 'all interviewer questions');
@@ -83,6 +86,7 @@ class AIService
                 : (string) $datasetContext;
 
             $prompt .= "\nUse this reliable source context when choosing question wording, local relevance, and skills coverage:\n{$contextText}\n";
+            $prompt .= "Adapt source-backed question patterns to '$targetPosition' instead of copying generic wording. ";
             $prompt .= 'Do not fabricate source claims, do not reproduce leaked or confidential exam questions, and keep the output as practice interview questions. ';
         }
 
@@ -123,9 +127,11 @@ class AIService
 
     public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null)
     {
-        $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '".($session->target_position ?? 'General')."' role. ";
+        $targetPosition = trim((string) ($session->target_position ?? 'General')) ?: 'General';
+        $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '{$targetPosition}' role. ";
         $prompt .= "The difficulty is '".($session->difficulty ?? 'Medium')."'. ";
         $prompt .= 'Stay in interviewer mode. Sound like a real hiring manager: neutral, concise, curious, and professionally probing. ';
+        $prompt .= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
         $prompt .= 'Do not give coaching, scores, praise-heavy feedback, or explanations during the interview. ';
         $prompt .= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
         $prompt .= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
@@ -196,7 +202,7 @@ class AIService
             }
         }
 
-        return "Thank you for sharing that. Let's move on to the next question. Can you tell me more about your background?";
+        return "Thank you for sharing that. Let's move on to the next question. How would your background help you succeed in the {$targetPosition} role?";
     }
 
     private static function interviewStyleInstruction($assistanceLevel = 'standard', $strictness = 'neutral'): string

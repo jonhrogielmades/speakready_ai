@@ -90,63 +90,63 @@
 
                 <a id="ucp-destination-interview" class="ucp-result" href="{{ route('interview.setup') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-microphone-lines" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Mock Interview</strong><small>Start guided Philippine interview practice</small></span>
+                    <span class="ucp-result-copy"><strong>Mock Interview</strong><small>Start guided Philippine interview practice</small></span>
                     <span class="ucp-result-group">Practice</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-modules" class="ucp-result" href="{{ route('user.modules.index') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Interview Modules</strong><small>Build Philippines interview skills with structured lessons</small></span>
+                    <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Build Philippines interview skills with structured lessons</small></span>
                     <span class="ucp-result-group">Training</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-voice" class="ucp-result" href="{{ route('user.drills.voice') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-rose"><i class="fa-solid fa-ear-listen" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Voice Rehearsal</strong><small>Improve clarity, pace, and delivery for interview answers</small></span>
+                    <span class="ucp-result-copy"><strong>Voice Rehearsal</strong><small>Improve clarity, pace, and delivery for interview answers</small></span>
                     <span class="ucp-result-group">Training</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-learning" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Challenges</strong><small>Sharpen interview skills through scenario challenges</small></span>
+                    <span class="ucp-result-copy"><strong>Challenges</strong><small>Sharpen interview skills through scenario challenges</small></span>
                     <span class="ucp-result-group">Training</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-coach" class="ucp-result" href="{{ route('user.coach') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-purple"><i class="fa-solid fa-robot" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH AI Coach</strong><small>Get Philippine interview guidance</small></span>
+                    <span class="ucp-result-copy"><strong>AI Coach</strong><small>Get Philippine interview guidance</small></span>
                     <span class="ucp-result-group">Training</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-progress" class="ucp-result" href="{{ route('user.progress') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Progress</strong><small>See Philippines interview trends and growth</small></span>
+                    <span class="ucp-result-copy"><strong>Progress</strong><small>See Philippines interview trends and growth</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-feedback" class="ucp-result" href="{{ route('user.feedback') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-blue"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Feedback</strong><small>Review answers and coaching feedback</small></span>
+                    <span class="ucp-result-copy"><strong>Feedback</strong><small>Review answers and coaching feedback</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-reports" class="ucp-result" href="{{ route('user.reports') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Reports</strong><small>Open your interview records and results</small></span>
+                    <span class="ucp-result-copy"><strong>Reports</strong><small>Open your interview records and results</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
                 <a id="ucp-destination-leaderboard" class="ucp-result" href="{{ route('user.leaderboard') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>PH Mastery</strong><small>Compare with your own assessment baseline</small></span>
+                    <span class="ucp-result-copy"><strong>Mastery</strong><small>Compare with your own assessment baseline</small></span>
                     <span class="ucp-result-group">Insights</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

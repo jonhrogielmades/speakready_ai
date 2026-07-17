@@ -4,7 +4,7 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
-      <title>SpeakReady AI PH Interview Admin Portal</title>
+      <title>SpeakReady AI Interview Admin Portal</title>
       <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -144,24 +144,24 @@
              <div class="db-logo d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                    <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
-                   <span class="admin-brand">SpeakReady AI PH Admin</span>
+                   <span class="admin-brand">SpeakReady AI Admin</span>
                 </div>
                 <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                    <i class="fa-solid fa-xmark"></i>
                 </button>
              </div>
             <div class="db-nav">
-               <div class="db-nav-section">PH Interview Modules</div>
-               <a href="{{ route('admin.dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> PH Interview Dashboard</a>
+               <div class="db-nav-section">Interview Modules</div>
+               <a href="{{ route('admin.dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Interview Dashboard</a>
                <a href="{{ route('admin.users.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i> User Management</a>
-               <a href="{{ route('admin.categories') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> PH Interview Categories</a>
-               <a href="{{ route('admin.questions') }}" class="db-nl db-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> PH Question Bank</a>
-               <a href="{{ route('admin.modules') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> PH Interview Lessons</a>
-               <a href="{{ route('admin.game') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> PH Interview Games</a>
+               <a href="{{ route('admin.categories') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> Interview Categories</a>
+               <a href="{{ route('admin.questions') }}" class="db-nl db-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> Question Bank</a>
+               <a href="{{ route('admin.modules') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Interview Lessons</a>
+               <a href="{{ route('admin.game') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Interview Games</a>
                
-               <div class="db-nav-section">PH Interview Monitoring</div>
-               <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> PH Session Monitoring</a>
-               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> PH Feedback Audit</a>
+               <div class="db-nav-section">Interview Monitoring</div>
+               <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> Session Monitoring</a>
+               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Audit</a>
                <a href="{{ route('admin.feedback.complaints') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i> User Complaints</a>
                <a href="{{ route('admin.contacts.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> Contact Messages</a>
                

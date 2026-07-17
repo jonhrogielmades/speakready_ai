@@ -1266,7 +1266,7 @@ class UserController extends Controller
 
     private function refreshChallengeEnergyIfNeeded(Profile $profile): void
     {
-        $maxEnergy = 10;
+        $maxEnergy = 3;
         $lastRefill = $profile->energy_last_refilled_at;
 
         if ($lastRefill && $lastRefill->isSameDay(now())) {

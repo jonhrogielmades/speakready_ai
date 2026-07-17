@@ -595,7 +595,8 @@
         var originalOpen = typeof window.openMobDrawer === 'function' ? window.openMobDrawer : null;
         var originalClose = typeof window.closeMobDrawer === 'function' ? window.closeMobDrawer : null;
 
-        window.openMobDrawer = function () {
+        window.openMobDrawer = function (options) {
+            var shouldFocusDrawer = Boolean(options && options.focusDrawer);
             returnFocus = document.activeElement;
 
             if (originalOpen) originalOpen.apply(this, arguments);
@@ -605,7 +606,7 @@
                 document.body.style.overflow = 'hidden';
             }
 
-            setDrawerState(true, true);
+            setDrawerState(true, shouldFocusDrawer);
         };
 
         window.closeMobDrawer = function () {
@@ -630,7 +631,7 @@
 
         var observer = new MutationObserver(function () {
             var open = drawer.classList.contains('open');
-            if (open !== wasOpen) setDrawerState(open, open);
+            if (open !== wasOpen) setDrawerState(open, false);
         });
         observer.observe(drawer, { attributes: true, attributeFilter: ['class'] });
 

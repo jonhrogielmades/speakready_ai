@@ -72,21 +72,21 @@
 
 
                 <div class="db-nav-section">Interview Practice</div>
-                <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> PH Mock Interview</a>
+                <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> Mock Interview</a>
 
                 <div class="db-nav-section">Specialized Training</div>
-               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> PH Modules</a>
-               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> PH Voice Rehearsal</a>
-               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> PH Challenges</a>
-               <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> PH Readiness Coach</a>
+               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Modules</a>
+               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
+               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Challenges</a>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> Readiness Coach</a>
 
                <div class="db-nav-section">Performance</div>
-               <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> PH Progress</a>
-               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> PH Feedback</a>
-               <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> PH Reports</a>
+               <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress</a>
+               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback</a>
+               <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> Reports</a>
 
                <div class="db-nav-section">Personal Goals</div>
-               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i> PH Mastery</a>
+               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i> Mastery</a>
             </div>
             <div class="db-bottom">
                <form action="{{ route('logout') }}" method="POST" style="display:inline;">

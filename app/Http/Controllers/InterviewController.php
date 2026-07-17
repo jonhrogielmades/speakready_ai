@@ -154,6 +154,8 @@ class InterviewController extends Controller
             );
 
             if (is_array($generated)) {
+                $generated = $this->roleAlignedQuestionTexts($generated, $position);
+
                 foreach ($generated as $idx => $qText) {
                     $this->createInterviewQuestion(
                         $session,
@@ -171,7 +173,7 @@ class InterviewController extends Controller
 
         if (! Question::where('interview_session_id', $session->id)->exists()) {
             $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
-            $fallbackQuestions = $this->sourceBackedQuestionTexts($dataset, $questionTypes, (int) ($validated['num_questions'] ?? 5), $validated['difficulty']);
+            $fallbackQuestions = $this->sourceBackedQuestionTexts($dataset, $questionTypes, (int) ($validated['num_questions'] ?? 5), $validated['difficulty'], $position);
             $fallbackQuestions = $this->localizedQuestionTexts($fallbackQuestions, $provider);
 
             foreach ($fallbackQuestions as $idx => $qText) {
@@ -404,8 +406,9 @@ class InterviewController extends Controller
         $followUpText = AIService::generateChatReply($session, $history, $validated['answer_text'], $provider, $isFinal, $this->currentLanguageConfig());
 
         if (! $followUpText) {
-            $followUpText = 'Thank you for sharing that. Could you tell me more about your experience in this field?'; // fallback
+            $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
         }
+        $followUpText = $this->roleAlignedQuestionText($followUpText, (string) $session->target_position);
 
         // 4. Save new AI Question
         $dataset = $this->datasetForSession($session);
@@ -1032,10 +1035,10 @@ class InterviewController extends Controller
                 ->all();
         }
 
-        return $questions;
+        return $this->roleAlignedQuestionTexts($questions, (string) $session->target_position);
     }
 
-    private function sourceBackedQuestionTexts(array $dataset, array $selectedQuestionTypes, int $limit, string $difficulty): array
+    private function sourceBackedQuestionTexts(array $dataset, array $selectedQuestionTypes, int $limit, string $difficulty, string $position): array
     {
         $limit = max(1, min(20, $limit));
         $selectedTypes = array_values(array_filter($selectedQuestionTypes));
@@ -1063,7 +1066,7 @@ class InterviewController extends Controller
                 ->values();
         }
 
-        return $questions->take($limit)->all();
+        return $this->roleAlignedQuestionTexts($questions->take($limit)->all(), $position);
     }
 
     private function philippinesInterviewFocus(?string $focus): string
@@ -1104,31 +1107,31 @@ class InterviewController extends Controller
         $templates = [
             'Behavioral' => [
                 "Tell me about a school, internship, BPO, freelance, or work project that best shows your readiness for a {$position} role in the Philippines.",
-                'Describe a time you received difficult feedback from a teacher, supervisor, client, or team lead and how you used it to improve.',
-                'Tell me about a time you worked with a Filipino teammate, customer, or stakeholder who had a different point of view.',
-                'Describe a situation where you took ownership even though the task was not fully explained to you.',
-                'Tell me about a mistake you made at work, school, or training and what changed afterward.',
+                "Describe a time you received difficult feedback that could affect your performance as {$position}, and how you used it to improve.",
+                "Tell me about a time you worked with a Filipino teammate, customer, or stakeholder who had a different point of view, and why that matters for a {$position} role.",
+                "Describe a situation where you took ownership of a task relevant to {$position} even though it was not fully explained to you.",
+                "Tell me about a mistake you made at work, school, or training and what changed in how you would perform as {$position}.",
             ],
             'Situational' => [
                 "If you joined as {$position} in a Philippine workplace and found unclear priorities in your first week, how would you respond?",
-                'Imagine a deadline is at risk because requirements changed late. What would you tell your lead or client first?',
+                "Imagine a {$position} deadline is at risk because requirements changed late. What would you tell your lead or client first?",
                 'How would you handle a local HR recruiter asking about salary expectations, availability, or work setup?',
-                "If {$employer} asked you to explain a complex decision to a non-technical audience, how would you structure it?",
-                'What would you do if you noticed a quality issue shortly before delivery to a customer or stakeholder?',
+                "If {$employer} asked you, as {$position}, to explain a complex decision to a non-technical audience, how would you structure it?",
+                "What would you do if you noticed a quality issue in your {$position} work shortly before delivery to a customer or stakeholder?",
             ],
             'Technical' => [
                 "Walk me through the technical strengths that make you a fit for a {$position} role in the Philippine market.",
-                'Describe a technical problem you solved and the tradeoffs behind your approach.',
-                'How do you validate that your work is reliable before handing it off to a teammate, client, or supervisor?',
-                "Tell me about a tool, framework, or process you would use to improve outcomes in {$focus}.",
-                'How do you debug an issue when the root cause is not obvious and the team needs an update quickly?',
+                "Describe a technical problem you solved that is relevant to {$position}, including the tradeoffs behind your approach.",
+                "As {$position}, how do you validate that your work is reliable before handing it off to a teammate, client, or supervisor?",
+                "Tell me about a tool, framework, or process you would use as {$position} to improve outcomes in {$focus}.",
+                "How would you debug an issue as {$position} when the root cause is not obvious and the team needs an update quickly?",
             ],
             'Personal' => [
                 "Why are you interested in a {$position} role in the Philippines right now?",
-                "What strengths would you bring to {$employer}, and where are you still growing?",
-                'How do you stay motivated when work becomes repetitive, high-volume, or ambiguous?',
-                'What Philippine workplace setup helps you do your best work: onsite, hybrid, remote, shifting, or regular hours?',
-                'What do you want a Philippine interviewer to remember about you after this conversation?',
+                "What strengths would you bring to {$employer} as {$position}, and where are you still growing?",
+                "As {$position}, how do you stay motivated when work becomes repetitive, high-volume, or ambiguous?",
+                "What Philippine workplace setup helps you do your best work as {$position}: onsite, hybrid, remote, shifting, or regular hours?",
+                "What do you want a Philippine interviewer to remember about your fit for {$position} after this conversation?",
             ],
         ];
 
@@ -1151,6 +1154,44 @@ class InterviewController extends Controller
         }
 
         return $questions;
+    }
+
+    private function roleAlignedQuestionTexts(array $questions, string $position): array
+    {
+        return array_values(array_filter(array_map(
+            fn ($question) => $this->roleAlignedQuestionText((string) $question, $position),
+            $questions
+        )));
+    }
+
+    private function roleAlignedQuestionText(string $questionText, string $position): string
+    {
+        $questionText = trim($questionText);
+        $position = trim($position);
+
+        if ($questionText === '' || $position === '') {
+            return $questionText;
+        }
+
+        $rolePhrase = "the {$position} role";
+        $replacements = [
+            '/\bfor this role\b/i' => "for {$rolePhrase}",
+            '/\bfor the role\b/i' => "for {$rolePhrase}",
+            '/\bfor your target role\b/i' => "for {$rolePhrase}",
+            '/\bthis role\b/i' => $rolePhrase,
+            '/\bthe target role\b/i' => $rolePhrase,
+            '/\byour target role\b/i' => $rolePhrase,
+        ];
+
+        foreach ($replacements as $pattern => $replacement) {
+            $questionText = preg_replace($pattern, $replacement, $questionText) ?? $questionText;
+        }
+
+        if (Str::contains(Str::lower($questionText), Str::lower($position))) {
+            return $questionText;
+        }
+
+        return 'For your target position of '.$position.', '.lcfirst($questionText);
     }
 
     private function localizedQuestionTexts(array $questions, string $provider): array

@@ -846,6 +846,7 @@
             letter-spacing: 0;
             line-height: 1.1;
             transition: color 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+            touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             border: none;
             background: transparent;
@@ -1772,12 +1773,12 @@
                </div>
                 <div class="mob-profile-section-title">Pages</div>
                 <div class="mob-profile-grid">
-                <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>PH Modules</span></a>
-                <a href="{{ route('user.drills.voice') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i><span>PH Voice</span></a>
-               <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>PH Challenges</span></a>
+                <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
+                <a href="{{ route('user.drills.voice') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i><span>Voice</span></a>
+               <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Challenges</span></a>
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Coach</span></a>
-               <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>PH Reports</span></a>
-               <a href="{{ route('user.leaderboard') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i><span>PH Mastery</span></a>
+               <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
+               <a href="{{ route('user.leaderboard') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i><span>Mastery</span></a>
                <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
                </div>
@@ -2008,7 +2009,7 @@
 
          document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('#mob-bottom-nav .mob-nav-item').forEach(item => {
-               item.addEventListener('pointerdown', () => playMobileNavIconMotion(item), { passive: true });
+               item.addEventListener('click', () => playMobileNavIconMotion(item), { passive: true });
                item.addEventListener('keydown', event => {
                   if (event.key === 'Enter' || event.key === ' ') {
                      playMobileNavIconMotion(item);
