@@ -57,6 +57,7 @@
         padding: 14px;
         text-align: left;
     }
+    .feedback-history-delete-label { display: none; }
 
     @media (max-width: 1199px) {
         .feedback-history-head {
@@ -132,6 +133,36 @@
 
         #feedback-filters #feedbackSearch {
             font-size: 0.72rem;
+        }
+    }
+
+    @media (max-width: 767px) {
+        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: stretch !important;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            margin-top: 6px !important;
+        }
+        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions > a,
+        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions > form {
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+            width: auto !important;
+            margin: 0 !important;
+        }
+        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
+            width: 100% !important;
+            min-height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px;
+        }
+        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-delete-label {
+            display: inline;
         }
     }
 </style>
@@ -217,13 +248,13 @@
                             @endif
                         </td>
                         <td class="border-0 py-3 text-end">
-                            <div class="d-flex justify-content-end gap-2">
+                            <div class="d-flex justify-content-end gap-2 feedback-history-actions">
                                 <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;">View Details</a>
                                 <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session" style="border-radius:8px;">
-                                        <i class="fa-solid fa-trash-can"></i>
+                                        <i class="fa-solid fa-trash-can"></i><span class="feedback-history-delete-label">Delete</span>
                                     </button>
                                 </form>
                             </div>

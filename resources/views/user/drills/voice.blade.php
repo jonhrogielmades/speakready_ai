@@ -145,26 +145,27 @@
             padding: 11px 7px;
             border-radius: 12px;
         }
-        #voice-rehearsal-page .row.g-2.mb-4 {
-            display: flex;
-            flex-wrap: nowrap;
-            margin-left: -4px;
-            margin-right: -4px;
+        #voice-rehearsal-page .voice-live-stats {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-left: 0;
+            margin-right: 0;
         }
-        #voice-rehearsal-page .row.g-2.mb-4 > .col-4 {
-            flex: 0 0 33.333333%;
-            max-width: 33.333333%;
-            width: 33.333333%;
-            padding-left: 4px;
-            padding-right: 4px;
+        #voice-rehearsal-page .voice-live-stats > [class*="col-"] {
+            width: auto !important;
+            max-width: none !important;
+            padding-left: 0;
+            padding-right: 0;
         }
         #voice-rehearsal-page .stat-val {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             line-height: 1.1;
         }
         #voice-rehearsal-page .stat-lbl {
-            font-size: 0.62rem;
+            font-size: 0.56rem;
             letter-spacing: 0;
+            line-height: 1.15;
         }
         #voice-rehearsal-page #transcriptView {
             min-height: 108px !important;
@@ -325,20 +326,26 @@
                     </div>
 
                     <!-- Live Stats -->
-                    <div class="row g-2 mb-4">
-                        <div class="col-4">
+                    <div class="row g-2 mb-4 voice-live-stats">
+                        <div class="col-3">
                             <div class="stat-box">
                                 <div class="stat-val" id="timeDisp">0:00</div>
                                 <div class="stat-lbl">Duration</div>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
                             <div class="stat-box">
                                 <div class="stat-val" id="wpmDisp">0</div>
                                 <div class="stat-lbl">WPM</div>
                             </div>
                         </div>
-                        <div class="col-4">
+                        <div class="col-3">
+                            <div class="stat-box">
+                                <div class="stat-val" id="stabilityDisp" style="color:#f59e0b;">0%</div>
+                                <div class="stat-lbl">Stability</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
                             <div class="stat-box">
                                 <div class="stat-val" id="fillerDisp" style="color:#f87171;">0</div>
                                 <div class="stat-lbl">Fillers</div>
@@ -915,6 +922,23 @@ function updateWPM() {
         const wpm = Math.round(wordCount / mins);
         document.getElementById('wpmDisp').innerText = wpm;
     }
+    updateLiveStability();
+}
+
+function updateLiveStability() {
+    const stability = document.getElementById('stabilityDisp');
+    if (!stability) return;
+
+    let score = 85;
+    const wpm = parseInt(document.getElementById('wpmDisp').innerText, 10) || 0;
+    if (wordCount < 5 || seconds < 5) score -= 30;
+    else if (wordCount < 20) score -= 10;
+    score -= Math.min(30, fillerCount * 3);
+    if (wpm > 0 && (wpm < 90 || wpm > 190)) score -= 12;
+
+    score = Math.max(0, Math.min(100, score));
+    stability.innerText = score + '%';
+    stability.style.color = score >= 80 ? '#34d399' : (score >= 60 ? '#f59e0b' : '#f87171');
 }
 
 function setPlaybackStatus(message, color = 'var(--tx3)') {

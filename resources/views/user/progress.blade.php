@@ -367,18 +367,26 @@
         }
         #history-table tbody td:nth-child(5) .d-flex {
             justify-content: stretch !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
             margin-top: 6px;
         }
         #history-table tbody td:nth-child(5) .btn-outline-primary {
-            flex: 1 1 auto;
+            flex: 1 1 0;
+            width: 100% !important;
             min-height: 38px;
         }
         #history-table tbody td:nth-child(5) form {
-            flex: 0 0 42px;
+            flex: 1 1 0;
+            width: auto !important;
+            margin: 0 !important;
         }
         #history-table tbody td:nth-child(5) .btn-outline-danger {
-            width: 42px;
+            width: 100% !important;
             min-height: 38px;
+            padding-left: 0;
+            padding-right: 0;
         }
         #voice-progress .row.text-center {
             --bs-gutter-x: 8px;

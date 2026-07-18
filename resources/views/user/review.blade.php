@@ -30,6 +30,7 @@
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
     .action-plan-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px; }
     .action-plan-item { background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:16px; }
+    .action-plan-links { display:flex;flex-wrap:wrap;gap:8px;align-items:center; }
     .retry-panel { display:none;background:var(--bg);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-top:18px; }
     .retry-panel.active { display:block; }
     .retry-meta { display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
@@ -44,6 +45,18 @@
     .answer-review-title { min-width:0;overflow-wrap:anywhere; }
     .answer-review-body, .answer-review-body * { min-width:0; }
     .answer-review-body p, .answer-review-body li, .answer-review-body div { overflow-wrap:anywhere; }
+    .feedback-hero-panel p {
+        text-align: justify;
+        text-justify: inter-word;
+    }
+    .revision-template-note {
+        color: var(--tx3);
+        font-size: .78rem;
+        margin-top: 8px;
+    }
+    .answer-retry-action {
+        margin-top: 1.5rem;
+    }
     @media (max-width: 768px) {
         .action-plan-grid { grid-template-columns:1fr; }
         .premium-panel {
@@ -65,23 +78,61 @@
             align-items:stretch !important;
         }
         .feedback-report-score { width:100%; }
+        .feedback-report-score > .d-flex {
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            text-align: center !important;
+        }
+        .feedback-report-score > .d-flex > div {
+            width: 100%;
+            text-align: center !important;
+        }
         .feedback-report-actions { margin-top:0 !important; }
-        .feedback-hero-content {
-            flex-direction:column;
-            gap:14px !important;
-        }
-        .feedback-hero-icon {
-            width:48px !important;
-            height:48px !important;
-        }
-        .feedback-hero-icon i { font-size:1.25rem !important; }
         .feedback-hero-grid { width:100%;margin:0; }
         .feedback-hero-grid > [class*="col-"] { padding-left:0;padding-right:0; }
+        .feedback-hero-grid > [class*="col-"] {
+            padding-inline: 6px !important;
+        }
+        .feedback-hero-panel p {
+            font-size:.9rem !important;
+            line-height:1.6 !important;
+        }
+        .feedback-hero-panel h5 {
+            font-size:1rem !important;
+            line-height:1.3 !important;
+            margin-bottom:9px !important;
+        }
         .feedback-hero-actions {
             margin-top:14px;
             padding-top:14px;
             border-top:1px solid rgba(59,130,246,.2);
             border-left:0 !important;
+        }
+        .action-plan-target {
+            width: 100%;
+            text-align: center !important;
+        }
+        .action-plan-links {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+            gap: 8px !important;
+        }
+        .action-plan-links .btn {
+            width: 100%;
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding-inline: 8px;
+            white-space: nowrap;
+        }
+        .action-plan-links .btn i {
+            margin-right: 0 !important;
+            flex: 0 0 auto;
         }
         .answer-review-heading { margin-top:28px !important;font-size:1.15rem; }
         .answer-review-card { margin-bottom:12px !important;padding:0 !important; }
@@ -96,6 +147,29 @@
         .answer-review-score .badge { font-size:.76rem !important;padding:6px 9px !important; }
         .answer-review-body { padding:14px !important; }
         .answer-review-body .p-4 { padding:14px !important; }
+        .revision-template-note {
+            display: block;
+            clear: both;
+            margin-top: 10px;
+            margin-bottom: 16px;
+            line-height: 1.45;
+        }
+        .answer-retry-action {
+            clear: both;
+            margin-top: 20px !important;
+            padding-top: 2px;
+        }
+        .answer-retry-action > .btn {
+            width: 100%;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .answer-retry-action > .btn i {
+            margin-right: 0 !important;
+        }
         .timeline-row { flex-direction:column;gap:3px; }
         .secure-share-dialog { margin:12px; }
         .secure-share-content { border-radius:12px !important; }
@@ -113,7 +187,13 @@
         $strengths = trim($feedback->strengths ?? '');
         $weaknesses = trim($feedback->weaknesses ?? '');
         $suggestions = trim($feedback->improvement_suggestions ?? '');
-        $feedbackSummary = $suggestions !== '' ? $suggestions : ($weaknesses !== '' ? $weaknesses : ($strengths !== '' ? $strengths : 'AI feedback was unavailable for this session.'));
+        $feedbackSummaryParts = array_filter([
+            $strengths !== '' ? 'Strengths: ' . $strengths : null,
+            $weaknesses !== '' ? 'Areas to improve: ' . $weaknesses : null,
+        ]);
+        $feedbackSummary = !empty($feedbackSummaryParts)
+            ? implode("\n\n", $feedbackSummaryParts)
+            : ($suggestions !== '' ? 'Review the recommended actions for your next practice step.' : 'AI feedback was unavailable for this session.');
         $comparisonRows = $comparisonRows ?? [];
         $actionPlan = is_array($sessionRecord->action_plan ?? null) ? $sessionRecord->action_plan : [];
         $actionPriorities = $actionPlan['priorities'] ?? [];
@@ -177,12 +257,9 @@
         <div class="col-12 animate-fade-up" style="animation-delay: 0.1s;">
             <div class="premium-panel feedback-hero-panel" style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important; border:1px solid rgba(59, 130, 246, 0.2) !important; padding:32px;">
                 <div class="d-flex align-items-start gap-4 feedback-hero-content">
-                    <div class="feedback-hero-icon" style="background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-                        <i class="fa-solid fa-robot text-white fs-3"></i>
-                    </div>
                     <div class="row w-100 feedback-hero-grid">
                         <div class="col-md-7">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">AI Personalized Feedback</h5>
+                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-robot me-2 text-primary"></i>AI Personalized Feedback</h5>
                             <p style="color:var(--tx);font-size:1rem;line-height:1.6;">
                                 {!! nl2br(e($feedbackSummary)) !!}
                             </p>
@@ -206,7 +283,7 @@
                         <h5 style="color:var(--tx);font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-route me-2" style="color:#10b981"></i>Post-Session Action Plan</h5>
                         <p style="color:var(--tx3);margin:0;font-size:.92rem;">{{ $actionPlan['headline'] ?? 'Targeted practice plan' }}</p>
                     </div>
-                    <div class="text-md-end">
+                    <div class="text-md-end action-plan-target">
                         <div style="font-size:.8rem;color:var(--tx3);font-weight:700;text-transform:uppercase;">Next Target</div>
                         <div style="font-size:1.8rem;font-weight:800;color:#10b981;line-height:1;">{{ $actionPlan['target_score'] ?? 70 }}%</div>
                     </div>
@@ -226,10 +303,13 @@
                     </div>
                 @endif
 
-                <div class="d-flex flex-wrap gap-2 align-items-center">
+                <div class="action-plan-links">
                     @foreach($recommendedPaths as $path)
+                        @php
+                            $pathLabel = preg_replace('/^PH\s+/i', '', $path['label'] ?? 'Practice');
+                        @endphp
                         <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ $path['url'] ?? route('interview.setup') }}">
-                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>{{ $path['label'] ?? 'Practice' }}
+                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>{{ $pathLabel }}
                         </a>
                     @endforeach
                     @if(!empty($actionPlan['next_session']))
@@ -404,37 +484,6 @@
                                 && (($answer->eye_contact_score ?? 0) > 0 || ($answer->posture_score ?? 0) > 0);
                         @endphp
 
-                        <!-- Feature 11: Voice Rehearsal Feedback -->
-                        @if($hasDeliveryMetrics)
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-3 col-6">
-                                <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Speaking Pace</div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->wpm ?? 0 }} WPM</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Duration</div>
-                                    <div style="color:var(--tx);font-weight:bold;font-size:1.1rem;">{{ $answer->voice_duration ?? 0 }}s</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Delivery Stability</div>
-                                    <div style="color:{{ ($answer->delivery_stability_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->delivery_stability_score ?? 0 }}%</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Filler Words</div>
-                                    <div style="color:#ef4444;font-weight:bold;font-size:1.1rem;">{{ $answer->filler_words_count ?? 0 }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        @endif
-
                         {{-- Legacy-only visual estimates are shown for historical transparency, never as readiness evidence. --}}
                         @if($hasLegacyBodyLanguageMetrics)
                         <div class="mb-2" style="color:var(--tx3);font-size:.8rem;">Legacy camera estimates — excluded from the current readiness score.</div>
@@ -456,27 +505,6 @@
                                 </div>
                             </div>
                         </div>
-                        @endif
-
-                        @if(($answer->self_reported_confidence ?? 0) > 0)
-                            <div class="mb-4" style="color:var(--tx3);font-size:.88rem;">
-                                <i class="fa-regular fa-face-smile me-1"></i>Self-reported preparedness after answering: <strong style="color:var(--tx);">{{ $answer->self_reported_confidence }}/100</strong>. This reflection is kept separate from automated scoring.
-                            </div>
-                        @endif
-
-                        @php
-                            $timeline = is_array($answer->transcript_timeline) ? array_slice($answer->transcript_timeline, -6) : [];
-                        @endphp
-                        @if(!empty($timeline))
-                            <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
-                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-wave-square me-2"></i>Transcript Timeline</h6>
-                                @foreach($timeline as $point)
-                                    <div class="timeline-row">
-                                        <span>{{ ucfirst(str_replace('_', ' ', $point['event'] ?? 'progress')) }}</span>
-                                        <span>{{ $point['at'] ?? 0 }}s / {{ $point['words'] ?? 0 }} words</span>
-                                    </div>
-                                @endforeach
-                            </div>
                         @endif
 
                         @php
@@ -582,22 +610,10 @@
                                 <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
                                     {{ $answer->better_sample_answer ?: 'No improved answer was generated for this response.' }}
                                 </div>
-                                <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Uses your answer as the source. Replace placeholders only with facts you can verify.</div>
+                                <div class="revision-template-note">Uses your answer as the source. Replace placeholders only with facts you can verify.</div>
                             </div>
                         </div>
 
-                        <!-- Feature 10: Follow-Up Questions -->
-                        <div class="mt-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
-                            <label style="font-size:0.9rem;color:#3b82f6;font-weight:700;text-transform:uppercase;margin-bottom:12px;"><i class="fa-solid fa-clipboard-question me-2"></i>Follow-Up Questions to Consider</label>
-                            <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:12px;">Think about these questions to encourage deeper practice:</p>
-                            <ul class="mb-0" style="color:var(--tx);line-height:1.8;">
-                                @if($answer->follow_up_question)
-                                    <li>{{ $answer->follow_up_question }}</li>
-                                @else
-                                    <li>No follow-up question was generated for this answer.</li>
-                                @endif
-                            </ul>
-                        </div>
                     @endif
 
                     @php
@@ -626,7 +642,7 @@
                         </div>
                     @endif
 
-                    <div class="mt-4">
+                    <div class="answer-retry-action">
                         <button type="button" class="btn btn-outline-primary btn-sm" style="border-radius:999px;font-weight:700;" onclick="toggleRetryPanel({{ $answer->id }})">
                             <i class="fa-solid fa-rotate-right me-1"></i>Retry This Answer
                         </button>
