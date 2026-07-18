@@ -12,6 +12,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -19,6 +20,69 @@ use Tests\TestCase;
 class ReliabilityHardeningTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_openai_feedback_uses_strict_evidence_linked_structured_output(): void
+    {
+        $answerText = 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.';
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => [
+                        'content' => json_encode([
+                            'per_question_feedback' => [[
+                                'id' => 71,
+                                'score' => 82,
+                                'clarity_score' => 80,
+                                'relevance_score' => 86,
+                                'grammar_score' => 82,
+                                'professionalism_score' => 80,
+                                'star_applicable' => false,
+                                'star_method_score' => 0,
+                                'evidence_quotes' => ['I inspected the query plan, compared row estimates, and verified index usage'],
+                                'ai_feedback' => 'You stated "I inspected the query plan, compared row estimates, and verified index usage", which directly supports a relevant diagnostic approach.',
+                            ]],
+                        ]),
+                    ],
+                ]],
+            ], 200),
+        ]);
+
+        $formatMethod = new \ReflectionMethod(AIService::class, 'feedbackResponseFormat');
+        $formatMethod->setAccessible(true);
+        $responseFormat = $formatMethod->invoke(null);
+        $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+        $providerMethod->setAccessible(true);
+        $providerResponse = $providerMethod->invokeArgs(null, [
+            'openai',
+            'Return evidence_quotes from UNTRUSTED TRANSCRIPT DATA JSON.',
+            [
+                'response_format' => $responseFormat,
+                'model' => 'gpt-4o-mini',
+                'timeout_seconds' => 5,
+                'attempts' => 1,
+            ],
+        ]);
+        $normalizeMethod = new \ReflectionMethod(AIService::class, 'normalizeFeedbackResponse');
+        $normalizeMethod->setAccessible(true);
+        $feedback = $normalizeMethod->invokeArgs(null, [$providerResponse, [[
+            'id' => 71,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => $answerText,
+        ]], []]);
+
+        $this->assertSame('ai_evidence_validated', $feedback['per_question_feedback'][0]['evaluation_source']);
+        Http::assertSent(function ($request): bool {
+            $payload = $request->data();
+
+            return data_get($payload, 'response_format.type') === 'json_schema'
+                && data_get($payload, 'response_format.json_schema.strict') === true
+                && data_get($payload, 'response_format.json_schema.schema.additionalProperties') === false
+                && str_contains((string) data_get($payload, 'messages.1.content'), 'evidence_quotes')
+                && str_contains((string) data_get($payload, 'messages.1.content'), 'UNTRUSTED TRANSCRIPT DATA JSON');
+        });
+    }
 
     public function test_admin_question_analytics_uses_recorded_answers(): void
     {
@@ -446,6 +510,32 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_retry_answer_persists_the_evidence_based_scoring_confidence(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'My first answer did not include enough specific evidence.',
+            'response_mode' => 'text',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_provider' => 'local'])
+            ->postJson(route('interview.answer.retry', $answer), [
+                'answer_text' => 'During a difficult project, I diagnosed the release issue, coordinated the rollback, and completed the recovery within ten minutes.',
+                'response_mode' => 'text',
+            ]);
+
+        $response->assertOk()->assertJsonPath('scoring_confidence', 50);
+        $retry = InterviewAnswer::where('retry_of_answer_id', $answer->id)->firstOrFail();
+        $this->assertSame(50, (int) $retry->scoring_confidence);
+        $this->assertSame('candidate_facts', $retry->improved_answer_source);
     }
 
     public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void

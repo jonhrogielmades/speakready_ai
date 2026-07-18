@@ -672,7 +672,11 @@ class InterviewController extends Controller
                     $totalGrammar += $g;
                     $totalProf += $p;
 
-                    $evidence = $assessment->answerEvidence($answer->answer_text ?? '', $qFeedback['ai_feedback'] ?? null);
+                    $evidence = $assessment->answerEvidence(
+                        $answer->answer_text ?? '',
+                        $qFeedback['ai_feedback'] ?? null,
+                        $answer->question
+                    );
                     $rubric = $assessment->rubricLevel($qScore);
                     $answer->update([
                         'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
@@ -710,7 +714,7 @@ class InterviewController extends Controller
                         'grammar_score' => 0,
                         'score' => $qScore,
                         'scoring_confidence' => 0,
-                        'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? ''),
+                        'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? '', null, $answer->question),
                         'rubric_level' => 'Unscored',
                         'improved_answer_source' => 'unavailable',
                     ]);
@@ -1043,7 +1047,11 @@ class InterviewController extends Controller
         if ($qFeedback) {
             $assessment = app(TrustworthyAssessmentService::class);
             $retryScore = $this->scoreValue($qFeedback['score'] ?? 0);
-            $evidence = $assessment->answerEvidence($retry->answer_text ?? '', $qFeedback['ai_feedback'] ?? null);
+            $evidence = $assessment->answerEvidence(
+                $retry->answer_text ?? '',
+                $qFeedback['ai_feedback'] ?? null,
+                $answer->question
+            );
             $rubric = $assessment->rubricLevel($retryScore);
             $retry->update([
                 'ai_feedback' => $qFeedback['ai_feedback'] ?? '',
@@ -1053,7 +1061,7 @@ class InterviewController extends Controller
                 'relevance_score' => $this->scoreValue($qFeedback['relevance_score'] ?? 0),
                 'grammar_score' => $this->scoreValue($qFeedback['grammar_score'] ?? 0),
                 'score' => $retryScore,
-                'scoring_confidence' => 80,
+                'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? 0),
                 'evidence_map' => $evidence,
                 'rubric_level' => $rubric['level'],
                 'recommendation_text' => $rubric['next_level'],

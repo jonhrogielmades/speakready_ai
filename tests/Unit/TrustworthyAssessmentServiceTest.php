@@ -74,6 +74,34 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertStringNotContainsString('increased revenue', $revision);
     }
 
+    public function test_technical_guidance_does_not_require_a_past_result_or_star_format(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $answer = 'I would inspect the query plan, compare row estimates, and verify index usage before changing the query.';
+        $question = new Question([
+            'type' => 'Technical',
+            'question_text' => 'How would you diagnose a slow database query?',
+        ]);
+
+        $evidence = $service->answerEvidence($answer, null, $question);
+        $revision = $service->groundedRevisionTemplate($answer, $evidence);
+
+        $this->assertFalse($evidence['result_required']);
+        $this->assertNotContains('A specific result, outcome, or measurable impact', $evidence['missing_evidence']);
+        $this->assertStringContainsString('Direct response:', $revision);
+        $this->assertStringNotContainsString('Situation/Task:', $revision);
+    }
+
+    public function test_evidence_detection_recognizes_common_personal_actions(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $map = $service->answerEvidence('I wrote the release guide, presented it to support, and trained the on-call team.');
+
+        $this->assertTrue($map['has_personal_action']);
+        $this->assertNotEmpty($map['supporting_excerpts']);
+        $this->assertNotContains('A clear statement of your personal action or ownership', $map['missing_evidence']);
+    }
+
     public function test_session_confidence_respects_answer_scoring_confidence(): void
     {
         $service = new TrustworthyAssessmentService;

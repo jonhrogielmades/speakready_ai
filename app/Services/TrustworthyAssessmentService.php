@@ -4,11 +4,16 @@ namespace App\Services;
 
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
+use App\Models\Question;
 use Illuminate\Support\Collection;
 
 class TrustworthyAssessmentService
 {
-    public const SCORE_VERSION = 2;
+    public const SCORE_VERSION = 3;
+
+    private const ACTION_VERB_PATTERN = '(?:lead|led|own|owned|build|built|create|created|resolve|resolved|solve|solved|fix|fixed|improve|improved|reduce|reduced|increase|increased|deliver|delivered|design|designed|implement|implemented|organize|organized|manage|managed|test|tested|analyze|analyzed|coordinate|coordinated|decide|decided|handle|handled|support|supported|communicate|communicated|verify|verified|check|checked|plan|planned|inspect|inspected|diagnose|diagnosed|review|reviewed|prioritize|prioritized|explain|explained|validate|validated|measure|measured|compare|compared|document|documented|escalate|escalated|write|wrote|prepare|prepared|train|trained|assist|assisted|propose|proposed|research|researched|configure|configured|deploy|deployed|investigate|investigated|monitor|monitored|report|reported|present|presented|negotiate|negotiated|mentor|mentored|facilitate|facilitated|maintain|maintained|migrate|migrated|automate|automated|optimize|optimized|launch|launched|process|processed|schedule|scheduled|delegate|delegated|select|selected|evaluate|evaluated|gather|gathered|contact|contacted|collaborate|collaborated|update|updated|identify|identified|recommend|recommended)';
+
+    private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
     public function deliveryStability(string $answerText, int $wpm, int $fillerWords, int $pauseCount, int $voiceDuration): ?int
     {
@@ -54,19 +59,33 @@ class TrustworthyAssessmentService
         return (int) round($score);
     }
 
-    public function answerEvidence(string $answer, ?string $feedback = null): array
+    public function answerEvidence(string $answer, ?string $feedback = null, Question|array|null $question = null): array
     {
         $sentences = preg_split('/(?<=[.!?])\s+/', trim($answer), -1, PREG_SPLIT_NO_EMPTY) ?: [];
         $evidence = collect($sentences)->filter(function (string $sentence) {
             return preg_match('/\b(I|we|my|our)\b/i', $sentence)
-                && preg_match('/\b(created|built|led|resolved|improved|reduced|increased|delivered|designed|implemented|organized|managed|tested|analyzed|coordinated|achieved|learned)\b/i', $sentence);
+                && preg_match('/\b'.self::ACTION_VERB_PATTERN.'\b/i', $sentence);
         })->take(3)->values()->all();
 
+        $questionType = strtolower(trim((string) ($question instanceof Question
+            ? $question->type
+            : ($question['type'] ?? ''))));
+        $questionText = trim((string) ($question instanceof Question
+            ? $question->question_text
+            : ($question['question_text'] ?? $question['question'] ?? '')));
+        $starApplicable = $questionType === 'behavioral'
+            || preg_match('/\b(tell me about|describe|share) (?:a |an )?(?:time|situation|experience)\b|\bgive (?:me )?an example\b/i', $questionText) === 1;
+        $resultRequired = $question === null
+            || $starApplicable
+            || preg_match('/\b(tell me about|describe|share|give me an example|walk me through)\b.*\b(time|situation|experience|project|case|incident|challenge|mistake)\b/i', $questionText) === 1;
+        $hasResult = preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent|hours?|days?|minutes?|seconds?)\b/i', $answer) === 1;
+        $hasPersonalAction = preg_match('/\bI\s+(?:personally\s+)?(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answer) === 1;
+
         $missing = [];
-        if (! preg_match('/\b\d+(?:\.\d+)?%?|\bpercent\b|\bresult|\boutcome|\bimpact|\bachieved|\breduced|\bincreased|\bimproved/i', $answer)) {
+        if ($resultRequired && ! $hasResult) {
             $missing[] = 'A specific result, outcome, or measurable impact';
         }
-        if (! preg_match('/\bI\s+(?:personally\s+)?(?:created|built|led|resolved|improved|reduced|increased|delivered|designed|implemented|organized|managed|tested|analyzed|coordinated|decided)/i', $answer)) {
+        if (! $hasPersonalAction) {
             $missing[] = 'A clear statement of your personal action or ownership';
         }
 
@@ -74,6 +93,10 @@ class TrustworthyAssessmentService
             'supporting_excerpts' => $evidence,
             'missing_evidence' => $missing,
             'feedback_basis' => $feedback ? mb_substr($feedback, 0, 500) : null,
+            'star_applicable' => $starApplicable,
+            'result_required' => $resultRequired,
+            'has_result' => $hasResult,
+            'has_personal_action' => $hasPersonalAction,
         ];
     }
 
@@ -91,11 +114,23 @@ class TrustworthyAssessmentService
             ? '[Add only a truthful, verified result, or state that no metric was recorded.]'
             : '[Restate only the result already present in your answer.]';
 
+        if ($evidence['star_applicable'] ?? false) {
+            return "Fact-grounded revision template - preserve only details you can verify:\n"
+                ."Verified source answer: {$excerpt}\n"
+                ."Situation/Task: [Briefly identify the context and your responsibility using only verified facts.]\n"
+                ."Action: [Restate the specific action you personally took from the source answer.]\n"
+                ."Result: {$resultPrompt}";
+        }
+
+        $evidencePrompt = ($evidence['result_required'] ?? true)
+            ? $resultPrompt
+            : '[Restate only the reasoning, verification step, or outcome already present; do not invent one.]';
+
         return "Fact-grounded revision template - preserve only details you can verify:\n"
             ."Verified source answer: {$excerpt}\n"
-            ."Situation/Task: [Briefly identify the context and your responsibility using only verified facts.]\n"
-            ."Action: [Restate the specific action you personally took from the source answer.]\n"
-            ."Result: {$resultPrompt}";
+            ."Direct response: [Answer the exact question in one sentence using only verified facts.]\n"
+            ."Supporting detail: [Organize the reasoning or actions already present in the source answer.]\n"
+            ."Evidence/verification: {$evidencePrompt}";
     }
 
     public function rubricLevel(int $score): array
@@ -111,7 +146,7 @@ class TrustworthyAssessmentService
     public function sessionMetadata(InterviewSession $session, Collection $answers, array $metrics, int $starScore, int $jobEvidenceScore): array
     {
         $answerEvidence = $answers->mapWithKeys(function (InterviewAnswer $answer) {
-            return [$answer->id => $this->answerEvidence($answer->answer_text ?? '', $answer->ai_feedback)];
+            return [$answer->id => $this->answerEvidence($answer->answer_text ?? '', $answer->ai_feedback, $answer->question)];
         })->all();
         $answered = $answers->where('is_skipped', false)->filter(fn ($answer) => trim((string) $answer->answer_text) !== '')->count();
         $confidence = min(95, max(20, 30 + ($answered * 10)));

@@ -84,6 +84,10 @@ class WeightedReadinessScoringTest extends TestCase
             ],
             'session_feedback' => $this->sessionFeedback(100, 100),
         ];
+        $response['per_question_feedback'][0]['evidence_quotes'] = [$answers[0]['answer']];
+        $response['per_question_feedback'][0]['ai_feedback'] = 'You stated "'.$answers[0]['answer'].'". This directly described diagnostic steps relevant to the question.';
+        $response['per_question_feedback'][1]['evidence_quotes'] = [$answers[1]['answer']];
+        $response['per_question_feedback'][1]['ai_feedback'] = 'You stated "'.$answers[1]['answer'].'". This described personal ownership and an outcome.';
 
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, []]);
 
@@ -92,7 +96,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(60, $normalized['per_question_feedback'][1]['score']);
         $this->assertSame(60, $normalized['session_feedback']['overall_readiness_score']);
         $this->assertSame(40, $normalized['session_feedback']['star_method_score']);
-        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['per_question_feedback'][0]['ai_feedback']);
+        $this->assertSame('ai_evidence_validated', $normalized['per_question_feedback'][0]['evaluation_source']);
+        $this->assertStringContainsString($answers[0]['answer'], $normalized['per_question_feedback'][0]['ai_feedback']);
     }
 
     public function test_it_rejects_duplicate_extra_and_out_of_range_provider_scores(): void
@@ -104,6 +109,8 @@ class WeightedReadinessScoringTest extends TestCase
             'answer' => 'An index can improve selective reads but adds storage and write overhead, so I verify the workload and query plan first.',
         ]];
         $validItem = $this->feedbackItem(11, 80, 80, 80, 80, 80, false, 0);
+        $validItem['evidence_quotes'] = ['An index can improve selective reads but adds storage and write overhead'];
+        $validItem['ai_feedback'] = 'You stated "An index can improve selective reads but adds storage and write overhead", which identifies a relevant indexing tradeoff.';
         $validResponse = [
             'per_question_feedback' => [$validItem],
             'session_feedback' => $this->sessionFeedback(80, 0),
@@ -211,6 +218,87 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertStringNotContainsString('Kubernetes', $normalized['ai_feedback']);
         $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
+    }
+
+    public function test_strict_feedback_schema_requires_evidence_linked_items(): void
+    {
+        $format = $this->invokePrivate('feedbackResponseFormat', []);
+        $schema = $format['json_schema']['schema'];
+        $item = $schema['properties']['per_question_feedback']['items'];
+
+        $this->assertSame('json_schema', $format['type']);
+        $this->assertTrue($format['json_schema']['strict']);
+        $this->assertFalse($schema['additionalProperties']);
+        $this->assertFalse($item['additionalProperties']);
+        $this->assertContains('evidence_quotes', $item['required']);
+        $this->assertContains('ai_feedback', $item['required']);
+        $this->assertArrayNotHasKey('session_feedback', $schema['properties']);
+    }
+
+    public function test_openai_base_urls_are_normalized_to_the_chat_completions_endpoint(): void
+    {
+        $this->assertSame(
+            'https://api.openai.com/v1/chat/completions',
+            $this->invokePrivate('openAiChatEndpoint', ['https://api.openai.com/v1'])
+        );
+        $this->assertSame(
+            'https://api.openai.com/v1/chat/completions',
+            $this->invokePrivate('openAiChatEndpoint', ['https://api.openai.com/v1/responses'])
+        );
+        $this->assertSame(
+            'https://example.test/custom/chat/completions',
+            $this->invokePrivate('openAiChatEndpoint', ['https://example.test/custom/chat/completions'])
+        );
+    }
+
+    public function test_it_rejects_modified_or_missing_evidence_quotes(): void
+    {
+        $answerText = 'I inspected the query plan and verified the index usage before changing the query.';
+        $answers = [[
+            'id' => 41,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow query?',
+            'answer' => $answerText,
+        ]];
+        $item = $this->feedbackItem(41, 80, 80, 80, 80, 80, false, 0);
+        $item['evidence_quotes'] = ['I reviewed the query plan and verified the index usage'];
+        $item['ai_feedback'] = 'You stated "I reviewed the query plan and verified the index usage", which supports the diagnostic score.';
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$item],
+        ], $answers]));
+
+        $item['evidence_quotes'] = ['I inspected the query plan and verified the index usage'];
+        $item['ai_feedback'] = 'You stated "I inspected the query plan and verified the index usage", which supports the diagnostic score.';
+
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$item],
+        ], $answers]));
+    }
+
+    public function test_session_summary_cites_candidate_evidence_and_counts_observed_gaps(): void
+    {
+        $strongAnswer = 'During a service outage, I diagnosed the failed deployment, coordinated the rollback, and restored service within ten minutes.';
+        $answers = [
+            [
+                'id' => 51,
+                'question_type' => 'Behavioral',
+                'question' => 'Tell me about a time you handled a service outage.',
+                'answer' => $strongAnswer,
+            ],
+            [
+                'id' => 52,
+                'question_type' => 'Behavioral',
+                'question' => 'Tell me about a difficult team handoff.',
+                'answer' => 'During a difficult handoff, the team discussed the issue and eventually moved forward.',
+            ],
+        ];
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[], $answers, []]);
+
+        $this->assertStringContainsString($strongAnswer, $normalized['session_feedback']['strengths']);
+        $this->assertStringContainsString('1 of 2 answered responses did not clearly identify personal action or ownership', $normalized['session_feedback']['weaknesses']);
+        $this->assertStringNotContainsString('appears to have', $normalized['session_feedback']['strengths']);
     }
 
     private function feedbackItem(
