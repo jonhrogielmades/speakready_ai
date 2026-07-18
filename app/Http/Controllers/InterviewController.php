@@ -19,6 +19,7 @@ use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -107,6 +108,8 @@ class InterviewController extends Controller
             $validated['time_limit'] = min(3, (int) $validated['time_limit'] + 1);
         }
         $assessmentMode = ($validated['live_feedback_mode'] ?? 'coaching') === 'real_interview' ? 'assessment' : 'coached';
+
+        $this->discardActiveInterviewSessions(Auth::id());
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
@@ -277,40 +280,7 @@ class InterviewController extends Controller
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
 
-        $isSkipped = filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $answerText = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
-        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
-        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
-
-        InterviewAnswer::updateOrCreate(
-            [
-                'interview_session_id' => $session->id,
-                'question_id' => $question->id,
-                'retry_of_answer_id' => null,
-            ],
-            array_merge([
-                'answer_text' => $answerText,
-                'transcript_timeline' => $transcriptTimeline,
-                'paste_event_count' => $integrity['paste_event_count'],
-                'pasted_character_count' => $integrity['pasted_character_count'],
-                'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
-                'answer_integrity_flags' => $integrity['answer_integrity_flags'],
-                'response_mode' => $validated['response_mode'] ?? 'text',
-                'is_skipped' => $isSkipped,
-                'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
-                'wpm' => $deliveryMetrics['wpm'],
-                'voice_duration' => $deliveryMetrics['voice_duration'],
-                'filler_words_count' => $deliveryMetrics['filler_words_count'],
-                'pause_count' => $deliveryMetrics['pause_count'],
-                'confidence_score' => $deliveryMetrics['confidence_score'],
-                'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
-                'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
-                'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
-                'posture_score' => $deliveryMetrics['posture_score'],
-            ], $this->integrityAuditFields($integrity))
-        );
+        $this->persistInterviewAnswer($session, $question, $validated);
 
         if (array_key_exists('notes', $validated)) {
             $session->update(['notes' => $validated['notes']]);
@@ -378,42 +348,39 @@ class InterviewController extends Controller
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
         $conversationContext = $this->normalizedConversationContextFrom(
             $this->jsonPayloadFrom($validated['conversation_context'] ?? null)
         );
-        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
-        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
 
         // 1. Save User's Answer
-        $answer = InterviewAnswer::updateOrCreate(
-            [
-                'interview_session_id' => $session->id,
-                'question_id' => $question->id,
-                'retry_of_answer_id' => null,
-            ],
-            array_merge([
-                'answer_text' => $answerText,
-                'transcript_timeline' => $transcriptTimeline,
-                'paste_event_count' => $integrity['paste_event_count'],
-                'pasted_character_count' => $integrity['pasted_character_count'],
-                'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
-                'answer_integrity_flags' => $integrity['answer_integrity_flags'],
-                'response_mode' => $validated['response_mode'] ?? 'text',
-                'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
-                'wpm' => $deliveryMetrics['wpm'],
-                'voice_duration' => $deliveryMetrics['voice_duration'],
-                'filler_words_count' => $deliveryMetrics['filler_words_count'],
-                'pause_count' => $deliveryMetrics['pause_count'],
-                'confidence_score' => $deliveryMetrics['confidence_score'],
-                'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
-                'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
-                'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
-                'posture_score' => $deliveryMetrics['posture_score'],
-            ], $this->integrityAuditFields($integrity))
-        );
+        $answer = $this->persistInterviewAnswer($session, $question, $validated, $answerText);
+
+        $questionSequence = $this->orderedQuestionsForSession($session);
+        $currentQuestionIndex = $this->questionIndexInSequence($questionSequence, $question);
+        $targetQuestionCount = $this->targetQuestionCountForSession($session);
+
+        if ($currentQuestionIndex === null) {
+            return response()->json(['error' => 'This question is not in the active interview sequence.'], 409);
+        }
+
+        if ($currentQuestionIndex >= $targetQuestionCount - 1) {
+            $session->update([
+                'current_question_index' => $currentQuestionIndex,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'interview_completed' => true,
+            ]);
+        }
+
+        if ($nextQuestion = $this->nextQuestionInSequence($questionSequence, $currentQuestionIndex, $targetQuestionCount)) {
+            $session->update([
+                'current_question_index' => $currentQuestionIndex + 1,
+            ]);
+
+            return $this->nextQuestionResponse($nextQuestion);
+        }
 
         // 2. Fetch Conversation History
         $history = InterviewAnswer::with('question')
@@ -430,7 +397,7 @@ class InterviewController extends Controller
 
         // 3. Generate Follow-up via AI
         $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
-        $isFinal = filter_var($validated['is_final_question'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
         if (! $followUpEnabled) {
             $provider = 'local';
         }
@@ -444,38 +411,78 @@ class InterviewController extends Controller
         }
         $followUpText = $this->roleAlignedQuestionText($followUpText, (string) $session->target_position);
 
-        // 4. Save new AI Question
-        $dataset = $this->datasetForSession($session);
-        $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
+        return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount) {
+            $lockedSession = InterviewSession::with('category')
+                ->where('user_id', Auth::id())
+                ->where('status', 'in_progress')
+                ->lockForUpdate()
+                ->find($session->id);
 
-        $questionIndex = InterviewAnswer::where('interview_session_id', $session->id)->count();
-        $newQuestion = $this->createInterviewQuestion(
-            $session,
-            $session->category,
-            $followUpText,
-            $session->difficulty,
-            $this->decodeQuestionTypes($session->question_types),
-            $questionIndex,
-            $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
-            $provider !== 'local'
-        );
+            if (! $lockedSession) {
+                return response()->json(['error' => 'Interview session is no longer active.'], 409);
+            }
 
-        if (! $newQuestion) {
-            return response()->json(['error' => 'Unable to prepare the next interview question.'], 500);
-        }
+            $questionSequence = $this->orderedQuestionsForSession($lockedSession);
+            $currentQuestionIndex = $this->questionIndexInSequence($questionSequence, $question);
 
-        $session->update([
-            'current_question_index' => max(0, $questionIndex),
-        ]);
+            if ($currentQuestionIndex === null) {
+                return response()->json(['error' => 'This question is not in the active interview sequence.'], 409);
+            }
 
-        return response()->json([
-            'success' => true,
-            'next_question_id' => $newQuestion->id,
-            'next_question_text' => $newQuestion->question_text,
-            'source_name' => $newQuestion->source_name,
-            'source_url' => $newQuestion->source_url,
-            'source_type' => $newQuestion->source_type,
-        ]);
+            if ($currentQuestionIndex >= $targetQuestionCount - 1) {
+                $lockedSession->update([
+                    'current_question_index' => $currentQuestionIndex,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'interview_completed' => true,
+                ]);
+            }
+
+            if ($nextQuestion = $this->nextQuestionInSequence($questionSequence, $currentQuestionIndex, $targetQuestionCount)) {
+                $lockedSession->update([
+                    'current_question_index' => $currentQuestionIndex + 1,
+                ]);
+
+                return $this->nextQuestionResponse($nextQuestion);
+            }
+
+            if ($questionSequence->count() >= $targetQuestionCount) {
+                return response()->json([
+                    'success' => true,
+                    'interview_completed' => true,
+                ]);
+            }
+
+            // 4. Save new AI Question
+            $dataset = $this->datasetForSession($lockedSession);
+            $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
+            $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
+            $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts);
+            $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
+
+            $newQuestion = $this->createInterviewQuestion(
+                $lockedSession,
+                $lockedSession->category,
+                $safeFollowUpText,
+                $lockedSession->difficulty,
+                $this->decodeQuestionTypes($lockedSession->question_types),
+                $nextQuestionIndex,
+                $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
+                $provider !== 'local'
+            );
+
+            if (! $newQuestion) {
+                return response()->json(['error' => 'Unable to prepare the next interview question.'], 500);
+            }
+
+            $lockedSession->update([
+                'current_question_index' => $nextQuestionIndex,
+            ]);
+
+            return $this->nextQuestionResponse($newQuestion);
+        });
     }
 
     public function speech(Request $request)
@@ -703,8 +710,9 @@ class InterviewController extends Controller
             $gameResultScore = min(100, $gameResultScore + 5);
         }
 
-        $scoreRecord = Score::create([
+        $scoreRecord = Score::updateOrCreate([
             'interview_session_id' => $session->id,
+        ], [
             'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
             'assessment_mode' => $session->assessment_mode,
             'clarity_score' => $clarity,
@@ -726,8 +734,9 @@ class InterviewController extends Controller
         ]);
 
         // Generate Session-level Feedback from AI
-        $feedbackRecord = Feedback::create([
+        $feedbackRecord = Feedback::updateOrCreate([
             'interview_session_id' => $session->id,
+        ], [
             'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
             'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
             'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
@@ -866,6 +875,37 @@ class InterviewController extends Controller
         ]);
     }
 
+    public function abortSession(Request $request)
+    {
+        if (! Auth::check()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'session_id' => 'nullable|integer',
+        ]);
+
+        $sessionId = $validated['session_id'] ?? session('active_interview_id');
+        $sessionRecord = $sessionId ? InterviewSession::find($sessionId) : null;
+
+        if ($sessionRecord && (int) $sessionRecord->user_id !== (int) Auth::id()) {
+            abort(403);
+        }
+
+        if ($sessionRecord && $sessionRecord->status === 'in_progress') {
+            $this->deleteInterviewSessionData($sessionRecord);
+        }
+
+        if (! $sessionRecord || (int) session('active_interview_id') === (int) ($sessionRecord->id ?? 0)) {
+            $this->forgetActiveInterviewKeys();
+        }
+
+        return response()->json([
+            'success' => true,
+            'redirect_url' => route('interview.setup'),
+        ]);
+    }
+
     public function retryAnswer(Request $request, InterviewAnswer $answer)
     {
         if (! Auth::check()) {
@@ -983,6 +1023,43 @@ class InterviewController extends Controller
             'follow_up_question' => $retry->follow_up_question ?: '',
             'created_at' => optional($retry->created_at)->format('M d, Y g:i A'),
         ]);
+    }
+
+    private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): InterviewAnswer
+    {
+        $answerText ??= $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
+        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
+        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
+        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
+
+        return InterviewAnswer::updateOrCreate(
+            [
+                'interview_session_id' => $session->id,
+                'question_id' => $question->id,
+                'retry_of_answer_id' => null,
+            ],
+            array_merge([
+                'answer_text' => $answerText,
+                'transcript_timeline' => $transcriptTimeline,
+                'paste_event_count' => $integrity['paste_event_count'],
+                'pasted_character_count' => $integrity['pasted_character_count'],
+                'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
+                'answer_integrity_flags' => $integrity['answer_integrity_flags'],
+                'response_mode' => $validated['response_mode'] ?? 'text',
+                'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
+                'wpm' => $deliveryMetrics['wpm'],
+                'voice_duration' => $deliveryMetrics['voice_duration'],
+                'filler_words_count' => $deliveryMetrics['filler_words_count'],
+                'pause_count' => $deliveryMetrics['pause_count'],
+                'confidence_score' => $deliveryMetrics['confidence_score'],
+                'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+                'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
+                'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
+                'posture_score' => $deliveryMetrics['posture_score'],
+            ], $this->integrityAuditFields($integrity))
+        );
     }
 
     private function currentLanguageConfig(): array
@@ -1254,6 +1331,79 @@ class InterviewController extends Controller
         }
 
         return $sessionQuestion;
+    }
+
+    private function orderedQuestionsForSession(InterviewSession $session)
+    {
+        return Question::where('interview_session_id', $session->id)
+            ->orderBy('id')
+            ->get();
+    }
+
+    private function questionIndexInSequence($questionSequence, Question $question): ?int
+    {
+        $index = $questionSequence->values()->search(fn (Question $item) => (int) $item->id === (int) $question->id);
+
+        return $index === false ? null : (int) $index;
+    }
+
+    private function targetQuestionCountForSession(InterviewSession $session): int
+    {
+        return max(1, min(20, (int) ($session->num_questions ?? 1)));
+    }
+
+    private function nextQuestionInSequence($questionSequence, int $currentQuestionIndex, int $targetQuestionCount): ?Question
+    {
+        $nextQuestionIndex = $currentQuestionIndex + 1;
+        if ($nextQuestionIndex >= $targetQuestionCount) {
+            return null;
+        }
+
+        return $questionSequence->values()->get($nextQuestionIndex);
+    }
+
+    private function nextQuestionResponse(Question $question)
+    {
+        return response()->json([
+            'success' => true,
+            'next_question_id' => $question->id,
+            'next_question_text' => $question->question_text,
+            'source_name' => $question->source_name,
+            'source_url' => $question->source_url,
+            'source_type' => $question->source_type,
+        ]);
+    }
+
+    private function uniqueQuestionTextForSession(InterviewSession $session, string $questionText, array $existingQuestionTexts): string
+    {
+        $normalizedExisting = collect($existingQuestionTexts)
+            ->map(fn ($text) => $this->normalizedQuestionText((string) $text))
+            ->filter()
+            ->all();
+
+        if (! in_array($this->normalizedQuestionText($questionText), $normalizedExisting, true)) {
+            return $questionText;
+        }
+
+        $targetPosition = trim((string) $session->target_position) ?: 'the role';
+        $alternatives = [
+            "Thinking about a different example for the {$targetPosition} role, what result or lesson would you want the interviewer to remember?",
+            "For the {$targetPosition} role, what is another specific situation that shows your judgment, ownership, and impact?",
+            "What remaining evidence best shows that you can succeed in the {$targetPosition} role?",
+        ];
+
+        foreach ($alternatives as $alternative) {
+            if (! in_array($this->normalizedQuestionText($alternative), $normalizedExisting, true)) {
+                return $alternative;
+            }
+        }
+
+        return $alternatives[0];
+    }
+
+    private function normalizedQuestionText(string $questionText): string
+    {
+        return trim(preg_replace('/[^a-z0-9]+/', ' ', Str::lower($questionText)) ?? '');
     }
 
     private function fallbackQuestionTextsForSession(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
@@ -1712,10 +1862,42 @@ class InterviewController extends Controller
         return $gameLevelId > 0 ? GameLevel::find($gameLevelId) : null;
     }
 
+    private function discardActiveInterviewSessions(int $userId): void
+    {
+        InterviewSession::where('user_id', $userId)
+            ->where('status', 'in_progress')
+            ->get()
+            ->each(fn (InterviewSession $session) => $this->deleteInterviewSessionData($session));
+    }
+
+    private function deleteInterviewSessionData(InterviewSession $session): void
+    {
+        DB::transaction(function () use ($session) {
+            Feedback::where('interview_session_id', $session->id)->delete();
+            Score::where('interview_session_id', $session->id)->delete();
+            InterviewAnswer::where('interview_session_id', $session->id)->delete();
+            Question::where('interview_session_id', $session->id)->delete();
+            $session->delete();
+        });
+
+        if ((int) session('active_interview_id') === (int) $session->id) {
+            $this->forgetActiveInterviewKeys();
+        }
+
+        if ((int) session('game_level_id') === (int) ($session->game_level_id ?? 0)) {
+            session()->forget('game_level_id');
+        }
+    }
+
+    private function forgetActiveInterviewKeys(): void
+    {
+        session()->forget(['active_interview_id', 'active_interview_provider', 'active_interview_context']);
+    }
+
     private function forgetCompletedSessionState(InterviewSession $session, ?GameLevel $gameLevel): void
     {
         if ((int) session('active_interview_id') === (int) $session->id) {
-            session()->forget(['active_interview_id', 'active_interview_provider', 'active_interview_context']);
+            $this->forgetActiveInterviewKeys();
         }
 
         if ($gameLevel && (int) session('game_level_id') === (int) $gameLevel->id) {

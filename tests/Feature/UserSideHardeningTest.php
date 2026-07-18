@@ -448,6 +448,29 @@ class UserSideHardeningTest extends TestCase
         $this->assertDatabaseCount('interview_sessions', 0);
     }
 
+    public function test_game_start_repairs_missing_game_session_tables_before_insert(): void
+    {
+        Schema::dropIfExists('game_answers');
+        Schema::dropIfExists('game_sessions');
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        $category = $this->category(['type' => 'game']);
+        $level = $this->gameLevel($category);
+
+        $this->actingAs($user)
+            ->post(route('user.game.start', $level))
+            ->assertRedirect(route('user.game.match'));
+
+        $this->assertTrue(Schema::hasTable('game_sessions'));
+        $this->assertTrue(Schema::hasTable('game_answers'));
+        $this->assertDatabaseHas('game_sessions', [
+            'user_id' => $user->id,
+            'game_level_id' => $level->id,
+            'status' => 'in_progress',
+        ]);
+    }
+
     public function test_game_answer_and_finish_use_separate_game_session_flow(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

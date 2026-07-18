@@ -121,7 +121,7 @@ class ReliabilityHardeningTest extends TestCase
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category(['title' => 'Software Engineering']);
-        $session = $this->sessionFor($user, $category);
+        $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
         $question = $this->question($category, ['interview_session_id' => $session->id]);
         $followUpText = 'What tradeoff would you make differently if you handled that project again?';
         $roleAlignedFollowUpText = 'For your target position of Developer, what tradeoff would you make differently if you handled that project again?';
@@ -193,11 +193,6 @@ class ReliabilityHardeningTest extends TestCase
             'interview_session_id' => $session->id,
             'question_text' => 'Tell me about a release you owned.',
         ]);
-        $secondQuestion = $this->question($category, [
-            'interview_session_id' => $session->id,
-            'question_text' => 'How would you verify a production fix before handoff?',
-        ]);
-
         $response = $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
@@ -210,18 +205,138 @@ class ReliabilityHardeningTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('source_type', 'ai_adapted_source_backed')
-            ->assertJsonPath('next_question_text', fn (string $text) => str_contains($text, 'You mentioned you owned a small release')
-                && str_contains($text, 'What result')
-                && str_contains($text, 'Developer role'));
-
-        $this->assertNotSame($secondQuestion->id, $response->json('next_question_id'));
+            ->assertJsonPath('source_type', 'ai_adapted_source_backed');
+        $this->assertTrue(str_contains($response->json('next_question_text'), 'owned a small release')
+            && str_contains($response->json('next_question_text'), 'final question')
+            && str_contains($response->json('next_question_text'), 'Developer'));
 
         $this->assertDatabaseHas('interview_answers', [
             'interview_session_id' => $session->id,
             'question_id' => $firstQuestion->id,
         ]);
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_interview_reuses_existing_next_question_without_generating_duplicate(): void
+    {
+        Http::fake();
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
+        $firstQuestion = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a release you owned.',
+        ]);
+        $secondQuestion = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'How would you verify a production fix before handoff?',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+            ])
+            ->postJson(route('interview.chatReply'), [
+                'question_id' => $firstQuestion->id,
+                'answer_text' => 'I owned a release, coordinated QA, and communicated the rollback plan.',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('next_question_id', $secondQuestion->id)
+            ->assertJsonPath('next_question_text', $secondQuestion->question_text);
+
+        Http::assertNothingSent();
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_interview_chat_reply_cannot_generate_after_final_question(): void
+    {
+        Http::fake();
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category, ['num_questions' => 1]);
+        $finalQuestion = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Why are you the right fit for this role?',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+            ])
+            ->postJson(route('interview.chatReply'), [
+                'question_id' => $finalQuestion->id,
+                'answer_text' => 'I have relevant experience, communicate clearly, and can deliver the role outcomes.',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'interview_completed' => true,
+            ]);
+
+        Http::assertNothingSent();
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_abort_interview_deletes_unfinished_session_data_and_clears_active_keys(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category, [
+            'num_questions' => 2,
+            'session_state' => json_encode(['has_started' => true, 'currentQIdx' => 0]),
+        ]);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'Draft answer that should be removed.',
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 50,
+            'relevance_score' => 50,
+            'grammar_score' => 50,
+            'professionalism_score' => 50,
+            'overall_readiness_score' => 50,
+        ]);
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'Temporary strength.',
+            'weaknesses' => 'Temporary weakness.',
+            'improvement_suggestions' => 'Temporary suggestion.',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+                'active_interview_context' => 'interview',
+            ])
+            ->postJson(route('interview.abort'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+                'redirect_url' => route('interview.setup'),
+            ])
+            ->assertSessionMissing('active_interview_id')
+            ->assertSessionMissing('active_interview_provider')
+            ->assertSessionMissing('active_interview_context');
+
+        $this->assertDatabaseMissing('interview_sessions', ['id' => $session->id]);
+        $this->assertDatabaseMissing('questions', ['id' => $question->id]);
+        $this->assertDatabaseMissing('interview_answers', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
     }
 
     public function test_interview_session_renders_human_opening_and_closing_conversation_flow(): void
@@ -247,8 +362,12 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('closingConversationText', false)
             ->assertSee('concludeAndFinishInterview', false)
             ->assertSee('playClosingConversationAndSubmit', false)
-            ->assertSee('onclick="concludeAndFinishInterview({ saveDraft: true })"', false)
-            ->assertSee('saveCurrentAnswer(false, false)', false)
+            ->assertSee('abortInterviewSession', false)
+            ->assertSee('onclick="abortInterviewSession()"', false)
+            ->assertSee(route('interview.abort'), false)
+            ->assertSee('openingHasPlayed', false)
+            ->assertSee('startInterviewSession();', false)
+            ->assertDontSee('onclick="concludeAndFinishInterview({ saveDraft: true })"', false)
             ->assertSee('conversation_context', false)
             ->assertSee('sessionTargetPosition', false);
     }

@@ -11,6 +11,7 @@ use App\Models\Profile;
 use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\LearningGameScoringService;
+use App\Support\GameSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -39,6 +40,8 @@ class GameController extends Controller
                 abort(404);
             }
         }
+
+        GameSchema::ensure();
 
         $this->refreshEnergyIfNeeded($profile);
 
@@ -175,6 +178,8 @@ class GameController extends Controller
 
     public function arenaSession(Request $request)
     {
+        GameSchema::ensure();
+
         $session_id = session('active_game_session_id');
         $level_id = session('game_level_id');
         
@@ -208,6 +213,8 @@ class GameController extends Controller
 
     public function answer(Request $request)
     {
+        GameSchema::ensure();
+
         $validated = $request->validate([
             'game_session_id' => 'required|exists:game_sessions,id',
             'question_index' => 'required|integer|min:0',
@@ -273,6 +280,8 @@ class GameController extends Controller
 
     public function saveState(Request $request)
     {
+        GameSchema::ensure();
+
         $validated = $request->validate([
             'game_session_id' => 'required|exists:game_sessions,id',
             'notes' => 'nullable|string|max:10000',
@@ -304,6 +313,8 @@ class GameController extends Controller
 
     public function finish(Request $request, LearningGameScoringService $scorer)
     {
+        GameSchema::ensure();
+
         $validated = $request->validate([
             'game_session_id' => 'required|exists:game_sessions,id',
             'duration_seconds' => 'nullable|integer|min:0|max:28800',

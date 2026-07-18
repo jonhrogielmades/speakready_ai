@@ -716,7 +716,7 @@
                     <!-- Left: Navigation / Secondary -->
                     <div class="d-flex gap-2 w-100 flex-fill">
                         <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
-                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="concludeAndFinishInterview({ saveDraft: true })" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="abortInterviewSession()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
                     </div>
                     
                     <!-- Right: Primary Actions (Mic + Send) -->
@@ -898,6 +898,14 @@
             let chatHistory = Array.isArray(savedSessionState.chatHistory) ? savedSessionState.chatHistory : [];
             let stateSaveDebounce = null;
             let interviewEnding = false;
+            let interviewTerminated = false;
+            let interviewStarted = false;
+            let answerListenersBound = false;
+            let isSubmittingAnswer = false;
+            let finalAnswerSubmitted = false;
+            let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(chatHistory) && chatHistory.some(item => item && item.role === 'interviewer' && String(item.text || '').includes('Let us start with the first question.'))));
+            const pendingFetchControllers = new Set();
+            const displayedQuestionIds = new Set();
             
             // Answers state
             function defaultAnswerState() {
@@ -1246,6 +1254,7 @@
             let questionSpeechToken = 0;
             let activeQuestionAudio = null;
             let captionInterval = null;
+            let activeSpeechCompletion = null;
             let serverVoiceUnavailable = !serverAiVoiceEnabled;
             const serverSpeechUrlCache = new Map();
 
@@ -1253,13 +1262,30 @@
                 return responseMode === 'voice' || responseMode === 'hybrid' || responseMode === 'voice_and_text';
             }
 
+            function managedFetch(url, options = {}) {
+                const controller = new AbortController();
+                pendingFetchControllers.add(controller);
+
+                return fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                }).finally(() => {
+                    pendingFetchControllers.delete(controller);
+                });
+            }
+
+            function abortManagedFetches() {
+                pendingFetchControllers.forEach(controller => controller.abort());
+                pendingFetchControllers.clear();
+            }
+
             function scheduleAutoTranscriptionStart(token) {
                 if (token !== questionSpeechToken) return;
                 clearTimeout(autoStartAfterQuestionTimer);
-                if (!isVoiceTranscriptionMode()) return;
+                if (!isVoiceTranscriptionMode() || interviewEnding || interviewTerminated) return;
 
                 autoStartAfterQuestionTimer = setTimeout(() => {
-                    if (token !== questionSpeechToken || isRecording) return;
+                    if (token !== questionSpeechToken || isRecording || interviewEnding || interviewTerminated) return;
                     startRecording({ silent: true });
                 }, 450);
             }
@@ -1361,6 +1387,29 @@
                 return 0;
             }
 
+            function estimatedSpeechTimeoutMs(text) {
+                const words = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+                return Math.max(4500, Math.min(60000, 2200 + (words * 620)));
+            }
+
+            function resolveSpeechCompletion(token, status = 'finished') {
+                if (!activeSpeechCompletion || activeSpeechCompletion.token !== token) return;
+
+                clearTimeout(activeSpeechCompletion.timeoutId);
+                const resolve = activeSpeechCompletion.resolve;
+                activeSpeechCompletion = null;
+                resolve(status);
+            }
+
+            function resolveAnySpeechCompletion(status = 'cancelled') {
+                if (!activeSpeechCompletion) return;
+
+                clearTimeout(activeSpeechCompletion.timeoutId);
+                const resolve = activeSpeechCompletion.resolve;
+                activeSpeechCompletion = null;
+                resolve(status);
+            }
+
             function startSpeakingUi(text, boundaryAware = false) {
                 clearCaptionInterval();
                 document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
@@ -1420,6 +1469,7 @@
                     startQuestionTimer();
                     scheduleAutoTranscriptionStart(token);
                 }
+                resolveSpeechCompletion(token);
             }
 
             function cancelQuestionAudio() {
@@ -1432,6 +1482,8 @@
             }
 
             function cancelQuestionSpeechOutput() {
+                questionSpeechToken++;
+                resolveAnySpeechCompletion();
                 cancelQuestionAudio();
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
@@ -1440,6 +1492,9 @@
                 renderQuestionCaption([], -1);
                 if (visualizerInterval) clearInterval(visualizerInterval);
                 visualizerInterval = null;
+                document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
+                const avatarHead = document.getElementById('aiAvatarHead');
+                if (avatarHead) avatarHead.style.borderColor = '#8b5cf6';
             }
 
             async function serverSpeechUrl(questionId) {
@@ -1455,7 +1510,7 @@
                 formData.append('session_id', interviewSessionId);
                 formData.append('question_id', questionId);
 
-                const response = await fetch('{{ route("interview.speech") }}', {
+                const response = await managedFetch('{{ route("interview.speech") }}', {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -1481,13 +1536,13 @@
             }
 
             async function speakWithServerVoice(text, token, startTimerAfterSpeech, questionId) {
-                if (!window.Audio || !questionId || serverVoiceUnavailable) {
+                if (!window.Audio || !questionId || serverVoiceUnavailable || interviewTerminated) {
                     return false;
                 }
 
                 try {
                     const url = await serverSpeechUrl(questionId);
-                    if (!url || token !== questionSpeechToken) return false;
+                    if (!url || token !== questionSpeechToken || interviewTerminated) return false;
 
                     const audio = new Audio(url);
                     activeQuestionAudio = audio;
@@ -1519,6 +1574,11 @@
             }
 
             function speakWithDeviceVoice(text, token, startTimerAfterSpeech) {
+                if (interviewTerminated) {
+                    resolveSpeechCompletion(token, 'cancelled');
+                    return;
+                }
+
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     let utterance = new SpeechSynthesisUtterance(text);
@@ -1549,31 +1609,47 @@
                         finishSpeakingUi(text, token, startTimerAfterSpeech);
                     };
 
-                    window.speechSynthesis.speak(utterance);
+                    try {
+                        window.speechSynthesis.speak(utterance);
+                    } catch (error) {
+                        console.warn('Device speech failed:', error);
+                        finishSpeakingUi(text, token, startTimerAfterSpeech);
+                    }
                 } else {
                     document.getElementById('aiQuestionText').innerText = text;
                     if (startTimerAfterSpeech) startQuestionTimer();
                     if (startTimerAfterSpeech) scheduleAutoTranscriptionStart(token);
+                    resolveSpeechCompletion(token);
                 }
             }
 
             async function speakQuestion(text, options = {}) {
-                questionSpeechToken++;
-                const token = questionSpeechToken;
+                if (interviewTerminated) return 'cancelled';
+
+                cancelQuestionSpeechOutput();
+                const token = ++questionSpeechToken;
                 const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
+                const completion = new Promise(resolve => {
+                    const timeoutId = setTimeout(() => {
+                        if (token === questionSpeechToken) {
+                            finishSpeakingUi(text, token, startTimerAfterSpeech);
+                        }
+                    }, estimatedSpeechTimeoutMs(text));
+                    activeSpeechCompletion = { token, resolve, timeoutId };
+                });
 
                 if (isRecording) {
                     pauseRecording();
                 }
 
-                cancelQuestionSpeechOutput();
-
                 const usedServerVoice = serverAiVoiceEnabled
                     ? await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId)
                     : false;
-                if (usedServerVoice || token !== questionSpeechToken) return;
+                if (usedServerVoice || token !== questionSpeechToken || interviewTerminated) return completion;
 
                 speakWithDeviceVoice(text, token, startTimerAfterSpeech);
+
+                return completion;
             }
 
             function formatSeconds(total) {
@@ -1674,6 +1750,7 @@
             }
 
             function scheduleStateSave() {
+                if (interviewEnding || interviewTerminated) return;
                 clearTimeout(stateSaveDebounce);
                 stateSaveDebounce = setTimeout(autoSaveState, 1200);
             }
@@ -1714,7 +1791,7 @@
             }
 
             function closingConversationText() {
-                return `Thank you for walking me through your answers today. That covers my questions for this ${sessionTargetPosition} interview. I will close the session now, and your feedback will be prepared from the evidence in your responses.`;
+                return `Thank you for walking me through your answers today. This ${sessionTargetPosition} interview is now complete, and your responses are being analyzed for feedback.`;
             }
 
             function setAnswerInputEnabled(enabled) {
@@ -1737,62 +1814,50 @@
                 }
             }
 
-            function beginOpeningConversation() {
+            async function beginOpeningConversation() {
+                if (openingHasPlayed || interviewTerminated) {
+                    await loadQuestion(currentQIdx, { append: true });
+                    return;
+                }
+
+                openingHasPlayed = true;
                 const introText = openingConversationText();
                 setAnswerInputEnabled(false);
                 appendChatMessage('interviewer', introText);
                 showInterviewerConversation(introText, 'Intro');
-                speakQuestion(introText, { startTimerAfterSpeech: false });
+                scheduleStateSave();
+                await speakQuestion(introText, { startTimerAfterSpeech: false, phase: 'intro' });
 
-                setTimeout(() => {
-                    setAnswerInputEnabled(true);
-                    loadQuestion(currentQIdx, { append: true });
-                }, naturalDelayFor(introText, 2500, 5000));
+                if (interviewTerminated) return;
+
+                setAnswerInputEnabled(true);
+                await loadQuestion(currentQIdx, { append: true });
             }
 
-            function playClosingConversationAndSubmit() {
+            async function playClosingConversationAndSubmit() {
                 const closingText = closingConversationText();
                 setAnswerInputEnabled(false);
                 appendChatMessage('interviewer', closingText);
                 showInterviewerConversation(closingText, 'Done');
-                speakQuestion(closingText, { startTimerAfterSpeech: false });
+                await speakQuestion(closingText, { startTimerAfterSpeech: false, phase: 'closing' });
 
-                setTimeout(() => {
+                if (!interviewTerminated) {
                     finishInterview();
-                }, naturalDelayFor(closingText, 2600, 4800));
+                }
             }
 
-            function concludeAndFinishInterview(options = {}) {
+            async function concludeAndFinishInterview() {
                 if (interviewEnding) return;
 
-                const shouldSaveDraft = options.saveDraft === true;
-                const draftText = (document.getElementById('answerTextarea')?.value || '').trim();
-
                 if (isRecording) stopRecording();
-
-                if (shouldSaveDraft && draftText && questions[currentQIdx] && answersData[currentQIdx]) {
-                    interviewEnding = true;
-                    setAnswerInputEnabled(false);
-                    answersData[currentQIdx].text = draftText;
-                    answersData[currentQIdx].is_skipped = false;
-                    answersData[currentQIdx].timed_out = false;
-
-                    saveCurrentAnswer(false, false)
-                        .then(() => playClosingConversationAndSubmit())
-                        .catch(error => {
-                            console.error(error);
-                            interviewEnding = false;
-                            setAnswerInputEnabled(true);
-                            alert('We could not save your current answer. Please try again before ending the session.');
-                        });
-                    return;
-                }
-
                 interviewEnding = true;
-                playClosingConversationAndSubmit();
+                setAnswerInputEnabled(false);
+                await playClosingConversationAndSubmit();
             }
 
             function startInterviewSession() {
+                if (interviewStarted || interviewTerminated) return;
+                interviewStarted = true;
                 document.getElementById('introContainer').style.display = 'none';
                 document.getElementById('workspaceWrapper').style.display = 'block';
                 document.getElementById('workspaceWrapper').classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview');
@@ -1834,34 +1899,42 @@
                 }
 
                 const restoredChat = restoreChatHistory();
-                if (!restoredChat && currentQIdx === 0) {
-                    beginOpeningConversation();
-                } else {
-                    loadQuestion(currentQIdx, { append: !restoredChat });
-                }
+                (async () => {
+                    if (!restoredChat && currentQIdx === 0 && !openingHasPlayed) {
+                        await beginOpeningConversation();
+                    } else {
+                        await loadQuestion(currentQIdx, { append: !restoredChat });
+                    }
+                })();
                 
-                const answerTextarea = document.getElementById('answerTextarea');
-                answerTextarea.addEventListener('input', triggerAnalysis);
-                answerTextarea.addEventListener('paste', handleAnswerPaste);
-                document.getElementById('sessionNotes').addEventListener('input', scheduleStateSave);
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'hidden') autoSaveState();
-                });
+                if (!answerListenersBound) {
+                    answerListenersBound = true;
+                    const answerTextarea = document.getElementById('answerTextarea');
+                    answerTextarea.addEventListener('input', triggerAnalysis);
+                    answerTextarea.addEventListener('paste', handleAnswerPaste);
+                    document.getElementById('sessionNotes').addEventListener('input', scheduleStateSave);
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'hidden') autoSaveState();
+                    });
+                }
             }
 
-            function loadQuestion(idx, options = {}) {
+            async function loadQuestion(idx, options = {}) {
+                if (interviewTerminated || interviewEnding) return;
                 currentQIdx = idx;
                 const q = questions[idx];
                 if (!q) return;
-                setAnswerInputEnabled(true);
+                setAnswerInputEnabled(false);
                 
                 document.getElementById('aiQuestionText').innerText = '...';
                 document.getElementById('qCounter').innerText = Math.min(idx + 1, targetQuestionCount) + '/' + targetQuestionCount;
                 updateQuestionSource(q);
 
                 // Append AI question to chat log if it's the first time seeing it
-                if (options.append !== false) {
+                const questionDisplayKey = String(q.id || idx);
+                if (options.append !== false && !displayedQuestionIds.has(questionDisplayKey)) {
                     appendChatMessage('interviewer', q.question_text);
+                    displayedQuestionIds.add(questionDisplayKey);
                 }
 
                 // Restore answer state if navigated back (though disabled in chat mode)
@@ -1871,7 +1944,9 @@
                 resetSpeechRecognitionBufferFromTextarea();
                 lastTimelineCaptureAt = 0;
                 
-                speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
+                await speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
+                if (interviewTerminated || interviewEnding) return;
+                setAnswerInputEnabled(true);
                 
                 triggerAnalysis();
                 scheduleStateSave();
@@ -2252,7 +2327,8 @@
                 document.getElementById('micPauseBtn').setAttribute('title', 'Resume recording');
                 document.getElementById('micStopBtn').style.display = 'inline-flex';
                 document.getElementById('recordingTimer').style.display = 'block';
-                document.getElementById('faceScannerBox').style.display = 'none';
+                const scannerBox = document.getElementById('faceScannerBox');
+                if (scannerBox) scannerBox.style.display = 'none';
             }
 
             function stopRecording() {
@@ -2268,6 +2344,7 @@
             }
 
             function saveCurrentAnswer(isSkipped = false, timedOut = false) {
+                if (interviewTerminated) return Promise.reject(new Error('Interview session has been terminated.'));
                 stopQuestionTimer();
                 captureTranscriptTimeline(timedOut ? 'timed_out_submit' : 'submitted', true);
                 const formData = new FormData();
@@ -2293,7 +2370,7 @@
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
                 formData.append('notes', document.getElementById('sessionNotes').value);
 
-                return fetch('{{ route("interview.answer") }}', {
+                return managedFetch('{{ route("interview.answer") }}', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -2302,11 +2379,12 @@
                         throw new Error('Answer save failed with status ' + response.status);
                     }
 
-                    return response;
+                    return response.json();
                 });
             }
 
             function autoSaveState() {
+                if (interviewEnding || interviewTerminated) return Promise.resolve();
                 if (answersData[currentQIdx]) {
                     answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
                     answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
@@ -2321,20 +2399,26 @@
                     has_started: true,
                     currentQIdx,
                     timerSeconds,
+                    openingHasPlayed,
                     questions: questionSnapshot(),
                     answersData,
                     chatHistory,
                     updated_at: new Date().toISOString()
                 }));
                 
-                fetch('{{ url("interview/save-state") }}', {
+                return managedFetch('{{ route("interview.saveState") }}', {
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 }).then(() => {
+                    if (interviewEnding || interviewTerminated) return;
                     const ind = document.getElementById('autoSaveIndicator');
                     ind.style.display = 'inline';
                     setTimeout(() => ind.style.display = 'none', 2000);
+                }).catch(error => {
+                    if (error.name !== 'AbortError') {
+                        console.warn('Interview state auto-save failed:', error);
+                    }
                 });
             }
 
@@ -2384,7 +2468,8 @@
                 return nextQuestionIndex;
             }
 
-            function submitAnswer(options = {}) {
+            async function submitAnswer(options = {}) {
+                if (isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
                 if(isRecording) stopRecording();
                 
                 const timedOut = options.timedOut === true;
@@ -2397,29 +2482,38 @@
                     document.getElementById('answerTextarea').value = answerText;
                 }
 
+                isSubmittingAnswer = true;
+                setAnswerInputEnabled(false);
+
                 answersData[currentQIdx].text = answerText;
                 answersData[currentQIdx].is_skipped = wasSkipped;
                 answersData[currentQIdx].timed_out = timedOut;
 
-                // Optimistically append user answer to chat
                 appendChatMessage('user', answerText);
 
-                if (currentQIdx >= targetQuestionCount - 1) {
-                    document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = true);
-                    saveCurrentAnswer(wasSkipped, timedOut).then(() => {
-                        concludeAndFinishInterview();
-                    }).catch(error => {
+                const isLastQuestion = currentQIdx >= targetQuestionCount - 1;
+
+                if (isLastQuestion) {
+                    finalAnswerSubmitted = true;
+                    try {
+                        await saveCurrentAnswer(wasSkipped, timedOut);
+                        isSubmittingAnswer = false;
+                        await concludeAndFinishInterview();
+                    } catch(error) {
                         console.error(error);
-                        document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
-                        alert('We could not save your final answer. Please try again before finishing.');
-                    });
+                        finalAnswerSubmitted = false;
+                        isSubmittingAnswer = false;
+                        if (!interviewTerminated) {
+                            setAnswerInputEnabled(true);
+                            alert('We could not save your final answer. Please try again before finishing.');
+                        }
+                    }
                     return;
                 }
 
                 stopQuestionTimer();
                 captureTranscriptTimeline(timedOut ? 'timed_out_submit' : 'submitted', true);
                 
-                // Show thinking indicator
                 const chatContainer = document.getElementById('chatTranscriptContainer');
                 const thinkingBubble = document.createElement('div');
                 thinkingBubble.id = 'thinkingBubble';
@@ -2431,9 +2525,6 @@
                 thinkingBubble.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted me-2"></i> <em>Interviewer is preparing the next question...</em>';
                 chatContainer.appendChild(thinkingBubble);
                 chatContainer.scrollTop = chatContainer.scrollHeight;
-
-                // Disable buttons
-                document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = true);
                 
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
@@ -2457,42 +2548,50 @@
                 formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
-
                 formData.append('is_final_question', (currentQIdx >= targetQuestionCount - 2));
 
-                fetch('{{ route("interview.chatReply") }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(res => res.json())
-                .then(data => {
+                try {
+                    const response = await managedFetch('{{ route("interview.chatReply") }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const data = await response.json();
                     const tb = document.getElementById('thinkingBubble');
                     if(tb) tb.remove();
-                    document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
 
-                    if (data.success) {
-                        const newQ = {
-                            id: data.next_question_id,
-                            question_text: data.next_question_text,
-                            source_name: data.source_name || '',
-                            source_url: data.source_url || '',
-                            source_type: data.source_type || ''
-                        };
-                        const nextQuestionIndex = placeNextQuestion(newQ);
-                        currentQIdx = nextQuestionIndex;
-                        loadQuestion(currentQIdx);
-                    } else {
-                        alert(data.error || 'An error occurred.');
+                    if (!response.ok || !data.success) {
+                        throw new Error(data.error || 'An error occurred.');
                     }
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert("Network error.");
-                    document.querySelectorAll('.next-btn-class').forEach(el => el.disabled = false);
+
+                    if (data.interview_completed) {
+                        finalAnswerSubmitted = true;
+                        isSubmittingAnswer = false;
+                        await concludeAndFinishInterview();
+                        return;
+                    }
+
+                    const newQ = {
+                        id: data.next_question_id,
+                        question_text: data.next_question_text,
+                        source_name: data.source_name || '',
+                        source_url: data.source_url || '',
+                        source_type: data.source_type || ''
+                    };
+                    const nextQuestionIndex = placeNextQuestion(newQ);
+                    currentQIdx = nextQuestionIndex;
+                    isSubmittingAnswer = false;
+                    await loadQuestion(currentQIdx);
+                } catch(err) {
                     const tb = document.getElementById('thinkingBubble');
                     if(tb) tb.remove();
-                });
+                    isSubmittingAnswer = false;
+                    console.error(err);
+                    if (!interviewTerminated && err.name !== 'AbortError') {
+                        setAnswerInputEnabled(true);
+                        alert(err.message || "Network error.");
+                    }
+                }
             }
 
             function skipQuestion() {
@@ -2508,8 +2607,30 @@
                 }
             }
 
-            function finishInterview() {
-                stopQuestionTimer();
+            function cleanupInterviewProcesses(options = {}) {
+                const abortFetches = options.abortFetches === true;
+                clearTimeout(autoStartAfterQuestionTimer);
+                clearTimeout(stateSaveDebounce);
+                clearInterval(timerInterval);
+                clearInterval(questionTimerInterval);
+                clearInterval(recTimerInterval);
+                questionTimerInterval = null;
+                timerInterval = null;
+                recTimerInterval = null;
+                questionStartedAt = null;
+                shouldAutoRestartRecognition = false;
+
+                if (recognition) {
+                    try {
+                        recognition.abort ? recognition.abort() : recognition.stop();
+                    } catch (error) {
+                        console.warn('Speech recognition cleanup failed:', error);
+                    }
+                }
+                recognitionActive = false;
+                isRecording = false;
+                isRecordingPaused = false;
+                releaseMicrophoneStream();
                 cancelQuestionSpeechOutput();
                 serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));
                 serverSpeechUrlCache.clear();
@@ -2517,9 +2638,44 @@
                     let video = document.getElementById(id);
                     if (video && video.srcObject) {
                         video.srcObject.getTracks().forEach(track => track.stop());
+                        video.srcObject = null;
                     }
                 });
-                clearInterval(timerInterval);
+
+                if (abortFetches) {
+                    abortManagedFetches();
+                }
+            }
+
+            async function abortInterviewSession() {
+                if (interviewTerminated) return;
+                interviewTerminated = true;
+                interviewEnding = true;
+                finalAnswerSubmitted = true;
+                setAnswerInputEnabled(false);
+                cleanupInterviewProcesses({ abortFetches: true });
+
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('session_id', interviewSessionId);
+
+                try {
+                    const response = await fetch('{{ route("interview.abort") }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    });
+                    const data = response.ok ? await response.json() : {};
+                    window.location.href = data.redirect_url || '{{ route("interview.setup") }}';
+                } catch (error) {
+                    console.error('Interview abort failed:', error);
+                    window.location.href = '{{ route("interview.setup") }}';
+                }
+            }
+
+            function finishInterview() {
+                cleanupInterviewProcesses();
+                stopQuestionTimer();
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
                 document.getElementById('finishForm').submit();
@@ -2529,6 +2685,14 @@
                 if(!str) return '';
                 return str.charAt(0).toUpperCase() + str.slice(1);
             }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    if (!interviewStarted && !interviewTerminated) {
+                        startInterviewSession();
+                    }
+                }, 350);
+            });
         </script>
         @else
         <div class="panel">

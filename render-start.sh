@@ -41,6 +41,10 @@ php artisan storage:link --force || true
 # Run database migrations (forces it in production)
 php artisan migrate --force
 
+# Repair Learning Game session tables if a previous migration was marked as run
+# while production schema drifted or missed the table creation.
+php artisan app:ensure-game-schema --force
+
 # Seed the database automatically (uses firstOrCreate so it's safe to run multiple times)
 php artisan db:seed --force
 
