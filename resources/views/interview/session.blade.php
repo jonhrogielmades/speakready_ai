@@ -226,6 +226,53 @@
     .real-interview-mode .coaching-only { display:none !important; }
     .recovery-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(52,211,153,.12);color:#34d399;font-weight:700;font-size:.76rem;margin-bottom:14px; }
     .question-timer-anchor { position:absolute;top:15px;right:15px;z-index:55; }
+    .feedback-loading-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 22px;
+        background: rgba(2, 6, 23, 0.82);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .feedback-loading-overlay.is-visible {
+        display: flex;
+    }
+    .feedback-loading-panel {
+        width: min(100%, 420px);
+        border: 1px solid rgba(96, 165, 250, 0.28);
+        border-radius: 16px;
+        padding: 24px;
+        background: var(--sf);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+        text-align: center;
+    }
+    .feedback-loading-spinner {
+        width: 54px;
+        height: 54px;
+        border: 4px solid rgba(96, 165, 250, 0.18);
+        border-top-color: #60a5fa;
+        border-radius: 50%;
+        margin: 0 auto 18px;
+        animation: spin 0.85s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .feedback-loading-title {
+        margin: 0 0 8px;
+        color: var(--tx);
+        font-size: 1.08rem;
+        font-weight: 800;
+        letter-spacing: 0;
+    }
+    .feedback-loading-copy {
+        margin: 0;
+        color: var(--tx3);
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
     .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:80px; border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background:#111827; }
     .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
     .mobile-camera-pip video { position:relative;z-index:2; }
@@ -835,6 +882,14 @@
                 </div>
             </div>
         </div>
+        </div>
+
+        <div id="feedbackLoadingOverlay" class="feedback-loading-overlay" role="status" aria-live="polite" aria-atomic="true">
+            <div class="feedback-loading-panel">
+                <div class="feedback-loading-spinner" aria-hidden="true"></div>
+                <h5 class="feedback-loading-title">Analyzing your responses</h5>
+                <p class="feedback-loading-copy">Your AI feedback is being prepared from the evidence in your answers. Please wait while we finalize your report.</p>
+            </div>
         </div>
 
         @php
@@ -2673,12 +2728,37 @@
                 }
             }
 
+            function showFeedbackLoadingState() {
+                const overlay = document.getElementById('feedbackLoadingOverlay');
+                if (overlay) {
+                    overlay.classList.add('is-visible');
+                }
+
+                const qText = document.getElementById('aiQuestionText');
+                if (qText) qText.innerText = 'Analyzing your responses...';
+
+                const qCounter = document.getElementById('qCounter');
+                if (qCounter) qCounter.innerText = 'Analyzing';
+
+                const sourceLine = document.getElementById('aiQuestionSource');
+                if (sourceLine) {
+                    sourceLine.innerHTML = '';
+                    sourceLine.style.display = 'none';
+                }
+            }
+
             function finishInterview() {
                 cleanupInterviewProcesses();
                 stopQuestionTimer();
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
-                document.getElementById('finishForm').submit();
+                showFeedbackLoadingState();
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        document.getElementById('finishForm').submit();
+                    });
+                });
             }
 
             function ucfirst(str) {

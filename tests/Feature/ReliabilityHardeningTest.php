@@ -367,6 +367,8 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee(route('interview.abort'), false)
             ->assertSee('openingHasPlayed', false)
             ->assertSee('startInterviewSession();', false)
+            ->assertSee('feedbackLoadingOverlay', false)
+            ->assertSee('showFeedbackLoadingState', false)
             ->assertDontSee('onclick="concludeAndFinishInterview({ saveDraft: true })"', false)
             ->assertSee('conversation_context', false)
             ->assertSee('sessionTargetPosition', false);
