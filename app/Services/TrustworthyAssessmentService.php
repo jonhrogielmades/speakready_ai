@@ -91,9 +91,10 @@ class TrustworthyAssessmentService
             ? '[Add only a truthful, verified result, or state that no metric was recorded.]'
             : '[Restate only the result already present in your answer.]';
 
-        return "Fact-grounded revision template — preserve only details you can verify:\n"
-            ."Situation/Task: [Briefly identify the context and your responsibility from your experience.]\n"
-            ."Action: {$excerpt}\n"
+        return "Fact-grounded revision template - preserve only details you can verify:\n"
+            ."Verified source answer: {$excerpt}\n"
+            ."Situation/Task: [Briefly identify the context and your responsibility using only verified facts.]\n"
+            ."Action: [Restate the specific action you personally took from the source answer.]\n"
             ."Result: {$resultPrompt}";
     }
 

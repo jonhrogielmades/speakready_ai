@@ -273,6 +273,51 @@
         font-size: 0.88rem;
         line-height: 1.45;
     }
+    .feedback-loading-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 18px;
+        color: var(--tx3);
+        font-size: 0.76rem;
+        line-height: 1.3;
+        text-align: left;
+    }
+    .feedback-loading-track {
+        height: 5px;
+        margin-top: 9px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(96, 165, 250, 0.14);
+    }
+    .feedback-loading-bar {
+        width: 42%;
+        height: 100%;
+        border-radius: inherit;
+        background: #60a5fa;
+        animation: feedbackLoadingProgress 1.35s ease-in-out infinite;
+    }
+    .feedback-loading-retry {
+        display: none;
+        width: 100%;
+        min-height: 42px;
+        margin-top: 18px;
+    }
+    .feedback-loading-panel.has-error .feedback-loading-spinner,
+    .feedback-loading-panel.has-error .feedback-loading-status,
+    .feedback-loading-panel.has-error .feedback-loading-track {
+        display: none;
+    }
+    .feedback-loading-panel.has-error .feedback-loading-retry {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    @keyframes feedbackLoadingProgress {
+        0% { transform: translateX(-115%); }
+        60%, 100% { transform: translateX(275%); }
+    }
     .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:80px; border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background:#111827; }
     .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
     .mobile-camera-pip video { position:relative;z-index:2; }
@@ -315,31 +360,32 @@
         .interview-session-header .sr-page-actions.interview-meta-line,
         #sec-interview-session .interview-meta-line {
             display: grid !important;
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            gap: 4px !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
             width: 100%;
             max-width: 100%;
             margin: 0 auto;
-            font-size: 0.56rem !important;
+            font-size: 0.68rem !important;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span,
         #sec-interview-session .interview-meta-line span {
             min-width: 0;
             width: 100%;
-            padding: 5px 3px;
+            min-height: 34px;
+            padding: 6px 7px;
             border: 1px solid var(--bd);
             border-radius: 999px;
             background: var(--bg3);
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: normal;
+            line-height: 1.2;
             justify-content: center;
             gap: 2px;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span i,
         #sec-interview-session .interview-meta-line span i {
             margin-right: 2px !important;
-            font-size: 0.54rem;
+            font-size: 0.64rem;
             flex: 0 0 auto;
         }
         .avatar-wrapper { transform: scale(0.62); }
@@ -582,6 +628,18 @@
         }
         .question-timer-anchor { display: none; }
         #aiQuestionText { max-height: 4.5em; overflow-y: auto; }
+        .feedback-loading-overlay { padding: 14px; }
+        .feedback-loading-panel {
+            width: 100%;
+            padding: 20px 18px;
+            border-radius: 12px;
+        }
+        .feedback-loading-spinner {
+            width: 46px;
+            height: 46px;
+            margin-bottom: 15px;
+        }
+        .feedback-loading-status { align-items: flex-start; }
     }
 
     @media (max-width: 380px) {
@@ -589,16 +647,16 @@
         .interview-session-title { font-size: 1.06rem !important; }
         .interview-session-header .sr-page-actions.interview-meta-line,
         #sec-interview-session .interview-meta-line {
-            gap: 3px !important;
-            font-size: 0.5rem !important;
+            gap: 5px !important;
+            font-size: 0.62rem !important;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span,
         #sec-interview-session .interview-meta-line span {
-            padding: 5px 2px;
+            padding: 5px 4px;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span i,
         #sec-interview-session .interview-meta-line span i {
-            font-size: 0.5rem;
+            font-size: 0.58rem;
         }
         .ai-avatar-panel { height: 204px !important; }
         .mobile-camera-pip { width: 62px !important; height: 62px !important; }
@@ -885,10 +943,18 @@
         </div>
 
         <div id="feedbackLoadingOverlay" class="feedback-loading-overlay" role="status" aria-live="polite" aria-atomic="true">
-            <div class="feedback-loading-panel">
+            <div id="feedbackLoadingPanel" class="feedback-loading-panel">
                 <div class="feedback-loading-spinner" aria-hidden="true"></div>
-                <h5 class="feedback-loading-title">Analyzing your responses</h5>
-                <p class="feedback-loading-copy">Your AI feedback is being prepared from the evidence in your answers. Please wait while we finalize your report.</p>
+                <h5 id="feedbackLoadingTitle" class="feedback-loading-title">Analyzing your responses</h5>
+                <p id="feedbackLoadingCopy" class="feedback-loading-copy">Checking every response against its question and the evidence you provided.</p>
+                <div class="feedback-loading-status">
+                    <span id="feedbackLoadingStage">Preparing your report</span>
+                    <span id="feedbackLoadingElapsed">0s</span>
+                </div>
+                <div class="feedback-loading-track" aria-hidden="true"><div class="feedback-loading-bar"></div></div>
+                <button id="feedbackLoadingRetry" type="button" class="btn btn-primary feedback-loading-retry" onclick="finishInterview()">
+                    <i class="fa-solid fa-rotate-right me-2"></i>Retry Analysis
+                </button>
             </div>
         </div>
 
@@ -958,6 +1024,9 @@
             let answerListenersBound = false;
             let isSubmittingAnswer = false;
             let finalAnswerSubmitted = false;
+            let feedbackSubmissionInFlight = false;
+            let feedbackLoadingInterval = null;
+            let feedbackLoadingStartedAt = 0;
             let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(chatHistory) && chatHistory.some(item => item && item.role === 'interviewer' && String(item.text || '').includes('Let us start with the first question.'))));
             const pendingFetchControllers = new Set();
             const displayedQuestionIds = new Set();
@@ -2734,6 +2803,31 @@
                     overlay.classList.add('is-visible');
                 }
 
+                const panel = document.getElementById('feedbackLoadingPanel');
+                if (panel) panel.classList.remove('has-error');
+
+                const title = document.getElementById('feedbackLoadingTitle');
+                if (title) title.textContent = 'Analyzing your responses';
+
+                const copy = document.getElementById('feedbackLoadingCopy');
+                if (copy) copy.textContent = 'Checking every response against its question and the evidence you provided.';
+
+                feedbackLoadingStartedAt = Date.now();
+                clearInterval(feedbackLoadingInterval);
+                const updateLoadingStatus = () => {
+                    const elapsed = Math.max(0, Math.floor((Date.now() - feedbackLoadingStartedAt) / 1000));
+                    const elapsedLabel = document.getElementById('feedbackLoadingElapsed');
+                    const stage = document.getElementById('feedbackLoadingStage');
+                    if (elapsedLabel) elapsedLabel.textContent = `${elapsed}s`;
+                    if (stage) {
+                        stage.textContent = elapsed >= 10
+                            ? 'Finalizing scores and recommendations'
+                            : (elapsed >= 4 ? 'Validating evidence and answer quality' : 'Preparing your report');
+                    }
+                };
+                updateLoadingStatus();
+                feedbackLoadingInterval = setInterval(updateLoadingStatus, 1000);
+
                 const qText = document.getElementById('aiQuestionText');
                 if (qText) qText.innerText = 'Analyzing your responses...';
 
@@ -2747,18 +2841,65 @@
                 }
             }
 
-            function finishInterview() {
+            function showFeedbackAnalysisError(message) {
+                clearInterval(feedbackLoadingInterval);
+                feedbackLoadingInterval = null;
+                const panel = document.getElementById('feedbackLoadingPanel');
+                const title = document.getElementById('feedbackLoadingTitle');
+                const copy = document.getElementById('feedbackLoadingCopy');
+                if (panel) panel.classList.add('has-error');
+                if (title) title.textContent = 'Feedback analysis paused';
+                if (copy) copy.textContent = message || 'We could not finish the report. Your final answer is saved and the analysis can be retried safely.';
+            }
+
+            function waitForFeedbackRetry(delayMs) {
+                return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 1000))));
+            }
+
+            async function finishInterview() {
+                if (feedbackSubmissionInFlight || interviewTerminated) return;
+                feedbackSubmissionInFlight = true;
                 cleanupInterviewProcesses();
                 stopQuestionTimer();
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
                 showFeedbackLoadingState();
 
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        document.getElementById('finishForm').submit();
-                    });
-                });
+                const form = document.getElementById('finishForm');
+                const formData = new FormData(form);
+
+                try {
+                    for (let attempt = 0; attempt < 4; attempt++) {
+                        const response = await managedFetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+                        const data = await response.json().catch(() => ({}));
+
+                        if (response.status === 409) {
+                            await waitForFeedbackRetry(data.retry_after_ms);
+                            continue;
+                        }
+
+                        if (!response.ok || !data.redirect_url) {
+                            throw new Error(data.message || 'The feedback service returned an incomplete response.');
+                        }
+
+                        clearInterval(feedbackLoadingInterval);
+                        window.location.replace(data.redirect_url);
+                        return;
+                    }
+
+                    throw new Error('The report is still processing. Please retry in a moment.');
+                } catch (error) {
+                    console.error('Interview feedback analysis failed:', error);
+                    feedbackSubmissionInFlight = false;
+                    showFeedbackAnalysisError(error.message);
+                }
             }
 
             function ucfirst(str) {

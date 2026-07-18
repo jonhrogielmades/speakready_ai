@@ -536,343 +536,400 @@ class InterviewController extends Controller
 
         if ($session->status === 'completed') {
             $this->forgetCompletedSessionState($session, $gameLevel);
+            $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
-            return $this->completedSessionRedirect($session, $gameLevel);
+            return $request->expectsJson()
+                ? response()->json(['redirect_url' => $redirect->getTargetUrl()])
+                : $redirect;
+        }
+
+        if ($session->status === 'processing' && $session->updated_at?->lte(now()->subMinutes(2))) {
+            InterviewSession::whereKey($session->id)
+                ->where('status', 'processing')
+                ->where('updated_at', '<=', now()->subMinutes(2))
+                ->update(['status' => 'in_progress']);
+            $session->refresh();
+        }
+
+        if ($session->status === 'processing') {
+            return $request->expectsJson()
+                ? response()->json([
+                    'message' => 'Feedback analysis is already in progress.',
+                    'retry_after_ms' => 1200,
+                ], 409)
+                : abort(409, 'Feedback analysis is already in progress.');
         }
 
         if ($session->status !== 'in_progress') {
             abort(403);
         }
 
-        $session->update([
-            'status' => 'completed',
-            'duration_seconds' => $validated['duration_seconds'] ?? $session->duration_seconds,
-            'notes' => $validated['notes'] ?? $session->notes,
-        ]);
+        $claimed = InterviewSession::whereKey($session->id)
+            ->where('status', 'in_progress')
+            ->update([
+                'status' => 'processing',
+                'duration_seconds' => $validated['duration_seconds'] ?? $session->duration_seconds,
+                'notes' => $validated['notes'] ?? $session->notes,
+            ]);
 
-        $answers = InterviewAnswer::with('question')
-            ->where('interview_session_id', $session->id)
-            ->whereNull('retry_of_answer_id')
-            ->get();
+        if ($claimed !== 1) {
+            return $request->expectsJson()
+                ? response()->json([
+                    'message' => 'Feedback analysis is already in progress.',
+                    'retry_after_ms' => 1200,
+                ], 409)
+                : abort(409, 'Feedback analysis is already in progress.');
+        }
 
-        $answersData = $answers->map(function ($answer) {
-            return [
-                'id' => $answer->id,
-                'question' => $answer->question->question_text ?? '',
-                'question_type' => $answer->question->type ?? null,
-                'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
-                'is_skipped' => (bool) $answer->is_skipped,
+        $session->refresh()->load('gameLevel');
+
+        try {
+            $answers = InterviewAnswer::with('question')
+                ->where('interview_session_id', $session->id)
+                ->whereNull('retry_of_answer_id')
+                ->get();
+
+            $answersData = $answers->map(function ($answer) {
+                return [
+                    'id' => $answer->id,
+                    'question' => $answer->question->question_text ?? '',
+                    'question_type' => $answer->question->type ?? null,
+                    'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
+                    'is_skipped' => (bool) $answer->is_skipped,
+                ];
+            })->toArray();
+
+            $sessionData = [
+                'target_position' => $session->target_position,
+                'difficulty' => $session->difficulty,
+                'interview_focus' => $session->interview_focus,
+                'company_persona' => $session->company_persona,
+                'country' => 'Philippines',
+                'ai_assistance_level' => $session->ai_assistance_level,
+                'interviewer_strictness' => $session->interviewer_strictness,
+                'interview_format' => $session->interview_format,
+                'assessment_mode' => $session->assessment_mode,
+                'accommodation_profile' => $session->accommodation_profile,
+                'target_language' => $this->currentLanguageConfig(),
             ];
-        })->toArray();
 
-        $sessionData = [
-            'target_position' => $session->target_position,
-            'difficulty' => $session->difficulty,
-            'interview_focus' => $session->interview_focus,
-            'company_persona' => $session->company_persona,
-            'country' => 'Philippines',
-            'ai_assistance_level' => $session->ai_assistance_level,
-            'interviewer_strictness' => $session->interviewer_strictness,
-            'interview_format' => $session->interview_format,
-            'assessment_mode' => $session->assessment_mode,
-            'accommodation_profile' => $session->accommodation_profile,
-            'target_language' => $this->currentLanguageConfig(),
-        ];
-
-        // Game Level specific modifiers
-        if ($gameLevel) {
-            if ($gameLevel->banned_words) {
-                $sessionData['banned_words'] = $gameLevel->banned_words;
-            }
-            if ($gameLevel->target_tone) {
-                $sessionData['target_tone'] = $gameLevel->target_tone;
-            }
-            $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
-            $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
-            $sessionData['game_success_criteria'] = $gameLevel->success_criteria;
-            $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
-        }
-
-        // Learning games must finish quickly and cannot wait on external AI retries.
-        if ($gameLevel) {
-            $aiFeedback = $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
-        } else {
-            // Provider routing is controlled by the configured primary/fallback chain, not by users.
-            $feedbackProvider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
-            $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
-        }
-        $assessment = app(TrustworthyAssessmentService::class);
-
-        $totalClarity = 0;
-        $totalRelevance = 0;
-        $totalGrammar = 0;
-        $totalProf = 0;
-        $totalBodyLang = 0;
-        $totalConfidence = 0;
-
-        foreach ($answers as $answer) {
-            $totalBodyLang += ($answer->eye_contact_score + $answer->posture_score) / 2;
-            $totalConfidence += $answer->confidence_score > 0 ? $this->scoreValue($answer->confidence_score) : 0;
-
-            // Find matching feedback
-            $qFeedback = null;
-            if (isset($aiFeedback['per_question_feedback']) && is_array($aiFeedback['per_question_feedback'])) {
-                foreach ($aiFeedback['per_question_feedback'] as $pf) {
-                    if (isset($pf['id']) && $pf['id'] == $answer->id) {
-                        $qFeedback = $pf;
-                        break;
-                    }
+            // Game Level specific modifiers
+            if ($gameLevel) {
+                if ($gameLevel->banned_words) {
+                    $sessionData['banned_words'] = $gameLevel->banned_words;
                 }
+                if ($gameLevel->target_tone) {
+                    $sessionData['target_tone'] = $gameLevel->target_tone;
+                }
+                $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
+                $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
+                $sessionData['game_success_criteria'] = $gameLevel->success_criteria;
+                $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
             }
 
-            if ($qFeedback) {
-                $c = $this->scoreValue($qFeedback['clarity_score'] ?? 0);
-                $r = $this->scoreValue($qFeedback['relevance_score'] ?? 0);
-                $g = $this->scoreValue($qFeedback['grammar_score'] ?? 0);
-                $p = $this->scoreValue($qFeedback['professionalism_score'] ?? 0);
-                $qScore = $this->scoreValue($qFeedback['score'] ?? round(($c + $r + $g + $p) / 4));
-
-                $totalClarity += $c;
-                $totalRelevance += $r;
-                $totalGrammar += $g;
-                $totalProf += $p;
-
-                $evidence = $assessment->answerEvidence($answer->answer_text ?? '', $qFeedback['ai_feedback'] ?? null);
-                $rubric = $assessment->rubricLevel($qScore);
-                $answer->update([
-                    'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
-                    'better_sample_answer' => $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence),
-                    'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
-                    'clarity_score' => $c,
-                    'relevance_score' => $r,
-                    'grammar_score' => $g,
-                    'score' => $qScore,
-                    'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? 80),
-                    'evidence_map' => $evidence,
-                    'rubric_level' => $rubric['level'],
-                    'recommendation_text' => $rubric['next_level'],
-                    'improved_answer_source' => 'candidate_facts',
-                ]);
+            // Learning games must finish quickly and cannot wait on external AI retries.
+            if ($gameLevel) {
+                $aiFeedback = $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
             } else {
-                // Do not invent positive scores when AI scoring fails.
-                $c = 0;
-                $r = 0;
-                $g = 0;
-                $p = 0;
-                $qScore = 0;
-
-                $totalClarity += $c;
-                $totalRelevance += $r;
-                $totalGrammar += $g;
-                $totalProf += $p;
-
-                $answer->update([
-                    'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
-                    'better_sample_answer' => '',
-                    'follow_up_question' => '',
-                    'clarity_score' => 0,
-                    'relevance_score' => 0,
-                    'grammar_score' => 0,
-                    'score' => $qScore,
-                    'scoring_confidence' => 0,
-                    'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? ''),
-                    'rubric_level' => 'Unscored',
-                    'improved_answer_source' => 'unavailable',
-                ]);
+                // Provider routing is controlled by the configured primary/fallback chain, not by users.
+                $feedbackProvider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+                $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
             }
-        }
+            $assessment = app(TrustworthyAssessmentService::class);
+            DB::beginTransaction();
 
-        $count = $answers->count() > 0 ? $answers->count() : 1;
-        $clarity = round($totalClarity / $count);
-        $relevance = round($totalRelevance / $count);
-        $grammar = round($totalGrammar / $count);
-        $prof = round($totalProf / $count);
-        $bodyLang = data_get($session->accommodation_profile, 'camera_coaching', false)
-            ? round($totalBodyLang / $count)
-            : 0;
-        $conf = round($totalConfidence / $count);
+            $totalClarity = 0;
+            $totalRelevance = 0;
+            $totalGrammar = 0;
+            $totalProf = 0;
+            $totalBodyLang = 0;
+            $totalConfidence = 0;
 
-        $sFeedback = $aiFeedback['session_feedback'] ?? null;
-        $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
-        $jobEvidenceScore = 0;
-        $metadata = $assessment->sessionMetadata($session, $answers->fresh(['question']), [
-            'clarity' => $clarity,
-            'relevance' => $relevance,
-            'grammar' => $grammar,
-            'professionalism' => $prof,
-        ], $starScore, $jobEvidenceScore);
-        $overall = $metadata['overall'];
+            foreach ($answers as $answer) {
+                $totalBodyLang += ($answer->eye_contact_score + $answer->posture_score) / 2;
+                $totalConfidence += $answer->confidence_score > 0 ? $this->scoreValue($answer->confidence_score) : 0;
 
-        // Game perks affect game progression, never the stored assessment score.
-        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
-        $gameResultScore = $overall;
-        if ($gameLevel && $profile->hasPerk('first_impressions')) {
-            $gameResultScore = min(100, $gameResultScore + 5);
-        }
-
-        $scoreRecord = Score::updateOrCreate([
-            'interview_session_id' => $session->id,
-        ], [
-            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
-            'assessment_mode' => $session->assessment_mode,
-            'clarity_score' => $clarity,
-            'relevance_score' => $relevance,
-            'grammar_score' => $grammar,
-            'professionalism_score' => $prof,
-            'body_language_score' => $bodyLang,
-            'confidence_score' => $conf,
-            'delivery_stability_score' => $metadata['delivery_stability'],
-            'overall_readiness_score' => $overall,
-            'readiness_band' => $metadata['readiness_band'],
-            'scoring_confidence' => $metadata['scoring_confidence'],
-            'ats_match_score' => $jobEvidenceScore,
-            'job_evidence_match_score' => $jobEvidenceScore,
-            'star_method_score' => $starScore,
-            'evidence_map' => $metadata['evidence_map'],
-            'rubric' => $metadata['rubric'],
-            'body_language_included' => false,
-        ]);
-
-        // Generate Session-level Feedback from AI
-        $feedbackRecord = Feedback::updateOrCreate([
-            'interview_session_id' => $session->id,
-        ], [
-            'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
-            'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
-            'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
-        ]);
-
-        $session->update([
-            'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $answers),
-            'current_question_index' => max(0, $answers->count() - 1),
-            'session_state' => null,
-        ]);
-
-        $badges = [];
-        if (! empty($profile->badges_earned)) {
-            $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
-        }
-
-        $xpEarned = 50;
-        if ($profile->hasPerk('xp_boost')) {
-            $xpEarned = round($xpEarned * 1.2);
-        }
-        $gameStatus = null;
-        $nextLevel = null;
-        $isNewBest = false;
-        $energySpent = null;
-        if ($gameLevel) {
-            $energySpent = $this->effectiveGameEnergyCost($gameLevel, $profile);
-            $baseReward = $gameLevel->xp_reward;
-            if ($profile->hasPerk('xp_boost')) {
-                $baseReward = round($baseReward * 1.2);
-            }
-            $xpEarned = $baseReward;
-            $progress = GameProgress::firstOrCreate(
-                ['user_id' => Auth::id(), 'game_level_id' => $gameLevel->id],
-                ['status' => 'active', 'best_score' => 0]
-            );
-
-            if ($progress) {
-                $previousBestScore = (int) ($progress->best_score ?? 0);
-                $isNewBest = $gameResultScore > $previousBestScore;
-
-                if ($gameResultScore >= $gameLevel->required_score) {
-                    $progress->status = 'completed';
-                    $gameStatus = 'victory';
-
-                    // Unlock next level
-                    $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
-                        ->where('level_number', $gameLevel->level_number + 1)
-                        ->first();
-                    if ($nextLevel) {
-                        GameProgress::firstOrCreate(
-                            ['user_id' => Auth::id(), 'game_level_id' => $nextLevel->id],
-                            ['status' => 'active', 'best_score' => 0]
-                        );
-                    }
-
-                    // Add Custom Badge and Skill XP if victorious
-                    if ($gameLevel->custom_badge_name && ! in_array($gameLevel->custom_badge_name, $badges)) {
-                        $badges[] = $gameLevel->custom_badge_name;
-                    }
-                    if ($gameLevel->skill_xp_amount > 0) {
-                        $skillType = strtolower(str_replace(' ', '_', $gameLevel->skill_xp_type));
-                        if (in_array($skillType, ['leadership', 'communication', 'technical', 'problem_solving'])) {
-                            $col = $skillType.'_xp';
-                            $profile->$col += $gameLevel->skill_xp_amount;
-                        } else {
-                            $xpEarned += $gameLevel->skill_xp_amount;
+                // Find matching feedback
+                $qFeedback = null;
+                if (isset($aiFeedback['per_question_feedback']) && is_array($aiFeedback['per_question_feedback'])) {
+                    foreach ($aiFeedback['per_question_feedback'] as $pf) {
+                        if (isset($pf['id']) && $pf['id'] == $answer->id) {
+                            $qFeedback = $pf;
+                            break;
                         }
                     }
+                }
 
+                if ($qFeedback) {
+                    $c = $this->scoreValue($qFeedback['clarity_score'] ?? 0);
+                    $r = $this->scoreValue($qFeedback['relevance_score'] ?? 0);
+                    $g = $this->scoreValue($qFeedback['grammar_score'] ?? 0);
+                    $p = $this->scoreValue($qFeedback['professionalism_score'] ?? 0);
+                    $qScore = $this->scoreValue($qFeedback['score'] ?? round(($c + $r + $g + $p) / 4));
+
+                    $totalClarity += $c;
+                    $totalRelevance += $r;
+                    $totalGrammar += $g;
+                    $totalProf += $p;
+
+                    $evidence = $assessment->answerEvidence($answer->answer_text ?? '', $qFeedback['ai_feedback'] ?? null);
+                    $rubric = $assessment->rubricLevel($qScore);
+                    $answer->update([
+                        'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
+                        'better_sample_answer' => $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence),
+                        'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
+                        'clarity_score' => $c,
+                        'relevance_score' => $r,
+                        'grammar_score' => $g,
+                        'score' => $qScore,
+                        'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? 80),
+                        'evidence_map' => $evidence,
+                        'rubric_level' => $rubric['level'],
+                        'recommendation_text' => $rubric['next_level'],
+                        'improved_answer_source' => 'candidate_facts',
+                    ]);
                 } else {
-                    $gameStatus = 'defeat';
+                    // Do not invent positive scores when AI scoring fails.
+                    $c = 0;
+                    $r = 0;
+                    $g = 0;
+                    $p = 0;
+                    $qScore = 0;
+
+                    $totalClarity += $c;
+                    $totalRelevance += $r;
+                    $totalGrammar += $g;
+                    $totalProf += $p;
+
+                    $answer->update([
+                        'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
+                        'better_sample_answer' => '',
+                        'follow_up_question' => '',
+                        'clarity_score' => 0,
+                        'relevance_score' => 0,
+                        'grammar_score' => 0,
+                        'score' => $qScore,
+                        'scoring_confidence' => 0,
+                        'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? ''),
+                        'rubric_level' => 'Unscored',
+                        'improved_answer_source' => 'unavailable',
+                    ]);
                 }
-                if ($gameResultScore > $progress->best_score) {
-                    $progress->best_score = $gameResultScore;
+            }
+
+            $count = $answers->count() > 0 ? $answers->count() : 1;
+            $clarity = round($totalClarity / $count);
+            $relevance = round($totalRelevance / $count);
+            $grammar = round($totalGrammar / $count);
+            $prof = round($totalProf / $count);
+            $bodyLang = data_get($session->accommodation_profile, 'camera_coaching', false)
+                ? round($totalBodyLang / $count)
+                : 0;
+            $conf = round($totalConfidence / $count);
+
+            $sFeedback = $aiFeedback['session_feedback'] ?? null;
+            $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
+            $jobEvidenceScore = 0;
+            $metadata = $assessment->sessionMetadata($session, $answers->fresh(['question']), [
+                'clarity' => $clarity,
+                'relevance' => $relevance,
+                'grammar' => $grammar,
+                'professionalism' => $prof,
+            ], $starScore, $jobEvidenceScore);
+            $overall = $metadata['overall'];
+
+            // Game perks affect game progression, never the stored assessment score.
+            $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+            $gameResultScore = $overall;
+            if ($gameLevel && $profile->hasPerk('first_impressions')) {
+                $gameResultScore = min(100, $gameResultScore + 5);
+            }
+
+            $scoreRecord = Score::updateOrCreate([
+                'interview_session_id' => $session->id,
+            ], [
+                'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+                'assessment_mode' => $session->assessment_mode,
+                'clarity_score' => $clarity,
+                'relevance_score' => $relevance,
+                'grammar_score' => $grammar,
+                'professionalism_score' => $prof,
+                'body_language_score' => $bodyLang,
+                'confidence_score' => $conf,
+                'delivery_stability_score' => $metadata['delivery_stability'],
+                'overall_readiness_score' => $overall,
+                'readiness_band' => $metadata['readiness_band'],
+                'scoring_confidence' => $metadata['scoring_confidence'],
+                'ats_match_score' => $jobEvidenceScore,
+                'job_evidence_match_score' => $jobEvidenceScore,
+                'star_method_score' => $starScore,
+                'evidence_map' => $metadata['evidence_map'],
+                'rubric' => $metadata['rubric'],
+                'body_language_included' => false,
+            ]);
+
+            // Generate Session-level Feedback from AI
+            $feedbackRecord = Feedback::updateOrCreate([
+                'interview_session_id' => $session->id,
+            ], [
+                'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
+                'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
+                'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
+            ]);
+
+            $session->update([
+                'status' => 'completed',
+                'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $answers),
+                'current_question_index' => max(0, $answers->count() - 1),
+                'session_state' => null,
+            ]);
+
+            $badges = [];
+            if (! empty($profile->badges_earned)) {
+                $badges = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
+            }
+
+            $xpEarned = 50;
+            if ($profile->hasPerk('xp_boost')) {
+                $xpEarned = round($xpEarned * 1.2);
+            }
+            $gameStatus = null;
+            $nextLevel = null;
+            $isNewBest = false;
+            $energySpent = null;
+            if ($gameLevel) {
+                $energySpent = $this->effectiveGameEnergyCost($gameLevel, $profile);
+                $baseReward = $gameLevel->xp_reward;
+                if ($profile->hasPerk('xp_boost')) {
+                    $baseReward = round($baseReward * 1.2);
                 }
-                $progress->save();
+                $xpEarned = $baseReward;
+                $progress = GameProgress::firstOrCreate(
+                    ['user_id' => Auth::id(), 'game_level_id' => $gameLevel->id],
+                    ['status' => 'active', 'best_score' => 0]
+                );
+
+                if ($progress) {
+                    $previousBestScore = (int) ($progress->best_score ?? 0);
+                    $isNewBest = $gameResultScore > $previousBestScore;
+
+                    if ($gameResultScore >= $gameLevel->required_score) {
+                        $progress->status = 'completed';
+                        $gameStatus = 'victory';
+
+                        // Unlock next level
+                        $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
+                            ->where('level_number', $gameLevel->level_number + 1)
+                            ->first();
+                        if ($nextLevel) {
+                            GameProgress::firstOrCreate(
+                                ['user_id' => Auth::id(), 'game_level_id' => $nextLevel->id],
+                                ['status' => 'active', 'best_score' => 0]
+                            );
+                        }
+
+                        // Add Custom Badge and Skill XP if victorious
+                        if ($gameLevel->custom_badge_name && ! in_array($gameLevel->custom_badge_name, $badges)) {
+                            $badges[] = $gameLevel->custom_badge_name;
+                        }
+                        if ($gameLevel->skill_xp_amount > 0) {
+                            $skillType = strtolower(str_replace(' ', '_', $gameLevel->skill_xp_type));
+                            if (in_array($skillType, ['leadership', 'communication', 'technical', 'problem_solving'])) {
+                                $col = $skillType.'_xp';
+                                $profile->$col += $gameLevel->skill_xp_amount;
+                            } else {
+                                $xpEarned += $gameLevel->skill_xp_amount;
+                            }
+                        }
+
+                    } else {
+                        $gameStatus = 'defeat';
+                    }
+                    if ($gameResultScore > $progress->best_score) {
+                        $progress->best_score = $gameResultScore;
+                    }
+                    $progress->save();
+                }
             }
-        }
 
-        if ($profile->total_sessions == 0 && ! in_array('First Interview', $badges)) {
-            $badges[] = 'First Interview';
-        }
-
-        $today = now()->format('Y-m-d');
-        if ($profile->last_activity_date != $today) {
-            $yesterday = now()->subDay()->format('Y-m-d');
-            if ($profile->last_activity_date == $yesterday) {
-                $profile->current_streak += 1;
-            } else {
-                $profile->current_streak = 1;
+            if ($profile->total_sessions == 0 && ! in_array('First Interview', $badges)) {
+                $badges[] = 'First Interview';
             }
-            $profile->last_activity_date = $today;
+
+            $today = now()->format('Y-m-d');
+            if ($profile->last_activity_date != $today) {
+                $yesterday = now()->subDay()->format('Y-m-d');
+                if ($profile->last_activity_date == $yesterday) {
+                    $profile->current_streak += 1;
+                } else {
+                    $profile->current_streak = 1;
+                }
+                $profile->last_activity_date = $today;
+            }
+
+            if ($profile->current_streak > $profile->longest_streak) {
+                $profile->longest_streak = $profile->current_streak;
+            }
+
+            if ($profile->current_streak >= 3 && ! in_array('3-Day Streak', $badges)) {
+                $badges[] = '3-Day Streak';
+            }
+
+            $profile->experience_points += $xpEarned;
+
+            // Level up logic (every 1000 XP = 1 Level)
+            $newLevel = max(1, floor($profile->experience_points / 1000) + 1);
+            if ($newLevel > ($profile->player_level ?? 1)) {
+                $profile->player_level = $newLevel;
+            }
+
+            $profile->badges_earned = $badges;
+            $profile->total_sessions += 1;
+            // Coached sessions remain useful practice, but only uncoached assessments update readiness.
+            if ($session->score_eligible) {
+                $profile->readiness_score = $overall;
+            }
+            $profile->save();
+            $profile->refresh();
+
+            ActivityLogger::log(
+                Auth::user(),
+                'interview_completed',
+                "You completed an interview session with an overall score of {$overall}%.",
+                $request->ip(),
+                true,
+                ['title' => 'Interview Completed', 'icon' => 'fa-flag-checkered', 'type' => 'success']
+            );
+
+            DB::commit();
+            $this->forgetCompletedSessionState($session, $gameLevel);
+
+            $redirect = $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
+                'xp_earned' => $xpEarned,
+                'energy_spent' => $energySpent,
+                'is_new_best' => $isNewBest,
+                'next_level' => $nextLevel,
+            ]);
+
+            return $request->expectsJson()
+                ? response()->json(['redirect_url' => $redirect->getTargetUrl()])
+                : $redirect;
+        } catch (\Throwable $error) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            InterviewSession::whereKey($session->id)
+                ->where('status', 'processing')
+                ->update(['status' => 'in_progress']);
+
+            Log::error('Interview feedback finalization failed.', [
+                'session_id' => $session->id,
+                'error_type' => $error::class,
+            ]);
+
+            throw $error;
         }
-
-        if ($profile->current_streak > $profile->longest_streak) {
-            $profile->longest_streak = $profile->current_streak;
-        }
-
-        if ($profile->current_streak >= 3 && ! in_array('3-Day Streak', $badges)) {
-            $badges[] = '3-Day Streak';
-        }
-
-        $profile->experience_points += $xpEarned;
-
-        // Level up logic (every 1000 XP = 1 Level)
-        $newLevel = max(1, floor($profile->experience_points / 1000) + 1);
-        if ($newLevel > ($profile->player_level ?? 1)) {
-            $profile->player_level = $newLevel;
-        }
-
-        $profile->badges_earned = $badges;
-        $profile->total_sessions += 1;
-        // Coached sessions remain useful practice, but only uncoached assessments update readiness.
-        if ($session->score_eligible) {
-            $profile->readiness_score = $overall;
-        }
-        $profile->save();
-        $profile->refresh();
-
-        $this->forgetCompletedSessionState($session, $gameLevel);
-
-        ActivityLogger::log(
-            Auth::user(),
-            'interview_completed',
-            "You completed an interview session with an overall score of {$overall}%.",
-            $request->ip(),
-            true,
-            ['title' => 'Interview Completed', 'icon' => 'fa-flag-checkered', 'type' => 'success']
-        );
-
-        return $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
-            'xp_earned' => $xpEarned,
-            'energy_spent' => $energySpent,
-            'is_new_best' => $isNewBest,
-            'next_level' => $nextLevel,
-        ]);
     }
 
     public function abortSession(Request $request)
@@ -892,7 +949,7 @@ class InterviewController extends Controller
             abort(403);
         }
 
-        if ($sessionRecord && $sessionRecord->status === 'in_progress') {
+        if ($sessionRecord && in_array($sessionRecord->status, ['in_progress', 'processing'], true)) {
             $this->deleteInterviewSessionData($sessionRecord);
         }
 
@@ -1865,7 +1922,7 @@ class InterviewController extends Controller
     private function discardActiveInterviewSessions(int $userId): void
     {
         InterviewSession::where('user_id', $userId)
-            ->where('status', 'in_progress')
+            ->whereIn('status', ['in_progress', 'processing'])
             ->get()
             ->each(fn (InterviewSession $session) => $this->deleteInterviewSessionData($session));
     }

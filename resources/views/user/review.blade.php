@@ -36,12 +36,74 @@
     .retry-chip { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700; }
     .timeline-row { display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--bd);padding:8px 0;font-size:.86rem;color:var(--tx2); }
     .timeline-row:last-child { border-bottom:0; }
+    .feedback-report-meta { flex-wrap:wrap; }
+    .feedback-report-score-actions { min-width:0; }
+    .feedback-hero-grid { min-width:0; }
+    .feedback-comparison-table-wrap { width:100%;overflow-x:auto;overscroll-behavior-inline:contain; }
+    .feedback-comparison-table { min-width:320px; }
+    .answer-review-title { min-width:0;overflow-wrap:anywhere; }
+    .answer-review-body, .answer-review-body * { min-width:0; }
+    .answer-review-body p, .answer-review-body li, .answer-review-body div { overflow-wrap:anywhere; }
     @media (max-width: 768px) {
         .action-plan-grid { grid-template-columns:1fr; }
-        .premium-panel { border-radius:18px !important; }
+        .premium-panel {
+            border-radius:12px !important;
+            padding:18px !important;
+        }
+        .premium-panel:hover { transform:none; }
         .retry-panel .btn { width:100%; }
         .retry-meta { flex-direction:column;align-items:stretch; }
         .retry-chip { justify-content:center; }
+        .feedback-report-meta {
+            gap:7px 12px !important;
+            font-size:.78rem !important;
+            line-height:1.35;
+        }
+        .feedback-report-score-actions {
+            width:100%;
+            gap:12px !important;
+            align-items:stretch !important;
+        }
+        .feedback-report-score { width:100%; }
+        .feedback-report-actions { margin-top:0 !important; }
+        .feedback-hero-content {
+            flex-direction:column;
+            gap:14px !important;
+        }
+        .feedback-hero-icon {
+            width:48px !important;
+            height:48px !important;
+        }
+        .feedback-hero-icon i { font-size:1.25rem !important; }
+        .feedback-hero-grid { width:100%;margin:0; }
+        .feedback-hero-grid > [class*="col-"] { padding-left:0;padding-right:0; }
+        .feedback-hero-actions {
+            margin-top:14px;
+            padding-top:14px;
+            border-top:1px solid rgba(59,130,246,.2);
+            border-left:0 !important;
+        }
+        .answer-review-heading { margin-top:28px !important;font-size:1.15rem; }
+        .answer-review-card { margin-bottom:12px !important;padding:0 !important; }
+        .answer-review-toggle { padding:14px 12px !important;align-items:flex-start; }
+        .answer-review-header {
+            flex-direction:column;
+            align-items:flex-start !important;
+            gap:9px !important;
+            padding-right:8px !important;
+        }
+        .answer-review-title { font-size:.92rem !important;line-height:1.45; }
+        .answer-review-score .badge { font-size:.76rem !important;padding:6px 9px !important; }
+        .answer-review-body { padding:14px !important; }
+        .answer-review-body .p-4 { padding:14px !important; }
+        .timeline-row { flex-direction:column;gap:3px; }
+        .secure-share-dialog { margin:12px; }
+        .secure-share-content { border-radius:12px !important; }
+    }
+    @media (max-width: 380px) {
+        .feedback-report-meta { flex-direction:column;gap:5px !important; }
+        .feedback-report-score-actions .btn { font-size:.78rem;padding-left:.65rem;padding-right:.65rem; }
+        .answer-review-body { padding:12px !important; }
     }
 </style>
 
@@ -64,19 +126,19 @@
             <a href="{{ route('user.feedback') }}" class="btn btn-link text-decoration-none p-0 mb-2" style="color:#3b82f6;"><i class="fa-solid fa-arrow-left me-2"></i>Back to Feedback Center</a>
             <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
 <i class="fa-solid fa-file-invoice me-2"></i>Detailed Feedback Report</h4>
-            <div class="d-flex gap-3 mt-2" style="font-size:0.9rem;color:var(--tx3)">
+            <div class="d-flex gap-3 mt-2 feedback-report-meta" style="font-size:0.9rem;color:var(--tx3)">
                 <span><i class="fa-regular fa-calendar me-1"></i> {{ $sessionRecord->created_at->format('M d, Y') }}</span>
                 <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'Job Interview' }}</span>
                 <span><i class="fa-solid fa-signal me-1"></i> {{ ucfirst($sessionRecord->difficulty ?? 'Intermediate') }}</span>
                 <span><i class="fa-regular fa-clock me-1"></i> {{ floor(($sessionRecord->duration_seconds ?? 0) / 60) }}m {{ ($sessionRecord->duration_seconds ?? 0) % 60 }}s</span>
             </div>
         </div>
-        <div class="text-md-end d-flex gap-4 align-items-center flex-wrap mt-3 mt-md-0">
+        <div class="text-md-end d-flex gap-4 align-items-center flex-wrap mt-3 mt-md-0 feedback-report-score-actions">
             <!-- Feature 3: Overall Performance Score & Rating -->
-            <div class="text-start">
+            <div class="text-start feedback-report-score">
                 @php 
                     $overall = $sessionRecord->score->overall_readiness_score ?? 0;
-                    $rating = $sessionRecord->score->readiness_band
+                    $rating = $sessionRecord->score?->readiness_band
                         ?: ($overall >= 80 ? 'Ready for Simulation' : ($overall >= 60 ? 'Nearly Ready' : 'Developing'));
                     $color = $overall >= 80 ? '#10b981' : ($overall >= 60 ? '#3b82f6' : '#f59e0b');
                 @endphp
@@ -88,7 +150,7 @@
                     @endif
                 </div>
             </div>
-            <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto">
+            <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto feedback-report-actions">
                 <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0 btn-shine" id="btnShareSession" type="button" style="border-radius:12px;font-weight:600;" onclick="toggleShare()">
                     <i class="fa-solid fa-share-nodes me-2"></i>{{ $sessionRecord->is_public ? 'Shared Link' : 'Share Session' }}
                 </button>
@@ -113,19 +175,19 @@
     <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
     <div class="row mb-4">
         <div class="col-12 animate-fade-up" style="animation-delay: 0.1s;">
-            <div class="premium-panel" style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important; border:1px solid rgba(59, 130, 246, 0.2) !important; padding:32px;">
-                <div class="d-flex align-items-start gap-4">
-                    <div style="background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+            <div class="premium-panel feedback-hero-panel" style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important; border:1px solid rgba(59, 130, 246, 0.2) !important; padding:32px;">
+                <div class="d-flex align-items-start gap-4 feedback-hero-content">
+                    <div class="feedback-hero-icon" style="background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                         <i class="fa-solid fa-robot text-white fs-3"></i>
                     </div>
-                    <div class="row w-100">
+                    <div class="row w-100 feedback-hero-grid">
                         <div class="col-md-7">
                             <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">AI Personalized Feedback</h5>
                             <p style="color:var(--tx);font-size:1rem;line-height:1.6;">
                                 {!! nl2br(e($feedbackSummary)) !!}
                             </p>
                         </div>
-                        <div class="col-md-5" style="border-left: 1px solid rgba(59, 130, 246, 0.2);">
+                        <div class="col-md-5 feedback-hero-actions" style="border-left: 1px solid rgba(59, 130, 246, 0.2);">
                             <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-location-arrow me-2 text-primary"></i>Recommended Actions</h5>
                             <p style="color:var(--tx);font-size:0.95rem;line-height:1.8;margin:0;">{!! nl2br(e($suggestions ?: 'No recommendations were generated for this session.')) !!}</p>
                         </div>
@@ -268,7 +330,8 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Feedback Comparison</h5>
                 @if(count($comparisonRows) > 0)
                     <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Comparing to your previous completed scored session.</p>
-                    <table class="table table-borderless table-sm mb-0" style="color:var(--tx);font-size:0.95rem;">
+                    <div class="feedback-comparison-table-wrap">
+                    <table class="table table-borderless table-sm mb-0 feedback-comparison-table" style="color:var(--tx);font-size:0.95rem;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--bd);color:var(--tx3);">
                                 <th>Metric</th>
@@ -296,6 +359,7 @@
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
                 @else
                     <p style="color:var(--tx3);font-size:0.9rem;line-height:1.6;margin:0;">No previous scored session is available for comparison yet.</p>
                 @endif
@@ -304,15 +368,15 @@
     </div>
 
     <!-- Question Breakdown -->
-    <h4 style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Detailed Answers Review</h4>
+    <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Detailed Answers Review</h4>
     <div class="accordion" id="answersAccordion">
         @foreach($sessionRecord->answers as $index => $answer)
-        <div class="accordion-item premium-panel animate-fade-up" style="margin-bottom:20px;overflow:hidden; animation-delay: {{ 0.5 + ($loop->index * 0.1) }}s; transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
+        <div class="accordion-item premium-panel animate-fade-up answer-review-card" style="margin-bottom:20px;overflow:hidden; animation-delay: {{ 0.5 + ($loop->index * 0.1) }}s; transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
             <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
-                    <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3">
-                        <span style="font-size:1.1rem;"><strong>Q{{ $index + 1 }}:</strong> {{ $answer->question->question_text ?? 'Describe a time you faced a difficult challenge.' }}</span>
-                        <div class="d-flex gap-2 align-items-center">
+                <button class="accordion-button collapsed answer-review-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
+                    <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3 answer-review-header">
+                        <span class="answer-review-title" style="font-size:1.1rem;"><strong>Q{{ $index + 1 }}:</strong> {{ $answer->question->question_text ?? 'Describe a time you faced a difficult challenge.' }}</span>
+                        <div class="d-flex gap-2 align-items-center answer-review-score">
                             @if($answer->is_skipped)
                                 <span class="badge" style="background:rgba(239, 68, 68, 0.1);color:#ef4444;font-size:0.9rem;padding:8px 12px;">Skipped</span>
                             @else
@@ -323,7 +387,7 @@
                 </button>
             </h2>
             <div id="collapse{{ $index }}" class="accordion-collapse collapse" data-bs-parent="#answersAccordion">
-                <div class="accordion-body" style="border-top:1px solid var(--bd);padding:24px;">
+                <div class="accordion-body answer-review-body" style="border-top:1px solid var(--bd);padding:24px;">
                     
                     @if($answer->is_skipped)
                         <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
@@ -598,8 +662,8 @@
 </div>
 
 <div class="modal fade" id="secureShareModal" tabindex="-1" aria-labelledby="secureShareLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background:var(--sf);border:1px solid var(--bd);color:var(--tx);border-radius:18px;">
+    <div class="modal-dialog modal-dialog-centered secure-share-dialog">
+        <div class="modal-content secure-share-content" style="background:var(--sf);border:1px solid var(--bd);color:var(--tx);border-radius:18px;">
             <div class="modal-header" style="border-color:var(--bd);">
                 <div>
                     <h5 class="modal-title" id="secureShareLabel" style="font-weight:800;"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Secure Review Link</h5>

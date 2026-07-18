@@ -24,10 +24,10 @@ class AIService
 
     private const READINESS_SCORE_WEIGHTS = [
         'clarity_score' => 0.25,
-        'relevance_score' => 0.30,
-        'grammar_score' => 0.15,
-        'professionalism_score' => 0.15,
-        'star_method_score' => 0.15,
+        'relevance_score' => 0.35,
+        'grammar_score' => 0.10,
+        'professionalism_score' => 0.20,
+        'star_method_score' => 0.10,
     ];
 
     private const STAR_APPLICABLE_QUESTION_TYPES = [
@@ -419,7 +419,7 @@ class AIService
         return is_array($decoded) ? array_values(array_filter($decoded)) : [];
     }
 
-    private static function callOpenAI($prompt, $systemPrompt = null)
+    private static function callOpenAI($prompt, $systemPrompt = null, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         // Try fetching key from DB first, then .env
         $dbProvider = AiProvider::where('name', 'like', '%OpenAI%')->where('status', 'active')->first();
@@ -434,7 +434,7 @@ class AIService
         $model = env('OPENAI_MODEL', 'gpt-4o-mini');
         $sysMsg = $systemPrompt ?? 'You are an expert interviewer. Respond concisely and professionally without markdown.';
 
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
+        $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post($endpoint, [
@@ -458,6 +458,14 @@ class AIService
 
     public static function generateFeedback($sessionData, $answersData, $provider)
     {
+        if (
+            $answersData === []
+            || self::externalAiDisabledForTests()
+            || strtolower(trim((string) $provider)) === 'local'
+        ) {
+            return self::normalizeFeedbackResponse([], $answersData, $sessionData);
+        }
+
         $prompt = "You are an expert Interview Coach evaluating a candidate's interview session. Evaluate the following interview answers and provide highly accurate feedback and scores.\n";
         $prompt .= 'Target Position: '.($sessionData['target_position'] ?? 'General')."\n";
         $prompt .= 'Difficulty: '.($sessionData['difficulty'] ?? 'Medium')."\n\n";
@@ -737,7 +745,7 @@ SESSION ANALYSIS RULES:
 
 overall_readiness_score:
 Must be calculated from the actual answer quality across all questions using this weighted formula:
-(clarity_score * 0.25) + (relevance_score * 0.30) + (grammar_score * 0.15) + (professionalism_score * 0.15) + (star_method_score * 0.15).
+(clarity_score * 0.25) + (relevance_score * 0.35) + (grammar_score * 0.10) + (professionalism_score * 0.20) + (star_method_score * 0.10).
 When the session has no Behavioral questions, exclude star_method_score and proportionally normalize the remaining weights.
 
 star_method_score:
@@ -785,30 +793,36 @@ EOT;
         $prompt .= "\nREQUIRED ANSWER IDS: ".implode(', ', array_column($answersData, 'id'))."\n";
         $prompt .= "You must return one per_question_feedback item for every required answer id and no extra ids.\n";
 
-        $maxRetries = 2;
+        $maxAttempts = max(1, min(2, (int) env('AI_FEEDBACK_ATTEMPTS', 1)));
         $providers = self::feedbackProviderPriority($provider);
+        $requestOptions = [
+            'timeout_seconds' => max(5, min(30, (int) env('AI_FEEDBACK_TIMEOUT', 15))),
+            'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
+        ];
 
         foreach ($providers as $currentProvider) {
-            for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
                 try {
-                    $response = self::callStructuredProvider($currentProvider, $prompt);
+                    $response = self::callStructuredProvider($currentProvider, $prompt, $requestOptions);
 
                     if (self::feedbackResponseIsComplete($response, $answersData)) {
                         return self::normalizeFeedbackResponse($response, $answersData, $sessionData);
                     }
 
                     Log::warning("AI Feedback Generation rejected incomplete response from {$currentProvider} on attempt {$attempt}.");
-                } catch (\Exception $e) {
-                    Log::error("AI Feedback Generation Error ({$currentProvider}, attempt {$attempt}): ".$e->getMessage());
+                } catch (\Throwable $e) {
+                    Log::warning("AI Feedback Generation Error ({$currentProvider}, attempt {$attempt}): ".self::safeProviderErrorMessage($e));
                 }
 
-                if ($attempt < $maxRetries) {
-                    sleep(1);
+                if ($attempt < $maxAttempts) {
+                    usleep(max(0, min(1000, (int) env('AI_FEEDBACK_RETRY_DELAY_MS', 200))) * 1000);
                 }
             }
         }
 
-        Log::error('AI Feedback Generation Failed on all configured providers.');
+        Log::warning('AI feedback providers were unavailable or incomplete; using evidence-grounded local scoring.', [
+            'providers_attempted' => $providers,
+        ]);
 
         return self::normalizeFeedbackResponse([], $answersData, $sessionData);
     }
@@ -1322,7 +1336,11 @@ PROMPT;
         $providers = array_map(fn ($name) => self::normalizeProviderName($name), $providers);
         $providers = array_filter($providers);
 
-        return array_values(array_unique($providers));
+        $providers = array_values(array_unique($providers));
+        $providers = array_values(array_filter($providers, fn (string $name) => self::providerHasCredentials($name)));
+        $maxProviders = max(1, min(3, (int) env('AI_FEEDBACK_MAX_PROVIDERS', 1)));
+
+        return array_slice($providers, 0, $maxProviders);
     }
 
     private static function normalizeProviderName($provider): string
@@ -1362,7 +1380,7 @@ PROMPT;
             && ! filter_var(env('AI_LIVE_TESTS', false), FILTER_VALIDATE_BOOL);
     }
 
-    private static function callStructuredProvider($provider, $prompt): array
+    private static function callStructuredProvider($provider, $prompt, array $requestOptions = []): array
     {
         $provider = self::normalizeProviderName($provider);
 
@@ -1370,15 +1388,18 @@ PROMPT;
             throw new \RuntimeException('Unsupported AI provider requested.');
         }
 
-        return self::recordProviderAttempt($provider, 'structured_json', function () use ($provider, $prompt) {
+        $timeoutSeconds = isset($requestOptions['timeout_seconds']) ? (int) $requestOptions['timeout_seconds'] : null;
+        $attempts = isset($requestOptions['attempts']) ? (int) $requestOptions['attempts'] : null;
+
+        return self::recordProviderAttempt($provider, 'structured_json', function () use ($provider, $prompt, $timeoutSeconds, $attempts) {
             $response = match ($provider) {
-                'openai' => self::callOpenAI($prompt, 'Return only one valid JSON object that matches the requested schema.'),
-                'gemini' => self::callGemini($prompt),
-                'cohere' => self::callCohere($prompt),
-                'groq' => self::callGroq($prompt),
-                'openrouter' => self::callOpenRouter($prompt),
-                'claude' => self::callClaude($prompt),
-                'wisdomgate' => self::callWisdomGate($prompt),
+                'openai' => self::callOpenAI($prompt, 'Return only one valid JSON object that matches the requested schema.', $timeoutSeconds, $attempts),
+                'gemini' => self::callGemini($prompt, $timeoutSeconds, $attempts),
+                'cohere' => self::callCohere($prompt, $timeoutSeconds, $attempts),
+                'groq' => self::callGroq($prompt, $timeoutSeconds, $attempts),
+                'openrouter' => self::callOpenRouter($prompt, $timeoutSeconds, $attempts),
+                'claude' => self::callClaude($prompt, $timeoutSeconds, $attempts),
+                'wisdomgate' => self::callWisdomGate($prompt, $timeoutSeconds, $attempts),
                 default => [],
             };
 
@@ -1401,9 +1422,18 @@ PROMPT;
 
             return $result;
         } catch (\Throwable $e) {
-            self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'failed', $e->getMessage());
+            self::writeProviderLog($dbProvider?->id, $module, $provider, $startedAt, 'failed', self::safeProviderErrorMessage($e));
             throw $e;
         }
+    }
+
+    private static function safeProviderErrorMessage(\Throwable $error): string
+    {
+        $message = $error->getMessage();
+        $message = preg_replace('/([?&](?:key|api_key|token)=)[^&\s]+/i', '$1[redacted]', $message) ?? $message;
+        $message = preg_replace('/(Bearer\s+)[A-Za-z0-9._-]+/i', '$1[redacted]', $message) ?? $message;
+
+        return mb_substr($message, 0, 1000);
     }
 
     private static function dbProviderFor(string $provider): ?AiProvider
@@ -1628,7 +1658,7 @@ PROMPT;
         } elseif (
             $aiFeedback === ''
             || self::isGenericFeedback($aiFeedback)
-            || ! self::feedbackIsGroundedInAnswer($aiFeedback, $answerText)
+            || ! self::feedbackIsGroundedInAnswer($aiFeedback, $answerText, $questionText)
         ) {
             $aiFeedback = self::evidenceGroundedFeedback($answerText, $questionText, $evidenceProfile, $hasProviderScores);
         }
@@ -1648,7 +1678,8 @@ PROMPT;
             $isTooShort,
             $aiFeedback,
             $answerText,
-            $evidenceProfile
+            $evidenceProfile,
+            $questionText
         );
 
         return array_merge([
@@ -1777,7 +1808,7 @@ PROMPT;
         return $cap;
     }
 
-    private static function feedbackIsGroundedInAnswer(string $feedback, string $answerText): bool
+    private static function feedbackIsGroundedInAnswer(string $feedback, string $answerText, string $questionText = ''): bool
     {
         if (self::feedbackHasUnsupportedNumbers($feedback, $answerText)) {
             return false;
@@ -1785,7 +1816,22 @@ PROMPT;
 
         $normalized = strtolower($feedback);
         if (preg_match('/\b(did not|does not|missing|lacked|without|too short|skipped|not explain|not include|provider did not)\b/i', $feedback)) {
-            return true;
+            $evidenceKeywords = array_values(array_unique(array_merge(
+                self::meaningfulKeywords($answerText),
+                self::meaningfulKeywords($questionText)
+            )));
+            $allowedAssessmentTerms = [
+                'action', 'actions', 'answer', 'candidate', 'clarity', 'communication', 'constraint',
+                'constraints', 'context', 'decision', 'detail', 'details', 'evidence', 'example', 'explain',
+                'final', 'flow', 'grammar', 'impact', 'include', 'lesson', 'mention', 'metric', 'metrics',
+                'outcome', 'ownership', 'professionalism', 'question', 'readiness', 'relevance', 'responsibility',
+                'result', 'results', 'role', 'situation', 'specific', 'structure', 'task', 'tradeoff', 'tradeoffs',
+            ];
+            $feedbackKeywords = self::meaningfulKeywords($feedback);
+            $unsupportedKeywords = array_diff($feedbackKeywords, $evidenceKeywords, $allowedAssessmentTerms);
+
+            return count($unsupportedKeywords) <= 2
+                || count(array_intersect($feedbackKeywords, $evidenceKeywords)) >= 2;
         }
 
         $answerKeywords = self::meaningfulKeywords($answerText);
@@ -1828,8 +1874,8 @@ PROMPT;
         $excerpt = self::excerpt((string) ($profile['supporting_excerpt'] ?: $answerText), 180);
         $parts = [];
         $prefix = $hadProviderScores
-            ? 'The provider feedback was normalized because it was not sufficiently evidence-grounded.'
-            : 'The provider did not return enough evidence-linked feedback.';
+            ? 'The AI commentary was replaced because it was not sufficiently evidence-grounded.'
+            : 'This assessment uses only evidence available in the submitted answer.';
 
         $parts[] = "{$prefix} Based only on the submitted answer, the strongest support was: \"{$excerpt}\".";
 
@@ -1874,7 +1920,7 @@ PROMPT;
         return 'What constraint or tradeoff made this situation difficult, and how did you decide what to do?';
     }
 
-    private static function questionScoringConfidence(bool $hasProviderScores, bool $isSkipped, bool $isTooShort, string $feedback, string $answerText, array $profile): int
+    private static function questionScoringConfidence(bool $hasProviderScores, bool $isSkipped, bool $isTooShort, string $feedback, string $answerText, array $profile, string $questionText = ''): int
     {
         if ($isSkipped) {
             return 95;
@@ -1885,7 +1931,7 @@ PROMPT;
 
         $confidence = $hasProviderScores ? 82 : 50;
 
-        if (! self::feedbackIsGroundedInAnswer($feedback, $answerText)) {
+        if (! self::feedbackIsGroundedInAnswer($feedback, $answerText, $questionText)) {
             $confidence -= 18;
         }
         if (! ($profile['has_personal_action'] ?? false)) {
@@ -2252,7 +2298,7 @@ PROMPT;
     {
         $excerpt = self::excerpt($answerText);
 
-        return 'The provider did not return enough evidence-linked feedback. Based only on the submitted answer excerpt "'.$excerpt.'", this response should be reviewed for clearer responsibilities, actions, and results before relying on the score.';
+        return 'This assessment uses only evidence available in the submitted answer. Based on the excerpt "'.$excerpt.'", add clearer responsibilities, actions, and results before relying heavily on the score.';
     }
 
     private static function fallbackBetterAnswer(string $questionText, array $sessionData): string
@@ -2326,13 +2372,24 @@ PROMPT;
         return is_array($decoded) ? $decoded : [];
     }
 
-    private static function callGemini($prompt)
+    private static function providerRequest(?int $timeoutSeconds = null, ?int $attempts = null)
+    {
+        $timeout = max(1, min(60, $timeoutSeconds ?? (int) env('AI_PROVIDER_TIMEOUT', 45)));
+        $connectTimeout = max(1, min($timeout, (int) env('AI_PROVIDER_CONNECT_TIMEOUT', 5)));
+        $requestAttempts = max(1, min(3, $attempts ?? (int) env('AI_PROVIDER_RETRIES', 2)));
+
+        return Http::connectTimeout($connectTimeout)
+            ->timeout($timeout)
+            ->retry($requestAttempts, (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250));
+    }
+
+    private static function callGemini($prompt, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         $apiKey = env('GEMINI_API_KEY');
         $model = env('GEMINI_MODEL', 'gemini-2.5-flash-lite');
         $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
 
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->post($url, [
+        $response = self::providerRequest($timeoutSeconds, $attempts)->post($url, [
             'contents' => [
                 [
                     'parts' => [
@@ -2357,12 +2414,12 @@ PROMPT;
         return [];
     }
 
-    private static function callCohere($prompt)
+    private static function callCohere($prompt, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         $apiKey = env('COHERE_API_KEY');
         $model = env('COHERE_MODEL', 'command-r7b-12-2024');
 
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
+        $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.cohere.ai/v1/generate', [
@@ -2382,12 +2439,12 @@ PROMPT;
         return [];
     }
 
-    private static function callGroq($prompt)
+    private static function callGroq($prompt, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         $apiKey = env('GROQ_API_KEY');
         $model = env('GROQ_MODEL', 'llama3-8b-8192');
 
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
+        $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.groq.com/openai/v1/chat/completions', [
@@ -2410,12 +2467,12 @@ PROMPT;
         return [];
     }
 
-    private static function callOpenRouter($prompt)
+    private static function callOpenRouter($prompt, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         $apiKey = env('OPENROUTER_API_KEY');
         $model = env('OPENROUTER_MODEL', 'openrouter/free');
 
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
+        $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://openrouter.ai/api/v1/chat/completions', [
@@ -2438,13 +2495,13 @@ PROMPT;
         return [];
     }
 
-    private static function callClaude($prompt)
+    private static function callClaude($prompt, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         $apiKey = env('ANTHROPIC_API_KEY');
         $model = env('ANTHROPIC_MODEL', 'claude-3-haiku-20240307');
         $version = env('ANTHROPIC_VERSION', '2023-06-01');
 
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
+        $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
             'x-api-key' => $apiKey,
             'anthropic-version' => $version,
             'content-type' => 'application/json',
@@ -2467,13 +2524,13 @@ PROMPT;
         return [];
     }
 
-    private static function callWisdomGate($prompt)
+    private static function callWisdomGate($prompt, ?int $timeoutSeconds = null, ?int $attempts = null)
     {
         $apiKey = env('WISDOMGATE_API_KEY');
         $model = env('WISDOMGATE_MODEL', 'gpt-5-nano');
 
         // Assuming WisdomGate is an OpenAI-compatible endpoint
-        $response = Http::timeout((int) env('AI_PROVIDER_TIMEOUT', 45))->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))->withHeaders([
+        $response = self::providerRequest($timeoutSeconds, $attempts)->withHeaders([
             'Authorization' => "Bearer {$apiKey}",
             'Content-Type' => 'application/json',
         ])->post('https://api.wisdomgate.ai/v1/chat/completions', [

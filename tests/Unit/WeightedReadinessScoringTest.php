@@ -48,6 +48,19 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(80, $score);
     }
 
+    public function test_it_uses_the_versioned_readiness_weights_for_relevance(): void
+    {
+        $score = AIService::calculateWeightedReadinessScore(
+            clarityScore: 0,
+            relevanceScore: 100,
+            grammarScore: 0,
+            professionalismScore: 0,
+            starMethodScore: 0
+        );
+
+        $this->assertSame(35, $score);
+    }
+
     public function test_it_recalculates_question_and_session_scores_from_evidence_guarded_components(): void
     {
         $answers = [
@@ -77,7 +90,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(60, $normalized['per_question_feedback'][0]['score']);
         $this->assertSame(0, $normalized['per_question_feedback'][0]['star_method_score']);
         $this->assertSame(60, $normalized['per_question_feedback'][1]['score']);
-        $this->assertSame(59, $normalized['session_feedback']['overall_readiness_score']);
+        $this->assertSame(60, $normalized['session_feedback']['overall_readiness_score']);
         $this->assertSame(40, $normalized['session_feedback']['star_method_score']);
         $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['per_question_feedback'][0]['ai_feedback']);
     }
@@ -151,7 +164,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertGreaterThan(0, $item['clarity_score']);
         $this->assertGreaterThan(0, $item['relevance_score']);
         $this->assertSame(50, $item['scoring_confidence']);
-        $this->assertStringContainsString('provider did not return enough evidence-linked feedback', $item['ai_feedback']);
+        $this->assertStringContainsString('uses only evidence available in the submitted answer', $item['ai_feedback']);
     }
 
     public function test_it_replaces_unsupported_provider_feedback_and_caps_scores(): void
@@ -181,6 +194,23 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringNotContainsString('50%', $normalized['ai_feedback']);
         $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
         $this->assertStringContainsString('did not explain the final result', $normalized['ai_feedback']);
+    }
+
+    public function test_it_rejects_negative_feedback_about_unmentioned_technology(): void
+    {
+        $answer = [
+            'id' => 33,
+            'question_type' => 'Behavioral',
+            'question' => 'Tell me about a time you improved a support process.',
+            'answer' => 'I checked support tickets each morning, organized repeated issues, and coordinated the updated handoff checklist with my supervisor.',
+        ];
+        $feedback = $this->feedbackItem(33, 80, 80, 80, 80, 80, true, 50);
+        $feedback['ai_feedback'] = 'The answer did not mention Kubernetes, container orchestration, cloud deployment, or production scaling, so it lacks cloud readiness.';
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertStringNotContainsString('Kubernetes', $normalized['ai_feedback']);
+        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
     }
 
     private function feedbackItem(

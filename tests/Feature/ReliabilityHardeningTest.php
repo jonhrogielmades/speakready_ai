@@ -369,9 +369,83 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('startInterviewSession();', false)
             ->assertSee('feedbackLoadingOverlay', false)
             ->assertSee('showFeedbackLoadingState', false)
+            ->assertSee('feedbackLoadingStage', false)
+            ->assertSee('feedbackSubmissionInFlight', false)
+            ->assertSee("'Accept': 'application/json'", false)
             ->assertDontSee('onclick="concludeAndFinishInterview({ saveDraft: true })"', false)
             ->assertSee('conversation_context', false)
             ->assertSee('sessionTargetPosition', false);
+    }
+
+    public function test_interview_finish_is_fast_idempotent_and_creates_complete_local_feedback(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'During a delayed release, I owned the checklist, coordinated the missing approvals, and delivered the deployment after documenting the final result.',
+            'response_mode' => 'text',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+            ])
+            ->postJson(route('interview.finish'), [
+                'session_id' => $session->id,
+                'duration_seconds' => 75,
+            ]);
+
+        $response->assertOk()->assertJsonPath('redirect_url', route('user.review', $session));
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
+        $this->assertNotEmpty($answer->fresh()->ai_feedback);
+
+        $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
+        $this->actingAs($user)
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+        $this->assertSame(
+            $profileAfterFirstFinish->total_sessions,
+            Profile::where('user_id', $user->id)->value('total_sessions')
+        );
+    }
+
+    public function test_stale_feedback_processing_state_can_recover_without_duplicate_records(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['status' => 'processing']);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.',
+            'response_mode' => 'text',
+        ]);
+        $session->timestamps = false;
+        $session->updated_at = now()->subMinutes(3);
+        $session->save();
+
+        $this->actingAs($user)
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
     }
 
     public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void
@@ -410,6 +484,11 @@ class ReliabilityHardeningTest extends TestCase
             ->assertDontSee('Speaking Pace')
             ->assertDontSee('135 WPM')
             ->assertDontSee('STAR Framework Analysis');
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertSee('feedback-report-meta', false)
+            ->assertSee('feedback-hero-content', false)
+            ->assertSee('answer-review-body', false);
     }
 
     public function test_admin_user_detail_endpoint_returns_real_stats_and_activity(): void
