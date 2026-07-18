@@ -49,11 +49,6 @@
         text-align: justify;
         text-justify: inter-word;
     }
-    .revision-template-note {
-        color: var(--tx3);
-        font-size: .78rem;
-        margin-top: 8px;
-    }
     .answer-retry-action {
         margin-top: 1.5rem;
     }
@@ -147,16 +142,9 @@
         .answer-review-score .badge { font-size:.76rem !important;padding:6px 9px !important; }
         .answer-review-body { padding:14px !important; }
         .answer-review-body .p-4 { padding:14px !important; }
-        .revision-template-note {
-            display: block;
-            clear: both;
-            margin-top: 10px;
-            margin-bottom: 16px;
-            line-height: 1.45;
-        }
         .answer-retry-action {
             clear: both;
-            margin-top: 20px !important;
+            margin-top: 22px !important;
             padding-top: 2px;
         }
         .answer-retry-action > .btn {
@@ -610,7 +598,6 @@
                                 <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
                                     {{ $answer->better_sample_answer ?: 'No improved answer was generated for this response.' }}
                                 </div>
-                                <div class="revision-template-note">Uses your answer as the source. Replace placeholders only with facts you can verify.</div>
                             </div>
                         </div>
 
