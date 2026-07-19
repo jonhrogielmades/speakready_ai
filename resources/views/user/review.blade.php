@@ -262,6 +262,8 @@
         </div>
     </div>
 
+    @include('partials.interview-coaching-summary', ['feedback' => $feedback])
+
     @if(!empty($actionPlan))
     <div class="row mb-4">
         <div class="col-12 animate-fade-up" style="animation-delay: 0.15s;">
@@ -374,9 +376,13 @@
                         ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
                         ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 0, 'color' => '#8b5cf6'],
                         ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
-                        ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'],
                         ['name' => 'Job Evidence Match', 'score' => $sessionRecord->score->job_evidence_match_score ?? 0, 'color' => '#ec4899']
                     ];
+                    $deliveryMeasured = (int) data_get($feedback->coaching_summary ?? [], 'coverage.delivery_measured', 0) > 0
+                        || $sessionRecord->answers->contains(fn ($item) => data_get($item->coaching_feedback ?? [], 'delivery.status') === 'measured');
+                    if ($deliveryMeasured) {
+                        $skills[] = ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'];
+                    }
                 @endphp
                 <div class="row g-4">
                     @foreach($skills as $skill)
@@ -439,6 +445,26 @@
     <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Detailed Answers Review</h4>
     <div class="accordion" id="answersAccordion">
         @foreach($sessionRecord->answers as $index => $answer)
+        @php
+            $headerAlignmentStatus = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.status', ''));
+            $headerAlignmentLabel = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.status_label', ''));
+            $headerAlignmentLabel = $headerAlignmentLabel !== '' ? $headerAlignmentLabel : match ($headerAlignmentStatus) {
+                'directly_answered' => 'Directly answered',
+                'partially_answered' => 'Partially answered',
+                'low_relevance' => 'Low relevance',
+                'insufficient_evidence' => 'Not enough evidence',
+                'not_evaluated' => 'Not evaluated',
+                'skipped' => 'Skipped',
+                default => '',
+            };
+            $headerAlignmentColor = match ($headerAlignmentStatus) {
+                'directly_answered' => '#10b981',
+                'partially_answered', 'insufficient_evidence' => '#f59e0b',
+                'low_relevance' => '#ef4444',
+                default => '#64748b',
+            };
+            $headerHasEvaluatedScore = in_array($headerAlignmentStatus, ['directly_answered', 'partially_answered', 'low_relevance'], true);
+        @endphp
         <div class="accordion-item premium-panel animate-fade-up answer-review-card" style="margin-bottom:20px;overflow:hidden; animation-delay: {{ 0.5 + ($loop->index * 0.1) }}s; transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed answer-review-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
@@ -447,6 +473,11 @@
                         <div class="d-flex gap-2 align-items-center answer-review-score">
                             @if($answer->is_skipped)
                                 <span class="badge" style="background:rgba(239, 68, 68, 0.1);color:#ef4444;font-size:0.9rem;padding:8px 12px;">Skipped</span>
+                            @elseif($headerAlignmentStatus !== '')
+                                <span class="badge" style="background:color-mix(in srgb, {{ $headerAlignmentColor }} 12%, transparent);color:{{ $headerAlignmentColor }};border:1px solid color-mix(in srgb, {{ $headerAlignmentColor }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $headerAlignmentLabel }}</span>
+                                @if($headerHasEvaluatedScore)
+                                    <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score ?? 0 }}</span>
+                                @endif
                             @else
                                 <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score ?? 0 }}</span>
                             @endif
@@ -461,14 +492,21 @@
                         <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
                             <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback ?: 'You skipped this question. No feedback available.' }}
                         </div>
+                        @include('partials.interview-answer-coaching', ['answer' => $answer])
                     @else
                         
                         @php
-                            $hasDeliveryMetrics = ($answer->wpm ?? 0) > 0
-                                || ($answer->voice_duration ?? 0) > 0
-                                || ($answer->filler_words_count ?? 0) > 0
-                                || ($answer->confidence_score ?? 0) > 0;
-                            $hasLegacyBodyLanguageMetrics = ($sessionRecord->score->body_language_included ?? false)
+                            $hasStructuredAnswerCoaching = is_array($answer->coaching_feedback ?? null)
+                                && ! empty($answer->coaching_feedback);
+                            $responseMode = strtolower((string) ($answer->response_mode ?? ''));
+                            $hasVoiceRecording = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)
+                                || ($responseMode === '' && ($answer->voice_duration ?? 0) > 0);
+                            $hasDeliveryMetrics = ! $hasStructuredAnswerCoaching
+                                && $hasVoiceRecording
+                                && ($answer->voice_duration ?? 0) > 0
+                                && ($answer->wpm ?? 0) > 0;
+                            $hasLegacyBodyLanguageMetrics = ! $hasStructuredAnswerCoaching
+                                && ($sessionRecord->score->body_language_included ?? false)
                                 && (($answer->eye_contact_score ?? 0) > 0 || ($answer->posture_score ?? 0) > 0);
                         @endphp
 
@@ -521,6 +559,8 @@
                                 @endif
                             </div>
                         @endif
+
+                        @include('partials.interview-answer-coaching', ['answer' => $answer])
 
                         <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
                             <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
@@ -618,12 +658,15 @@
                                         </div>
                                         <div class="retry-meta">
                                             <span class="retry-chip">Score {{ $retry->score ?? 0 }}%</span>
-                                            <span class="retry-chip">Delivery Stability {{ $retry->delivery_stability_score ?? 0 }}%</span>
+                                            @if(in_array(strtolower((string) $retry->response_mode), ['voice', 'hybrid', 'voice_and_text'], true) && ($retry->voice_duration ?? 0) > 0 && $retry->delivery_stability_score !== null)
+                                                <span class="retry-chip">Delivery Stability {{ $retry->delivery_stability_score }}%</span>
+                                            @endif
                                         </div>
                                     </div>
                                     @if($retry->ai_feedback)
                                         <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
                                     @endif
+                                    @include('partials.interview-answer-coaching', ['answer' => $retry])
                                 @endforeach
                             </div>
                         </div>
@@ -767,12 +810,41 @@ function saveShare(enabled) {
 const retryTimers = {};
 
 function retryEscape(value) {
-    return String(value || '')
+    return String(value ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function retryCoachingHtml(coaching) {
+    if (!coaching || typeof coaching !== 'object') return '';
+
+    const delivery = coaching.delivery && typeof coaching.delivery === 'object' ? coaching.delivery : {};
+    const question = coaching.question && typeof coaching.question === 'object' ? coaching.question : {};
+    const actions = Array.isArray(coaching.priority_actions) ? coaching.priority_actions.slice(0, 3) : [];
+    const rows = [];
+
+    if (delivery.observation) {
+        rows.push(`<p style="margin:0 0 8px;color:var(--tx2);line-height:1.55;"><strong style="color:var(--tx);">Delivery (${retryEscape(String(delivery.status || 'not measured').replace(/_/g, ' '))}):</strong> ${retryEscape(delivery.observation)}</p>`);
+    }
+    if (question.tip) {
+        rows.push(`<p style="margin:0 0 8px;color:var(--tx2);line-height:1.55;"><strong style="color:#3b82f6;">${retryEscape(question.title || 'Question strategy')}:</strong> ${retryEscape(question.tip)}</p>`);
+    }
+    if (actions.length) {
+        const actionItems = actions.map(item => {
+            if (!item || typeof item !== 'object' || !item.action) return '';
+            return `<li><strong>${retryEscape(item.area || 'Practice action')}:</strong> ${retryEscape(item.action)}</li>`;
+        }).filter(Boolean).join('');
+        if (actionItems) {
+            rows.push(`<ol style="margin:8px 0 0;padding-left:20px;color:var(--tx2);line-height:1.55;">${actionItems}</ol>`);
+        }
+    }
+
+    if (!rows.length) return '';
+
+    return `<div class="mt-3 p-3" style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;"><strong style="display:block;color:#3b82f6;margin-bottom:8px;">Evidence-based retry coaching</strong>${rows.join('')}</div>`;
 }
 
 function formatRetrySeconds(total) {
@@ -839,20 +911,17 @@ function submitRetry(answerId) {
 
     const elapsed = retryElapsed(answerId);
     const words = text.split(/\s+/).filter(Boolean).length;
-    const wpm = Math.round((words / Math.max(1, elapsed)) * 60);
-    const fillers = (text.match(/\b(um|uh|like|you know|basically|i mean|sort of|kind of)\b/gi) || []).length;
-    const confidence = Math.max(0, Math.min(100, 92 - (fillers * 3) - (wpm < 90 || wpm > 190 ? 10 : 0)));
 
     const formData = new FormData();
     formData.append('_token', '{{ csrf_token() }}');
     formData.append('answer_text', text);
     formData.append('response_mode', 'text');
     formData.append('elapsed_seconds', elapsed);
-    formData.append('voice_duration', elapsed);
-    formData.append('wpm', wpm);
-    formData.append('filler_words_count', fillers);
+    formData.append('voice_duration', 0);
+    formData.append('wpm', 0);
+    formData.append('filler_words_count', 0);
     formData.append('pause_count', 0);
-    formData.append('confidence_score', confidence);
+    formData.append('confidence_score', 0);
     formData.append('eye_contact_score', 0);
     formData.append('posture_score', 0);
     formData.append('transcript_timeline', JSON.stringify([
@@ -871,14 +940,21 @@ function submitRetry(answerId) {
     .then(res => res.json())
     .then(data => {
         if (!data.success) throw new Error(data.error || 'Retry failed');
+        const deliveryChip = data.delivery_stability_score === null || data.delivery_stability_score === undefined
+            ? ''
+            : `<span class="retry-chip">Delivery Stability ${retryEscape(data.delivery_stability_score)}%</span>`;
+        const coachingHtml = typeof data.coaching_html === 'string'
+            ? data.coaching_html
+            : retryCoachingHtml(data.coaching_feedback);
         result.innerHTML = `
             <div class="p-3" style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:12px;color:var(--tx);">
                 <div class="d-flex flex-wrap gap-2 mb-2">
                     <span class="retry-chip">Attempt ${retryEscape(data.attempt_number)}</span>
                     <span class="retry-chip">Score ${retryEscape(data.score)}%</span>
-                    <span class="retry-chip">Delivery Stability ${retryEscape(data.delivery_stability_score ?? 0)}%</span>
+                    ${deliveryChip}
                 </div>
                 <p style="margin:0;color:var(--tx2);line-height:1.6;">${retryEscape(data.ai_feedback)}</p>
+                ${coachingHtml}
             </div>
         `;
     })

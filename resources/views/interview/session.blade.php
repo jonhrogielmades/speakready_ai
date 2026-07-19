@@ -226,103 +226,103 @@
     .real-interview-mode .coaching-only { display:none !important; }
     .recovery-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(52,211,153,.12);color:#34d399;font-weight:700;font-size:.76rem;margin-bottom:14px; }
     .question-timer-anchor { position:absolute;top:15px;right:15px;z-index:55; }
-    .feedback-loading-overlay {
+    .finish-transition-overlay {
         position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: none;
-        place-items: center;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         width: 100vw;
+        min-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
         min-height: 100vh;
         min-height: 100dvh;
-        padding: max(22px, env(safe-area-inset-top, 0px)) 22px max(22px, env(safe-area-inset-bottom, 0px));
-        background: rgba(2, 6, 23, 0.82);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        overflow-y: auto;
-        overscroll-behavior: contain;
-    }
-    .feedback-loading-overlay.is-visible {
-        display: grid;
-    }
-    .feedback-loading-panel {
-        width: min(100%, 420px);
-        max-height: calc(100dvh - 44px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-        overflow: auto;
-        border: 1px solid rgba(96, 165, 250, 0.28);
-        border-radius: 16px;
-        padding: 24px;
-        background: var(--sf);
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+        margin: 0;
+        padding: max(24px, env(safe-area-inset-top, 0px)) 20px max(24px, env(safe-area-inset-bottom, 0px));
+        background: var(--bg, #ffffff);
+        box-sizing: border-box;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
         text-align: center;
     }
-    .feedback-loading-spinner {
-        width: 54px;
-        height: 54px;
-        border: 4px solid rgba(96, 165, 250, 0.18);
-        border-top-color: #60a5fa;
-        border-radius: 50%;
-        margin: 0 auto 18px;
-        animation: spin 0.85s linear infinite;
+    .finish-transition-overlay.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .feedback-loading-title {
-        margin: 0 0 8px;
-        color: var(--tx);
-        font-size: 1.08rem;
-        font-weight: 800;
-        letter-spacing: 0;
+    body.finish-transition-active {
+        overflow: hidden !important;
+        touch-action: none;
     }
-    .feedback-loading-copy {
-        margin: 0;
-        color: var(--tx3);
-        font-size: 0.88rem;
-        line-height: 1.45;
-    }
-    .feedback-loading-status {
+    .finish-loading-wrapper {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        flex: 0 0 120px;
+        margin-bottom: 20px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 18px;
-        color: var(--tx3);
-        font-size: 0.76rem;
-        line-height: 1.3;
-        text-align: left;
-    }
-    .feedback-loading-track {
-        height: 5px;
-        margin-top: 9px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(96, 165, 250, 0.14);
-    }
-    .feedback-loading-bar {
-        width: 42%;
-        height: 100%;
-        border-radius: inherit;
-        background: #60a5fa;
-        animation: feedbackLoadingProgress 1.35s ease-in-out infinite;
-    }
-    .feedback-loading-retry {
-        display: none;
-        width: 100%;
-        min-height: 42px;
-        margin-top: 18px;
-    }
-    .feedback-loading-panel.has-error .feedback-loading-spinner,
-    .feedback-loading-panel.has-error .feedback-loading-status,
-    .feedback-loading-panel.has-error .feedback-loading-track {
-        display: none;
-    }
-    .feedback-loading-panel.has-error .feedback-loading-retry {
-        display: inline-flex;
         align-items: center;
         justify-content: center;
     }
-    @keyframes feedbackLoadingProgress {
-        0% { transform: translateX(-115%); }
-        60%, 100% { transform: translateX(275%); }
+    .finish-loading-circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 4px solid var(--bd, #e2e8f0);
+        border-top: 4px solid var(--pur, #7c3aed);
+        animation: finishSpin 1s linear infinite;
+    }
+    .finish-loading-wrapper img {
+        width: 70px;
+        height: 70px;
+        object-fit: contain;
+        animation: finishPulse 1.5s ease-in-out infinite;
+    }
+    .finish-transition-overlay h4 {
+        margin: 0;
+        color: var(--tx);
+        font-weight: 600;
+        font-size: 1.2rem;
+        line-height: 1.25;
+        letter-spacing: 0;
+        max-width: min(100%, 420px);
+        overflow-wrap: anywhere;
+    }
+    .finish-transition-overlay p {
+        margin: 8px 0 0;
+        color: var(--tx3);
+        font-size: 0.9rem;
+        line-height: 1.45;
+        max-width: min(100%, 420px);
+        overflow-wrap: anywhere;
+    }
+    .finish-retry-button {
+        margin-top: 16px;
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 18px;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        color: #fff;
+        font-weight: 800;
+    }
+    @keyframes finishSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    @keyframes finishPulse {
+        0% { transform: scale(0.9); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.8; }
     }
     .mobile-camera-pip { position:absolute; top:15px; right:15px; width:80px; height:80px; border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.3); z-index:50; box-shadow: 0 4px 15px rgba(0,0,0,0.6); background:#111827; }
     .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
@@ -634,24 +634,50 @@
         }
         .question-timer-anchor { display: none; }
         #aiQuestionText { max-height: 4.5em; overflow-y: auto; }
-        .feedback-loading-overlay {
-            padding: max(14px, env(safe-area-inset-top, 0px)) 14px max(14px, env(safe-area-inset-bottom, 0px));
+        .finish-transition-overlay {
+            padding: max(18px, env(safe-area-inset-top, 0px)) 16px max(18px, env(safe-area-inset-bottom, 0px));
         }
-        .feedback-loading-panel {
-            width: min(100%, 360px);
-            padding: 20px 18px;
-            border-radius: 12px;
+        .finish-loading-wrapper {
+            width: 96px;
+            height: 96px;
+            flex-basis: 96px;
+            margin-bottom: 16px;
         }
-        .feedback-loading-spinner {
-            width: 46px;
-            height: 46px;
-            margin-bottom: 15px;
+        .finish-loading-circle {
+            border-width: 3px;
         }
-        .feedback-loading-status { align-items: flex-start; }
+        .finish-loading-wrapper img {
+            width: 56px;
+            height: 56px;
+        }
+        .finish-transition-overlay h4 {
+            max-width: 300px;
+            font-size: 1.02rem;
+        }
+        .finish-transition-overlay p {
+            max-width: 300px;
+            font-size: 0.82rem;
+        }
     }
 
     @media (max-width: 380px) {
         #sec-interview-session { --session-gap: 10px; }
+        .finish-loading-wrapper {
+            width: 84px;
+            height: 84px;
+            flex-basis: 84px;
+            margin-bottom: 14px;
+        }
+        .finish-loading-wrapper img {
+            width: 50px;
+            height: 50px;
+        }
+        .finish-transition-overlay h4 {
+            font-size: 0.96rem;
+        }
+        .finish-transition-overlay p {
+            font-size: 0.78rem;
+        }
         .interview-session-title { font-size: 1.06rem !important; }
         .interview-session-header .sr-page-actions.interview-meta-line,
         #sec-interview-session .interview-meta-line {
@@ -777,10 +803,12 @@
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
                     <!-- Mobile Picture-in-Picture Camera -->
+                    @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
                     <div class="d-block d-lg-none mobile-camera-pip">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                         <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
                     </div>
+                    @endif
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
@@ -900,11 +928,11 @@
                         <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
                             <div class="scan-line" style="width:100%;height:2px;background:#34d399;position:absolute;top:0;animation: scanAnim 2s infinite linear;box-shadow:0 0 8px #34d399;"></div>
                         </div>
-                        <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#34d399"><i class="fa-solid fa-circle text-success pulse-anim" style="font-size:.5rem;margin-right:4px"></i> AI Track</div>
+                        <div id="cameraCoachStatus" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#cbd5e1"><i class="fa-solid fa-laptop me-1"></i>Local estimate</div>
                     </div>
                     <div class="stat-row"><span>Face in frame</span><span id="stEyeContact" class="text-secondary">Waiting</span></div>
-                    <div class="stat-row mb-0"><span>Detection quality</span><span id="stPosture" class="text-secondary">Not scored</span></div>
-                    <div class="small mt-2" style="color:var(--tx3)">Framing feedback is descriptive and excluded from readiness.</div>
+                    <div class="stat-row mb-0"><span>Head alignment estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
+                    <div class="small mt-2" style="color:var(--tx3)">This estimates face visibility and head alignment only. Video is analyzed in your browser; no images or video are stored. Only derived timestamps and framing/head-alignment samples are saved for this report, and they are excluded from readiness.</div>
                 </div>
                 @endif
 
@@ -938,7 +966,7 @@
                     <div class="panel-title"><i class="fa-solid fa-wave-square me-2"></i> Voice Analytics</div>
                     <div class="stat-row"><span>Speaking Duration</span><span id="vaDuration">0s</span></div>
                     <div class="stat-row"><span>Speed (WPM)</span><span id="vaWpm">0</span></div>
-                    <div class="stat-row mb-0"><span>Filler Words (Um, Uh)</span><span id="vaFillers" class="text-danger">0</span></div>
+                    <div class="stat-row mb-0"><span>Possible transcript filler matches</span><span id="vaFillers" class="text-danger">0</span></div>
                 </div>
 
                 <!-- Interview Notes -->
@@ -948,22 +976,6 @@
                 </div>
             </div>
         </div>
-        </div>
-
-        <div id="feedbackLoadingOverlay" class="feedback-loading-overlay" role="status" aria-live="polite" aria-atomic="true">
-            <div id="feedbackLoadingPanel" class="feedback-loading-panel">
-                <div class="feedback-loading-spinner" aria-hidden="true"></div>
-                <h5 id="feedbackLoadingTitle" class="feedback-loading-title">Analyzing your responses</h5>
-                <p id="feedbackLoadingCopy" class="feedback-loading-copy">Checking every response against its question and the evidence you provided.</p>
-                <div class="feedback-loading-status">
-                    <span id="feedbackLoadingStage">Preparing your report</span>
-                    <span id="feedbackLoadingElapsed">0s</span>
-                </div>
-                <div class="feedback-loading-track" aria-hidden="true"><div class="feedback-loading-bar"></div></div>
-                <button id="feedbackLoadingRetry" type="button" class="btn btn-primary feedback-loading-retry" onclick="finishInterview()">
-                    <i class="fa-solid fa-rotate-right me-2"></i>Retry Analysis
-                </button>
-            </div>
         </div>
 
         @php
@@ -998,6 +1010,16 @@
             <input type="hidden" name="notes" id="formNotes">
         </form>
 
+        <div id="finishTransitionOverlay" class="finish-transition-overlay" role="status" aria-live="polite" aria-atomic="true">
+            <div class="finish-loading-wrapper">
+                <div class="finish-loading-circle"></div>
+                <img src="{{ asset('img/logo.png') }}" alt="Loading feedback">
+            </div>
+            <h4>Analyzing your response...</h4>
+            <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
+            <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
+        </div>
+
         <script>
             const savedSessionState = @json($savedStateForUi ?? []);
             const initialQuestions = {!! json_encode($questions) !!};
@@ -1015,6 +1037,7 @@
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
+            let cameraUnavailableReason = null;
             const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
             currentQIdx = Math.max(0, Math.min(currentQIdx, Math.max(0, questions.length - 1)));
@@ -1033,8 +1056,6 @@
             let isSubmittingAnswer = false;
             let finalAnswerSubmitted = false;
             let feedbackSubmissionInFlight = false;
-            let feedbackLoadingInterval = null;
-            let feedbackLoadingStartedAt = 0;
             let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(chatHistory) && chatHistory.some(item => item && item.role === 'interviewer' && String(item.text || '').includes('Let us start with the first question.'))));
             const pendingFetchControllers = new Set();
             const displayedQuestionIds = new Set();
@@ -1042,21 +1063,27 @@
             // Answers state
             function defaultAnswerState() {
                 return {
-                text: '',
-                is_skipped: false,
-                timed_out: false,
-                elapsed_seconds: 0,
-                wpm: 0,
-                voice_duration: 0,
-                filler_words: 0,
-                pause_count: 0,
-                confidence_score: 0,
-                self_reported_confidence: 50,
-                eye_contact_score: 0,
+                    text: '',
+                    speech_transcript: '',
+                    is_skipped: false,
+                    timed_out: false,
+                    elapsed_seconds: 0,
+                    wpm: 0,
+                    voice_duration: 0,
+                    filler_words: 0,
+                    pause_count: 0,
+                    confidence_score: 0,
+                    self_reported_confidence: 50,
+                    eye_contact_score: 0,
                     posture_score: 0,
                     paste_event_count: 0,
                     pasted_character_count: 0,
-                    transcript_timeline: []
+                    transcript_timeline: [],
+                    observation_data: {
+                        filler_events: [],
+                        camera_samples: [],
+                        camera_unavailable_reason: cameraUnavailableReason
+                    }
                 };
             }
 
@@ -1084,6 +1111,7 @@
             let lastCommittedAt = 0;
             let microphoneStream = null;
             let microphoneReadyPromise = null;
+            let cameraTrackingInFlight = false;
 
             const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
@@ -1137,6 +1165,9 @@
 
             function shouldCollapseDuplicateWindow(size, normalizedPhrase) {
                 if (!normalizedPhrase) return false;
+                if (isFillerOnlySpeech(normalizedPhrase)) {
+                    return false;
+                }
                 if (size >= 2) return true;
                 return normalizedPhrase.length > 2 || duplicateSafeWordSet.has(normalizedPhrase);
             }
@@ -1196,19 +1227,33 @@
                 lastCommittedAt = 0;
             }
 
+            function isFillerOnlySpeech(segment) {
+                const normalized = normalizeTranscriptForMatch(segment);
+                return /^(?:(?:you know|i mean|sort of|kind of|um+|uh+|erm+|hmm+|like|actually|basically|literally)(?:\s+|$))+$/i.test(normalized);
+            }
+
             function commitSpeechSegment(segment) {
                 const cleanSegment = collapseRepeatedSpeech(cleanTranscriptText(segment));
-                if (!cleanSegment) return;
+                if (!cleanSegment) return false;
 
                 const normalized = normalizeTranscriptForMatch(cleanSegment);
                 const now = Date.now();
-                if (normalized && normalized === lastCommittedSpeech && (now - lastCommittedAt) < 5000) {
-                    return;
+                const fillerOnly = isFillerOnlySpeech(cleanSegment);
+                const duplicateWindowMs = fillerOnly ? 750 : 5000;
+                if (normalized && normalized === lastCommittedSpeech && (now - lastCommittedAt) < duplicateWindowMs) {
+                    return false;
                 }
 
-                committedSpeechTranscript = collapseRepeatedSpeech(appendWithoutOverlap(committedSpeechTranscript, cleanSegment));
+                const appendSpeech = existing => fillerOnly
+                    ? cleanTranscriptText(`${existing || ''} ${cleanSegment}`)
+                    : appendWithoutOverlap(existing || '', cleanSegment);
+                committedSpeechTranscript = collapseRepeatedSpeech(appendSpeech(committedSpeechTranscript));
+                const answerState = answersData[currentQIdx] || defaultAnswerState();
+                answerState.speech_transcript = collapseRepeatedSpeech(appendSpeech(answerState.speech_transcript));
+                answersData[currentQIdx] = answerState;
                 lastCommittedSpeech = normalized;
                 lastCommittedAt = now;
+                return true;
             }
 
             function renderSpeechTranscript() {
@@ -1266,7 +1311,9 @@
 
             function finalizeInterimTranscript() {
                 if (!liveSpeechInterim) return;
-                commitSpeechSegment(liveSpeechInterim);
+                if (commitSpeechSegment(liveSpeechInterim)) {
+                    recordFillerEvents(liveSpeechInterim);
+                }
                 liveSpeechInterim = '';
                 renderSpeechTranscript();
             }
@@ -1304,7 +1351,9 @@
                         if (!transcript) continue;
 
                         if (event.results[i].isFinal) {
-                            commitSpeechSegment(transcript);
+                            if (commitSpeechSegment(transcript)) {
+                                recordFillerEvents(transcript);
+                            }
                         } else {
                             interimParts.push(transcript);
                         }
@@ -1331,6 +1380,30 @@
                 };
             }
 
+            function markCameraUnavailable(reason) {
+                const allowedReasons = ['permission_denied', 'device_unavailable', 'browser_unsupported', 'model_unavailable', 'camera_error'];
+                cameraUnavailableReason = allowedReasons.includes(reason) ? reason : 'camera_error';
+                answersData.forEach(answerState => {
+                    answerState.observation_data = answerState.observation_data || { filler_events: [], camera_samples: [] };
+                    answerState.observation_data.camera_unavailable_reason = cameraUnavailableReason;
+                });
+                const faceStatus = document.getElementById('stEyeContact');
+                const alignmentStatus = document.getElementById('stPosture');
+                const coachStatus = document.getElementById('cameraCoachStatus');
+                if (faceStatus) {
+                    faceStatus.textContent = 'Camera unavailable';
+                    faceStatus.className = 'text-warning';
+                }
+                if (alignmentStatus) {
+                    alignmentStatus.textContent = 'Not measured';
+                    alignmentStatus.className = 'text-secondary';
+                }
+                if (coachStatus) {
+                    coachStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i>Not measured';
+                    coachStatus.style.color = '#fbbf24';
+                }
+            }
+
             function initCamera() {
                 if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                     navigator.mediaDevices.getUserMedia({ video: true })
@@ -1349,33 +1422,81 @@
                         })
                         .catch(function(err) {
                             console.error("Error accessing camera: ", err);
+                            const reason = err && err.name === 'NotAllowedError'
+                                ? 'permission_denied'
+                                : (err && err.name === 'NotFoundError' ? 'device_unavailable' : 'camera_error');
+                            markCameraUnavailable(reason);
                         });
                 } else {
                     console.error("getUserMedia not supported");
+                    markCameraUnavailable('browser_unsupported');
                 }
             }
             
             async function trackBodyLanguage() {
-                if (!cameraCoachingEnabled) return;
+                if (!cameraCoachingEnabled || cameraTrackingInFlight || typeof faceapi === 'undefined') return;
                 const video = document.getElementById('userCamera');
                 if (!video || !video.srcObject) return;
-                
+                const trackedQuestionIndex = currentQIdx;
+
+                cameraTrackingInFlight = true;
                 try {
                     const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
-                    
+                    const state = answersData[trackedQuestionIndex] || defaultAnswerState();
+                    state.observation_data = state.observation_data || { filler_events: [], camera_samples: [] };
+                    state.observation_data.camera_samples = Array.isArray(state.observation_data.camera_samples)
+                        ? state.observation_data.camera_samples
+                        : [];
+                    let cameraFacing = false;
+                    let centered = false;
+
                     if (detection) {
+                        const leftEye = detection.landmarks.getLeftEye();
+                        const rightEye = detection.landmarks.getRightEye();
+                        const nose = detection.landmarks.getNose();
+                        const centerOf = points => {
+                            const total = points.reduce(
+                                (point, current) => ({ x: point.x + current.x, y: point.y + current.y }),
+                                { x: 0, y: 0 }
+                            );
+                            return { x: total.x / Math.max(1, points.length), y: total.y / Math.max(1, points.length) };
+                        };
+                        const leftCenter = centerOf(leftEye);
+                        const rightCenter = centerOf(rightEye);
+                        const eyeMidpoint = { x: (leftCenter.x + rightCenter.x) / 2, y: (leftCenter.y + rightCenter.y) / 2 };
+                        const noseTip = nose[Math.min(3, Math.max(0, nose.length - 1))] || eyeMidpoint;
+                        const eyeDistance = Math.max(1, Math.hypot(rightCenter.x - leftCenter.x, rightCenter.y - leftCenter.y));
+                        cameraFacing = Math.abs((noseTip.x - eyeMidpoint.x) / eyeDistance) <= 0.32;
+
+                        const box = detection.detection.box;
+                        const videoWidth = Math.max(1, video.videoWidth || video.clientWidth || 1);
+                        const videoHeight = Math.max(1, video.videoHeight || video.clientHeight || 1);
+                        centered = Math.abs((box.x + (box.width / 2)) - (videoWidth / 2)) <= videoWidth * 0.24
+                            && Math.abs((box.y + (box.height / 2)) - (videoHeight / 2)) <= videoHeight * 0.28;
+
                         document.getElementById('stEyeContact').innerHTML = '<i class="fa-solid fa-check me-1"></i>Visible';
                         document.getElementById('stEyeContact').className = 'text-success';
-                        document.getElementById('stPosture').textContent = 'Available · not scored';
-                        document.getElementById('stPosture').className = 'text-secondary';
+                        document.getElementById('stPosture').textContent = cameraFacing ? 'Camera-facing estimate' : 'Head turned estimate';
+                        document.getElementById('stPosture').className = cameraFacing ? 'text-success' : 'text-warning';
                     } else {
                         document.getElementById('stEyeContact').textContent = 'Outside frame / unavailable';
                         document.getElementById('stEyeContact').className = 'text-warning';
                         document.getElementById('stPosture').textContent = 'Excluded from scoring';
                         document.getElementById('stPosture').className = 'text-secondary';
                     }
+
+                    state.observation_data.camera_samples.push({
+                        at_seconds: Math.max(0, Number(state.voice_duration || recTimerSeconds || 0)),
+                        face_detected: Boolean(detection),
+                        camera_facing: Boolean(detection && cameraFacing),
+                        centered: Boolean(detection && centered)
+                    });
+                    state.observation_data.camera_samples = state.observation_data.camera_samples.slice(-300);
+                    answersData[trackedQuestionIndex] = state;
                 } catch(e) {
                     console.error("Tracking error", e);
+                } finally {
+                    cameraTrackingInFlight = false;
                 }
             }
 
@@ -1996,7 +2117,7 @@
                 document.getElementById('interviewControls').style.opacity = '1';
                 document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
-                if (cameraCoachingEnabled || document.getElementById('userCameraMobile')) initCamera();
+                if (cameraCoachingEnabled) initCamera();
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
@@ -2165,8 +2286,34 @@
                 'result', 'outcome', 'impact', 'increased', 'decreased', 'reduced', 'improved', 'saved',
                 'delivered', 'launched', 'resolved', 'completed', 'achieved', 'learned', 'led to', 'as a result'
             ];
-            const fillerPattern = /\b(um|uh|like|you know|basically|i mean|sort of|kind of|literally|actually)\b/gi;
+            const fillerPattern = /\b(you know|i mean|sort of|kind of|um+|uh+|erm+|hmm+|like|basically|literally|actually)\b/gi;
             const unprofessionalPattern = /\b(whatever|stuff|things|idk|lol|yeah|nah|kinda|sorta)\b/gi;
+
+            function canonicalFillerWord(word) {
+                const normalized = String(word || '').toLowerCase().replace(/\s+/g, ' ').trim();
+                if (/^um+$/.test(normalized)) return 'um';
+                if (/^uh+$/.test(normalized)) return 'uh';
+                if (/^erm+$/.test(normalized)) return 'erm';
+                if (/^hmm+$/.test(normalized)) return 'hmm';
+                return normalized;
+            }
+
+            function recordFillerEvents(segment) {
+                const state = answersData[currentQIdx];
+                if (!state || !isVoiceTranscriptionMode()) return;
+                state.observation_data = state.observation_data || { filler_events: [], camera_samples: [] };
+                state.observation_data.filler_events = Array.isArray(state.observation_data.filler_events)
+                    ? state.observation_data.filler_events
+                    : [];
+                const matches = String(segment || '').matchAll(new RegExp(fillerPattern.source, 'gi'));
+                for (const match of matches) {
+                    state.observation_data.filler_events.push({
+                        word: canonicalFillerWord(match[0]),
+                        at_seconds: Math.max(0, Number(state.voice_duration || recTimerSeconds || 0))
+                    });
+                }
+                state.observation_data.filler_events = state.observation_data.filler_events.slice(-500);
+            }
 
             function escapeHtml(value) {
                 return String(value)
@@ -2262,7 +2409,6 @@
                 const casualCount = casualMatches ? casualMatches.length : 0;
 
                 let clarity = 28 + Math.min(28, wordCount * 1.1) + (starSignals.componentCount * 8) + Math.min(8, sentenceCount * 2);
-                clarity -= fillerCount * 3;
                 clarity -= longSentencePenalty;
                 if (wordCount > 220) clarity -= 10;
                 if (wordCount < 15) clarity = Math.min(clarity, 45);
@@ -2270,13 +2416,11 @@
                 const relevance = calculateRelevanceScore(answerText, questionText, wordCount, starSignals);
 
                 let grammar = 55 + Math.min(20, wordCount * 0.5) + (hasEndPunctuation ? 8 : 0);
-                grammar -= fillerCount * 3;
                 grammar -= hasRepeatedWord ? 8 : 0;
                 grammar -= longSentencePenalty;
                 if (wordCount < 15) grammar = Math.min(grammar, 50);
 
                 let professionalism = 58 + (hasFirstPersonOwnership ? 10 : 0) + (starSignals.hasA ? 8 : 0) + (starSignals.hasR ? 8 : 0);
-                professionalism -= fillerCount * 3;
                 professionalism -= casualCount * 10;
                 if (wordCount < 15) professionalism = Math.min(professionalism, 50);
 
@@ -2323,7 +2467,7 @@
                     return 'Add one measurable detail, such as time saved, quality improved, revenue, volume, or customer impact.';
                 }
                 if (fillerCount >= 3) {
-                    return 'Reduce filler words and make the delivery more direct and confident.';
+                    return 'The transcript detected several possible filler phrases. Try a brief silent pause when gathering your next thought.';
                 }
                 if (wordCount > 220) {
                     return 'Tighten the answer to the strongest 60-90 seconds: situation, decision, action, result.';
@@ -2348,7 +2492,10 @@
                 updateStarIcon('starA', starSignals.hasA);
                 updateStarIcon('starR', starSignals.hasR);
 
-                const matches = text.match(fillerPattern);
+                const deliveryText = isVoiceTranscriptionMode()
+                    ? String(answersData[currentQIdx]?.speech_transcript || '')
+                    : '';
+                const matches = deliveryText.match(fillerPattern);
                 const fillers = matches ? matches.length : 0;
                 const scores = calculateLiveScores(text, currentQuestion, wordCount, fillers, starSignals);
                 const tip = biggestSuggestion(text, currentQuestion, wordCount, fillers, scores, starSignals);
@@ -2410,12 +2557,12 @@
                     document.getElementById('vaDuration').innerText = recTimerSeconds + 's';
                     answersData[currentQIdx].voice_duration = recTimerSeconds;
                     
-                    const wordCount = document.getElementById('answerTextarea').value.trim().split(/\s+/).filter(w=>w.length>0).length;
+                    const wordCount = String(answersData[currentQIdx]?.speech_transcript || '').trim().split(/\s+/).filter(w=>w.length>0).length;
                     
-                    // Deduct 3 seconds per pause for a highly accurate WPM of ACTIVE speaking time
-                    let activeSeconds = recTimerSeconds - (answersData[currentQIdx].pause_count * 3);
-                    if (activeSeconds < 1) activeSeconds = 1;
-                    const wpm = Math.round((wordCount / activeSeconds) * 60);
+                    // Match the server report: speech-transcript words divided
+                    // by the browser-timed recording duration.
+                    const timedSeconds = Math.max(1, recTimerSeconds);
+                    const wpm = Math.round((wordCount / timedSeconds) * 60);
                     
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
@@ -2484,7 +2631,9 @@
                 formData.append('session_id', interviewSessionId);
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answersData[currentQIdx].text);
+                formData.append('speech_transcript', answersData[currentQIdx].speech_transcript || '');
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
+                formData.append('observation_data', JSON.stringify(answersData[currentQIdx].observation_data || {}));
                 formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);
                 formData.append('pasted_character_count', answersData[currentQIdx].pasted_character_count || 0);
                 formData.append('is_skipped', isSkipped);
@@ -2527,13 +2676,27 @@
                 formData.append('notes', document.getElementById('sessionNotes').value);
                 formData.append('duration_seconds', timerSeconds);
                 formData.append('current_question_index', currentQIdx);
+                const answersForAutosave = answersData.map((answer, index) => {
+                    const snapshot = Object.assign({}, answer);
+                    const observations = answer && answer.observation_data && typeof answer.observation_data === 'object'
+                        ? answer.observation_data
+                        : {};
+                    snapshot.observation_data = index === currentQIdx
+                        ? {
+                            ...observations,
+                            filler_events: Array.isArray(observations.filler_events) ? observations.filler_events.slice(-100) : [],
+                            camera_samples: Array.isArray(observations.camera_samples) ? observations.camera_samples.slice(-120) : []
+                        }
+                        : { filler_events: [], camera_samples: [] };
+                    return snapshot;
+                });
                 formData.append('session_state', JSON.stringify({
                     has_started: true,
                     currentQIdx,
                     timerSeconds,
                     openingHasPlayed,
                     questions: questionSnapshot(),
-                    answersData,
+                    answersData: answersForAutosave,
                     chatHistory,
                     updated_at: new Date().toISOString()
                 }));
@@ -2663,8 +2826,10 @@
                 formData.append('session_id', interviewSessionId);
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answerText);
+                formData.append('speech_transcript', answersData[currentQIdx].speech_transcript || '');
                 formData.append('conversation_context', JSON.stringify(chatHistory.slice(-16)));
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
+                formData.append('observation_data', JSON.stringify(answersData[currentQIdx].observation_data || {}));
                 formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);
                 formData.append('pasted_character_count', answersData[currentQIdx].pasted_character_count || 0);
                 formData.append('is_skipped', wasSkipped);
@@ -2805,63 +2970,18 @@
                 }
             }
 
-            function showFeedbackLoadingState() {
-                const overlay = document.getElementById('feedbackLoadingOverlay');
-                if (overlay) {
-                    overlay.classList.add('is-visible');
-                }
-
-                const panel = document.getElementById('feedbackLoadingPanel');
-                if (panel) panel.classList.remove('has-error');
-
-                const title = document.getElementById('feedbackLoadingTitle');
-                if (title) title.textContent = 'Analyzing your responses';
-
-                const copy = document.getElementById('feedbackLoadingCopy');
-                if (copy) copy.textContent = 'Checking every response against its question and the evidence you provided.';
-
-                feedbackLoadingStartedAt = Date.now();
-                clearInterval(feedbackLoadingInterval);
-                const updateLoadingStatus = () => {
-                    const elapsed = Math.max(0, Math.floor((Date.now() - feedbackLoadingStartedAt) / 1000));
-                    const elapsedLabel = document.getElementById('feedbackLoadingElapsed');
-                    const stage = document.getElementById('feedbackLoadingStage');
-                    if (elapsedLabel) elapsedLabel.textContent = `${elapsed}s`;
-                    if (stage) {
-                        stage.textContent = elapsed >= 10
-                            ? 'Finalizing scores and recommendations'
-                            : (elapsed >= 4 ? 'Validating evidence and answer quality' : 'Preparing your report');
-                    }
-                };
-                updateLoadingStatus();
-                feedbackLoadingInterval = setInterval(updateLoadingStatus, 1000);
-
-                const qText = document.getElementById('aiQuestionText');
-                if (qText) qText.innerText = 'Analyzing your responses...';
-
-                const qCounter = document.getElementById('qCounter');
-                if (qCounter) qCounter.innerText = 'Analyzing';
-
-                const sourceLine = document.getElementById('aiQuestionSource');
-                if (sourceLine) {
-                    sourceLine.innerHTML = '';
-                    sourceLine.style.display = 'none';
-                }
-            }
-
-            function showFeedbackAnalysisError(message) {
-                clearInterval(feedbackLoadingInterval);
-                feedbackLoadingInterval = null;
-                const panel = document.getElementById('feedbackLoadingPanel');
-                const title = document.getElementById('feedbackLoadingTitle');
-                const copy = document.getElementById('feedbackLoadingCopy');
-                if (panel) panel.classList.add('has-error');
-                if (title) title.textContent = 'Feedback analysis paused';
-                if (copy) copy.textContent = message || 'We could not finish the report. Your final answer is saved and the analysis can be retried safely.';
-            }
-
             function waitForFeedbackRetry(delayMs) {
                 return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 1000))));
+            }
+
+            function setFinishTransitionVisible(visible) {
+                const overlay = document.getElementById('finishTransitionOverlay');
+                if (!overlay) return;
+                if (visible && overlay.parentElement !== document.body) {
+                    document.body.appendChild(overlay);
+                }
+                overlay.classList.toggle('active', visible);
+                document.body.classList.toggle('finish-transition-active', visible);
             }
 
             async function finishInterview() {
@@ -2871,8 +2991,11 @@
                 stopQuestionTimer();
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
-                showFeedbackLoadingState();
-
+                const transitionMessage = document.getElementById('finishTransitionMessage');
+                const retryButton = document.getElementById('finishRetryButton');
+                if (transitionMessage) transitionMessage.textContent = 'Please wait while we finalize your interview report.';
+                if (retryButton) retryButton.style.display = 'none';
+                setFinishTransitionVisible(true);
                 const form = document.getElementById('finishForm');
                 const formData = new FormData(form);
 
@@ -2897,7 +3020,6 @@
                             throw new Error(data.message || 'The feedback service returned an incomplete response.');
                         }
 
-                        clearInterval(feedbackLoadingInterval);
                         window.location.replace(data.redirect_url);
                         return;
                     }
@@ -2906,8 +3028,16 @@
                 } catch (error) {
                     console.error('Interview feedback analysis failed:', error);
                     feedbackSubmissionInFlight = false;
-                    showFeedbackAnalysisError(error.message);
+                    const message = document.getElementById('finishTransitionMessage');
+                    const retryButton = document.getElementById('finishRetryButton');
+                    if (message) message.textContent = error.message || 'We could not finish the report. Your final answer is saved.';
+                    if (retryButton) retryButton.style.display = 'inline-flex';
+                    setFinishTransitionVisible(true);
                 }
+            }
+
+            function retryFinishInterview() {
+                if (!feedbackSubmissionInFlight) finishInterview();
             }
 
             function ucfirst(str) {
@@ -2934,13 +3064,16 @@
 @if(isset($sessionRecord) && (bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
-    if (cameraCoachingEnabled) {
+    if (typeof cameraCoachingEnabled !== 'undefined' && cameraCoachingEnabled) {
         Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
             faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
         ]).then(() => {
             console.log("Optional camera-framing models loaded");
-        }).catch(err => console.error("Error loading optional camera models", err));
+        }).catch(err => {
+            console.error("Error loading optional camera models", err);
+            if (typeof markCameraUnavailable === 'function') markCameraUnavailable('model_unavailable');
+        });
     }
 </script>
 @endif

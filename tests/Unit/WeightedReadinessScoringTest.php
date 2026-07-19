@@ -85,9 +85,15 @@ class WeightedReadinessScoringTest extends TestCase
             'session_feedback' => $this->sessionFeedback(100, 100),
         ];
         $response['per_question_feedback'][0]['evidence_quotes'] = [$answers[0]['answer']];
-        $response['per_question_feedback'][0]['ai_feedback'] = 'You stated "'.$answers[0]['answer'].'". This directly described diagnostic steps relevant to the question.';
+        $response['per_question_feedback'][0]['question_focus'] = $answers[0]['question'];
+        $response['per_question_feedback'][0]['answer_alignment'] = 'directly_addressed';
+        $response['per_question_feedback'][0]['missing_criteria'] = [];
+        $response['per_question_feedback'][0]['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "'.$answers[0]['answer'].'". This directly described diagnostic steps relevant to the question.';
         $response['per_question_feedback'][1]['evidence_quotes'] = [$answers[1]['answer']];
-        $response['per_question_feedback'][1]['ai_feedback'] = 'You stated "'.$answers[1]['answer'].'". This described personal ownership and an outcome.';
+        $response['per_question_feedback'][1]['question_focus'] = $answers[1]['question'];
+        $response['per_question_feedback'][1]['answer_alignment'] = 'partially_addressed';
+        $response['per_question_feedback'][1]['missing_criteria'] = [];
+        $response['per_question_feedback'][1]['ai_feedback'] = 'For "'.$answers[1]['question'].'", you stated "'.$answers[1]['answer'].'". This described personal ownership and an outcome.';
 
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, []]);
 
@@ -110,7 +116,10 @@ class WeightedReadinessScoringTest extends TestCase
         ]];
         $validItem = $this->feedbackItem(11, 80, 80, 80, 80, 80, false, 0);
         $validItem['evidence_quotes'] = ['An index can improve selective reads but adds storage and write overhead'];
-        $validItem['ai_feedback'] = 'You stated "An index can improve selective reads but adds storage and write overhead", which identifies a relevant indexing tradeoff.';
+        $validItem['question_focus'] = $answers[0]['question'];
+        $validItem['answer_alignment'] = 'directly_addressed';
+        $validItem['missing_criteria'] = [];
+        $validItem['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "An index can improve selective reads but adds storage and write overhead", which identifies a relevant indexing tradeoff.';
         $validResponse = [
             'per_question_feedback' => [$validItem],
             'session_feedback' => $this->sessionFeedback(80, 0),
@@ -150,6 +159,9 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame(10, $normalized['score']);
         $this->assertSame(10, $normalized['star_method_score']);
         $this->assertLessThanOrEqual(10, $normalized['relevance_score']);
+        $this->assertStringContainsString($answer['question'], $normalized['ai_feedback']);
+        $this->assertStringContainsString($answer['answer'], $normalized['ai_feedback']);
+        $this->assertStringContainsString('Next attempt:', $normalized['ai_feedback']);
     }
 
     public function test_it_uses_bounded_local_scores_when_provider_feedback_is_missing(): void
@@ -231,6 +243,9 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertFalse($schema['additionalProperties']);
         $this->assertFalse($item['additionalProperties']);
         $this->assertContains('evidence_quotes', $item['required']);
+        $this->assertContains('question_focus', $item['required']);
+        $this->assertContains('answer_alignment', $item['required']);
+        $this->assertContains('missing_criteria', $item['required']);
         $this->assertContains('ai_feedback', $item['required']);
         $this->assertArrayNotHasKey('session_feedback', $schema['properties']);
     }
@@ -261,15 +276,18 @@ class WeightedReadinessScoringTest extends TestCase
             'answer' => $answerText,
         ]];
         $item = $this->feedbackItem(41, 80, 80, 80, 80, 80, false, 0);
+        $item['question_focus'] = $answers[0]['question'];
+        $item['answer_alignment'] = 'directly_addressed';
+        $item['missing_criteria'] = [];
         $item['evidence_quotes'] = ['I reviewed the query plan and verified the index usage'];
-        $item['ai_feedback'] = 'You stated "I reviewed the query plan and verified the index usage", which supports the diagnostic score.';
+        $item['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "I reviewed the query plan and verified the index usage", which supports the diagnostic score.';
 
         $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$item],
         ], $answers]));
 
         $item['evidence_quotes'] = ['I inspected the query plan and verified the index usage'];
-        $item['ai_feedback'] = 'You stated "I inspected the query plan and verified the index usage", which supports the diagnostic score.';
+        $item['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "I inspected the query plan and verified the index usage", which supports the diagnostic score.';
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$item],
@@ -297,8 +315,216 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[], $answers, []]);
 
         $this->assertStringContainsString($strongAnswer, $normalized['session_feedback']['strengths']);
-        $this->assertStringContainsString('1 of 2 answered responses did not clearly identify personal action or ownership', $normalized['session_feedback']['weaknesses']);
+        $this->assertStringContainsString('1 of 2 responses that required personal ownership did not clearly identify the candidate\'s action', $normalized['session_feedback']['weaknesses']);
         $this->assertStringNotContainsString('appears to have', $normalized['session_feedback']['strengths']);
+    }
+
+    public function test_each_local_fallback_is_tied_to_its_own_question(): void
+    {
+        $sameAnswer = 'I organize complex releases with checklists, coordinate dependencies, and verify each handoff before launch.';
+        $answers = [
+            [
+                'id' => 61,
+                'question_type' => 'Personal',
+                'question' => 'What is your greatest strength?',
+                'answer' => $sameAnswer,
+            ],
+            [
+                'id' => 62,
+                'question_type' => 'Personal',
+                'question' => 'What salary range are you expecting?',
+                'answer' => $sameAnswer,
+            ],
+        ];
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[], $answers, []]);
+        $first = $normalized['per_question_feedback'][0];
+        $second = $normalized['per_question_feedback'][1];
+
+        $this->assertNotSame($first['ai_feedback'], $second['ai_feedback']);
+        $this->assertNotSame($first['follow_up_question'], $second['follow_up_question']);
+        $this->assertStringContainsString($answers[0]['question'], $first['ai_feedback']);
+        $this->assertStringContainsString($answers[1]['question'], $second['ai_feedback']);
+        $this->assertSame(61, $first['id']);
+        $this->assertSame(62, $second['id']);
+    }
+
+    public function test_validated_semantic_relevance_is_not_overridden_by_unrelated_ownership_rules(): void
+    {
+        $cases = [
+            [
+                'id' => 71,
+                'question_type' => 'Technical',
+                'question' => 'What is database normalization and why is it useful?',
+                'answer' => 'Database normalization separates repeated data into related tables, which reduces duplication and update anomalies while preserving consistent relationships between records.',
+            ],
+            [
+                'id' => 72,
+                'question_type' => 'Personal',
+                'question' => 'What is your greatest strength?',
+                'answer' => 'Organizing complex releases is my strongest capability because I make dependencies visible and keep handoffs clear for everyone involved.',
+            ],
+            [
+                'id' => 73,
+                'question_type' => 'Personal',
+                'question' => 'What salary range are you expecting?',
+                'answer' => 'I am open to a fair range based on the role responsibilities, total benefits, and the company budget, and I am comfortable discussing the full package.',
+            ],
+        ];
+
+        foreach ($cases as $answer) {
+            $feedback = $this->v4FeedbackFor($answer, relevance: 92, alignment: 'directly_addressed');
+            $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+            $this->assertSame(92, $normalized['relevance_score']);
+            $this->assertSame('directly_addressed', $normalized['answer_alignment']);
+            $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+            $this->assertFalse(collect($normalized['missing_evidence'])->contains(
+                fn (string $gap): bool => str_contains(strtolower($gap), 'personal action')
+            ));
+            $this->assertStringNotContainsString('what did you personally do', strtolower($normalized['follow_up_question']));
+        }
+    }
+
+    public function test_question_focus_and_unique_commentary_prevent_cross_question_feedback_reuse(): void
+    {
+        $answers = [
+            [
+                'id' => 81,
+                'question_type' => 'Technical',
+                'question' => 'Explain an indexing tradeoff.',
+                'answer' => 'An index speeds selective reads but adds storage and write overhead for each affected table.',
+            ],
+            [
+                'id' => 82,
+                'question_type' => 'Technical',
+                'question' => 'Explain a transaction isolation tradeoff.',
+                'answer' => 'Stronger isolation can reduce anomalies but may increase blocking and reduce concurrent throughput.',
+            ],
+        ];
+        $first = $this->v4FeedbackFor($answers[0], 85, 'directly_addressed');
+        $second = $this->v4FeedbackFor($answers[1], 85, 'directly_addressed');
+        $second['question_focus'] = $answers[0]['question'];
+        $second['ai_feedback'] = str_replace($answers[1]['question'], $answers[0]['question'], $second['ai_feedback']);
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$first, $second],
+        ], $answers]));
+
+        $duplicateAnswers = [$answers[0], array_merge($answers[0], ['id' => 83])];
+        $duplicate = $first;
+        $duplicate['id'] = 83;
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$first, $duplicate],
+        ], $duplicateAnswers]));
+    }
+
+    public function test_valid_items_are_preserved_when_another_question_item_is_invalid(): void
+    {
+        $answers = [
+            [
+                'id' => 84,
+                'question_type' => 'Technical',
+                'question' => 'What does an index improve?',
+                'answer' => 'An index can improve selective reads by reducing the rows the database must scan.',
+            ],
+            [
+                'id' => 85,
+                'question_type' => 'Personal',
+                'question' => 'What is your greatest weakness?',
+                'answer' => 'I sometimes over-check reports, so I now use a time limit and a review checklist.',
+            ],
+        ];
+        $valid = $this->v4FeedbackFor($answers[0], 88, 'directly_addressed');
+        $invalid = $this->v4FeedbackFor($answers[1], 88, 'directly_addressed');
+        $invalid['question_focus'] = $answers[0]['question'];
+
+        $subset = $this->invokePrivate('validFeedbackSubset', [[
+            'per_question_feedback' => [$valid, $invalid],
+        ], $answers]);
+
+        $this->assertCount(1, $subset);
+        $this->assertSame(84, $subset[0]['id']);
+    }
+
+    public function test_validated_cebuano_feedback_is_preserved_without_english_only_caps(): void
+    {
+        $answer = [
+            'id' => 91,
+            'question_type' => 'Behavioral',
+            'question' => 'Isaysay ang usa ka higayon nga imong nasulbad ang lisod nga problema.',
+            'expected_guide' => 'Use STAR: situation, task, action, and result.',
+            'answer' => 'Sa among proyekto, ako ang responsable sa sayop nga report. Gisusi nako ang datos, gitul-id ang pormula, ug gipa-review kini sa akong kauban. Human niini, nahuman namo ang husto nga report sa takdang oras.',
+        ];
+        $feedback = $this->v4FeedbackFor(
+            $answer,
+            relevance: 92,
+            alignment: 'directly_addressed',
+            starApplicable: true,
+            starScore: 100
+        );
+        $feedback['ai_feedback'] = 'Alang sa "'.$answer['question'].'", ang ebidensya nga "'.$answer['answer'].'" direktang nagtubag sa pangutana ug naghatag og klarong pananglitan.';
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertSame(92, $normalized['relevance_score']);
+        $this->assertSame(100, $normalized['star_method_score']);
+        $this->assertSame('directly_addressed', $normalized['answer_alignment']);
+        $this->assertSame([], $normalized['missing_evidence']);
+        $this->assertSame(82, $normalized['scoring_confidence']);
+    }
+
+    public function test_role_fit_question_is_not_forced_into_star_by_a_coarse_behavioral_label(): void
+    {
+        $answer = [
+            'id' => 101,
+            'question_type' => 'Behavioral',
+            'question' => 'Why should a Philippine employer hire you for this role?',
+            'expected_guide' => 'Connect role requirements to specific experience, strengths, measurable results, and motivation.',
+            'answer' => 'My support experience and careful documentation match the role, and I can contribute a consistent approach to resolving customer requests.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 88, 'directly_addressed', false, 0);
+
+        $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$feedback],
+        ], [$answer]]));
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+        $this->assertFalse($normalized['star_applicable']);
+        $this->assertSame(0, $normalized['star_method_score']);
+        $this->assertFalse($normalized['requires_personal_action']);
+
+        $session = $this->invokePrivate('normalizeSessionFeedback', [[], [$normalized]]);
+        $this->assertStringNotContainsString('personal action', strtolower($session['weaknesses']));
+        $this->assertStringNotContainsString('ownership', strtolower($session['weaknesses']));
+    }
+
+    public function test_session_feedback_counts_relevance_from_structured_alignment(): void
+    {
+        $feedback = [[
+            'score' => 62,
+            'clarity_score' => 70,
+            'relevance_score' => 62,
+            'grammar_score' => 75,
+            'professionalism_score' => 75,
+            'star_applicable' => false,
+            'star_method_score' => 0,
+            'is_skipped' => false,
+            'is_too_short' => false,
+            'answer_alignment' => 'partially_addressed',
+            'evidence_quotes' => ['I named the strength but did not connect it to the role.'],
+            'requires_personal_action' => false,
+            'has_personal_action' => false,
+            'requires_result' => false,
+            'has_result' => false,
+            'missing_evidence' => [],
+        ]];
+
+        $session = $this->invokePrivate('normalizeSessionFeedback', [[], $feedback]);
+
+        $this->assertStringContainsString('covered only part', strtolower($session['weaknesses']));
+        $this->assertStringContainsString('partially answered', strtolower($session['improvement_suggestions']));
+        $this->assertStringNotContainsString('personal action', strtolower($session['weaknesses']));
     }
 
     private function feedbackItem(
@@ -324,6 +550,34 @@ class WeightedReadinessScoringTest extends TestCase
             'better_sample_answer' => 'A stronger answer would add constraints, personal ownership, and a measurable result.',
             'follow_up_question' => 'What tradeoff had the largest effect on your decision?',
         ];
+    }
+
+    private function v4FeedbackFor(
+        array $answer,
+        int $relevance,
+        string $alignment,
+        bool $starApplicable = false,
+        int $starScore = 0
+    ): array {
+        $answerText = (string) ($answer['answer'] ?? '');
+        $question = (string) ($answer['question'] ?? '');
+        $item = $this->feedbackItem(
+            (int) $answer['id'],
+            85,
+            85,
+            $relevance,
+            85,
+            85,
+            $starApplicable,
+            $starScore
+        );
+        $item['evidence_quotes'] = [$answerText];
+        $item['question_focus'] = $question;
+        $item['answer_alignment'] = $alignment;
+        $item['missing_criteria'] = [];
+        $item['ai_feedback'] = 'For "'.$question.'", the exact answer evidence "'.$answerText.'" supports this question-specific evaluation.';
+
+        return $item;
     }
 
     private function sessionFeedback(int $readiness, int $starScore): array

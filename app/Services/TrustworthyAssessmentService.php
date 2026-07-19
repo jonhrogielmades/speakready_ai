@@ -67,17 +67,11 @@ class TrustworthyAssessmentService
                 && preg_match('/\b'.self::ACTION_VERB_PATTERN.'\b/i', $sentence);
         })->take(3)->values()->all();
 
-        $questionType = strtolower(trim((string) ($question instanceof Question
-            ? $question->type
-            : ($question['type'] ?? ''))));
-        $questionText = trim((string) ($question instanceof Question
-            ? $question->question_text
-            : ($question['question_text'] ?? $question['question'] ?? '')));
-        $starApplicable = $questionType === 'behavioral'
-            || preg_match('/\b(tell me about|describe|share) (?:a |an )?(?:time|situation|experience)\b|\bgive (?:me )?an example\b/i', $questionText) === 1;
-        $resultRequired = $question === null
-            || $starApplicable
-            || preg_match('/\b(tell me about|describe|share|give me an example|walk me through)\b.*\b(time|situation|experience|project|case|incident|challenge|mistake)\b/i', $questionText) === 1;
+        $starApplicable = QuestionIntentService::starApplicable($question);
+        $questionIntent = QuestionIntentService::classify($question);
+        $questionText = QuestionIntentService::text($question);
+        $resultRequired = $question === null || QuestionIntentService::requiresResult($question);
+        $personalActionRequired = $question === null || QuestionIntentService::requiresPersonalAction($question);
         $hasResult = preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent|hours?|days?|minutes?|seconds?)\b/i', $answer) === 1;
         $hasPersonalAction = preg_match('/\bI\s+(?:personally\s+)?(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answer) === 1;
 
@@ -85,7 +79,7 @@ class TrustworthyAssessmentService
         if ($resultRequired && ! $hasResult) {
             $missing[] = 'A specific result, outcome, or measurable impact';
         }
-        if (! $hasPersonalAction) {
+        if ($personalActionRequired && ! $hasPersonalAction) {
             $missing[] = 'A clear statement of your personal action or ownership';
         }
 
@@ -93,8 +87,11 @@ class TrustworthyAssessmentService
             'supporting_excerpts' => $evidence,
             'missing_evidence' => $missing,
             'feedback_basis' => $feedback ? mb_substr($feedback, 0, 500) : null,
+            'question_text' => $questionText,
+            'question_intent' => $questionIntent,
             'star_applicable' => $starApplicable,
             'result_required' => $resultRequired,
+            'personal_action_required' => $personalActionRequired,
             'has_result' => $hasResult,
             'has_personal_action' => $hasPersonalAction,
         ];
@@ -122,15 +119,73 @@ class TrustworthyAssessmentService
                 ."Result: {$resultPrompt}";
         }
 
+        $questionText = trim((string) ($evidence['question_text'] ?? ''));
+        $questionLabel = $questionText !== '' ? ' for "'.mb_substr($questionText, 0, 180).'"' : '';
+        $intent = (string) ($evidence['question_intent'] ?? 'direct_evidence');
+        $intentScaffold = match ($intent) {
+            'strength' => [
+                'Direct response: [Name only the strength supported by your source answer.]',
+                'Proof: [Use the most relevant truthful example already present.]',
+                'Role connection: [Explain the role connection without adding an unsupported result.]',
+            ],
+            'strength_and_weakness' => [
+                'Strength: [Name and support one truthful, job-relevant strength.]',
+                'Development area: [Name only the genuine weakness stated in the source answer.]',
+                'Improvement: [Restate the improvement action and evidence of progress already present.]',
+            ],
+            'weakness' => [
+                'Development area: [State the genuine, manageable weakness from the source answer.]',
+                'Effect: [Explain only the real effect already described.]',
+                'Improvement: [Restate the concrete improvement habit and verified progress.]',
+            ],
+            'salary_expectation' => [
+                'Direct response: [State only the range or flexibility actually supported by your source answer.]',
+                'Basis: [Connect it to verified experience, responsibilities, or conditions without inventing market data.]',
+                'Close: [State only the professional openness already expressed.]',
+            ],
+            'motivation', 'role_fit' => [
+                'Direct response: [State the specific reason or role fit supported by your source answer.]',
+                'Evidence: [Connect one verified skill, experience, or goal already present.]',
+                'Contribution/next step: [Use only the contribution or career direction already stated.]',
+            ],
+            'self_introduction' => [
+                'Present: [State the current professional or educational focus already provided.]',
+                'Relevant past: [Select only the most role-relevant verified experience.]',
+                'Next step: [Restate the truthful role connection already present.]',
+            ],
+            'career_transition' => [
+                'Reason: [State the verified reason briefly and professionally.]',
+                'Learning: [Use only the lesson or need already described.]',
+                'Next step: [Connect it to what you truthfully seek next.]',
+            ],
+            'technical' => [
+                'Direct response: [State the technical conclusion already supported by the source.]',
+                'Reasoning: [Organize only the diagnostic or reasoning steps already present.]',
+                'Verification/tradeoff: [Restate only a verification step or tradeoff already mentioned.]',
+            ],
+            'situational' => [
+                'Goal and constraints: [Use only the goal or constraint stated in the source.]',
+                'Ordered action: [Organize the steps already proposed.]',
+                'Verification: [Restate only how the answer says success would be checked.]',
+            ],
+            default => [
+                'Direct response: [Answer the exact question in one sentence using only verified facts.]',
+                'Supporting detail: [Organize the reasoning or actions already present in the source answer.]',
+                'Evidence/verification: '.$resultPrompt,
+            ],
+        };
+
         $evidencePrompt = ($evidence['result_required'] ?? true)
             ? $resultPrompt
             : '[Restate only the reasoning, verification step, or outcome already present; do not invent one.]';
 
-        return "Fact-grounded revision template - preserve only details you can verify:\n"
+        if ($intent === 'direct_evidence') {
+            $intentScaffold[2] = 'Evidence/verification: '.$evidencePrompt;
+        }
+
+        return "Fact-grounded revision template{$questionLabel} - preserve only details you can verify:\n"
             ."Verified source answer: {$excerpt}\n"
-            ."Direct response: [Answer the exact question in one sentence using only verified facts.]\n"
-            ."Supporting detail: [Organize the reasoning or actions already present in the source answer.]\n"
-            ."Evidence/verification: {$evidencePrompt}";
+            .implode("\n", $intentScaffold);
     }
 
     public function rubricLevel(int $score): array
@@ -158,7 +213,7 @@ class TrustworthyAssessmentService
             $confidence = min($confidence, (int) round($answerConfidences->avg()));
         }
         $deliveryScores = $answers->pluck('delivery_stability_score')->filter(fn ($value) => $value !== null);
-        $starApplicable = $answers->contains(fn ($answer) => strtolower((string) $answer->question?->type) === 'behavioral');
+        $starApplicable = $answers->contains(fn ($answer) => QuestionIntentService::starApplicable($answer->question));
         $languageScoring = ! ((bool) data_get($session->accommodation_profile, 'separate_language_scoring', false));
         $overall = $this->overallScore([
             'clarity' => $metrics['clarity'],

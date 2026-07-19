@@ -8,7 +8,13 @@
         $strengths = trim($feedback->strengths ?? '');
         $weaknesses = trim($feedback->weaknesses ?? '');
         $suggestions = trim($feedback->improvement_suggestions ?? '');
-        $feedbackSummary = $suggestions !== '' ? $suggestions : ($weaknesses !== '' ? $weaknesses : ($strengths !== '' ? $strengths : 'AI feedback was unavailable for this session.'));
+        $feedbackSummaryParts = array_filter([
+            $strengths !== '' ? 'Strengths: '.$strengths : null,
+            $weaknesses !== '' ? 'Areas to improve: '.$weaknesses : null,
+        ]);
+        $feedbackSummary = ! empty($feedbackSummaryParts)
+            ? implode("\n\n", $feedbackSummaryParts)
+            : ($suggestions !== '' ? 'Review the recommended actions for the next practice step.' : 'AI feedback was unavailable for this session.');
         $comparisonRows = $comparisonRows ?? [];
         $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
     @endphp
@@ -77,6 +83,8 @@
         </div>
     </div>
 
+    @include('partials.interview-coaching-summary', ['feedback' => $feedback])
+
     <!-- Feature 5 & 6: Strengths and Areas for Improvement -->
     <div class="row g-4 mb-4">
         <div class="col-md-6">
@@ -109,9 +117,13 @@
                         ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
                         ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 0, 'color' => '#8b5cf6'],
                         ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
-                        ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'],
                         ['name' => 'Job Evidence Match', 'score' => $sessionRecord->score->job_evidence_match_score ?? 0, 'color' => '#ec4899']
                     ];
+                    $deliveryMeasured = (int) data_get($feedback->coaching_summary ?? [], 'coverage.delivery_measured', 0) > 0
+                        || $sessionRecord->answers->contains(fn ($item) => data_get($item->coaching_feedback ?? [], 'delivery.status') === 'measured');
+                    if ($deliveryMeasured) {
+                        $skills[] = ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'];
+                    }
                 @endphp
                 <div class="row g-4">
                     @foreach($skills as $skill)
@@ -223,6 +235,26 @@
     <h4 style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Detailed Answers Review</h4>
     <div class="accordion" id="answersAccordion">
         @foreach($sessionRecord->answers as $index => $answer)
+        @php
+            $headerAlignmentStatus = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.status', ''));
+            $headerAlignmentLabel = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.status_label', ''));
+            $headerAlignmentLabel = $headerAlignmentLabel !== '' ? $headerAlignmentLabel : match ($headerAlignmentStatus) {
+                'directly_answered' => 'Directly answered',
+                'partially_answered' => 'Partially answered',
+                'low_relevance' => 'Low relevance',
+                'insufficient_evidence' => 'Not enough evidence',
+                'not_evaluated' => 'Not evaluated',
+                'skipped' => 'Skipped',
+                default => '',
+            };
+            $headerAlignmentColor = match ($headerAlignmentStatus) {
+                'directly_answered' => '#10b981',
+                'partially_answered', 'insufficient_evidence' => '#f59e0b',
+                'low_relevance' => '#ef4444',
+                default => '#64748b',
+            };
+            $headerHasEvaluatedScore = in_array($headerAlignmentStatus, ['directly_answered', 'partially_answered', 'low_relevance'], true);
+        @endphp
         <div class="accordion-item" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;margin-bottom:20px;overflow:hidden;box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" style="background:transparent;color:var(--tx);box-shadow:none;padding:20px;">
@@ -231,6 +263,11 @@
                         <div class="d-flex gap-2 align-items-center">
                             @if($answer->is_skipped)
                                 <span class="badge" style="background:rgba(239, 68, 68, 0.1);color:#ef4444;font-size:0.9rem;padding:8px 12px;">Skipped</span>
+                            @elseif($headerAlignmentStatus !== '')
+                                <span class="badge" style="background:color-mix(in srgb, {{ $headerAlignmentColor }} 12%, transparent);color:{{ $headerAlignmentColor }};border:1px solid color-mix(in srgb, {{ $headerAlignmentColor }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $headerAlignmentLabel }}</span>
+                                @if($headerHasEvaluatedScore)
+                                    <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score ?? 0 }}</span>
+                                @endif
                             @else
                                 <span class="badge" style="background:rgba(59, 130, 246, 0.1);color:#3b82f6;font-size:0.9rem;padding:8px 12px;">Score: {{ $answer->score ?? 0 }}</span>
                             @endif
@@ -245,14 +282,21 @@
                         <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
                             <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback ?: 'You skipped this question. No feedback available.' }}
                         </div>
+                        @include('partials.interview-answer-coaching', ['answer' => $answer])
                     @else
                         
                         @php
-                            $hasDeliveryMetrics = ($answer->wpm ?? 0) > 0
-                                || ($answer->voice_duration ?? 0) > 0
-                                || ($answer->filler_words_count ?? 0) > 0
-                                || ($answer->confidence_score ?? 0) > 0;
-                            $hasLegacyBodyLanguageMetrics = ($sessionRecord->score->body_language_included ?? false)
+                            $hasStructuredAnswerCoaching = is_array($answer->coaching_feedback ?? null)
+                                && ! empty($answer->coaching_feedback);
+                            $responseMode = strtolower((string) ($answer->response_mode ?? ''));
+                            $hasVoiceRecording = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)
+                                || ($responseMode === '' && ($answer->voice_duration ?? 0) > 0);
+                            $hasDeliveryMetrics = ! $hasStructuredAnswerCoaching
+                                && $hasVoiceRecording
+                                && ($answer->voice_duration ?? 0) > 0
+                                && ($answer->wpm ?? 0) > 0;
+                            $hasLegacyBodyLanguageMetrics = ! $hasStructuredAnswerCoaching
+                                && ($sessionRecord->score->body_language_included ?? false)
                                 && (($answer->eye_contact_score ?? 0) > 0 || ($answer->posture_score ?? 0) > 0);
                         @endphp
 
@@ -335,6 +379,8 @@
                                 @endif
                             </div>
                         @endif
+
+                        @include('partials.interview-answer-coaching', ['answer' => $answer])
 
                         <div class="mb-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
                             <h6 style="color:#3b82f6;font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-comment-medical me-2"></i>AI Feedback</h6>
@@ -427,6 +473,35 @@
                                     <li>No follow-up question was generated for this answer.</li>
                                 @endif
                             </ul>
+                        </div>
+                    @endif
+
+                    @php
+                        $retryAttempts = $answer->retryAttempts ?? collect();
+                    @endphp
+                    @if($retryAttempts->count() > 0)
+                        <div class="mt-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
+                            <h6 style="color:#10b981;font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-rotate me-2"></i>Retry Attempts</h6>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach($retryAttempts as $retry)
+                                    <div class="d-flex flex-column flex-md-row justify-content-between gap-2" style="color:var(--tx);border-bottom:1px solid var(--bd);padding-bottom:10px;">
+                                        <div>
+                                            <strong>Attempt {{ $retry->attempt_number }}</strong>
+                                            <div style="color:var(--tx3);font-size:.85rem;">{{ $retry->created_at?->format('M d, Y g:i A') }}</div>
+                                        </div>
+                                        <div class="retry-meta d-flex gap-2 flex-wrap align-items-center">
+                                            <span class="retry-chip" style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700;">Score {{ $retry->score ?? 0 }}%</span>
+                                            @if(in_array(strtolower((string) $retry->response_mode), ['voice', 'hybrid', 'voice_and_text'], true) && ($retry->voice_duration ?? 0) > 0 && $retry->delivery_stability_score !== null)
+                                                <span class="retry-chip" style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700;">Delivery Stability {{ $retry->delivery_stability_score }}%</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @if($retry->ai_feedback)
+                                        <p style="color:var(--tx2);font-size:.9rem;line-height:1.6;margin:0 0 8px;">{{ $retry->ai_feedback }}</p>
+                                    @endif
+                                    @include('partials.interview-answer-coaching', ['answer' => $retry])
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>

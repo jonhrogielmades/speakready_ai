@@ -14,7 +14,9 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Services\AIService;
+use App\Services\EvidenceBasedCoachingService;
 use App\Services\QuestionDatasetProvider;
+use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Http\Request;
@@ -176,34 +178,46 @@ class InterviewController extends Controller
 
         if (! Question::where('interview_session_id', $session->id)->exists()) {
             $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
-            $fallbackQuestions = $this->sourceBackedQuestionTexts($dataset, $questionTypes, (int) ($validated['num_questions'] ?? 5), $validated['difficulty'], $position);
-            $fallbackQuestions = $this->localizedQuestionTexts($fallbackQuestions, $provider);
+            $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $questionTypes, (int) ($validated['num_questions'] ?? 5), $validated['difficulty'], $position);
+            $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
 
-            foreach ($fallbackQuestions as $idx => $qText) {
+            foreach ($fallbackQuestions as $idx => $questionRecord) {
                 $this->createInterviewQuestion(
                     $session,
                     $category,
-                    $qText,
+                    $localizedTexts[$idx] ?? $questionRecord['question_text'],
                     $validated['difficulty'],
                     $questionTypes,
                     $idx,
-                    $sourceMetadata
+                    array_merge($sourceMetadata, [
+                        'question_type' => $questionRecord['type'] ?? null,
+                        'expected_guide' => $questionRecord['expected_guide'] ?? null,
+                        'mapped_skills' => $questionRecord['mapped_skills'] ?? [],
+                    ])
                 );
             }
         }
 
         if (! Question::where('interview_session_id', $session->id)->exists()) {
-            $fallbackQuestions = $this->fallbackQuestionTextsForSession($session, $questionTypes, (int) ($validated['num_questions'] ?? 5));
-            $fallbackQuestions = $this->localizedQuestionTexts($fallbackQuestions, $provider);
+            $fallbackQuestions = $this->fallbackQuestionRecordsForSession($session, $questionTypes, (int) ($validated['num_questions'] ?? 5));
+            $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
 
-            foreach ($fallbackQuestions as $idx => $qText) {
+            foreach ($fallbackQuestions as $idx => $questionRecord) {
                 $this->createInterviewQuestion(
                     $session,
                     $category,
-                    $qText,
+                    $localizedTexts[$idx] ?? $questionRecord['question_text'],
                     $validated['difficulty'],
                     $questionTypes,
-                    $idx
+                    $idx,
+                    [
+                        'question_type' => $questionRecord['type'] ?? null,
+                        'expected_guide' => $questionRecord['expected_guide'] ?? null,
+                        'mapped_skills' => $questionRecord['mapped_skills'] ?? [],
+                        'source_name' => $questionRecord['source_name'] ?? null,
+                        'source_url' => $questionRecord['source_url'] ?? null,
+                        'source_type' => $questionRecord['source_type'] ?? null,
+                    ]
                 );
             }
         }
@@ -252,7 +266,9 @@ class InterviewController extends Controller
             'session_id' => 'nullable|exists:interview_sessions,id',
             'question_id' => 'required|exists:questions,id',
             'answer_text' => 'nullable|string|max:20000',
+            'speech_transcript' => 'nullable|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
+            'observation_data' => 'nullable|string|max:50000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
@@ -323,8 +339,10 @@ class InterviewController extends Controller
 
         $validated = $request->validate([
             'answer_text' => 'required|string|max:20000',
+            'speech_transcript' => 'nullable|string|max:20000',
             'conversation_context' => 'nullable|string|max:50000',
             'transcript_timeline' => 'nullable|string|max:50000',
+            'observation_data' => 'nullable|string|max:50000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'question_id' => 'required|exists:questions,id',
@@ -596,6 +614,8 @@ class InterviewController extends Controller
                     'question_type' => $answer->question->type ?? null,
                     'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
                     'is_skipped' => (bool) $answer->is_skipped,
+                    'expected_guide' => $answer->question->expected_guide ?? null,
+                    'mapped_skills' => $answer->question->mapped_skills ?? [],
                 ];
             })->toArray();
 
@@ -636,19 +656,15 @@ class InterviewController extends Controller
                 $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
             }
             $assessment = app(TrustworthyAssessmentService::class);
+            $coaching = app(EvidenceBasedCoachingService::class);
             DB::beginTransaction();
 
             $totalClarity = 0;
             $totalRelevance = 0;
             $totalGrammar = 0;
             $totalProf = 0;
-            $totalBodyLang = 0;
-            $totalConfidence = 0;
 
             foreach ($answers as $answer) {
-                $totalBodyLang += ($answer->eye_contact_score + $answer->posture_score) / 2;
-                $totalConfidence += $answer->confidence_score > 0 ? $this->scoreValue($answer->confidence_score) : 0;
-
                 // Find matching feedback
                 $qFeedback = null;
                 if (isset($aiFeedback['per_question_feedback']) && is_array($aiFeedback['per_question_feedback'])) {
@@ -678,6 +694,17 @@ class InterviewController extends Controller
                         $answer->question
                     );
                     $rubric = $assessment->rubricLevel($qScore);
+                    $coachingFeedback = $coaching->forAnswer(
+                        (string) ($answer->answer_text ?? ''),
+                        $answer->question,
+                        $this->coachingMetricsFromAnswer(
+                            $answer,
+                            $this->scoreValue($qFeedback['scoring_confidence'] ?? 80),
+                            $session,
+                            $this->coachingEvaluationMetrics($qFeedback)
+                        ),
+                        is_array($answer->observation_data) ? $answer->observation_data : []
+                    );
                     $answer->update([
                         'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
                         'better_sample_answer' => $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence),
@@ -691,6 +718,7 @@ class InterviewController extends Controller
                         'rubric_level' => $rubric['level'],
                         'recommendation_text' => $rubric['next_level'],
                         'improved_answer_source' => 'candidate_facts',
+                        'coaching_feedback' => $coachingFeedback,
                     ]);
                 } else {
                     // Do not invent positive scores when AI scoring fails.
@@ -705,6 +733,12 @@ class InterviewController extends Controller
                     $totalGrammar += $g;
                     $totalProf += $p;
 
+                    $coachingFeedback = $coaching->forAnswer(
+                        (string) ($answer->answer_text ?? ''),
+                        $answer->question,
+                        $this->coachingMetricsFromAnswer($answer, 0, $session),
+                        is_array($answer->observation_data) ? $answer->observation_data : []
+                    );
                     $answer->update([
                         'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
                         'better_sample_answer' => '',
@@ -717,6 +751,7 @@ class InterviewController extends Controller
                         'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? '', null, $answer->question),
                         'rubric_level' => 'Unscored',
                         'improved_answer_source' => 'unavailable',
+                        'coaching_feedback' => $coachingFeedback,
                     ]);
                 }
             }
@@ -726,21 +761,25 @@ class InterviewController extends Controller
             $relevance = round($totalRelevance / $count);
             $grammar = round($totalGrammar / $count);
             $prof = round($totalProf / $count);
-            $bodyLang = data_get($session->accommodation_profile, 'camera_coaching', false)
-                ? round($totalBodyLang / $count)
-                : 0;
-            $conf = round($totalConfidence / $count);
+            $bodyLang = 0;
+            $conf = 0;
 
             $sFeedback = $aiFeedback['session_feedback'] ?? null;
             $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
             $jobEvidenceScore = 0;
-            $metadata = $assessment->sessionMetadata($session, $answers->fresh(['question']), [
+            $evaluatedAnswers = $answers->fresh(['question']);
+            $metadata = $assessment->sessionMetadata($session, $evaluatedAnswers, [
                 'clarity' => $clarity,
                 'relevance' => $relevance,
                 'grammar' => $grammar,
                 'professionalism' => $prof,
             ], $starScore, $jobEvidenceScore);
-            $overall = $metadata['overall'];
+            $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)
+                ? $this->scoreValue($sFeedback['overall_readiness_score'])
+                : $metadata['overall'];
+            $metadata['overall'] = $overall;
+            $metadata['readiness_band'] = $assessment->readinessBand($overall);
+            $coachingSummary = $coaching->sessionSummary($evaluatedAnswers);
 
             // Game perks affect game progression, never the stored assessment score.
             $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -779,11 +818,12 @@ class InterviewController extends Controller
                 'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
                 'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
                 'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
+                'coaching_summary' => $coachingSummary,
             ]);
 
             $session->update([
                 'status' => 'completed',
-                'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $answers),
+                'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
                 'current_question_index' => max(0, $answers->count() - 1),
                 'session_state' => null,
             ]);
@@ -984,7 +1024,9 @@ class InterviewController extends Controller
 
         $validated = $request->validate([
             'answer_text' => 'required|string|max:20000',
+            'speech_transcript' => 'nullable|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
+            'observation_data' => 'nullable|string|max:50000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
@@ -1000,9 +1042,23 @@ class InterviewController extends Controller
         ]);
 
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
+        $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
+        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $deliveryTranscript);
         $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
         $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
+        $coaching = app(EvidenceBasedCoachingService::class);
+        $observationData = $coaching->normalizeObservationData(
+            $this->jsonPayloadFrom($validated['observation_data'] ?? null),
+            $deliveryTranscript,
+            array_merge($deliveryMetrics, ['response_mode' => $validated['response_mode'] ?? 'text']),
+            (bool) data_get($session->accommodation_profile, 'camera_coaching', false)
+        );
+        $initialCoaching = $coaching->forAnswer(
+            $answerText,
+            $answer->question,
+            array_merge($deliveryMetrics, ['response_mode' => $validated['response_mode'] ?? 'text']),
+            $observationData
+        );
         $nextAttempt = ((int) InterviewAnswer::where('retry_of_answer_id', $answer->id)->max('attempt_number')) + 1;
         $nextAttempt = max(2, $nextAttempt);
 
@@ -1012,11 +1068,14 @@ class InterviewController extends Controller
             'attempt_number' => $nextAttempt,
             'question_id' => $answer->question_id,
             'answer_text' => $answerText,
+            'delivery_transcript' => $deliveryTranscript !== '' ? $deliveryTranscript : null,
             'transcript_timeline' => $transcriptTimeline,
             'paste_event_count' => $integrity['paste_event_count'],
             'pasted_character_count' => $integrity['pasted_character_count'],
             'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
             'answer_integrity_flags' => $integrity['answer_integrity_flags'],
+            'observation_data' => $observationData,
+            'coaching_feedback' => $initialCoaching,
             'response_mode' => $validated['response_mode'] ?? 'text',
             'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
             'wpm' => $deliveryMetrics['wpm'],
@@ -1041,6 +1100,8 @@ class InterviewController extends Controller
             'question_type' => $answer->question->type ?? null,
             'answer' => $retry->answer_text,
             'is_skipped' => false,
+            'expected_guide' => $answer->question->expected_guide ?? null,
+            'mapped_skills' => $answer->question->mapped_skills ?? [],
         ]], $provider);
 
         $qFeedback = $feedback['per_question_feedback'][0] ?? null;
@@ -1053,6 +1114,17 @@ class InterviewController extends Controller
                 $answer->question
             );
             $rubric = $assessment->rubricLevel($retryScore);
+            $coachingFeedback = $coaching->forAnswer(
+                (string) ($retry->answer_text ?? ''),
+                $answer->question,
+                $this->coachingMetricsFromAnswer(
+                    $retry,
+                    $this->scoreValue($qFeedback['scoring_confidence'] ?? 0),
+                    $session,
+                    $this->coachingEvaluationMetrics($qFeedback)
+                ),
+                is_array($retry->observation_data) ? $retry->observation_data : []
+            );
             $retry->update([
                 'ai_feedback' => $qFeedback['ai_feedback'] ?? '',
                 'better_sample_answer' => $assessment->groundedRevisionTemplate($retry->answer_text ?? '', $evidence),
@@ -1066,10 +1138,14 @@ class InterviewController extends Controller
                 'rubric_level' => $rubric['level'],
                 'recommendation_text' => $rubric['next_level'],
                 'improved_answer_source' => 'candidate_facts',
+                'coaching_feedback' => $coachingFeedback,
             ]);
         }
 
         $retry->refresh();
+        $coachingHtml = view('partials.interview-answer-coaching', [
+            'answer' => $retry,
+        ])->render();
 
         return response()->json([
             'success' => true,
@@ -1086,6 +1162,8 @@ class InterviewController extends Controller
             'ai_feedback' => $retry->ai_feedback ?: 'Retry saved. Feedback was not available.',
             'better_sample_answer' => $retry->better_sample_answer ?: '',
             'follow_up_question' => $retry->follow_up_question ?: '',
+            'coaching_feedback' => $retry->coaching_feedback ?? [],
+            'coaching_html' => $coachingHtml,
             'created_at' => optional($retry->created_at)->format('M d, Y g:i A'),
         ]);
     }
@@ -1093,9 +1171,26 @@ class InterviewController extends Controller
     private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): InterviewAnswer
     {
         $answerText ??= $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $answerText);
+        $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
+        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $deliveryTranscript);
         $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
         $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
+        $coaching = app(EvidenceBasedCoachingService::class);
+        $observationData = $coaching->normalizeObservationData(
+            $this->jsonPayloadFrom($validated['observation_data'] ?? null),
+            $deliveryTranscript,
+            array_merge($deliveryMetrics, ['response_mode' => $validated['response_mode'] ?? 'text']),
+            (bool) data_get($session->accommodation_profile, 'camera_coaching', false)
+        );
+        $coachingFeedback = $coaching->forAnswer(
+            $answerText,
+            $question,
+            array_merge($deliveryMetrics, [
+                'response_mode' => $validated['response_mode'] ?? 'text',
+                'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ]),
+            $observationData
+        );
 
         return InterviewAnswer::updateOrCreate(
             [
@@ -1105,11 +1200,14 @@ class InterviewController extends Controller
             ],
             array_merge([
                 'answer_text' => $answerText,
+                'delivery_transcript' => $deliveryTranscript !== '' ? $deliveryTranscript : null,
                 'transcript_timeline' => $transcriptTimeline,
                 'paste_event_count' => $integrity['paste_event_count'],
                 'pasted_character_count' => $integrity['pasted_character_count'],
                 'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
                 'answer_integrity_flags' => $integrity['answer_integrity_flags'],
+                'observation_data' => $observationData,
+                'coaching_feedback' => $coachingFeedback,
                 'response_mode' => $validated['response_mode'] ?? 'text',
                 'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
@@ -1132,28 +1230,135 @@ class InterviewController extends Controller
         return Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
     }
 
-    private function deliveryMetricsFrom(array $input, string $answerText): array
+    private function deliveryMetricsFrom(array $input, string $deliveryTranscript): array
     {
-        $wpm = $this->clampInt($input['wpm'] ?? 0, 0, 400);
-        $voiceDuration = $this->clampInt($input['voice_duration'] ?? 0, 0, 7200);
-        $fillerWords = $this->clampInt($input['filler_words_count'] ?? 0, 0, 500);
-        $pauseCount = $this->clampInt($input['pause_count'] ?? 0, 0, 500);
+        $responseMode = strtolower(trim((string) ($input['response_mode'] ?? 'text')));
+        $isVoiceMode = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true);
+        $voiceDuration = $isVoiceMode
+            ? $this->clampInt($input['voice_duration'] ?? 0, 0, 7200)
+            : 0;
+        $hasVoiceEvidence = $isVoiceMode
+            && $voiceDuration > 0
+            && TranscriptService::wordCount($deliveryTranscript) > 0;
+        $wpm = $hasVoiceEvidence
+            ? $this->clampInt(round((TranscriptService::wordCount($deliveryTranscript) / $voiceDuration) * 60), 0, 400)
+            : 0;
+        $fillerWords = $hasVoiceEvidence
+            ? $this->clampInt(TranscriptService::countFillerWords($deliveryTranscript), 0, 500)
+            : 0;
+        $pauseCount = $hasVoiceEvidence
+            ? min($this->clampInt($input['pause_count'] ?? 0, 0, 500), intdiv($voiceDuration, 2))
+            : 0;
 
         $deliveryStability = app(TrustworthyAssessmentService::class)
-            ->deliveryStability($answerText, $wpm, $fillerWords, $pauseCount, $voiceDuration);
-        $session = $this->activeInterviewSession();
-        $cameraCoaching = (bool) data_get($session?->accommodation_profile, 'camera_coaching', false);
+            ->deliveryStability($deliveryTranscript, $wpm, $fillerWords, 0, $voiceDuration);
 
         return [
             'wpm' => $wpm,
             'voice_duration' => $voiceDuration,
             'filler_words_count' => $fillerWords,
             'pause_count' => $pauseCount,
-            'confidence_score' => $this->estimatedAnswerConfidence($answerText, $wpm, $fillerWords, $pauseCount, $voiceDuration),
+            // Confidence is a personal trait and is not inferred from pace,
+            // filler candidates, pauses, answer length, or camera behavior.
+            'confidence_score' => 0,
             'delivery_stability_score' => $deliveryStability,
-            'eye_contact_score' => $cameraCoaching ? $this->scoreValue($input['eye_contact_score'] ?? 0) : 0,
-            'posture_score' => $cameraCoaching ? $this->scoreValue($input['posture_score'] ?? 0) : 0,
+            // Legacy client scores are deliberately ignored. Structured camera
+            // samples are stored separately and are never part of readiness.
+            'eye_contact_score' => 0,
+            'posture_score' => 0,
         ];
+    }
+
+    private function coachingMetricsFromAnswer(
+        InterviewAnswer $answer,
+        ?int $scoringConfidence = null,
+        ?InterviewSession $session = null,
+        array $evaluation = []
+    ): array {
+        return array_merge([
+            'answer_id' => $answer->id,
+            'response_mode' => $answer->response_mode ?? 'text',
+            'voice_duration' => $answer->voice_duration ?? 0,
+            'wpm' => $answer->wpm ?? 0,
+            'filler_words_count' => $answer->filler_words_count ?? 0,
+            'pause_count' => $answer->pause_count ?? 0,
+            'delivery_transcript' => $answer->delivery_transcript,
+            'scoring_confidence' => $scoringConfidence ?? $answer->scoring_confidence ?? 0,
+            'is_skipped' => (bool) ($answer->is_skipped ?? false),
+            'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_coaching', false),
+        ], $evaluation);
+    }
+
+    private function coachingEvaluationMetrics(array $feedback): array
+    {
+        return [
+            'relevance_score' => $this->scoreValue($feedback['relevance_score'] ?? 0),
+            'evidence_quotes' => is_array($feedback['evidence_quotes'] ?? null)
+                ? $feedback['evidence_quotes']
+                : [],
+            'missing_evidence' => is_array($feedback['missing_evidence'] ?? null)
+                ? $feedback['missing_evidence']
+                : [],
+            'evaluation_source' => is_scalar($feedback['evaluation_source'] ?? null)
+                ? trim((string) $feedback['evaluation_source'])
+                : null,
+            'answer_alignment' => is_scalar($feedback['answer_alignment'] ?? null)
+                ? trim((string) $feedback['answer_alignment'])
+                : null,
+            'question_focus' => is_scalar($feedback['question_focus'] ?? null)
+                ? trim((string) $feedback['question_focus'])
+                : null,
+            'is_skipped' => (bool) ($feedback['is_skipped'] ?? false),
+            'is_too_short' => (bool) ($feedback['is_too_short'] ?? false),
+        ];
+    }
+
+    private function deliveryTranscriptFrom(array $input, string $answerText): string
+    {
+        $responseMode = strtolower(trim((string) ($input['response_mode'] ?? 'text')));
+        if (! in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)) {
+            return '';
+        }
+
+        // New clients send a speech-only transcript. Falling back to the full
+        // answer keeps older clients compatible, and the coaching caveat makes
+        // the browser provenance explicit.
+        $speechTranscript = array_key_exists('speech_transcript', $input)
+            ? (string) ($input['speech_transcript'] ?? '')
+            : $answerText;
+        $speechTranscript = $this->cleanTranscribedAnswer($speechTranscript);
+        if ($speechTranscript === '' || ! $this->deliveryTranscriptMatchesAnswer($speechTranscript, $answerText)) {
+            return '';
+        }
+
+        return $speechTranscript;
+    }
+
+    private function deliveryTranscriptMatchesAnswer(string $speechTranscript, string $answerText): bool
+    {
+        $tokenCounts = static function (string $text): array {
+            preg_match_all('/\b[\pL\pN][\pL\pN\'\x{2019}-]*\b/u', mb_strtolower($text, 'UTF-8'), $matches);
+            $counts = [];
+            foreach (($matches[0] ?? []) as $token) {
+                $counts[$token] = ($counts[$token] ?? 0) + 1;
+            }
+
+            return $counts;
+        };
+
+        $speechCounts = $tokenCounts($speechTranscript);
+        $answerCounts = $tokenCounts($answerText);
+        $speechWordCount = array_sum($speechCounts);
+        if ($speechWordCount === 0) {
+            return false;
+        }
+
+        $matchingWords = 0;
+        foreach ($speechCounts as $word => $count) {
+            $matchingWords += min($count, (int) ($answerCounts[$word] ?? 0));
+        }
+
+        return ($matchingWords / $speechWordCount) >= .8;
     }
 
     private function answerIntegrityFrom(array $input, string $answerText, ?array $timeline): array
@@ -1376,12 +1581,20 @@ class InterviewController extends Controller
             return null;
         }
 
+        $questionType = $sourceMetadata['question_type'] ?? $this->questionTypeForIndex($questionText, $selectedTypes, $index);
+        $defaultCoaching = $this->defaultQuestionCoachingMetadata($questionType);
         $questionData = [
             'category_id' => $categoryId,
             'question_text' => $questionText,
             'difficulty' => $difficulty,
-            'type' => $this->questionTypeForIndex($questionText, $selectedTypes, $index),
+            'type' => $questionType,
             'status' => 'active',
+            'expected_guide' => filled($sourceMetadata['expected_guide'] ?? null)
+                ? $sourceMetadata['expected_guide']
+                : $defaultCoaching['expected_guide'],
+            'mapped_skills' => ! empty($sourceMetadata['mapped_skills'] ?? [])
+                ? $sourceMetadata['mapped_skills']
+                : $defaultCoaching['mapped_skills'],
             'source_name' => $sourceMetadata['source_name'] ?? null,
             'source_url' => $sourceMetadata['source_url'] ?? null,
             'source_type' => $sourceMetadata['source_type'] ?? null,
@@ -1471,7 +1684,7 @@ class InterviewController extends Controller
         return trim(preg_replace('/[^a-z0-9]+/', ' ', Str::lower($questionText)) ?? '');
     }
 
-    private function fallbackQuestionTextsForSession(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
+    private function fallbackQuestionRecordsForSession(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
     {
         $query = Question::where('category_id', $session->category_id)
             ->whereNull('interview_session_id')
@@ -1479,7 +1692,7 @@ class InterviewController extends Controller
             ->where('difficulty', $session->difficulty)
             ->when(! empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes));
 
-        $questions = $query->inRandomOrder()->limit($limit)->pluck('question_text')->all();
+        $questions = $query->inRandomOrder()->limit($limit)->get();
 
         if (empty($questions)) {
             $questions = Question::where('category_id', $session->category_id)
@@ -1488,14 +1701,28 @@ class InterviewController extends Controller
                 ->when(! empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes))
                 ->inRandomOrder()
                 ->limit($limit)
-                ->pluck('question_text')
-                ->all();
+                ->get();
         }
 
-        return $this->roleAlignedQuestionTexts($questions, (string) $session->target_position);
+        $records = $questions->map(fn (Question $question): array => [
+            'question_text' => $question->question_text,
+            'type' => $question->type,
+            'expected_guide' => $question->expected_guide,
+            'mapped_skills' => $question->mapped_skills ?? [],
+            'source_name' => $question->source_name,
+            'source_url' => $question->source_url,
+            'source_type' => $question->source_type,
+        ])->values()->all();
+        $alignedTexts = $this->roleAlignedQuestionTexts(array_column($records, 'question_text'), (string) $session->target_position);
+
+        return array_map(function (array $record, int $index) use ($alignedTexts): array {
+            $record['question_text'] = $alignedTexts[$index] ?? $record['question_text'];
+
+            return $record;
+        }, $records, array_keys($records));
     }
 
-    private function sourceBackedQuestionTexts(array $dataset, array $selectedQuestionTypes, int $limit, string $difficulty, string $position): array
+    private function sourceBackedQuestionRecords(array $dataset, array $selectedQuestionTypes, int $limit, string $difficulty, string $position): array
     {
         $limit = max(1, min(20, $limit));
         $selectedTypes = array_values(array_filter($selectedQuestionTypes));
@@ -1511,19 +1738,51 @@ class InterviewController extends Controller
 
         $questions = $difficultyMatched
             ->concat($otherDifficulty)
-            ->pluck('question_text')
-            ->filter()
-            ->unique()
+            ->filter(fn (array $question) => filled($question['question_text'] ?? null))
+            ->unique('question_text')
             ->values();
 
-        if ($questions->isEmpty()) {
+        if ($questions->isEmpty() && empty($selectedTypes)) {
             $questions = collect($dataset['questions'] ?? [])
-                ->pluck('question_text')
-                ->filter()
+                ->filter(fn (array $question) => filled($question['question_text'] ?? null))
                 ->values();
         }
 
-        return $this->roleAlignedQuestionTexts($questions->take($limit)->all(), $position);
+        $records = $questions->take($limit)->map(fn (array $question): array => [
+            'question_text' => (string) $question['question_text'],
+            'type' => $question['type'] ?? null,
+            'expected_guide' => $question['expected_guide'] ?? null,
+            'mapped_skills' => $question['mapped_skills'] ?? [],
+        ])->values()->all();
+        $alignedTexts = $this->roleAlignedQuestionTexts(array_column($records, 'question_text'), $position);
+
+        return array_map(function (array $record, int $index) use ($alignedTexts): array {
+            $record['question_text'] = $alignedTexts[$index] ?? $record['question_text'];
+
+            return $record;
+        }, $records, array_keys($records));
+    }
+
+    private function defaultQuestionCoachingMetadata(string $questionType): array
+    {
+        return match (strtolower(trim($questionType))) {
+            'behavioral' => [
+                'expected_guide' => 'Use STAR: concise situation and task, your specific action and reasoning, then a verified result, impact, or lesson.',
+                'mapped_skills' => ['STAR Method', 'Ownership', 'Evidence'],
+            ],
+            'situational' => [
+                'expected_guide' => 'Clarify the goal and constraints, give ordered steps, explain key tradeoffs, and state how you would verify the outcome.',
+                'mapped_skills' => ['Judgment', 'Prioritization', 'Verification'],
+            ],
+            'technical' => [
+                'expected_guide' => 'Answer directly, explain the reasoning or diagnostic sequence, mention a relevant constraint or tradeoff, and state how you would verify the result.',
+                'mapped_skills' => ['Technical Reasoning', 'Tradeoffs', 'Verification'],
+            ],
+            default => [
+                'expected_guide' => 'Answer the exact question directly, support the main claim with truthful evidence, and connect the response to the interview goal.',
+                'mapped_skills' => ['Communication', 'Relevance', 'Evidence'],
+            ],
+        };
     }
 
     private function philippinesInterviewFocus(?string $focus): string
@@ -1684,6 +1943,8 @@ class InterviewController extends Controller
                     'difficulty' => $questionData['difficulty'],
                     'type' => $questionData['type'],
                     'status' => $questionData['status'] ?? 'active',
+                    'expected_guide' => $questionData['expected_guide'] ?? null,
+                    'mapped_skills' => $questionData['mapped_skills'] ?? null,
                     'source_name' => $questionData['source_name'] ?? null,
                     'source_url' => $questionData['source_url'] ?? null,
                     'source_type' => $questionData['source_type'] ?? null,
@@ -1735,12 +1996,21 @@ class InterviewController extends Controller
         $metrics = [
             'Clarity' => (int) ($score->clarity_score ?? 0),
             'Relevance' => (int) ($score->relevance_score ?? 0),
-            'Grammar' => (int) ($score->grammar_score ?? 0),
             'Professionalism' => (int) ($score->professionalism_score ?? 0),
-            'Delivery Stability' => (int) ($score->delivery_stability_score ?? 0),
-            'STAR Method' => (int) ($score->star_method_score ?? 0),
-            'Job Evidence Match' => (int) ($score->job_evidence_match_score ?? 0),
         ];
+
+        if (! (bool) data_get($session->accommodation_profile, 'separate_language_scoring', false)) {
+            $metrics['Grammar'] = (int) ($score->grammar_score ?? 0);
+        }
+        if ($answers->contains(fn (InterviewAnswer $answer): bool => $answer->delivery_stability_score !== null)) {
+            $metrics['Delivery Stability'] = (int) ($score->delivery_stability_score ?? 0);
+        }
+        if ($answers->contains(fn (InterviewAnswer $answer): bool => QuestionIntentService::starApplicable($answer->question))) {
+            $metrics['STAR Method'] = (int) ($score->star_method_score ?? 0);
+        }
+        if ((int) ($score->job_evidence_match_score ?? 0) > 0) {
+            $metrics['Job Evidence Match'] = (int) $score->job_evidence_match_score;
+        }
 
         asort($metrics);
         $weakest = array_slice($metrics, 0, 3, true);
@@ -1757,9 +2027,19 @@ class InterviewController extends Controller
         $overall = (int) ($score->overall_readiness_score ?? 0);
         $targetScore = min(100, max(60, $overall + 10));
         $weakestSkill = array_key_first($weakest) ?: 'Clarity';
+        $coachingPriorities = is_array($feedback->coaching_summary)
+            ? (array) ($feedback->coaching_summary['priority_actions'] ?? [])
+            : [];
+        $topCoachingPriority = collect($coachingPriorities)->first(fn ($priority): bool => is_array($priority) && filled($priority['action'] ?? null));
+        $headline = is_array($topCoachingPriority) && filled($topCoachingPriority['area'] ?? null)
+            ? 'Next focus: '.trim((string) $topCoachingPriority['area'])
+            : "Next focus: {$weakestSkill}";
+        $summary = is_array($topCoachingPriority)
+            ? trim((string) ($topCoachingPriority['action'] ?? ''))
+            : '';
 
         return [
-            'headline' => "Next focus: {$weakestSkill}",
+            'headline' => $headline,
             'target_score' => $targetScore,
             'next_session' => [
                 'difficulty' => $overall >= 80 ? 'hard' : ($overall >= 60 ? 'medium' : 'easy'),
@@ -1769,7 +2049,9 @@ class InterviewController extends Controller
             ],
             'priorities' => $tasks,
             'recommended_paths' => $this->recommendedPathsFor($weakestSkill),
-            'summary' => trim($feedback->improvement_suggestions ?? '') ?: 'Repeat your weakest answer, then run a shorter targeted interview focused on the lowest scoring skill.',
+            'summary' => $summary !== ''
+                ? $summary
+                : (trim($feedback->improvement_suggestions ?? '') ?: 'Repeat your weakest answer, then run a shorter targeted interview focused on the lowest scoring skill.'),
             'generated_at' => now()->toIso8601String(),
         ];
     }
@@ -1829,31 +2111,6 @@ class InterviewController extends Controller
         $decoded = json_decode($questionTypes, true);
 
         return is_array($decoded) ? array_values(array_filter($decoded)) : [];
-    }
-
-    private function estimatedAnswerConfidence(string $answerText, int $wpm, int $fillerWords, int $pauseCount, int $voiceDuration): int
-    {
-        $wordCount = TranscriptService::wordCount($answerText);
-        $score = 82;
-
-        if ($wordCount === 0) {
-            return 0;
-        }
-
-        if ($wordCount < 20) {
-            $score -= 20;
-        } elseif ($wordCount > 50) {
-            $score += 6;
-        }
-
-        $score -= min(25, $fillerWords * 3);
-        $score -= min(15, $pauseCount * 2);
-
-        if ($voiceDuration > 0 && ($wpm < 90 || $wpm > 190)) {
-            $score -= 12;
-        }
-
-        return $this->scoreValue($score);
     }
 
     private function cleanTranscribedAnswer(?string $answerText): string
@@ -2100,6 +2357,8 @@ class InterviewController extends Controller
         $answerText = trim((string) ($answer['answer'] ?? ''));
         $questionText = (string) ($answer['question'] ?? '');
         $isSkipped = (bool) ($answer['is_skipped'] ?? false) || $answerText === '' || $answerText === '(Skipped or no answer)';
+        $questionExcerpt = trim(mb_substr((string) preg_replace('/\s+/u', ' ', $questionText), 0, 180));
+        $starApplicable = $this->gameStarIsApplicable($answer, $gameLevel);
 
         if ($isSkipped) {
             return [
@@ -2109,11 +2368,17 @@ class InterviewController extends Controller
                 'relevance_score' => 0,
                 'grammar_score' => 0,
                 'professionalism_score' => 0,
-                'star_applicable' => $this->gameStarIsApplicable($answer, $gameLevel),
+                'star_applicable' => $starApplicable,
                 'star_method_score' => 0,
-                'ai_feedback' => 'No answer was submitted for this challenge prompt, so the level goal was not demonstrated.',
+                'ai_feedback' => 'The challenge question "'.$questionExcerpt.'" was skipped, so no answer evidence was available for that prompt.',
                 'better_sample_answer' => '',
-                'follow_up_question' => 'What specific example could you use to answer this prompt?',
+                'follow_up_question' => 'What truthful example or direct response could you use for "'.$questionExcerpt.'"?',
+                'evidence_quotes' => [],
+                'missing_evidence' => ['No response was submitted for the question "'.$questionExcerpt.'".'],
+                'evaluation_source' => 'deterministic_game_rubric',
+                'answer_alignment' => 'skipped',
+                'is_skipped' => true,
+                'is_too_short' => false,
             ];
         }
 
@@ -2182,14 +2447,33 @@ class InterviewController extends Controller
             100
         );
 
+        $answerExcerpt = trim(mb_substr((string) preg_replace('/\s+/u', ' ', $answerText), 0, 220));
+        $alignment = match (true) {
+            $wordCount < 10 => 'insufficient_evidence',
+            $relevance >= 75 => 'directly_addressed',
+            $relevance >= 50 => 'partially_addressed',
+            default => 'not_addressed',
+        };
+        $alignmentLabel = match ($alignment) {
+            'directly_addressed' => 'directly addressed',
+            'partially_addressed' => 'partially addressed',
+            'not_addressed' => 'did not clearly address',
+            default => 'was too short to assess against',
+        };
         $feedbackParts = [
-            "Instant game scoring: your response scored {$score}% against this level's goal.",
+            'For the challenge question "'.$questionExcerpt.'", the response '.$alignmentLabel.' the prompt. The answer evidence reviewed was: "'.$answerExcerpt.'".',
         ];
+        $missingEvidence = [];
         if ($criteriaScore < 70) {
-            $feedbackParts[] = 'Add clearer evidence for the level checklist.';
+            $feedbackParts[] = 'The response did not yet demonstrate enough of this level\'s checklist.';
+            $missingEvidence[] = 'The response did not yet demonstrate enough of the level checklist for "'.$questionExcerpt.'".';
         }
-        if ($starScore < 70 && $this->gameStarIsApplicable($answer, $gameLevel)) {
+        if ($starScore < 70 && $starApplicable) {
             $feedbackParts[] = 'Use Situation, Task, Action, and Result more completely.';
+            $missingEvidence[] = 'The answer did not include complete Situation, Task, Action, and Result evidence for this prompt.';
+        }
+        if ($relevance < 75) {
+            $missingEvidence[] = 'The answer did not fully address the main focus of "'.$questionExcerpt.'".';
         }
         if (count($bannedHits) > 0) {
             $feedbackParts[] = 'Avoid banned words or phrases: '.implode(', ', $bannedHits).'.';
@@ -2202,11 +2486,35 @@ class InterviewController extends Controller
             'relevance_score' => $relevance,
             'grammar_score' => $grammar,
             'professionalism_score' => $professionalism,
-            'star_applicable' => $this->gameStarIsApplicable($answer, $gameLevel),
+            'star_applicable' => $starApplicable,
             'star_method_score' => $starScore,
             'ai_feedback' => implode(' ', $feedbackParts),
-            'better_sample_answer' => app(TrustworthyAssessmentService::class)->groundedRevisionTemplate($answerText),
-            'follow_up_question' => 'What measurable result or concrete outcome can you add to strengthen this challenge answer?',
+            'better_sample_answer' => (function () use ($answerText, $answer, $questionText, $gameLevel): string {
+                $assessment = app(TrustworthyAssessmentService::class);
+                $questionContext = [
+                    'question_text' => $questionText,
+                    'question_type' => $answer['question_type'] ?? null,
+                    'expected_guide' => implode(' ', array_filter([
+                        $gameLevel->learning_objective,
+                        $gameLevel->success_criteria,
+                    ])),
+                    'mapped_skills' => array_filter([(string) ($gameLevel->skill_focus ?? '')]),
+                ];
+
+                return $assessment->groundedRevisionTemplate(
+                    $answerText,
+                    $assessment->answerEvidence($answerText, null, $questionContext)
+                );
+            })(),
+            'follow_up_question' => $starApplicable && $starScore < 70
+                ? 'For "'.$questionExcerpt.'", which missing STAR detail can you add using only truthful facts?'
+                : 'What additional truthful evidence would make your response to "'.$questionExcerpt.'" more direct and complete?',
+            'evidence_quotes' => [$answerExcerpt],
+            'missing_evidence' => array_values(array_unique($missingEvidence)),
+            'evaluation_source' => 'deterministic_game_rubric',
+            'answer_alignment' => $alignment,
+            'is_skipped' => false,
+            'is_too_short' => $wordCount < 10,
         ];
     }
 
@@ -2281,9 +2589,15 @@ class InterviewController extends Controller
 
     private function gameStarIsApplicable(array $answer, GameLevel $gameLevel): bool
     {
-        return str_contains(Str::lower((string) ($answer['question_type'] ?? '')), 'behavioral')
-            || str_contains(Str::lower((string) ($gameLevel->skill_focus ?? '')), 'star')
-            || preg_match('/\b(describe|tell me about|time when|example|situation)\b/i', (string) ($answer['question'] ?? ''));
+        return QuestionIntentService::starApplicable([
+            'question' => $answer['question'] ?? '',
+            'question_type' => $answer['question_type'] ?? null,
+            'expected_guide' => implode(' ', array_filter([
+                $gameLevel->learning_objective,
+                $gameLevel->success_criteria,
+            ])),
+            'mapped_skills' => array_filter([(string) ($gameLevel->skill_focus ?? '')]),
+        ]);
     }
 
     private function gameStarScore(string $answerText): int

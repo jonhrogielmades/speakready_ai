@@ -92,6 +92,26 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertStringNotContainsString('Situation/Task:', $revision);
     }
 
+    public function test_role_fit_question_with_behavioral_label_does_not_require_star_or_personal_action(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $question = new Question([
+            'type' => 'Behavioral',
+            'question_text' => 'Why should a Philippine employer hire you for this role?',
+            'expected_guide' => 'Connect role requirements to experience, strengths, results, and motivation.',
+        ]);
+        $answer = 'My support experience and careful documentation match the role and the work your team needs.';
+
+        $evidence = $service->answerEvidence($answer, null, $question);
+        $revision = $service->groundedRevisionTemplate($answer, $evidence);
+
+        $this->assertFalse($evidence['star_applicable']);
+        $this->assertFalse($evidence['personal_action_required']);
+        $this->assertSame('role_fit', $evidence['question_intent']);
+        $this->assertStringContainsString('Direct response:', $revision);
+        $this->assertStringNotContainsString('Situation/Task:', $revision);
+    }
+
     public function test_evidence_detection_recognizes_common_personal_actions(): void
     {
         $service = new TrustworthyAssessmentService;

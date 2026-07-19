@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -14,11 +13,14 @@ class InterviewAnswer extends Model
         'attempt_number',
         'question_id',
         'answer_text',
+        'delivery_transcript',
         'transcript_timeline',
         'paste_event_count',
         'pasted_character_count',
         'ai_generated_likelihood',
         'answer_integrity_flags',
+        'observation_data',
+        'coaching_feedback',
         'response_mode',
         'ai_feedback',
         'better_sample_answer',
@@ -53,6 +55,8 @@ class InterviewAnswer extends Model
         'star_analysis' => 'array',
         'transcript_timeline' => 'array',
         'answer_integrity_flags' => 'array',
+        'observation_data' => 'array',
+        'coaching_feedback' => 'array',
         'is_skipped' => 'boolean',
         'timed_out' => 'boolean',
         'evidence_map' => 'array',

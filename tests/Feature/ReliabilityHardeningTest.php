@@ -40,7 +40,10 @@ class ReliabilityHardeningTest extends TestCase
                                 'star_applicable' => false,
                                 'star_method_score' => 0,
                                 'evidence_quotes' => ['I inspected the query plan, compared row estimates, and verified index usage'],
-                                'ai_feedback' => 'You stated "I inspected the query plan, compared row estimates, and verified index usage", which directly supports a relevant diagnostic approach.',
+                                'question_focus' => 'How would you diagnose a slow database query?',
+                                'answer_alignment' => 'directly_addressed',
+                                'missing_criteria' => [],
+                                'ai_feedback' => 'For "How would you diagnose a slow database query?", you stated "I inspected the query plan, compared row estimates, and verified index usage", which directly supports a relevant diagnostic approach.',
                             ]],
                         ]),
                     ],
@@ -82,6 +85,44 @@ class ReliabilityHardeningTest extends TestCase
                 && str_contains((string) data_get($payload, 'messages.1.content'), 'evidence_quotes')
                 && str_contains((string) data_get($payload, 'messages.1.content'), 'UNTRUSTED TRANSCRIPT DATA JSON');
         });
+    }
+
+    public function test_learning_game_feedback_is_distinct_and_question_bound(): void
+    {
+        $controller = app(\App\Http\Controllers\InterviewController::class);
+        $method = new \ReflectionMethod($controller, 'scoreLearningGameAnswer');
+        $method->setAccessible(true);
+        $level = new \App\Models\GameLevel([
+            'skill_focus' => 'Direct Answering',
+            'learning_objective' => 'Answer each prompt directly with truthful supporting evidence.',
+            'success_criteria' => '1. Direct answer 2. Relevant evidence 3. Clear next point',
+        ]);
+        $sameAnswer = 'I organize complex releases with dependency checklists and verify each handoff before launch.';
+        $strength = $method->invoke($controller, [
+            'id' => 201,
+            'question' => 'What is your greatest strength?',
+            'question_type' => 'Personal',
+            'answer' => $sameAnswer,
+        ], $level, []);
+        $salary = $method->invoke($controller, [
+            'id' => 202,
+            'question' => 'What salary range are you expecting?',
+            'question_type' => 'Personal',
+            'answer' => $sameAnswer,
+        ], $level, []);
+
+        $this->assertNotSame($strength['ai_feedback'], $salary['ai_feedback']);
+        $this->assertNotSame($strength['follow_up_question'], $salary['follow_up_question']);
+        $this->assertStringContainsString('What is your greatest strength?', $strength['ai_feedback']);
+        $this->assertStringContainsString('What salary range are you expecting?', $salary['ai_feedback']);
+        $this->assertSame([$sameAnswer], $strength['evidence_quotes']);
+        $this->assertSame([$sameAnswer], $salary['evidence_quotes']);
+        $this->assertContains($strength['answer_alignment'], [
+            'directly_addressed', 'partially_addressed', 'not_addressed', 'insufficient_evidence',
+        ]);
+        $this->assertContains($salary['answer_alignment'], [
+            'directly_addressed', 'partially_addressed', 'not_addressed', 'insufficient_evidence',
+        ]);
     }
 
     public function test_admin_question_analytics_uses_recorded_answers(): void
@@ -431,9 +472,10 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee(route('interview.abort'), false)
             ->assertSee('openingHasPlayed', false)
             ->assertSee('startInterviewSession();', false)
-            ->assertSee('feedbackLoadingOverlay', false)
-            ->assertSee('showFeedbackLoadingState', false)
-            ->assertSee('feedbackLoadingStage', false)
+            ->assertSee('finishTransitionOverlay', false)
+            ->assertSee('setFinishTransitionVisible', false)
+            ->assertSee('finishRetryButton', false)
+            ->assertSee('retryFinishInterview', false)
             ->assertSee('feedbackSubmissionInFlight', false)
             ->assertSee("'Accept': 'application/json'", false)
             ->assertDontSee('onclick="concludeAndFinishInterview({ saveDraft: true })"', false)
@@ -469,7 +511,54 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
         $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
-        $this->assertNotEmpty($answer->fresh()->ai_feedback);
+        $savedAnswer = $answer->fresh();
+        $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+        $this->assertNotEmpty($savedAnswer->ai_feedback);
+        $this->assertNotEmpty($savedAnswer->coaching_feedback);
+        $this->assertSame('not_measured', data_get($savedAnswer->coaching_feedback, 'delivery.status'));
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'question.tip'));
+        $this->assertSame($savedAnswer->id, data_get($savedAnswer->coaching_feedback, 'content_alignment.answer_id'));
+        $this->assertSame($question->id, data_get($savedAnswer->coaching_feedback, 'content_alignment.question_id'));
+        $this->assertSame($question->question_text, data_get($savedAnswer->coaching_feedback, 'content_alignment.question'));
+        $this->assertContains(
+            data_get($savedAnswer->coaching_feedback, 'content_alignment.status'),
+            ['directly_answered', 'partially_answered', 'low_relevance']
+        );
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.evidence_quotes'));
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.what_worked'));
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.improvement_focus'));
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.action'));
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.next_attempt_steps'));
+        $this->assertNotEmpty(data_get($savedAnswer->coaching_feedback, 'content_alignment.success_check'));
+        $this->assertNotEmpty($savedFeedback->coaching_summary);
+        $this->assertNotEmpty(data_get($savedFeedback->coaching_summary, 'content_overview'));
+        $this->assertNotEmpty(data_get($savedFeedback->coaching_summary, 'question_improvements'));
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Answer-to-Question Relevance')
+            ->assertSee($question->question_text)
+            ->assertSee('Useful starting point')
+            ->assertSee('Improve next')
+            ->assertSee('Next-attempt checklist')
+            ->assertSee('Done when')
+            ->assertSee('Question-by-question improvement map')
+            ->assertSee('Question coverage')
+            ->assertDontSee('â€œ', false);
+
+        $session->update(['is_public' => true, 'share_token' => 'alignment-review-token']);
+        $this->get(route('shared.review', 'alignment-review-token'))
+            ->assertOk()
+            ->assertSee('Answer-to-Question Relevance')
+            ->assertSee($question->question_text)
+            ->assertSee('Useful starting point')
+            ->assertSee('Improve next')
+            ->assertSee('Next-attempt checklist')
+            ->assertSee('Done when')
+            ->assertSee('Question-by-question improvement map')
+            ->assertSee('Question coverage')
+            ->assertDontSee('â€œ', false);
 
         $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
         $this->actingAs($user)
@@ -512,7 +601,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
     }
 
-    public function test_retry_answer_persists_the_evidence_based_scoring_confidence(): void
+    public function test_retry_answer_returns_server_rendered_evidence_based_coaching(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
@@ -532,10 +621,137 @@ class ReliabilityHardeningTest extends TestCase
                 'response_mode' => 'text',
             ]);
 
-        $response->assertOk()->assertJsonPath('scoring_confidence', 50);
+        $response->assertOk()
+            ->assertJsonPath('scoring_confidence', 50)
+            ->assertJsonStructure([
+                'coaching_feedback' => ['content_alignment'],
+                'coaching_html',
+            ]);
         $retry = InterviewAnswer::where('retry_of_answer_id', $answer->id)->firstOrFail();
         $this->assertSame(50, (int) $retry->scoring_confidence);
         $this->assertSame('candidate_facts', $retry->improved_answer_source);
+        $this->assertSame($retry->id, data_get($retry->coaching_feedback, 'content_alignment.answer_id'));
+        $this->assertSame($question->id, data_get($retry->coaching_feedback, 'content_alignment.question_id'));
+        $this->assertNotEmpty(data_get($retry->coaching_feedback, 'content_alignment.evidence_quotes'));
+        $this->assertStringContainsString('Evidence-Based Coaching', (string) $response->json('coaching_html'));
+        $this->assertStringContainsString('Answer-to-Question Relevance', (string) $response->json('coaching_html'));
+        $this->assertStringContainsString($question->question_text, (string) $response->json('coaching_html'));
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee("typeof data.coaching_html === 'string'", false)
+            ->assertSee('${coachingHtml}', false);
+    }
+
+    public function test_shared_review_shows_session_summary_and_distinct_retry_coaching_without_retry_controls(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, [
+            'status' => 'completed',
+            'is_public' => true,
+            'share_token' => 'shared-retry-coaching-token',
+        ]);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Describe how you resolved a difficult release issue.',
+        ]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I initially described the release issue without enough evidence.',
+            'response_mode' => 'text',
+            'ai_feedback' => 'Original answer feedback.',
+            'score' => 45,
+        ]);
+
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'retry_of_answer_id' => $answer->id,
+            'attempt_number' => 1,
+            'question_id' => $question->id,
+            'answer_text' => 'I diagnosed the failed release and coordinated a rollback.',
+            'response_mode' => 'text',
+            'ai_feedback' => 'First retry feedback: the response explained the diagnosis but not the verified outcome.',
+            'score' => 64,
+            'coaching_feedback' => [
+                'analysis_status' => ['content' => 'scored', 'alignment' => 'partially_answered'],
+                'content_alignment' => [
+                    'status' => 'partially_answered',
+                    'status_label' => 'Partially answered',
+                    'question' => $question->question_text,
+                    'relevance_score' => 64,
+                    'observation' => 'First retry alignment: diagnosis and rollback were relevant, but the result was missing.',
+                    'evidence_quotes' => ['I diagnosed the failed release and coordinated a rollback.'],
+                    'missing_points' => ['The verified recovery result was not stated.'],
+                    'action' => 'First retry action: add the verified recovery result.',
+                ],
+            ],
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'retry_of_answer_id' => $answer->id,
+            'attempt_number' => 2,
+            'question_id' => $question->id,
+            'answer_text' => 'I diagnosed the failed release, coordinated a rollback, and verified service recovery with monitoring.',
+            'response_mode' => 'text',
+            'ai_feedback' => 'Second retry feedback: the response added a verified recovery check.',
+            'score' => 86,
+            'coaching_feedback' => [
+                'analysis_status' => ['content' => 'scored', 'alignment' => 'directly_answered'],
+                'content_alignment' => [
+                    'status' => 'directly_answered',
+                    'status_label' => 'Directly answered',
+                    'question' => $question->question_text,
+                    'relevance_score' => 86,
+                    'observation' => 'Second retry alignment: the response covered diagnosis, action, and verification.',
+                    'evidence_quotes' => ['I diagnosed the failed release, coordinated a rollback, and verified service recovery with monitoring.'],
+                    'missing_points' => [],
+                    'action' => 'Second retry action: retain this complete sequence in future answers.',
+                ],
+            ],
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 72,
+            'relevance_score' => 72,
+            'grammar_score' => 72,
+            'professionalism_score' => 72,
+            'overall_readiness_score' => 72,
+        ]);
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'The retries became more specific.',
+            'weaknesses' => 'The original answer lacked a verified result.',
+            'improvement_suggestions' => 'Keep the action and verification sequence.',
+            'coaching_summary' => [
+                'observations' => ['Shared summary observation: both retries added relevant evidence.'],
+                'priority_actions' => [[
+                    'area' => 'Release example',
+                    'observation' => 'The final retry included verification.',
+                    'action' => 'Shared summary action: keep the verified outcome in the final answer.',
+                ]],
+                'coverage' => ['answers' => 1, 'delivery_measured' => 0],
+                'transparency_note' => 'Shared summary transparency note.',
+            ],
+        ]);
+
+        $this->get(route('shared.review', 'shared-retry-coaching-token'))
+            ->assertOk()
+            ->assertSee('Evidence-Based Coaching Summary')
+            ->assertSee('Shared summary observation: both retries added relevant evidence.')
+            ->assertSee('Shared summary action: keep the verified outcome in the final answer.')
+            ->assertSee('Retry Attempts')
+            ->assertSeeInOrder(['Attempt 1', 'Attempt 2'])
+            ->assertSee('First retry feedback: the response explained the diagnosis but not the verified outcome.')
+            ->assertSee('First retry alignment: diagnosis and rollback were relevant, but the result was missing.')
+            ->assertSee('First retry action: add the verified recovery result.')
+            ->assertSee('Second retry feedback: the response added a verified recovery check.')
+            ->assertSee('Second retry alignment: the response covered diagnosis, action, and verification.')
+            ->assertSee('Second retry action: retain this complete sequence in future answers.')
+            ->assertDontSee('Retry This Answer')
+            ->assertDontSee('Practice Attempt');
     }
 
     public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void
@@ -579,6 +795,61 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('feedback-report-meta', false)
             ->assertSee('feedback-hero-content', false)
             ->assertSee('answer-review-body', false);
+    }
+
+    public function test_unavailable_relevance_is_rendered_as_not_scored_instead_of_zero_performance(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $question = $this->question($category, ['question_text' => 'What is one weakness you are improving?']);
+        $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'Public speaking.',
+            'response_mode' => 'text',
+            'score' => 0,
+            'ai_feedback' => 'The response was too short for a dependable evaluation.',
+            'coaching_feedback' => [
+                'analysis_status' => ['content' => 'limited_evidence', 'alignment' => 'insufficient_evidence'],
+                'content_alignment' => [
+                    'status' => 'insufficient_evidence',
+                    'status_label' => 'Not enough evidence',
+                    'question' => $question->question_text,
+                    'relevance_score' => 0,
+                    'observation' => 'The response was too short for a dependable relevance judgment.',
+                    'what_worked' => 'A response was started.',
+                    'improvement_focus' => 'Add specific, relevant detail.',
+                    'missing_points' => ['The response did not contain enough relevant detail.'],
+                    'action' => 'Explain the weakness, its effect, and the truthful improvement action.',
+                    'next_attempt_steps' => ['Name the weakness.', 'Explain the improvement action.'],
+                    'success_check' => 'The retry contains enough relevant detail to assess.',
+                ],
+            ],
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 0,
+            'relevance_score' => 0,
+            'grammar_score' => 0,
+            'professionalism_score' => 0,
+            'overall_readiness_score' => 0,
+        ]);
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'No dependable strength was inferred.',
+            'weaknesses' => 'The response needs more evidence.',
+            'improvement_suggestions' => 'Expand the response before relying on a score.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Not enough evidence')
+            ->assertSee('Not scored')
+            ->assertDontSee('Score: 0')
+            ->assertDontSee('0% relevance');
     }
 
     public function test_admin_user_detail_endpoint_returns_real_stats_and_activity(): void

@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
-use App\Models\GameAnswer;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
 use App\Models\GameSession;
@@ -206,6 +205,10 @@ class UserSideHardeningTest extends TestCase
         Question::where('interview_session_id', $session->id)
             ->pluck('question_text')
             ->each(fn (string $questionText) => $this->assertStringContainsString('Developer', $questionText));
+        $this->assertTrue(
+            Question::where('interview_session_id', $session->id)->get()
+                ->every(fn (Question $question): bool => filled($question->expected_guide) && ! empty($question->mapped_skills))
+        );
     }
 
     public function test_public_shared_review_accepts_mentor_comment(): void
@@ -289,7 +292,7 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
-    public function test_interview_answer_recomputes_confidence_from_delivery_metrics(): void
+    public function test_interview_answer_recomputes_delivery_metrics_from_server_evidence(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
@@ -300,7 +303,8 @@ class UserSideHardeningTest extends TestCase
             ->withSession(['active_interview_id' => $session->id])
             ->postJson(route('interview.answer'), [
                 'question_id' => $question->id,
-                'answer_text' => 'I did it.',
+                'answer_text' => 'Typed notes said um um, then I did it.',
+                'speech_transcript' => 'I did it.',
                 'response_mode' => 'voice',
                 'voice_duration' => 30,
                 'wpm' => 100,
@@ -315,8 +319,22 @@ class UserSideHardeningTest extends TestCase
         $this->assertDatabaseHas('interview_answers', [
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
-            'confidence_score' => 62,
+            'wpm' => 6,
+            'filler_words_count' => 0,
+            'eye_contact_score' => 0,
+            'posture_score' => 0,
+            'confidence_score' => 0,
         ]);
+
+        $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)
+            ->where('question_id', $question->id)
+            ->firstOrFail();
+
+        $this->assertSame('measured', data_get($savedAnswer->observation_data, 'delivery.status'));
+        $this->assertSame(6, data_get($savedAnswer->observation_data, 'delivery.wpm'));
+        $this->assertSame('I did it.', $savedAnswer->delivery_transcript);
+        $this->assertSame('not_measured', data_get($savedAnswer->observation_data, 'camera.status'));
+        $this->assertNotEmpty($savedAnswer->coaching_feedback);
     }
 
     public function test_interview_answer_rejects_out_of_range_delivery_metrics(): void
@@ -339,6 +357,35 @@ class UserSideHardeningTest extends TestCase
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
         ]);
+    }
+
+    public function test_interview_answer_rejects_unrelated_speech_transcript_as_delivery_evidence(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.answer'), [
+                'question_id' => $question->id,
+                'answer_text' => 'This answer was typed and contains different content.',
+                'speech_transcript' => 'Um I claimed an unrelated spoken response.',
+                'response_mode' => 'voice',
+                'voice_duration' => 30,
+            ])
+            ->assertOk();
+
+        $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)
+            ->where('question_id', $question->id)
+            ->firstOrFail();
+
+        $this->assertNull($savedAnswer->delivery_transcript);
+        $this->assertNull($savedAnswer->delivery_stability_score);
+        $this->assertSame(0, $savedAnswer->wpm);
+        $this->assertSame(0, $savedAnswer->filler_words_count);
+        $this->assertSame('not_measured', data_get($savedAnswer->observation_data, 'delivery.status'));
     }
 
     public function test_interview_answer_cleans_adjacent_transcript_duplicates(): void
