@@ -802,13 +802,11 @@
                 <!-- Simulated AI Video Avatar Panel -->
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
-                    <!-- Picture-in-picture camera preview -->
-                    @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
+                    <!-- Video-call style self-view -->
                     <div class="d-block mobile-camera-pip">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                         <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
                     </div>
-                    @endif
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
@@ -898,11 +896,6 @@
                             <!-- Chat bubbles will go here -->
                         </div>
                         <textarea id="answerTextarea" class="oinp mb-2" style="min-height:80px;font-size:.95rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..."></textarea>
-                        <div class="p-3 mb-3" style="border:1px solid var(--bd);border-radius:12px;background:var(--bg3)">
-                            <div class="d-flex justify-content-between gap-2 mb-2"><label for="selfConfidenceRange" style="font-size:.8rem;font-weight:700;color:var(--tx)">How prepared did you feel for this question?</label><span id="selfConfidenceValue" class="badge text-bg-secondary">50%</span></div>
-                            <input id="selfConfidenceRange" type="range" min="0" max="100" value="50" class="form-range" oninput="document.getElementById('selfConfidenceValue').textContent=this.value+'%'">
-                            <div style="font-size:.72rem;color:var(--tx3)">This is your self-report. It is shown separately from delivery stability and is not inferred from your face or voice.</div>
-                        </div>
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
@@ -1037,6 +1030,7 @@
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
+            const cameraPreviewEnabled = true;
             let cameraUnavailableReason = null;
             const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
@@ -1383,10 +1377,12 @@
             function markCameraUnavailable(reason) {
                 const allowedReasons = ['permission_denied', 'device_unavailable', 'browser_unsupported', 'model_unavailable', 'camera_error'];
                 cameraUnavailableReason = allowedReasons.includes(reason) ? reason : 'camera_error';
-                answersData.forEach(answerState => {
-                    answerState.observation_data = answerState.observation_data || { filler_events: [], camera_samples: [] };
-                    answerState.observation_data.camera_unavailable_reason = cameraUnavailableReason;
-                });
+                if (cameraCoachingEnabled) {
+                    answersData.forEach(answerState => {
+                        answerState.observation_data = answerState.observation_data || { filler_events: [], camera_samples: [] };
+                        answerState.observation_data.camera_unavailable_reason = cameraUnavailableReason;
+                    });
+                }
                 const faceStatus = document.getElementById('stEyeContact');
                 const alignmentStatus = document.getElementById('stPosture');
                 const coachStatus = document.getElementById('cameraCoachStatus');
@@ -2117,7 +2113,7 @@
                 document.getElementById('interviewControls').style.opacity = '1';
                 document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
-                if (cameraCoachingEnabled) initCamera();
+                if (cameraPreviewEnabled || cameraCoachingEnabled) initCamera();
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
@@ -2192,8 +2188,14 @@
 
                 // Restore answer state if navigated back (though disabled in chat mode)
                 document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
-                document.getElementById('selfConfidenceRange').value = answersData[idx]?.self_reported_confidence ?? 50;
-                document.getElementById('selfConfidenceValue').textContent = (answersData[idx]?.self_reported_confidence ?? 50) + '%';
+                const selfConfidenceRange = document.getElementById('selfConfidenceRange');
+                const selfConfidenceValue = document.getElementById('selfConfidenceValue');
+                if (selfConfidenceRange) {
+                    selfConfidenceRange.value = answersData[idx]?.self_reported_confidence ?? 50;
+                }
+                if (selfConfidenceValue) {
+                    selfConfidenceValue.textContent = (answersData[idx]?.self_reported_confidence ?? 50) + '%';
+                }
                 resetSpeechRecognitionBufferFromTextarea();
                 lastTimelineCaptureAt = 0;
                 
