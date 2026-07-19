@@ -13,8 +13,10 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ReliabilityHardeningTest extends TestCase
@@ -598,6 +600,39 @@ class ReliabilityHardeningTest extends TestCase
 
         $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void
+    {
+        Http::preventStrayRequests();
+        if (Schema::hasColumn('feedback', 'coaching_summary')) {
+            Schema::table('feedback', function (Blueprint $table): void {
+                $table->dropColumn('coaching_summary');
+            });
+        }
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the release checklist, coordinated QA approval, and documented the final handoff result.',
+            'response_mode' => 'text',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
     }
 
