@@ -238,6 +238,53 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertNotEmpty(data_get($skipped, 'content_alignment.success_check'));
     }
 
+    public function test_short_cleanup_follow_up_feedback_names_missing_details_without_truncated_prompt(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $questionText = 'I understand you\'ve mentioned you handled it. Can you walk me through the specific steps you took to manage that challenging cleanup, and what cleaning supplies were involved for the Janitor role?';
+
+        $coaching = $service->forAnswer('okay', [
+            'id' => 177,
+            'type' => 'Behavioral',
+            'question_text' => $questionText,
+        ], [
+            'answer_id' => 72,
+            'response_mode' => 'text',
+            'scoring_confidence' => 50,
+            'relevance_score' => 0,
+            'answer_alignment' => 'insufficient_evidence',
+            'evidence_quotes' => ['okay'],
+        ]);
+
+        $alignment = data_get($coaching, 'content_alignment');
+        $this->assertSame('insufficient_evidence', $alignment['status']);
+        $this->assertNull($alignment['relevance_score']);
+        $this->assertSame(['okay'], $alignment['evidence_quotes']);
+        $this->assertStringContainsString('Only limited answer evidence', $alignment['what_worked']);
+        $this->assertStringNotContainsString('The response started with', $alignment['what_worked']);
+        $this->assertContains('The response did not explain the specific steps you personally took.', $alignment['missing_points']);
+        $this->assertContains('The response did not name the tools, supplies, equipment, or cleaning agents used.', $alignment['missing_points']);
+        $this->assertStringContainsString('cleanup situation', $alignment['action']);
+        $this->assertStringContainsString('cleaning agents used', $alignment['action']);
+        $this->assertStringNotContainsString('Expand your response to "', $alignment['action']);
+        $this->assertStringNotContainsString('...', $alignment['action']);
+        $this->assertContains('List the cleanup steps you personally took in order.', $alignment['next_attempt_steps']);
+        $this->assertContains('Name the cleaning tools, supplies, PPE, or agents used.', $alignment['next_attempt_steps']);
+        $this->assertStringContainsString('tools or supplies used', $alignment['success_check']);
+
+        $answer = $this->textAnswer('okay', $questionText);
+        $answer->setRawAttributes(array_merge($answer->getAttributes(), [
+            'id' => 72,
+            'question_id' => 177,
+            'coaching_feedback' => json_encode($coaching, JSON_THROW_ON_ERROR),
+        ]), true);
+        $summary = $service->sessionSummary(new Collection([$answer]));
+
+        $this->assertSame($alignment['action'], data_get($summary, 'question_improvements.0.next_attempt'));
+        $this->assertStringNotContainsString('Expand your response to "', data_get($summary, 'question_improvements.0.next_attempt'));
+        $this->assertContains('The response did not name the tools, supplies, equipment, or cleaning agents used.', data_get($summary, 'question_improvements.0.missing_points'));
+    }
+
     public function test_the_same_answer_receives_question_bound_alignment_for_each_different_question(): void
     {
         $service = new EvidenceBasedCoachingService;

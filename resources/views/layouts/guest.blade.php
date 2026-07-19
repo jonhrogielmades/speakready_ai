@@ -282,12 +282,17 @@
          @media (max-width: 575.98px) {
             #lofc {
                padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
-               place-items: start center;
+               background: rgba(2, 6, 23, 0.62) !important;
+               backdrop-filter: blur(12px) saturate(1.08);
+               -webkit-backdrop-filter: blur(12px) saturate(1.08);
+               place-items: center;
+               align-content: center;
             }
 
             #lofc .modal-dialog {
                width: min(100%, 350px);
-               margin: 8px auto !important;
+               min-height: 0 !important;
+               margin: 0 auto !important;
             }
 
             #lofc .modal-content {

@@ -802,9 +802,9 @@
                 <!-- Simulated AI Video Avatar Panel -->
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
-                    <!-- Mobile Picture-in-Picture Camera -->
+                    <!-- Picture-in-picture camera preview -->
                     @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
-                    <div class="d-block d-lg-none mobile-camera-pip">
+                    <div class="d-block mobile-camera-pip">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                         <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
                     </div>

@@ -887,10 +887,14 @@ final class EvidenceBasedCoachingService
             }
         }
 
+        $coverageTargets = $this->questionCoverageTargets($questionText, $questionTip);
+
         if ($status === 'skipped' && $missingPoints === []) {
             $missingPoints[] = 'No response was submitted, so required coverage is still missing.';
         } elseif ($status === 'insufficient_evidence' && $missingPoints === []) {
-            $missingPoints[] = 'The response did not contain enough relevant detail for a dependable assessment.';
+            $missingPoints = $coverageTargets['missing_points'] !== []
+                ? $coverageTargets['missing_points']
+                : ['The response did not contain enough relevant detail for a dependable assessment.'];
         } elseif ($status === 'not_evaluated' && $missingPoints === []) {
             $missingPoints[] = 'The content gap could not be determined because a dependable evaluation was unavailable.';
         } elseif ($status === 'partially_answered' && $missingPoints === []) {
@@ -913,9 +917,12 @@ final class EvidenceBasedCoachingService
 
         $gap = $missingPoints[0] ?? null;
         $guidance = trim((string) ($questionTip['guidance'] ?? 'Answer the exact question first, then support it with truthful evidence.'));
+        $insufficientAction = $coverageTargets['action'] !== ''
+            ? $coverageTargets['action']
+            : 'Expand the answer with enough specific, question-relevant detail to assess it.';
         $action = match ($status) {
             'skipped' => "Practice a direct response to {$questionLabel}. {$guidance}",
-            'insufficient_evidence' => "Expand your response to {$questionLabel} with enough detail to assess it. {$guidance}",
+            'insufficient_evidence' => trim($insufficientAction.' '.$guidance),
             'directly_answered' => $gap
                 ? "Keep the direct response to {$questionLabel}, then address this remaining gap: {$gap}"
                 : "Keep the direct opening for {$questionLabel}, then strengthen it with the most relevant truthful evidence or result.",
@@ -935,7 +942,7 @@ final class EvidenceBasedCoachingService
                 ? 'A complete response was submitted, and this excerpt gives you concrete material to revise: "'.$evidenceExcerpt.'".'
                 : 'A response was submitted, giving you concrete material to revise.',
             'insufficient_evidence' => $evidenceExcerpt
-                ? 'The response started with: "'.$evidenceExcerpt.'", but it needs more relevant detail before it can be assessed dependably.'
+                ? 'Only limited answer evidence was available: "'.$evidenceExcerpt.'". Add the missing details before relying on this assessment.'
                 : 'A response was started, but it needs more relevant detail before it can be assessed dependably.',
             'skipped' => 'No answer evidence is available yet; the next attempt should begin with a direct response to the exact question.',
             default => 'The response is saved, but no dependable content verdict is available yet.',
@@ -945,7 +952,9 @@ final class EvidenceBasedCoachingService
                 ? $gap
                 : 'Keep the direct answer and make the strongest truthful supporting detail easier to identify.',
             'partially_answered', 'low_relevance' => $gap ?: $guidance,
-            'insufficient_evidence' => 'Add enough specific, question-relevant detail to support a dependable assessment.',
+            'insufficient_evidence' => $coverageTargets['improvement_focus'] !== ''
+                ? $coverageTargets['improvement_focus']
+                : 'Add enough specific, question-relevant detail to support a dependable assessment.',
             'skipped' => 'Submit a direct, truthful response that follows the question-specific strategy below.',
             default => $guidance,
         };
@@ -964,10 +973,12 @@ final class EvidenceBasedCoachingService
                 $gap ? ['Address this missing point: '.$gap] : [],
                 array_slice($frameworkSteps, 0, 2)
             ),
-            'insufficient_evidence' => array_merge(
-                ['Give a complete first sentence that answers '.$questionLabel.'.'],
-                array_slice($frameworkSteps, 0, 3)
-            ),
+            'insufficient_evidence' => $coverageTargets['next_attempt_steps'] !== []
+                ? $coverageTargets['next_attempt_steps']
+                : array_merge(
+                    ['Give a complete first sentence that answers '.$questionLabel.'.'],
+                    array_slice($frameworkSteps, 0, 3)
+                ),
             'skipped' => array_merge(
                 ['Start a practice response to '.$questionLabel.'.'],
                 array_slice($frameworkSteps, 0, 3)
@@ -978,7 +989,9 @@ final class EvidenceBasedCoachingService
         $successCheck = match ($status) {
             'directly_answered' => 'The revised answer still addresses '.$questionLabel.' immediately, and every added detail clearly supports that focus.',
             'partially_answered', 'low_relevance' => 'A reviewer can identify the direct answer in the first sentence and find relevant evidence for each required point.',
-            'insufficient_evidence' => 'The retry contains enough specific, relevant detail to explain the answer and support a dependable assessment.',
+            'insufficient_evidence' => $coverageTargets['success_check'] !== ''
+                ? $coverageTargets['success_check']
+                : 'The retry contains enough specific, relevant detail to explain the answer and support a dependable assessment.',
             'skipped' => 'A complete response to '.$questionLabel.' is submitted and supported with truthful detail.',
             default => 'The response follows the question-specific strategy and stays focused on '.$questionLabel.'.',
         };
@@ -1109,6 +1122,113 @@ final class EvidenceBasedCoachingService
             str_contains($area, 'camera') => 45,
             default => 25,
         };
+    }
+
+    private function questionCoverageTargets(string $questionText, array $questionTip): array
+    {
+        $questionText = trim($questionText);
+        $framework = strtolower(trim((string) ($questionTip['framework'] ?? '')));
+        if ($questionText === '') {
+            return [
+                'missing_points' => [],
+                'action' => '',
+                'improvement_focus' => '',
+                'next_attempt_steps' => [],
+                'success_check' => '',
+            ];
+        }
+
+        $mentionsCleanup = preg_match('/\b(clean(?:up|ing)?|clean\s+up|mess|janitor|custodian|sanitiz\w*|spill|trash|waste|restroom|floor)\b/i', $questionText) === 1;
+        $asksForSteps = preg_match('/\b(specific steps|steps? (?:you )?(?:took|used)|walk me through|manage|managed|handle|handled|process|clean\s+up|cleanup)\b/i', $questionText) === 1;
+        $asksForTools = preg_match('/\b(tools?|suppl(?:y|ies)|agents?|equipment|materials?|chemicals?|cleaning agents?|mop|bucket|gloves|ppe|disinfectant|detergent)\b/i', $questionText) === 1;
+        $asksForResult = preg_match('/\b(result|outcome|impact|resolved|finished|verified|safe|safety|check|lesson)\b/i', $questionText) === 1;
+
+        $missingPoints = [];
+        $nextSteps = [];
+        $actionParts = [];
+        $successParts = [];
+
+        if ($mentionsCleanup) {
+            $missingPoints[] = 'The response did not identify the cleanup situation or difficult mess.';
+            $nextSteps[] = 'Briefly name the cleanup situation and your responsibility.';
+            $actionParts[] = 'describe the cleanup situation';
+            $successParts[] = 'cleanup context';
+        }
+
+        if ($asksForSteps || $mentionsCleanup || $framework === 'star') {
+            $missingPoints[] = 'The response did not explain the specific steps you personally took.';
+            $nextSteps[] = $mentionsCleanup
+                ? 'List the cleanup steps you personally took in order.'
+                : 'Describe the specific steps you personally took.';
+            $actionParts[] = 'list the steps you personally took';
+            $successParts[] = 'specific actions';
+        }
+
+        if ($asksForTools) {
+            $missingPoints[] = 'The response did not name the tools, supplies, equipment, or cleaning agents used.';
+            $nextSteps[] = $mentionsCleanup
+                ? 'Name the cleaning tools, supplies, PPE, or agents used.'
+                : 'Name the tools, supplies, equipment, or materials involved.';
+            $actionParts[] = 'name the tools, supplies, or cleaning agents used';
+            $successParts[] = 'tools or supplies used';
+        }
+
+        if ($asksForResult || $mentionsCleanup || $framework === 'star') {
+            $missingPoints[] = 'The response did not state the finished result, safety check, impact, or lesson.';
+            $nextSteps[] = $mentionsCleanup
+                ? 'Close with the finished result, safety check, or lesson learned.'
+                : 'Close with the verified result, impact, or lesson.';
+            $actionParts[] = $mentionsCleanup
+                ? 'state the finished result or safety check'
+                : 'state the verified result or lesson';
+            $successParts[] = $mentionsCleanup ? 'result or safety check' : 'result or lesson';
+        }
+
+        $missingPoints = array_values(array_unique($missingPoints));
+        $nextSteps = array_values(array_unique(array_merge(
+            ['Start with a direct sentence that answers the question.'],
+            $nextSteps
+        )));
+        $actionParts = array_values(array_unique($actionParts));
+        $successParts = array_values(array_unique($successParts));
+
+        $action = $actionParts === []
+            ? ''
+            : 'Expand the answer with specific, truthful details: '.$this->readableList($actionParts).'.';
+        $improvementFocus = $successParts === []
+            ? ''
+            : 'Add '.$this->readableList($successParts).' so the answer can be assessed dependably.';
+        $successCheck = $successParts === []
+            ? ''
+            : 'The retry names '.$this->readableList($successParts).' clearly enough for a dependable assessment.';
+
+        return [
+            'missing_points' => array_slice($missingPoints, 0, 4),
+            'action' => $action,
+            'improvement_focus' => $improvementFocus,
+            'next_attempt_steps' => array_slice($nextSteps, 0, 4),
+            'success_check' => $successCheck,
+        ];
+    }
+
+    private function readableList(array $items): string
+    {
+        $items = array_values(array_filter(array_map(
+            fn ($item): string => is_scalar($item) ? trim((string) $item) : '',
+            $items
+        )));
+        $count = count($items);
+        if ($count === 0) {
+            return '';
+        }
+        if ($count === 1) {
+            return $items[0];
+        }
+        if ($count === 2) {
+            return $items[0].' and '.$items[1];
+        }
+
+        return implode(', ', array_slice($items, 0, -1)).', and '.$items[$count - 1];
     }
 
     private function textExcerpt(string $text, int $limit): string
