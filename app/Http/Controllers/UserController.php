@@ -412,21 +412,32 @@ class UserController extends Controller
             ])
             ->firstOrFail();
 
-        $this->refreshDetailedFeedbackReport($sessionRecord);
-        $sessionRecord->refresh()->load([
-            'category',
-            'answers' => function ($query) {
-                $query->whereNull('retry_of_answer_id')
-                    ->with(['question', 'retryAttempts']);
-            },
-            'score',
-            'feedback',
-            'mentorReviewComments',
-        ]);
+        if ($this->detailedFeedbackReportIsStale($sessionRecord)) {
+            $this->refreshDetailedFeedbackReport($sessionRecord);
+            $sessionRecord->refresh()->load([
+                'category',
+                'answers' => function ($query) {
+                    $query->whereNull('retry_of_answer_id')
+                        ->with(['question', 'retryAttempts']);
+                },
+                'score',
+                'feedback',
+                'mentorReviewComments',
+            ]);
+        }
 
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
         return view('user.review', compact('sessionRecord', 'comparisonRows'));
+    }
+
+    private function detailedFeedbackReportIsStale(InterviewSession $session): bool
+    {
+        $summary = is_array($session->feedback?->coaching_summary ?? null)
+            ? $session->feedback->coaching_summary
+            : [];
+
+        return (int) ($summary['version'] ?? 0) < EvidenceBasedCoachingService::VERSION;
     }
 
     private function refreshDetailedFeedbackReport(InterviewSession $session): void
