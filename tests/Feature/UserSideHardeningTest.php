@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\GameAnswer;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
 use App\Models\GameSession;
@@ -678,6 +679,36 @@ class UserSideHardeningTest extends TestCase
             'user_id' => $user->id,
             'game_level_id' => $level->id,
         ]);
+    }
+
+    public function test_voice_game_answers_are_cleaned_before_save(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+        $category = $this->category(['type' => 'game']);
+        $level = $this->gameLevel($category);
+
+        $this->actingAs($user)
+            ->post(route('user.game.start', $level))
+            ->assertRedirect(route('user.game.match'));
+
+        $session = GameSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->actingAs($user)
+            ->postJson(route('user.game.answer'), [
+                'game_session_id' => $session->id,
+                'question_index' => 0,
+                'answer_text' => 'I handled customer concern I handled customer concern and solved it solved it',
+                'response_mode' => 'voice',
+                'voice_duration' => 18,
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $answer = GameAnswer::where('game_session_id', $session->id)->firstOrFail();
+
+        $this->assertSame('I handled customer concern and solved it', $answer->answer_text);
+        $this->assertSame('voice', $answer->response_mode);
     }
 
     public function test_game_match_rejects_regular_interview_even_with_stale_game_key(): void

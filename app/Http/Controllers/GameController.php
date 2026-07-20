@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\LearningGameScoringService;
 use App\Services\LearningGameCertificateService;
+use App\Services\TranscriptService;
 use App\Support\GameSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -283,7 +284,11 @@ class GameController extends Controller
         }
 
         $isSkipped = filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $responseMode = $validated['response_mode'] ?? 'text';
         $answerText = trim((string) ($validated['answer_text'] ?? ''));
+        if (in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)) {
+            $answerText = TranscriptService::clean($answerText);
+        }
         if ($isSkipped && $answerText === '') {
             $answerText = '[Skipped]';
         }
@@ -297,7 +302,7 @@ class GameController extends Controller
                 'question_text' => $questions[$questionIndex],
                 'answer_text' => $answerText,
                 'is_skipped' => $isSkipped,
-                'response_mode' => $validated['response_mode'] ?? 'text',
+                'response_mode' => $responseMode,
                 'elapsed_seconds' => (int) ($validated['elapsed_seconds'] ?? 0),
                 'wpm' => (int) ($validated['wpm'] ?? 0),
                 'voice_duration' => (int) ($validated['voice_duration'] ?? 0),

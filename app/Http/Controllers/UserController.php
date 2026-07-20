@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -1408,7 +1409,13 @@ Rules:
 }
 PROMPT;
 
-        $decoded = json_decode(AIService::generateJson($prompt, env('AI_PROVIDER', 'gemini')), true);
+        try {
+            $decoded = json_decode(AIService::generateJson($prompt, env('AI_PROVIDER', 'gemini')), true);
+        } catch (\Throwable $exception) {
+            Log::warning('Mission generation fell back after AI error: '.$exception->getMessage());
+            $decoded = [];
+        }
+
         $missions = collect($decoded['missions'] ?? [])
             ->map(fn ($mission, $index) => $this->normalizeMission($mission, $index, $goal))
             ->filter()
@@ -1416,6 +1423,14 @@ PROMPT;
 
         if ($missions->isEmpty()) {
             $missions = $this->fallbackMissions($goal);
+        }
+        if ($missions->count() < 4) {
+            $existingIds = $missions->pluck('id')->all();
+            $supplements = $this->fallbackMissions($goal)
+                ->reject(fn ($mission) => in_array($mission->id, $existingIds, true))
+                ->values();
+
+            $missions = $missions->concat($supplements)->take(4)->values();
         }
 
         return response()->json([

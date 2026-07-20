@@ -646,8 +646,20 @@ let activeMission = missionData[0] || null;
 let missionTimer = null;
 let remainingSeconds = activeMission ? Number(activeMission.duration) || 60 : 60;
 const MissionSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const missionSpeechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
+const missionTranscriptPlaceholder = 'Your spoken answer will appear here...';
+const missionDuplicateSafeWordSet = new Set([
+    'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
+    'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
+]);
 let missionRecognition = null;
+let missionRecognitionActive = false;
+let missionShouldAutoRestart = false;
+let missionRecognitionToken = 0;
 let missionVoiceTranscript = '';
+let missionVoiceInterim = '';
+let missionLastCommittedSpeech = '';
+let missionLastCommittedAt = 0;
 
 function escapeMissionHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -666,6 +678,104 @@ function normalizeMissionText(value) {
 function missionWordCount(value) {
     const clean = normalizeMissionText(value);
     return clean ? clean.split(/\s+/).length : 0;
+}
+
+function cleanMissionTranscriptText(value) {
+    return String(value || '').replace(/\s+/gu, ' ').trim();
+}
+
+function normalizeMissionTranscriptForMatch(value) {
+    return cleanMissionTranscriptText(value)
+        .toLocaleLowerCase(missionSpeechLocale)
+        .replace(/[^\p{L}\p{N}'\u2019\s]/gu, '')
+        .replace(/\s+/gu, ' ')
+        .trim();
+}
+
+function missionWordsForTranscript(value) {
+    return cleanMissionTranscriptText(value).split(/\s+/u).filter(Boolean);
+}
+
+function appendMissionTranscriptWithoutOverlap(existing, addition) {
+    const existingClean = cleanMissionTranscriptText(existing);
+    const additionClean = cleanMissionTranscriptText(addition);
+    if (!existingClean) return additionClean;
+    if (!additionClean) return existingClean;
+
+    const existingWords = missionWordsForTranscript(existingClean);
+    const additionWords = missionWordsForTranscript(additionClean);
+    const existingNormalized = existingWords.map(normalizeMissionTranscriptForMatch);
+    const additionNormalized = additionWords.map(normalizeMissionTranscriptForMatch);
+    const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
+    let overlap = 0;
+
+    for (let size = maxOverlap; size > 0; size--) {
+        const existingTail = existingNormalized.slice(existingNormalized.length - size).join(' ');
+        const additionHead = additionNormalized.slice(0, size).join(' ');
+        if (existingTail && existingTail === additionHead) {
+            overlap = size;
+            break;
+        }
+    }
+
+    const remainder = additionWords.slice(overlap).join(' ');
+    return cleanMissionTranscriptText(existingClean + (remainder ? ' ' + remainder : ''));
+}
+
+function shouldCollapseMissionDuplicateWindow(size, normalizedPhrase) {
+    if (!normalizedPhrase) return false;
+    if (size >= 2) return true;
+    return Array.from(normalizedPhrase).length > 2 || missionDuplicateSafeWordSet.has(normalizedPhrase);
+}
+
+function collapseRepeatedMissionSpeech(text) {
+    const words = missionWordsForTranscript(text);
+    if (words.length < 2) return cleanMissionTranscriptText(text);
+
+    let index = 0;
+    while (index < words.length) {
+        let collapsed = false;
+        const maxWindow = Math.min(12, Math.floor((words.length - index) / 2));
+
+        for (let size = maxWindow; size >= 1; size--) {
+            const first = words.slice(index, index + size).map(normalizeMissionTranscriptForMatch).join(' ');
+            const second = words.slice(index + size, index + (size * 2)).map(normalizeMissionTranscriptForMatch).join(' ');
+
+            if (first && first === second && shouldCollapseMissionDuplicateWindow(size, first)) {
+                words.splice(index + size, size);
+                index = Math.max(0, index - size);
+                collapsed = true;
+                break;
+            }
+        }
+
+        if (!collapsed) index++;
+    }
+
+    return cleanMissionTranscriptText(words.join(' '));
+}
+
+function mergeMissionTranscriptParts(...parts) {
+    let merged = '';
+    parts.forEach(part => {
+        const clean = cleanMissionTranscriptText(part);
+        if (clean) merged = appendMissionTranscriptWithoutOverlap(merged, clean);
+    });
+    return collapseRepeatedMissionSpeech(merged);
+}
+
+function missionTranscriptEditorText() {
+    const box = document.getElementById('missionVoiceTranscript');
+    const text = cleanMissionTranscriptText(box ? (box.innerText || box.textContent || '') : '');
+    return text === missionTranscriptPlaceholder ? '' : text;
+}
+
+function bestMissionSpeechAlternative(result) {
+    let best = result[0] || null;
+    for (let i = 1; i < result.length; i++) {
+        if ((result[i].confidence || 0) > (best?.confidence || 0)) best = result[i];
+    }
+    return best ? best.transcript : '';
 }
 
 function hasAny(text, terms) {
@@ -869,10 +979,50 @@ function speakMissionPrompt() {
     window.speechSynthesis.speak(utterance);
 }
 
-function updateMissionVoiceTranscript(interim = '') {
+function commitMissionSpeechSegment(segment) {
+    const cleanSegment = collapseRepeatedMissionSpeech(cleanMissionTranscriptText(segment));
+    if (!cleanSegment) return;
+
+    const normalized = normalizeMissionTranscriptForMatch(cleanSegment);
+    const now = Date.now();
+    if (normalized && normalized === missionLastCommittedSpeech && (now - missionLastCommittedAt) < 5000) return;
+
+    missionVoiceTranscript = collapseRepeatedMissionSpeech(
+        appendMissionTranscriptWithoutOverlap(missionVoiceTranscript, cleanSegment)
+    );
+    missionLastCommittedSpeech = normalized;
+    missionLastCommittedAt = now;
+}
+
+function updateMissionVoiceTranscript() {
     const box = document.getElementById('missionVoiceTranscript');
-    const text = [missionVoiceTranscript, interim].filter(Boolean).join(' ').trim();
-    box.textContent = text || 'Your spoken answer will appear here...';
+    const text = mergeMissionTranscriptParts(missionVoiceTranscript, missionVoiceInterim);
+    box.textContent = text || missionTranscriptPlaceholder;
+}
+
+function finalizeMissionVoiceInterim() {
+    if (!missionVoiceInterim) return;
+    commitMissionSpeechSegment(missionVoiceInterim);
+    missionVoiceInterim = '';
+    updateMissionVoiceTranscript();
+}
+
+function startMissionVoiceEngine(token = missionRecognitionToken) {
+    if (token !== missionRecognitionToken) return false;
+    if (!missionRecognition || missionRecognitionActive || !missionShouldAutoRestart) return false;
+
+    try {
+        missionRecognition.start();
+        missionRecognitionActive = true;
+        return true;
+    } catch (error) {
+        if (!error || error.name !== 'InvalidStateError') {
+            console.error('Mission voice recognition failed to start:', error);
+            setMissionVoiceStatus('Voice transcription could not start. You can type directly in the transcript box.', '#ef4444');
+        }
+        missionShouldAutoRestart = false;
+        return false;
+    }
 }
 
 function startMissionVoice() {
@@ -881,60 +1031,107 @@ function startMissionVoice() {
         return;
     }
 
+    missionRecognitionToken++;
+    const token = missionRecognitionToken;
+
     if (missionRecognition) {
+        missionShouldAutoRestart = false;
         try { missionRecognition.stop(); } catch (error) {}
     }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
+    missionVoiceInterim = '';
+    missionLastCommittedSpeech = '';
+    missionLastCommittedAt = 0;
+    missionShouldAutoRestart = true;
 
     missionRecognition = new MissionSpeechRecognition();
-    missionRecognition.lang = 'en-PH';
+    missionRecognition.lang = missionSpeechLocale;
     missionRecognition.continuous = true;
     missionRecognition.interimResults = true;
+    missionRecognition.maxAlternatives = 3;
 
-    missionRecognition.onstart = () => setMissionVoiceStatus('Listening. Speak your answer clearly...', '#16a34a');
+    missionRecognition.onstart = () => {
+        if (token !== missionRecognitionToken) return;
+        missionRecognitionActive = true;
+        setMissionVoiceStatus('Listening. Speak your answer clearly...', '#16a34a');
+    };
     missionRecognition.onerror = event => {
+        if (token !== missionRecognitionToken) return;
         const reason = event.error === 'not-allowed'
             ? 'Microphone permission was blocked. Allow microphone access, then try again.'
             : 'Voice transcription stopped. You can try again or type directly.';
+        if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
+            missionShouldAutoRestart = false;
+        }
         setMissionVoiceStatus(reason, '#ef4444');
     };
-    missionRecognition.onend = () => setMissionVoiceStatus('Voice capture stopped. Review or edit the transcript.');
+    missionRecognition.onend = () => {
+        if (token !== missionRecognitionToken) return;
+        missionRecognitionActive = false;
+        if (missionShouldAutoRestart) {
+            setMissionVoiceStatus('Reconnecting voice transcription...', '#f59e0b');
+            setTimeout(() => startMissionVoiceEngine(token), 300);
+            return;
+        }
+
+        setMissionVoiceStatus('Voice capture stopped. Review or edit the transcript.');
+    };
     missionRecognition.onresult = event => {
-        let interim = '';
+        if (token !== missionRecognitionToken) return;
+        const interimParts = [];
         for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0]?.transcript || '';
+            const transcript = bestMissionSpeechAlternative(event.results[i]);
+            if (!transcript) continue;
+
             if (event.results[i].isFinal) {
-                missionVoiceTranscript = `${missionVoiceTranscript} ${transcript}`.trim();
+                commitMissionSpeechSegment(transcript);
             } else {
-                interim += transcript;
+                interimParts.push(transcript);
             }
         }
-        updateMissionVoiceTranscript(interim.trim());
+
+        missionVoiceInterim = cleanMissionTranscriptText(interimParts.join(' '));
+        updateMissionVoiceTranscript();
     };
 
-    missionRecognition.start();
+    startMissionVoiceEngine(token);
 }
 
 function stopMissionVoice() {
+    missionShouldAutoRestart = false;
+    finalizeMissionVoiceInterim();
+    missionRecognitionToken++;
+    missionRecognitionActive = false;
     if (missionRecognition) {
         try { missionRecognition.stop(); } catch (error) {}
     }
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    setMissionVoiceStatus('Voice capture stopped. Review or edit the transcript.');
 }
 
 function clearMissionVoiceTranscript() {
     missionVoiceTranscript = '';
-    document.getElementById('missionVoiceTranscript').textContent = 'Your spoken answer will appear here...';
+    missionVoiceInterim = '';
+    missionLastCommittedSpeech = '';
+    missionLastCommittedAt = 0;
+    document.getElementById('missionVoiceTranscript').textContent = missionTranscriptPlaceholder;
     setMissionVoiceStatus('Transcript cleared. Start voice again when ready.');
 }
 
 function useMissionVoiceTranscript() {
+    finalizeMissionVoiceInterim();
     const box = document.getElementById('missionVoiceTranscript');
-    const text = box.textContent.trim();
-    if (!text || text === 'Your spoken answer will appear here...') {
+    const text = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
+    if (!text) {
         setMissionVoiceStatus('Record or type a transcript before using it.', '#f59e0b');
         return;
     }
 
+    missionVoiceTranscript = text;
+    missionVoiceInterim = '';
+    box.textContent = text;
     document.getElementById('missionAnswer').value = text;
     scoreMission(false);
     setMissionVoiceStatus('Transcript added to your mission answer.', '#16a34a');
@@ -1054,6 +1251,19 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
             generateMissionTasks();
         }
+    });
+    const missionTranscriptBox = document.getElementById('missionVoiceTranscript');
+    missionTranscriptBox.addEventListener('focus', () => {
+        if (!missionTranscriptEditorText()) missionTranscriptBox.textContent = '';
+    });
+    missionTranscriptBox.addEventListener('input', () => {
+        missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
+        missionVoiceInterim = '';
+    });
+    missionTranscriptBox.addEventListener('blur', () => {
+        missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
+        missionVoiceInterim = '';
+        updateMissionVoiceTranscript();
     });
     selectMission(activeMission?.id);
 });

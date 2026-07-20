@@ -28,6 +28,16 @@ class TranscriptServiceTest extends TestCase
         $this->assertSame(8, TranscriptService::wordCount(TranscriptService::clean($transcript)));
     }
 
+    public function test_it_collapses_browser_restart_phrases_and_word_doubles(): void
+    {
+        $transcript = 'I can handle pressure because I can handle pressure because I stayed calm calm during calls calls';
+
+        $this->assertSame(
+            'I can handle pressure because I stayed calm during calls',
+            TranscriptService::clean($transcript)
+        );
+    }
+
     public function test_it_counts_common_fillers_as_phrases(): void
     {
         $this->assertSame(
