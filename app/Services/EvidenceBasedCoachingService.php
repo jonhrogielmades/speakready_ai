@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 final class EvidenceBasedCoachingService
 {
-    public const VERSION = 3;
+    public const VERSION = 4;
 
     private const VOICE_MODES = ['voice', 'hybrid', 'voice_and_text'];
 

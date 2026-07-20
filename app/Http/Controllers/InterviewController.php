@@ -1238,10 +1238,14 @@ class InterviewController extends Controller
 
     private function completedSessionFeedbackIsStale(InterviewSession $session): bool
     {
-        $session->loadMissing('score');
+        $session->loadMissing(['score', 'feedback']);
+        $summary = is_array($session->feedback?->coaching_summary ?? null)
+            ? $session->feedback->coaching_summary
+            : [];
 
         return ! $session->score
-            || (int) ($session->score->score_version ?? 0) < TrustworthyAssessmentService::SCORE_VERSION;
+            || (int) ($session->score->score_version ?? 0) < TrustworthyAssessmentService::SCORE_VERSION
+            || (int) ($summary['version'] ?? 0) < EvidenceBasedCoachingService::VERSION;
     }
 
     private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null): void

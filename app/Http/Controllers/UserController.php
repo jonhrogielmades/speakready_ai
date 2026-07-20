@@ -20,6 +20,7 @@ use App\Models\VoiceSession;
 use App\Services\AIService;
 use App\Services\CoachLanguageService;
 use App\Services\CsvExportService;
+use App\Services\EvidenceBasedCoachingService;
 use App\Services\LearningRecommendationService;
 use App\Services\PersonalizedPracticePlanService;
 use App\Services\TranscriptService;
@@ -410,9 +411,55 @@ class UserController extends Controller
                 'mentorReviewComments',
             ])
             ->firstOrFail();
+
+        if ($this->detailedFeedbackReportIsStale($sessionRecord)) {
+            $this->refreshDetailedFeedbackReport($sessionRecord);
+            $sessionRecord->refresh()->load([
+                'category',
+                'answers' => function ($query) {
+                    $query->whereNull('retry_of_answer_id')
+                        ->with(['question', 'retryAttempts']);
+                },
+                'score',
+                'feedback',
+                'mentorReviewComments',
+            ]);
+        }
+
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
         return view('user.review', compact('sessionRecord', 'comparisonRows'));
+    }
+
+    private function detailedFeedbackReportIsStale(InterviewSession $session): bool
+    {
+        $summary = is_array($session->feedback?->coaching_summary ?? null)
+            ? $session->feedback->coaching_summary
+            : [];
+
+        return (int) ($summary['version'] ?? 0) < EvidenceBasedCoachingService::VERSION;
+    }
+
+    private function refreshDetailedFeedbackReport(InterviewSession $session): void
+    {
+        $answers = $session->answers
+            ->whereNull('retry_of_answer_id')
+            ->values();
+
+        if ($answers->isEmpty()) {
+            return;
+        }
+
+        $summary = app(EvidenceBasedCoachingService::class)->sessionSummary($answers);
+
+        Feedback::updateOrCreate([
+            'interview_session_id' => $session->id,
+        ], [
+            'strengths' => $session->feedback?->strengths ?? 'AI feedback was unavailable, so no strengths were inferred.',
+            'weaknesses' => $session->feedback?->weaknesses ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
+            'improvement_suggestions' => $session->feedback?->improvement_suggestions ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
+            'coaching_summary' => $summary,
+        ]);
     }
 
     public function exportSession(InterviewSession $session)
