@@ -13,6 +13,8 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
+use App\Services\EvidenceBasedCoachingService;
+use App\Services\TrustworthyAssessmentService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -786,11 +788,13 @@ class ReliabilityHardeningTest extends TestCase
         ]);
         Score::create([
             'interview_session_id' => $session->id,
+            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
             'clarity_score' => 72,
             'relevance_score' => 72,
             'grammar_score' => 72,
             'professionalism_score' => 72,
             'overall_readiness_score' => 72,
+            'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
         ]);
         Feedback::create([
             'interview_session_id' => $session->id,
@@ -798,6 +802,7 @@ class ReliabilityHardeningTest extends TestCase
             'weaknesses' => 'The original answer lacked a verified result.',
             'improvement_suggestions' => 'Keep the action and verification sequence.',
             'coaching_summary' => [
+                'version' => EvidenceBasedCoachingService::VERSION,
                 'observations' => ['Shared summary observation: both retries added relevant evidence.'],
                 'priority_actions' => [[
                     'area' => 'Release example',
@@ -824,6 +829,56 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('Second retry action: retain this complete sequence in future answers.')
             ->assertDontSee('Retry This Answer')
             ->assertDontSee('Practice Attempt');
+    }
+
+    public function test_user_review_refreshes_stale_rubric_score_metadata_on_open(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a time you improved a support handoff.',
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.',
+            'response_mode' => 'text',
+            'score' => 60,
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'score_version' => 1,
+            'clarity_score' => 60,
+            'relevance_score' => 60,
+            'grammar_score' => 60,
+            'professionalism_score' => 60,
+            'overall_readiness_score' => 60,
+            'rubric' => ['version' => 1],
+        ]);
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'Legacy summary.',
+            'weaknesses' => 'Legacy gap.',
+            'improvement_suggestions' => 'Legacy next step.',
+            'coaching_summary' => ['version' => EvidenceBasedCoachingService::VERSION],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Rubric v'.TrustworthyAssessmentService::SCORE_VERSION);
+
+        $score = Score::where('interview_session_id', $session->id)->firstOrFail();
+        $answer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
+        $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+
+        $this->assertSame(TrustworthyAssessmentService::SCORE_VERSION, $score->score_version);
+        $this->assertSame(TrustworthyAssessmentService::SCORE_VERSION, data_get($score->rubric, 'version'));
+        $this->assertSame(EvidenceBasedCoachingService::VERSION, data_get($feedback->coaching_summary, 'version'));
+        $this->assertNotEmpty($answer->evidence_map);
+        $this->assertNotEmpty($answer->rubric_level);
     }
 
     public function test_review_page_does_not_render_unrecorded_delivery_or_comparison_metrics(): void

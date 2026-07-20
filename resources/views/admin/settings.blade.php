@@ -843,7 +843,7 @@
                 <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal" aria-label="Close" style="background-size: 0.8em;"></button>
             </div>
             <div class="modal-body pt-0">
-                            <p class="text-muted mb-4">Rubric v2 is versioned so every candidate is assessed consistently. Delivery stability and self-reported preparedness are shown separately and never change the readiness score.</p>
+                            <p class="text-muted mb-4">Rubric v{{ \App\Services\TrustworthyAssessmentService::SCORE_VERSION }} is versioned so every candidate is assessed consistently. Delivery stability and self-reported preparedness are shown separately and never change the readiness score.</p>
                             
                             <div class="row g-3">
                                 <div class="col-md-6">

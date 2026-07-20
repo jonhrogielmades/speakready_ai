@@ -600,8 +600,7 @@ class InterviewController extends Controller
         $gameLevel = $this->gameLevelForSession($session);
 
         if ($session->status === 'completed') {
-            if ($this->completedSessionFeedbackIsStale($session)) {
-                $this->refreshCompletedSessionFeedback($session, $gameLevel);
+            if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
                 $session->refresh()->load(['score', 'feedback']);
             }
 
@@ -1236,15 +1235,30 @@ class InterviewController extends Controller
         ]);
     }
 
+    public function ensureCompletedSessionFeedbackIsCurrent(InterviewSession $session, $gameLevel = null): bool
+    {
+        if (! $this->completedSessionFeedbackIsStale($session)) {
+            return false;
+        }
+
+        $this->refreshCompletedSessionFeedback($session, $gameLevel);
+
+        return true;
+    }
+
     private function completedSessionFeedbackIsStale(InterviewSession $session): bool
     {
         $session->loadMissing(['score', 'feedback']);
         $summary = is_array($session->feedback?->coaching_summary ?? null)
             ? $session->feedback->coaching_summary
             : [];
+        $rubric = is_array($session->score?->rubric ?? null)
+            ? $session->score->rubric
+            : [];
 
         return ! $session->score
             || (int) ($session->score->score_version ?? 0) < TrustworthyAssessmentService::SCORE_VERSION
+            || (int) ($rubric['version'] ?? 0) < TrustworthyAssessmentService::SCORE_VERSION
             || (int) ($summary['version'] ?? 0) < EvidenceBasedCoachingService::VERSION;
     }
 
@@ -3027,10 +3041,26 @@ class InterviewController extends Controller
                 },
                 'score',
                 'feedback',
+                'gameLevel',
                 'user',
                 'mentorReviewComments',
             ])
             ->firstOrFail();
+
+        if ($this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel)) {
+            $sessionRecord->refresh()->load([
+                'category',
+                'answers' => function ($query) {
+                    $query->whereNull('retry_of_answer_id')
+                        ->with(['question', 'retryAttempts']);
+                },
+                'score',
+                'feedback',
+                'gameLevel',
+                'user',
+                'mentorReviewComments',
+            ]);
+        }
 
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
@@ -3104,6 +3134,7 @@ class InterviewController extends Controller
                 },
                 'score',
                 'feedback',
+                'gameLevel',
                 'user',
                 'mentorReviewComments',
             ])
@@ -3112,6 +3143,21 @@ class InterviewController extends Controller
         abort_unless($sessionRecord->shareIsActive(), 410, 'This private review link has expired.');
         if ($sessionRecord->share_password_hash && ! $request->session()->get("shared_review.{$token}")) {
             return view('shared.unlock', compact('sessionRecord'));
+        }
+
+        if ($this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel)) {
+            $sessionRecord->refresh()->load([
+                'category',
+                'answers' => function ($query) {
+                    $query->whereNull('retry_of_answer_id')
+                        ->with(['question', 'retryAttempts']);
+                },
+                'score',
+                'feedback',
+                'gameLevel',
+                'user',
+                'mentorReviewComments',
+            ]);
         }
 
         $comparisonRows = [];
