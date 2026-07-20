@@ -1363,6 +1363,13 @@ class UserController extends Controller
         $validated = $request->validate([
             'prompt' => 'required|string|max:5000',
             'transcript' => 'required|string|max:20000',
+            'duration_seconds' => 'nullable|integer|min:0|max:7200',
+            'wpm' => 'nullable|integer|min:0|max:400',
+            'filler_words' => 'nullable|integer|min:0|max:500',
+            'transcript_confidence' => 'nullable|numeric|min:0|max:1',
+            'reliability_score' => 'nullable|integer|min:0|max:100',
+            'playback_captured' => 'nullable|boolean',
+            'live_transcription_supported' => 'nullable|boolean',
         ]);
 
         $transcript = TranscriptService::clean($validated['transcript']);
@@ -1372,7 +1379,16 @@ class UserController extends Controller
             $validated['prompt'],
             $transcript,
             $provider,
-            Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()))
+            Setting::languageConfig(Setting::preferredLanguageFor(Auth::user())),
+            [
+                'duration_seconds' => $validated['duration_seconds'] ?? null,
+                'wpm' => $validated['wpm'] ?? null,
+                'filler_words' => $validated['filler_words'] ?? null,
+                'transcript_confidence' => $validated['transcript_confidence'] ?? null,
+                'reliability_score' => $validated['reliability_score'] ?? null,
+                'playback_captured' => $validated['playback_captured'] ?? null,
+                'live_transcription_supported' => $validated['live_transcription_supported'] ?? null,
+            ]
         );
         $assessment = app(TrustworthyAssessmentService::class);
         $analysis['improved_answer'] = $assessment->groundedRevisionTemplate(
