@@ -2740,7 +2740,7 @@
 
             function startInterviewSession() {
                 if (interviewStarted || interviewTerminated) return;
-                enterMobileFullscreen();
+                
                 interviewStarted = true;
                 document.getElementById('introContainer').style.display = 'none';
                 document.getElementById('workspaceWrapper').style.display = 'block';
