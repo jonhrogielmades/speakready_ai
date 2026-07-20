@@ -83,7 +83,7 @@
         </div>
     </div>
 
-    @include('partials.interview-coaching-summary', ['feedback' => $feedback])
+    @include('partials.interview-coaching-summary', ['feedback' => $feedback, 'sessionRecord' => $sessionRecord])
 
     <!-- Feature 5 & 6: Strengths and Areas for Improvement -->
     <div class="row g-4 mb-4">

@@ -20,6 +20,7 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
+use App\Support\FeedbackCoachingRepair;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -1241,6 +1242,11 @@ class InterviewController extends Controller
             return false;
         }
 
+        if ($this->completedSessionScoreIsCurrent($session)
+            && app(FeedbackCoachingRepair::class)->summaryNeedsRepair($session->feedback?->coaching_summary ?? null)) {
+            return app(FeedbackCoachingRepair::class)->repairSession($session);
+        }
+
         $this->refreshCompletedSessionFeedback($session, $gameLevel);
 
         return true;
@@ -1249,17 +1255,21 @@ class InterviewController extends Controller
     private function completedSessionFeedbackIsStale(InterviewSession $session): bool
     {
         $session->loadMissing(['score', 'feedback']);
-        $summary = is_array($session->feedback?->coaching_summary ?? null)
-            ? $session->feedback->coaching_summary
-            : [];
+
+        return ! $this->completedSessionScoreIsCurrent($session)
+            || app(FeedbackCoachingRepair::class)->summaryNeedsRepair($session->feedback?->coaching_summary ?? null);
+    }
+
+    private function completedSessionScoreIsCurrent(InterviewSession $session): bool
+    {
+        $session->loadMissing('score');
         $rubric = is_array($session->score?->rubric ?? null)
             ? $session->score->rubric
             : [];
 
-        return ! $session->score
-            || (int) ($session->score->score_version ?? 0) < TrustworthyAssessmentService::SCORE_VERSION
-            || (int) ($rubric['version'] ?? 0) < TrustworthyAssessmentService::SCORE_VERSION
-            || (int) ($summary['version'] ?? 0) < EvidenceBasedCoachingService::VERSION;
+        return (bool) $session->score
+            && (int) ($session->score->score_version ?? 0) >= TrustworthyAssessmentService::SCORE_VERSION
+            && (int) ($rubric['version'] ?? 0) >= TrustworthyAssessmentService::SCORE_VERSION;
     }
 
     private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null): void

@@ -262,7 +262,7 @@
         </div>
     </div>
 
-    @include('partials.interview-coaching-summary', ['feedback' => $feedback])
+    @include('partials.interview-coaching-summary', ['feedback' => $feedback, 'sessionRecord' => $sessionRecord])
 
     @if(!empty($actionPlan))
     <div class="row mb-4">

@@ -673,6 +673,117 @@ class ReliabilityHardeningTest extends TestCase
 
         $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Evidence-Based Coaching Summary')
+            ->assertSee('Question coverage')
+            ->assertSee($question->question_text);
+    }
+
+    public function test_user_review_repairs_missing_coaching_report_data_without_ai_refresh(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Describe how you handled a delayed release.',
+        ]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I coordinated QA approval, updated the release checklist, and documented the successful handoff.',
+            'response_mode' => 'text',
+            'ai_feedback' => 'The answer included relevant ownership and handoff evidence.',
+            'score' => 78,
+            'relevance_score' => 78,
+            'scoring_confidence' => 80,
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+            'clarity_score' => 78,
+            'relevance_score' => 78,
+            'grammar_score' => 78,
+            'professionalism_score' => 78,
+            'overall_readiness_score' => 78,
+            'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+        ]);
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'The answer showed ownership.',
+            'weaknesses' => 'The result could be more measurable.',
+            'improvement_suggestions' => 'Add a concrete result metric.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Evidence-Based Coaching Summary')
+            ->assertSee('Answer-to-Question Relevance')
+            ->assertSee('Question coverage')
+            ->assertSee($question->question_text);
+
+        $this->assertSame(
+            EvidenceBasedCoachingService::VERSION,
+            data_get($answer->fresh()->coaching_feedback, 'version')
+        );
+        $this->assertSame(
+            EvidenceBasedCoachingService::VERSION,
+            data_get(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary, 'version')
+        );
+    }
+
+    public function test_repair_feedback_coaching_command_backfills_missing_report_data(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['status' => 'completed']);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a time you improved a team process.',
+        ]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I mapped the handoff issue, wrote a checklist, and confirmed the new process reduced missed approvals.',
+            'response_mode' => 'text',
+            'ai_feedback' => 'The answer connected the action to a process improvement.',
+            'score' => 82,
+            'relevance_score' => 82,
+            'scoring_confidence' => 80,
+        ]);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+            'clarity_score' => 82,
+            'relevance_score' => 82,
+            'grammar_score' => 82,
+            'professionalism_score' => 82,
+            'overall_readiness_score' => 82,
+            'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
+        ]);
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'The answer used a concrete process example.',
+            'weaknesses' => 'The measurable outcome could be clearer.',
+            'improvement_suggestions' => 'State the before-and-after result.',
+        ]);
+
+        $this->artisan('app:repair-feedback-coaching', ['--limit' => 0])
+            ->assertExitCode(0);
+
+        $this->assertSame(
+            EvidenceBasedCoachingService::VERSION,
+            data_get($answer->fresh()->coaching_feedback, 'version')
+        );
+        $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+        $this->assertSame(EvidenceBasedCoachingService::VERSION, data_get($feedback->coaching_summary, 'version'));
+        $this->assertNotEmpty(data_get($feedback->coaching_summary, 'question_improvements'));
     }
 
     public function test_retry_answer_returns_server_rendered_evidence_based_coaching(): void

@@ -2,6 +2,13 @@
     $coachingFeedback = is_array($answer->coaching_feedback ?? null)
         ? $answer->coaching_feedback
         : [];
+    $coachingRepair = app(\App\Support\FeedbackCoachingRepair::class);
+    if ($coachingRepair->answerCoachingNeedsRepair($coachingFeedback)) {
+        $coachingFeedback = $coachingRepair->buildAnswerCoaching(
+            $answer,
+            (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession) ? $sessionRecord : null
+        );
+    }
     $analysisStatus = is_array($coachingFeedback['analysis_status'] ?? null)
         ? $coachingFeedback['analysis_status']
         : [];

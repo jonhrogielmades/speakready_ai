@@ -1,7 +1,17 @@
 @php
+    $coachingRepair = app(\App\Support\FeedbackCoachingRepair::class);
     $coachingSummary = is_array($feedback->coaching_summary ?? null)
         ? $feedback->coaching_summary
         : [];
+    if ($coachingRepair->summaryNeedsRepair($coachingSummary) && isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession && $sessionRecord->relationLoaded('answers')) {
+        $answersForCoachingSummary = $sessionRecord->answers
+            ->filter(fn ($answer) => ($answer->retry_of_answer_id ?? null) === null)
+            ->values();
+
+        if ($answersForCoachingSummary->isNotEmpty()) {
+            $coachingSummary = $coachingRepair->buildSummaryFromAnswers($answersForCoachingSummary);
+        }
+    }
     $summaryObservations = is_array($coachingSummary['observations'] ?? null)
         ? array_values(array_filter($coachingSummary['observations'], fn ($item) => is_scalar($item) ? trim((string) $item) !== '' : is_array($item)))
         : [];

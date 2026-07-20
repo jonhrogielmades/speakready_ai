@@ -45,6 +45,10 @@ php artisan migrate --force
 # while production schema drifted or missed the table creation.
 php artisan app:ensure-game-schema --force
 
+# Backfill report-only coaching data for older completed interviews. This uses
+# saved answers only and does not call external AI providers.
+php artisan app:repair-feedback-coaching --limit=1000 || true
+
 # Seed the database automatically (uses firstOrCreate so it's safe to run multiple times)
 php artisan db:seed --force
 
