@@ -1228,6 +1228,8 @@
             })));
             const pendingFetchControllers = new Set();
             const displayedQuestionIds = new Set();
+            const firstQuestionIntroText = 'Heres your first questions';
+            const firstQuestionIntroDisplayKey = '__first_scored_question_intro__';
             
             // Answers state
             function defaultAnswerState() {
@@ -2573,6 +2575,13 @@
                 return hasOpeningQuestion() ? idx : idx + 1;
             }
 
+            function shouldIntroduceFirstScoredQuestion(idx, question, options = {}) {
+                return options.append !== false
+                    && !isOpeningQuestion(question)
+                    && questionDisplayNumber(idx) === 1
+                    && !displayedQuestionIds.has(firstQuestionIntroDisplayKey);
+            }
+
             function isLastScoredQuestion(idx) {
                 return questionDisplayNumber(idx) >= targetQuestionCount;
             }
@@ -2821,6 +2830,18 @@
                     ? 'Intro'
                     : Math.min(questionDisplayNumber(idx), targetQuestionCount) + '/' + targetQuestionCount;
                 updateQuestionSource(q);
+
+                if (shouldIntroduceFirstScoredQuestion(idx, q, options)) {
+                    appendChatMessage('interviewer', firstQuestionIntroText);
+                    displayedQuestionIds.add(firstQuestionIntroDisplayKey);
+                    showInterviewerConversation(firstQuestionIntroText, 'Q1');
+                    await speakQuestion(firstQuestionIntroText, {
+                        startTimerAfterSpeech: false,
+                        phase: 'first_question_intro',
+                        speechText: firstQuestionIntroText
+                    });
+                    if (interviewTerminated || interviewEnding) return;
+                }
 
                 // Append AI question to chat log if it's the first time seeing it
                 const questionDisplayKey = String(q.id || idx);
