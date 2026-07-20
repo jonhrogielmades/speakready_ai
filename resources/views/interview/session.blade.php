@@ -870,7 +870,7 @@
                                 </button>
                             @else
                                 <div class="d-flex gap-2">
-                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;"><i class="fa-solid fa-pause"></i></button>
+                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Start recording" title="Start recording"><i class="fa-solid fa-microphone"></i></button>
                                     <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;"><i class="fa-solid fa-stop"></i></button>
                                 </div>
                             @endif
@@ -900,6 +900,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
                                 <span id="wordCount">0 words</span> - <span id="charCount">0 characters</span>
+                                <span id="speechStatus" class="ms-3" style="display:none;"></span>
                                 <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
                             </div>
                         </div>
@@ -1110,6 +1111,10 @@
             const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
             const speechLanguage = speechLocale.split('-')[0];
+            const serverDetectedMobile = @json($isMobile);
+            const mobileSpeechSurface = serverDetectedMobile
+                || window.matchMedia('(max-width: 767px)').matches
+                || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const duplicateSafeWordSet = new Set([
                 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
                 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -1205,11 +1210,19 @@
             function bestSpeechAlternative(result) {
                 let best = result[0] || null;
                 for (let i = 1; i < result.length; i++) {
-                    if ((result[i].confidence || 0) > (best.confidence || 0)) {
+                    if ((result[i].confidence || 0) > (best?.confidence || 0)) {
                         best = result[i];
                     }
                 }
                 return best ? best.transcript : '';
+            }
+
+            function setSpeechStatus(message, color = 'var(--tx3)') {
+                const status = document.getElementById('speechStatus');
+                if (!status) return;
+                status.textContent = message || '';
+                status.style.color = color;
+                status.style.display = message ? 'inline-block' : 'none';
             }
 
             function resetSpeechRecognitionBufferFromTextarea() {
@@ -1256,19 +1269,28 @@
 
                 const recognizedTranscript = mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim);
                 ta.value = mergeTranscriptParts(preRecordingText, recognizedTranscript);
+                if (recognizedTranscript) setSpeechStatus('Transcribing', '#34d399');
                 triggerAnalysis();
             }
 
             function startSpeechRecognitionEngine() {
-                if (!recognition || recognitionActive || !isRecording || !shouldAutoRestartRecognition) return;
+                if (!recognition) {
+                    setSpeechStatus('Live transcript unavailable in this browser', '#fbbf24');
+                    return false;
+                }
+                if (recognitionActive || !isRecording || !shouldAutoRestartRecognition) return false;
 
                 try {
                     recognition.start();
                     recognitionActive = true;
+                    setSpeechStatus('Listening', '#34d399');
+                    return true;
                 } catch (error) {
                     if (!error || error.name !== 'InvalidStateError') {
                         console.error('Speech recognition failed to start:', error);
+                        setSpeechStatus('Tap the mic again to start live transcript', '#fbbf24');
                     }
+                    return false;
                 }
             }
 
@@ -1315,13 +1337,14 @@
             let lastSpeechEnd = 0;
             if (BrowserSpeechRecognition) {
                 recognition = new BrowserSpeechRecognition();
-                recognition.continuous = true;
+                recognition.continuous = !mobileSpeechSurface;
                 recognition.interimResults = true;
                 recognition.lang = speechLocale;
                 recognition.maxAlternatives = 3;
 
                 recognition.onstart = function() {
                     recognitionActive = true;
+                    setSpeechStatus('Listening', '#34d399');
                 };
                 
                 recognition.onsoundstart = function() {
@@ -1358,20 +1381,32 @@
                 };
 
                 recognition.onerror = function(event) {
-                    console.warn('Speech recognition error:', event.error || event);
-                    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
+                    const error = event.error || 'unknown';
+                    console.warn('Speech recognition error:', error);
+                    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(error)) {
                         shouldAutoRestartRecognition = false;
-                    } else if (event.error === 'no-speech' && isRecording) {
+                        const message = error === 'audio-capture'
+                            ? 'Microphone unavailable for live transcript'
+                            : 'Microphone permission denied for live transcript';
+                        setSpeechStatus(message, '#f87171');
+                        if (isRecording) pauseRecording({ keepStatus: true, keepPaused: false });
+                    } else if (error === 'no-speech' && isRecording) {
                         shouldAutoRestartRecognition = true;
+                        setSpeechStatus('Listening - speak close to the mic', '#fbbf24');
+                    } else if (error === 'network' && isRecording) {
+                        shouldAutoRestartRecognition = true;
+                        setSpeechStatus('Reconnecting live transcript', '#fbbf24');
                     }
                 };
 
                 recognition.onend = function() {
                     recognitionActive = false;
                     if (shouldAutoRestartRecognition && isRecording) {
-                        setTimeout(startSpeechRecognitionEngine, 250);
+                        setTimeout(startSpeechRecognitionEngine, mobileSpeechSurface ? 500 : 250);
                     }
                 };
+            } else {
+                setTimeout(() => setSpeechStatus('Live transcript unavailable in this browser', '#fbbf24'), 0);
             }
 
             function markCameraUnavailable(reason) {
@@ -1532,6 +1567,12 @@
                 if (token !== questionSpeechToken) return;
                 clearTimeout(autoStartAfterQuestionTimer);
                 if (!isVoiceTranscriptionMode() || interviewEnding || interviewTerminated) return;
+                if (mobileSpeechSurface) {
+                    setSpeechStatus(BrowserSpeechRecognition
+                        ? 'Tap the mic to start live transcript'
+                        : 'Live transcript unavailable in this browser', '#fbbf24');
+                    return;
+                }
 
                 autoStartAfterQuestionTimer = setTimeout(() => {
                     if (token !== questionSpeechToken || isRecording || interviewEnding || interviewTerminated) return;
@@ -2138,6 +2179,10 @@
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
+                    setMicButtonMode('idle');
+                    setSpeechStatus(BrowserSpeechRecognition
+                        ? (mobileSpeechSurface ? 'Tap the mic to start live transcript' : '')
+                        : 'Live transcript unavailable in this browser', '#fbbf24');
                     if (liveFeedbackMode !== 'real_interview') {
                         document.getElementById('voiceAnalyticsPanel').style.display = 'block';
                     }
@@ -2548,9 +2593,29 @@
                 }
             }
 
+            function setMicButtonMode(mode) {
+                const btn = document.getElementById('micPauseBtn');
+                if (!btn) return;
+
+                if (mode === 'recording') {
+                    btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                    btn.setAttribute('aria-label', 'Pause recording');
+                    btn.setAttribute('title', 'Pause recording');
+                } else if (mode === 'paused') {
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    btn.setAttribute('aria-label', 'Resume recording');
+                    btn.setAttribute('title', 'Resume recording');
+                } else {
+                    btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                    btn.setAttribute('aria-label', 'Start recording');
+                    btn.setAttribute('title', 'Start recording');
+                }
+            }
+
             function startRecording(options = {}) {
                 const silent = options && options.silent === true;
                 if(!recognition) {
+                    setSpeechStatus('Live transcript unavailable in this browser', '#fbbf24');
                     if(!silent) alert("Speech recognition not supported in this browser.");
                     return;
                 }
@@ -2563,11 +2628,19 @@
                 shouldAutoRestartRecognition = true;
                 isRecording = true;
                 isRecordingPaused = false;
-                startSpeechRecognitionEngine();
+                const recognitionStarted = startSpeechRecognitionEngine();
+                if (!recognitionStarted && !recognitionActive) {
+                    shouldAutoRestartRecognition = false;
+                    isRecording = false;
+                    isRecordingPaused = false;
+                    setMicButtonMode('idle');
+                    setSpeechStatus(silent
+                        ? 'Tap the mic to start live transcript'
+                        : 'Unable to start live transcript. Check microphone permission.', '#fbbf24');
+                    return;
+                }
                 document.getElementById('micPauseBtn').style.display = 'inline-flex';
-                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
-                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Pause recording');
-                document.getElementById('micPauseBtn').setAttribute('title', 'Pause recording');
+                setMicButtonMode('recording');
                 document.getElementById('micStopBtn').style.display = 'inline-flex';
                 document.getElementById('recordingTimer').style.display = 'block';
                 clearInterval(recTimerInterval);
@@ -2610,7 +2683,7 @@
                 startRecording({ silent: false });
             }
 
-            function pauseRecording() {
+            function pauseRecording(options = {}) {
                 finalizeInterimTranscript();
                 shouldAutoRestartRecognition = false;
                 if(recognition) {
@@ -2621,12 +2694,11 @@
                     }
                 }
                 isRecording = false;
-                isRecordingPaused = true;
+                isRecordingPaused = options.keepPaused === false ? false : true;
                 clearInterval(recTimerInterval);
+                if (options.keepStatus !== true) setSpeechStatus(isRecordingPaused ? 'Paused' : '');
                 document.getElementById('micPauseBtn').style.display = 'inline-flex';
-                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
-                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Resume recording');
-                document.getElementById('micPauseBtn').setAttribute('title', 'Resume recording');
+                setMicButtonMode(isRecordingPaused ? 'paused' : 'idle');
                 document.getElementById('micStopBtn').style.display = 'inline-flex';
                 document.getElementById('recordingTimer').style.display = 'block';
                 const scannerBox = document.getElementById('faceScannerBox');
@@ -2638,10 +2710,9 @@
                 clearTimeout(autoStartAfterQuestionTimer);
                 isRecordingPaused = false;
                 recTimerSeconds = 0;
+                setSpeechStatus('');
                 document.getElementById('recordingTimer').innerText = '00:00';
-                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
-                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Pause recording');
-                document.getElementById('micPauseBtn').setAttribute('title', 'Pause recording');
+                setMicButtonMode('idle');
                 resetSpeechRecognitionBufferFromTextarea();
             }
 
