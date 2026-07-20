@@ -511,20 +511,26 @@ class InterviewController extends Controller
 
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
-            'question_id' => 'required|exists:questions,id',
+            'question_id' => 'nullable|required_without:speech_text|exists:questions,id',
+            'speech_text' => 'nullable|required_without:question_id|string|max:800',
         ]);
 
-        $session = $this->activeInterviewSession($validated['session_id'] ?? null, $validated['question_id']);
+        $session = $this->activeInterviewSession($validated['session_id'] ?? null, $validated['question_id'] ?? null);
         if (! $session) {
             return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
         }
 
-        $question = $this->questionForSession($validated['question_id'], $session);
-        if (! $question) {
-            return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+        $speechText = trim((string) ($validated['speech_text'] ?? ''));
+        if ($speechText === '') {
+            $question = $this->questionForSession($validated['question_id'] ?? null, $session);
+            if (! $question) {
+                return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+            }
+
+            $speechText = $question->question_text;
         }
 
-        $speech = AIService::synthesizeSpeech($question->question_text, $this->currentLanguageConfig());
+        $speech = AIService::synthesizeSpeech($speechText, $this->currentLanguageConfig());
         if (! $speech) {
             return response()->json(['error' => 'AI speech is not available.'], 503);
         }

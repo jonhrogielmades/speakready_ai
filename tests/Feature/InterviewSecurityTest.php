@@ -144,6 +144,43 @@ class InterviewSecurityTest extends TestCase
             && $request['input'] === $question->question_text);
     }
 
+    public function test_user_can_request_speech_for_active_session_closing_text(): void
+    {
+        config(['services.openai.tts_enabled' => true]);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::response('closing-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $closingText = 'Thank you for walking me through your answers today. Your responses are being analyzed for feedback.';
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), [
+                'session_id' => $session->id,
+                'speech_text' => $closingText,
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('closing-audio');
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'
+            && $request['model'] === 'gpt-4o-mini-tts'
+            && $request['input'] === $closingText);
+    }
+
     public function test_speech_endpoint_does_not_call_paid_tts_when_disabled(): void
     {
         config(['services.openai.tts_enabled' => false]);

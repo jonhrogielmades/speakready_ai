@@ -1746,10 +1746,11 @@
                 if (avatarHead) avatarHead.style.borderColor = '#8b5cf6';
             }
 
-            async function serverSpeechUrl(questionId) {
-                if (!questionId || serverVoiceUnavailable) return null;
+            async function serverSpeechUrl(questionId, speechText = '') {
+                const cleanSpeechText = cleanTranscriptText(speechText);
+                if ((!questionId && !cleanSpeechText) || serverVoiceUnavailable) return null;
 
-                const cacheKey = String(questionId);
+                const cacheKey = questionId ? `q:${questionId}` : `text:${cleanSpeechText}`;
                 if (serverSpeechUrlCache.has(cacheKey)) {
                     return serverSpeechUrlCache.get(cacheKey);
                 }
@@ -1757,7 +1758,12 @@
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
                 formData.append('session_id', interviewSessionId);
-                formData.append('question_id', questionId);
+                if (questionId) {
+                    formData.append('question_id', questionId);
+                }
+                if (cleanSpeechText) {
+                    formData.append('speech_text', cleanSpeechText);
+                }
 
                 const response = await managedFetch('{{ route("interview.speech") }}', {
                     method: 'POST',
@@ -1784,13 +1790,13 @@
                 return url;
             }
 
-            async function speakWithServerVoice(text, token, startTimerAfterSpeech, questionId) {
-                if (!window.Audio || !questionId || serverVoiceUnavailable || interviewTerminated) {
+            async function speakWithServerVoice(text, token, startTimerAfterSpeech, questionId, speechText = '') {
+                if (!window.Audio || (!questionId && !speechText) || serverVoiceUnavailable || interviewTerminated) {
                     return false;
                 }
 
                 try {
-                    const url = await serverSpeechUrl(questionId);
+                    const url = await serverSpeechUrl(questionId, speechText);
                     if (!url || token !== questionSpeechToken || interviewTerminated) return false;
 
                     const audio = new Audio(url);
@@ -1892,7 +1898,7 @@
                 }
 
                 const usedServerVoice = serverAiVoiceEnabled
-                    ? await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId)
+                    ? await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, options.speechText || '')
                     : false;
                 if (usedServerVoice || token !== questionSpeechToken || interviewTerminated) return completion;
 
@@ -2027,6 +2033,15 @@
                 return Math.max(minimum, Math.min(maximum, 900 + (words * 115)));
             }
 
+            function pauseFor(ms) {
+                return new Promise(resolve => setTimeout(resolve, Math.max(0, ms || 0)));
+            }
+
+            function waitForMinimumElapsed(startedAt, minimumMs) {
+                const remaining = Math.max(0, minimumMs - (Date.now() - startedAt));
+                return remaining > 0 ? pauseFor(remaining) : Promise.resolve();
+            }
+
             function pluralizeQuestionCount() {
                 return targetQuestionCount === 1 ? '1 question' : `${targetQuestionCount} questions`;
             }
@@ -2085,10 +2100,16 @@
 
             async function playClosingConversationAndSubmit() {
                 const closingText = closingConversationText();
+                const closingStartedAt = Date.now();
                 setAnswerInputEnabled(false);
                 appendChatMessage('interviewer', closingText);
                 showInterviewerConversation(closingText, 'Done');
-                await speakQuestion(closingText, { startTimerAfterSpeech: false, phase: 'closing' });
+                await speakQuestion(closingText, {
+                    startTimerAfterSpeech: false,
+                    phase: 'closing',
+                    speechText: closingText
+                });
+                await waitForMinimumElapsed(closingStartedAt, naturalDelayFor(closingText, 3600, 7600));
 
                 if (!interviewTerminated) {
                     finishInterview();
