@@ -21,6 +21,7 @@ use App\Services\AIService;
 use App\Services\CoachLanguageService;
 use App\Services\CsvExportService;
 use App\Services\LearningRecommendationService;
+use App\Services\PersonalizedPracticePlanService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use Carbon\Carbon;
@@ -237,6 +238,7 @@ class UserController extends Controller
         ];
 
         $aiRecommendations = app(LearningRecommendationService::class)->forUser($user_id, 3);
+        $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($user_id, 3);
 
         // Get past scores for chart
         $scoreTrend = (clone $completedSessions)
@@ -254,7 +256,7 @@ class UserController extends Controller
         return view('dashboard', compact(
             'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
             'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
-            'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations'
+            'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations', 'practicePlan'
         ));
     }
 
@@ -294,6 +296,7 @@ class UserController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
         $moduleRecommendations = app(LearningRecommendationService::class)->forUser($userId, 3);
+        $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($userId, 4);
 
         $currentStreak = $profile->current_streak ?? 0;
         $longestStreak = max((int) ($profile->longest_streak ?? 0), (int) $currentStreak);
@@ -354,6 +357,7 @@ class UserController extends Controller
             'voiceSummary',
             'learningProgress',
             'moduleRecommendations',
+            'practicePlan',
             'currentStreak',
             'longestStreak',
             'totalPracticeDays',

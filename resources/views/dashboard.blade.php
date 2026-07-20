@@ -659,6 +659,49 @@
         background: color-mix(in srgb, var(--accent, #60a5fa) 12%, transparent);
     }
 
+    .sr-plan-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .sr-plan-top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .sr-plan-step {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #60a5fa;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+
+    .sr-plan-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 8px;
+    }
+
+    .sr-plan-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 7px;
+        color: #60a5fa;
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
     .sr-sessions-mobile {
         display: none;
     }
@@ -1501,6 +1544,42 @@
                 <div class="sr-chart-box">
                     <canvas id="progressChart"></canvas>
                 </div>
+            </section>
+
+            <section id="card-practice-plan" class="sr-card sr-card-pad">
+                <div class="sr-card-header">
+                    <div>
+                        <h5 class="sr-card-title"><i class="fa-solid fa-calendar-check me-2" style="color:#10b981"></i> Personalized Practice Plan</h5>
+                        <div class="sr-card-kicker">A short plan built from your latest scores, voice work, and learning progress.</div>
+                    </div>
+                    <a href="{{ route('user.progress') }}#personalized-practice-plan" class="sr-btn" style="min-height:36px;padding:7px 12px">View Plan</a>
+                </div>
+                @if(isset($practicePlan) && $practicePlan->count() > 0)
+                    <div class="sr-rec-list">
+                        @foreach($practicePlan as $item)
+                            <a href="{{ $item->url }}" class="sr-rec-item" style="text-decoration:none;color:inherit;">
+                                <div class="sr-rec-icon" style="--accent: {{ $item->color }}"><i class="fa-solid {{ $item->icon }}"></i></div>
+                                <div class="sr-plan-copy">
+                                    <div class="sr-plan-top">
+                                        <span class="sr-plan-step">{{ $item->day }}</span>
+                                        <span style="font-size:.9rem;font-weight:900;color:var(--tx);line-height:1.25;">{{ $item->title }}</span>
+                                    </div>
+                                    <div style="font-size:.78rem;font-weight:600;color:var(--tx3);line-height:1.45;">{{ $item->action }}</div>
+                                    <div class="sr-plan-meta">
+                                        <span class="sr-tag" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.18);color:#10b981">{{ $item->minutes }} min</span>
+                                        <span class="sr-tag" style="background:color-mix(in srgb, {{ $item->color }} 12%, transparent);border-color:color-mix(in srgb, {{ $item->color }} 22%, transparent);color:{{ $item->color }}">{{ $item->focus }}</span>
+                                    </div>
+                                    <span class="sr-plan-cta">{{ $item->cta }} <i class="fa-solid fa-arrow-right"></i></span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="sr-empty">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <div>Complete a Philippine interview or voice rehearsal to generate a practice plan.</div>
+                    </div>
+                @endif
             </section>
 
             <div class="sr-two-col">

@@ -124,6 +124,111 @@
         transform: translateY(-5px);
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08);
     }
+    .practice-plan-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .practice-plan-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+        height: 100%;
+        padding: 14px;
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        background: var(--bg3);
+        color: inherit;
+        text-decoration: none;
+    }
+    .practice-plan-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 38px;
+        color: var(--plan-color, #3b82f6);
+        background: color-mix(in srgb, var(--plan-color, #3b82f6) 12%, transparent);
+    }
+    .practice-plan-copy {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .practice-plan-top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .practice-plan-step {
+        display: inline-flex;
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #60a5fa;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+    .practice-plan-title {
+        color: var(--tx);
+        font-size: 0.92rem;
+        font-weight: 900;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+    .practice-plan-text {
+        color: var(--tx3);
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.45;
+    }
+    .practice-plan-tasks {
+        display: grid;
+        gap: 5px;
+        margin: 10px 0 0;
+        padding: 0;
+        list-style: none;
+    }
+    .practice-plan-tasks li {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        color: var(--tx2);
+        font-size: 0.76rem;
+        line-height: 1.35;
+    }
+    .practice-plan-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .practice-plan-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 999px;
+        padding: 5px 8px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        font-size: 0.7rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+    .practice-plan-link {
+        color: #60a5fa;
+        font-size: 0.76rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
@@ -274,6 +379,26 @@
         #readiness-trend .premium-panel > div,
         #category-perf .premium-panel > div {
             height: 210px !important;
+        }
+        .practice-plan-list {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .practice-plan-row {
+            border-radius: 12px;
+            padding: 12px;
+            gap: 10px;
+        }
+        .practice-plan-icon {
+            width: 34px;
+            height: 34px;
+            flex-basis: 34px;
+            border-radius: 11px;
+        }
+        .practice-plan-footer {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 7px;
         }
         #skill-tracker .d-flex.justify-content-between,
         #learning-progress .d-flex.justify-content-between,
@@ -575,6 +700,51 @@
             </div>
         </div>
     @endif
+
+    <div class="row mb-4 animate-fade-up" id="personalized-practice-plan" style="animation-delay: 0.55s;">
+        <div class="col-12">
+            <div class="premium-panel">
+                <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 style="color:var(--tx);margin:0;font-weight:bold;">Personalized Practice Plan</h5>
+                        <p class="mb-0 mt-1" style="color:var(--tx3);font-size:0.84rem;line-height:1.45;">Daily actions based on your latest scores, voice rehearsal, and module progress.</p>
+                    </div>
+                    <span class="practice-plan-pill"><i class="fa-solid fa-clock"></i> {{ isset($practicePlan) ? $practicePlan->sum('minutes') : 0 }} min total</span>
+                </div>
+                @if(isset($practicePlan) && $practicePlan->count() > 0)
+                    <div class="practice-plan-list">
+                        @foreach($practicePlan as $item)
+                            <a href="{{ $item->url }}" class="practice-plan-row" style="--plan-color: {{ $item->color }};">
+                                <div class="practice-plan-icon"><i class="fa-solid {{ $item->icon }}"></i></div>
+                                <div class="practice-plan-copy">
+                                    <div class="practice-plan-top">
+                                        <span class="practice-plan-step">{{ $item->day }}</span>
+                                        <span class="practice-plan-title">{{ $item->title }}</span>
+                                    </div>
+                                    <div class="practice-plan-text">{{ $item->action }}</div>
+                                    <div class="practice-plan-text mt-1">{{ $item->reason }}</div>
+                                    <ul class="practice-plan-tasks">
+                                        @foreach(array_slice((array) ($item->tasks ?? []), 0, 2) as $task)
+                                            <li><i class="fa-solid fa-check" style="color:#10b981;margin-top:2px;"></i><span>{{ $task }}</span></li>
+                                        @endforeach
+                                    </ul>
+                                    <div class="practice-plan-footer">
+                                        <span class="practice-plan-pill"><i class="fa-regular fa-clock"></i> {{ $item->minutes }} min</span>
+                                        <span class="practice-plan-link">{{ $item->cta }} <i class="fa-solid fa-arrow-right ms-1"></i></span>
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4" style="color:var(--tx3);">
+                        <i class="fa-solid fa-calendar-check fs-2 mb-3" style="color:var(--bd);"></i>
+                        <p>Complete a Philippines practice interview or voice rehearsal to generate your plan.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <div class="row g-4 mb-4">
         <!-- Feature 1: Readiness Score Trend -->
@@ -1142,5 +1312,4 @@
 </script>
 @endpush
 @endsection
-
 

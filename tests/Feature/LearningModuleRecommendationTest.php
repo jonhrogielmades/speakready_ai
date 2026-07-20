@@ -8,8 +8,10 @@ use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
 use App\Models\Score;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\LearningRecommendationService;
+use App\Services\PersonalizedPracticePlanService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -96,6 +98,88 @@ class LearningModuleRecommendationTest extends TestCase
 
         $this->assertNotNull($progress);
         $this->assertSame(100, (int) $progress->progress_percentage);
+    }
+
+    public function test_personalized_practice_plan_prioritizes_weak_scores(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Communication');
+        $clarityModule = $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
+
+        $session = $this->completedSessionFor($user, $category);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 46,
+            'relevance_score' => 88,
+            'grammar_score' => 84,
+            'professionalism_score' => 82,
+            'confidence_score' => 79,
+            'overall_readiness_score' => 70,
+        ]);
+
+        $plan = app(PersonalizedPracticePlanService::class)->forUser($user->id, 4);
+
+        $this->assertCount(4, $plan);
+        $this->assertSame('Today', $plan->first()->day);
+        $this->assertSame('Clarity', $plan->first()->focus);
+        $this->assertStringContainsString($clarityModule->title, $plan->first()->action);
+        $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Rehearse'));
+        $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Start Interview'));
+    }
+
+    public function test_dashboard_shows_personalized_practice_plan(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Communication');
+        $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
+
+        $session = $this->completedSessionFor($user, $category);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 50,
+            'relevance_score' => 85,
+            'grammar_score' => 80,
+            'professionalism_score' => 82,
+            'confidence_score' => 78,
+            'overall_readiness_score' => 71,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Personalized Practice Plan')
+            ->assertSee('Clear Answer Structure')
+            ->assertSee('Open Module');
+    }
+
+    public function test_personalized_practice_plan_avoids_disabled_feature_links(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Communication');
+        $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
+
+        Setting::setVal('ll_modules', false, 'general', 'boolean');
+        Setting::setVal('vr_recording', false, 'general', 'boolean');
+        Setting::setVal('aic_enable', false, 'general', 'boolean');
+
+        $session = $this->completedSessionFor($user, $category);
+        Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 48,
+            'relevance_score' => 82,
+            'grammar_score' => 78,
+            'professionalism_score' => 80,
+            'confidence_score' => 75,
+            'overall_readiness_score' => 68,
+        ]);
+
+        $plan = app(PersonalizedPracticePlanService::class)->forUser($user->id, 4);
+        $urls = $plan->pluck('url');
+
+        $this->assertFalse($urls->contains(route('user.drills.voice')));
+        $this->assertFalse($urls->contains(route('user.coach')));
+        $this->assertTrue($urls->contains(route('interview.setup')));
+        $this->assertTrue($plan->contains(fn ($item) => str_contains($item->reason, 'disabled')));
     }
 
     private function category(string $title): Category
