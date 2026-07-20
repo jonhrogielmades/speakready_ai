@@ -600,6 +600,11 @@ class InterviewController extends Controller
         $gameLevel = $this->gameLevelForSession($session);
 
         if ($session->status === 'completed') {
+            if ($this->completedSessionFeedbackIsStale($session)) {
+                $this->refreshCompletedSessionFeedback($session, $gameLevel);
+                $session->refresh()->load(['score', 'feedback']);
+            }
+
             $this->forgetCompletedSessionState($session, $gameLevel);
             $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
@@ -1229,6 +1234,180 @@ class InterviewController extends Controller
             'coaching_html' => $coachingHtml,
             'created_at' => optional($retry->created_at)->format('M d, Y g:i A'),
         ]);
+    }
+
+    private function completedSessionFeedbackIsStale(InterviewSession $session): bool
+    {
+        $session->loadMissing('score');
+
+        return ! $session->score
+            || (int) ($session->score->score_version ?? 0) < TrustworthyAssessmentService::SCORE_VERSION;
+    }
+
+    private function refreshCompletedSessionFeedback(InterviewSession $session, $gameLevel = null): void
+    {
+        $answers = InterviewAnswer::with('question')
+            ->where('interview_session_id', $session->id)
+            ->whereNull('retry_of_answer_id')
+            ->get();
+
+        $answersData = $answers->map(fn ($answer) => [
+            'id' => $answer->id,
+            'question' => $answer->question->question_text ?? '',
+            'question_type' => $answer->question->type ?? null,
+            'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
+            'is_skipped' => (bool) $answer->is_skipped,
+            'expected_guide' => $answer->question->expected_guide ?? null,
+            'mapped_skills' => $answer->question->mapped_skills ?? [],
+        ])->toArray();
+
+        $sessionData = [
+            'target_position' => $session->target_position,
+            'difficulty' => $session->difficulty,
+            'interview_focus' => $session->interview_focus,
+            'company_persona' => $session->company_persona,
+            'country' => 'Philippines',
+            'ai_assistance_level' => $session->ai_assistance_level,
+            'interviewer_strictness' => $session->interviewer_strictness,
+            'interview_format' => $session->interview_format,
+            'assessment_mode' => $session->assessment_mode,
+            'accommodation_profile' => $session->accommodation_profile,
+            'target_language' => $this->currentLanguageConfig(),
+        ];
+
+        if ($gameLevel) {
+            if ($gameLevel->banned_words) {
+                $sessionData['banned_words'] = $gameLevel->banned_words;
+            }
+            if ($gameLevel->target_tone) {
+                $sessionData['target_tone'] = $gameLevel->target_tone;
+            }
+            $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
+            $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
+            $sessionData['game_success_criteria'] = $gameLevel->guidance_checklist_text;
+            $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
+        }
+
+        $aiFeedback = $gameLevel
+            ? $this->learningGameFeedback($gameLevel, $sessionData, $answersData)
+            : AIService::generateFeedback($sessionData, $answersData, session('active_interview_provider', env('AI_PROVIDER', 'gemini')));
+
+        $assessment = app(TrustworthyAssessmentService::class);
+        $coaching = app(EvidenceBasedCoachingService::class);
+
+        DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment, $coaching) {
+            $totalClarity = 0;
+            $totalRelevance = 0;
+            $totalGrammar = 0;
+            $totalProf = 0;
+
+            foreach ($answers as $answer) {
+                $qFeedback = collect($aiFeedback['per_question_feedback'] ?? [])
+                    ->first(fn ($pf) => isset($pf['id']) && (int) $pf['id'] === (int) $answer->id);
+
+                $c = $this->scoreValue($qFeedback['clarity_score'] ?? 0);
+                $r = $this->scoreValue($qFeedback['relevance_score'] ?? 0);
+                $g = $this->scoreValue($qFeedback['grammar_score'] ?? 0);
+                $p = $this->scoreValue($qFeedback['professionalism_score'] ?? 0);
+                $qScore = $this->scoreValue($qFeedback['score'] ?? round(($c + $r + $g + $p) / 4));
+
+                $totalClarity += $c;
+                $totalRelevance += $r;
+                $totalGrammar += $g;
+                $totalProf += $p;
+
+                $evidence = $assessment->answerEvidence(
+                    $answer->answer_text ?? '',
+                    $qFeedback['ai_feedback'] ?? null,
+                    $answer->question
+                );
+                $rubric = $assessment->rubricLevel($qScore);
+                $coachingFeedback = $coaching->forAnswer(
+                    (string) ($answer->answer_text ?? ''),
+                    $answer->question,
+                    $this->coachingMetricsFromAnswer(
+                        $answer,
+                        $this->scoreValue($qFeedback['scoring_confidence'] ?? ($qFeedback ? 80 : 0)),
+                        $session,
+                        $this->coachingEvaluationMetrics($qFeedback ?? [])
+                    ),
+                    is_array($answer->observation_data) ? $answer->observation_data : []
+                );
+
+                $answer->update([
+                    'ai_feedback' => $qFeedback['ai_feedback'] ?? 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
+                    'better_sample_answer' => $qFeedback ? $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence) : '',
+                    'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
+                    'clarity_score' => $c,
+                    'relevance_score' => $r,
+                    'grammar_score' => $g,
+                    'score' => $qScore,
+                    'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? ($qFeedback ? 80 : 0)),
+                    'evidence_map' => $evidence,
+                    'rubric_level' => $qFeedback ? $rubric['level'] : 'Unscored',
+                    'recommendation_text' => $qFeedback ? $rubric['next_level'] : null,
+                    'improved_answer_source' => $qFeedback ? 'candidate_facts' : 'unavailable',
+                    'coaching_feedback' => $coachingFeedback,
+                ]);
+            }
+
+            $count = $answers->count() > 0 ? $answers->count() : 1;
+            $clarity = round($totalClarity / $count);
+            $relevance = round($totalRelevance / $count);
+            $grammar = round($totalGrammar / $count);
+            $prof = round($totalProf / $count);
+            $sFeedback = $aiFeedback['session_feedback'] ?? null;
+            $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
+            $jobEvidenceScore = 0;
+            $evaluatedAnswers = $answers->fresh(['question']);
+            $metadata = $assessment->sessionMetadata($session, $evaluatedAnswers, [
+                'clarity' => $clarity,
+                'relevance' => $relevance,
+                'grammar' => $grammar,
+                'professionalism' => $prof,
+            ], $starScore, $jobEvidenceScore);
+            $overall = is_array($sFeedback) && array_key_exists('overall_readiness_score', $sFeedback)
+                ? $this->scoreValue($sFeedback['overall_readiness_score'])
+                : $metadata['overall'];
+            $metadata['overall'] = $overall;
+            $metadata['readiness_band'] = $assessment->readinessBand($overall);
+
+            $scoreRecord = Score::updateOrCreate([
+                'interview_session_id' => $session->id,
+            ], [
+                'score_version' => TrustworthyAssessmentService::SCORE_VERSION,
+                'assessment_mode' => $session->assessment_mode,
+                'clarity_score' => $clarity,
+                'relevance_score' => $relevance,
+                'grammar_score' => $grammar,
+                'professionalism_score' => $prof,
+                'body_language_score' => 0,
+                'confidence_score' => 0,
+                'delivery_stability_score' => $metadata['delivery_stability'],
+                'overall_readiness_score' => $overall,
+                'readiness_band' => $metadata['readiness_band'],
+                'scoring_confidence' => $metadata['scoring_confidence'],
+                'ats_match_score' => $jobEvidenceScore,
+                'job_evidence_match_score' => $jobEvidenceScore,
+                'star_method_score' => $starScore,
+                'evidence_map' => $metadata['evidence_map'],
+                'rubric' => $metadata['rubric'],
+                'body_language_included' => false,
+            ]);
+
+            $feedbackRecord = Feedback::updateOrCreate([
+                'interview_session_id' => $session->id,
+            ], [
+                'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
+                'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
+                'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
+                'coaching_summary' => $coaching->sessionSummary($evaluatedAnswers),
+            ]);
+
+            $session->update([
+                'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
+            ]);
+        });
     }
 
     private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): InterviewAnswer
