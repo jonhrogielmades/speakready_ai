@@ -1046,8 +1046,8 @@
                             <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()">
                                 Send Answer <i class="fa-solid fa-paper-plane"></i>
                             </button>
-                            <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Toggle fullscreen" title="Exit fullscreen">
-                                <i class="fa-solid fa-compress"></i>
+                            <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Enter fullscreen" title="Enter fullscreen">
+                                <i class="fa-solid fa-expand"></i>
                             </button>
                         </div>
                     </div>

@@ -1728,7 +1728,7 @@
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
       </style>
    </head>
-   <body class="{{ request()->routeIs('interview.session') ? 'mobile-interview-fullscreen' : '' }}">
+   <body>
 
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">

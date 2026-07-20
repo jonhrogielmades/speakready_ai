@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\InterviewSession;
+use App\Models\Question;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -164,5 +167,49 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('id="ucp-destination-account"', false)
             ->assertDontSee('14 destinations')
             ->assertDontSee('data-ucp-search', false);
+    }
+
+    public function test_mobile_interview_session_does_not_start_in_fullscreen_mode(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $category = Category::create([
+            'title' => 'Behavioral',
+            'description' => 'Behavioral questions',
+            'status' => 'active',
+            'type' => 'core',
+        ]);
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Developer',
+            'num_questions' => 1,
+            'response_mode' => 'text',
+            'status' => 'in_progress',
+        ]);
+        Question::create([
+            'category_id' => $category->id,
+            'interview_session_id' => $session->id,
+            'question_text' => 'Describe a time you solved a difficult issue.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('interview.session'))
+            ->assertOk()
+            ->assertSee('<body>', false)
+            ->assertDontSee('<body class="mobile-interview-fullscreen"', false)
+            ->assertSee('id="responseFullscreenToggle"', false)
+            ->assertSee('aria-label="Enter fullscreen"', false)
+            ->assertSee('fa-solid fa-expand', false);
     }
 }
