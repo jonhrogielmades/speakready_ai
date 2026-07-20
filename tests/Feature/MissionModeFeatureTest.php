@@ -24,12 +24,44 @@ class MissionModeFeatureTest extends TestCase
             ->get(route('user.missions'))
             ->assertOk()
             ->assertSee('Real-Life Mission Mode')
-            ->assertSee('First Impression Sprint')
-            ->assertSee('Polite Problem Report')
-            ->assertSee('Convince With Evidence')
-            ->assertSee('Growth Without Excuses')
-            ->assertSee('missionVoiceUrl', false)
-            ->assertSee(route('user.drills.voice'), false);
+            ->assertSee('Generate Task')
+            ->assertSee('Tell AI what you want to practice to generate your mission tasks.', false)
+            ->assertDontSee('First Impression Sprint')
+            ->assertSee('missionVoiceModal', false)
+            ->assertSee('AI Speak Mission')
+            ->assertSee('missionGenerateUrl', false)
+            ->assertDontSee('id="voiceMissionLink"', false);
+    }
+
+    public function test_authenticated_user_can_generate_personalized_missions(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->postJson(route('user.missions.generate'), [
+                'goal' => 'Practice an IT support interview about debugging a network issue',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(4, 'missions')
+            ->assertJsonStructure([
+                'success',
+                'missions' => [
+                    '*' => [
+                        'id',
+                        'title',
+                        'category',
+                        'difficulty',
+                        'duration',
+                        'intent',
+                        'icon',
+                        'color',
+                        'prompt',
+                        'success_criteria',
+                        'coach_tip',
+                    ],
+                ],
+            ]);
     }
 
     public function test_voice_rehearsal_supports_mission_preset_and_intention_coach(): void

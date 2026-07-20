@@ -108,7 +108,6 @@
         </svg>
     </div>
     <div class="sr-page-actions report-export-actions btn-no-print">
-        <button class="btn btn-outline-primary btn-shine" onclick="window.print()" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-print me-2"></i>Print Report</button>
         <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
         <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
         @if($sessions->count() > 0)
@@ -489,7 +488,7 @@
             exportPdfBtn.addEventListener('click', function() {
                 const element = document.getElementById('portfolioReport');
                 if (!element || typeof window.html2pdf !== 'function') {
-                    alert('PDF export is not available right now. Please use Print Report instead.');
+                    alert('PDF export is not available right now. Please try again later.');
                     return;
                 }
                 const opt = {
@@ -509,7 +508,7 @@
                 }
 
                 html2pdf().set(opt).from(element).save().catch(() => {
-                    alert('PDF export failed. Please try again or use Print Report.');
+                    alert('PDF export failed. Please try again.');
                 }).finally(() => {
                     if (headerActions) {
                         headerActions.style.display = originalDisplay;

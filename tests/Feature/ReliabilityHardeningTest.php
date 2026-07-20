@@ -324,10 +324,41 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
     }
 
-    public function test_interview_reuses_existing_next_question_without_generating_duplicate(): void
+    public function test_interview_answers_brief_candidate_question_then_continues_interview(): void
+    {
+        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
+        $firstQuestion = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Please introduce yourself.',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.chatReply'), [
+                'question_id' => $firstQuestion->id,
+                'answer_text' => 'My name is John, and I am based in Manila. By the way, what is your name?',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $nextQuestion = (string) $response->json('next_question_text');
+        $this->assertStringContainsString('I am Mia, nice to meet you.', $nextQuestion);
+        $this->assertSame(1, substr_count($nextQuestion, '?'));
+        $this->assertStringContainsString('Developer', $nextQuestion);
+    }
+
+    public function test_interview_replaces_unanswered_fixed_next_question_with_answer_based_followup(): void
     {
         Http::fake();
-        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
 
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category(['title' => 'Software Engineering']);
@@ -344,7 +375,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'openai',
+                'active_interview_provider' => 'local',
             ])
             ->postJson(route('interview.chatReply'), [
                 'question_id' => $firstQuestion->id,
@@ -353,11 +384,17 @@ class ReliabilityHardeningTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('next_question_id', $secondQuestion->id)
-            ->assertJsonPath('next_question_text', $secondQuestion->question_text);
+            ->assertJsonMissing(['next_question_id' => $secondQuestion->id])
+            ->assertJsonMissing(['next_question_text' => $secondQuestion->question_text])
+            ->assertJsonPath('source_type', 'ai_adapted_source_backed');
 
         Http::assertNothingSent();
         $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+        $this->assertDatabaseMissing('questions', ['id' => $secondQuestion->id]);
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'source_type' => 'ai_adapted_source_backed',
+        ]);
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
     }
 

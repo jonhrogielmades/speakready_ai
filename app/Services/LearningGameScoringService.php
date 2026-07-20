@@ -49,13 +49,13 @@ class LearningGameScoringService
         $fillerPenalty = min(18, $fillerCount * 4);
         $bannedHits = $this->bannedWordHits($answerText, (string) ($level->banned_words ?? ''));
 
-        $criteriaScore = $this->criteriaScore($answerText, $level->parsed_success_criteria ?? []);
+        $criteriaScore = $this->criteriaScore($answerText, $level->guidance_checklist ?? []);
         $starScore = $this->starScore($answerText);
         $keywordScore = $this->keywordOverlapScore($answerText, implode(' ', array_filter([
             $questionText,
             $level->skill_focus,
             $level->learning_objective,
-            $level->success_criteria,
+            $level->guidance_checklist_text,
         ])));
 
         $clarity = $this->clamp(

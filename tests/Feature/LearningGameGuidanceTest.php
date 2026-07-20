@@ -56,7 +56,7 @@ class LearningGameGuidanceTest extends TestCase
     public function test_learning_guidance_renders_for_learners_and_live_game_sessions(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
         $category = $this->category(['type' => 'game']);
         $level = $this->gameLevel($category);
 
@@ -90,6 +90,45 @@ class LearningGameGuidanceTest extends TestCase
             ->assertSee('STAR Method')
             ->assertSee('Include a measurable result.')
             ->assertSee('Make the action and result more specific before retrying.');
+    }
+
+    public function test_learning_guidance_falls_back_when_success_criteria_are_missing(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+        $category = $this->category(['type' => 'game']);
+        $level = $this->gameLevel($category, [
+            'title' => 'Render Production Challenge',
+            'skill_focus' => null,
+            'learning_objective' => null,
+            'success_criteria' => null,
+            'retry_hint' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.learning', ['category_id' => $category->id]))
+            ->assertOk()
+            ->assertSee('Success checklist')
+            ->assertSee('Answer the interview question directly.');
+
+        $this->actingAs($user)
+            ->post(route('user.game.start', $level))
+            ->assertRedirect(route('user.game.match'));
+
+        $session = GameSession::where('user_id', $user->id)->latest()->firstOrFail();
+        $this->assertStringContainsString('Success criteria:', $session->interview_focus);
+        $this->assertStringContainsString('Answer the interview question directly.', $session->interview_focus);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_game_session_id' => $session->id,
+                'game_level_id' => $level->id,
+            ])
+            ->get(route('user.game.match'))
+            ->assertOk()
+            ->assertSee('Challenge Brief')
+            ->assertSee('Success checklist')
+            ->assertSee('Answer the interview question directly.');
     }
 
     public function test_admin_game_generate_tolerates_missing_optional_generation_columns(): void

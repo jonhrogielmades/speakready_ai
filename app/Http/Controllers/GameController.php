@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Models\Category;
 use App\Models\GameAnswer;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
@@ -11,6 +12,7 @@ use App\Models\Profile;
 use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\LearningGameScoringService;
+use App\Services\LearningGameCertificateService;
 use App\Support\GameSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +20,36 @@ use Illuminate\Validation\Rule;
 
 class GameController extends Controller
 {
-    private const MAX_ENERGY = 3;
+    public function downloadCertificate(Category $category, LearningGameCertificateService $certificates)
+    {
+        if ($category->type !== 'game') {
+            abort(404);
+        }
+
+        $user = Auth::user();
+        $alreadyIssued = \App\Models\GameCertificate::where('user_id', $user->id)
+            ->where('category_id', $category->id)
+            ->exists();
+        $certificate = $certificates->issueFor($user, $category);
+        $pdf = $certificates->pdfBytes($certificate, $user, $category);
+
+        ActivityLogger::log(
+            $user,
+            $alreadyIssued ? 'learning_game_certificate_downloaded' : 'learning_game_certificate_issued',
+            $alreadyIssued
+                ? "{$user->name} downloaded certificate {$certificate->certificate_code} for {$category->title}."
+                : "{$user->name} earned certificate {$certificate->certificate_code} for {$category->title}.",
+            request()->ip(),
+            false
+        );
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$certificates->filename($category).'"',
+            'Cache-Control' => 'private, max-age=0, must-revalidate',
+            'Pragma' => 'public',
+        ]);
+    }
 
     public function startLevel(Request $request, $id)
     {
@@ -108,7 +139,7 @@ class GameController extends Controller
         $learningContext = array_filter([
             $level->skill_focus ? 'Skill focus: '.$level->skill_focus : null,
             $level->learning_objective ? 'Learning objective: '.$level->learning_objective : null,
-            $level->success_criteria ? 'Success criteria: '.$level->success_criteria : null,
+            $level->guidance_checklist_text ? 'Success criteria: '.$level->guidance_checklist_text : null,
             $level->retry_hint ? 'Retry hint: '.$level->retry_hint : null,
         ]);
         if ($learningContext !== []) {
@@ -159,12 +190,20 @@ class GameController extends Controller
             'active_game_session_id' => $session->id,
         ]);
 
+        ActivityLogger::log(
+            $user,
+            'learning_game_started',
+            "{$user->name} started Learning Game Level {$level->level_number}: {$level->title}.",
+            $request->ip(),
+            false
+        );
+
         return redirect()->route('user.game.match')->with('success', 'Learning Game Started! Good luck!');
     }
 
-    private function refreshEnergyIfNeeded(\App\Models\Profile $profile): void
+    private function refreshEnergyIfNeeded(Profile $profile): void
     {
-        $maxEnergy = self::MAX_ENERGY;
+        $maxEnergy = Profile::MAX_ENERGY;
         $lastRefill = $profile->energy_last_refilled_at;
 
         if ($lastRefill && $lastRefill->isSameDay(now())) {
@@ -417,10 +456,15 @@ class GameController extends Controller
         ActivityLogger::log(
             Auth::user(),
             'learning_game_completed',
-            "You completed Learning Game Level {$gameLevel->level_number} with a goal score of {$gameResultScore}%.",
+            Auth::user()->name." completed Learning Game Level {$gameLevel->level_number} with a goal score of {$gameResultScore}%.",
             $request->ip(),
             true,
-            ['title' => 'Learning Game Completed', 'icon' => 'fa-gamepad', 'type' => $scoreResult['status'] === 'passed' ? 'success' : 'warning']
+            [
+                'title' => 'Learning Game Completed',
+                'message' => "You completed Learning Game Level {$gameLevel->level_number} with a goal score of {$gameResultScore}%.",
+                'icon' => 'fa-gamepad',
+                'type' => $scoreResult['status'] === 'passed' ? 'success' : 'warning',
+            ]
         );
 
         return $this->completedGameRedirect($gameSession->fresh(['level']), $gameLevel);
@@ -459,7 +503,10 @@ class GameController extends Controller
             $progress->status = 'completed';
 
             $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
-                ->where('level_number', $gameLevel->level_number + 1)
+                ->where('is_hidden', false)
+                ->where('level_number', '>', $gameLevel->level_number)
+                ->orderBy('level_number')
+                ->orderBy('id')
                 ->first();
             if ($nextLevel) {
                 GameProgress::firstOrCreate(
@@ -525,8 +572,23 @@ class GameController extends Controller
         $score = (int) ($gameSession->score ?? 0);
         $passed = ($gameSession->result_status === 'passed') || $score >= (int) $gameLevel->required_score;
         $nextLevel = $passed
-            ? GameLevel::where('category_id', $gameLevel->category_id)->where('level_number', $gameLevel->level_number + 1)->first()
+            ? GameLevel::where('category_id', $gameLevel->category_id)
+                ->where('is_hidden', false)
+                ->where('level_number', '>', $gameLevel->level_number)
+                ->orderBy('level_number')
+                ->orderBy('id')
+                ->first()
             : null;
+        $certificate = null;
+        if ($passed && ! $nextLevel && $gameLevel->category) {
+            $certificates = app(LearningGameCertificateService::class);
+            if ($certificates->isUnlocked(Auth::user(), $gameLevel->category)) {
+                $certificate = [
+                    'download_url' => route('user.game.certificate.download', $gameLevel->category_id),
+                    'path_title' => $gameLevel->category->title,
+                ];
+            }
+        }
 
         $message = $passed
             ? 'Passed! You cleared Level '.$gameLevel->level_number.' with '.$score.'%.'
@@ -539,7 +601,7 @@ class GameController extends Controller
             'level_title' => $gameLevel->title,
             'skill_focus' => $gameLevel->skill_focus,
             'learning_objective' => $gameLevel->learning_objective,
-            'success_criteria' => $gameLevel->parsed_success_criteria,
+            'success_criteria' => $gameLevel->guidance_checklist,
             'goal_breakdown' => $gameSession->goal_breakdown ?? [],
             'status' => $passed ? 'passed' : 'failed',
             'message' => $message,
@@ -563,6 +625,7 @@ class GameController extends Controller
                 'energy_cost' => $this->effectiveGameEnergyCost($nextLevel, $profile),
                 'can_start' => (int) ($profile->energy ?? 0) >= $this->effectiveGameEnergyCost($nextLevel, $profile),
             ] : null,
+            'certificate' => $certificate,
         ];
     }
 

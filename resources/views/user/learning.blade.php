@@ -702,13 +702,17 @@
         </div>
         
         <!-- Energy/Lives -->
+        @php
+            $maxEnergy = \App\Models\Profile::MAX_ENERGY;
+            $currentEnergy = $profile?->energy ?? $maxEnergy;
+        @endphp
         <div class="col-12 col-sm-6 col-lg-3 animate-fade-up" style="animation-delay: 0.2s">
             <div class="ll-stat-card d-flex align-items-center gap-3" style="height:100%;">
                 <div style="width:55px; height:55px; border-radius:15px; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.8rem;">
                     <i class="fa-solid fa-heart"></i>
                 </div>
                 <div style="text-align:left;">
-                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $profile?->energy ?? 10 }} <span style="font-size:1rem; color:var(--tx3);">/ 10</span></div>
+                    <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $currentEnergy }} <span style="font-size:1rem; color:var(--tx3);">/ {{ $maxEnergy }}</span></div>
                     <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Energy</div>
                 </div>
             </div>
@@ -746,8 +750,8 @@
         <div class="col-lg-12">
             
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 style="font-weight:700;color:var(--tx);margin:0">Philippines Challenge Journey</h5>
-                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $profile?->energy ?? 10 }} / 10 Lives</span>
+                <h5 style="font-weight:700;color:var(--tx);margin:0">Challenge Journey</h5>
+                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $currentEnergy }} / {{ $maxEnergy }} Lives</span>
             </div>
 
             <div class="level-path-container" id="modules-list">
@@ -812,6 +816,7 @@
                             }
                             
                             $score = $prog ? $prog->best_score : 0;
+                            $successChecklist = $level->guidance_checklist;
                             
                             $nodeClass = '';
                             $iconHtml = '';
@@ -885,10 +890,10 @@
                                 @if($status === 'active')
                                     <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
                                         <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count($level->parsed_questions) }} Questions</div>
-                                        @if($level->parsed_success_criteria)
+                                        @if($successChecklist)
                                             <div style="margin-top:12px;">
                                                 <div style="font-size:0.78rem;color:var(--tx3);font-weight:700;margin-bottom:6px;">Success checklist</div>
-                                                @foreach($level->parsed_success_criteria as $criterion)
+                                                @foreach($successChecklist as $criterion)
                                                     <div style="font-size:0.78rem;color:var(--tx2);line-height:1.4;margin-bottom:4px;"><i class="fa-solid fa-check text-success me-1"></i>{{ $criterion }}</div>
                                                 @endforeach
                                             </div>
@@ -919,6 +924,52 @@
                             </div>
                         </div>
                     @endforeach
+                    @php
+                        $certificateLevelCount = $gameLevels->count();
+                        $certificateUnlocked = $selectedCategory
+                            && $certificateLevelCount > 0
+                            && $gameLevels->every(function ($level) use ($gameProgress) {
+                                $progress = $gameProgress ? $gameProgress->get($level->id) : null;
+
+                                return $progress && (int) $progress->best_score >= (int) $level->required_score;
+                            });
+                    @endphp
+                    <div class="level-node {{ $certificateUnlocked ? 'completed' : 'locked' }} animate-fade-up" style="animation-delay: {{ $gameLevels->count() * 0.1 }}s">
+                        <div class="level-icon-wrapper">
+                            <div class="level-icon">
+                                @if($certificateUnlocked)
+                                    <i class="fa-solid fa-medal"></i>
+                                @else
+                                    <i class="fa-solid fa-lock"></i>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="level-card">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                <div>
+                                    <div style="font-size:0.75rem;color:{{ $certificateUnlocked ? '#34d399' : 'var(--tx3)' }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Final Reward</div>
+                                    <h5 style="color:var(--tx);font-weight:700;margin:0">Completion Certificate</h5>
+                                </div>
+                                @if($certificateUnlocked)
+                                    <div class="score-badge"><i class="fa-solid fa-circle-check"></i> Unlocked</div>
+                                @else
+                                    <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
+                                @endif
+                            </div>
+                            <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:14px;line-height:1.5">
+                                Complete every level in this challenge path to unlock your downloadable PDF certificate.
+                            </p>
+                            @if($certificateUnlocked)
+                                <a href="{{ route('user.game.certificate.download', $selectedCategory->id) }}" class="btn btn-success" style="border-radius:12px;font-weight:700;padding:10px 18px;">
+                                    <i class="fa-solid fa-file-pdf me-2"></i> Download Certificate
+                                </a>
+                            @else
+                                <div style="margin-top:8px;font-size:0.8rem;color:var(--tx2);font-weight:600;display:flex;align-items:center;gap:6px;">
+                                    <i class="fa-solid fa-flag-checkered text-info"></i> Unlocks after the final level.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 @else
                     <div class="text-center py-5">
                         <i class="fa-solid fa-folder-open fa-3x mb-3" style="color:var(--bd)"></i>
@@ -936,6 +987,7 @@
         $scoreValue = max(0, min(100, (int) ($gameResult['score'] ?? 0)));
         $scoreColor = $resultPassed ? '#34d399' : '#f59e0b';
         $nextLevel = $gameResult['next_level'] ?? null;
+        $certificate = $gameResult['certificate'] ?? null;
     @endphp
     <div class="modal fade game-result-modal" id="gameResultModal" tabindex="-1" aria-labelledby="gameResultModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -1009,6 +1061,9 @@
                     @elseif($resultPassed)
                         <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
                             <strong style="color:#10b981;">Path complete.</strong> You cleared the last available level in this scenario path.
+                            @if($certificate)
+                                Your PDF certificate is unlocked.
+                            @endif
                         </div>
                     @endif
 
@@ -1069,6 +1124,11 @@
                                     <i class="fa-solid fa-rotate-right me-1"></i> Retry Level
                                 </button>
                             </form>
+                        @endif
+                        @if($certificate)
+                            <a href="{{ $certificate['download_url'] }}" class="btn btn-success">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Download Certificate
+                            </a>
                         @endif
 
                         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">

@@ -29,10 +29,11 @@ class ActivityLogger
 
         if ($notify) {
             $title = $notificationOptions['title'] ?? ucfirst(str_replace('_', ' ', $action));
+            $message = $notificationOptions['message'] ?? $description;
             $icon = $notificationOptions['icon'] ?? 'fa-info-circle';
             $type = $notificationOptions['type'] ?? 'info';
 
-            $user->notify(new UserActivityNotification($title, $description, $icon, $type));
+            $user->notify(new UserActivityNotification($title, $message, $icon, $type));
         }
 
         return $log;

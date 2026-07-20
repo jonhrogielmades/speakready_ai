@@ -108,13 +108,16 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/answer', [\App\Http\Controllers\GameController::class, 'answer'])->name('user.game.answer');
     Route::post('/game/save-state', [\App\Http\Controllers\GameController::class, 'saveState'])->name('user.game.saveState');
     Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
+    Route::get('/game/certificates/{category}/download', [\App\Http\Controllers\GameController::class, 'downloadCertificate'])->name('user.game.certificate.download');
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
     Route::get('/missions', [UserController::class, 'missions'])->name('user.missions');
+    Route::post('/missions/generate', [UserController::class, 'generateMissionTask'])->name('user.missions.generate');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
     Route::post('/drills/voice/prompt', [UserController::class, 'generateVoicePrompt'])->name('user.drills.voice.prompt');
     Route::post('/drills/voice/analyze', [UserController::class, 'analyzeVoiceSession'])->name('user.drills.voice.analyze');
     Route::post('/drills/voice/save', [UserController::class, 'saveVoiceSession'])->name('user.drills.voice.save');
+    Route::delete('/drills/voice/sessions', [UserController::class, 'clearVoiceSessions'])->name('user.drills.voice.clear');
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
     Route::get('/session/{session}/export', [UserController::class, 'exportSession'])->name('user.sessions.export');

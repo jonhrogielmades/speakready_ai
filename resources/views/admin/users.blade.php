@@ -918,6 +918,7 @@
                 <ul class="nav nav-tabs border-0 w-100" id="userTabs" role="tablist">
                     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">Overview</button></li>
                     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-interviews" type="button">PH Interviews</button></li>
+                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-user-updates" type="button">User Updates</button></li>
                     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-activity" type="button">Activity Logs</button></li>
                 </ul>
             </div>
@@ -934,6 +935,7 @@
                                     <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Email</div><div id="userDetailEmail" class="col-8 user-detail-info-value">--</div></div>
                                     <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Role</div><div id="userDetailRole" class="col-8 user-detail-info-value">--</div></div>
                                     <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Target Role</div><div id="userDetailTarget" class="col-8 user-detail-info-value">--</div></div>
+                                    <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Language</div><div id="userDetailLanguage" class="col-8 user-detail-info-value">--</div></div>
                                     <div class="row mb-2 user-detail-info-row"><div class="col-4 text-muted user-detail-info-label">Registered</div><div id="userDetailRegistered" class="col-8 user-detail-info-value">--</div></div>
                                 </div>
                             </div>
@@ -964,6 +966,31 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row g-4 mt-1">
+                            <div class="col-md-12">
+                                <div class="premium-card p-3">
+                                    <h6 class="fw-bold mb-3 border-bottom pb-2" style="border-color:var(--bd)!important;"><i class="fa-solid fa-arrows-rotate me-2 text-info"></i>User Side Updates</h6>
+                                    <div class="row text-center">
+                                        <div class="col-6 col-md-3 mb-3 mb-md-0">
+                                            <h4 id="userDetailLearningCompleted" class="fw-bold text-success mb-0">0</h4>
+                                            <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Modules Completed</div>
+                                        </div>
+                                        <div class="col-6 col-md-3 mb-3 mb-md-0">
+                                            <h4 id="userDetailVoiceSessions" class="fw-bold text-info mb-0">0</h4>
+                                            <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Voice Rehearsals</div>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <h4 id="userDetailGameLevels" class="fw-bold text-warning mb-0">0</h4>
+                                            <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Game Levels Done</div>
+                                        </div>
+                                        <div class="col-6 col-md-3">
+                                            <h4 id="userDetailXp" class="fw-bold text-primary mb-0">0 XP</h4>
+                                            <div style="font-size:0.72rem;color:var(--tx3);text-transform:uppercase;">Total XP</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Feature 9: Interview History Tab -->
@@ -984,6 +1011,82 @@
                                         <tr><td colspan="5" class="text-center text-muted py-3">Select a user to load Philippines interview history.</td></tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Side Updates Tab -->
+                    <div class="tab-pane fade" id="tab-user-updates">
+                        <div class="row g-4">
+                            <div class="col-lg-12">
+                                <div class="premium-card p-3">
+                                    <h6 class="fw-bold mb-3">Learning Module Progress</h6>
+                                    <div class="table-responsive">
+                                        <table class="table custom-table w-100">
+                                            <thead>
+                                                <tr>
+                                                    <th>Module</th>
+                                                    <th>Status</th>
+                                                    <th>Progress</th>
+                                                    <th>Quiz</th>
+                                                    <th>Updated</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="userDetailLearningProgress">
+                                                <tr><td colspan="5" class="text-center text-muted py-3">Select a user to load learning updates.</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="premium-card p-3 h-100">
+                                    <h6 class="fw-bold mb-3">Voice Rehearsals</h6>
+                                    <div id="userDetailVoiceHistory" class="timeline">
+                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load voice updates.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="premium-card p-3 h-100">
+                                    <h6 class="fw-bold mb-3">Learning Games</h6>
+                                    <div id="userDetailGameHistory" class="timeline">
+                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load game updates.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="premium-card p-3 h-100">
+                                    <h6 class="fw-bold mb-3">AI Coach Conversations</h6>
+                                    <div id="userDetailCoachHistory" class="timeline">
+                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load coach updates.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="premium-card p-3 h-100">
+                                    <h6 class="fw-bold mb-3">Certificates & Skill Perks</h6>
+                                    <div id="userDetailCertificates" class="timeline mb-3">
+                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load certificates.</div>
+                                    </div>
+                                    <div id="userDetailPerks" class="d-flex flex-wrap gap-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="premium-card p-3 h-100">
+                                    <h6 class="fw-bold mb-3">Answer Retries</h6>
+                                    <div id="userDetailRetryHistory" class="timeline">
+                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load retry updates.</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="premium-card p-3 h-100">
+                                    <h6 class="fw-bold mb-3">Shared Review Links</h6>
+                                    <div id="userDetailSharedReviews" class="timeline">
+                                        <div class="text-muted text-center py-3" style="font-size:0.9rem;">Select a user to load shared review links.</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1233,6 +1336,14 @@
         return score === null || score === undefined ? 'N/A' : `${score}%`;
     }
 
+    function durationText(seconds) {
+        if (seconds === null || seconds === undefined) return 'N/A';
+        const total = Number(seconds) || 0;
+        const minutes = Math.floor(total / 60);
+        const remaining = total % 60;
+        return minutes > 0 ? `${minutes}m ${remaining}s` : `${remaining}s`;
+    }
+
     function lastActiveText(lastActiveAt) {
         if (!lastActiveAt) {
             return 'Offline';
@@ -1292,12 +1403,17 @@
                 document.getElementById('userDetailEmail').innerHTML = `${escapeHtml(user.email)} ${user.email_verified_at ? '<span class="badge bg-success ms-1">Verified</span>' : ''}`;
                 document.getElementById('userDetailRole').innerHTML = data.role_badge || '';
                 document.getElementById('userDetailTarget').textContent = user.target_position || 'Not set';
+                document.getElementById('userDetailLanguage').textContent = user.preferred_language_label || 'English';
                 document.getElementById('userDetailRegistered').textContent = data.formatted_date || '--';
                 document.getElementById('userDetailCompleted').textContent = stats.completed_interviews ?? 0;
                 document.getElementById('userDetailAverage').textContent = scoreText(stats.average_score);
                 document.getElementById('userDetailHighest').textContent = scoreText(stats.highest_score);
                 document.getElementById('userDetailStreak').textContent = `${stats.current_streak ?? 0} Days`;
                 document.getElementById('userDetailRating').textContent = `Readiness Rating: ${stats.readiness_rating || 'No scored sessions'}`;
+                document.getElementById('userDetailLearningCompleted').textContent = stats.learning_completed ?? 0;
+                document.getElementById('userDetailVoiceSessions').textContent = stats.voice_rehearsals ?? 0;
+                document.getElementById('userDetailGameLevels').textContent = stats.game_levels_completed ?? 0;
+                document.getElementById('userDetailXp').textContent = `${stats.experience_points ?? 0} XP`;
 
                 const interviewRows = (data.interviews || []).map(session => `
                     <tr>
@@ -1309,6 +1425,76 @@
                     </tr>
                 `).join('');
                 document.getElementById('userDetailInterviews').innerHTML = interviewRows || '<tr><td colspan="5" class="text-center text-muted py-3">No completed Philippines interviews found.</td></tr>';
+
+                const learningRows = (data.learning_progress || []).map(item => `
+                    <tr>
+                        <td>${escapeHtml(item.module)}</td>
+                        <td><span class="stat-badge primary">${escapeHtml(String(item.status || 'enrolled').replace(/_/g, ' '))}</span></td>
+                        <td><span class="fw-bold">${item.progress_percentage ?? 0}%</span></td>
+                        <td>${item.quiz_score === null || item.quiz_score === undefined ? 'N/A' : escapeHtml(item.quiz_score) + '%'}</td>
+                        <td>${escapeHtml(item.updated || '--')}</td>
+                    </tr>
+                `).join('');
+                document.getElementById('userDetailLearningProgress').innerHTML = learningRows || '<tr><td colspan="5" class="text-center text-muted py-3">No learning module updates found.</td></tr>';
+
+                const voiceRows = (data.voice_sessions || []).map(session => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;"><strong>${escapeHtml(session.category)}</strong></div>
+                        <div style="font-size:0.78rem;color:var(--tx2);">Clarity ${scoreText(session.clarity_score)} - Confidence ${scoreText(session.confidence_score)} - ${durationText(session.duration_seconds)}</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">${escapeHtml(session.created || '--')}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailVoiceHistory').innerHTML = voiceRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No voice rehearsal updates found.</div>';
+
+                const gameRows = (data.game_sessions || []).map(session => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;"><strong>${escapeHtml(session.level)}</strong></div>
+                        <div style="font-size:0.78rem;color:var(--tx2);">Status ${escapeHtml(session.result_status || session.status || 'in progress')} - Score ${scoreText(session.score)} - ${escapeHtml(session.xp_earned || 0)} XP</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">${escapeHtml(session.updated || '--')}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailGameHistory').innerHTML = gameRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No learning game updates found.</div>';
+
+                const coachRows = (data.coach_conversations || []).map(conversation => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;"><strong>${escapeHtml(conversation.title || 'Untitled conversation')}</strong></div>
+                        <div style="font-size:0.78rem;color:var(--tx2);">${escapeHtml(conversation.messages_count || 0)} messages</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">${escapeHtml(conversation.updated || '--')}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailCoachHistory').innerHTML = coachRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No AI coach conversations found.</div>';
+
+                const certificateRows = (data.game_certificates || []).map(certificate => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;"><strong>${escapeHtml(certificate.path)}</strong></div>
+                        <div style="font-size:0.78rem;color:var(--tx2);">${escapeHtml(certificate.certificate_code)}</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">Issued ${escapeHtml(certificate.issued_at || '--')}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailCertificates').innerHTML = certificateRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No certificates issued yet.</div>';
+
+                const perkRows = (data.unlocked_perks || []).map(perk => `
+                    <span class="stat-badge success">${escapeHtml(perk.name)}</span>
+                `).join('');
+                document.getElementById('userDetailPerks').innerHTML = perkRows || '<span class="text-muted" style="font-size:0.9rem;">No skill perks unlocked.</span>';
+
+                const retryRows = (data.recent_retries || []).map(retry => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;"><strong>Session #${escapeHtml(retry.session_id)} attempt ${escapeHtml(retry.attempt_number)}</strong></div>
+                        <div style="font-size:0.78rem;color:var(--tx2);">${escapeHtml(retry.question)}</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">Score ${scoreText(retry.score)} - ${escapeHtml(retry.created || '--')}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailRetryHistory').innerHTML = retryRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No answer retries found.</div>';
+
+                const sharedRows = (data.shared_reviews || []).map(review => `
+                    <div class="timeline-item">
+                        <div style="font-size:0.85rem;"><strong>Session #${escapeHtml(review.session_id)} - ${escapeHtml(review.category)}</strong></div>
+                        <div style="font-size:0.78rem;color:var(--tx2);">${review.is_public ? 'Active' : 'Disabled'} shared review link</div>
+                        <div style="font-size:0.75rem;color:var(--tx3);">Expires ${escapeHtml(review.expires_at || '--')} - ${escapeHtml(review.updated || '--')}</div>
+                    </div>
+                `).join('');
+                document.getElementById('userDetailSharedReviews').innerHTML = sharedRows || '<div class="text-muted text-center py-3" style="font-size:0.9rem;">No shared review links found.</div>';
 
                 const activityRows = (data.activities || []).map(activity => `
                     <div class="timeline-item">

@@ -15,6 +15,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\LearningGameCertificateService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
@@ -137,9 +138,23 @@ class InterviewController extends Controller
             'status' => 'in_progress',
         ]);
 
-        if ($provider !== 'local' && ! Question::where('interview_session_id', $session->id)->exists()) {
-            $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
+        $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
+        $this->createInterviewQuestion(
+            $session,
+            $category,
+            $this->initialInterviewQuestionText($session),
+            $validated['difficulty'],
+            ['Personal'],
+            0,
+            array_merge($sourceMetadata, [
+                'question_type' => 'Personal',
+                'expected_guide' => 'Give your name, current location or city/province, brief background, and the role or opportunity you are interviewing for. Share only interview-appropriate personal details.',
+                'mapped_skills' => ['self_introduction', 'communication_clarity', 'professional_presence'],
+                'source_type' => 'real_interview_opening',
+            ])
+        );
 
+        if ($provider !== 'local' && ! $this->hasNonOpeningQuestion($session)) {
             $generated = AIService::generateQuestions(
                 1, // Only generate the first question upfront for the real-time loop
                 $position,
@@ -176,9 +191,9 @@ class InterviewController extends Controller
             }
         }
 
-        if (! Question::where('interview_session_id', $session->id)->exists()) {
+        if (! $this->hasNonOpeningQuestion($session)) {
             $sourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
-            $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $questionTypes, (int) ($validated['num_questions'] ?? 5), $validated['difficulty'], $position);
+            $fallbackQuestions = $this->sourceBackedQuestionRecords($dataset, $questionTypes, 1, $validated['difficulty'], $position);
             $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
 
             foreach ($fallbackQuestions as $idx => $questionRecord) {
@@ -198,8 +213,8 @@ class InterviewController extends Controller
             }
         }
 
-        if (! Question::where('interview_session_id', $session->id)->exists()) {
-            $fallbackQuestions = $this->fallbackQuestionRecordsForSession($session, $questionTypes, (int) ($validated['num_questions'] ?? 5));
+        if (! $this->hasNonOpeningQuestion($session)) {
+            $fallbackQuestions = $this->fallbackQuestionRecordsForSession($session, $questionTypes, 1);
             $localizedTexts = $this->localizedQuestionTexts(array_column($fallbackQuestions, 'question_text'), $provider);
 
             foreach ($fallbackQuestions as $idx => $questionRecord) {
@@ -222,14 +237,14 @@ class InterviewController extends Controller
             }
         }
 
-        if (! Question::where('interview_session_id', $session->id)->exists()) {
+        if (! $this->hasNonOpeningQuestion($session)) {
             Log::warning('Interview setup used built-in fallback questions because no AI, pack, or bank questions were available.', [
                 'session_id' => $session->id,
                 'category_id' => $category->id,
                 'provider' => $provider,
             ]);
 
-            foreach ($this->builtInFallbackQuestionTexts($session, $questionTypes, (int) ($validated['num_questions'] ?? 5)) as $idx => $qText) {
+            foreach ($this->builtInFallbackQuestionTexts($session, $questionTypes, 1) as $idx => $qText) {
                 $this->createInterviewQuestion(
                     $session,
                     $category,
@@ -251,10 +266,15 @@ class InterviewController extends Controller
         ActivityLogger::log(
             Auth::user(),
             'interview_started',
-            "You started a new mock interview session in category '{$category->title}'.",
+            Auth::user()->name." started a new mock interview session in category '{$category->title}'.",
             $request->ip(),
             true,
-            ['title' => 'Interview Started', 'icon' => 'fa-play', 'type' => 'info']
+            [
+                'title' => 'Interview Started',
+                'message' => "You started a new mock interview session in category '{$category->title}'.",
+                'icon' => 'fa-play',
+                'type' => 'info',
+            ]
         );
 
         return redirect()->route('interview.session');
@@ -365,7 +385,9 @@ class InterviewController extends Controller
         if (! $question) {
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
+        $candidateTurnText = trim((string) $validated['answer_text']);
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
+        $interviewerInputText = $candidateTurnText !== '' ? $candidateTurnText : $answerText;
         $conversationContext = $this->normalizedConversationContextFrom(
             $this->jsonPayloadFrom($validated['conversation_context'] ?? null)
         );
@@ -392,14 +414,6 @@ class InterviewController extends Controller
             ]);
         }
 
-        if ($nextQuestion = $this->nextQuestionInSequence($questionSequence, $currentQuestionIndex, $targetQuestionCount)) {
-            $session->update([
-                'current_question_index' => $currentQuestionIndex + 1,
-            ]);
-
-            return $this->nextQuestionResponse($nextQuestion);
-        }
-
         // 2. Fetch Conversation History
         $history = InterviewAnswer::with('question')
             ->where('interview_session_id', $session->id)
@@ -421,13 +435,17 @@ class InterviewController extends Controller
         }
 
         $followUpText = $followUpEnabled
-            ? AIService::generateChatReply($session, $history, $answerText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext)
-            : AIService::fallbackInterviewReply($session, $history, $answerText, $isFinal);
+            ? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext)
+            : AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
 
         if (! $followUpText) {
             $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
         }
-        $followUpText = $this->roleAlignedQuestionText($followUpText, (string) $session->target_position);
+        $followUpText = $this->roleAlignedQuestionText(
+            $followUpText,
+            (string) $session->target_position,
+            $this->candidateAskedInterviewerNameQuestion($interviewerInputText)
+        );
 
         return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount) {
             $lockedSession = InterviewSession::with('category')
@@ -458,27 +476,13 @@ class InterviewController extends Controller
                 ]);
             }
 
-            if ($nextQuestion = $this->nextQuestionInSequence($questionSequence, $currentQuestionIndex, $targetQuestionCount)) {
-                $lockedSession->update([
-                    'current_question_index' => $currentQuestionIndex + 1,
-                ]);
-
-                return $this->nextQuestionResponse($nextQuestion);
-            }
-
-            if ($questionSequence->count() >= $targetQuestionCount) {
-                return response()->json([
-                    'success' => true,
-                    'interview_completed' => true,
-                ]);
-            }
-
             // 4. Save new AI Question
             $dataset = $this->datasetForSession($lockedSession);
             $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
             $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
             $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts);
             $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
+            $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
             $newQuestion = $this->createInterviewQuestion(
                 $lockedSession,
@@ -686,7 +690,7 @@ class InterviewController extends Controller
                 }
                 $sessionData['game_skill_focus'] = $gameLevel->skill_focus;
                 $sessionData['game_learning_objective'] = $gameLevel->learning_objective;
-                $sessionData['game_success_criteria'] = $gameLevel->success_criteria;
+                $sessionData['game_success_criteria'] = $gameLevel->guidance_checklist_text;
                 $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
             }
 
@@ -906,7 +910,10 @@ class InterviewController extends Controller
 
                         // Unlock next level
                         $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
-                            ->where('level_number', $gameLevel->level_number + 1)
+                            ->where('is_hidden', false)
+                            ->where('level_number', '>', $gameLevel->level_number)
+                            ->orderBy('level_number')
+                            ->orderBy('id')
                             ->first();
                         if ($nextLevel) {
                             GameProgress::firstOrCreate(
@@ -982,10 +989,15 @@ class InterviewController extends Controller
             ActivityLogger::log(
                 Auth::user(),
                 'interview_completed',
-                "You completed an interview session with an overall score of {$overall}%.",
+                Auth::user()->name." completed an interview session with an overall score of {$overall}%.",
                 $request->ip(),
                 true,
-                ['title' => 'Interview Completed', 'icon' => 'fa-flag-checkered', 'type' => 'success']
+                [
+                    'title' => 'Interview Completed',
+                    'message' => "You completed an interview session with an overall score of {$overall}%.",
+                    'icon' => 'fa-flag-checkered',
+                    'type' => 'success',
+                ]
             );
 
             DB::commit();
@@ -1189,6 +1201,14 @@ class InterviewController extends Controller
         $coachingHtml = view('partials.interview-answer-coaching', [
             'answer' => $retry,
         ])->render();
+
+        ActivityLogger::log(
+            Auth::user(),
+            'interview_answer_retry_saved',
+            Auth::user()->name." saved retry attempt {$retry->attempt_number} for interview session #{$session->id}.",
+            $request->ip(),
+            false
+        );
 
         return response()->json([
             'success' => true,
@@ -1654,6 +1674,13 @@ class InterviewController extends Controller
         return $sessionQuestion;
     }
 
+    private function initialInterviewQuestionText(InterviewSession $session): string
+    {
+        $targetPosition = trim((string) $session->target_position) ?: 'this role';
+
+        return "Before we get into the {$targetPosition} interview, please introduce yourself. What is your name, where are you currently based, and what background or experience would you like me to know first?";
+    }
+
     private function orderedQuestionsForSession(InterviewSession $session)
     {
         return Question::where('interview_session_id', $session->id)
@@ -1670,7 +1697,22 @@ class InterviewController extends Controller
 
     private function targetQuestionCountForSession(InterviewSession $session): int
     {
-        return max(1, min(20, (int) ($session->num_questions ?? 1)));
+        $count = max(1, min(20, (int) ($session->num_questions ?? 1)));
+        $hasOpeningQuestion = Question::where('interview_session_id', $session->id)
+            ->where('source_type', 'real_interview_opening')
+            ->exists();
+
+        return $hasOpeningQuestion ? $count + 1 : $count;
+    }
+
+    private function hasNonOpeningQuestion(InterviewSession $session): bool
+    {
+        return Question::where('interview_session_id', $session->id)
+            ->where(function ($query) {
+                $query->whereNull('source_type')
+                    ->orWhere('source_type', '!=', 'real_interview_opening');
+            })
+            ->exists();
     }
 
     private function nextQuestionInSequence($questionSequence, int $currentQuestionIndex, int $targetQuestionCount): ?Question
@@ -1693,6 +1735,21 @@ class InterviewController extends Controller
             'source_url' => $question->source_url,
             'source_type' => $question->source_type,
         ]);
+    }
+
+    private function deleteUnansweredFutureQuestions(InterviewSession $session, Question $currentQuestion): void
+    {
+        $answeredQuestionIds = InterviewAnswer::where('interview_session_id', $session->id)
+            ->whereNull('retry_of_answer_id')
+            ->pluck('question_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        Question::where('interview_session_id', $session->id)
+            ->where('id', '!=', $currentQuestion->id)
+            ->whereNotIn('id', $answeredQuestionIds)
+            ->delete();
     }
 
     private function uniqueQuestionTextForSession(InterviewSession $session, string $questionText, array $existingQuestionTexts): string
@@ -1923,13 +1980,17 @@ class InterviewController extends Controller
         )));
     }
 
-    private function roleAlignedQuestionText(string $questionText, string $position): string
+    private function roleAlignedQuestionText(string $questionText, string $position, bool $preserveInterviewerIntro = false): string
     {
         $questionText = trim($questionText);
         $position = trim($position);
 
         if ($questionText === '' || $position === '') {
             return $questionText;
+        }
+
+        if (! $preserveInterviewerIntro) {
+            $questionText = $this->removeRepeatedInterviewerIntro($questionText);
         }
 
         $rolePhrase = "the {$position} role";
@@ -1957,6 +2018,51 @@ class InterviewController extends Controller
         }
 
         return 'For your target position of '.$position.', '.lcfirst($questionText);
+    }
+
+    private function candidateAskedInterviewerNameQuestion(string $answerText): bool
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $answerText) ?? '');
+
+        return $clean !== ''
+            && (
+                str_contains(Str::lower($clean), 'what is your name')
+                || str_contains(Str::lower($clean), "what's your name")
+                || preg_match('/\b(?:what(?:\'s| is)|may i know|can i ask|who are you|tell me)\b.*\b(?:your name|you called|who you are)\b/i', $clean)
+                || preg_match('/\b(?:your name|name of (?:the )?interviewer)\b/i', $clean)
+            );
+    }
+
+    private function removeRepeatedInterviewerIntro(string $questionText): string
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $questionText) ?? $questionText);
+        $patterns = [
+            '/^(?:hi|hello|okay|alright|sure)[,.!\s]+/i',
+            '/^[a-z][a-z\'-]{1,30},\s*(?:i am|i\'m)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+            '/^[a-z][a-z\'-]{1,30},\s*(?:my name is|you can call me)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+            '/^(?:i am|i\'m)\s+mia[,.]?\s*(?:nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?)?[,.!\s]+/i',
+            '/^(?:my name is|you can call me)\s+mia[,.]?\s*(?:nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?)?[,.!\s]+/i',
+            '/^(?:i am|i\'m)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+            '/^(?:my name is|you can call me)\s+mia,\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
+            '/^(?:as\s+)?(?:the\s+)?(?:hiring\s+manager|interviewer|recruiter)[,.!\s]+/i',
+            '/^nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?[,.!\s]+/i',
+            '/^(?:thanks|thank you)\s+for\s+(?:sharing|that\s+background)[,.!\s]+/i',
+            '/^(?:here(?:\'s| is)\s+(?:your\s+)?(?:first\s+)?question)[,:.\s]+/i',
+        ];
+
+        $changed = true;
+        while ($changed) {
+            $changed = false;
+            foreach ($patterns as $pattern) {
+                $next = trim(preg_replace($pattern, '', $clean, 1) ?? $clean);
+                if ($next !== $clean) {
+                    $clean = $next;
+                    $changed = true;
+                }
+            }
+        }
+
+        return $clean;
     }
 
     private function localizedQuestionTexts(array $questions, string $provider): array
@@ -2312,8 +2418,21 @@ class InterviewController extends Controller
         $nextLevel = $context['next_level'] ?? null;
         if (! $nextLevel && $passed) {
             $nextLevel = GameLevel::where('category_id', $gameLevel->category_id)
-                ->where('level_number', $gameLevel->level_number + 1)
+                ->where('is_hidden', false)
+                ->where('level_number', '>', $gameLevel->level_number)
+                ->orderBy('level_number')
+                ->orderBy('id')
                 ->first();
+        }
+        $certificate = null;
+        if ($passed && ! $nextLevel && $gameLevel->category) {
+            $certificates = app(LearningGameCertificateService::class);
+            if ($certificates->isUnlocked(Auth::user(), $gameLevel->category)) {
+                $certificate = [
+                    'download_url' => route('user.game.certificate.download', $gameLevel->category_id),
+                    'path_title' => $gameLevel->category->title,
+                ];
+            }
         }
 
         $energySpent = $context['energy_spent'] ?? $this->effectiveGameEnergyCost($gameLevel, $profile);
@@ -2332,7 +2451,7 @@ class InterviewController extends Controller
             'level_title' => $gameLevel->title,
             'skill_focus' => $gameLevel->skill_focus,
             'learning_objective' => $gameLevel->learning_objective,
-            'success_criteria' => $gameLevel->parsed_success_criteria,
+            'success_criteria' => $gameLevel->guidance_checklist,
             'status' => $status,
             'message' => $message,
             'score' => (int) $gameResultScore,
@@ -2355,6 +2474,7 @@ class InterviewController extends Controller
                 'energy_cost' => (int) $nextEnergyCost,
                 'can_start' => $energyRemaining >= $nextEnergyCost,
             ] : null,
+            'certificate' => $certificate,
         ];
     }
 
@@ -2431,7 +2551,7 @@ class InterviewController extends Controller
         $fillerPenalty = min(18, $fillerCount * 4);
         $bannedHits = $this->gameBannedWordHits($answerText, (string) ($gameLevel->banned_words ?? ''));
 
-        $criteriaScore = $this->gameCriteriaScore($answerText, $gameLevel->parsed_success_criteria ?? []);
+        $criteriaScore = $this->gameCriteriaScore($answerText, $gameLevel->guidance_checklist ?? []);
         $starScore = $this->gameStarScore($answerText);
         $keywordScore = $this->gameKeywordOverlapScore($answerText, implode(' ', array_filter([
             $questionText,
@@ -2769,6 +2889,16 @@ class InterviewController extends Controller
             $session->share_expires_at = now();
         }
         $session->save();
+
+        ActivityLogger::log(
+            Auth::user(),
+            $session->is_public ? 'shared_review_link_enabled' : 'shared_review_link_disabled',
+            $session->is_public
+                ? Auth::user()->name." enabled shared review link for interview session #{$session->id}."
+                : Auth::user()->name." disabled shared review link for interview session #{$session->id}.",
+            $request->ip(),
+            false
+        );
 
         return response()->json([
             'success' => true,

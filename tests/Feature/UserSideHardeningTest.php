@@ -194,7 +194,15 @@ class UserSideHardeningTest extends TestCase
 
         $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
 
-        $this->assertDatabaseCount('questions', 5);
+        $this->assertDatabaseCount('questions', 2);
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'type' => 'Personal',
+            'status' => 'active',
+            'source_type' => 'real_interview_opening',
+        ]);
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => $session->id,
             'category_id' => $category->id,
@@ -202,9 +210,12 @@ class UserSideHardeningTest extends TestCase
             'type' => 'Technical',
             'status' => 'active',
         ]);
-        Question::where('interview_session_id', $session->id)
-            ->pluck('question_text')
-            ->each(fn (string $questionText) => $this->assertStringContainsString('Developer', $questionText));
+        $this->assertTrue(
+            Question::where('interview_session_id', $session->id)
+                ->where('source_type', 'real_interview_opening')
+                ->pluck('question_text')
+                ->every(fn (string $questionText) => str_contains($questionText, 'introduce yourself'))
+        );
         $this->assertTrue(
             Question::where('interview_session_id', $session->id)->get()
                 ->every(fn (Question $question): bool => filled($question->expected_guide) && ! empty($question->mapped_skills))
@@ -486,7 +497,7 @@ class UserSideHardeningTest extends TestCase
             ->post(route('user.game.start', $level))
             ->assertRedirect(route('user.game.match'));
 
-        $this->assertSame(2, Profile::where('user_id', $user->id)->first()->energy);
+        $this->assertSame(Profile::MAX_ENERGY - 1, Profile::where('user_id', $user->id)->first()->energy);
         $this->assertDatabaseHas('game_sessions', [
             'user_id' => $user->id,
             'game_level_id' => $level->id,
@@ -501,7 +512,7 @@ class UserSideHardeningTest extends TestCase
         Schema::dropIfExists('game_sessions');
 
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
         $category = $this->category(['type' => 'game']);
         $level = $this->gameLevel($category);
 
@@ -521,7 +532,7 @@ class UserSideHardeningTest extends TestCase
     public function test_game_answer_and_finish_use_separate_game_session_flow(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
         $category = $this->category(['type' => 'game']);
         $level = $this->gameLevel($category, [
             'required_score' => 0,
@@ -557,8 +568,9 @@ class UserSideHardeningTest extends TestCase
                     && $result['status'] === 'passed'
                     && $result['required_score'] === 0
                     && $result['energy_spent'] === 1
-                    && $result['energy_remaining'] === 2
-                    && $result['xp_earned'] === 125;
+                    && $result['energy_remaining'] === Profile::MAX_ENERGY - 1
+                    && $result['xp_earned'] === 125
+                    && ! empty($result['certificate']['download_url']);
             });
 
         $this->assertDatabaseHas('game_progress', [
@@ -581,6 +593,18 @@ class UserSideHardeningTest extends TestCase
         ]);
         $this->assertDatabaseCount('interview_sessions', 0);
         $this->assertDatabaseCount('interview_answers', 0);
+
+        $certificateResponse = $this->actingAs($user)
+            ->get(route('user.game.certificate.download', $category));
+        $certificateResponse->assertOk();
+        $certificateResponse->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-1.4', $certificateResponse->getContent());
+        $this->assertStringContainsString('/Type /Catalog', $certificateResponse->getContent());
+        $this->assertDatabaseHas('game_certificates', [
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'final_game_level_id' => $level->id,
+        ]);
 
         $profile = Profile::where('user_id', $user->id)->firstOrFail();
         $scoreCount = Score::count();
@@ -605,10 +629,24 @@ class UserSideHardeningTest extends TestCase
         ));
     }
 
+    public function test_game_certificate_download_requires_completed_path(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+        $category = $this->category(['type' => 'game']);
+        $this->gameLevel($category);
+
+        $this->actingAs($user)
+            ->get(route('user.game.certificate.download', $category))
+            ->assertForbidden();
+
+        $this->assertDatabaseCount('game_certificates', 0);
+    }
+
     public function test_regular_interview_finish_ignores_stale_game_level_session_key(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
         $category = $this->category();
         $gameCategory = $this->category(['title' => 'Game Path', 'type' => 'game']);
         $level = $this->gameLevel($gameCategory);
@@ -724,7 +762,7 @@ class UserSideHardeningTest extends TestCase
     public function test_learning_game_session_renders_game_only_finish_modal(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
         $category = $this->category(['type' => 'game']);
         $level = $this->gameLevel($category);
         $session = GameSession::create([

@@ -287,6 +287,22 @@
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    #voice-rehearsal-page .voice-history-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    #voice-rehearsal-page .voice-history-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+    }
+    #voice-rehearsal-page .voice-history-actions form {
+        margin: 0;
+    }
     @media (max-width: 767px) {
         #voice-rehearsal-page .sr-page-actions {
             display: block !important;
@@ -430,6 +446,26 @@
             grid-template-columns: 1fr;
             gap: 8px;
             align-items: stretch !important;
+        }
+        #voice-rehearsal-page .voice-history-head {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 14px !important;
+        }
+        #voice-rehearsal-page .voice-history-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            width: 100%;
+        }
+        #voice-rehearsal-page .voice-history-actions .btn {
+            width: 100% !important;
+            min-height: 42px;
+            padding: 8px 6px !important;
+            font-size: 0.72rem;
+            line-height: 1.15;
+            white-space: normal;
         }
         #voice-rehearsal-page .voice-history-table {
             table-layout: fixed !important;
@@ -613,6 +649,16 @@
                         </div>
                     </div>
 
+                    <!-- Transcript Box -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <label style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase;">Live Answer Transcript</label>
+                            <span id="transStatus" style="font-size:0.8rem;color:#34d399;display:none;"><i class="fa-solid fa-circle-dot fa-fade me-1"></i> Transcribing</span>
+                        </div>
+                        <div id="transcriptView" style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px;min-height:120px;color:var(--tx);font-size:1.05rem;line-height:1.6;white-space:pre-wrap;" contenteditable="false">Your answer will appear here...</div>
+                        <p class="mt-2 mb-0" style="font-size:0.8rem;color:var(--tx3);display:none;" id="editHint"><i class="fa-solid fa-pencil me-1"></i> You can edit the transcript above manually before saving.</p>
+                    </div>
+
                     <section class="instant-feedback-panel mb-4" aria-label="Instant speaking feedback">
                         <div class="instant-feedback-head">
                             <div>
@@ -673,16 +719,6 @@
                             <li><i class="fa-solid fa-circle-info"></i><span>Waiting for enough words to compare your wording with the target intention.</span></li>
                         </ul>
                     </section>
-
-                    <!-- Transcript Box -->
-                    <div>
-                        <div class="d-flex justify-content-between mb-2">
-                            <label style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase;">Live Answer Transcript</label>
-                            <span id="transStatus" style="font-size:0.8rem;color:#34d399;display:none;"><i class="fa-solid fa-circle-dot fa-fade me-1"></i> Transcribing</span>
-                        </div>
-                        <div id="transcriptView" style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px;min-height:120px;color:var(--tx);font-size:1.05rem;line-height:1.6;white-space:pre-wrap;" contenteditable="false">Your answer will appear here...</div>
-                        <p class="mt-2" style="font-size:0.8rem;color:var(--tx3);display:none;" id="editHint"><i class="fa-solid fa-pencil me-1"></i> You can edit the transcript above manually before saving.</p>
-                    </div>
                 </div>
             </div>
 
@@ -775,9 +811,20 @@
 
                 <!-- Rehearsal History -->
                 <div class="premium-card">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="voice-history-head">
                         <h5 class="fw-bold m-0">Rehearsal History</h5>
-                        <button class="btn btn-sm btn-outline-primary" style="border-radius:8px;" onclick="downloadReport()"><i class="fa-solid fa-download me-1"></i> Download Report (PDF)</button>
+                        <div class="voice-history-actions">
+                            <button class="btn btn-sm btn-outline-primary" type="button" style="border-radius:8px;" onclick="downloadReport()"><i class="fa-solid fa-download me-1"></i> Download PDF</button>
+                            @if($history->count() > 0)
+                                <form action="{{ route('user.drills.voice.clear') }}" method="POST" onsubmit="return confirm('Clear all voice rehearsal sessions? This cannot be undone.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;">
+                                        <i class="fa-solid fa-trash-can me-1"></i> Clear All
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table custom-table voice-history-table">

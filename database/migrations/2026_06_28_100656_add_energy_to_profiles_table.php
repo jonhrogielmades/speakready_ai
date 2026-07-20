@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('profiles', function (Blueprint $table) {
-            $table->integer('energy')->default(3)->after('badges_earned');
+            $table->integer('energy')->default(20)->after('badges_earned');
             $table->timestamp('energy_last_refilled_at')->nullable()->after('energy');
             $table->integer('player_level')->default(1)->after('experience_points');
         });

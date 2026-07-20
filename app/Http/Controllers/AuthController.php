@@ -41,6 +41,14 @@ class AuthController extends Controller
 
         Auth::login($user, true);
 
+        ActivityLogger::log(
+            $user,
+            'user_registered',
+            "{$user->name} ({$user->email}) registered a new account.",
+            $request->ip(),
+            false
+        );
+
         if ($user->is_admin) {
             return redirect()->route('admin.dashboard');
         }
@@ -99,6 +107,15 @@ class AuthController extends Controller
 
         if ($user && in_array($user->status, ['inactive', 'suspended'])) {
             $user->update(['reactivation_requested_at' => now()]);
+
+            ActivityLogger::log(
+                $user,
+                'reactivation_requested',
+                "{$user->name} ({$user->email}) requested account reactivation.",
+                $request->ip(),
+                false
+            );
+
             return back()->with('success', 'Your reactivation request has been sent to the admin.');
         }
 

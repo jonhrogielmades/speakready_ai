@@ -10,6 +10,8 @@ class Profile extends Model
 {
     use HasFactory;
 
+    public const MAX_ENERGY = 20;
+
     protected $fillable = [
         'user_id',
         'total_sessions',

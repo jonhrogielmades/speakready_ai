@@ -39,6 +39,8 @@ class AIService
 
     private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
+    private const INTERVIEWER_DISPLAY_NAME = 'Mia';
+
     public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $companyPersona = null, $questionTypes = [], $assistanceLevel = 'standard', $strictness = 'neutral', $datasetContext = null, $targetLanguage = null, $interviewFormat = 'standard', $simplifiedQuestions = false)
     {
         $jobDescription = self::truncateText($jobDescription);
@@ -138,8 +140,10 @@ class AIService
         $prompt .= 'Stay in interviewer mode. Sound like a real hiring manager: neutral, concise, curious, and professionally probing. ';
         $prompt .= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
         $prompt .= 'Do not give coaching, scores, praise-heavy feedback, or explanations during the interview. ';
+        $prompt .= 'Do not reintroduce yourself as Mia during normal interview questions; the opening already introduced you. ';
         $prompt .= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
         $prompt .= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
+        $prompt .= "If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as interviewer ".self::INTERVIEWER_DISPLAY_NAME.", then smoothly continue with one interview question grounded in the candidate's latest answer. ";
         $prompt .= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
         $prompt .= self::interviewStyleInstruction($session->ai_assistance_level ?? 'standard', $session->interviewer_strictness ?? 'neutral');
         $prompt .= self::interviewFormatInstruction($session->interview_format ?? 'standard');
@@ -207,18 +211,18 @@ class AIService
         $prompt .= self::truncateText($latestAnswer, 1200)."\n";
 
         if ($isFinal) {
-            $prompt .= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer without evaluating it, explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. Prefer a question about strongest fit, remaining evidence, motivation, or what the candidate wants the interviewer to remember. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+            $prompt .= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer without evaluating it. If they asked a brief rapport or logistics question, answer it first in one short clause. Explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. Prefer a question about strongest fit, remaining evidence, motivation, or what the candidate wants the interviewer to remember. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
         } else {
-            $prompt .= "\nYour task: Briefly acknowledge the candidate's latest answer in one neutral sentence, then ask exactly ONE relevant follow-up question based on that answer. If the answer was vague, ask for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+            $prompt .= "\nYour task: Briefly acknowledge the candidate's latest answer in one neutral sentence, then ask exactly ONE relevant follow-up question based on that answer. If they asked a brief rapport or logistics question, answer it first in one short clause before the interview question. If the answer was vague, ask for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
         }
-        $prompt .= ' Keep the reply natural for speech, under 60 words, with exactly one interviewer question. Do not reveal scores, feedback, coaching tips, rubrics, or answer-improvement advice during the interview. ';
+        $prompt .= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. Do not reveal scores, feedback, coaching tips, rubrics, or answer-improvement advice during the interview. ';
 
         $maxRetries = 3;
         $attempt = 0;
 
         while ($attempt < $maxRetries) {
             try {
-                $systemPrompt = 'You are a realistic hiring interviewer. Use the recent conversation the way a live interviewer would, but stay in interview mode. Ask one concise, natural spoken follow-up question. Do not coach, score, use markdown, or add labels. '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+                $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would, but stay in interview mode. If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not coach, score, use markdown, or add labels. '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
 
                 // Rely on chatMessage for robust failover
                 $response = self::chatMessage($prompt, [], $provider, $systemPrompt);
@@ -247,7 +251,7 @@ class AIService
         $wordCount = self::wordCount($answerText);
         $lastInteraction = $history === [] ? [] : $history[array_key_last($history)];
         $question = trim((string) data_get($lastInteraction, 'question', ''));
-        $acknowledgement = self::answerBasedAcknowledgement($answerText);
+        $acknowledgement = self::candidateSideQuestionReply($answerText).self::answerBasedAcknowledgement($answerText);
 
         if ($isFinal) {
             return "{$acknowledgement}For my final question, what is the strongest evidence you want me to remember about your fit for the {$targetPosition} role?";
@@ -279,6 +283,35 @@ class AIService
         return $anchor !== ''
             ? "You mentioned {$anchor}. "
             : 'Thank you. ';
+    }
+
+    private static function candidateSideQuestionReply(string $answerText): string
+    {
+        $clean = trim(preg_replace('/\s+/u', ' ', $answerText) ?? '');
+        if ($clean === '') {
+            return '';
+        }
+
+        $lower = strtolower($clean);
+        if (str_contains($lower, 'what is your name')
+            || str_contains($lower, "what's your name")
+            || str_contains($lower, 'may i know your name')
+            || str_contains($lower, 'can i ask your name')
+            || str_contains($lower, 'who are you')
+            || preg_match('/\b(?:what(?:\'s| is)|may i know|can i ask|who are you|tell me)\b.*\b(?:your name|you called|who you are)\b/i', $clean)
+            || preg_match('/\b(?:your name|name of (?:the )?interviewer)\b/i', $clean)) {
+            return 'I am '.self::INTERVIEWER_DISPLAY_NAME.', nice to meet you. ';
+        }
+
+        if (preg_match('/\b(?:how are you|how do you do)\b/i', $clean)) {
+            return 'I am doing well, thank you for asking. ';
+        }
+
+        if (preg_match('/\b(?:what happens next|what(?:\'s| is) next|next step|how will this work)\b/i', $clean)) {
+            return 'I will guide the conversation one question at a time. ';
+        }
+
+        return '';
     }
 
     private static function answerAnchor(string $answerText): string

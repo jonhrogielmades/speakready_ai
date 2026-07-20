@@ -29,6 +29,46 @@
         padding: 24px;
         height: 100%;
     }
+    #personal-mastery-page .mastery-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 24px;
+    }
+    #personal-mastery-page .mastery-stat-value {
+        color: var(--tx);
+    }
+    #personal-mastery-page .mastery-stat-label {
+        color: var(--tx3);
+    }
+    @media (max-width: 1199.98px) {
+        #personal-mastery-page .mastery-stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    @media (max-width: 575.98px) {
+        #personal-mastery-page .mastery-stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        #personal-mastery-page .mastery-stat-card {
+            min-height: 120px;
+            padding: 16px 14px;
+            border-radius: 14px;
+        }
+        #personal-mastery-page .mastery-stat-card i {
+            font-size: 1.25rem !important;
+            margin-bottom: 12px !important;
+        }
+        #personal-mastery-page .mastery-stat-value {
+            font-size: 1.25rem;
+            line-height: 1.15;
+            margin-bottom: 8px;
+        }
+        #personal-mastery-page .mastery-stat-label {
+            font-size: 0.82rem;
+            line-height: 1.25;
+        }
+    }
 </style>
 @include('partials.page-hero-styles')
 
@@ -70,14 +110,20 @@
             <path d="M30 135c32-10 72-10 108 0s58 8 78-4" fill="none" stroke="#FBBF24" stroke-width="5" stroke-linecap="round" opacity=".55"/>
         </svg>
     </div>
-    <div class="row g-4">
+    <div class="mastery-stats-grid">
         @foreach([
             ['Personal best', $personalBest.'%', 'fa-trophy', '#f59e0b'],
             ['Latest assessed', $latest.'%', 'fa-bullseye', '#3b82f6'],
             ['Growth from baseline', (($latest-$baseline) >= 0 ? '+' : '').($latest-$baseline).' pts', 'fa-arrow-trend-up', '#10b981'],
             ['Practice streak', ($profile->current_streak ?? 0).' days', 'fa-fire', '#ef4444'],
         ] as [$label,$value,$icon,$color])
-            <div class="col-md-6 col-xl-3"><div class="mastery-stat-card"><i class="fa-solid {{ $icon }} mb-3" style="font-size:1.5rem;color:{{ $color }}"></i><div class="h3 fw-bold" style="color:var(--tx)">{{ $value }}</div><div style="color:var(--tx3)">{{ $label }}</div></div></div>
+            <div>
+                <div class="mastery-stat-card">
+                    <i class="fa-solid {{ $icon }} mb-3" style="font-size:1.5rem;color:{{ $color }}"></i>
+                    <div class="h3 fw-bold mastery-stat-value">{{ $value }}</div>
+                    <div class="mastery-stat-label">{{ $label }}</div>
+                </div>
+            </div>
         @endforeach
     </div>
     <div class="p-4 mt-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:16px">

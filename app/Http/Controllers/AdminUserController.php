@@ -4,10 +4,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ActivityLog;
+use App\Models\ChatbotConversation;
+use App\Models\GameCertificate;
+use App\Models\GameProgress;
+use App\Models\GameSession;
+use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
+use App\Models\LearningProgress;
 use App\Models\Profile;
 use App\Models\Score;
+use App\Models\Setting;
 use App\Models\User;
+use App\Models\VoiceSession;
 use App\Services\CsvExportService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\File;
@@ -210,6 +218,140 @@ class AdminUserController extends Controller
         $completedCount = InterviewSession::where('user_id', $user->id)
             ->where('status', 'completed')
             ->count();
+        $learningCompletedCount = LearningProgress::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+        $learningActiveCount = LearningProgress::where('user_id', $user->id)
+            ->whereIn('status', ['enrolled', 'in_progress'])
+            ->count();
+        $voiceSessionCount = VoiceSession::where('user_id', $user->id)->count();
+        $latestVoiceSession = VoiceSession::where('user_id', $user->id)->latest()->first();
+        $gameLevelsCompleted = GameProgress::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+        $gameSessionsCompleted = GameSession::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
+        $certificateCount = GameCertificate::where('user_id', $user->id)->count();
+        $coachConversationCount = ChatbotConversation::where('user_id', $user->id)->count();
+        $retryAttemptCount = InterviewAnswer::whereNotNull('retry_of_answer_id')
+            ->whereHas('interviewSession', fn ($query) => $query->where('user_id', $user->id))
+            ->count();
+        $sharedReviewCount = InterviewSession::where('user_id', $user->id)
+            ->whereNotNull('share_token')
+            ->count();
+
+        $learningProgress = LearningProgress::with('learningModule')
+            ->where('user_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->take(5)
+            ->get()
+            ->map(function ($progress) {
+                return [
+                    'module' => $progress->learningModule?->title ?? 'Deleted module',
+                    'status' => $progress->status,
+                    'progress_percentage' => (int) ($progress->progress_percentage ?? 0),
+                    'quiz_score' => $progress->quiz_score === null ? null : (int) $progress->quiz_score,
+                    'learning_hours' => (float) ($progress->learning_hours ?? 0),
+                    'updated' => optional($progress->updated_at)->diffForHumans(),
+                ];
+            });
+
+        $voiceSessions = VoiceSession::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'category' => $session->category ?: 'General Job Interview',
+                    'clarity_score' => $session->clarity_score === null ? null : (int) $session->clarity_score,
+                    'confidence_score' => $session->confidence_score === null ? null : (int) $session->confidence_score,
+                    'wpm' => $session->wpm === null ? null : (int) $session->wpm,
+                    'duration_seconds' => $session->duration_seconds === null ? null : (int) $session->duration_seconds,
+                    'created' => optional($session->created_at)->format('M d, Y h:i A'),
+                ];
+            });
+
+        $gameSessions = GameSession::with('level')
+            ->where('user_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->take(5)
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'level' => $session->level?->title ?? 'Deleted game level',
+                    'status' => $session->status,
+                    'score' => $session->score === null ? null : (int) $session->score,
+                    'result_status' => $session->result_status,
+                    'xp_earned' => (int) ($session->xp_earned ?? 0),
+                    'updated' => optional($session->updated_at)->diffForHumans(),
+                ];
+            });
+
+        $coachConversations = ChatbotConversation::withCount('messages')
+            ->where('user_id', $user->id)
+            ->orderByDesc('updated_at')
+            ->take(5)
+            ->get()
+            ->map(function ($conversation) {
+                return [
+                    'title' => $conversation->title,
+                    'messages_count' => (int) $conversation->messages_count,
+                    'updated' => optional($conversation->updated_at)->diffForHumans(),
+                ];
+            });
+
+        $certificates = GameCertificate::with('category')
+            ->where('user_id', $user->id)
+            ->orderByDesc('issued_at')
+            ->take(5)
+            ->get()
+            ->map(function ($certificate) {
+                return [
+                    'path' => $certificate->category?->title ?? 'Deleted challenge path',
+                    'certificate_code' => $certificate->certificate_code,
+                    'issued_at' => optional($certificate->issued_at)->format('M d, Y'),
+                ];
+            });
+
+        $unlockedPerks = collect($profile?->unlocked_perks ?? [])
+            ->map(fn ($perk) => [
+                'id' => $perk,
+                'name' => ucwords(str_replace('_', ' ', (string) $perk)),
+            ])
+            ->values();
+
+        $recentRetries = InterviewAnswer::with(['question', 'interviewSession.category'])
+            ->whereNotNull('retry_of_answer_id')
+            ->whereHas('interviewSession', fn ($query) => $query->where('user_id', $user->id))
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get()
+            ->map(function ($retry) {
+                return [
+                    'session_id' => $retry->interview_session_id,
+                    'question' => $retry->question?->question_text ?? 'Deleted question',
+                    'attempt_number' => (int) ($retry->attempt_number ?? 0),
+                    'score' => $retry->score === null ? null : (int) $retry->score,
+                    'created' => optional($retry->created_at)->diffForHumans(),
+                ];
+            });
+
+        $sharedReviews = InterviewSession::with('category')
+            ->where('user_id', $user->id)
+            ->whereNotNull('share_token')
+            ->orderByDesc('updated_at')
+            ->take(5)
+            ->get()
+            ->map(function ($session) {
+                return [
+                    'session_id' => $session->id,
+                    'category' => $session->category?->title ?? 'Uncategorized',
+                    'is_public' => (bool) $session->is_public,
+                    'expires_at' => optional($session->share_expires_at)->format('M d, Y'),
+                    'updated' => optional($session->updated_at)->diffForHumans(),
+                ];
+            });
 
         $activities = ActivityLog::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
@@ -229,6 +371,10 @@ class AdminUserController extends Controller
             $averageScore >= 50 => 'Fair',
             default => 'Needs Improvement',
         };
+        $preferredLanguageCode = Setting::usersTableHasPreferredLanguage()
+            ? $user->preferred_language
+            : null;
+        $preferredLanguage = Setting::languageConfig($preferredLanguageCode ?: 'en');
 
         return response()->json([
             'user' => [
@@ -243,6 +389,8 @@ class AdminUserController extends Controller
                 'is_admin' => (bool) $user->is_admin,
                 'status' => $user->status,
                 'target_position' => $user->target_position,
+                'preferred_language' => $preferredLanguage['code'] ?? 'en',
+                'preferred_language_label' => $preferredLanguage['label'] ?? 'English',
             ],
             'formatted_date' => $user->created_at->format('M d, Y'),
             'role_badge' => $user->is_admin ? '<span class="stat-badge primary" style="background:rgba(59,130,246,0.15);color:#60a5fa;">Admin</span>' : '<span class="stat-badge secondary">User</span>',
@@ -253,8 +401,29 @@ class AdminUserController extends Controller
                 'highest_score' => $highestScore === null ? null : (int) round($highestScore),
                 'current_streak' => (int) ($profile->current_streak ?? 0),
                 'readiness_rating' => $readinessRating,
+                'learning_completed' => $learningCompletedCount,
+                'learning_active' => $learningActiveCount,
+                'voice_rehearsals' => $voiceSessionCount,
+                'latest_voice_clarity' => $latestVoiceSession?->clarity_score === null ? null : (int) $latestVoiceSession->clarity_score,
+                'game_levels_completed' => $gameLevelsCompleted,
+                'game_sessions_completed' => $gameSessionsCompleted,
+                'experience_points' => (int) ($profile->experience_points ?? 0),
+                'player_level' => (int) ($profile->player_level ?? 1),
+                'certificates' => $certificateCount,
+                'coach_conversations' => $coachConversationCount,
+                'unlocked_perks' => $unlockedPerks->count(),
+                'retry_attempts' => $retryAttemptCount,
+                'shared_review_links' => $sharedReviewCount,
             ],
             'interviews' => $completedInterviews,
+            'learning_progress' => $learningProgress,
+            'voice_sessions' => $voiceSessions,
+            'game_sessions' => $gameSessions,
+            'coach_conversations' => $coachConversations,
+            'game_certificates' => $certificates,
+            'unlocked_perks' => $unlockedPerks,
+            'recent_retries' => $recentRetries,
+            'shared_reviews' => $sharedReviews,
             'activities' => $activities,
         ]);
     }

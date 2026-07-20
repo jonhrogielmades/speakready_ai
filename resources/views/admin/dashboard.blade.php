@@ -432,9 +432,9 @@
         </div>
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card overview-card text-center p-3 h-100" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(52,211,153,0.1) 100%); border-color: rgba(52,211,153,0.3);">
-                <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-server"></i></div>
-                <div style="font-size:1.5rem;font-weight:700;color:#34d399;">99.9%</div>
-                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">System Online</div>
+                <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-arrows-rotate"></i></div>
+                <div style="font-size:1.5rem;font-weight:700;color:#34d399;">{{ number_format($userUpdatesCount) }}</div>
+                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">User Updates</div>
             </div>
         </div>
     </div>

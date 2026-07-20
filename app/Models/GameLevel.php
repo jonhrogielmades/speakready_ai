@@ -80,6 +80,80 @@ class GameLevel extends Model
         return $this->parseNumberedLines($this->success_criteria);
     }
 
+    public function getGuidanceChecklistAttribute(): array
+    {
+        $criteria = $this->parsed_success_criteria;
+
+        if ($criteria !== []) {
+            return $criteria;
+        }
+
+        return self::fallbackSuccessCriteria(
+            (string) ($this->skill_focus ?? ''),
+            (string) ($this->title ?? ''),
+            (string) ($this->difficulty ?? '')
+        );
+    }
+
+    public function getGuidanceChecklistTextAttribute(): string
+    {
+        $lines = [];
+        foreach ($this->guidance_checklist as $index => $criterion) {
+            $lines[] = ($index + 1).'. '.$criterion;
+        }
+
+        return implode("\n", $lines);
+    }
+
+    public static function fallbackSuccessCriteria(string $skillFocus = '', string $title = '', string $difficulty = ''): array
+    {
+        $context = strtolower($skillFocus.' '.$title.' '.$difficulty);
+
+        if (str_contains($context, 'star') || str_contains($context, 'behavior') || str_contains($context, 'conflict')) {
+            return [
+                'Set the situation briefly.',
+                'Explain your responsibility or goal.',
+                'Describe the specific action you took.',
+                'End with a result, impact, or lesson.',
+            ];
+        }
+
+        if (str_contains($context, 'professional') || str_contains($context, 'weakness') || str_contains($context, 'curveball') || str_contains($context, 'hr')) {
+            return [
+                'Answer the question directly and honestly.',
+                'Keep the tone respectful and accountable.',
+                'Explain what you learned or changed.',
+                'Connect the answer back to readiness for the role.',
+            ];
+        }
+
+        if (str_contains($context, 'clarity') || str_contains($context, 'about yourself') || str_contains($context, 'introduction')) {
+            return [
+                'Open with your current role, course, training, or background.',
+                'Mention one or two strengths relevant to the opportunity.',
+                'Connect your experience to the role or panel question.',
+                'Keep the answer focused, respectful, and professional.',
+            ];
+        }
+
+        if (str_contains($context, 'readiness') || str_contains($context, 'final') || str_contains($context, 'mock')) {
+            return [
+                'Answer each question directly.',
+                'Use specific evidence from school, work, internship, freelance, or project experience.',
+                'Include a result, lesson, or next step when relevant.',
+                'Keep pacing steady and stay professional from start to finish.',
+            ];
+        }
+
+        return [
+            'Answer the interview question directly.',
+            'Use one concrete example or proof point.',
+            'Explain your action or decision clearly.',
+            'Include a result, lesson, or next step.',
+            'Keep the tone professional and appropriate for Philippine interviews.',
+        ];
+    }
+
     private function parseNumberedLines(string $text): array
     {
         $normalizedText = str_replace(["\r\n", "\r", '\n'], "\n", $text);

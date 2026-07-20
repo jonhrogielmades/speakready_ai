@@ -412,7 +412,8 @@
                 </div>
                 @endif
 
-                @if($gameLevel->skill_focus || $gameLevel->learning_objective || $gameLevel->parsed_success_criteria || $gameLevel->retry_hint)
+                @php $successChecklist = $gameLevel->guidance_checklist; @endphp
+                @if($gameLevel->skill_focus || $gameLevel->learning_objective || $successChecklist || $gameLevel->retry_hint)
                 <div class="panel">
                     <div class="panel-title"><i class="fa-solid fa-bullseye me-2"></i> Challenge Brief</div>
                     @if($gameLevel->skill_focus)
@@ -423,10 +424,10 @@
                     @if($gameLevel->learning_objective)
                         <div style="font-size:0.84rem;color:var(--tx2);line-height:1.5;margin-bottom:14px;">{{ $gameLevel->learning_objective }}</div>
                     @endif
-                    @if($gameLevel->parsed_success_criteria)
+                    @if($successChecklist)
                         <div style="font-size:0.78rem;color:var(--tx3);font-weight:700;margin-bottom:8px;text-transform:uppercase;">Success checklist</div>
                         <div class="d-flex flex-column gap-2 mb-3">
-                            @foreach($gameLevel->parsed_success_criteria as $criterion)
+                            @foreach($successChecklist as $criterion)
                                 <div style="display:flex;gap:8px;align-items:flex-start;font-size:0.82rem;color:var(--tx2);line-height:1.4;">
                                     <i class="fa-solid fa-check" style="color:#34d399;margin-top:2px;"></i>
                                     <span>{{ $criterion }}</span>

@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -420,6 +421,15 @@ class UserController extends Controller
         $session->load(['category', 'score', 'feedback', 'answers.question']);
         $answers = $session->answers->whereNull('retry_of_answer_id')->values();
         $fileName = 'interview_session_'.$session->id.'_'.now()->format('Ymd_His').'.csv';
+        $user = Auth::user();
+
+        ActivityLogger::log(
+            $user,
+            'interview_session_exported',
+            "{$user->name} exported interview session #{$session->id}.",
+            request()->ip(),
+            false
+        );
 
         return response()->stream(function () use ($session, $answers) {
             $stream = fopen('php://output', 'w');
@@ -490,10 +500,15 @@ class UserController extends Controller
         ActivityLogger::log(
             $user,
             'interview_session_deleted',
-            "You deleted an interview session from {$sessionDate}.",
+            "{$user->name} deleted an interview session from {$sessionDate}.",
             $request->ip(),
             true,
-            ['title' => 'Session Deleted', 'icon' => 'fa-trash-can', 'type' => 'warning']
+            [
+                'title' => 'Session Deleted',
+                'message' => "You deleted an interview session from {$sessionDate}.",
+                'icon' => 'fa-trash-can',
+                'type' => 'warning',
+            ]
         );
 
         return redirect()->back()->with('success', 'Interview session deleted successfully.');
@@ -528,10 +543,15 @@ class UserController extends Controller
         ActivityLogger::log(
             $user,
             'interview_sessions_cleared',
-            "You cleared {$sessionCount} completed interview {$label}.",
+            "{$user->name} cleared {$sessionCount} completed interview {$label}.",
             $request->ip(),
             true,
-            ['title' => 'Sessions Cleared', 'icon' => 'fa-broom', 'type' => 'warning']
+            [
+                'title' => 'Sessions Cleared',
+                'message' => "You cleared {$sessionCount} completed interview {$label}.",
+                'icon' => 'fa-broom',
+                'type' => 'warning',
+            ]
         );
 
         return redirect()->back()->with('success', 'All completed interview sessions were cleared.');
@@ -987,6 +1007,7 @@ class UserController extends Controller
         $history = $request->input('history', []);
         $provider = env('AI_PROVIDER', 'gemini');
         $conversation_id = $request->input('conversation_id');
+        $isNewConversation = false;
 
         if (! $conversation_id) {
             $conversation = ChatbotConversation::create([
@@ -994,6 +1015,7 @@ class UserController extends Controller
                 'title' => substr($message, 0, 30).(strlen($message) > 30 ? '...' : ''),
             ]);
             $conversation_id = $conversation->id;
+            $isNewConversation = true;
         } else {
             $conversation = ChatbotConversation::where('user_id', Auth::id())->findOrFail($conversation_id);
             $conversation->touch();
@@ -1025,6 +1047,17 @@ class UserController extends Controller
             'role' => 'ai',
             'content' => $response,
         ]);
+
+        $user = Auth::user();
+        ActivityLogger::log(
+            $user,
+            $isNewConversation ? 'ai_coach_conversation_started' : 'ai_coach_message_sent',
+            $isNewConversation
+                ? "{$user->name} started an AI coach conversation: {$conversation->title}."
+                : "{$user->name} sent a new AI coach message in {$conversation->title}.",
+            $request->ip(),
+            false
+        );
 
         return response()->json([
             'response' => $response,
@@ -1218,19 +1251,42 @@ class UserController extends Controller
 
     public function deleteCoachConversation($id)
     {
+        $user = Auth::user();
         $conversation = ChatbotConversation::where('user_id', Auth::id())->findOrFail($id);
+        $title = $conversation->title;
         ChatbotMessage::where('chatbot_conversation_id', $conversation->id)->delete();
         $conversation->delete();
+
+        ActivityLogger::log(
+            $user,
+            'ai_coach_conversation_deleted',
+            "{$user->name} deleted AI coach conversation: {$title}.",
+            request()->ip(),
+            false
+        );
 
         return response()->json(['success' => true]);
     }
 
     public function clearCoachConversations()
     {
-        $conversationIds = ChatbotConversation::where('user_id', Auth::id())->pluck('id');
+        $user = Auth::user();
+        $conversationIds = ChatbotConversation::where('user_id', $user->id)->pluck('id');
+        $conversationCount = $conversationIds->count();
 
         ChatbotMessage::whereIn('chatbot_conversation_id', $conversationIds)->delete();
         ChatbotConversation::whereIn('id', $conversationIds)->delete();
+
+        if ($conversationCount > 0) {
+            $label = $conversationCount === 1 ? 'conversation' : 'conversations';
+            ActivityLogger::log(
+                $user,
+                'ai_coach_conversations_cleared',
+                "{$user->name} cleared {$conversationCount} AI coach {$label}.",
+                request()->ip(),
+                false
+            );
+        }
 
         return response()->json(['success' => true]);
     }
@@ -1264,13 +1320,16 @@ class UserController extends Controller
         $gameLevels = $query->get();
 
         $gameProgress = GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
+        $selectedCategory = $request->has('category_id')
+            ? $categories->firstWhere('id', (int) $request->category_id)
+            : null;
 
-        return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories'));
+        return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories', 'selectedCategory'));
     }
 
     private function refreshChallengeEnergyIfNeeded(Profile $profile): void
     {
-        $maxEnergy = 3;
+        $maxEnergy = Profile::MAX_ENERGY;
         $lastRefill = $profile->energy_last_refilled_at;
 
         if ($lastRefill && $lastRefill->isSameDay(now())) {
@@ -1291,7 +1350,159 @@ class UserController extends Controller
 
     public function missions()
     {
-        $missions = collect([
+        $missions = collect();
+
+        $recentVoiceSessions = VoiceSession::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function ($session) {
+                $session->practice_scenario = $this->voiceScenarioLabel($session->category);
+
+                return $session;
+            });
+
+        $practiceSessionCount = VoiceSession::where('user_id', Auth::id())->count();
+
+        return view('user.missions', compact('missions', 'recentVoiceSessions', 'practiceSessionCount'));
+    }
+
+    public function generateMissionTask(Request $request)
+    {
+        $validated = $request->validate([
+            'goal' => 'required|string|min:3|max:240',
+        ]);
+
+        $goal = trim($validated['goal']);
+        $prompt = <<<PROMPT
+Generate exactly 4 customized real-life interview practice missions for a SpeakReady AI user in the Philippines.
+
+USER REQUEST:
+"{$goal}"
+
+Rules:
+- Keep all tasks grounded in interview preparation, career communication, school admission, scholarship, BPO/customer support, IT/technical, fresh graduate, or Philippine workplace communication.
+- Do not generate unrelated tasks.
+- Make each mission specific to what the user wants.
+- Use realistic Philippine interview or workplace wording.
+- Each mission must train a transferable behavior the user can apply during live interview sessions: answer structure, role fit, evidence, ownership, outcome, tone, or next action.
+- Every success criterion must be observable in the user's answer and must avoid vague words like "good", "better", or "confident" unless tied to a concrete behavior.
+- The coach_tip must explain how to apply the practice during an actual interview answer.
+- Return ONLY valid JSON with this shape:
+{
+  "missions": [
+    {
+      "id": "short-kebab-id",
+      "title": "2-5 word title",
+      "category": "short category",
+      "difficulty": "Starter|Focused|Challenge",
+      "duration": 60,
+      "intent": "Confident|Friendly|Calm|Persuasive|Accountable",
+      "icon": "Font Awesome solid icon class without fa-solid",
+      "color": "#2563eb",
+      "prompt": "One concrete speaking task.",
+      "success_criteria": ["criterion 1", "criterion 2", "criterion 3"],
+      "coach_tip": "One short coaching tip."
+    }
+  ]
+}
+PROMPT;
+
+        $decoded = json_decode(AIService::generateJson($prompt, env('AI_PROVIDER', 'gemini')), true);
+        $missions = collect($decoded['missions'] ?? [])
+            ->map(fn ($mission, $index) => $this->normalizeMission($mission, $index, $goal))
+            ->filter()
+            ->values();
+
+        if ($missions->isEmpty()) {
+            $missions = $this->fallbackMissions($goal);
+        }
+
+        return response()->json([
+            'success' => true,
+            'missions' => $missions->take(4)->values(),
+        ]);
+    }
+
+    private function fallbackMissions(?string $goal = null)
+    {
+        $goalText = trim((string) $goal);
+        if ($goalText !== '') {
+            $shortGoal = Str::limit($goalText, 90, '');
+
+            return collect([
+                [
+                    'id' => 'custom-sprint',
+                    'title' => 'Custom Sprint',
+                    'category' => 'Personal Goal',
+                    'difficulty' => 'Starter',
+                    'duration' => 60,
+                    'intent' => 'Confident',
+                    'icon' => 'fa-wand-magic-sparkles',
+                    'color' => '#2563eb',
+                    'prompt' => "Answer this practice goal in 60 seconds: {$shortGoal}. Connect it to a Philippine interview or workplace situation.",
+                    'success_criteria' => [
+                        'States the requested goal clearly',
+                        'Uses one specific school, work, internship, freelance, or project example',
+                        'Ends with a clear result, lesson, or next action',
+                    ],
+                    'coach_tip' => 'Use context, action, and result so the answer sounds specific instead of generic.',
+                ],
+                [
+                    'id' => 'evidence-builder',
+                    'title' => 'Evidence Builder',
+                    'category' => 'Personal Goal',
+                    'difficulty' => 'Focused',
+                    'duration' => 75,
+                    'intent' => 'Persuasive',
+                    'icon' => 'fa-file-circle-check',
+                    'color' => '#0f766e',
+                    'prompt' => "Give one proof point that supports this goal: {$shortGoal}. Explain why it matters to the interviewer.",
+                    'success_criteria' => [
+                        'Names one concrete proof point',
+                        'Explains your personal action',
+                        'Connects the proof to the role, panel, or customer need',
+                    ],
+                    'coach_tip' => 'Proof can come from school, training, OJT, freelance work, family business, or previous employment.',
+                ],
+                [
+                    'id' => 'challenge-response',
+                    'title' => 'Challenge Response',
+                    'category' => 'Personal Goal',
+                    'difficulty' => 'Challenge',
+                    'duration' => 90,
+                    'intent' => 'Accountable',
+                    'icon' => 'fa-mountain-sun',
+                    'color' => '#b45309',
+                    'prompt' => "Describe a challenge related to {$shortGoal}, what you did, and what changed after your action.",
+                    'success_criteria' => [
+                        'Keeps the challenge brief and clear',
+                        'Shows ownership of the action',
+                        'Mentions a result, improvement, or lesson',
+                    ],
+                    'coach_tip' => 'Spend more time on what you did and learned than on the problem itself.',
+                ],
+                [
+                    'id' => 'closing-fit',
+                    'title' => 'Closing Fit',
+                    'category' => 'Personal Goal',
+                    'difficulty' => 'Focused',
+                    'duration' => 60,
+                    'intent' => 'Friendly',
+                    'icon' => 'fa-flag-checkered',
+                    'color' => '#16a34a',
+                    'prompt' => "Close an interview answer about {$shortGoal} by explaining what you can contribute next.",
+                    'success_criteria' => [
+                        'Links the answer to the role or opportunity',
+                        'Names one contribution you can make',
+                        'Ends with a confident but respectful tone',
+                    ],
+                    'coach_tip' => 'A strong close tells the interviewer what to remember about you.',
+                ],
+            ])->map(fn ($mission) => (object) $mission);
+        }
+
+        return collect([
             [
                 'id' => 'first-impression',
                 'title' => 'First Impression Sprint',
@@ -1361,20 +1572,48 @@ class UserController extends Controller
                 'coach_tip' => 'Keep the mistake short. Spend more time on the fix and the lesson.',
             ],
         ])->map(fn ($mission) => (object) $mission);
+    }
 
-        $recentVoiceSessions = VoiceSession::where('user_id', Auth::id())
-            ->orderBy('created_at', 'desc')
-            ->take(3)
-            ->get()
-            ->map(function ($session) {
-                $session->practice_scenario = $this->voiceScenarioLabel($session->category);
+    private function normalizeMission($mission, int $index, string $goal): ?object
+    {
+        if (! is_array($mission)) {
+            return null;
+        }
 
-                return $session;
-            });
+        $icons = ['fa-handshake-angle', 'fa-headset', 'fa-bullhorn', 'fa-seedling', 'fa-briefcase', 'fa-comments'];
+        $colors = ['#2563eb', '#0f766e', '#b45309', '#16a34a', '#7c3aed', '#0891b2'];
+        $difficulty = in_array($mission['difficulty'] ?? '', ['Starter', 'Focused', 'Challenge'], true) ? $mission['difficulty'] : 'Focused';
+        $intent = in_array($mission['intent'] ?? '', ['Confident', 'Friendly', 'Calm', 'Persuasive', 'Accountable'], true) ? $mission['intent'] : 'Confident';
+        $criteria = array_values(array_filter(array_map(
+            fn ($item) => trim((string) $item),
+            (array) ($mission['success_criteria'] ?? [])
+        )));
+        $criteria = array_values(array_filter(
+            $criteria,
+            fn ($item) => str_word_count($item) >= 4 && ! preg_match('/\b(good|better|nice|great|improve)\b/i', $item)
+        ));
+        $prompt = trim((string) ($mission['prompt'] ?? $goal));
+        if (str_word_count($prompt) < 8) {
+            $prompt = "Answer this interview practice goal with one specific example, your action, and the result: {$goal}.";
+        }
 
-        $practiceSessionCount = VoiceSession::where('user_id', Auth::id())->count();
-
-        return view('user.missions', compact('missions', 'recentVoiceSessions', 'practiceSessionCount'));
+        return (object) [
+            'id' => Str::slug((string) ($mission['id'] ?? $mission['title'] ?? 'custom-mission-'.$index)) ?: 'custom-mission-'.$index,
+            'title' => Str::limit(trim((string) ($mission['title'] ?? 'Custom Mission')), 42, ''),
+            'category' => Str::limit(trim((string) ($mission['category'] ?? 'Custom Practice')), 42, ''),
+            'difficulty' => $difficulty,
+            'duration' => max(45, min(120, (int) ($mission['duration'] ?? 60))),
+            'intent' => $intent,
+            'icon' => preg_match('/^fa-[a-z0-9-]+$/', (string) ($mission['icon'] ?? '')) ? $mission['icon'] : $icons[$index % count($icons)],
+            'color' => preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($mission['color'] ?? '')) ? $mission['color'] : $colors[$index % count($colors)],
+            'prompt' => Str::limit($prompt, 260, ''),
+            'success_criteria' => array_slice($criteria ?: [
+                'Answers the requested goal in the first sentence',
+                'Includes one specific example and your personal action',
+                'Ends with a result, lesson, or next interview-ready action',
+            ], 0, 3),
+            'coach_tip' => Str::limit(trim((string) ($mission['coach_tip'] ?? 'Use this in interview sessions by answering directly, proving one point with evidence, and closing with the result.')), 180, ''),
+        ];
     }
 
     public function voiceRehearsal()
@@ -1495,9 +1734,10 @@ class UserController extends Controller
         $validated['transcript'] = TranscriptService::clean($validated['transcript'] ?? '');
 
         $metrics = $this->voiceSessionMetrics($validated);
+        $user = Auth::user();
 
         $session = VoiceSession::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'category' => $validated['category'] ?? null,
             'prompt' => $validated['prompt'] ?? null,
             'transcript' => $validated['transcript'] ?? null,
@@ -1513,9 +1753,18 @@ class UserController extends Controller
         ]);
 
         // Calculate some basic gamification points
-        $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
+        $profile = Profile::firstOrCreate(['user_id' => $user->id]);
         $profile->experience_points += 10;
         $profile->save();
+
+        $scenario = $this->voiceScenarioLabel($session->category);
+        ActivityLogger::log(
+            $user,
+            'voice_rehearsal_saved',
+            "{$user->name} saved a {$scenario} voice rehearsal with {$session->clarity_score}% clarity.",
+            $request->ip(),
+            false
+        );
 
         return response()->json([
             'success' => true,
@@ -1529,6 +1778,36 @@ class UserController extends Controller
                 'fillers' => $session->filler_words,
             ],
         ]);
+    }
+
+    public function clearVoiceSessions(Request $request)
+    {
+        $user = Auth::user();
+        $sessionCount = VoiceSession::where('user_id', $user->id)->count();
+
+        if ($sessionCount === 0) {
+            return redirect()->back()->with('message', 'No voice rehearsal sessions to clear.');
+        }
+
+        VoiceSession::where('user_id', $user->id)->delete();
+
+        $label = $sessionCount === 1 ? 'session' : 'sessions';
+
+        ActivityLogger::log(
+            $user,
+            'voice_rehearsal_sessions_cleared',
+            "{$user->name} cleared {$sessionCount} voice rehearsal {$label}.",
+            $request->ip(),
+            true,
+            [
+                'title' => 'Voice Sessions Cleared',
+                'message' => "You cleared {$sessionCount} voice rehearsal {$label}.",
+                'icon' => 'fa-microphone-slash',
+                'type' => 'warning',
+            ]
+        );
+
+        return redirect()->back()->with('success', 'All voice rehearsal sessions were cleared.');
     }
 
     public function reports()
@@ -1695,6 +1974,15 @@ class UserController extends Controller
             $user->save();
         }
 
+        $languageLabel = Setting::languageConfig($validated['preferred_language'])['label'] ?? strtoupper($validated['preferred_language']);
+        ActivityLogger::log(
+            $user,
+            'language_updated',
+            "{$user->name} changed preferred language to {$languageLabel}.",
+            $request->ip(),
+            false
+        );
+
         return redirect()->back()->with('success', 'Language updated successfully.');
     }
 
@@ -1784,10 +2072,15 @@ class UserController extends Controller
         ActivityLogger::log(
             $user,
             'profile_updated',
-            'You successfully updated your profile information.',
+            "{$user->name} updated profile information.",
             $request->ip(),
             true,
-            ['title' => 'Profile Updated', 'icon' => 'fa-user-pen', 'type' => 'success']
+            [
+                'title' => 'Profile Updated',
+                'message' => 'You successfully updated your profile information.',
+                'icon' => 'fa-user-pen',
+                'type' => 'success',
+            ]
         );
 
         return redirect()->back()->with('success', 'Profile updated successfully.');
@@ -1808,10 +2101,15 @@ class UserController extends Controller
         ActivityLogger::log(
             $user,
             'password_changed',
-            'Your account password was recently changed.',
+            "{$user->name} changed their account password.",
             $request->ip(),
             true,
-            ['title' => 'Password Changed', 'icon' => 'fa-lock', 'type' => 'warning']
+            [
+                'title' => 'Password Changed',
+                'message' => 'Your account password was recently changed.',
+                'icon' => 'fa-lock',
+                'type' => 'warning',
+            ]
         );
 
         return redirect()->back()->with('success', 'Password updated successfully.');
@@ -1820,6 +2118,14 @@ class UserController extends Controller
     public function deleteAccount(Request $request)
     {
         $user = Auth::user();
+        ActivityLogger::log(
+            $user,
+            'account_deleted',
+            "{$user->name} ({$user->email}) deleted their account.",
+            $request->ip(),
+            false
+        );
+
         Auth::logout();
         $user->delete(); // Soft delete as configured in User model
 
@@ -1878,13 +2184,19 @@ class UserController extends Controller
         });
 
         if ($result['success']) {
+            $user = Auth::user();
             ActivityLogger::log(
-                Auth::user(),
+                $user,
                 'perk_unlocked',
-                'You unlocked a new skill perk!',
+                "{$user->name} unlocked the {$perk['name']} skill perk.",
                 $request->ip(),
                 true,
-                ['title' => 'Perk Unlocked', 'icon' => 'fa-unlock', 'type' => 'success']
+                [
+                    'title' => 'Perk Unlocked',
+                    'message' => 'You unlocked a new skill perk!',
+                    'icon' => 'fa-unlock',
+                    'type' => 'success',
+                ]
             );
         }
 
@@ -2186,6 +2498,15 @@ class UserController extends Controller
         }
 
         $progress->save();
+
+        $user = Auth::user();
+        ActivityLogger::log(
+            $user,
+            'learning_module_progress_updated',
+            "{$user->name} updated learning progress for {$module->title} to {$progressPercentage}%.",
+            $request->ip(),
+            false
+        );
 
         $message = $status === 'completed'
             ? 'Module marked as completed. Nice work keeping your learning trail honest.'

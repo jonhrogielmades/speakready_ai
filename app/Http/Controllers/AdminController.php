@@ -29,6 +29,7 @@ class AdminController extends Controller
         $mockInterviewsCount = \App\Models\InterviewSession::count();
         $aiFeedbacksCount = \App\Models\Feedback::count();
         $modulesCompletedCount = \App\Models\LearningProgress::where('status', 'completed')->count();
+        $userUpdatesCount = \App\Models\ActivityLog::count();
         
         $recentSessions = \App\Models\InterviewSession::with(['user', 'category', 'score'])
             ->orderBy('created_at', 'desc')
@@ -100,6 +101,7 @@ class AdminController extends Controller
             'mockInterviewsCount',
             'aiFeedbacksCount',
             'modulesCompletedCount',
+            'userUpdatesCount',
             'recentSessions',
             'readinessBandSummary',
             'usersNeedingSupport',
@@ -1173,12 +1175,11 @@ EOT;
         $newCount = \App\Models\ActivityLog::whereNull('read_at')->count();
         $authActivities = $latestActivities
             ->whereNull('read_at')
-            ->whereIn('action', ['user_logged_in', 'user_logged_out'])
             ->values()
             ->map(function ($activity) {
                 return [
                     'id' => $activity->id,
-                    'title' => $activity->action === 'user_logged_out' ? 'User logged out' : 'User logged in',
+                    'title' => ucwords(str_replace('_', ' ', $activity->action)),
                     'body' => $activity->description ?: ($activity->user ? $activity->user->name : 'A user activity was recorded.'),
                     'url' => route('admin.dashboard'),
                 ];

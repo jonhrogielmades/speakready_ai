@@ -1000,7 +1000,7 @@
                 <i class="fa-solid fa-robot"></i>
             </div>
             <h4 style="color:var(--tx);font-weight:700">{{ $hasSavedInterviewState ? 'Philippines Interview Saved' : 'Philippines Interview Ready' }}</h4>
-            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $questions->count() }} Philippines-focused questions. Live readiness and STAR analysis will update as you respond.</p>
+            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $num }} Philippines-focused questions. The AI greeting is not counted as a question.</p>
             @if($sourceNames)
                 <div class="session-source-line"><i class="fa-solid fa-link me-1"></i> Scenario: {{ $scenarioLabel }}. Sources: {{ $sourceNames }}.</div>
             @endif
@@ -1008,7 +1008,7 @@
                 <span class="db-badge" style="background:rgba(14,165,233,.13);color:#38bdf8"><i class="fa-solid fa-flag me-1"></i> {{ $scenarioLabel }}</span>
                 <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
                 <span class="db-badge" style="background:rgba(245,158,11,.12);color:#f59e0b"><i class="fa-solid fa-stopwatch me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
-                <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-list-check me-1"></i> {{ $questions->count() }} Questions</span>
+                <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-list-check me-1"></i> {{ $num }} Questions</span>
             </div>
             <button class="btn px-4 py-3 w-100 btn-shine intro-start-btn" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume PH Interview' : 'Begin PH Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
         </div>
@@ -1067,7 +1067,13 @@
             let isSubmittingAnswer = false;
             let finalAnswerSubmitted = false;
             let feedbackSubmissionInFlight = false;
-            let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(chatHistory) && chatHistory.some(item => item && item.role === 'interviewer' && String(item.text || '').includes('Let us start with the first question.'))));
+            let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(chatHistory) && chatHistory.some(item => {
+                const text = String(item?.text || '');
+                return item && item.role === 'interviewer' && (
+                    text.includes('Let us start with the first question.')
+                    || text.includes('To begin, I would like to get to know you first.')
+                );
+            })));
             const pendingFetchControllers = new Set();
             const displayedQuestionIds = new Set();
             
@@ -2403,12 +2409,55 @@
                 return targetQuestionCount === 1 ? '1 question' : `${targetQuestionCount} questions`;
             }
 
+            function isOpeningQuestion(question) {
+                return question && question.source_type === 'real_interview_opening';
+            }
+
+            function hasOpeningQuestion() {
+                return questions.length > 0 && isOpeningQuestion(questions[0]);
+            }
+
+            function questionDisplayNumber(idx) {
+                return hasOpeningQuestion() ? idx : idx + 1;
+            }
+
+            function isLastScoredQuestion(idx) {
+                return questionDisplayNumber(idx) >= targetQuestionCount;
+            }
+
+            function isPenultimateScoredQuestion(idx) {
+                return questionDisplayNumber(idx) >= targetQuestionCount - 1;
+            }
+
+            function candidateFirstName(answerText) {
+                const clean = String(answerText || '').replace(/\s+/g, ' ').trim();
+                const patterns = [
+                    /\bmy name is\s+([A-Z][a-zA-Z'-]{1,30})\b/i,
+                    /\bi am\s+([A-Z][a-zA-Z'-]{1,30})\b/i,
+                    /\bi'm\s+([A-Z][a-zA-Z'-]{1,30})\b/i,
+                    /^\s*([A-Z][a-zA-Z'-]{1,30})\b/
+                ];
+                const blockedNames = new Set(['i', 'im', "i'm", 'am', 'my', 'name', 'hello', 'hi', 'yes', 'no']);
+
+                for (const pattern of patterns) {
+                    const match = clean.match(pattern);
+                    if (match && match[1]) {
+                        const candidate = match[1].replace(/[^a-zA-Z'-]/g, '');
+                        if (candidate.length > 1 && !blockedNames.has(candidate.toLowerCase())) {
+                            return candidate.charAt(0).toUpperCase() + candidate.slice(1).toLowerCase();
+                        }
+                    }
+                }
+
+                return '';
+            }
+
             function openingConversationText() {
                 const modeLine = liveFeedbackMode === 'real_interview'
-                    ? 'I will keep this like a real interview and save detailed feedback until the end.'
-                    : 'I will keep the conversation realistic and ask follow-ups based on what you answer.';
+                    ? 'I will save feedback until the end.'
+                    : 'I may ask follow-ups based on your answers.';
 
-                return `Hi, thanks for joining today. I will be your interviewer for this ${sessionScenarioLabel}, focused on the ${sessionTargetPosition} role. We will go through ${pluralizeQuestionCount()} at ${sessionDifficultyLabel} level. ${modeLine} Answer naturally with real examples. Let us start with the first question.`;
+                return `Hi, I'm Mia, good to meet you. I will be your interviewer for the ${sessionTargetPosition} role. We have ${pluralizeQuestionCount()} today. ${modeLine} To begin, I would like to get to know you first.`;
             }
 
             function closingConversationText() {
@@ -2560,7 +2609,9 @@
                 setAnswerInputEnabled(false);
                 
                 document.getElementById('aiQuestionText').innerText = '...';
-                document.getElementById('qCounter').innerText = Math.min(idx + 1, targetQuestionCount) + '/' + targetQuestionCount;
+                document.getElementById('qCounter').innerText = isOpeningQuestion(q)
+                    ? 'Intro'
+                    : Math.min(questionDisplayNumber(idx), targetQuestionCount) + '/' + targetQuestionCount;
                 updateQuestionSource(q);
 
                 // Append AI question to chat log if it's the first time seeing it
@@ -3225,7 +3276,8 @@
 
                 appendChatMessage('user', answerText);
 
-                const isLastQuestion = currentQIdx >= targetQuestionCount - 1;
+                const answeredOpeningQuestion = isOpeningQuestion(questions[currentQIdx]);
+                const isLastQuestion = !answeredOpeningQuestion && isLastScoredQuestion(currentQIdx);
 
                 if (isLastQuestion) {
                     finalAnswerSubmitted = true;
@@ -3284,7 +3336,7 @@
                 formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
-                formData.append('is_final_question', (currentQIdx >= targetQuestionCount - 2));
+                formData.append('is_final_question', (!answeredOpeningQuestion && isPenultimateScoredQuestion(currentQIdx)));
 
                 try {
                     const response = await managedFetch('{{ route("interview.chatReply") }}', {

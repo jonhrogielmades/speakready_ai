@@ -159,7 +159,7 @@ class PageSmokeTest extends TestCase
     private function seedUserPageData(): array
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        Profile::create(['user_id' => $user->id, 'energy' => 3]);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
         $category = $this->category();
         $gameCategory = $this->category(['title' => 'Learning Game', 'type' => 'game']);
         $level = GameLevel::create([

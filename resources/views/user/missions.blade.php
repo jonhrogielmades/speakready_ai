@@ -67,6 +67,42 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
     }
+    .mission-generator {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 9px;
+        margin-bottom: 14px;
+    }
+    .mission-generator input {
+        width: 100%;
+        min-height: 42px;
+        color: var(--tx);
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        padding: 9px 12px;
+        outline: none;
+    }
+    .mission-generator input:focus {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.14);
+    }
+    .mission-generator-status {
+        color: var(--tx3);
+        font-size: 0.76rem;
+        line-height: 1.35;
+        margin: -6px 0 12px;
+    }
+    .mission-empty-state {
+        color: var(--tx3);
+        background: var(--bg3);
+        border: 1px dashed var(--bd2);
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 0.84rem;
+        line-height: 1.45;
+        text-align: center;
+    }
     .mission-card {
         width: 100%;
         min-height: 176px;
@@ -90,23 +126,39 @@
         box-shadow: 0 14px 34px color-mix(in srgb, var(--mission-color, #2563eb) 18%, transparent);
         transform: translateY(-2px);
     }
-    .mission-card-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 13px;
+    #mission-mode-page .mission-card-name {
+        color: var(--tx);
+        font-size: 0.82rem;
+        font-weight: 900;
+        line-height: 1;
+        margin: 0 !important;
+        min-width: 0;
+        width: 100% !important;
+        max-width: none !important;
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap !important;
+    }
+    #mission-mode-page .mission-title-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 auto;
+        flex: 0 0 18px;
         color: var(--mission-color, #2563eb);
         background: color-mix(in srgb, var(--mission-color, #2563eb) 14%, transparent);
+        font-size: 0.55rem;
     }
-    .mission-card-name {
-        color: var(--tx);
-        font-size: 0.95rem;
-        font-weight: 900;
-        line-height: 1.25;
-        margin: 0;
+    #mission-mode-page .mission-title-text {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .mission-card-copy {
         color: var(--tx3);
@@ -216,6 +268,7 @@
         font-weight: 850;
         text-decoration: none;
         cursor: pointer;
+        text-align: center;
     }
     .mission-btn-primary {
         color: #fff;
@@ -228,6 +281,9 @@
         grid-template-columns: 160px minmax(0, 1fr);
         gap: 16px;
         align-items: center;
+    }
+    #missionResultPanel {
+        margin-top: 6px;
     }
     .mission-score-ring {
         width: 140px;
@@ -271,6 +327,50 @@
         flex: 0 0 auto;
         margin-top: 3px;
     }
+    .mission-voice-modal .modal-content {
+        background: var(--sf);
+        color: var(--tx);
+        border: 1px solid var(--bd);
+        border-radius: 18px;
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+    }
+    .modal-backdrop.mission-voice-backdrop {
+        background: rgba(15, 23, 42, 0.42);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 1 !important;
+    }
+    .mission-voice-modal .modal-header,
+    .mission-voice-modal .modal-footer {
+        border-color: var(--bd);
+    }
+    .mission-voice-modal .modal-footer {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .mission-voice-modal .modal-footer .btn {
+        width: 100%;
+        min-height: 42px;
+    }
+    .mission-voice-prompt,
+    .mission-voice-transcript {
+        color: var(--tx);
+        background: var(--bg3);
+        border: 1px solid var(--bd);
+        border-radius: 14px;
+        padding: 14px;
+        line-height: 1.5;
+    }
+    .mission-voice-transcript {
+        min-height: 140px;
+        white-space: pre-wrap;
+    }
+    .mission-voice-status {
+        color: var(--tx3);
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
     .mission-recent-list {
         display: grid;
         gap: 9px;
@@ -306,6 +406,9 @@
         .mission-grid {
             grid-template-columns: 1fr;
         }
+        .mission-generator {
+            grid-template-columns: 1fr;
+        }
         .mission-score-ring {
             width: 124px;
             height: 124px;
@@ -321,13 +424,69 @@
             padding: 14px;
             border-radius: 15px;
         }
-        .mission-panel-head,
-        .mission-detail-head {
+        #missionResultPanel {
+            margin-top: 14px;
+        }
+        .mission-panel-head {
             display: grid;
             grid-template-columns: 1fr;
         }
+        .mission-detail-head {
+            display: flex !important;
+            grid-template-columns: none !important;
+            align-items: center !important;
+            flex-direction: row !important;
+            gap: 8px;
+        }
+        .mission-detail-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            flex: 0 0 32px;
+            font-size: 0.82rem;
+        }
+        .mission-detail-head > div {
+            min-width: 0;
+        }
+        .mission-detail-head .mission-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .mission-actions {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .mission-btn {
+            min-height: 42px;
+            padding: 8px 6px;
+            font-size: 0.72rem;
+            line-height: 1.15;
+            white-space: normal;
+            gap: 5px;
+        }
+        .mission-btn i {
+            flex: 0 0 auto;
+            margin: 0;
+        }
+        .mission-card {
+            min-height: 0;
+            gap: 10px;
+            padding: 13px;
+        }
+        #mission-mode-page .mission-card-name {
+            font-size: 0.76rem;
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            gap: 5px;
+        }
+        #mission-mode-page .mission-title-icon {
+            width: 17px;
+            height: 17px;
+            border-radius: 5px;
+            flex-basis: 17px;
+            font-size: 0.5rem;
         }
     }
 </style>
@@ -359,28 +518,18 @@
             <div class="mission-panel-head">
                 <div>
                     <h5 class="mission-title"><i class="fa-solid fa-route me-2" style="color:#0ea5e9;"></i>Mission Board</h5>
-                    <div class="mission-kicker">Choose one task, answer it, and measure how ready it sounds.</div>
+                    <div class="mission-kicker">Generate tasks from what you want to practice, then measure how ready your answer sounds.</div>
                 </div>
                 <span class="mission-pill" style="--pill-color:#16a34a"><i class="fa-solid fa-microphone-lines"></i>{{ $practiceSessionCount }} saved sessions</span>
             </div>
 
+            <div class="mission-generator">
+                <input type="text" id="missionGoalInput" maxlength="240" placeholder="Example: BPO final interview, scholarship panel, IT debugging question...">
+                <button type="button" class="mission-btn mission-btn-primary" id="generateMissionBtn" style="min-height:42px;"><i class="fa-solid fa-wand-magic-sparkles"></i>Generate Task</button>
+            </div>
+            <div class="mission-generator-status" id="missionGeneratorStatus">Tasks can be personalized to your target role, school interview, panel, or workplace situation.</div>
+
             <div class="mission-grid" id="missionGrid">
-                @foreach($missions as $mission)
-                    <button type="button" class="mission-card" data-mission-id="{{ $mission->id }}" style="--mission-color: {{ $mission->color }};">
-                        <div class="d-flex align-items-center justify-content-between gap-2">
-                            <span class="mission-card-icon"><i class="fa-solid {{ $mission->icon }}"></i></span>
-                            <span class="mission-meta">{{ $mission->difficulty }}</span>
-                        </div>
-                        <div>
-                            <h6 class="mission-card-name">{{ $mission->title }}</h6>
-                            <p class="mission-card-copy">{{ $mission->prompt }}</p>
-                        </div>
-                        <div class="mission-card-meta">
-                            <span class="mission-meta"><i class="fa-regular fa-clock me-1"></i>{{ $mission->duration }}s</span>
-                            <span class="mission-meta"><i class="fa-solid fa-face-smile me-1"></i>{{ $mission->intent }}</span>
-                        </div>
-                    </button>
-                @endforeach
             </div>
         </section>
 
@@ -407,7 +556,7 @@
             <div class="mission-actions">
                 <button type="button" class="mission-btn" id="missionTimerBtn"><i class="fa-regular fa-clock"></i><span id="missionTimerText">Start 0:00</span></button>
                 <button type="button" class="mission-btn mission-btn-primary" id="scoreMissionBtn"><i class="fa-solid fa-chart-simple"></i>Score Answer</button>
-                <a href="{{ route('user.drills.voice') }}" class="mission-btn" id="voiceMissionLink"><i class="fa-solid fa-microphone-lines"></i>Practice With Voice</a>
+                <button type="button" class="mission-btn" id="voiceMissionBtn"><i class="fa-solid fa-microphone-lines"></i>Practice With Voice</button>
                 <button type="button" class="mission-btn" id="clearMissionBtn"><i class="fa-solid fa-eraser"></i>Clear</button>
             </div>
         </aside>
@@ -457,12 +606,48 @@
     @endif
 </div>
 
+<div class="modal fade mission-voice-modal" id="missionVoiceModal" tabindex="-1" aria-labelledby="missionVoiceModalTitle" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="missionVoiceModalTitle">Mission Voice Practice</h5>
+                    <div class="mission-voice-status" id="missionVoiceStatus">Listen to the mission, then record your spoken answer.</div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="mission-kicker mb-2">Mission Question</div>
+                    <div class="mission-voice-prompt" id="missionVoicePrompt">Generate or select a mission first.</div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" class="mission-btn mission-btn-primary" id="speakMissionBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-volume-high"></i>AI Speak Mission</button>
+                    <button type="button" class="mission-btn" id="startMissionVoiceBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-microphone"></i>Start Voice</button>
+                    <button type="button" class="mission-btn" id="stopMissionVoiceBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-stop"></i>Stop</button>
+                    <button type="button" class="mission-btn" id="clearMissionVoiceBtn" style="min-height:38px;padding:8px 12px;"><i class="fa-solid fa-eraser"></i>Clear Transcript</button>
+                </div>
+                <div>
+                    <div class="mission-kicker mb-2">Voice Transcript</div>
+                    <div class="mission-voice-transcript" id="missionVoiceTranscript" contenteditable="true">Your spoken answer will appear here...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="useMissionVoiceTranscriptBtn"><i class="fa-solid fa-check me-1"></i>Use Transcript</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-const missionData = @json($missions->values());
-const voiceBaseUrl = @json(route('user.drills.voice'));
+let missionData = @json($missions->values());
+const missionGenerateUrl = @json(route('user.missions.generate'));
 let activeMission = missionData[0] || null;
 let missionTimer = null;
 let remainingSeconds = activeMission ? Number(activeMission.duration) || 60 : 60;
+const MissionSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let missionRecognition = null;
+let missionVoiceTranscript = '';
 
 function escapeMissionHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -487,21 +672,93 @@ function hasAny(text, terms) {
     return terms.some(term => new RegExp(`\\b${term}\\b`, 'i').test(text));
 }
 
-function missionVoiceUrl(mission) {
-    const params = new URLSearchParams({
-        mission: mission.id,
-        category: mission.category,
-        intent: mission.intent,
-        prompt: mission.prompt
-    });
-
-    return `${voiceBaseUrl}?${params.toString()}`;
-}
-
 function formatMissionTime(totalSeconds) {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function renderMissionBoard() {
+    const grid = document.getElementById('missionGrid');
+    if (!grid) return;
+
+    if (missionData.length === 0) {
+        grid.innerHTML = '<div class="mission-empty-state">Tell AI what you want to practice to generate your mission tasks.</div>';
+        return;
+    }
+
+    grid.innerHTML = missionData.map(mission => `
+        <button type="button" class="mission-card" data-mission-id="${escapeMissionHtml(mission.id)}" style="--mission-color: ${escapeMissionHtml(mission.color)};">
+            <h6 class="mission-card-name">
+                <span class="mission-title-icon"><i class="fa-solid ${escapeMissionHtml(mission.icon)}"></i></span>
+                <span class="mission-title-text">${escapeMissionHtml(mission.title)}</span>
+            </h6>
+            <div>
+                <p class="mission-card-copy">${escapeMissionHtml(mission.prompt)}</p>
+            </div>
+            <div class="mission-card-meta">
+                <span class="mission-meta">${escapeMissionHtml(mission.difficulty)}</span>
+                <span class="mission-meta"><i class="fa-regular fa-clock me-1"></i>${Number(mission.duration) || 60}s</span>
+                <span class="mission-meta"><i class="fa-solid fa-face-smile me-1"></i>${escapeMissionHtml(mission.intent)}</span>
+            </div>
+        </button>
+    `).join('');
+
+    document.querySelectorAll('.mission-card').forEach(card => {
+        card.addEventListener('click', () => selectMission(card.dataset.missionId));
+    });
+}
+
+function setMissionGeneratorStatus(message, color = 'var(--tx3)') {
+    const status = document.getElementById('missionGeneratorStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.style.color = color;
+}
+
+async function generateMissionTasks() {
+    const input = document.getElementById('missionGoalInput');
+    const button = document.getElementById('generateMissionBtn');
+    const goal = input ? input.value.trim() : '';
+
+    if (goal.length < 3) {
+        setMissionGeneratorStatus('Type what you want to practice first.', '#f59e0b');
+        return;
+    }
+
+    const originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>Generating';
+    setMissionGeneratorStatus('Generating missions for your goal...');
+
+    try {
+        const response = await fetch(missionGenerateUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ goal })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success || !Array.isArray(data.missions) || data.missions.length === 0) {
+            throw new Error(data.message || 'Mission generation failed.');
+        }
+
+        missionData = data.missions;
+        activeMission = missionData[0] || null;
+        renderMissionBoard();
+        selectMission(activeMission?.id);
+        setMissionGeneratorStatus('Generated fresh missions based on your request.', '#16a34a');
+    } catch (error) {
+        console.error('Mission generation failed:', error);
+        setMissionGeneratorStatus('Could not generate with AI right now. Try a simpler goal or use the current missions.', '#ef4444');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalHtml;
+    }
 }
 
 function stopMissionTimer() {
@@ -558,10 +815,134 @@ function selectMission(id) {
     document.getElementById('detailCriteria').innerHTML = mission.success_criteria
         .map(item => `<li><i class="fa-solid fa-check"></i><span>${escapeMissionHtml(item)}</span></li>`)
         .join('');
-    document.getElementById('voiceMissionLink').href = missionVoiceUrl(mission);
 
     resetMissionTimer();
     scoreMission(false);
+}
+
+function setMissionVoiceStatus(message, color = 'var(--tx3)') {
+    const status = document.getElementById('missionVoiceStatus');
+    if (!status) return;
+    status.textContent = message;
+    status.style.color = color;
+}
+
+function missionVoiceText() {
+    if (!activeMission) return '';
+    return `${activeMission.title}. ${activeMission.prompt}`;
+}
+
+function openMissionVoiceModal() {
+    if (!activeMission) {
+        setMissionGeneratorStatus('Generate or select a mission before using voice practice.', '#f59e0b');
+        return;
+    }
+
+    document.getElementById('missionVoiceModalTitle').textContent = `${activeMission.title} Voice Practice`;
+    document.getElementById('missionVoicePrompt').textContent = activeMission.prompt;
+    setMissionVoiceStatus('Listen to the mission, then record your spoken answer.');
+
+    const modalElement = document.getElementById('missionVoiceModal');
+    if (window.bootstrap?.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modalElement).show();
+    } else {
+        modalElement.classList.add('show');
+        modalElement.style.display = 'block';
+        modalElement.removeAttribute('aria-hidden');
+    }
+}
+
+function speakMissionPrompt() {
+    if (!('speechSynthesis' in window)) {
+        setMissionVoiceStatus('Text-to-speech is not supported in this browser.', '#f59e0b');
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(missionVoiceText());
+    utterance.lang = 'en-PH';
+    utterance.rate = 0.92;
+    utterance.pitch = 1;
+    utterance.onstart = () => setMissionVoiceStatus('AI is speaking the mission...');
+    utterance.onend = () => setMissionVoiceStatus('Now answer the mission using Start Voice.');
+    utterance.onerror = () => setMissionVoiceStatus('Could not speak the mission in this browser.', '#f59e0b');
+    window.speechSynthesis.speak(utterance);
+}
+
+function updateMissionVoiceTranscript(interim = '') {
+    const box = document.getElementById('missionVoiceTranscript');
+    const text = [missionVoiceTranscript, interim].filter(Boolean).join(' ').trim();
+    box.textContent = text || 'Your spoken answer will appear here...';
+}
+
+function startMissionVoice() {
+    if (!MissionSpeechRecognition) {
+        setMissionVoiceStatus('Voice transcription is not supported in this browser. You can type directly in the transcript box.', '#f59e0b');
+        return;
+    }
+
+    if (missionRecognition) {
+        try { missionRecognition.stop(); } catch (error) {}
+    }
+
+    missionRecognition = new MissionSpeechRecognition();
+    missionRecognition.lang = 'en-PH';
+    missionRecognition.continuous = true;
+    missionRecognition.interimResults = true;
+
+    missionRecognition.onstart = () => setMissionVoiceStatus('Listening. Speak your answer clearly...', '#16a34a');
+    missionRecognition.onerror = event => {
+        const reason = event.error === 'not-allowed'
+            ? 'Microphone permission was blocked. Allow microphone access, then try again.'
+            : 'Voice transcription stopped. You can try again or type directly.';
+        setMissionVoiceStatus(reason, '#ef4444');
+    };
+    missionRecognition.onend = () => setMissionVoiceStatus('Voice capture stopped. Review or edit the transcript.');
+    missionRecognition.onresult = event => {
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0]?.transcript || '';
+            if (event.results[i].isFinal) {
+                missionVoiceTranscript = `${missionVoiceTranscript} ${transcript}`.trim();
+            } else {
+                interim += transcript;
+            }
+        }
+        updateMissionVoiceTranscript(interim.trim());
+    };
+
+    missionRecognition.start();
+}
+
+function stopMissionVoice() {
+    if (missionRecognition) {
+        try { missionRecognition.stop(); } catch (error) {}
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function clearMissionVoiceTranscript() {
+    missionVoiceTranscript = '';
+    document.getElementById('missionVoiceTranscript').textContent = 'Your spoken answer will appear here...';
+    setMissionVoiceStatus('Transcript cleared. Start voice again when ready.');
+}
+
+function useMissionVoiceTranscript() {
+    const box = document.getElementById('missionVoiceTranscript');
+    const text = box.textContent.trim();
+    if (!text || text === 'Your spoken answer will appear here...') {
+        setMissionVoiceStatus('Record or type a transcript before using it.', '#f59e0b');
+        return;
+    }
+
+    document.getElementById('missionAnswer').value = text;
+    scoreMission(false);
+    setMissionVoiceStatus('Transcript added to your mission answer.', '#16a34a');
+
+    const modalElement = document.getElementById('missionVoiceModal');
+    if (window.bootstrap?.Modal) {
+        bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+    }
 }
 
 function missionToneSignal(mission, normalizedText) {
@@ -598,38 +979,38 @@ function scoreMission(showEmptyAlert = true) {
 
     if (words >= 45 && words <= 150) {
         score += 24;
-        feedback.push('Length is practical for a spoken mission answer.');
+        feedback.push('Interview use: your answer length is practical for a spoken interview response.');
     } else if (words > 0) {
         score += 12;
-        feedback.push(words < 45 ? 'Add more detail so the answer has enough proof.' : 'Tighten the answer so it stays interview-friendly.');
+        feedback.push(words < 45 ? 'Interview use: add one concrete detail so the answer has enough proof.' : 'Interview use: tighten the answer so it stays clear under time pressure.');
     }
 
     if (hasAny(normalized, ['because', 'for example', 'example', 'when', 'during', 'project', 'internship', 'school', 'work', 'client'])) {
         score += 22;
-        feedback.push('Evidence is present, which makes the answer easier to trust.');
+        feedback.push('Interview use: evidence is present, which makes the answer easier for an interviewer to trust.');
     } else if (answer) {
-        feedback.push('Add one specific example, project, class, client, or work situation.');
+        feedback.push('Interview use: add one specific example, project, class, client, or work situation.');
     }
 
     if (hasAny(normalized, ['result', 'improved', 'reduced', 'increased', 'learned', 'completed', 'solved', 'helped', 'successful'])) {
         score += 20;
-        feedback.push('The answer includes an outcome or lesson.');
+        feedback.push('Interview use: the answer includes an outcome or lesson, so it shows growth or impact.');
     } else if (answer) {
-        feedback.push('Close with a result, lesson, or next action.');
+        feedback.push('Interview use: close with a result, lesson, or next action.');
     }
 
     if (missionToneSignal(activeMission, normalized)) {
         score += 20;
-        feedback.push(`${activeMission.intent} intention is showing in the wording.`);
+        feedback.push(`Interview use: ${activeMission.intent.toLowerCase()} intention is showing in the wording.`);
     } else if (answer) {
-        feedback.push(`Adjust wording so it sounds more ${String(activeMission.intent).toLowerCase()}.`);
+        feedback.push(`Interview use: adjust wording so it sounds more ${String(activeMission.intent).toLowerCase()} without inventing facts.`);
     }
 
     if (hasAny(normalized, ['i will', 'next', 'contribute', 'support', 'help', 'apply', 'continue', 'moving forward'])) {
         score += 14;
-        feedback.push('The ending gives a forward direction.');
+        feedback.push('Interview use: the ending gives a forward direction the interviewer can remember.');
     } else if (answer) {
-        feedback.push('End with what you will do, contribute, or improve next.');
+        feedback.push('Interview use: end with what you will do, contribute, or improve next.');
     }
 
     score = Math.max(0, Math.min(100, score));
@@ -642,23 +1023,38 @@ function scoreMission(showEmptyAlert = true) {
     document.getElementById('missionResultStatus').textContent = answer ? status : 'Waiting';
     document.getElementById('missionResultStatus').style.setProperty('--pill-color', answer ? scoreColor : '#64748b');
     document.getElementById('missionResultSummary').textContent = answer
-        ? `${activeMission.title} checked ${words} words against structure, evidence, result, and intention.`
+        ? `${activeMission.title} checked ${words} words against interview-ready structure, evidence, result, tone, and next action.`
         : 'Score an answer to see mission-specific feedback.';
-    document.getElementById('missionFeedbackList').innerHTML = (answer ? feedback : ['Your result will check structure, evidence, tone fit, and next action.'])
+    document.getElementById('missionFeedbackList').innerHTML = (answer ? feedback : ['Your result will check interview structure, evidence, role fit, tone, and next action.'])
         .map(item => `<li><i class="fa-solid fa-arrow-right"></i><span>${escapeMissionHtml(item)}</span></li>`)
         .join('');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.mission-card').forEach(card => {
-        card.addEventListener('click', () => selectMission(card.dataset.missionId));
-    });
+    renderMissionBoard();
     document.getElementById('scoreMissionBtn').addEventListener('click', () => scoreMission(true));
     document.getElementById('clearMissionBtn').addEventListener('click', () => {
         document.getElementById('missionAnswer').value = '';
         scoreMission(false);
     });
     document.getElementById('missionTimerBtn').addEventListener('click', toggleMissionTimer);
+    document.getElementById('voiceMissionBtn').addEventListener('click', openMissionVoiceModal);
+    document.getElementById('speakMissionBtn').addEventListener('click', speakMissionPrompt);
+    document.getElementById('startMissionVoiceBtn').addEventListener('click', startMissionVoice);
+    document.getElementById('stopMissionVoiceBtn').addEventListener('click', stopMissionVoice);
+    document.getElementById('clearMissionVoiceBtn').addEventListener('click', clearMissionVoiceTranscript);
+    document.getElementById('useMissionVoiceTranscriptBtn').addEventListener('click', useMissionVoiceTranscript);
+    document.getElementById('missionVoiceModal').addEventListener('shown.bs.modal', () => {
+        document.querySelector('.modal-backdrop:last-of-type')?.classList.add('mission-voice-backdrop');
+    });
+    document.getElementById('missionVoiceModal').addEventListener('hidden.bs.modal', stopMissionVoice);
+    document.getElementById('generateMissionBtn').addEventListener('click', generateMissionTasks);
+    document.getElementById('missionGoalInput').addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            generateMissionTasks();
+        }
+    });
     selectMission(activeMission?.id);
 });
 </script>
