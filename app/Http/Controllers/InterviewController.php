@@ -540,6 +540,43 @@ class InterviewController extends Controller
             ->header('Cache-Control', 'private, no-store, max-age=0');
     }
 
+    public function transcribe(Request $request)
+    {
+        if (! Auth::check()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'session_id' => 'nullable|exists:interview_sessions,id',
+            'question_id' => 'required|exists:questions,id',
+            'audio' => [
+                'required',
+                'file',
+                'max:10240',
+                'mimetypes:audio/webm,audio/mp4,audio/mpeg,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream',
+            ],
+        ]);
+
+        $session = $this->activeInterviewSession($validated['session_id'] ?? null, $validated['question_id']);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
+
+        $question = $this->questionForSession($validated['question_id'], $session);
+        if (! $question) {
+            return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
+        }
+
+        $transcript = AIService::transcribeSpeech($request->file('audio'), $this->currentLanguageConfig());
+        if ($transcript === null) {
+            return response()->json(['error' => 'Live transcription is not available.'], 503);
+        }
+
+        return response()->json([
+            'transcript' => TranscriptService::clean($transcript),
+        ]);
+    }
+
     public function finish(Request $request)
     {
         if (! Auth::check()) {

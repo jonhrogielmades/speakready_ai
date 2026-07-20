@@ -65,6 +65,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->name('interview.answer');
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->name('interview.chatReply');
     Route::post('/interview/speech', [InterviewController::class, 'speech'])->name('interview.speech');
+    Route::post('/interview/transcribe', [InterviewController::class, 'transcribe'])->name('interview.transcribe');
     Route::post('/interview/save-state', [InterviewController::class, 'saveSessionState'])->name('interview.saveState');
     Route::post('/interview/finish', [InterviewController::class, 'finish'])->name('interview.finish');
     Route::post('/interview/abort', [InterviewController::class, 'abortSession'])->name('interview.abort');
@@ -109,6 +110,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::post('/game/finish', [\App\Http\Controllers\GameController::class, 'finish'])->name('user.game.finish');
 
     Route::get('/learning/assistant', [UserController::class, 'learningAssistant'])->name('user.learning.assistant');
+    Route::get('/missions', [UserController::class, 'missions'])->name('user.missions');
     Route::get('/drills/voice', [UserController::class, 'voiceRehearsal'])->name('user.drills.voice');
     Route::post('/drills/voice/prompt', [UserController::class, 'generateVoicePrompt'])->name('user.drills.voice.prompt');
     Route::post('/drills/voice/analyze', [UserController::class, 'analyzeVoiceSession'])->name('user.drills.voice.analyze');

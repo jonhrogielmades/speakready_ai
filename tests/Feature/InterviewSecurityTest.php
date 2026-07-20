@@ -8,6 +8,7 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -225,6 +226,71 @@ class InterviewSecurityTest extends TestCase
             ->postJson(route('interview.speech'), [
                 'session_id' => $session->id,
                 'question_id' => $otherQuestion->id,
+            ])
+            ->assertForbidden();
+
+        Http::assertNothingSent();
+    }
+
+    public function test_user_can_transcribe_audio_for_their_active_question(): void
+    {
+        config(['services.openai.transcription_model' => 'whisper-1']);
+
+        Http::fake([
+            'https://api.openai.com/v1/audio/transcriptions' => Http::response([
+                'text' => 'I delivered a stable migration.',
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.transcribe'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
+            ])
+            ->assertOk()
+            ->assertJson(['transcript' => 'I delivered a stable migration.']);
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/transcriptions');
+    }
+
+    public function test_user_cannot_transcribe_audio_for_another_sessions_question(): void
+    {
+        Http::fake();
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $otherSession = $this->sessionFor($otherUser, $category);
+        $otherQuestion = $this->sessionQuestion($otherSession, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.transcribe'), [
+                'session_id' => $session->id,
+                'question_id' => $otherQuestion->id,
+                'audio' => UploadedFile::fake()->create('speech.webm', 32, 'audio/webm'),
             ])
             ->assertForbidden();
 

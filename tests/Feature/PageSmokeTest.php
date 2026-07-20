@@ -40,6 +40,7 @@ class PageSmokeTest extends TestCase
             route('user.modules.show', $module),
             route('user.skills'),
             route('user.leaderboard'),
+            route('user.missions'),
             route('user.drills.voice'),
             route('user.review', $session),
             route('interview.review', $session),

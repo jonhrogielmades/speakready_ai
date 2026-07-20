@@ -6,6 +6,7 @@
       <meta name="theme-color" content="#08080f">
       <meta name="apple-mobile-web-app-capable" content="yes">
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+      <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
       <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -1775,6 +1776,7 @@
                 <div class="mob-profile-grid">
                 <a href="{{ route('user.modules.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i><span>Modules</span></a>
                 <a href="{{ route('user.drills.voice') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i><span>Voice</span></a>
+               <a href="{{ route('user.missions') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('user.missions') ? 'active' : '' }}"><i class="fa-solid fa-route"></i><span>Missions</span></a>
                <a href="{{ route('user.learning') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('user.learning*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i><span>Challenges</span></a>
                <a href="{{ route('user.coach') }}" class="mob-profile-link profile-nav-purple {{ request()->routeIs('user.coach*') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i><span>Coach</span></a>
                <a href="{{ route('user.reports') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i><span>Reports</span></a>
@@ -1865,7 +1867,7 @@
                <span class="mob-nav-icon"><i class="fa-solid fa-clipboard-check"></i></span>
                <span>Feedback</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.drills.voice', 'user.learning*', 'user.coach*', 'user.reports', 'user.leaderboard') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('user.account', 'user.notifications', 'user.modules.*', 'user.drills.voice', 'user.missions', 'user.learning*', 'user.coach*', 'user.reports', 'user.leaderboard') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"

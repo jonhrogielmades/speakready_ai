@@ -6,6 +6,7 @@ use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
 use Illuminate\Http\Client\StrayRequestException;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -1354,7 +1355,98 @@ PROMPT;
         ];
     }
 
+    public static function transcribeSpeech(UploadedFile $audioFile, array|string|null $targetLanguage = null): ?string
+    {
+        $credentials = self::openAiTranscriptionCredentials();
+        if (! $credentials) {
+            return null;
+        }
+
+        $path = $audioFile->getRealPath();
+        if (! is_string($path) || ! is_readable($path)) {
+            return null;
+        }
+
+        $payload = [
+            'model' => config('services.openai.transcription_model', 'whisper-1'),
+            'response_format' => 'json',
+        ];
+
+        $language = self::openAiTranscriptionLanguage($targetLanguage);
+        if ($language !== null) {
+            $payload['language'] = $language;
+        }
+
+        $fileHandle = fopen($path, 'rb');
+        if (! is_resource($fileHandle)) {
+            return null;
+        }
+
+        try {
+            $response = Http::timeout((int) config('services.openai.transcription_timeout', 30))
+                ->retry((int) env('AI_PROVIDER_RETRIES', 2), (int) env('AI_PROVIDER_RETRY_DELAY_MS', 250))
+                ->withHeaders([
+                    'Authorization' => 'Bearer '.$credentials['api_key'],
+                    'Accept' => 'application/json',
+                ])
+                ->attach(
+                    'file',
+                    $fileHandle,
+                    self::openAiTranscriptionFilename($audioFile),
+                    ['Content-Type' => $audioFile->getMimeType() ?: 'audio/webm']
+                )
+                ->post($credentials['endpoint'], $payload);
+        } catch (\Throwable $e) {
+            Log::warning('OpenAI Transcription Error: '.$e->getMessage());
+
+            return null;
+        } finally {
+            fclose($fileHandle);
+        }
+
+        if (! $response->successful()) {
+            Log::warning('OpenAI Transcription Error: '.substr($response->body(), 0, 1000));
+
+            return null;
+        }
+
+        $text = trim((string) data_get($response->json(), 'text', ''));
+
+        return $text !== '' ? $text : null;
+    }
+
+    public static function speechTranscriptionAvailable(): bool
+    {
+        return self::openAiTranscriptionCredentials() !== null;
+    }
+
     private static function openAiSpeechCredentials(): ?array
+    {
+        $credentials = self::openAiBaseCredentials('OpenAI Speech Error');
+        if (! $credentials) {
+            return null;
+        }
+
+        return [
+            'api_key' => $credentials['api_key'],
+            'endpoint' => self::openAiSpeechEndpoint($credentials['endpoint']),
+        ];
+    }
+
+    private static function openAiTranscriptionCredentials(): ?array
+    {
+        $credentials = self::openAiBaseCredentials('OpenAI Transcription Error');
+        if (! $credentials) {
+            return null;
+        }
+
+        return [
+            'api_key' => $credentials['api_key'],
+            'endpoint' => self::openAiTranscriptionEndpoint($credentials['endpoint']),
+        ];
+    }
+
+    private static function openAiBaseCredentials(string $logContext): ?array
     {
         $dbProvider = AiProvider::where('name', 'like', '%OpenAI%')
             ->where('status', 'active')
@@ -1364,7 +1456,7 @@ PROMPT;
             try {
                 $apiKey = Crypt::decryptString($dbProvider->api_key);
             } catch (\Throwable $e) {
-                Log::warning('OpenAI Speech Error: unable to decrypt provider key.');
+                Log::warning($logContext.': unable to decrypt provider key.');
                 $apiKey = '';
             }
 
@@ -1381,7 +1473,7 @@ PROMPT;
 
         return [
             'api_key' => $apiKey,
-            'endpoint' => self::openAiSpeechEndpoint($endpoint),
+            'endpoint' => $endpoint,
         ];
     }
 
@@ -1395,6 +1487,43 @@ PROMPT;
         $endpoint = preg_replace('#/(?:chat/completions|responses)$#', '', $endpoint) ?: $endpoint;
 
         return $endpoint.'/audio/speech';
+    }
+
+    private static function openAiTranscriptionEndpoint(string $configuredEndpoint): string
+    {
+        $endpoint = rtrim(trim($configuredEndpoint) ?: 'https://api.openai.com/v1', '/');
+        if (str_ends_with($endpoint, '/audio/transcriptions')) {
+            return $endpoint;
+        }
+
+        $endpoint = preg_replace('#/(?:chat/completions|responses|audio/speech)$#', '', $endpoint) ?: $endpoint;
+
+        return $endpoint.'/audio/transcriptions';
+    }
+
+    private static function openAiTranscriptionFilename(UploadedFile $audioFile): string
+    {
+        $originalExtension = pathinfo($audioFile->getClientOriginalName(), PATHINFO_EXTENSION);
+        $extension = $audioFile->guessExtension() ?: $originalExtension ?: 'webm';
+        $extension = preg_replace('/[^a-z0-9]/i', '', strtolower($extension)) ?: 'webm';
+
+        return 'speech.'.($extension === 'oga' ? 'ogg' : $extension);
+    }
+
+    private static function openAiTranscriptionLanguage(array|string|null $targetLanguage): ?string
+    {
+        if (is_array($targetLanguage)) {
+            $locale = (string) ($targetLanguage['speech_locale'] ?? $targetLanguage['code'] ?? '');
+        } else {
+            $locale = (string) $targetLanguage;
+        }
+
+        $language = strtolower(explode('-', str_replace('_', '-', trim($locale)))[0] ?? '');
+        if ($language === 'fil') {
+            $language = 'tl';
+        }
+
+        return preg_match('/^[a-z]{2}$/', $language) ? $language : null;
     }
 
     public static function chatMessage($message, $history = [], $provider = 'gemini', $systemPrompt = null)

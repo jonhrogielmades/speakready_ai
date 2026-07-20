@@ -48,6 +48,221 @@
     }
     .stat-val { font-size: 1.5rem; font-weight: 700; color: var(--tx); }
     .stat-lbl { font-size: 0.8rem; color: var(--tx3); text-transform: uppercase; letter-spacing: 1px; }
+    .instant-feedback-panel {
+        background: linear-gradient(135deg, rgba(14, 165, 233, 0.06), rgba(16, 185, 129, 0.05));
+        border: 1px solid rgba(14, 165, 233, 0.22);
+        border-radius: 14px;
+        padding: 16px;
+    }
+    .instant-feedback-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .instant-feedback-title {
+        color: var(--tx);
+        font-size: 0.94rem;
+        font-weight: 800;
+        margin: 0 0 3px;
+    }
+    .instant-feedback-summary {
+        color: var(--tx3);
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+    .instant-feedback-status {
+        border: 1px solid var(--bd);
+        border-radius: 999px;
+        color: var(--tx3);
+        background: var(--bg3);
+        flex: 0 0 auto;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 5px 9px;
+        text-transform: uppercase;
+    }
+    .instant-feedback-status.good,
+    .instant-feedback-signal.good .instant-feedback-badge {
+        color: #10b981;
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.28);
+    }
+    .instant-feedback-status.warn,
+    .instant-feedback-signal.warn .instant-feedback-badge {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.28);
+    }
+    .instant-feedback-status.bad,
+    .instant-feedback-signal.bad .instant-feedback-badge {
+        color: #f87171;
+        background: rgba(248, 113, 113, 0.12);
+        border-color: rgba(248, 113, 113, 0.28);
+    }
+    .instant-feedback-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .instant-feedback-signal {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        min-height: 116px;
+        padding: 13px;
+    }
+    .instant-feedback-kicker {
+        color: var(--tx3);
+        font-size: 0.7rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+    .instant-feedback-value {
+        color: var(--tx);
+        font-size: 1.05rem;
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 7px;
+    }
+    .instant-feedback-badge {
+        border: 1px solid var(--bd);
+        border-radius: 999px;
+        color: var(--tx3);
+        background: var(--bg3);
+        display: inline-flex;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 8px;
+        padding: 5px 7px;
+        text-transform: uppercase;
+    }
+    .instant-feedback-note {
+        color: var(--tx2);
+        font-size: 0.79rem;
+        line-height: 1.45;
+    }
+    .instant-feedback-actions {
+        display: grid;
+        gap: 7px;
+        list-style: none;
+        margin: 12px 0 0;
+        padding: 0;
+    }
+    .instant-feedback-actions li {
+        color: var(--tx2);
+        display: flex;
+        gap: 8px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+    .instant-feedback-actions i {
+        color: #0ea5e9;
+        flex: 0 0 auto;
+        margin-top: 3px;
+    }
+    .intention-coach-panel {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.07), rgba(20, 184, 166, 0.06));
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        border-radius: 14px;
+        padding: 16px;
+    }
+    .intention-coach-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .intention-coach-title {
+        color: var(--tx);
+        font-size: 0.94rem;
+        font-weight: 800;
+        margin: 0 0 3px;
+    }
+    .intention-coach-summary {
+        color: var(--tx3);
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+    .intention-coach-status {
+        border: 1px solid var(--bd);
+        border-radius: 999px;
+        color: var(--tx3);
+        background: var(--bg3);
+        flex: 0 0 auto;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 5px 9px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .intention-coach-status.good { color:#10b981;background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.28); }
+    .intention-coach-status.warn { color:#f59e0b;background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.28); }
+    .intention-coach-status.bad { color:#f87171;background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.28); }
+    .intention-coach-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    .intention-coach-metric {
+        min-height: 94px;
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        background: var(--sf);
+        padding: 12px;
+    }
+    .intention-coach-kicker {
+        color: var(--tx3);
+        font-size: 0.68rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+    .intention-coach-value {
+        color: var(--tx);
+        font-size: 1rem;
+        font-weight: 900;
+        line-height: 1.18;
+        overflow-wrap: anywhere;
+    }
+    .intention-meter {
+        height: 8px;
+        background: var(--bg3);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+    .intention-meter span {
+        display: block;
+        width: var(--intent-score, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #22c55e, #0ea5e9);
+    }
+    .intention-tip-list {
+        display: grid;
+        gap: 7px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .intention-tip-list li {
+        color: var(--tx2);
+        display: flex;
+        gap: 8px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+    .intention-tip-list i {
+        color: #14b8a6;
+        flex: 0 0 auto;
+        margin-top: 3px;
+    }
 
     .tab-pane { display: none; }
     .tab-pane.active { display: block; animation: fadeIn 0.4s ease; }
@@ -108,6 +323,7 @@
             margin-bottom: 14px !important;
         }
         #voice-rehearsal-page #categorySelect,
+        #voice-rehearsal-page #intentionSelect,
         #voice-rehearsal-page .premium-card .btn {
             width: 100% !important;
             min-height: 42px;
@@ -166,6 +382,39 @@
             font-size: 0.56rem;
             letter-spacing: 0;
             line-height: 1.15;
+        }
+        #voice-rehearsal-page .instant-feedback-panel {
+            padding: 12px;
+            border-radius: 12px;
+        }
+        #voice-rehearsal-page .instant-feedback-head {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        #voice-rehearsal-page .instant-feedback-status {
+            width: max-content;
+        }
+        #voice-rehearsal-page .instant-feedback-grid {
+            grid-template-columns: 1fr;
+        }
+        #voice-rehearsal-page .intention-coach-head {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        #voice-rehearsal-page .intention-coach-status {
+            width: max-content;
+        }
+        #voice-rehearsal-page .intention-coach-grid {
+            grid-template-columns: 1fr;
+        }
+        #voice-rehearsal-page .intention-coach-metric {
+            min-height: 0;
+        }
+        #voice-rehearsal-page .instant-feedback-signal {
+            min-height: 0;
+            padding: 11px;
         }
         #voice-rehearsal-page #transcriptView {
             min-height: 108px !important;
@@ -278,14 +527,24 @@
             <div class="col-lg-8 animate-fade-up delay-100">
                 <div class="premium-card mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
-                            <option value="Tell Me About Yourself">General Job Interview</option>
-                            <option value="Strengths and Weaknesses">Strengths & Weaknesses</option>
-                            <option value="Leadership">Leadership / Teamwork</option>
-                            <option value="Problem Solving">Problem Solving</option>
-                            <option value="Technical">IT / Technical Interview</option>
-                            <option value="Scholarship">Scholarship / Admission</option>
-                        </select>
+                        <div class="d-flex flex-wrap gap-2">
+                            <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
+                                <option value="Tell Me About Yourself">General Job Interview</option>
+                                <option value="Strengths and Weaknesses">Strengths & Weaknesses</option>
+                                <option value="Leadership">Leadership / Teamwork</option>
+                                <option value="Problem Solving">Problem Solving</option>
+                                <option value="Customer Service">Customer Service</option>
+                                <option value="Technical">IT / Technical Interview</option>
+                                <option value="Scholarship">Scholarship / Admission</option>
+                            </select>
+                            <select id="intentionSelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
+                                <option value="Confident">Confident</option>
+                                <option value="Friendly">Friendly</option>
+                                <option value="Calm">Calm</option>
+                                <option value="Persuasive">Persuasive</option>
+                                <option value="Accountable">Accountable</option>
+                            </select>
+                        </div>
                         <button id="btnRandomizePrompt" class="btn btn-sm btn-outline-secondary" onclick="randomizePrompt()" style="border-radius:8px;"><i class="fa-solid fa-shuffle"></i> Randomize</button>
                     </div>
 
@@ -324,6 +583,7 @@
                         <button id="btnStop" class="btn btn-danger" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="stopRec()"><i class="fa-solid fa-stop me-2"></i> Stop & Analyze</button>
                         <button id="btnRerecord" class="btn btn-outline-secondary" style="display:none;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="resetRec()"><i class="fa-solid fa-rotate-left me-2"></i> Retry</button>
                     </div>
+                    <div id="micPermissionHelp" class="text-center mb-4" style="display:none;color:var(--tx3);font-size:0.82rem;line-height:1.5;"></div>
 
                     <!-- Live Stats -->
                     <div class="row g-2 mb-4 voice-live-stats">
@@ -352,6 +612,67 @@
                             </div>
                         </div>
                     </div>
+
+                    <section class="instant-feedback-panel mb-4" aria-label="Instant speaking feedback">
+                        <div class="instant-feedback-head">
+                            <div>
+                                <h6 class="instant-feedback-title"><i class="fa-solid fa-bolt me-2" style="color:#0ea5e9;"></i>Instant Speaking Feedback</h6>
+                                <div class="instant-feedback-summary" id="instantFeedbackSummary">Ready for your first speaking signal.</div>
+                            </div>
+                            <span class="instant-feedback-status" id="instantFeedbackStatus">Ready</span>
+                        </div>
+                        <div class="instant-feedback-grid">
+                            <div class="instant-feedback-signal" id="instantPaceSignal">
+                                <div class="instant-feedback-kicker">Pace</div>
+                                <div class="instant-feedback-value" id="instantPaceValue">0 WPM</div>
+                                <span class="instant-feedback-badge" id="instantPaceBadge">Waiting</span>
+                                <div class="instant-feedback-note" id="instantPaceNote">Keep a natural rhythm once recording starts.</div>
+                            </div>
+                            <div class="instant-feedback-signal" id="instantFillerSignal">
+                                <div class="instant-feedback-kicker">Fillers</div>
+                                <div class="instant-feedback-value" id="instantFillerValue">0 found</div>
+                                <span class="instant-feedback-badge" id="instantFillerBadge">Waiting</span>
+                                <div class="instant-feedback-note" id="instantFillerNote">Silent pauses are counted better than filler words.</div>
+                            </div>
+                            <div class="instant-feedback-signal" id="instantDepthSignal">
+                                <div class="instant-feedback-kicker">Answer Depth</div>
+                                <div class="instant-feedback-value" id="instantDepthValue">0 words</div>
+                                <span class="instant-feedback-badge" id="instantDepthBadge">Waiting</span>
+                                <div class="instant-feedback-note" id="instantDepthNote">Build toward a complete example with a result.</div>
+                            </div>
+                        </div>
+                        <ul class="instant-feedback-actions" id="instantFeedbackActions">
+                            <li><i class="fa-solid fa-circle-info"></i><span>Waiting for transcript evidence.</span></li>
+                        </ul>
+                    </section>
+
+                    <section class="intention-coach-panel mb-4" aria-label="Emotion and intention coach">
+                        <div class="intention-coach-head">
+                            <div>
+                                <h6 class="intention-coach-title"><i class="fa-solid fa-face-smile-beam me-2" style="color:#14b8a6;"></i>Emotion & Intention Coach</h6>
+                                <div class="intention-coach-summary" id="intentionCoachSummary">Choose a target intention, then speak or edit your answer.</div>
+                            </div>
+                            <span class="intention-coach-status" id="intentionCoachStatus">Ready</span>
+                        </div>
+                        <div class="intention-coach-grid">
+                            <div class="intention-coach-metric">
+                                <div class="intention-coach-kicker">Target</div>
+                                <div class="intention-coach-value" id="intentionTargetValue">Confident</div>
+                            </div>
+                            <div class="intention-coach-metric">
+                                <div class="intention-coach-kicker">Detected</div>
+                                <div class="intention-coach-value" id="intentionDetectedValue">Waiting</div>
+                            </div>
+                            <div class="intention-coach-metric">
+                                <div class="intention-coach-kicker">Match</div>
+                                <div class="intention-coach-value" id="intentionMatchValue">--%</div>
+                                <div class="intention-meter"><span id="intentionMatchMeter" style="--intent-score:0%;"></span></div>
+                            </div>
+                        </div>
+                        <ul class="intention-tip-list" id="intentionCoachTips">
+                            <li><i class="fa-solid fa-circle-info"></i><span>Waiting for enough words to compare your wording with the target intention.</span></li>
+                        </ul>
+                    </section>
 
                     <!-- Transcript Box -->
                     <div>
@@ -416,13 +737,6 @@
                             </div>
                         </div>
 
-                        <!-- Audio Playback -->
-                        <div class="mb-4">
-                            <h6 style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;margin-bottom:8px;">Playback</h6>
-                            <audio id="audioPlayback" controls style="width:100%;height:40px;outline:none;" class="mb-2"></audio>
-                            <div id="playbackStatus" style="font-size:0.76rem;color:var(--tx3);">Playback appears after you stop recording.</div>
-                        </div>
-
                         <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:600;border-radius:12px;border:none;box-shadow:0 4px 15px rgba(52,211,153,0.4);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
                     </div>
                 </div>
@@ -456,6 +770,7 @@
                     <div style="height:250px;">
                         <canvas id="voiceProgressChart"></canvas>
                     </div>
+                    <div id="voiceProgressEmpty" class="text-center mt-3" style="display:none;color:var(--tx3);font-size:0.85rem;">No saved rehearsal data yet.</div>
                 </div>
 
                 <!-- Rehearsal History -->
@@ -540,8 +855,16 @@ const fallbackPrompts = {
     "Strengths and Weaknesses": ["What is one strength you can prove with a specific school, internship, freelance, or work example?", "Tell me about a weakness you are actively improving and what changed because of that work.", "Describe feedback you received from a teacher, supervisor, client, or team lead and how you used it to improve."],
     "Leadership": ["Tell me about a time you led a team through uncertainty in school, work, internship, or community work.", "Describe a situation where you had to resolve conflict while keeping the work moving.", "Give an example of how you motivated others toward a shared goal in a Philippine team setting."],
     "Problem Solving": ["Tell me about a complex problem you solved with limited information in school, work, or training.", "Describe a time you had competing deadlines and how you chose what to do first.", "How would you handle a Philippine interviewer asking about salary expectations, schedule, or work setup?"],
+    "Customer Service": ["Explain a customer concern politely, acknowledge the issue, and offer the next action.", "How would you calm a frustrated customer while still being honest about what you can do?", "Describe a time you handled a service issue and protected the relationship."],
     "Technical": ["Explain a technical concept from your experience to a non-technical Philippine interviewer.", "Walk me through your debugging process when the cause is unclear.", "Describe a technical tradeoff you made for a class, client, employer, or startup project and how you evaluated it."],
     "Scholarship": ["Why does this Philippine scholarship or admission program fit your academic and career plan?", "Tell me about a challenge that shaped your goals and how you responded.", "Describe how you will contribute to your school, community, or the Philippines if selected."]
+};
+
+const voiceMissionPreset = {
+    mission: @json(request('mission')),
+    category: @json(request('category')),
+    prompt: @json(request('prompt')),
+    intent: @json(request('intent'))
 };
 
 function voiceScenarioLabel(category) {
@@ -550,11 +873,24 @@ function voiceScenarioLabel(category) {
         "Strengths and Weaknesses": "Strengths & Weaknesses",
         "Leadership": "Leadership / Teamwork",
         "Problem Solving": "Problem Solving",
+        "Customer Service": "Customer Service",
         "Technical": "IT / Technical Interview",
         "Scholarship": "Scholarship / Admission"
     };
 
     return labels[category] || category || 'General Job Interview';
+}
+
+function categoryValueForPreset(category) {
+    const labels = {
+        "General Job Interview": "Tell Me About Yourself",
+        "Strengths & Weaknesses": "Strengths and Weaknesses",
+        "Leadership / Teamwork": "Leadership",
+        "IT / Technical Interview": "Technical",
+        "Scholarship / Admission": "Scholarship"
+    };
+
+    return labels[category] || category || "Tell Me About Yourself";
 }
 
 function localFallbackPrompt(category) {
@@ -601,6 +937,7 @@ async function randomizePrompt() {
     }
 }
 document.getElementById('categorySelect').addEventListener('change', randomizePrompt);
+document.getElementById('intentionSelect').addEventListener('change', () => updateIntentionCoach());
 
 // Recording Logic
 let recognition = null;
@@ -616,10 +953,6 @@ let lastCommittedAt = 0;
 let recognitionRestartDelay = 300;
 let timer = null;
 let seconds = 0;
-let mediaRecorder = null;
-let mediaStream = null;
-let audioObjectUrl = null;
-let audioChunks = [];
 const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
 const serverDetectedMobile = @json($isMobile);
@@ -762,6 +1095,158 @@ function setTranscriptionStatus(message, color = '#34d399') {
     status.style.display = message ? 'inline-block' : 'none';
 }
 
+function setMicrophoneHelp(message, color = 'var(--tx3)') {
+    const help = document.getElementById('micPermissionHelp');
+    if (!help) return;
+    help.textContent = message || '';
+    help.style.color = color;
+    help.style.display = message ? 'block' : 'none';
+}
+
+function setStartButtonEnabled(enabled) {
+    const btn = document.getElementById('btnStart');
+    if (!btn) return;
+    btn.disabled = !enabled;
+    btn.style.opacity = enabled ? '1' : '0.65';
+    btn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+}
+
+function microphoneRequiresSecureOrigin() {
+    return !(window.isSecureContext
+        || ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname));
+}
+
+function stopProbeStream(stream) {
+    if (stream) stream.getTracks().forEach(track => track.stop());
+}
+
+function mobilePermissionGuidance() {
+    return mobileSpeechSurface
+        ? 'On mobile, allow Microphone for this site in the browser permission prompt or site settings, then tap Start again.'
+        : 'Allow Microphone for this site in your browser permission prompt or site settings, then start again.';
+}
+
+function microphoneErrorMessage(error) {
+    const name = error?.name || error || 'unknown';
+    if (name === 'NotAllowedError' || name === 'SecurityError' || name === 'not-allowed' || name === 'service-not-allowed') {
+        return `Microphone permission is blocked. ${mobilePermissionGuidance()}`;
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return 'No microphone was detected on this device.';
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError' || name === 'audio-capture') {
+        return 'The microphone is unavailable or already being used by another app.';
+    }
+    return `Microphone could not start. ${mobilePermissionGuidance()}`;
+}
+
+function audioCaptureConstraints() {
+    return {
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+        }
+    };
+}
+
+async function queryMicrophonePermissionState() {
+    if (!navigator.permissions?.query) return null;
+
+    try {
+        const status = await navigator.permissions.query({ name: 'microphone' });
+        status.onchange = () => refreshMicrophoneAvailabilityUi();
+        return status.state;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function requestMicrophoneProbe() {
+    if (!navigator.mediaDevices?.getUserMedia) return true;
+
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia(audioCaptureConstraints());
+        return true;
+    } catch (error) {
+        if (error?.name === 'OverconstrainedError' || error?.name === 'ConstraintNotSatisfiedError') {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            return true;
+        }
+        throw error;
+    } finally {
+        stopProbeStream(stream);
+    }
+}
+
+async function ensureMicrophonePermission() {
+    if (!recognition) {
+        const message = 'Live microphone transcription is not supported in this browser.';
+        setMicrophoneHelp(message, '#fbbf24');
+        setTranscriptionStatus(message, '#fbbf24');
+        return false;
+    }
+
+    if (microphoneRequiresSecureOrigin()) {
+        const message = 'Microphone access requires HTTPS on mobile. Open the secure site URL, then tap Start.';
+        setMicrophoneHelp(message, '#f87171');
+        setTranscriptionStatus('Secure connection required', '#f87171');
+        return false;
+    }
+
+    const permissionState = await queryMicrophonePermissionState();
+    if (permissionState === 'denied') {
+        const message = `Microphone permission is blocked. ${mobilePermissionGuidance()}`;
+        setMicrophoneHelp(message, '#f87171');
+        setTranscriptionStatus('Microphone permission denied', '#f87171');
+        return false;
+    }
+
+    setMicrophoneHelp(mobileSpeechSurface ? 'When prompted, choose Allow microphone.' : '');
+    setTranscriptionStatus('Requesting microphone permission', '#fbbf24');
+
+    try {
+        await requestMicrophoneProbe();
+        setMicrophoneHelp('');
+        return true;
+    } catch (error) {
+        const message = microphoneErrorMessage(error);
+        console.error('Microphone permission check failed:', error);
+        setMicrophoneHelp(message, '#f87171');
+        setTranscriptionStatus(message, '#f87171');
+        return false;
+    }
+}
+
+async function refreshMicrophoneAvailabilityUi() {
+    if (!recognition) {
+        setStartButtonEnabled(false);
+        setMicrophoneHelp('Live microphone transcription is not supported in this browser.', '#fbbf24');
+        return;
+    }
+
+    if (microphoneRequiresSecureOrigin()) {
+        setStartButtonEnabled(false);
+        setMicrophoneHelp('Microphone access requires HTTPS on mobile. Open the secure site URL to use Voice Rehearsal.', '#f87171');
+        return;
+    }
+
+    const permissionState = await queryMicrophonePermissionState();
+    if (permissionState === 'denied') {
+        setStartButtonEnabled(true);
+        setMicrophoneHelp(`Microphone permission is blocked. ${mobilePermissionGuidance()}`, '#f87171');
+        return;
+    }
+
+    setStartButtonEnabled(true);
+    setMicrophoneHelp(mobileSpeechSurface ? 'Tap Start and choose Allow microphone when prompted.' : '');
+}
+
+function restoreStartAvailabilityAfterFailedPermission() {
+    setStartButtonEnabled(Boolean(recognition) && !microphoneRequiresSecureOrigin());
+}
+
 function resolveRecognitionStopWaiter() {
     if (recognitionStopTimer) {
         clearTimeout(recognitionStopTimer);
@@ -788,16 +1273,25 @@ function waitForRecognitionStop(timeoutMs = mobileSpeechSurface ? 1600 : 800) {
 }
 
 function startSpeechRecognitionEngine() {
-    if (!recognition || recognitionActive || !isRec || isPaused || !shouldAutoRestartRecognition) return;
+    if (!recognition) {
+        setTranscriptionStatus('Live microphone transcription is not supported in this browser.', '#fbbf24');
+        return false;
+    }
+    if (recognitionActive || !isRec || isPaused || !shouldAutoRestartRecognition) return false;
 
     try {
         recognition.start();
         recognitionActive = true;
+        setTranscriptionStatus('Listening - speak now');
+        return true;
     } catch (error) {
         if (!error || error.name !== 'InvalidStateError') {
             console.error('Speech recognition failed to start:', error);
-            setTranscriptionStatus('Unable to start transcription', '#f87171');
+            const message = microphoneErrorMessage(error);
+            setMicrophoneHelp(message, '#f87171');
+            setTranscriptionStatus(message, '#f87171');
         }
+        return false;
     }
 }
 
@@ -838,10 +1332,12 @@ if (BrowserSpeechRecognition) {
 
         if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(error)) {
             shouldAutoRestartRecognition = false;
-            const message = error === 'audio-capture' ? 'Microphone unavailable' : 'Microphone permission denied';
+            const message = microphoneErrorMessage(error);
             setTimeout(async () => {
                 await stopRec(false);
                 setTranscriptionStatus(message, '#f87171');
+                setMicrophoneHelp(message, '#f87171');
+                restoreStartAvailabilityAfterFailedPermission();
             }, 0);
         } else if (error === 'no-speech') {
             recognitionRestartDelay = 500;
@@ -923,6 +1419,7 @@ function updateWPM() {
         document.getElementById('wpmDisp').innerText = wpm;
     }
     updateLiveStability();
+    updateInstantFeedback();
 }
 
 function updateLiveStability() {
@@ -941,125 +1438,404 @@ function updateLiveStability() {
     stability.style.color = score >= 80 ? '#34d399' : (score >= 60 ? '#f59e0b' : '#f87171');
 }
 
-function setPlaybackStatus(message, color = 'var(--tx3)') {
-    const status = document.getElementById('playbackStatus');
-    if (!status) return;
-    status.textContent = message;
-    status.style.color = color;
+function setInstantText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
 }
 
-function clearAudioPlayback() {
-    if (audioObjectUrl) {
-        URL.revokeObjectURL(audioObjectUrl);
-        audioObjectUrl = null;
-    }
-
-    const playback = document.getElementById('audioPlayback');
-    if (playback) {
-        playback.removeAttribute('src');
-        playback.load();
-    }
-
-    setPlaybackStatus('Playback appears after you stop recording.');
+function applyInstantState(el, state) {
+    if (!el) return;
+    el.classList.remove('good', 'warn', 'bad', 'neutral');
+    el.classList.add(state || 'neutral');
 }
 
-function releaseMediaStream(stream = mediaStream) {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    if (mediaStream === stream) {
-        mediaStream = null;
-    }
-}
-
-async function ensureMicrophoneAccess() {
-    if (!navigator.mediaDevices?.getUserMedia) return true;
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            }
-        });
-        releaseMediaStream(stream);
-        return true;
-    } catch (error) {
-        console.error('Microphone access failed:', error);
-        const denied = error?.name === 'NotAllowedError' || error?.name === 'SecurityError';
-        setTranscriptionStatus(denied ? 'Microphone permission denied' : 'Microphone unavailable', '#f87171');
-        return false;
-    }
-}
-
-function shouldCaptureAudioPlayback() {
-    return !mobileSpeechSurface && Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
-}
-
-function preferredAudioMimeType() {
-    if (!window.MediaRecorder || typeof MediaRecorder.isTypeSupported !== 'function') return '';
-
-    return [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/mpeg'
-    ].find(type => MediaRecorder.isTypeSupported(type)) || '';
-}
-
-async function initAudioRec() {
-    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) return false;
-
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            }
-        });
-        mediaStream = stream;
-        const recordingChunks = audioChunks;
-        const preferredType = preferredAudioMimeType();
-        const recorder = preferredType
-            ? new MediaRecorder(stream, { mimeType: preferredType })
-            : new MediaRecorder(stream);
-        mediaRecorder = recorder;
-        recorder.ondataavailable = event => {
-            if (event.data?.size > 0) recordingChunks.push(event.data);
+function instantPaceSignal(wpm) {
+    if (seconds < 5 || wordCount < 3) {
+        return {
+            state: 'neutral',
+            label: 'Collecting',
+            value: `${wpm} WPM`,
+            note: 'Speak one complete thought to unlock a reliable pace signal.'
         };
-        recorder.onstop = () => {
-            if (audioObjectUrl) URL.revokeObjectURL(audioObjectUrl);
-            audioObjectUrl = null;
-
-            if (recordingChunks.length > 0) {
-                const audioBlob = new Blob(recordingChunks, { type: recorder.mimeType || preferredType || 'audio/webm' });
-                audioObjectUrl = URL.createObjectURL(audioBlob);
-                const playback = document.getElementById('audioPlayback');
-                playback.src = audioObjectUrl;
-                playback.load();
-                setPlaybackStatus('Playback ready.', '#34d399');
-            } else {
-                setPlaybackStatus('No playback audio was captured for this recording.', '#fbbf24');
-            }
-
-            releaseMediaStream(stream);
-        };
-        recorder.start(1000);
-        setPlaybackStatus('Recording playback audio...');
-        return true;
-    } catch (error) {
-        console.error('Audio recording failed:', error);
-        releaseMediaStream();
-        setPlaybackStatus('Playback recording is unavailable in this browser.', '#fbbf24');
-        return false;
     }
+
+    if (wpm >= 100 && wpm <= 150) {
+        return {
+            state: 'good',
+            label: 'Good Pace',
+            value: `${wpm} WPM`,
+            note: 'Your pace is within the interview-friendly range.'
+        };
+    }
+
+    if (wpm >= 90 && wpm < 100) {
+        return {
+            state: 'warn',
+            label: 'Slightly Slow',
+            value: `${wpm} WPM`,
+            note: 'Add a little momentum while keeping your words clear.'
+        };
+    }
+
+    if (wpm > 150 && wpm <= 180) {
+        return {
+            state: 'warn',
+            label: 'Quick',
+            value: `${wpm} WPM`,
+            note: 'Add short pauses between points so the answer is easier to follow.'
+        };
+    }
+
+    return {
+        state: 'bad',
+        label: wpm < 90 ? 'Too Slow' : 'Too Fast',
+        value: `${wpm} WPM`,
+        note: wpm < 90
+            ? 'Move into the next point sooner so the answer keeps energy.'
+            : 'Slow down and pause after important details.'
+    };
+}
+
+function instantFillerSignal() {
+    const rate = wordCount > 0 ? (fillerCount / wordCount) * 100 : 0;
+
+    if (wordCount < 8) {
+        return {
+            state: 'neutral',
+            label: 'Collecting',
+            value: `${fillerCount} found`,
+            note: 'Filler feedback becomes useful after a few more words.'
+        };
+    }
+
+    if (fillerCount === 0) {
+        return {
+            state: 'good',
+            label: 'Clean',
+            value: '0 found',
+            note: 'No tracked filler words are showing in the transcript.'
+        };
+    }
+
+    if (rate <= 4) {
+        return {
+            state: 'good',
+            label: 'Manageable',
+            value: `${fillerCount} found`,
+            note: 'The filler count is low for the current answer length.'
+        };
+    }
+
+    if (rate <= 8) {
+        return {
+            state: 'warn',
+            label: 'Watch',
+            value: `${fillerCount} found`,
+            note: 'Use a silent pause before your next detail.'
+        };
+    }
+
+    return {
+        state: 'bad',
+        label: 'High',
+        value: `${fillerCount} found`,
+        note: 'Replace fillers with short pauses to sound steadier.'
+    };
+}
+
+function instantDepthSignal() {
+    if (wordCount === 0) {
+        return {
+            state: 'neutral',
+            label: 'Waiting',
+            value: '0 words',
+            note: 'A full answer usually needs a direct point and supporting evidence.'
+        };
+    }
+
+    if (wordCount < 20) {
+        return {
+            state: 'warn',
+            label: 'Brief',
+            value: `${wordCount} words`,
+            note: 'Add one action you took and one result or lesson.'
+        };
+    }
+
+    if (wordCount > 170) {
+        return {
+            state: 'warn',
+            label: 'Long',
+            value: `${wordCount} words`,
+            note: 'Start closing so the answer stays focused.'
+        };
+    }
+
+    return {
+        state: 'good',
+        label: 'Useful Detail',
+        value: `${wordCount} words`,
+        note: 'Your answer has enough length for meaningful review.'
+    };
+}
+
+function instantActionsFor(signals, wpm) {
+    const actions = [];
+
+    if (wordCount === 0) {
+        actions.push('Open with a direct answer to the prompt.');
+    }
+
+    if (signals.pace.state === 'bad') {
+        actions.push(wpm < 90
+            ? 'Move to your next point sooner to raise delivery energy.'
+            : 'Pause after each main idea to bring the pace down.');
+    } else if (signals.pace.state === 'warn') {
+        actions.push(wpm > 150
+            ? 'Add a short pause before the next example.'
+            : 'Keep your next sentence concise and forward-moving.');
+    }
+
+    if (signals.filler.state === 'bad' || signals.filler.state === 'warn') {
+        actions.push('Use a silent pause instead of the next filler word.');
+    }
+
+    if (signals.depth.state === 'warn') {
+        actions.push(wordCount < 20
+            ? 'Add one concrete action and one result.'
+            : 'Close with the result or lesson learned.');
+    }
+
+    if (actions.length === 0) {
+        actions.push('Keep this rhythm and finish with one clear result.');
+    }
+
+    return actions.slice(0, 3);
+}
+
+function buildInstantFeedback(metrics = currentVoiceMetrics()) {
+    const signals = {
+        pace: instantPaceSignal(metrics.wpm),
+        filler: instantFillerSignal(),
+        depth: instantDepthSignal()
+    };
+
+    let overall = 'good';
+    if (wordCount === 0 && !isRec) {
+        overall = 'neutral';
+    } else if (Object.values(signals).some(signal => signal.state === 'bad')) {
+        overall = 'bad';
+    } else if (Object.values(signals).some(signal => signal.state === 'warn')) {
+        overall = 'warn';
+    } else if (Object.values(signals).some(signal => signal.state === 'neutral')) {
+        overall = 'neutral';
+    }
+
+    return {
+        metrics,
+        signals,
+        overall,
+        actions: instantActionsFor(signals, metrics.wpm)
+    };
+}
+
+function setInstantSignal(prefix, signal) {
+    applyInstantState(document.getElementById(`instant${prefix}Signal`), signal.state);
+    setInstantText(`instant${prefix}Value`, signal.value);
+    setInstantText(`instant${prefix}Badge`, signal.label);
+    setInstantText(`instant${prefix}Note`, signal.note);
+}
+
+function updateInstantFeedback() {
+    const status = document.getElementById('instantFeedbackStatus');
+    if (!status) return null;
+
+    const feedback = buildInstantFeedback();
+    setInstantSignal('Pace', feedback.signals.pace);
+    setInstantSignal('Filler', feedback.signals.filler);
+    setInstantSignal('Depth', feedback.signals.depth);
+
+    const statusLabel = isRec
+        ? (isPaused ? 'Paused' : 'Live')
+        : (wordCount > 0 ? 'Review' : 'Ready');
+    status.textContent = statusLabel;
+    applyInstantState(status, feedback.overall);
+
+    const summary = wordCount === 0
+        ? 'Ready for your first speaking signal.'
+        : feedback.overall === 'good'
+            ? 'Pace, filler control, and answer depth look steady.'
+            : feedback.overall === 'bad'
+                ? 'One delivery signal needs attention before you finish.'
+                : 'You have one small adjustment to make while speaking.';
+    setInstantText('instantFeedbackSummary', summary);
+
+    const list = document.getElementById('instantFeedbackActions');
+    if (list) {
+        list.innerHTML = feedback.actions
+            .map(action => `<li><i class="fa-solid fa-arrow-right"></i><span>${escapeTranscriptHtml(action)}</span></li>`)
+            .join('');
+    }
+
+    updateIntentionCoach(feedback.metrics);
+
+    return feedback;
+}
+
+const intentionProfiles = {
+    Confident: {
+        keywords: ['i can', 'i have', 'i handled', 'i led', 'i built', 'i improved', 'my experience', 'contribute', 'ready'],
+        tip: 'Use a clear ownership phrase such as "I handled", "I improved", or "I can contribute".'
+    },
+    Friendly: {
+        keywords: ['thank', 'appreciate', 'happy', 'glad', 'support', 'help', 'together', 'welcome'],
+        tip: 'Add a warm acknowledgement before the main point, then keep the answer concise.'
+    },
+    Calm: {
+        keywords: ['understand', 'clarify', 'resolve', 'confirm', 'next step', 'check', 'help', 'issue'],
+        tip: 'Use a steady sequence: acknowledge the concern, explain the fact, then name the next step.'
+    },
+    Persuasive: {
+        keywords: ['because', 'benefit', 'evidence', 'result', 'improve', 'support', 'recommend', 'value'],
+        tip: 'Add one reason and one proof point so the listener can verify your claim.'
+    },
+    Accountable: {
+        keywords: ['learned', 'changed', 'feedback', 'mistake', 'weakness', 'improved', 'now', 'responsibility'],
+        tip: 'Own the issue briefly, then spend more time on what changed and what improved.'
+    }
+};
+
+function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function countIntentionHits(normalizedText, keywords) {
+    return keywords.reduce((count, keyword) => {
+        return count + (new RegExp(`\\b${escapeRegExp(keyword)}\\b`, 'i').test(normalizedText) ? 1 : 0);
+    }, 0);
+}
+
+function selectedIntention() {
+    const select = document.getElementById('intentionSelect');
+    return select?.value || 'Confident';
+}
+
+function detectIntention(normalizedText) {
+    if (!normalizedText || wordCount < 8) {
+        return { label: 'Waiting', score: 0, hits: 0 };
+    }
+
+    let best = { label: 'Neutral', score: 0, hits: 0 };
+    Object.entries(intentionProfiles).forEach(([label, profile]) => {
+        const hits = countIntentionHits(normalizedText, profile.keywords);
+        const score = hits * 18;
+        if (score > best.score) {
+            best = { label, score, hits };
+        }
+    });
+
+    return best;
+}
+
+function buildIntentionCoach(metrics = currentVoiceMetrics()) {
+    const target = selectedIntention();
+    const profile = intentionProfiles[target] || intentionProfiles.Confident;
+    const normalized = normalizeTranscriptForMatch(transcript);
+    const detected = detectIntention(normalized);
+
+    if (!normalized || wordCount < 8) {
+        return {
+            target,
+            detected: detected.label,
+            match: 0,
+            state: 'neutral',
+            summary: 'Waiting for enough words to compare your wording with the target intention.',
+            tips: ['Start with one direct sentence that matches your chosen intention.']
+        };
+    }
+
+    const targetHits = countIntentionHits(normalized, profile.keywords);
+    let match = targetHits * 18;
+    if (detected.label === target) match += 24;
+    if (wordCount >= 35 && wordCount <= 150) match += 14;
+    if (fillerCount <= 2) match += 10;
+    if (metrics.wpm >= 90 && metrics.wpm <= 170) match += 10;
+    if (metrics.confidence >= 75) match += 8;
+    match = Math.max(0, Math.min(100, match));
+
+    const tips = [];
+    if (detected.label !== target || match < 70) {
+        tips.push(profile.tip);
+    }
+    if (metrics.wpm > 170) {
+        tips.push('Slow the next sentence slightly so the intention sounds controlled.');
+    } else if (metrics.wpm > 0 && metrics.wpm < 90) {
+        tips.push('Add a little more energy so the answer does not sound hesitant.');
+    }
+    if (fillerCount > 2) {
+        tips.push('Replace the next filler with a short silent pause.');
+    }
+    if (wordCount < 35) {
+        tips.push('Add one concrete example so the intention has evidence behind it.');
+    }
+    if (tips.length === 0) {
+        tips.push(`Your ${target.toLowerCase()} intention is coming through. Finish with one clear result or next action.`);
+    }
+
+    return {
+        target,
+        detected: detected.label,
+        match,
+        state: match >= 80 ? 'good' : (match >= 55 ? 'warn' : 'bad'),
+        summary: detected.label === target
+            ? `Your wording is mostly aligned with a ${target.toLowerCase()} delivery.`
+            : `Your wording currently reads closer to ${detected.label.toLowerCase()} than ${target.toLowerCase()}.`,
+        tips: tips.slice(0, 3)
+    };
+}
+
+function updateIntentionCoach(metrics = currentVoiceMetrics()) {
+    const status = document.getElementById('intentionCoachStatus');
+    if (!status) return null;
+
+    const coach = buildIntentionCoach(metrics);
+    setInstantText('intentionTargetValue', coach.target);
+    setInstantText('intentionDetectedValue', coach.detected);
+    setInstantText('intentionMatchValue', coach.match > 0 ? `${coach.match}%` : '--%');
+    setInstantText('intentionCoachSummary', coach.summary);
+
+    status.textContent = coach.match > 0 ? (coach.state === 'good' ? 'Aligned' : (coach.state === 'warn' ? 'Adjust' : 'Mismatch')) : 'Ready';
+    applyInstantState(status, coach.state);
+
+    const meter = document.getElementById('intentionMatchMeter');
+    if (meter) meter.style.setProperty('--intent-score', `${coach.match}%`);
+
+    const list = document.getElementById('intentionCoachTips');
+    if (list) {
+        list.innerHTML = coach.tips
+            .map(tip => `<li><i class="fa-solid fa-arrow-right"></i><span>${escapeTranscriptHtml(tip)}</span></li>`)
+            .join('');
+    }
+
+    return coach;
 }
 
 async function startRec() {
-    if (!recognition) return alert("Speech recognition is not supported in this browser.");
+    if (!recognition) {
+        const message = 'Live microphone transcription is not supported in this browser.';
+        setMicrophoneHelp(message, '#fbbf24');
+        setTranscriptionStatus(message, '#fbbf24');
+        return alert("Speech recognition is not supported in this browser.");
+    }
     if (isRec || stopInProgress) return;
+
+    setStartButtonEnabled(false);
+    const microphoneReady = await ensureMicrophonePermission();
+    if (!microphoneReady) {
+        restoreStartAvailabilityAfterFailedPermission();
+        return;
+    }
+    setStartButtonEnabled(true);
 
     isRec = true;
     isPaused = false;
@@ -1073,41 +1849,28 @@ async function startRec() {
     seconds = 0;
     wordCount = 0;
     fillerCount = 0;
-    audioChunks = [];
     window.currentAnalysis = null;
     window.analysisTranscript = null;
     
     document.getElementById('transcriptView').innerHTML = "";
     document.getElementById('transcriptView').setAttribute('contenteditable', 'false');
     document.getElementById('editHint').style.display = 'none';
-    clearAudioPlayback();
+    document.getElementById('timeDisp').innerText = "0:00";
+    document.getElementById('wpmDisp').innerText = "0";
+    document.getElementById('fillerDisp').innerText = "0";
+    document.getElementById('stabilityDisp').innerText = "0%";
+    updateInstantFeedback();
 
     updateUIState();
-    setTranscriptionStatus('Preparing microphone', '#fbbf24');
 
-    if (mobileSpeechSurface) {
-        startSpeechRecognitionEngine();
-        if (recognitionActive) {
-            setTranscriptionStatus('Listening - speak now');
-        }
-        setPlaybackStatus('Playback recording is disabled on mobile so speech detection can use the microphone.', '#fbbf24');
-    } else {
-        if (shouldCaptureAudioPlayback()) {
-            await initAudioRec();
-        } else {
-            mediaRecorder = null;
-            releaseMediaStream();
-            setPlaybackStatus('Playback recording is unavailable in this browser.', '#fbbf24');
-        }
-
-        if (!isRec) {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            return;
-        }
-        startSpeechRecognitionEngine();
-        if (recognitionActive) {
-            setTranscriptionStatus('Listening - speak now');
-        }
+    const started = startSpeechRecognitionEngine();
+    if (!started && !recognitionActive) {
+        isRec = false;
+        isPaused = false;
+        shouldAutoRestartRecognition = false;
+        updateUIState();
+        restoreStartAvailabilityAfterFailedPermission();
+        return;
     }
 
     clearInterval(timer);
@@ -1126,20 +1889,26 @@ function pauseRec() {
             console.error('Speech recognition failed to pause:', error);
         }
     }
-    if(mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.pause();
     clearInterval(timer);
     updateUIState();
+    updateInstantFeedback();
 }
 
 function resumeRec() {
     if (!isRec || !isPaused) return;
     isPaused = false;
     shouldAutoRestartRecognition = true;
-    startSpeechRecognitionEngine();
-    if(mediaRecorder && mediaRecorder.state === "paused") mediaRecorder.resume();
+    const started = startSpeechRecognitionEngine();
+    if (!started && !recognitionActive) {
+        isPaused = true;
+        shouldAutoRestartRecognition = false;
+        updateUIState();
+        return;
+    }
     clearInterval(timer);
     timer = setInterval(updateTimer, 1000);
     updateUIState();
+    updateInstantFeedback();
 }
 
 async function stopRec(shouldAnalyze = true) {
@@ -1164,17 +1933,13 @@ async function stopRec(shouldAnalyze = true) {
             resolveRecognitionStopWaiter();
         }
 
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
-        } else {
-            releaseMediaStream();
-        }
         clearInterval(timer);
 
         await recognitionSettled;
         finalizeInterimTranscript();
         processTranscript(mergeTranscriptParts(committedSpeechTranscript, liveSpeechInterim));
         updateUIState();
+        updateInstantFeedback();
 
         document.getElementById('transcriptView').setAttribute('contenteditable', 'true');
         document.getElementById('editHint').style.display = 'block';
@@ -1191,10 +1956,15 @@ async function resetRec() {
     document.getElementById('timeDisp').innerText = "0:00";
     document.getElementById('wpmDisp').innerText = "0";
     document.getElementById('fillerDisp').innerText = "0";
+    document.getElementById('stabilityDisp').innerText = "0%";
+    seconds = 0;
+    wordCount = 0;
+    fillerCount = 0;
     document.getElementById('transcriptView').innerHTML = "Your speech will appear here...";
     document.getElementById('analysisPanel').style.opacity = '0.5';
     document.getElementById('analysisPanel').style.pointerEvents = 'none';
     document.getElementById('comparisonPanel').style.display = 'none';
+    updateInstantFeedback();
     startRec();
 }
 
@@ -1274,14 +2044,21 @@ function currentVoiceMetrics() {
 
 function localAnalysisPayload(clarity, confidence, wpm) {
     const tooShort = wordCount < 20;
+    const instant = buildInstantFeedback({ wpm, clarity, confidence });
+    const actionText = instant.actions.join(' ');
+    const steadySignals = Object.values(instant.signals)
+        .filter(signal => signal.state === 'good')
+        .map(signal => signal.label.toLowerCase());
 
     return {
         ai_feedback_strengths: tooShort
             ? 'The transcript was saved, but it is too brief for reliable AI strengths feedback.'
-            : 'Saved with local delivery metrics. Review the transcript for structure, examples, and measurable results.',
+            : steadySignals.length > 0
+                ? `Saved with steady local delivery signals: ${steadySignals.join(', ')}.`
+                : 'Saved with local delivery metrics from the transcript, pace, and filler count.',
         ai_feedback_weaknesses: tooShort
             ? 'Add a fuller answer with a clear situation, action, and result before relying on coaching feedback.'
-            : 'AI feedback was unavailable. Use the WPM, filler count, and transcript to identify the next practice focus.',
+            : actionText || 'Use the WPM, filler count, and transcript to identify the next practice focus.',
         ai_improved_answer: 'AI revision was unavailable. Build a stronger answer from your transcript by naming the situation, your task, the specific actions you took, and the result without inventing new facts.',
         clarity_score: clarity,
         confidence_score: confidence,
@@ -1310,6 +2087,7 @@ async function generateAnalysis() {
     // Calculate metrics
     const metrics = currentVoiceMetrics();
     const wpm = metrics.wpm;
+    const instant = updateInstantFeedback() || buildInstantFeedback(metrics);
     
     let paceRating = "Too Slow";
     let paceCol = "#f87171";
@@ -1338,9 +2116,11 @@ async function generateAnalysis() {
         ? keywords.map(keyword => `<span class="badge" style="background:rgba(52,211,153,0.15);color:#34d399;font-weight:600;">${keyword}</span>`).join('')
         : '<span style="color:var(--tx3);font-size:0.85rem;">No tracked keywords detected.</span>';
     
-    // Set loading state for AI Feedback
-    document.getElementById('resStrengths').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
-    document.getElementById('resWeak').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+    // Show immediate local feedback while the deeper AI review runs.
+    document.getElementById('resStrengths').innerText = instant.overall === 'good'
+        ? 'Your live delivery signals are steady: pace, filler control, and answer depth.'
+        : 'Your voice metrics were captured instantly from the transcript.';
+    document.getElementById('resWeak').innerText = instant.actions.join(' ');
     document.getElementById('comparisonPanel').style.display = 'block';
     document.getElementById('compUser').textContent = transcript;
     document.getElementById('compAI').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Building a grounded revision template...';
@@ -1435,22 +2215,19 @@ async function saveSession() {
         
         if (data.success) {
             alert("Session saved successfully to your History!");
-            
-            // Append to history table
-            const emptyHistory = document.querySelector('#historyTable td[colspan="5"]');
-            if (emptyHistory) emptyHistory.closest('tr')?.remove();
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="color:var(--tx2);font-size:0.9rem;">${data.session.date}</td>
-                <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${data.session.category}</span></td>
-                <td style="color:#34d399;font-weight:600;">${data.session.clarity}</td>
-                <td>${data.session.wpm}</td>
-                <td style="color:#f87171;">${data.session.fillers}</td>
-            `;
-            document.getElementById('historyTable').prepend(tr);
-            
-            // Optionally, update charts dynamically here if desired
+            const clarityScore = Number(data.session.score) || parseInt(String(data.session.clarity || '').replace(/[^\d]/g, ''), 10) || 0;
+            voiceHistoryData.unshift({
+                d: data.session.date,
+                ts: Number(data.session.timestamp) || Math.floor(Date.now() / 1000),
+                c: data.session.category,
+                cl: data.session.clarity,
+                w: Number(data.session.wpm) || 0,
+                f: Number(data.session.fillers) || 0,
+                score: clarityScore
+            });
+            loadHistory();
+            renderVoiceProgressChart();
         } else {
             alert("Failed to save session.");
         }
@@ -1468,23 +2245,25 @@ function downloadReport() {
 }
 
 // Chart.js & History Init
-function loadHistory() {
-    const histData = {!! json_encode($history->map(function($session) {
-        return [
-            'd' => $session->created_at->format('M d'),
-            'c' => $session->practice_scenario ?? 'General Job Interview',
-            'cl' => ($session->clarity_score ?? 0) . '%',
-            'w' => $session->wpm ?? 0,
-            'f' => $session->filler_words ?? 0,
-            'score' => $session->clarity_score ?? 0
-        ];
-    })) !!};
+let voiceProgressChart = null;
+let voiceHistoryData = {!! json_encode($history->map(function($session) {
+    return [
+        'd' => $session->created_at->format('M d'),
+        'ts' => $session->created_at->timestamp,
+        'c' => $session->practice_scenario ?? 'General Job Interview',
+        'cl' => ($session->clarity_score ?? 0) . '%',
+        'w' => $session->wpm ?? 0,
+        'f' => $session->filler_words ?? 0,
+        'score' => $session->clarity_score ?? 0
+    ];
+})) !!};
 
+function loadHistory() {
     let html = '';
-    if (histData.length === 0) {
+    if (voiceHistoryData.length === 0) {
         html = '<tr><td colspan="5" class="text-center text-muted">No history found. Practice a Philippines voice session to see it here.</td></tr>';
     } else {
-        histData.forEach(h => {
+        voiceHistoryData.forEach(h => {
             html += `<tr>
                 <td style="color:var(--tx2);font-size:0.9rem;">${h.d}</td>
                 <td><span class="badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;">${h.c}</span></td>
@@ -1496,49 +2275,85 @@ function loadHistory() {
     }
     document.getElementById('historyTable').innerHTML = html;
     
-    return histData;
+    return voiceHistoryData;
+}
+
+function chronologicalVoiceHistory() {
+    return [...voiceHistoryData].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+}
+
+function renderVoiceProgressChart() {
+    if(typeof Chart === 'undefined') return;
+
+    Chart.defaults.color = '#808090';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    const voiceProgressCanvas = document.getElementById('voiceProgressChart');
+    if (!voiceProgressCanvas) return;
+
+    const chartRows = chronologicalVoiceHistory();
+    const emptyState = document.getElementById('voiceProgressEmpty');
+    if (emptyState) emptyState.style.display = chartRows.length === 0 ? 'block' : 'none';
+
+    const chartData = {
+        labels: chartRows.map(h => h.d),
+        datasets: [{
+            label: 'Clarity Score',
+            data: chartRows.map(h => Number(h.score) || 0),
+            borderColor: '#34d399',
+            backgroundColor: 'rgba(52,211,153,0.1)',
+            borderWidth: 3, tension: 0.4, fill: true
+        }, {
+            label: 'Fillers Used',
+            data: chartRows.map(h => Number(h.f) || 0),
+            borderColor: '#f87171',
+            backgroundColor: 'transparent',
+            borderWidth: 2, tension: 0.4, fill: false
+        }]
+    };
+
+    if (voiceProgressChart) {
+        voiceProgressChart.data = chartData;
+        voiceProgressChart.update();
+        return;
+    }
+
+    voiceProgressChart = new Chart(voiceProgressCanvas.getContext('2d'), {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
 }
 
 document.addEventListener("DOMContentLoaded", function() {
     loadHistory();
-    randomizePrompt();
-    
-    if(typeof Chart !== 'undefined') {
-        Chart.defaults.color = '#808090';
-        Chart.defaults.font.family = "'Inter', sans-serif";
-        
-        const voiceProgressCanvas = document.getElementById('voiceProgressChart');
-        if (!voiceProgressCanvas) return;
-
-        const ctx = voiceProgressCanvas.getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Session 1', 'Session 2', 'Session 3', 'Session 4', 'Session 5'],
-                datasets: [{
-                    label: 'Clarity Score',
-                    data: [70, 75, 82, 85, 92],
-                    borderColor: '#34d399',
-                    backgroundColor: 'rgba(52,211,153,0.1)',
-                    borderWidth: 3, tension: 0.4, fill: true
-                }, {
-                    label: 'Fillers Used',
-                    data: [15, 12, 8, 5, 2],
-                    borderColor: '#f87171',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2, tension: 0.4, fill: false
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
-                    x: { grid: { display: false } }
-                }
-            }
-        });
+    const presetCategory = categoryValueForPreset(voiceMissionPreset.category);
+    const categorySelect = document.getElementById('categorySelect');
+    if (presetCategory && categorySelect && Array.from(categorySelect.options).some(option => option.value === presetCategory)) {
+        categorySelect.value = presetCategory;
     }
+
+    const intentionSelect = document.getElementById('intentionSelect');
+    if (voiceMissionPreset.intent && intentionSelect && Array.from(intentionSelect.options).some(option => option.value === voiceMissionPreset.intent)) {
+        intentionSelect.value = voiceMissionPreset.intent;
+    }
+
+    if (voiceMissionPreset.prompt) {
+        document.getElementById('promptText').innerText = `"${cleanTranscriptText(voiceMissionPreset.prompt)}"`;
+    } else {
+        randomizePrompt();
+    }
+    refreshMicrophoneAvailabilityUi();
+    updateInstantFeedback();
+    updateIntentionCoach();
+    renderVoiceProgressChart();
 });
 </script>
 
@@ -1579,5 +2394,3 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 @endpush
 @endsection
-
-

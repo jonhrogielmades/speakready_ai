@@ -1289,6 +1289,94 @@ class UserController extends Controller
             ->with('message', 'Your AI learning assistant is available in the Interview Coach.');
     }
 
+    public function missions()
+    {
+        $missions = collect([
+            [
+                'id' => 'first-impression',
+                'title' => 'First Impression Sprint',
+                'category' => 'General Job Interview',
+                'difficulty' => 'Starter',
+                'duration' => 60,
+                'intent' => 'Confident',
+                'icon' => 'fa-handshake-angle',
+                'color' => '#2563eb',
+                'prompt' => 'Introduce yourself to a Philippine recruiter in 60 seconds and connect your background to the role.',
+                'success_criteria' => [
+                    'States role fit in the first two sentences',
+                    'Includes one specific school, internship, freelance, or work proof',
+                    'Ends with a clear next-step signal',
+                ],
+                'coach_tip' => 'Lead with the role, prove one strength, then close with what you can contribute.',
+            ],
+            [
+                'id' => 'polite-problem',
+                'title' => 'Polite Problem Report',
+                'category' => 'Customer Service',
+                'difficulty' => 'Focused',
+                'duration' => 75,
+                'intent' => 'Calm',
+                'icon' => 'fa-headset',
+                'color' => '#0f766e',
+                'prompt' => 'Explain a customer or team problem politely, acknowledge the concern, and propose the next action.',
+                'success_criteria' => [
+                    'Acknowledges the other person before explaining',
+                    'Uses calm wording instead of blame',
+                    'Names one concrete next action',
+                ],
+                'coach_tip' => 'Use acknowledge, explain, act: "I understand...", "What happened was...", "I will...".',
+            ],
+            [
+                'id' => 'convince-support',
+                'title' => 'Convince With Evidence',
+                'category' => 'Leadership / Teamwork',
+                'difficulty' => 'Challenge',
+                'duration' => 90,
+                'intent' => 'Persuasive',
+                'icon' => 'fa-bullhorn',
+                'color' => '#b45309',
+                'prompt' => 'Convince a teammate, panel, or supervisor to support your idea using one benefit and one proof point.',
+                'success_criteria' => [
+                    'Names the idea clearly',
+                    'Explains one practical benefit',
+                    'Uses evidence, outcome, or example instead of generic claims',
+                ],
+                'coach_tip' => 'Avoid sounding forceful. Persuade by making the value easy to verify.',
+            ],
+            [
+                'id' => 'admit-weakness',
+                'title' => 'Growth Without Excuses',
+                'category' => 'Strengths & Weaknesses',
+                'difficulty' => 'Focused',
+                'duration' => 75,
+                'intent' => 'Accountable',
+                'icon' => 'fa-seedling',
+                'color' => '#16a34a',
+                'prompt' => 'Describe a weakness or mistake, then show what you changed and what improved because of it.',
+                'success_criteria' => [
+                    'Owns the weakness without over-apologizing',
+                    'Shows a change in behavior',
+                    'Mentions a result, habit, or lesson',
+                ],
+                'coach_tip' => 'Keep the mistake short. Spend more time on the fix and the lesson.',
+            ],
+        ])->map(fn ($mission) => (object) $mission);
+
+        $recentVoiceSessions = VoiceSession::where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->take(3)
+            ->get()
+            ->map(function ($session) {
+                $session->practice_scenario = $this->voiceScenarioLabel($session->category);
+
+                return $session;
+            });
+
+        $practiceSessionCount = VoiceSession::where('user_id', Auth::id())->count();
+
+        return view('user.missions', compact('missions', 'recentVoiceSessions', 'practiceSessionCount'));
+    }
+
     public function voiceRehearsal()
     {
         if (! Setting::enabled('vr_recording')) {
@@ -1433,8 +1521,10 @@ class UserController extends Controller
             'success' => true,
             'session' => [
                 'date' => $session->created_at->format('M d'),
+                'timestamp' => $session->created_at->timestamp,
                 'category' => $this->voiceScenarioLabel($session->category),
                 'clarity' => $session->clarity_score.'%',
+                'score' => $session->clarity_score,
                 'wpm' => $session->wpm,
                 'fillers' => $session->filler_words,
             ],
@@ -1845,6 +1935,7 @@ class UserController extends Controller
     private function voicePromptPositionFor(string $category): string
     {
         return match ($category) {
+            'Customer Service' => 'Philippines customer service or BPO interview candidate',
             'Technical' => 'Philippines IT or technical interview candidate',
             'Scholarship' => 'Philippines scholarship or admission applicant',
             default => 'Philippines job interview candidate',
@@ -1858,6 +1949,7 @@ class UserController extends Controller
             'Strengths and Weaknesses' => 'Philippines interview self-awareness, growth mindset, and concrete evidence',
             'Leadership' => 'Philippines workplace leadership, ownership, conflict handling, and team impact',
             'Problem Solving' => 'Philippines workplace problem solving, prioritization, ambiguity, and decision making',
+            'Customer Service' => 'Philippines customer service empathy, issue explanation, de-escalation, and next action',
             'Technical' => 'Philippines IT interview technical communication, debugging process, systems thinking, and tradeoffs',
             'Scholarship' => 'Philippines scholarship or admission goals, service, resilience, and program fit',
             default => 'Philippines '.$category.' interview practice',
@@ -1896,6 +1988,11 @@ class UserController extends Controller
                 'Describe a time you had competing deadlines and how you chose what to do first.',
                 'How would you handle a Philippine interviewer asking about salary expectations, schedule, or work setup?',
             ],
+            'Customer Service' => [
+                'Explain a customer concern politely, acknowledge the issue, and offer the next action.',
+                'How would you calm a frustrated customer while still being honest about what you can do?',
+                'Describe a time you handled a service issue and protected the relationship.',
+            ],
             'Technical' => [
                 'Explain a technical concept from your experience to a non-technical Philippine interviewer.',
                 'Walk me through your debugging process when the cause is unclear.',
@@ -1920,6 +2017,7 @@ class UserController extends Controller
             'Strengths and Weaknesses' => 'Strengths & Weaknesses',
             'Leadership' => 'Leadership / Teamwork',
             'Problem Solving' => 'Problem Solving',
+            'Customer Service' => 'Customer Service',
             'Technical' => 'IT / Technical Interview',
             'Scholarship' => 'Scholarship / Admission',
             default => $category ?: 'General Job Interview',

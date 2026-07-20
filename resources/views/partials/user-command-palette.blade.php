@@ -109,6 +109,13 @@
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>
 
+                <a id="ucp-destination-missions" class="ucp-result" href="{{ route('user.missions') }}" data-ucp-item>
+                    <span class="ucp-result-icon ucp-cyan"><i class="fa-solid fa-route" aria-hidden="true"></i></span>
+                    <span class="ucp-result-copy"><strong>Missions</strong><small>Practice real-life speaking tasks with goal-based scoring</small></span>
+                    <span class="ucp-result-group">Training</span>
+                    <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
+                </a>
+
                 <a id="ucp-destination-learning" class="ucp-result" href="{{ route('user.learning') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-amber"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></span>
                     <span class="ucp-result-copy"><strong>Challenges</strong><small>Sharpen interview skills through scenario challenges</small></span>
@@ -182,7 +189,7 @@
             </footer>
             @else
             <footer class="ucp-footer">
-                <span class="ucp-status">14 destinations</span>
+                <span class="ucp-status">15 destinations</span>
                 <span class="ucp-help"><kbd>&uarr;</kbd><kbd>&darr;</kbd> move <kbd>Enter</kbd> open</span>
             </footer>
             @endif

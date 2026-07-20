@@ -43,6 +43,8 @@ return [
         'tts_voice' => env('OPENAI_TTS_VOICE', 'alloy'),
         'tts_speed' => env('OPENAI_TTS_SPEED', 0.95),
         'tts_timeout' => env('AI_TTS_TIMEOUT', 30),
+        'transcription_model' => env('OPENAI_TRANSCRIPTION_MODEL', 'whisper-1'),
+        'transcription_timeout' => env('AI_TRANSCRIPTION_TIMEOUT', 30),
     ],
 
 ];

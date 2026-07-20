@@ -4,6 +4,7 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
+      <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
       <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
@@ -77,6 +78,7 @@
                 <div class="db-nav-section">Specialized Training</div>
                <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Modules</a>
                <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
+               <a href="{{ route('user.missions') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.missions') ? 'active' : '' }}"><i class="fa-solid fa-route"></i> Missions</a>
                <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Challenges</a>
                <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> Readiness Coach</a>
 

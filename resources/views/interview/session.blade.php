@@ -328,6 +328,13 @@
     .mobile-camera-placeholder { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.72);background:linear-gradient(135deg,#111827,#312e81);font-size:1rem;z-index:3; }
     .mobile-camera-pip video { position:relative;z-index:2; }
     .mobile-camera-pip.camera-ready .mobile-camera-placeholder { display:none; }
+    .transcription-status {
+        display: none;
+        max-width: 260px;
+        font-size: 0.76rem;
+        line-height: 1.25;
+        color: var(--tx3);
+    }
 
     /* Circular Audio Spectrum */
     .circular-spectrum { position: absolute; top: 50%; left: 50%; width: 0; height: 0; display: none; z-index: 5; }
@@ -547,6 +554,15 @@
         #voiceControls .btn i {
             margin: 0 !important;
             font-size: 0.68rem;
+        }
+        .transcription-status {
+            flex-basis: 100%;
+            max-width: 100%;
+            display: none;
+            font-size: 0.72rem;
+            line-height: 1.25;
+            text-align: center;
+            color: var(--tx3);
         }
         #interviewControls .btn { min-height: 38px; padding: 0.43rem 0.58rem; }
         #interviewControls .send-answer-btn {
@@ -875,6 +891,7 @@
                                 </div>
                             @endif
                         </div>
+                        <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
 
                         <button type="button" class="btn px-4 flex-fill next-btn-class send-answer-btn text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 160px; border-radius:12px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
                     </div>
@@ -1105,11 +1122,37 @@
             let lastCommittedAt = 0;
             let microphoneStream = null;
             let microphoneReadyPromise = null;
+            let serverTranscriptionRecorder = null;
+            let serverTranscriptionStream = null;
+            let serverTranscriptionQueue = [];
+            let serverTranscriptionProcessing = false;
+            let serverTranscriptionDrainResolver = null;
+            let serverTranscriptionDrainTimer = null;
+            let serverTranscriptionUnavailable = false;
+            let serverTranscriptionSessionToken = 0;
             let cameraTrackingInFlight = false;
 
             const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const serverTranscriptionEnabled = @json(\App\Services\AIService::speechTranscriptionAvailable());
+            const mobileSpeechSurface = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+            const localMicrophoneHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
             const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
             const speechLanguage = speechLocale.split('-')[0];
+            const serverTranscriptionMimeType = (() => {
+                if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
+                return [
+                    'audio/webm;codecs=opus',
+                    'audio/webm',
+                    'audio/mp4;codecs=mp4a.40.2',
+                    'audio/mp4',
+                    'audio/ogg;codecs=opus',
+                    'audio/ogg'
+                ].find(type => MediaRecorder.isTypeSupported(type)) || '';
+            })();
+            const serverTranscriptionSupported = serverTranscriptionEnabled
+                && Boolean(window.MediaRecorder)
+                && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+            let activeTranscriptionEngine = BrowserSpeechRecognition ? 'browser' : (serverTranscriptionSupported ? 'server' : null);
             const duplicateSafeWordSet = new Set([
                 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
                 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -1259,36 +1302,142 @@
                 triggerAnalysis();
             }
 
+            function setTranscriptionStatus(message, color = 'var(--tx3)') {
+                const status = document.getElementById('transcriptionStatus');
+                if (!status) return;
+                status.textContent = message || '';
+                status.style.color = color;
+                status.style.display = message ? 'inline-block' : 'none';
+            }
+
+            function microphoneRequiresSecureOrigin() {
+                return !(window.isSecureContext || localMicrophoneHosts.has(window.location.hostname));
+            }
+
+            function audioCaptureConstraints() {
+                return {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                };
+            }
+
+            function stopMediaStream(stream) {
+                if (!stream) return;
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            async function requestMicrophoneStream() {
+                try {
+                    return await navigator.mediaDevices.getUserMedia(audioCaptureConstraints());
+                } catch (error) {
+                    if (error?.name === 'OverconstrainedError' || error?.name === 'ConstraintNotSatisfiedError') {
+                        return navigator.mediaDevices.getUserMedia({ audio: true });
+                    }
+                    throw error;
+                }
+            }
+
+            function microphoneErrorMessage(error) {
+                const name = error?.name || error || 'unknown';
+                if (name === 'NotAllowedError' || name === 'SecurityError' || name === 'not-allowed') {
+                    return 'Microphone permission is blocked. Allow Microphone for this site, then try again.';
+                }
+                if (name === 'service-not-allowed') {
+                    return 'Browser speech recognition is blocked, switching to server transcription if available.';
+                }
+                if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+                    return 'No microphone was detected on this device.';
+                }
+                if (name === 'NotReadableError' || name === 'TrackStartError' || name === 'audio-capture') {
+                    return 'The microphone is unavailable or already being used by another app.';
+                }
+                if (name === 'network') {
+                    return 'Browser speech recognition lost connection, switching to server transcription if available.';
+                }
+                return 'Microphone could not start. Allow Microphone for this site, then try again.';
+            }
+
+            function transcriptionUnavailableMessage() {
+                if (microphoneRequiresSecureOrigin()) {
+                    return 'Microphone access requires HTTPS online, or http://localhost for local testing.';
+                }
+                if (!BrowserSpeechRecognition && !serverTranscriptionEnabled) {
+                    return 'Live transcription needs Chrome/Edge, or an OpenAI key for server transcription.';
+                }
+                if (!BrowserSpeechRecognition && !window.MediaRecorder) {
+                    return 'Live transcription is not supported in this browser.';
+                }
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    return 'Microphone access is not available in this browser.';
+                }
+                return 'Live transcription is not available on this device.';
+            }
+
+            function canUseServerTranscription() {
+                return serverTranscriptionSupported && !serverTranscriptionUnavailable && !microphoneRequiresSecureOrigin();
+            }
+
+            function preferredTranscriptionEngine() {
+                if (microphoneRequiresSecureOrigin()) return null;
+                if (activeTranscriptionEngine === 'server' && canUseServerTranscription()) return 'server';
+                if (recognition) return 'browser';
+                if (canUseServerTranscription()) return 'server';
+                return null;
+            }
+
             function startSpeechRecognitionEngine() {
-                if (!recognition || recognitionActive || !isRecording || !shouldAutoRestartRecognition) return;
+                if (!recognition) {
+                    setTranscriptionStatus('Browser speech recognition is not supported.', '#fbbf24');
+                    return false;
+                }
+                if (recognitionActive || !isRecording || !shouldAutoRestartRecognition || activeTranscriptionEngine !== 'browser') {
+                    return false;
+                }
 
                 try {
                     recognition.start();
                     recognitionActive = true;
+                    setTranscriptionStatus('Listening - speak now');
+                    return true;
                 } catch (error) {
                     if (!error || error.name !== 'InvalidStateError') {
                         console.error('Speech recognition failed to start:', error);
+                        setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
                     }
+                    return false;
                 }
             }
 
-            async function ensureMicrophoneReady() {
-                if (microphoneStream && microphoneStream.active) return true;
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return true;
+            async function ensureMicrophoneReady(engine = 'browser') {
+                if (microphoneRequiresSecureOrigin()) {
+                    setTranscriptionStatus(transcriptionUnavailableMessage(), '#f87171');
+                    return false;
+                }
+
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    setTranscriptionStatus(transcriptionUnavailableMessage(), '#f87171');
+                    return false;
+                }
+
+                if (engine === 'server' && serverTranscriptionStream && serverTranscriptionStream.active) {
+                    return true;
+                }
 
                 if (!microphoneReadyPromise) {
-                    microphoneReadyPromise = navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true
+                    setTranscriptionStatus('Requesting microphone permission', '#fbbf24');
+                    microphoneReadyPromise = requestMicrophoneStream().then(stream => {
+                        if (engine === 'server') {
+                            serverTranscriptionStream = stream;
+                        } else {
+                            stopMediaStream(stream);
                         }
-                    }).then(stream => {
-                        microphoneStream = stream;
                         return true;
                     }).catch(error => {
-                        microphoneStream = null;
-                        throw error;
+                        setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
+                        return false;
                     }).finally(() => {
                         microphoneReadyPromise = null;
                     });
@@ -1298,9 +1447,9 @@
             }
 
             function releaseMicrophoneStream() {
-                if (!microphoneStream) return;
-                microphoneStream.getTracks().forEach(track => track.stop());
+                stopMediaStream(microphoneStream);
                 microphoneStream = null;
+                releaseServerTranscriptionStream();
             }
 
             function finalizeInterimTranscript() {
@@ -1312,16 +1461,214 @@
                 renderSpeechTranscript();
             }
 
+            function releaseServerTranscriptionStream() {
+                stopMediaStream(serverTranscriptionStream);
+                serverTranscriptionStream = null;
+            }
+
+            function serverTranscriptionFilename(blob) {
+                const type = String(blob?.type || serverTranscriptionMimeType || '').toLowerCase();
+                if (type.includes('mp4')) return 'speech.mp4';
+                if (type.includes('ogg')) return 'speech.ogg';
+                if (type.includes('mpeg')) return 'speech.mp3';
+                if (type.includes('wav')) return 'speech.wav';
+                return 'speech.webm';
+            }
+
+            function resolveServerTranscriptionDrain() {
+                if (serverTranscriptionQueue.length > 0 || serverTranscriptionProcessing || !serverTranscriptionDrainResolver) {
+                    return;
+                }
+
+                if (serverTranscriptionDrainTimer) {
+                    clearTimeout(serverTranscriptionDrainTimer);
+                    serverTranscriptionDrainTimer = null;
+                }
+
+                const resolve = serverTranscriptionDrainResolver;
+                serverTranscriptionDrainResolver = null;
+                resolve();
+            }
+
+            function waitForServerTranscriptionDrain(timeoutMs = 10000) {
+                if (serverTranscriptionQueue.length === 0 && !serverTranscriptionProcessing) {
+                    return Promise.resolve();
+                }
+
+                return new Promise(resolve => {
+                    serverTranscriptionDrainResolver = resolve;
+                    serverTranscriptionDrainTimer = setTimeout(() => {
+                        serverTranscriptionDrainResolver = null;
+                        serverTranscriptionDrainTimer = null;
+                        resolve();
+                    }, timeoutMs);
+                    resolveServerTranscriptionDrain();
+                });
+            }
+
+            function queueServerTranscriptionChunk(blob) {
+                if (!blob || blob.size < 700 || !questions[currentQIdx]) return;
+
+                serverTranscriptionQueue.push({
+                    blob,
+                    questionIndex: currentQIdx,
+                    questionId: questions[currentQIdx].id,
+                    token: serverTranscriptionSessionToken
+                });
+                processServerTranscriptionQueue();
+            }
+
+            async function processServerTranscriptionQueue() {
+                if (serverTranscriptionProcessing) return;
+                serverTranscriptionProcessing = true;
+
+                while (serverTranscriptionQueue.length > 0) {
+                    const job = serverTranscriptionQueue.shift();
+                    try {
+                        await transcribeServerChunk(job);
+                    } catch (error) {
+                        if (error.name !== 'AbortError') {
+                            console.warn('Server transcription failed:', error);
+                            setTranscriptionStatus('Server transcription is temporarily unavailable.', '#f87171');
+                        }
+                    }
+                }
+
+                serverTranscriptionProcessing = false;
+                resolveServerTranscriptionDrain();
+            }
+
+            async function transcribeServerChunk(job) {
+                if (!job || job.token !== serverTranscriptionSessionToken || !job.questionId) return;
+
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('session_id', interviewSessionId);
+                formData.append('question_id', job.questionId);
+                formData.append('audio', job.blob, serverTranscriptionFilename(job.blob));
+
+                const response = await managedFetch('{{ route("interview.transcribe") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 503) {
+                        serverTranscriptionUnavailable = true;
+                    }
+                    throw new Error(data.error || 'Transcription request failed.');
+                }
+
+                const transcript = cleanTranscriptText(data.transcript || '');
+                if (!transcript || job.token !== serverTranscriptionSessionToken || job.questionIndex !== currentQIdx) return;
+
+                if (commitSpeechSegment(transcript)) {
+                    recordFillerEvents(transcript);
+                    captureTranscriptTimeline('server_transcript');
+                }
+                liveSpeechInterim = '';
+                renderSpeechTranscript();
+                if (isRecording && activeTranscriptionEngine === 'server') {
+                    setTranscriptionStatus('Listening - server transcription');
+                }
+            }
+
+            function startServerTranscriptionEngine() {
+                if (!canUseServerTranscription() || !serverTranscriptionStream || !serverTranscriptionStream.active) {
+                    setTranscriptionStatus(transcriptionUnavailableMessage(), '#f87171');
+                    return false;
+                }
+
+                try {
+                    const options = serverTranscriptionMimeType ? { mimeType: serverTranscriptionMimeType } : undefined;
+                    serverTranscriptionRecorder = new MediaRecorder(serverTranscriptionStream, options);
+                    serverTranscriptionSessionToken++;
+                    serverTranscriptionRecorder.ondataavailable = event => queueServerTranscriptionChunk(event.data);
+                    serverTranscriptionRecorder.onerror = event => {
+                        console.warn('MediaRecorder transcription error:', event.error || event);
+                        setTranscriptionStatus('Microphone recording failed. Try again.', '#f87171');
+                    };
+                    serverTranscriptionRecorder.start(4200);
+                    setTranscriptionStatus('Listening - server transcription');
+                    return true;
+                } catch (error) {
+                    console.error('Server transcription recorder failed:', error);
+                    setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
+                    releaseServerTranscriptionStream();
+                    return false;
+                }
+            }
+
+            async function stopServerTranscriptionEngine() {
+                const recorder = serverTranscriptionRecorder;
+                if (!recorder) {
+                    releaseServerTranscriptionStream();
+                    await waitForServerTranscriptionDrain();
+                    return;
+                }
+
+                await new Promise(resolve => {
+                    let settled = false;
+                    const finish = () => {
+                        if (settled) return;
+                        settled = true;
+                        serverTranscriptionRecorder = null;
+                        releaseServerTranscriptionStream();
+                        resolve();
+                    };
+
+                    recorder.onstop = finish;
+                    try {
+                        if (recorder.state !== 'inactive') {
+                            recorder.requestData();
+                            recorder.stop();
+                        } else {
+                            finish();
+                        }
+                    } catch (error) {
+                        console.warn('Server transcription stop failed:', error);
+                        finish();
+                    }
+
+                    setTimeout(finish, 8000);
+                });
+
+                await waitForServerTranscriptionDrain();
+            }
+
+            async function activateServerTranscriptionFallback(message = 'Using server transcription fallback') {
+                if (!isRecording || !canUseServerTranscription()) return false;
+
+                shouldAutoRestartRecognition = false;
+                activeTranscriptionEngine = 'server';
+                setTranscriptionStatus(message, '#fbbf24');
+
+                if (recognition && recognitionActive) {
+                    try {
+                        recognition.stop();
+                    } catch (error) {
+                        console.warn('Browser recognition stop failed before fallback:', error);
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 350));
+                }
+
+                if (!await ensureMicrophoneReady('server')) return false;
+                return startServerTranscriptionEngine();
+            }
+
             let lastSpeechEnd = 0;
             if (BrowserSpeechRecognition) {
                 recognition = new BrowserSpeechRecognition();
-                recognition.continuous = true;
+                recognition.continuous = !mobileSpeechSurface;
                 recognition.interimResults = true;
                 recognition.lang = speechLocale;
                 recognition.maxAlternatives = 3;
 
                 recognition.onstart = function() {
                     recognitionActive = true;
+                    setTranscriptionStatus('Transcribing');
                 };
                 
                 recognition.onsoundstart = function() {
@@ -1358,18 +1705,28 @@
                 };
 
                 recognition.onerror = function(event) {
-                    console.warn('Speech recognition error:', event.error || event);
-                    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(event.error)) {
+                    recognitionActive = false;
+                    const error = event.error || 'unknown';
+                    console.warn('Speech recognition error:', error);
+
+                    if (['network', 'service-not-allowed'].includes(error) && canUseServerTranscription()) {
+                        setTimeout(() => activateServerTranscriptionFallback(microphoneErrorMessage(error)), 0);
+                        return;
+                    }
+
+                    if (['not-allowed', 'service-not-allowed', 'audio-capture'].includes(error)) {
                         shouldAutoRestartRecognition = false;
-                    } else if (event.error === 'no-speech' && isRecording) {
+                        setTranscriptionStatus(microphoneErrorMessage(error), '#f87171');
+                    } else if (error === 'no-speech' && isRecording) {
                         shouldAutoRestartRecognition = true;
+                        setTranscriptionStatus('Still listening - speak close to the mic', '#fbbf24');
                     }
                 };
 
                 recognition.onend = function() {
                     recognitionActive = false;
-                    if (shouldAutoRestartRecognition && isRecording) {
-                        setTimeout(startSpeechRecognitionEngine, 250);
+                    if (shouldAutoRestartRecognition && isRecording && activeTranscriptionEngine === 'browser') {
+                        setTimeout(startSpeechRecognitionEngine, mobileSpeechSurface ? 650 : 250);
                     }
                 };
             }
@@ -1894,7 +2251,7 @@
                 });
 
                 if (isRecording) {
-                    pauseRecording();
+                    await pauseRecording();
                 }
 
                 const usedServerVoice = serverAiVoiceEnabled
@@ -2119,7 +2476,7 @@
             async function concludeAndFinishInterview() {
                 if (interviewEnding) return;
 
-                if (isRecording) stopRecording();
+                if (isRecording) await stopRecording();
                 interviewEnding = true;
                 setAnswerInputEnabled(false);
                 await playClosingConversationAndSubmit();
@@ -2138,6 +2495,12 @@
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
+                    const transcriptionEngine = preferredTranscriptionEngine();
+                    if (!transcriptionEngine) {
+                        setTranscriptionStatus(transcriptionUnavailableMessage(), '#f87171');
+                    } else if (transcriptionEngine === 'server') {
+                        setTranscriptionStatus('Server transcription ready');
+                    }
                     if (liveFeedbackMode !== 'real_interview') {
                         document.getElementById('voiceAnalyticsPanel').style.display = 'block';
                     }
@@ -2548,28 +2911,73 @@
                 }
             }
 
-            function startRecording(options = {}) {
-                const silent = options && options.silent === true;
-                if(!recognition) {
-                    if(!silent) alert("Speech recognition not supported in this browser.");
-                    return;
+            function setRecordingControlButtons(state) {
+                const pauseBtn = document.getElementById('micPauseBtn');
+                const stopBtn = document.getElementById('micStopBtn');
+                const timer = document.getElementById('recordingTimer');
+
+                if (pauseBtn) {
+                    pauseBtn.style.display = 'inline-flex';
+                    pauseBtn.innerHTML = state === 'paused'
+                        ? '<i class="fa-solid fa-play"></i>'
+                        : '<i class="fa-solid fa-pause"></i>';
+                    pauseBtn.setAttribute('aria-label', state === 'paused' ? 'Resume recording' : 'Pause recording');
+                    pauseBtn.setAttribute('title', state === 'paused' ? 'Resume recording' : 'Pause recording');
                 }
-                if (isRecording) return;
+
+                if (stopBtn) stopBtn.style.display = 'inline-flex';
+                if (timer) timer.style.display = 'block';
+            }
+
+            async function startRecording(options = {}) {
+                const silent = options && options.silent === true;
+                if (isRecording) return true;
+
+                let engine = preferredTranscriptionEngine();
+                if (!engine) {
+                    const message = transcriptionUnavailableMessage();
+                    setTranscriptionStatus(message, '#f87171');
+                    if(!silent) alert(message);
+                    return false;
+                }
 
                 if (!isRecordingPaused) {
                     resetSpeechRecognitionBufferFromTextarea();
                 }
+
+                if (!await ensureMicrophoneReady(engine)) {
+                    if(!silent) {
+                        const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
+                        alert(message);
+                    }
+                    return false;
+                }
+
                 lastSpeechEnd = 0;
                 shouldAutoRestartRecognition = true;
                 isRecording = true;
                 isRecordingPaused = false;
-                startSpeechRecognitionEngine();
-                document.getElementById('micPauseBtn').style.display = 'inline-flex';
-                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
-                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Pause recording');
-                document.getElementById('micPauseBtn').setAttribute('title', 'Pause recording');
-                document.getElementById('micStopBtn').style.display = 'inline-flex';
-                document.getElementById('recordingTimer').style.display = 'block';
+                activeTranscriptionEngine = engine;
+
+                let started = engine === 'server'
+                    ? startServerTranscriptionEngine()
+                    : startSpeechRecognitionEngine();
+
+                if (!started && engine === 'browser' && canUseServerTranscription()) {
+                    activeTranscriptionEngine = 'server';
+                    engine = 'server';
+                    started = await ensureMicrophoneReady('server') && startServerTranscriptionEngine();
+                }
+
+                if (!started) {
+                    shouldAutoRestartRecognition = false;
+                    isRecording = false;
+                    isRecordingPaused = false;
+                    if(!silent) alert(document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage());
+                    return false;
+                }
+
+                setRecordingControlButtons('recording');
                 clearInterval(recTimerInterval);
                 
                 recTimerInterval = setInterval(() => {
@@ -2599,6 +3007,7 @@
 
                 const scannerBox = document.getElementById('faceScannerBox');
                 if (scannerBox) scannerBox.style.display = 'block';
+                return true;
             }
 
             function toggleRecordingPause() {
@@ -2610,10 +3019,12 @@
                 startRecording({ silent: false });
             }
 
-            function pauseRecording() {
+            async function pauseRecording() {
                 finalizeInterimTranscript();
                 shouldAutoRestartRecognition = false;
-                if(recognition) {
+
+                const usedServerTranscription = activeTranscriptionEngine === 'server';
+                if(recognition && !usedServerTranscription) {
                     try {
                         recognition.stop();
                     } catch (error) {
@@ -2623,26 +3034,31 @@
                 isRecording = false;
                 isRecordingPaused = true;
                 clearInterval(recTimerInterval);
-                document.getElementById('micPauseBtn').style.display = 'inline-flex';
-                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
-                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Resume recording');
-                document.getElementById('micPauseBtn').setAttribute('title', 'Resume recording');
-                document.getElementById('micStopBtn').style.display = 'inline-flex';
-                document.getElementById('recordingTimer').style.display = 'block';
+                setRecordingControlButtons('paused');
                 const scannerBox = document.getElementById('faceScannerBox');
                 if (scannerBox) scannerBox.style.display = 'none';
+
+                if (usedServerTranscription) {
+                    setTranscriptionStatus('Finalizing transcription', '#fbbf24');
+                    await stopServerTranscriptionEngine();
+                }
+
+                if (!interviewEnding && !interviewTerminated) {
+                    setTranscriptionStatus('Paused');
+                }
             }
 
-            function stopRecording() {
-                pauseRecording();
+            async function stopRecording() {
+                await pauseRecording();
                 clearTimeout(autoStartAfterQuestionTimer);
                 isRecordingPaused = false;
                 recTimerSeconds = 0;
-                document.getElementById('recordingTimer').innerText = '00:00';
-                document.getElementById('micPauseBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
-                document.getElementById('micPauseBtn').setAttribute('aria-label', 'Pause recording');
-                document.getElementById('micPauseBtn').setAttribute('title', 'Pause recording');
+                const timer = document.getElementById('recordingTimer');
+                if (timer) timer.innerText = '00:00';
+                setRecordingControlButtons('recording');
                 resetSpeechRecognitionBufferFromTextarea();
+                setTranscriptionStatus('');
+                return true;
             }
 
             function saveCurrentAnswer(isSkipped = false, timedOut = false) {
@@ -2788,7 +3204,7 @@
 
             async function submitAnswer(options = {}) {
                 if (isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
-                if(isRecording) stopRecording();
+                if(isRecording) await stopRecording();
                 
                 const timedOut = options.timedOut === true;
                 let answerText = document.getElementById('answerTextarea').value.trim();
@@ -2914,14 +3330,14 @@
                 }
             }
 
-            function skipQuestion() {
-                if(isRecording) stopRecording();
+            async function skipQuestion() {
+                if(isRecording) await stopRecording();
                 document.getElementById('answerTextarea').value = "[User skipped the question]";
                 submitAnswer({ skipped: true });
             }
 
-            function prevQuestion() {
-                if(isRecording) stopRecording();
+            async function prevQuestion() {
+                if(isRecording) await stopRecording();
                 if (currentQIdx > 0) {
                     loadQuestion(currentQIdx - 1);
                 }
@@ -2948,9 +3364,23 @@
                     }
                 }
                 recognitionActive = false;
+                if (serverTranscriptionRecorder && serverTranscriptionRecorder.state !== 'inactive') {
+                    try {
+                        serverTranscriptionRecorder.requestData();
+                        serverTranscriptionRecorder.stop();
+                    } catch (error) {
+                        console.warn('Server transcription cleanup failed:', error);
+                    }
+                }
+                serverTranscriptionRecorder = null;
+                serverTranscriptionSessionToken++;
+                serverTranscriptionQueue = [];
+                serverTranscriptionProcessing = false;
+                resolveServerTranscriptionDrain();
                 isRecording = false;
                 isRecordingPaused = false;
                 releaseMicrophoneStream();
+                setTranscriptionStatus('');
                 cancelQuestionSpeechOutput();
                 serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));
                 serverSpeechUrlCache.clear();
