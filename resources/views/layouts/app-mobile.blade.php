@@ -784,6 +784,23 @@
          }
          .db-content { padding: 10px 12px 12px !important; }
 
+         body.mobile-interview-fullscreen #mob-header,
+         body.mobile-interview-fullscreen #mob-bottom-nav {
+            display: none !important;
+         }
+
+         body.mobile-interview-fullscreen #mob-content {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            min-height: 100dvh;
+            overflow-y: auto;
+         }
+
+         body.mobile-interview-fullscreen #mob-content > .db-content {
+            min-height: 100dvh;
+            padding: 0 !important;
+         }
+
          @include('partials.mobile-card-rhythm')
 
          /* ---- Bottom Navigation Bar ---- */
@@ -1711,7 +1728,7 @@
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
       </style>
    </head>
-   <body>
+   <body class="{{ request()->routeIs('interview.session') ? 'mobile-interview-fullscreen' : '' }}">
 
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">

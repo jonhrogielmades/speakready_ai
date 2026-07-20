@@ -46,7 +46,15 @@
     }
     #chatTranscriptContainer {
         border-radius: 14px !important;
-        background: var(--bg3) !important;
+        background: transparent !important;
+        border: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        font-size: 0.78rem;
+        line-height: 1.35;
+    }
+    #chatTranscriptContainer:empty {
+        display: none !important;
     }
     #introContainer {
         border-radius: 16px !important;
@@ -93,6 +101,58 @@
     }
     .interview-meta-line { flex-wrap: wrap; }
     .panel-title { font-weight:800;margin-bottom:16px;display:flex;align-items:center;font-size:1rem;color:var(--tx); letter-spacing: 0; }
+    .response-title-actions {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+    }
+    .response-fullscreen-toggle {
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        background: var(--bg3);
+        color: var(--tx2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        line-height: 1;
+        transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+    .response-fullscreen-toggle:hover,
+    .response-fullscreen-toggle:focus {
+        background: rgba(96, 165, 250, 0.12);
+        border-color: rgba(96, 165, 250, 0.38);
+        color: #60a5fa;
+    }
+    .response-fullscreen-toggle:active {
+        transform: scale(0.94);
+    }
+    .response-send-answer-btn {
+        min-height: 34px;
+        padding: 0.45rem 0.72rem;
+        border: none;
+        border-radius: 10px;
+        background: var(--dash-primary, #60a5fa);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(96,165,250,0.28);
+        font-size: 0.78rem;
+        font-weight: 800;
+        line-height: 1.1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .response-send-answer-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
     .panel-title > i {
         width: 28px;
         height: 28px;
@@ -141,6 +201,28 @@
     .question-source-line { display:inline-flex;align-items:center;gap:5px;color:rgba(255,255,255,.72);font-size:.68rem;font-weight:700;margin-top:7px;max-width:100%; }
     .question-source-line a { color:rgba(191,219,254,.95);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
     .question-source-line a:hover { color:#fff;text-decoration:underline; }
+    .source-card-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        color: var(--tx2);
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.4;
+        max-width: 100%;
+    }
+    .source-card-line a,
+    .source-card-line span:last-child {
+        color: var(--tx);
+        overflow-wrap: anywhere;
+    }
+    .source-card-line a {
+        text-decoration: none;
+    }
+    .source-card-line a:hover {
+        color: #60a5fa;
+        text-decoration: underline;
+    }
     .question-caption-overlay {
         position: absolute;
         left: 18px;
@@ -342,6 +424,22 @@
     
     /* Responsive overrides */
     @media (max-width: 768px) {
+        body.mobile-interview-fullscreen {
+            min-height: 100dvh;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+        body.mobile-interview-fullscreen #sec-interview-session {
+            --session-gap: 12px;
+            min-height: 100dvh;
+            height: 100dvh !important;
+            padding: 8px 8px max(8px, env(safe-area-inset-bottom, 0px)) !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+        }
+        body.mobile-interview-fullscreen #workspaceWrapper {
+            min-height: 100%;
+        }
         #sec-interview-session { --session-gap: 12px; }
         .question-caption-overlay {
             left: 12px;
@@ -412,9 +510,7 @@
             letter-spacing: 0;
         }
         .ai-question-card {
-            margin-top: calc(var(--session-gap) * -0.35);
-            padding: 10px 12px;
-            border-radius: 12px;
+            display: none !important;
         }
         .question-source-line {
             font-size: 0.6rem !important;
@@ -438,15 +534,48 @@
         }
         .panel {
             padding: 12px !important;
-            margin-bottom: var(--session-gap);
+            margin-bottom: var(--session-gap) !important;
             border-radius: 14px;
             box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+        body.mobile-interview-fullscreen #workspaceRow {
+            row-gap: var(--session-gap) !important;
+        }
+        body.mobile-interview-fullscreen #workspaceRow > [class*="col-"] {
+            display: flex;
+            flex-direction: column;
+            gap: var(--session-gap);
+        }
+        body.mobile-interview-fullscreen #workspaceRow > [class*="col-"] > .panel,
+        body.mobile-interview-fullscreen #workspaceRow > [class*="col-"] > #interviewControls {
+            margin-bottom: 0 !important;
+        }
+        body.mobile-interview-fullscreen #workspaceRow > .col-lg-4 {
+            margin-top: 0 !important;
         }
         .panel:hover { transform: none; }
         .panel-title {
             font-size: 0.86rem;
             margin-bottom: 10px;
             line-height: 1.15;
+        }
+        .response-title-actions {
+            gap: 6px;
+        }
+        .response-fullscreen-toggle {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            font-size: 0.78rem;
+        }
+        .response-send-answer-btn {
+            min-height: 32px;
+            padding: 0.42rem 0.58rem;
+            font-size: 0.68rem;
+            border-radius: 9px;
+        }
+        .response-send-answer-btn i {
+            font-size: 0.64rem;
         }
         .panel-title > i {
             width: 24px;
@@ -492,60 +621,71 @@
         }
         #workspaceRow { --bs-gutter-x: 0; --bs-gutter-y: var(--session-gap); }
         #interviewControls {
-            align-items: stretch !important;
-            border-radius: 14px;
-            padding: 10px;
-            gap: 8px !important;
-            margin-bottom: var(--session-gap) !important;
-        }
-        #interviewControls > div { gap: 8px !important; width: 100%; }
-        #interviewControls > div:first-child {
             display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: minmax(58px, 1fr) minmax(66px, 1fr) auto auto auto minmax(0, auto);
+            align-items: center !important;
+            border-radius: 14px;
+            padding: 6px;
+            gap: 4px !important;
+            margin-bottom: 0 !important;
+            overflow: hidden;
+        }
+        #interviewControls > div { gap: 4px !important; width: auto !important; min-width: 0; }
+        #interviewControls > div:first-child {
+            display: contents !important;
         }
         #interviewControls > div:first-child .btn {
+            min-width: 0;
             width: 100%;
-            min-height: 42px;
-            padding: 0.5rem 0.55rem;
+            min-height: 32px;
+            padding: 0.32rem 0.24rem;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            font-size: 0.78rem;
+            gap: 3px;
+            font-size: 0.52rem;
             line-height: 1.15;
+            border-radius: 8px !important;
+            white-space: nowrap;
         }
         #interviewControls > div:first-child .btn i {
             margin: 0 !important;
-            font-size: 0.76rem;
+            font-size: 0.54rem;
         }
         #interviewControls > div:nth-child(2) {
-            display: flex !important;
-            flex-wrap: wrap;
+            display: contents !important;
+        }
+        #interviewControls > div:nth-child(2) > * {
+            min-width: 0;
+        }
+        #interviewControls > div:nth-child(2) {
             align-items: center !important;
             justify-content: center !important;
+            width: auto !important;
         }
         #recordingTimer {
             margin-right: 0 !important;
-            font-size: 0.74rem !important;
-            min-width: 40px;
+            font-size: 0.5rem !important;
+            min-width: 26px;
             text-align: center;
         }
         #voiceControls {
             width: auto;
+            flex: 0 0 auto;
         }
         #voiceControls .d-flex.gap-2 {
             display: flex !important;
             align-items: center;
             justify-content: center;
-            gap: 7px !important;
+            gap: 4px !important;
             flex-wrap: nowrap !important;
         }
         #voiceControls .btn {
-            width: 42px;
+            width: 30px;
             min-width: 0;
-            min-height: 34px !important;
-            height: 34px !important;
-            padding: 0.36rem 0.42rem !important;
+            min-height: 28px !important;
+            height: 28px !important;
+            padding: 0.24rem !important;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -553,18 +693,20 @@
         }
         #voiceControls .btn i {
             margin: 0 !important;
-            font-size: 0.68rem;
+            font-size: 0.62rem;
         }
         .transcription-status {
-            flex-basis: 100%;
-            max-width: 100%;
+            max-width: 72px;
             display: none;
-            font-size: 0.72rem;
+            font-size: 0.56rem;
             line-height: 1.25;
-            text-align: center;
+            text-align: left;
             color: var(--tx3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        #interviewControls .btn { min-height: 38px; padding: 0.43rem 0.58rem; }
+        #interviewControls .btn { min-height: 32px; padding: 0.36rem 0.42rem; }
         #interviewControls .send-answer-btn {
             grid-column: 1 / -1;
             justify-self: center;
@@ -581,20 +723,18 @@
             font-size: 0.68rem;
             margin-left: 0.35rem !important;
         }
-        #chatTranscriptContainer { padding: 10px !important; margin-bottom: 12px !important; max-height: 240px !important; }
-        #chatTranscriptContainer:empty::before {
-            content: 'Transcript will appear here';
-            color: var(--tx3);
-            font-size: 0.74rem;
-            display: block;
-            text-align: center;
-            padding: 18px 8px;
+        #chatTranscriptContainer {
+            padding: 0 !important;
+            margin-bottom: 8px !important;
+            max-height: none !important;
+            overflow: visible !important;
+            gap: 8px !important;
         }
         #answerTextarea {
-            min-height: 92px !important;
+            min-height: 76px !important;
             border-radius: 12px !important;
-            padding: 11px 12px !important;
-            font-size: 0.86rem !important;
+            padding: 9px 10px !important;
+            font-size: 0.78rem !important;
             line-height: 1.4;
         }
         #answerForm > .d-flex.justify-content-between {
@@ -616,6 +756,9 @@
             margin-left: 6px !important;
         }
         #introContainer { padding: 16px !important; max-width: 100% !important; }
+        body.mobile-interview-fullscreen #introContainer {
+            margin-top: 10px !important;
+        }
         #introContainer .intro-ai-icon {
             width: 56px;
             height: 56px;
@@ -713,34 +856,31 @@
         .ai-question-card { padding: 10px; }
         .question-timer-anchor { top: 10px !important; right: 10px !important; }
         .session-chip { padding: 6px 8px; font-size: 0.7rem; }
-        #interviewControls { padding: 9px; }
-        #interviewControls .btn { font-size: 0.82rem; }
-        #interviewControls > div:first-child {
-            gap: 6px !important;
-        }
+        #interviewControls { padding: 6px; gap: 4px !important; }
+        #interviewControls .btn { font-size: 0.52rem; }
         #interviewControls > div:first-child .btn {
-            min-height: 38px;
-            padding: 0.42rem 0.45rem;
-            font-size: 0.68rem;
+            min-height: 28px;
+            padding: 0.3rem 0.18rem;
+            font-size: 0.48rem;
         }
         #interviewControls > div:first-child .btn i {
-            font-size: 0.68rem;
+            font-size: 0.5rem;
         }
         #recordingTimer {
-            font-size: 0.72rem !important;
-            min-width: 38px;
+            font-size: 0.48rem !important;
+            min-width: 24px;
         }
         #voiceControls .d-flex.gap-2 {
             gap: 6px !important;
         }
         #voiceControls .btn {
-            width: 40px;
-            min-height: 32px !important;
-            height: 32px !important;
-            padding: 0.35rem 0.42rem !important;
+            width: 28px;
+            min-height: 26px !important;
+            height: 26px !important;
+            padding: 0.22rem !important;
         }
         #voiceControls .btn i {
-            font-size: 0.66rem;
+            font-size: 0.58rem;
         }
     }
 </style>
@@ -861,7 +1001,6 @@
                     <div class="d-flex justify-content-center align-items-end gap-3 text-center">
                         <div class="w-100">
                             <div id="aiQuestionText">Loading your first question...</div>
-                            <div id="aiQuestionSource" class="question-source-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}" data-default-type="{{ $primarySource->source_type ?? 'dataset' }}"></div>
                         </div>
                     </div>
                 </div>
@@ -893,7 +1032,6 @@
                         </div>
                         <span id="transcriptionStatus" class="transcription-status" aria-live="polite" aria-atomic="true"></span>
 
-                        <button type="button" class="btn px-4 flex-fill next-btn-class send-answer-btn text-white btn-shine" style="background:var(--dash-primary, #60a5fa); border:none; box-shadow: 0 4px 15px rgba(96,165,250,0.4); font-weight:600; min-width: 160px; border-radius:12px;" onclick="submitAnswer()">Send Answer <i class="fa-solid fa-paper-plane ms-2"></i></button>
                     </div>
                 </div>
 
@@ -901,18 +1039,24 @@
                 <div class="panel mb-4 animate-fade-up delay-200">
                     <div class="panel-title">
                         <i class="fa-solid fa-pen-nib me-2"></i> Your Response
-                        @if($sessionRecord->game_level_id)
-                            <span class="badge ms-auto" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
-                        @endif
+                        <div class="response-title-actions">
+                            @if($sessionRecord->game_level_id)
+                                <span class="badge" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
+                            @endif
+                            <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()">
+                                Send Answer <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                            <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Toggle fullscreen" title="Exit fullscreen">
+                                <i class="fa-solid fa-compress"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <form id="answerForm">
                         <!-- Voice controls moved to interviewControls panel -->
 
-                        <div id="chatTranscriptContainer" style="max-height: 350px; overflow-y: auto; padding: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--bd); display: flex; flex-direction: column; gap: 15px;">
-                            <!-- Chat bubbles will go here -->
-                        </div>
-                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:80px;font-size:.95rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..."></textarea>
+                        <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
+                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..."></textarea>
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div style="font-size:.8rem;color:var(--tx3)">
@@ -945,6 +1089,14 @@
                     <div class="small mt-2" style="color:var(--tx3)">This estimates face visibility and head alignment only. Video is analyzed in your browser; no images or video are stored. Only derived timestamps and framing/head-alignment samples are saved for this report, and they are excluded from readiness.</div>
                 </div>
                 @endif
+
+                <!-- Question Source -->
+                <div class="panel animate-fade-up delay-150" id="questionSourcePanel">
+                    <div class="panel-title"><i class="fa-solid fa-link me-2"></i> Question Source</div>
+                    <div id="aiQuestionSource" class="source-card-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}" data-default-type="{{ $primarySource->source_type ?? 'dataset' }}">
+                        <span style="color:var(--tx3);font-weight:600">Source will appear when the question starts.</span>
+                    </div>
+                </div>
 
                 <!-- AI Visualizer Panel -->
                 <div class="panel animate-fade-up delay-200 coaching-only" id="liveFeedbackPanel">
@@ -2531,8 +2683,64 @@
                 await playClosingConversationAndSubmit();
             }
 
+            function enterMobileFullscreen() {
+                if (!window.matchMedia('(max-width: 768px)').matches) return;
+                document.body.classList.add('mobile-interview-fullscreen');
+                updateMobileFullscreenToggle();
+
+                const root = document.documentElement;
+                if (!document.fullscreenElement && root.requestFullscreen) {
+                    root.requestFullscreen({ navigationUI: 'hide' }).catch(() => {
+                        updateMobileFullscreenToggle();
+                    });
+                }
+            }
+
+            function exitMobileFullscreen() {
+                document.body.classList.remove('mobile-interview-fullscreen');
+                updateMobileFullscreenToggle();
+
+                if (document.fullscreenElement && document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {
+                        updateMobileFullscreenToggle();
+                    });
+                }
+            }
+
+            function toggleMobileFullscreen() {
+                if (document.body.classList.contains('mobile-interview-fullscreen')) {
+                    exitMobileFullscreen();
+                } else {
+                    enterMobileFullscreen();
+                }
+            }
+
+            function updateMobileFullscreenToggle() {
+                const toggle = document.getElementById('responseFullscreenToggle');
+                if (!toggle) return;
+
+                const fullscreenOn = document.body.classList.contains('mobile-interview-fullscreen');
+                toggle.title = fullscreenOn ? 'Exit fullscreen' : 'Enter fullscreen';
+                toggle.setAttribute('aria-label', toggle.title);
+                toggle.innerHTML = fullscreenOn
+                    ? '<i class="fa-solid fa-compress"></i>'
+                    : '<i class="fa-solid fa-expand"></i>';
+            }
+
+            function handleBrowserFullscreenChange() {
+                if (!document.fullscreenElement && interviewStarted) {
+                    document.body.classList.remove('mobile-interview-fullscreen');
+                }
+
+                updateMobileFullscreenToggle();
+            }
+
+            window.exitMobileFullscreen = exitMobileFullscreen;
+            window.toggleMobileFullscreen = toggleMobileFullscreen;
+
             function startInterviewSession() {
                 if (interviewStarted || interviewTerminated) return;
+                enterMobileFullscreen();
                 interviewStarted = true;
                 document.getElementById('introContainer').style.display = 'none';
                 document.getElementById('workspaceWrapper').style.display = 'block';
@@ -2657,7 +2865,7 @@
                     return;
                 }
 
-                sourceLine.style.display = 'inline-flex';
+                sourceLine.style.display = 'flex';
                 const icon = document.createElement('i');
                 icon.className = 'fa-solid fa-link';
                 const label = document.createElement('span');
@@ -3209,12 +3417,17 @@
 
             function appendChatMessage(role, text, record = true) {
                 const chatContainer = document.getElementById('chatTranscriptContainer');
+                if (role === 'interviewer') {
+                    chatContainer.innerHTML = '';
+                }
+                chatContainer.style.display = 'flex';
+
                 const bubble = document.createElement('div');
-                bubble.style.padding = '10px 14px';
-                bubble.style.borderRadius = '16px';
-                bubble.style.maxWidth = '85%';
-                bubble.style.lineHeight = '1.4';
-                bubble.style.fontSize = '0.85rem';
+                bubble.style.padding = '8px 10px';
+                bubble.style.borderRadius = '12px';
+                bubble.style.maxWidth = '96%';
+                bubble.style.lineHeight = '1.35';
+                bubble.style.fontSize = '0.76rem';
                 
                 if (role === 'interviewer') {
                     bubble.style.background = 'rgba(139,92,246,0.15)';
@@ -3229,7 +3442,6 @@
                 }
                 
                 chatContainer.appendChild(bubble);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
 
                 if (record) {
                     chatHistory.push({ role, text });
@@ -3301,16 +3513,18 @@
                 captureTranscriptTimeline(timedOut ? 'timed_out_submit' : 'submitted', true);
                 
                 const chatContainer = document.getElementById('chatTranscriptContainer');
+                chatContainer.style.display = 'flex';
                 const thinkingBubble = document.createElement('div');
                 thinkingBubble.id = 'thinkingBubble';
-                thinkingBubble.style.padding = '12px 16px';
-                thinkingBubble.style.borderRadius = '16px';
-                thinkingBubble.style.maxWidth = '85%';
+                thinkingBubble.style.padding = '8px 10px';
+                thinkingBubble.style.borderRadius = '12px';
+                thinkingBubble.style.maxWidth = '96%';
+                thinkingBubble.style.fontSize = '0.76rem';
+                thinkingBubble.style.lineHeight = '1.35';
                 thinkingBubble.style.alignSelf = 'flex-start';
                 thinkingBubble.style.background = 'rgba(255,255,255,0.05)';
                 thinkingBubble.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-muted me-2"></i> <em>Interviewer is preparing the next question...</em>';
                 chatContainer.appendChild(thinkingBubble);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
                 
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
@@ -3551,6 +3765,9 @@
             }
 
             document.addEventListener('DOMContentLoaded', () => {
+                updateMobileFullscreenToggle();
+                document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);
+
                 setTimeout(() => {
                     if (!interviewStarted && !interviewTerminated) {
                         startInterviewSession();
