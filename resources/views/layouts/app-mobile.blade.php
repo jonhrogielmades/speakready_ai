@@ -146,7 +146,7 @@
             position: relative;
          }
          :root {
-            --mob-nav-h: 78px;
+            --mob-nav-h: 72px;
             --mob-top-h: 56px;
             --mob-safe-top: env(safe-area-inset-top, 0px);
             --mob-safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -810,30 +810,30 @@
             z-index: 990;
             height: calc(var(--mob-nav-h) + var(--mob-safe-bottom));
             padding-bottom: var(--mob-safe-bottom);
-            background: linear-gradient(180deg, rgba(17, 24, 39, 0.88) 0%, rgba(8, 8, 15, 0.98) 100%);
-            backdrop-filter: blur(22px) saturate(160%);
-            -webkit-backdrop-filter: blur(22px) saturate(160%);
-            border-top: 1px solid rgba(148, 163, 184, 0.16);
+            background: rgba(18, 25, 39, 0.96);
+            backdrop-filter: blur(18px) saturate(150%);
+            -webkit-backdrop-filter: blur(18px) saturate(150%);
+            border-top: 1px solid rgba(96, 165, 250, 0.16);
             display: flex;
             align-items: center;
             overflow: visible;
-            box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 -12px 30px rgba(2, 6, 23, 0.26);
             isolation: isolate;
          }
          #mob-bottom-nav::before {
             content: "";
             position: absolute;
-            top: 0;
-            left: 16px;
-            right: 16px;
+            top: -1px;
+            left: 0;
+            right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.42), transparent);
+            background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.34), transparent);
             pointer-events: none;
          }
          .lm #mob-bottom-nav {
-            background: rgba(255, 255, 255, 0.94);
-            border-top-color: rgba(15, 23, 42, 0.08);
-            box-shadow: 0 -16px 34px rgba(15, 23, 42, 0.1);
+            background: rgba(255, 255, 255, 0.97);
+            border-top-color: rgba(226, 232, 240, 0.95);
+            box-shadow: 0 -8px 26px rgba(15, 23, 42, 0.1);
          }
 
          .mob-nav-items {
@@ -842,8 +842,8 @@
             height: 100%;
             align-items: center;
             justify-content: space-between;
-            gap: 2px;
-            padding: 6px 10px 8px;
+            gap: 0;
+            padding: 6px max(8px, env(safe-area-inset-left, 0px)) 7px max(8px, env(safe-area-inset-right, 0px));
          }
          .mob-nav-item {
             position: relative;
@@ -851,16 +851,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
+            gap: 4px;
             min-width: 0;
-            min-height: 58px;
+            min-height: 54px;
             flex: 1 1 0;
-            padding: 6px 2px 5px;
-            border-radius: 16px;
+            padding: 5px 2px 4px;
+            border-radius: 12px;
             text-decoration: none;
-            color: var(--tx3);
-            font-size: 0.62rem;
-            font-weight: 700;
+            color: #8a96a8;
+            font-size: 0.66rem;
+            font-weight: 600;
             letter-spacing: 0;
             line-height: 1.1;
             transition: color 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
@@ -871,10 +871,13 @@
             cursor: pointer;
             font-family: "Poppins", sans-serif;
          }
+         .lm .mob-nav-item {
+            color: #8b95a5;
+         }
          .mob-nav-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 14px;
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -882,7 +885,7 @@
          }
          .mob-nav-icon i,
          .mob-nav-primary-icon i {
-            font-size: 1.12rem;
+            font-size: 1.26rem;
             line-height: 1;
          }
          .mob-nav-item > span:last-child {
@@ -910,54 +913,55 @@
             outline-offset: 2px;
          }
          .mob-nav-item.active {
-            color: #60a5fa;
+            color: #1f6fff;
+            font-weight: 800;
          }
          .mob-nav-item.active .mob-nav-icon {
-            background: rgba(96, 165, 250, 0.12);
-            box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.18);
+            background: transparent;
+            box-shadow: none;
          }
          .mob-nav-primary {
-            color: #2563eb;
+            color: #1f6fff;
             font-weight: 800;
             align-self: flex-start;
-            min-height: 72px;
+            min-height: 74px;
             padding-top: 0;
-            transform: translateY(-15px);
+            transform: translateY(-22px);
          }
          .mob-nav-primary-icon {
-            width: 60px;
-            height: 60px;
+            width: 62px;
+            height: 62px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 48%, #0ea5e9 100%);
-            border: 4px solid rgba(15, 23, 42, 0.96);
-            box-shadow: 0 16px 28px rgba(37, 99, 235, 0.38), 0 0 0 7px rgba(37, 99, 235, 0.12);
-            margin-bottom: -3px;
+            background: linear-gradient(180deg, #2f80ff 0%, #1767f2 100%);
+            border: 5px solid rgba(18, 25, 39, 0.98);
+            box-shadow: 0 11px 20px rgba(37, 99, 235, 0.34), 0 0 0 1px rgba(96, 165, 250, 0.28);
+            margin-bottom: 1px;
             transition: transform 0.18s ease, box-shadow 0.18s ease;
          }
          .mob-nav-primary .mob-nav-primary-icon i {
-            font-size: 1.45rem;
+            font-size: 1.64rem;
             filter: none;
          }
          .mob-nav-primary.active,
          .mob-nav-primary:active {
-            color: #2563eb;
+            color: #1f6fff;
          }
          .mob-nav-primary.active .mob-nav-primary-icon {
-            box-shadow: 0 18px 34px rgba(37, 99, 235, 0.48), 0 0 0 8px rgba(37, 99, 235, 0.16);
+            box-shadow: 0 13px 24px rgba(37, 99, 235, 0.42), 0 0 0 1px rgba(96, 165, 250, 0.34);
          }
          .lm .mob-nav-item.active .mob-nav-icon {
-            background: rgba(37, 99, 235, 0.1);
-            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+            background: transparent;
+            box-shadow: none;
          }
          .lm .mob-nav-primary {
-            color: #2563eb;
+            color: #1f6fff;
          }
          .lm .mob-nav-primary-icon {
-            border-color: rgba(255, 255, 255, 0.96);
+            border-color: rgba(255, 255, 255, 0.98);
          }
 
          .ucp-mobile-launcher {
@@ -1875,7 +1879,7 @@
             <a href="{{ route('interview.setup') }}"
                class="mob-nav-item mob-nav-primary {{ request()->routeIs('interview.*') ? 'active' : '' }}"
                id="mobnav-interview">
-               <span class="mob-nav-primary-icon"><i class="fa-solid fa-microphone-lines"></i></span>
+               <span class="mob-nav-primary-icon"><i class="fa-solid fa-microphone"></i></span>
                <span>Interview</span>
             </a>
             <a href="{{ route('user.feedback') }}"

@@ -3,77 +3,310 @@
 
 @section('content')
 <style>
-    .text-gradient-primary {
-        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
+    .feedback-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+    }
+    .feedback-hero {
+        min-height: 236px;
+        margin-bottom: 24px;
+        border: 1px solid rgba(191, 219, 254, 0.72);
+        border-radius: 22px;
+        background:
+            radial-gradient(circle at 84% 72%, rgba(147, 197, 253, 0.32), transparent 18%),
+            linear-gradient(108deg, rgba(255, 255, 255, 0.96) 0%, rgba(239, 246, 255, 0.98) 48%, rgba(219, 234, 254, 0.94) 100%);
+        box-shadow: 0 18px 42px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.92);
+        overflow: hidden;
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 34%);
+        gap: 24px;
+        align-items: center;
+        padding: clamp(24px, 4vw, 42px);
+    }
+    .feedback-hero::before {
+        content: "";
+        position: absolute;
+        inset: 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        pointer-events: none;
+    }
+    .feedback-hero-copy {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 68px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+    }
+    .feedback-chat-mark {
+        width: 68px;
+        height: 68px;
+        color: #2563eb;
+        filter: drop-shadow(0 12px 16px rgba(37, 99, 235, 0.22));
+    }
+    .feedback-title {
+        margin: 0 0 14px;
+        color: #2563eb;
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 900;
+        line-height: 1.05;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+    .feedback-subtitle {
+        max-width: 600px;
+        margin: 0;
+        color: #334155;
+        font-size: clamp(1.05rem, 2vw, 1.34rem);
+        line-height: 1.55;
+        letter-spacing: 0;
+    }
+    .feedback-hero-art {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        min-width: 210px;
+        filter: drop-shadow(0 24px 30px rgba(37, 99, 235, 0.24));
+        transform-origin: 50% 78%;
+        animation: feedbackHeroArtFloat 4.8s ease-in-out infinite;
+    }
+    .feedback-hero-art :is(circle, rect, path):nth-child(odd) {
+        transform-origin: center;
+        animation: feedbackHeroArtPulse 3.4s ease-in-out infinite;
+    }
+    @keyframes feedbackHeroArtFloat {
+        0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+        35% { transform: translate3d(0, -7px, 0) rotate(1.5deg) scale(1.015); }
+        70% { transform: translate3d(-3px, -2px, 0) rotate(-1deg) scale(1.005); }
+    }
+    @keyframes feedbackHeroArtPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.78; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .feedback-hero-art,
+        .feedback-hero-art :is(circle, rect, path) {
+            animation: none !important;
+        }
     }
     .premium-panel {
-        background: var(--sf);
-        border: 1px solid var(--bd);
-        border-radius: 24px;
-        padding: 24px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(203, 213, 225, 0.74);
+        border-radius: 22px;
+        padding: clamp(20px, 3.4vw, 38px);
+        box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .feedback-history-title {
+        color: #0f172a;
+        margin: 0 0 22px;
+        font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+        font-weight: 900;
+        letter-spacing: 0;
     }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
     @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
     .btn-shine { position: relative; overflow: hidden; }
     .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
-    
-    .db-filter-input { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-    .db-filter-input:focus, .db-filter-input:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15) !important; background: var(--sf) !important; }
-    .input-group.db-filter-input:focus-within { border-radius: 8px; border: 1px solid var(--pur) !important; }
+
+    #feedback-filters {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px 22px !important;
+        width: 100%;
+        margin-bottom: 24px;
+    }
+    .db-filter-input,
+    #feedback-filters .btn,
+    #feedback-filters .form-select {
+        min-height: 70px;
+        border: 1px solid rgba(148, 163, 184, 0.46) !important;
+        border-radius: 12px !important;
+        background-color: rgba(248, 250, 252, 0.72) !important;
+        color: #475569 !important;
+        font-size: 1.05rem;
+        font-weight: 600;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.035);
+        transition: all 0.24s ease;
+    }
+    .db-filter-input:focus, .db-filter-input:focus-within,
+    #feedback-filters .form-select:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14), 0 10px 24px rgba(37, 99, 235, 0.09) !important;
+        background: #fff !important;
+    }
+    #feedback-filters .feedback-clear-form,
+    #feedback-filters .feedback-search-wrap {
+        grid-column: 1 / -1;
+    }
+    #feedback-filters .feedback-clear-form .btn {
+        color: #ef1d2b !important;
+        border-color: #ef1d2b !important;
+        background: rgba(255, 255, 255, 0.78) !important;
+        font-weight: 800;
+        justify-content: center;
+    }
     #feedback-filters .feedback-search-wrap {
         overflow: hidden;
-        border: 1px solid var(--bd);
-        background: var(--bg);
-        border-radius: 8px;
+        display: flex;
+        align-items: center;
     }
     #feedback-filters .feedback-search-wrap .input-group-text,
     #feedback-filters .feedback-search-wrap .form-control {
         background: transparent !important;
         border: 0 !important;
         box-shadow: none !important;
+        color: #475569;
+        font-size: 1.05rem;
+        font-weight: 600;
     }
-    #feedback-filters .feedback-search-wrap .input-group-text,
-    #feedback-filters .feedback-search-wrap .form-control {
-        border-radius: 0 !important;
+    #feedback-filters .feedback-search-wrap .input-group-text {
+        padding-left: 22px;
+        padding-right: 12px;
+        color: #475569 !important;
+        font-size: 1.25rem;
     }
     .feedback-empty-state {
         display: block;
         width: 100%;
-        border: 1px solid var(--bd);
-        border-radius: 10px;
+        border: 1px solid rgba(191, 219, 254, 0.72);
+        border-radius: 14px;
         background: rgba(96, 165, 250, 0.08);
-        color: var(--tx3);
-        font-size: 0.82rem;
+        color: #475569;
+        font-size: 0.95rem;
         line-height: 1.45;
-        padding: 14px;
+        padding: 18px;
         text-align: left;
     }
-    .feedback-history-delete-label { display: none; }
+    .feedback-table-wrap { overflow: visible; }
+    #feedbackTable {
+        border-collapse: separate;
+        border-spacing: 0 18px;
+        color: #0f172a !important;
+    }
+    #feedbackTable thead { display: none; }
+    #feedbackTable tbody tr {
+        border: 1px solid rgba(203, 213, 225, 0.8) !important;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.72)) !important;
+        box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+    }
+    #feedbackTable tbody td {
+        padding: 24px 26px !important;
+        border: 0 !important;
+        vertical-align: middle;
+    }
+    #feedbackTable tbody td:first-child {
+        border-radius: 18px 0 0 18px;
+        color: #334155;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    #feedbackTable tbody td:first-child::before {
+        content: "\f133";
+        font-family: "Font Awesome 6 Free";
+        font-weight: 900;
+        margin-right: 10px;
+        color: #475569;
+    }
+    #feedbackTable tbody td:nth-child(2) {
+        color: #0f172a;
+        font-size: 1.15rem;
+        font-weight: 900 !important;
+    }
+    #feedbackTable tbody td:nth-child(3) {
+        color: #2563eb;
+        font-weight: 900 !important;
+    }
+    #feedbackTable tbody td:nth-child(3)::before,
+    #feedbackTable tbody td:nth-child(4)::before {
+        color: #475569;
+    }
+    #feedbackTable .badge {
+        border-radius: 999px;
+        padding: 8px 14px;
+        font-size: 0.86rem;
+    }
+    #feedbackTable tbody td:last-child {
+        border-radius: 0 18px 18px 0;
+    }
+    .feedback-history-actions {
+        min-width: 300px;
+    }
+    .feedback-history-actions .btn {
+        min-height: 52px;
+        border-radius: 10px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 0.98rem;
+        font-weight: 800 !important;
+        padding-inline: 18px;
+    }
+    .feedback-history-actions .btn-primary {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.22);
+    }
+    .feedback-history-actions .btn-outline-danger {
+        color: #ef1d2b;
+        border-color: #ef1d2b;
+        background: rgba(255, 255, 255, 0.74);
+    }
+    .feedback-history-delete-label { display: inline; }
+
+    :root:not(.lm) .feedback-hero {
+        border-color: rgba(147, 197, 253, 0.28);
+        background:
+            radial-gradient(circle at 84% 72%, rgba(37, 99, 235, 0.24), transparent 18%),
+            linear-gradient(108deg, #111827 0%, #172554 100%);
+        box-shadow: 0 18px 42px rgba(2, 6, 23, 0.28);
+    }
+    :root:not(.lm) .feedback-title {
+        color: #93c5fd;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.16);
+    }
+    :root:not(.lm) .feedback-subtitle {
+        color: #e2e8f0;
+    }
+    :root:not(.lm) .feedback-chat-mark {
+        color: #60a5fa;
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.32));
+    }
+    :root:not(.lm) .feedback-hero-art {
+        opacity: 1;
+        filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.38));
+    }
+    :root:not(.lm) .premium-panel {
+        background: rgba(17, 24, 39, 0.94);
+        border-color: rgba(147, 197, 253, 0.18);
+    }
+    :root:not(.lm) .feedback-history-title,
+    :root:not(.lm) #feedbackTable tbody td:nth-child(2) {
+        color: #f8fafc;
+    }
+    :root:not(.lm) #feedbackTable tbody tr {
+        background: linear-gradient(135deg, rgba(21, 28, 45, 0.98), rgba(29, 38, 58, 0.92)) !important;
+        border-color: rgba(147, 197, 253, 0.18) !important;
+    }
+    :root:not(.lm) .db-filter-input,
+    :root:not(.lm) #feedback-filters .btn,
+    :root:not(.lm) #feedback-filters .form-select,
+    :root:not(.lm) #feedback-filters .feedback-search-wrap .input-group-text,
+    :root:not(.lm) #feedback-filters .feedback-search-wrap .form-control {
+        background-color: rgba(15, 23, 42, 0.24) !important;
+        border-color: rgba(147, 197, 253, 0.18) !important;
+        color: #d6deea !important;
+    }
 
     @media (max-width: 1199px) {
-        .feedback-history-head {
-            display: block !important;
-        }
-
-        .feedback-history-head h5 {
-            margin-bottom: 12px !important;
-        }
-
         #feedback-filters {
-            display: grid !important;
             grid-template-columns: 1fr;
-            gap: 8px !important;
-            width: 100%;
-            align-items: stretch;
         }
 
         #feedback-filters #scenarioFilter {
@@ -82,16 +315,12 @@
             width: 100% !important;
             max-width: none !important;
             min-width: 0 !important;
-            min-height: 42px;
         }
 
         #feedback-filters #sortDateBtn {
             grid-column: 1 / -1;
             width: 100% !important;
             min-width: 0;
-            min-height: 42px;
-            padding: 8px 9px;
-            font-size: 0.72rem;
             white-space: nowrap;
         }
 
@@ -100,18 +329,6 @@
             width: 100% !important;
             max-width: none !important;
             min-width: 0;
-            min-height: 42px;
-        }
-
-        #feedback-filters .feedback-search-wrap .input-group-text {
-            padding-left: 10px;
-            padding-right: 7px;
-        }
-
-        #feedback-filters #feedbackSearch {
-            min-width: 0;
-            font-size: 0.76rem;
-            padding-left: 4px;
         }
 
         #feedback-filters form {
@@ -121,22 +338,167 @@
 
         #feedback-filters form .btn {
             width: 100%;
-            min-height: 42px;
-        }
-    }
-
-    @media (max-width: 420px) {
-        #feedback-filters #sortDateBtn {
-            font-size: 0.68rem;
-            padding-inline: 7px;
-        }
-
-        #feedback-filters #feedbackSearch {
-            font-size: 0.72rem;
         }
     }
 
     @media (max-width: 767px) {
+        .feedback-shell {
+            padding-inline: 0;
+        }
+        .feedback-hero {
+            min-height: 96px;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 0;
+            border-radius: 16px;
+            margin-bottom: 14px;
+            border-color: rgba(96, 165, 250, 0.26);
+            background:
+                radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.2), transparent 25%),
+                linear-gradient(110deg, rgba(255, 255, 255, 0.99), rgba(239, 246, 255, 0.97)) !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+        .feedback-hero::before {
+            display: none;
+        }
+        .feedback-hero-copy {
+            min-height: 96px;
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 12px 104px 12px 14px;
+        }
+        .feedback-chat-mark {
+            box-sizing: border-box;
+            width: 38px;
+            height: 38px;
+            padding: 9px;
+            color: #2563eb;
+            border: 1px solid rgba(37, 99, 235, 0.16);
+            border-radius: 11px;
+            background: rgba(37, 99, 235, 0.07);
+        }
+        .feedback-title {
+            font-size: 0.98rem !important;
+            line-height: 1.08;
+            margin-bottom: 4px;
+            color: #2563eb;
+        }
+        .feedback-subtitle {
+            max-width: 13.5rem;
+            font-size: 0.68rem;
+            line-height: 1.28;
+            color: #334155;
+        }
+        .feedback-hero-art {
+            position: absolute;
+            right: -6px;
+            bottom: 4px;
+            width: 92px;
+            min-width: 0;
+            opacity: 0.9;
+            filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.34));
+        }
+        :root:not(.lm) .feedback-hero {
+            border-color: rgba(96, 165, 250, 0.38);
+            background:
+                radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.22), transparent 25%),
+                linear-gradient(110deg, #111827, #172554) !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+        }
+        :root:not(.lm) .feedback-title {
+            color: #93c5fd;
+        }
+        :root:not(.lm) .feedback-subtitle {
+            color: #f8fafc;
+        }
+        :root:not(.lm) .feedback-chat-mark {
+            color: #60a5fa;
+            border-color: rgba(147, 197, 253, 0.28);
+            background: rgba(59, 130, 246, 0.16);
+        }
+        .premium-panel {
+            padding: 14px;
+            border-radius: 14px;
+        }
+        .feedback-history-title {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+        #feedback-filters {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px !important;
+            margin-bottom: 12px;
+        }
+        .db-filter-input,
+        #feedback-filters .btn,
+        #feedback-filters .form-select {
+            min-height: 44px;
+            border-radius: 10px !important;
+            font-size: 0.78rem;
+        }
+        #feedback-filters .feedback-search-wrap .input-group-text,
+        #feedback-filters .feedback-search-wrap .form-control {
+            font-size: 0.78rem;
+        }
+        #feedback-filters .feedback-search-wrap .input-group-text {
+            padding-left: 12px;
+            padding-right: 8px;
+            font-size: 0.9rem;
+        }
+        #feedbackTable {
+            border-spacing: 0 10px;
+        }
+        #feedbackTable tbody tr {
+            display: block !important;
+            padding: 10px !important;
+            border-radius: 12px !important;
+        }
+        #feedbackTable tbody td {
+            display: block !important;
+            width: 100% !important;
+            padding: 0 0 6px !important;
+            font-size: 0.7rem !important;
+            text-align: left !important;
+        }
+        #feedbackTable tbody td:first-child,
+        #feedbackTable tbody td:last-child {
+            border-radius: 0;
+        }
+        #feedbackTable tbody td:nth-child(1) {
+            font-size: 0.6rem !important;
+            color: #334155 !important;
+            padding-bottom: 6px !important;
+        }
+        #feedbackTable tbody td:nth-child(2) {
+            font-size: 0.78rem !important;
+            line-height: 1.18;
+            padding-bottom: 7px !important;
+        }
+        #feedbackTable tbody td:nth-child(3)::before {
+            content: "Score: ";
+            color: #475569;
+            font-weight: 800;
+        }
+        #feedbackTable tbody td:nth-child(4)::before {
+            content: "Rating: ";
+            color: #475569;
+            font-weight: 800;
+        }
+        #feedback-filters #sortDateBtn,
+        #feedback-filters .feedback-clear-form {
+            grid-column: auto !important;
+            min-width: 0;
+        }
+        #feedback-filters #sortDateBtn {
+            width: 100% !important;
+        }
+        #feedback-filters .feedback-clear-form .btn {
+            min-height: 44px;
+            padding-inline: 10px;
+            font-size: 0.74rem;
+            width: 100%;
+        }
         #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions {
             display: flex !important;
             flex-direction: row !important;
@@ -144,7 +506,8 @@
             justify-content: stretch !important;
             flex-wrap: nowrap !important;
             gap: 8px !important;
-            margin-top: 6px !important;
+            margin-top: 4px !important;
+            min-width: 0;
         }
         #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions > a,
         #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions > form {
@@ -155,67 +518,197 @@
         }
         #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
             width: 100% !important;
-            min-height: 38px !important;
+            min-height: 34px !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 6px;
+            border-radius: 10px !important;
+            font-size: 0.62rem;
+            white-space: nowrap;
         }
-        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-delete-label {
-            display: inline;
+        #feedbackTable .badge {
+            padding: 4px 7px;
+            font-size: 0.56rem;
+        }
+    }
+    @media (max-width: 575px) {
+        .feedback-hero {
+            min-height: 92px;
+        }
+        .feedback-hero-copy {
+            min-height: 92px;
+            grid-template-columns: 36px minmax(0, 1fr);
+            gap: 9px;
+            padding: 11px 96px 11px 12px;
+        }
+        .feedback-chat-mark {
+            width: 36px;
+            height: 36px;
+            padding: 8px;
+        }
+        .feedback-title {
+            font-size: 0.9rem !important;
+            margin-bottom: 4px;
+        }
+        .feedback-subtitle {
+            max-width: 12rem;
+            font-size: 0.64rem;
+        }
+        .feedback-hero-art {
+            right: -4px;
+            bottom: 5px;
+            width: 84px;
+        }
+    }
+    @media (max-width: 390px) {
+        .feedback-hero-copy {
+            padding-right: 86px;
+        }
+        .feedback-title {
+            font-size: 0.86rem !important;
+        }
+        .feedback-hero-art {
+            width: 78px;
+        }
+    }
+    @media (max-width: 380px) {
+        .premium-panel { padding: 12px; }
+        .feedback-hero {
+            min-height: 92px;
+            padding: 0;
+        }
+        .feedback-hero-copy {
+            min-height: 92px;
+            grid-template-columns: 36px minmax(0, 1fr);
+            gap: 9px;
+            padding: 11px 86px 11px 12px;
+        }
+        .feedback-chat-mark {
+            width: 36px;
+            height: 36px;
+            padding: 8px;
+        }
+        .feedback-title { font-size: 0.86rem !important; }
+        .feedback-subtitle {
+            max-width: 12rem;
+            font-size: 0.64rem;
+        }
+        .feedback-hero-art {
+            width: 78px;
+            right: -4px;
+            bottom: 5px;
+        }
+        #mob-content #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
+            font-size: 0.56rem;
+            min-height: 32px !important;
+            padding-inline: 6px;
+        }
+        #feedbackTable tbody tr {
+            padding: 9px !important;
+        }
+        #feedbackTable tbody td:nth-child(2) {
+            font-size: 0.74rem !important;
+        }
+        #feedbackTable .badge {
+            font-size: 0.5rem;
+        }
+    }
+    @media (max-width: 767px) {
+        #feedback-filters {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+        }
+        #feedback-filters #scenarioFilter,
+        #feedback-filters .feedback-search-wrap {
+            grid-column: 1 / -1 !important;
+        }
+        #feedback-filters #sortDateBtn,
+        #feedback-filters .feedback-clear-form {
+            grid-column: auto !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        #feedback-filters .db-filter-input,
+        #feedback-filters .btn,
+        #feedback-filters .form-select {
+            min-height: 38px !important;
+            border-radius: 9px !important;
+            font-size: 0.68rem !important;
+        }
+        #feedback-filters .feedback-clear-form .btn,
+        #feedback-filters #sortDateBtn {
+            padding-inline: 8px !important;
+            justify-content: center;
+        }
+        #feedback-filters .feedback-search-wrap .input-group-text,
+        #feedback-filters .feedback-search-wrap .form-control {
+            font-size: 0.68rem !important;
+        }
+        #feedback-filters .feedback-search-wrap .input-group-text {
+            padding-left: 10px;
+            padding-right: 7px;
         }
     }
 </style>
-@include('partials.page-hero-styles')
 
-<div class="db-section active animate-fade-up">
-    <div class="sr-page-hero">
-        <div class="sr-page-hero-inner">
-            <div class="sr-page-hero-copy">
-                <h4 class="sr-page-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h8M9 3h6l1 3H8l1-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 6H5v15h14V6h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8 14 2 2 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Feedback Center
-                </h4>
-                <p class="sr-page-hero-subtitle">Review Philippines practice interviews, readiness scores, and answer feedback.</p>
+<div class="db-section active animate-fade-up feedback-shell">
+    <div class="feedback-hero">
+        <div class="feedback-hero-copy">
+            <svg class="feedback-chat-mark" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M13 46.5 8 56l12.6-3.8c3.4 1.6 7.3 2.4 11.4 2.4 14.4 0 26-9.8 26-22S46.4 10.5 32 10.5 6 20.3 6 32.4c0 5.5 2.4 10.5 7 14.1Z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M20 25h24M20 35h16" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>
+                <circle cx="45" cy="42" r="4.5" fill="currentColor" opacity=".72"/>
+            </svg>
+            <div>
+                <h4 class="feedback-title">Feedback Center</h4>
+                <p class="feedback-subtitle">Enter Philippines practice interview, receive scores, and get AI-powered feedback to improve faster.</p>
             </div>
         </div>
-        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
-            <defs><linearGradient id="feedbackPanel" x1="36" y1="18" x2="176" y2="128"><stop stop-color="#DBEAFE"/><stop offset="1" stop-color="#ECFEFF"/></linearGradient><linearGradient id="feedbackBlue" x1="72" y1="38" x2="166" y2="112"><stop stop-color="#3B82F6"/><stop offset="1" stop-color="#06B6D4"/></linearGradient></defs>
-            <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#feedbackPanel)" stroke="#BFDBFE" stroke-width="3"/>
-            <rect x="58" y="43" width="78" height="8" rx="4" fill="#93C5FD"/><rect x="58" y="61" width="108" height="7" rx="3.5" fill="#BAE6FD"/><rect x="58" y="78" width="88" height="7" rx="3.5" fill="#C7D2FE"/>
-            <circle cx="154" cy="47" r="20" fill="url(#feedbackBlue)"/><path d="m146 47 6 6 12-14" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M61 106h34m18 0h46" stroke="#60A5FA" stroke-width="8" stroke-linecap="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        <svg class="feedback-hero-art" viewBox="0 0 270 190" aria-hidden="true">
+            <defs>
+                <linearGradient id="feedbackBubble" x1="20" y1="16" x2="225" y2="160"><stop stop-color="#EFF6FF"/><stop offset="1" stop-color="#DBEAFE"/></linearGradient>
+                <linearGradient id="feedbackCheck" x1="181" y1="22" x2="234" y2="78"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient>
+            </defs>
+            <path d="M30 34h186c15 0 27 12 27 27v58c0 15-12 27-27 27h-95l-50 30 13-30H30c-15 0-27-12-27-27V61c0-15 12-27 27-27Z" fill="url(#feedbackBubble)" stroke="#BFDBFE" stroke-width="2"/>
+            <path d="M45 71h105M45 95h132M45 119h112" stroke="#93C5FD" stroke-width="8" stroke-linecap="round"/>
+            <path d="M45 142h59M124 142h76" stroke="#60A5FA" stroke-width="8" stroke-linecap="round" opacity=".88"/>
+            <circle cx="211" cy="61" r="31" fill="url(#feedbackCheck)"/>
+            <path d="m197 60 10 10 20-24" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M-4 11h12M2 5v12M-27 88h8M-23 84v8" stroke="#60A5FA" stroke-width="5" stroke-linecap="round"/>
+            <circle cx="-5" cy="126" r="6" fill="#93C5FD" opacity=".85"/>
         </svg>
     </div>
 
     <div class="premium-panel">
-        <div class="feedback-history-head d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <h5 style="color:var(--tx);margin:0;font-weight:bold;">Feedback History</h5>
-            <div id="feedback-filters" class="d-flex gap-2 flex-wrap">
-                <select id="scenarioFilter" class="form-select border-0 db-filter-input" style="background:var(--bg);color:var(--tx);width:220px;border-radius:8px;">
+        <div class="feedback-history-head">
+            <h5 class="feedback-history-title">Feedback History</h5>
+            <div id="feedback-filters">
+                <select id="scenarioFilter" class="form-select db-filter-input">
                     <option value="">All Scenarios</option>
                     @foreach($feedbackCategories as $category)
                         <option value="{{ $category }}">{{ $category }}</option>
                     @endforeach
                 </select>
-                <button class="btn btn-outline-secondary" id="sortDateBtn" style="border-radius:8px;"><i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date</button>
+                <button class="btn btn-outline-secondary" id="sortDateBtn"><i class="fa-regular fa-calendar me-2"></i> All Time</button>
                 @if($sessions->total() > 0)
-                    <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                    <form class="feedback-clear-form" action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-outline-danger" style="border-radius:8px;font-weight:600;">
-                            <i class="fa-solid fa-trash-can me-1"></i> Clear All
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-trash-can me-2"></i> Clear All
                         </button>
                     </form>
                 @endif
-                <div class="input-group db-filter-input feedback-search-wrap" style="width:250px;">
-                    <span class="input-group-text border-0" style="background:transparent;color:var(--tx3);border-radius:8px 0 0 8px;"><i class="fa-solid fa-search"></i></span>
-                    <input type="text" id="feedbackSearch" class="form-control border-0 db-filter-input" placeholder="Search Feedback..." style="background:transparent;color:var(--tx);border-radius:0 8px 8px 0; outline:none; box-shadow:none !important;">
+                <div class="input-group db-filter-input feedback-search-wrap">
+                    <span class="input-group-text border-0"><i class="fa-solid fa-search"></i></span>
+                    <input type="text" id="feedbackSearch" class="form-control border-0" placeholder="Search feedback...">
                 </div>
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive feedback-table-wrap">
             <table class="table custom-table align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent;" id="feedbackTable">
                 <thead>
                     <tr style="border-bottom: 2px solid var(--bd); color: var(--tx3);">
@@ -249,12 +742,12 @@
                         </td>
                         <td class="border-0 py-3 text-end">
                             <div class="d-flex justify-content-end gap-2 feedback-history-actions">
-                                <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine" style="border-radius: 8px; font-weight:600;">View Details</a>
+                                <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine"><i class="fa-solid fa-chart-simple"></i> View Details</a>
                                 <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session" style="border-radius:8px;">
-                                        <i class="fa-solid fa-trash-can"></i><span class="feedback-history-delete-label">Delete</span>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session">
+                                        <i class="fa-solid fa-trash-can"></i> <span class="feedback-history-delete-label">Delete</span>
                                     </button>
                                 </form>
                             </div>

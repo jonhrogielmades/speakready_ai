@@ -1,48 +1,129 @@
-<svg width="220" height="150" viewBox="0 0 220 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="260" height="170" viewBox="0 0 260 170" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <linearGradient id="ai-panel" x1="36" y1="18" x2="176" y2="128" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#DBEAFE"/>
-            <stop offset="1" stop-color="#ECFEFF"/>
+        <linearGradient id="shell" x1="106" y1="11" x2="205" y2="161" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#FFFFFF"/>
+            <stop offset="0.55" stop-color="#EAF5FF"/>
+            <stop offset="1" stop-color="#BFDFFF"/>
         </linearGradient>
-        <linearGradient id="ai-face" x1="72" y1="38" x2="148" y2="113" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#3B82F6"/>
-            <stop offset="1" stop-color="#06B6D4"/>
+        <linearGradient id="blue" x1="47" y1="27" x2="224" y2="145" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#7EC1FF"/>
+            <stop offset="1" stop-color="#2468F5"/>
         </linearGradient>
-        <linearGradient id="ai-suit" x1="66" y1="91" x2="154" y2="134" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#2563EB"/>
-            <stop offset="1" stop-color="#0EA5E9"/>
+        <linearGradient id="visor" x1="106" y1="43" x2="184" y2="94" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#10286B"/>
+            <stop offset="1" stop-color="#071634"/>
         </linearGradient>
-        <filter id="ai-shadow" x="20" y="8" width="184" height="136" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-            <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#2563EB" flood-opacity="0.16"/>
+        <radialGradient id="faceGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(146 71) rotate(90) scale(26 45)">
+            <stop stop-color="#46ECFF" stop-opacity=".72"/>
+            <stop offset="1" stop-color="#0EA5E9" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="shadow" x="38" y="0" width="201" height="178" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feDropShadow dx="0" dy="12" stdDeviation="9" flood-color="#2563EB" flood-opacity=".17"/>
         </filter>
+        <style>
+            .robot { animation: robotFloat 4.6s ease-in-out infinite; transform-origin: 145px 130px; }
+            .arm { animation: armWave 1.95s ease-in-out infinite; transform-origin: 76px 78px; }
+            .hand { animation: handWave 1.95s ease-in-out infinite; transform-origin: 55px 48px; }
+            .ear { animation: earPulse 2.8s ease-in-out infinite; transform-origin: center; }
+            .eye { animation: blink 4.5s ease-in-out infinite; transform-origin: center; }
+            .chat { animation: drift 3.7s ease-in-out infinite; }
+            .chat.left { animation-delay: .55s; }
+            .spark { animation: twinkle 2.5s ease-in-out infinite; transform-origin: center; }
+            .spark.d2 { animation-delay: .4s; }
+            .spark.d3 { animation-delay: .9s; }
+            .badge { animation: badgePulse 2.6s ease-in-out infinite; transform-origin: 142px 133px; }
+            @keyframes robotFloat {
+                0%, 100% { transform: translateY(0) rotate(0deg); }
+                45% { transform: translateY(-6px) rotate(.8deg); }
+                72% { transform: translateY(-2px) rotate(-.6deg); }
+            }
+            @keyframes armWave {
+                0%, 100% { transform: rotate(0deg); }
+                18% { transform: rotate(-13deg); }
+                36% { transform: rotate(10deg); }
+                54% { transform: rotate(-12deg); }
+                74% { transform: rotate(6deg); }
+            }
+            @keyframes handWave {
+                0%, 100% { transform: rotate(0deg) translateY(0); }
+                36% { transform: rotate(-8deg) translateY(-2px); }
+                70% { transform: rotate(6deg) translateY(1px); }
+            }
+            @keyframes earPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.06); }
+            }
+            @keyframes blink {
+                0%, 88%, 100% { transform: scaleY(1); }
+                92% { transform: scaleY(.16); }
+            }
+            @keyframes drift {
+                0%, 100% { transform: translateY(0); opacity: .7; }
+                50% { transform: translateY(-5px); opacity: 1; }
+            }
+            @keyframes twinkle {
+                0%, 100% { transform: scale(.85) rotate(0deg); opacity: .45; }
+                50% { transform: scale(1.18) rotate(18deg); opacity: 1; }
+            }
+            @keyframes badgePulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.07); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                .robot, .arm, .hand, .ear, .eye, .chat, .spark, .badge { animation: none; }
+            }
+        </style>
     </defs>
 
-    <path d="M30 134C64 123 102 123 138 134C174 145 196 142 216 131" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
-    <path d="M194 28L204 18M198 48L212 46M24 59L13 52M31 107L17 110" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+    <path class="spark d2" d="M30 28H35M32.5 25.5V30.5" stroke="#79B9FF" stroke-width="2" stroke-linecap="round"/>
+    <path class="spark d3" d="M223 64H228M225.5 61.5V66.5" stroke="#8CC8FF" stroke-width="2" stroke-linecap="round"/>
+    <path class="spark" d="M239 121L242 124L239 127L236 124L239 121Z" fill="#8FC8FF"/>
+    <path class="spark d2" d="M37 126L40 129L37 132L34 129L37 126Z" fill="#91C9FF"/>
 
-    <g filter="url(#ai-shadow)">
-        <rect x="32" y="22" width="156" height="106" rx="18" fill="url(#ai-panel)" stroke="#BFDBFE" stroke-width="3"/>
-        <circle cx="59" cy="37" r="5" fill="#60A5FA"/>
-        <circle cx="76" cy="37" r="5" fill="#67E8F9"/>
+    <g class="chat" opacity=".74">
+        <rect x="189" y="17" width="38" height="18" rx="9" fill="#B5DDFF"/>
+        <circle cx="202" cy="26" r="2" fill="#EFF8FF"/>
+        <circle cx="212" cy="26" r="2" fill="#EFF8FF"/>
+        <path d="M196 35L202 32H192L196 35Z" fill="#B5DDFF"/>
+    </g>
+    <g class="chat left" opacity=".68">
+        <rect x="33" y="132" width="32" height="16" rx="8" fill="#C5E6FF"/>
+        <circle cx="45" cy="140" r="1.9" fill="#F4FBFF"/>
+        <circle cx="53" cy="140" r="1.9" fill="#F4FBFF"/>
+    </g>
 
-        <path d="M65 126C69 102 84 90 110 90C136 90 151 102 155 126H65Z" fill="url(#ai-suit)"/>
-        <path d="M93 94L110 116L127 94" fill="#EFF6FF"/>
-        <path d="M104 106L110 116L116 106L113 100H107L104 106Z" fill="#2563EB"/>
+    <g class="robot" filter="url(#shadow)">
+        <path d="M101 106C91 96 78 98 69 109C58 122 61 143 76 151C90 159 106 151 111 133L101 106Z" fill="url(#shell)" stroke="#B9D9FF" stroke-width="2"/>
+        <g class="arm">
+            <path d="M94 101C79 92 66 77 62 60" stroke="#EDF7FF" stroke-width="18" stroke-linecap="round"/>
+            <path d="M94 101C79 92 66 77 62 60" stroke="url(#blue)" stroke-width="11" stroke-linecap="round"/>
+            <g class="hand">
+                <path d="M52 58C47 55 46 48 50 44C49 37 57 34 61 39C65 33 74 37 73 44C80 45 83 54 77 59L65 68C58 72 50 66 52 58Z" fill="url(#blue)" stroke="#8FC7FF" stroke-width="2"/>
+                <path d="M57 43L58 57M64 39L64 56M71 45L67 59" stroke="#C6E6FF" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+            </g>
+        </g>
 
-        <rect x="73" y="43" width="74" height="55" rx="24" fill="url(#ai-face)"/>
-        <path d="M88 43C91 32 101 26 112 26C129 26 141 39 141 55V61H133V55C133 44 125 35 113 35C103 35 96 39 93 47L88 43Z" fill="#93C5FD"/>
-        <rect x="83" y="57" width="54" height="27" rx="13.5" fill="#EFF6FF"/>
-        <circle cx="100" cy="70" r="4.5" fill="#2563EB"/>
-        <circle cx="121" cy="70" r="4.5" fill="#2563EB"/>
-        <path d="M101 82C106 86 115 86 120 82" stroke="#0EA5E9" stroke-width="4" stroke-linecap="round"/>
-        <path d="M73 68H63C58 68 54 72 54 77C54 82 58 86 63 86H73" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
-        <path d="M147 68H157C162 68 166 72 166 77C166 82 162 86 157 86H147" stroke="#60A5FA" stroke-width="7" stroke-linecap="round"/>
-        <path d="M157 86V94C157 100 153 104 147 104H134" stroke="#60A5FA" stroke-width="6" stroke-linecap="round"/>
-        <circle cx="132" cy="104" r="5" fill="#22C55E"/>
+        <path d="M119 102H172C193 102 210 119 210 140V170H81V140C81 119 98 102 119 102Z" fill="url(#shell)" stroke="#B9D9FF" stroke-width="2"/>
+        <path d="M107 112C115 126 128 134 146 134C164 134 178 126 186 112C201 120 210 134 210 152V170H81V152C81 134 91 120 107 112Z" fill="#F7FBFF"/>
+        <path d="M105 168C113 150 127 141 146 141C165 141 179 150 187 168" stroke="#D4EAFF" stroke-width="4" stroke-linecap="round"/>
 
-        <path d="M160 45H184V70H171L160 81V45Z" fill="#BAE6FD" stroke="#93C5FD" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M168 55H176M168 63H173" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M51 54C48 46 51 38 58 34" stroke="#38BDF8" stroke-width="4" stroke-linecap="round" opacity=".75"/>
-        <path d="M47 67C42 61 41 52 45 45" stroke="#93C5FD" stroke-width="4" stroke-linecap="round" opacity=".75"/>
+        <g class="badge">
+            <circle cx="146" cy="135" r="17" fill="#2C77FF"/>
+            <circle cx="146" cy="135" r="12" fill="#5EAAFF"/>
+            <path d="M141 139C143 142 151 142 152 137C153 134 144 135 144 131C144 128 150 128 152 130M146 126V144" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+        </g>
+
+        <path d="M198 104C211 95 217 79 210 67C204 58 192 56 181 62L179 83C182 96 188 103 198 104Z" fill="#DCEEFF" stroke="#B9D9FF" stroke-width="2"/>
+        <path d="M189 67C195 64 202 67 204 74C208 85 202 97 193 101" stroke="url(#blue)" stroke-width="11" stroke-linecap="round"/>
+
+        <rect x="91" y="24" width="107" height="91" rx="38" fill="url(#shell)" stroke="#B9D9FF" stroke-width="2"/>
+        <path d="M105 36C115 23 133 18 152 22C174 26 190 42 192 64" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+        <circle class="ear" cx="87" cy="72" r="16" fill="url(#blue)" stroke="#A9D4FF" stroke-width="3"/>
+        <circle class="ear" cx="202" cy="72" r="16" fill="url(#blue)" stroke="#A9D4FF" stroke-width="3"/>
+        <rect x="105" y="44" width="79" height="52" rx="26" fill="url(#visor)"/>
+        <ellipse cx="145" cy="72" rx="38" ry="25" fill="url(#faceGlow)"/>
+        <circle class="eye" cx="130" cy="72" r="5" fill="#51EEFF"/>
+        <circle class="eye" cx="160" cy="72" r="5" fill="#51EEFF"/>
+        <path d="M138 86C143 90 152 90 157 86" stroke="#51EEFF" stroke-width="3" stroke-linecap="round" opacity=".86"/>
     </g>
 </svg>
