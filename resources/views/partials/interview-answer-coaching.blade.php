@@ -30,6 +30,9 @@
     $contentAlignment = is_array($coachingFeedback['content_alignment'] ?? null)
         ? $coachingFeedback['content_alignment']
         : [];
+    $feedbackQuality = is_array($coachingFeedback['feedback_quality'] ?? null)
+        ? $coachingFeedback['feedback_quality']
+        : [];
     $alignmentEvidence = is_array($contentAlignment['evidence_quotes'] ?? null)
         ? array_values(array_filter(array_map(fn ($item) => is_scalar($item) ? trim((string) $item) : '', $contentAlignment['evidence_quotes'])))
         : [];
@@ -92,7 +95,7 @@
         $contentStatus !== '' ? ['label' => 'Content', 'status' => $contentStatus] : null,
         $alignmentStatus !== '' ? ['label' => 'Relevance', 'status' => $alignmentStatus] : null,
         $deliveryStatus !== '' ? ['label' => 'Delivery', 'status' => $deliveryStatus] : null,
-        $cameraStatus !== '' ? ['label' => 'Camera', 'status' => $cameraStatus] : null,
+        $cameraStatus !== '' ? ['label' => 'Body language', 'status' => $cameraStatus] : null,
     ]));
 
     $observationItems = [];
@@ -102,7 +105,7 @@
         $observationItems[] = ['label' => 'Delivery', 'text' => $deliveryObservation];
     }
     if ($cameraObservation !== '') {
-        $observationItems[] = ['label' => 'Camera', 'text' => $cameraObservation];
+        $observationItems[] = ['label' => 'Body language', 'text' => $cameraObservation];
     }
     foreach ($priorityActions as $priorityAction) {
         if (strtolower(trim((string) ($priorityAction['area'] ?? ''))) === 'answer-to-question relevance') {
@@ -147,7 +150,7 @@
         foreach ((array) ($cameraCoaching['tips'] ?? []) as $tip) {
             $tip = is_scalar($tip) ? trim((string) $tip) : '';
             if ($tip !== '' && ! collect($actionItems)->contains(fn (array $item) => $item['action'] === $tip)) {
-                $actionItems[] = ['area' => 'Camera setup', 'action' => $tip];
+                $actionItems[] = ['area' => 'Body-language setup', 'action' => $tip];
             }
         }
     }
@@ -219,6 +222,35 @@
                 'value' => max(0, (int) round($cameraEvidence['centered_count'])).' / '.$cameraSampleCount,
             ];
         }
+        if (array_key_exists('pose_detected_count', $cameraEvidence) && is_numeric($cameraEvidence['pose_detected_count'])) {
+            $cameraMetricItems[] = [
+                'label' => 'Pose detected samples',
+                'value' => max(0, (int) round($cameraEvidence['pose_detected_count'])).' / '.$cameraSampleCount,
+            ];
+        }
+        if (array_key_exists('hands_visible_percent', $cameraEvidence) && is_numeric($cameraEvidence['hands_visible_percent'])) {
+            $cameraMetricItems[] = ['label' => 'Hands visible', 'value' => (int) round($cameraEvidence['hands_visible_percent']).'%'];
+        } elseif (array_key_exists('hands_visible_count', $cameraEvidence) && is_numeric($cameraEvidence['hands_visible_count'])) {
+            $cameraMetricItems[] = [
+                'label' => 'Hands visible samples',
+                'value' => max(0, (int) round($cameraEvidence['hands_visible_count'])).' / '.$cameraSampleCount,
+            ];
+        }
+        if (array_key_exists('gesture_activity_percent', $cameraEvidence) && is_numeric($cameraEvidence['gesture_activity_percent'])) {
+            $cameraMetricItems[] = ['label' => 'Gesture movement', 'value' => (int) round($cameraEvidence['gesture_activity_percent']).'%'];
+        }
+        if (array_key_exists('shoulders_level_percent', $cameraEvidence) && is_numeric($cameraEvidence['shoulders_level_percent'])) {
+            $cameraMetricItems[] = ['label' => 'Shoulder balance', 'value' => (int) round($cameraEvidence['shoulders_level_percent']).'%'];
+        }
+        if (array_key_exists('upright_posture_percent', $cameraEvidence) && is_numeric($cameraEvidence['upright_posture_percent'])) {
+            $cameraMetricItems[] = ['label' => 'Upright posture estimate', 'value' => (int) round($cameraEvidence['upright_posture_percent']).'%'];
+        }
+        if (array_key_exists('average_movement_score', $cameraEvidence) && is_numeric($cameraEvidence['average_movement_score'])) {
+            $cameraMetricItems[] = ['label' => 'Average movement score', 'value' => (int) round($cameraEvidence['average_movement_score']).' / 100'];
+        }
+        if (array_key_exists('high_movement_percent', $cameraEvidence) && is_numeric($cameraEvidence['high_movement_percent'])) {
+            $cameraMetricItems[] = ['label' => 'Higher-movement samples', 'value' => (int) round($cameraEvidence['high_movement_percent']).'%'];
+        }
     }
 
     $framework = is_array($questionCoaching['framework'] ?? null)
@@ -259,6 +291,12 @@
     $scoringConfidence = strtolower($contentStatus) === 'scored' && is_numeric($answer->scoring_confidence ?? null)
         ? (int) round($answer->scoring_confidence)
         : null;
+    $feedbackQualityPercent = is_numeric($feedbackQuality['completeness_percent'] ?? null)
+        ? max(0, min(100, (int) round($feedbackQuality['completeness_percent'])))
+        : null;
+    $feedbackQualityPassed = max(0, (int) ($feedbackQuality['checks_passed'] ?? 0));
+    $feedbackQualityTotal = max(0, (int) ($feedbackQuality['checks_total'] ?? 0));
+    $feedbackQualityLimitation = trim((string) ($feedbackQuality['limitation'] ?? ''));
 
     $hasStructuredCoaching = ! empty($coachingFeedback)
         && (! empty($statusItems)
@@ -282,7 +320,7 @@
                 <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;"><i class="fa-solid fa-magnifying-glass-chart me-2" style="color:#0ea5e9;"></i>Evidence-Based Coaching</h6>
                 <div style="color:var(--tx3);font-size:.84rem;">Observation <i class="fa-solid fa-arrow-right mx-1" aria-hidden="true"></i> Evidence <i class="fa-solid fa-arrow-right mx-1" aria-hidden="true"></i> Action</div>
             </div>
-            @if(!empty($statusItems) || ($scoringConfidence !== null && $scoringConfidence > 0))
+            @if(!empty($statusItems) || ($scoringConfidence !== null && $scoringConfidence > 0) || $feedbackQualityPercent !== null)
                 <div class="d-flex flex-wrap gap-2 align-items-start" aria-label="Analysis availability">
                     @foreach($statusItems as $statusItem)
                         @php $statusColors = $statusPresentation($statusItem['status']); @endphp
@@ -292,6 +330,11 @@
                     @endforeach
                     @if($scoringConfidence !== null && $scoringConfidence > 0)
                         <span class="badge" style="color:#3b82f6;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.25);padding:7px 10px;">Score confidence: {{ $scoringConfidence }}%</span>
+                    @endif
+                    @if($feedbackQualityPercent !== null)
+                        <span class="badge" title="{{ $feedbackQualityLimitation }}" style="color:{{ $feedbackQualityPercent === 100 ? '#10b981' : '#f59e0b' }};background:{{ $feedbackQualityPercent === 100 ? 'rgba(16,185,129,.10)' : 'rgba(245,158,11,.10)' }};border:1px solid {{ $feedbackQualityPercent === 100 ? 'rgba(16,185,129,.25)' : 'rgba(245,158,11,.25)' }};padding:7px 10px;">
+                            Feedback checks: {{ $feedbackQualityPercent }}%{{ $feedbackQualityTotal > 0 ? ' ('.$feedbackQualityPassed.'/'.$feedbackQualityTotal.')' : '' }}
+                        </span>
                     @endif
                 </div>
             @endif
@@ -450,7 +493,7 @@
 
                     @if(!empty($cameraMetricItems))
                         <div class="mt-3 pt-3" style="border-top:1px solid var(--bd);">
-                            <div style="color:var(--tx3);font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:8px;">Descriptive camera signals</div>
+                            <div style="color:var(--tx3);font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:8px;">Descriptive body-language signals</div>
                             <div class="d-flex flex-column gap-2">
                                 @foreach($cameraMetricItems as $metric)
                                     <div class="d-flex justify-content-between gap-3" style="font-size:.86rem;">
@@ -523,16 +566,19 @@
             </div>
         @endif
 
-        @if($deliveryLimitation !== '' || $cameraLimitation !== '' || !empty($cameraMetricItems) || $transparencyNote !== '')
+        @if($deliveryLimitation !== '' || $cameraLimitation !== '' || !empty($cameraMetricItems) || $transparencyNote !== '' || $feedbackQualityLimitation !== '')
             <div class="mt-3 pt-3" style="border-top:1px solid var(--bd);color:var(--tx3);font-size:.78rem;line-height:1.55;">
+                @if($feedbackQualityLimitation !== '')
+                    <div><strong style="color:var(--tx2);">Feedback-check meaning:</strong> {{ $feedbackQualityLimitation }}</div>
+                @endif
                 @if($deliveryLimitation !== '')
-                    <div><strong style="color:var(--tx2);">Delivery limitation:</strong> {{ $deliveryLimitation }}</div>
+                    <div class="{{ $feedbackQualityLimitation !== '' ? 'mt-1' : '' }}"><strong style="color:var(--tx2);">Delivery limitation:</strong> {{ $deliveryLimitation }}</div>
                 @endif
                 @if($cameraLimitation !== '')
-                    <div class="{{ $deliveryLimitation !== '' ? 'mt-1' : '' }}"><strong style="color:var(--tx2);">Camera limitation:</strong> {{ $cameraLimitation }}</div>
+                    <div class="{{ $deliveryLimitation !== '' || $feedbackQualityLimitation !== '' ? 'mt-1' : '' }}"><strong style="color:var(--tx2);">Body-language limitation:</strong> {{ $cameraLimitation }}</div>
                 @endif
                 @if(!empty($cameraMetricItems))
-                    <div class="mt-1"><i class="fa-solid fa-shield-halved me-1"></i>Camera signals describe framing and camera-facing position only. They do not measure confidence, personality, honesty, or employability.</div>
+                    <div class="mt-1"><i class="fa-solid fa-shield-halved me-1"></i>Body-language signals describe visible framing, head alignment, hands, shoulders, posture pose, and movement steadiness only. They do not measure confidence, personality, honesty, employability, or intent.</div>
                 @endif
                 @if($transparencyNote !== '')
                     <div class="mt-1"><strong style="color:var(--tx2);">How to read this:</strong> {{ $transparencyNote }}</div>

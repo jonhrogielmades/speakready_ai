@@ -17,7 +17,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">How does AI feedback work?</button></h2>
                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady evaluates relevance, clarity, professionalism, applicable STAR evidence, and job evidence with a versioned rubric. Delivery and optional camera-framing prompts are coaching aids, not readiness scores.</div>
+                              <div class="accordion-body">SpeakReady evaluates relevance, clarity, professionalism, applicable STAR evidence, and job evidence with a versioned rubric. Delivery and optional body-language prompts are coaching aids, not readiness scores, and do not infer confidence, honesty, or personality.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

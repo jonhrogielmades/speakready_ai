@@ -576,7 +576,7 @@ class AIService
         return [
             'type' => 'json_schema',
             'json_schema' => [
-                'name' => 'interview_feedback_v4',
+                'name' => 'interview_feedback_v5',
                 'description' => 'Question-linked, evidence-linked interview scores and per-answer coaching feedback.',
                 'strict' => true,
                 'schema' => [
@@ -1937,6 +1937,10 @@ PROMPT;
             $aiFeedback = trim((string) ($item['ai_feedback'] ?? ''));
             if ($aiFeedback === '') {
                 $errors[] = "Feedback ID {$id} has empty commentary.";
+            } elseif (! $isSkipped && self::isGenericFeedback($aiFeedback)) {
+                $errors[] = "Feedback ID {$id} contains generic commentary.";
+            } elseif (self::feedbackInfersForbiddenTrait($aiFeedback)) {
+                $errors[] = "Feedback ID {$id} infers a personal trait from unsupported evidence.";
             }
             $questionFocus = self::validatedQuestionFocus($item, $answer);
             if ($questionFocus === null) {
@@ -2005,6 +2009,7 @@ PROMPT;
         return [
             'per_question_feedback' => $normalizedItems,
             'session_feedback' => self::normalizeSessionFeedback($response['session_feedback'] ?? [], $normalizedItems),
+            'feedback_quality' => self::aggregateFeedbackQuality($normalizedItems),
         ];
     }
 
@@ -2072,6 +2077,8 @@ PROMPT;
             && str_contains($providerFeedback, $questionFocus)
             && $alignmentIsValid
             && self::missingCriteriaAreValid($feedback, $answer)
+            && ! self::isGenericFeedback($providerFeedback)
+            && ! self::feedbackInfersForbiddenTrait($providerFeedback)
             && ($isSkipped || ! self::feedbackHasUnsupportedNumbers($providerFeedback, $answerText));
         $evidenceProfile = self::answerEvidenceProfile($answerText, $questionText, $starApplicable, $answer);
 
@@ -2181,7 +2188,7 @@ PROMPT;
             $feedbackContext
         );
 
-        return array_merge([
+        $normalizedFeedback = array_merge([
             'id' => $id,
         ], $scores, [
             'star_applicable' => $starApplicable,
@@ -2211,6 +2218,101 @@ PROMPT;
             'requires_personal_action' => (bool) ($evidenceProfile['requires_personal_action'] ?? false),
             'requires_result' => (bool) ($evidenceProfile['requires_result'] ?? false),
         ]);
+
+        $normalizedFeedback['feedback_quality'] = self::normalizedFeedbackQuality(
+            $normalizedFeedback,
+            $answerText,
+            $questionText
+        );
+
+        return $normalizedFeedback;
+    }
+
+    private static function normalizedFeedbackQuality(array $feedback, string $answerText, string $questionText): array
+    {
+        $isSkipped = (bool) ($feedback['is_skipped'] ?? false);
+        $evidenceQuotes = is_array($feedback['evidence_quotes'] ?? null)
+            ? $feedback['evidence_quotes']
+            : [];
+        $evidenceLinked = $isSkipped
+            ? $evidenceQuotes === []
+            : $evidenceQuotes !== [] && collect($evidenceQuotes)->every(
+                fn ($quote): bool => is_string($quote) && trim($quote) !== '' && str_contains($answerText, $quote)
+            );
+        $scoreFields = array_merge(self::FEEDBACK_SCORE_FIELDS, ['star_method_score', 'scoring_confidence']);
+        $scoresGuarded = collect($scoreFields)->every(
+            fn (string $field): bool => self::isValidScoreValue($feedback[$field] ?? null)
+        );
+        if ($scoresGuarded) {
+            $weightedReadiness = self::calculateWeightedReadinessScore(
+                $feedback['clarity_score'],
+                $feedback['relevance_score'],
+                $feedback['grammar_score'],
+                $feedback['professionalism_score'],
+                $feedback['star_method_score'],
+                (bool) ($feedback['star_applicable'] ?? false)
+            );
+            $scoresGuarded = self::normalizeScore($feedback['score']) <= $weightedReadiness;
+        }
+        $alignment = (string) ($feedback['answer_alignment'] ?? '');
+        $relevance = self::normalizeScore($feedback['relevance_score'] ?? 0);
+        $alignmentChecked = match (true) {
+            $isSkipped => $alignment === 'skipped',
+            (bool) ($feedback['is_too_short'] ?? false) => $alignment === 'insufficient_evidence',
+            $relevance >= 75 => $alignment === 'directly_addressed',
+            $relevance >= 50 => $alignment === 'partially_addressed',
+            default => $alignment === 'not_addressed',
+        };
+        $checks = [
+            'question_linked' => trim($questionText) !== '' && trim((string) ($feedback['question_focus'] ?? '')) !== '',
+            'answer_evidence_linked' => $evidenceLinked,
+            'scores_bounded_and_recomputed' => $scoresGuarded,
+            'alignment_cross_checked' => $alignmentChecked,
+            'uncertainty_reported' => in_array((string) ($feedback['evaluation_source'] ?? ''), ['ai_evidence_validated', 'local_evidence'], true),
+            'next_attempt_actionable' => trim((string) ($feedback['ai_feedback'] ?? '')) !== ''
+                && trim((string) ($feedback['follow_up_question'] ?? '')) !== ''
+                && ($isSkipped || trim((string) ($feedback['better_sample_answer'] ?? '')) !== ''),
+            'personal_trait_inference_excluded' => ! self::feedbackInfersForbiddenTrait((string) ($feedback['ai_feedback'] ?? '')),
+        ];
+        $passed = count(array_filter($checks));
+        $total = count($checks);
+        $percent = $total > 0 ? (int) round(($passed / $total) * 100) : 0;
+
+        return [
+            'status' => $percent === 100 ? 'verified' : 'limited',
+            'checks_passed' => $passed,
+            'checks_total' => $total,
+            'completeness_percent' => $percent,
+            'checks' => $checks,
+            'scope' => 'Required feedback safeguards and coaching fields.',
+            'limitation' => 'A 100% result means every required feedback safeguard passed. It is not a guarantee that the assessment is perfectly accurate.',
+        ];
+    }
+
+    private static function aggregateFeedbackQuality(array $feedbackItems): array
+    {
+        $passed = 0;
+        $total = 0;
+        foreach ($feedbackItems as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $quality = is_array($item['feedback_quality'] ?? null) ? $item['feedback_quality'] : [];
+            $passed += max(0, (int) ($quality['checks_passed'] ?? 0));
+            $total += max(0, (int) ($quality['checks_total'] ?? 0));
+        }
+
+        $percent = $total > 0 ? (int) round(($passed / $total) * 100) : 0;
+
+        return [
+            'status' => $total === 0 ? 'not_available' : ($percent === 100 ? 'verified' : 'limited'),
+            'checks_passed' => $passed,
+            'checks_total' => $total,
+            'completeness_percent' => $percent,
+            'scope' => 'Required feedback safeguards across all normalized answers.',
+            'limitation' => 'A 100% result means every required feedback safeguard passed. It is not a guarantee that the assessment is perfectly accurate.',
+        ];
     }
 
     private static function hasUsableQuestionScores(array $feedback): bool
@@ -3116,6 +3218,20 @@ PROMPT;
         ];
 
         return in_array($normalized, $generic, true) || self::wordCount($normalized) < 8;
+    }
+
+    private static function feedbackInfersForbiddenTrait(string $feedback): bool
+    {
+        if (trim($feedback) === '') {
+            return false;
+        }
+
+        $trait = '(?:confiden(?:ce|t)|honest(?:y)?|dishonest(?:y)?|personality|nervous(?:ness)?|anxious|anxiety|deceptive|deception|trustworthy|trustworthiness|employab(?:le|ility)|intentions?)';
+
+        return preg_match('/\b(?:you|the candidate|candidate)\s+(?:are|is|seem|seems|appear|appears|look|looks|sound|sounds)\s+'.$trait.'\b/iu', $feedback) === 1
+            || preg_match('/\b(?:shows?|demonstrates?|indicates?|suggests?|proves?|reveals?|signals?)\s+(?:a\s+)?'.$trait.'\b/iu', $feedback) === 1
+            || preg_match('/\b(?:lacks?|has|possesses?)\s+(?:a\s+)?'.$trait.'\b/iu', $feedback) === 1
+            || preg_match('/\b(?:body language|eye contact|posture|gestures?|facial expressions?|movement)\b.{0,80}\b(?:shows?|indicates?|suggests?|proves?|reveals?|signals?|means?)\b.{0,40}\b'.$trait.'\b/iu', $feedback) === 1;
     }
 
     private static function wordCount(string $text): int

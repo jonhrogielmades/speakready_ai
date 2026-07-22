@@ -6,6 +6,7 @@ use App\Models\Feedback;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\TranscriptService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 
@@ -48,6 +49,11 @@ class FeedbackCoachingRepair
             return true;
         }
 
+        $version = (int) ($coachingFeedback['version'] ?? 0);
+        if ($version > 0 && $version < EvidenceBasedCoachingService::VERSION) {
+            return true;
+        }
+
         return empty($coachingFeedback['content_alignment'] ?? [])
             && empty($coachingFeedback['delivery'] ?? [])
             && empty($coachingFeedback['delivery_feedback'] ?? [])
@@ -65,9 +71,23 @@ class FeedbackCoachingRepair
         $observationData = is_array($answer->observation_data ?? null)
             ? $answer->observation_data
             : [];
+        $answerText = (string) ($answer->answer_text ?? '');
+        $evidenceMap = is_array($answer->evidence_map ?? null) ? $answer->evidence_map : [];
+        $isSkipped = (bool) ($answer->is_skipped ?? false) || trim($answerText) === '';
+        $isTooShort = ! $isSkipped && TranscriptService::wordCount($answerText) < 10;
+        $scoringConfidence = max(0, min(100, (int) ($answer->scoring_confidence ?? 0)));
+        $relevanceScore = max(0, min(100, (int) ($answer->relevance_score ?? 0)));
+        $answerAlignment = match (true) {
+            $isSkipped => 'skipped',
+            $isTooShort => 'insufficient_evidence',
+            $scoringConfidence <= 0 => null,
+            $relevanceScore >= 75 => 'directly_addressed',
+            $relevanceScore >= 50 => 'partially_addressed',
+            default => 'not_addressed',
+        };
 
         return $this->coaching->forAnswer(
-            (string) ($answer->answer_text ?? ''),
+            $answerText,
             $answer->question,
             [
                 'answer_id' => $answer->id,
@@ -77,8 +97,19 @@ class FeedbackCoachingRepair
                 'filler_words_count' => $answer->filler_words_count ?? 0,
                 'pause_count' => $answer->pause_count ?? 0,
                 'delivery_transcript' => $answer->delivery_transcript ?? null,
-                'scoring_confidence' => $answer->scoring_confidence ?? 0,
-                'is_skipped' => (bool) ($answer->is_skipped ?? false),
+                'scoring_confidence' => $scoringConfidence,
+                'relevance_score' => $relevanceScore,
+                'evidence_quotes' => is_array($evidenceMap['supporting_excerpts'] ?? null)
+                    ? $evidenceMap['supporting_excerpts']
+                    : [],
+                'missing_evidence' => is_array($evidenceMap['missing_evidence'] ?? null)
+                    ? $evidenceMap['missing_evidence']
+                    : [],
+                'evaluation_source' => $scoringConfidence > 0 ? 'stored_evidence_assessment' : null,
+                'answer_alignment' => $answerAlignment,
+                'question_focus' => $answer->question?->question_text,
+                'is_skipped' => $isSkipped,
+                'is_too_short' => $isTooShort,
                 'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_coaching', false),
             ],
             $observationData

@@ -1578,6 +1578,9 @@ class InterviewController extends Controller
             'question_focus' => is_scalar($feedback['question_focus'] ?? null)
                 ? trim((string) $feedback['question_focus'])
                 : null,
+            'feedback_quality' => is_array($feedback['feedback_quality'] ?? null)
+                ? $feedback['feedback_quality']
+                : [],
             'is_skipped' => (bool) ($feedback['is_skipped'] ?? false),
             'is_too_short' => (bool) ($feedback['is_too_short'] ?? false),
         ];

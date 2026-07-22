@@ -663,7 +663,7 @@
                     @php $inclusive = Auth::user()->profile?->inclusive_preferences ?? []; @endphp
                     <div class="cbx-grid">
                         @foreach([
-                            'camera_coaching' => 'Optional camera framing coach',
+                            'camera_coaching' => 'Optional body-language coach',
                             'separate_language_scoring' => 'Separate language mechanics',
                             'extended_time' => 'Extended response time',
                             'captions' => 'Captions / transcript controls',
@@ -673,7 +673,7 @@
                             <label class="custom-cbx"><input type="checkbox" name="{{ $preferenceKey }}" value="1" {{ old($preferenceKey, data_get($inclusive, $preferenceKey, false)) ? 'checked' : '' }}> {{ $preferenceLabel }}</label>
                         @endforeach
                     </div>
-                    <div class="desc-text mt-3"><strong>Important:</strong> eye contact and posture are never included in the readiness score. Camera coaching only reports framing and detection availability.</div>
+                    <div class="desc-text mt-3"><strong>Important:</strong> body-language signals are never included in the readiness score. Camera coaching only reports visible framing, head alignment, hand/shoulder/posture cues, and movement steadiness. It does not infer confidence, honesty, personality, or employability.</div>
                 </div>
 
                 <!-- Content & Assistance -->

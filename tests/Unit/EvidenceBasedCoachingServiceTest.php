@@ -87,6 +87,111 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertStringNotContainsString('0 filler', $deliveryText);
     }
 
+    public function test_body_language_samples_are_normalized_as_descriptive_non_scoring_evidence(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $observations = $service->normalizeObservationData([
+            'camera_samples' => [
+                [
+                    'at_seconds' => 0,
+                    'face_detected' => true,
+                    'camera_facing' => true,
+                    'centered' => true,
+                    'pose_detected' => true,
+                    'hand_count' => 1,
+                    'hands_visible' => true,
+                    'gesture_active' => false,
+                    'shoulders_visible' => true,
+                    'shoulders_level' => true,
+                    'upright_posture' => true,
+                    'movement_score' => null,
+                    'high_movement' => null,
+                ],
+                [
+                    'at_seconds' => 2,
+                    'face_detected' => true,
+                    'camera_facing' => true,
+                    'centered' => true,
+                    'pose_detected' => true,
+                    'hand_count' => 2,
+                    'hands_visible' => true,
+                    'gesture_active' => true,
+                    'shoulders_visible' => true,
+                    'shoulders_level' => true,
+                    'upright_posture' => true,
+                    'movement_score' => 20,
+                    'high_movement' => false,
+                ],
+                [
+                    'at_seconds' => 4,
+                    'face_detected' => true,
+                    'camera_facing' => false,
+                    'centered' => true,
+                    'pose_detected' => true,
+                    'hand_count' => 1,
+                    'hands_visible' => true,
+                    'gesture_active' => true,
+                    'shoulders_visible' => true,
+                    'shoulders_level' => false,
+                    'upright_posture' => false,
+                    'movement_score' => 60,
+                    'high_movement' => true,
+                ],
+                [
+                    'at_seconds' => 6,
+                    'face_detected' => true,
+                    'camera_facing' => true,
+                    'centered' => false,
+                    'pose_detected' => true,
+                    'hand_count' => 0,
+                    'hands_visible' => false,
+                    'gesture_active' => false,
+                    'shoulders_visible' => true,
+                    'shoulders_level' => true,
+                    'upright_posture' => true,
+                    'movement_score' => 10,
+                    'high_movement' => false,
+                ],
+            ],
+        ], 'I checked the issue, explained my action, and shared the result clearly.', [
+            'response_mode' => 'voice',
+            'voice_duration' => 20,
+        ], true);
+
+        $camera = $observations['camera'];
+        $this->assertSame('measured', $camera['status']);
+        $this->assertSame('browser_reported_pose_hand_landmark_estimate', $camera['source']);
+        $this->assertSame(3, $camera['hands_visible_count']);
+        $this->assertSame(67, $camera['gesture_activity_percent']);
+        $this->assertSame(75, $camera['shoulders_level_percent']);
+        $this->assertSame(75, $camera['upright_posture_percent']);
+        $this->assertSame(30, $camera['average_movement_score']);
+        $this->assertSame(33, $camera['high_movement_percent']);
+
+        $coaching = $service->forAnswer(
+            'I checked the issue, explained my action, and shared the result clearly.',
+            ['type' => 'Behavioral', 'question_text' => 'Tell me about a time you solved a problem.'],
+            ['response_mode' => 'voice', 'voice_duration' => 20],
+            $observations
+        );
+
+        $cameraFeedback = strtolower(json_encode($coaching['camera_feedback'], JSON_THROW_ON_ERROR));
+        $this->assertStringContainsString('hands were visible', $cameraFeedback);
+        $this->assertStringContainsString('gesture movement', $cameraFeedback);
+        $this->assertStringContainsString('movement score', $cameraFeedback);
+        $this->assertStringContainsString('infer confidence', strtolower($coaching['transparency_note']));
+        $this->assertSame('verified', $coaching['feedback_quality']['status']);
+        $this->assertSame(100, $coaching['feedback_quality']['completeness_percent']);
+        $this->assertSame(
+            $coaching['feedback_quality']['checks_total'],
+            $coaching['feedback_quality']['checks_passed']
+        );
+        $this->assertTrue(collect($coaching['priority_actions'])->contains(
+            fn (array $priority): bool => $priority['area'] === 'Optional body-language framing'
+        ));
+    }
+
     public function test_one_context_sensitive_match_does_not_create_a_filler_priority(): void
     {
         $service = new EvidenceBasedCoachingService;
@@ -496,6 +601,8 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame([1, 2], array_column(array_slice($summary['priority_actions'], 0, 2), 'rank'));
         $this->assertNotEmpty($summary['focus_headline']);
         $this->assertNotEmpty($summary['priority_actions'][0]['success_check']);
+        $this->assertSame('verified', $summary['feedback_quality']['status']);
+        $this->assertSame(100, $summary['feedback_quality']['completeness_percent']);
 
         $priorityText = strtolower(json_encode($summary['priority_actions'], JSON_THROW_ON_ERROR));
         $this->assertStringContainsString('filler', $priorityText);

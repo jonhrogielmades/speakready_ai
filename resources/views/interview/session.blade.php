@@ -1073,20 +1073,23 @@
             <!-- Side Panels -->
             <div class="col-lg-4">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
-                <!-- Optional descriptive camera coach; never used in readiness scoring. -->
+                <!-- Optional descriptive body-language coach; never used in readiness scoring. -->
                 @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
                 <div class="panel d-none d-lg-block animate-fade-up delay-100" id="cameraPanel">
-                    <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Optional Camera Coach</div>
+                    <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Optional Body-Language Coach</div>
                     <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
                         <video id="userCamera" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
                         <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
                             <div class="scan-line" style="width:100%;height:2px;background:#34d399;position:absolute;top:0;animation: scanAnim 2s infinite linear;box-shadow:0 0 8px #34d399;"></div>
                         </div>
-                        <div id="cameraCoachStatus" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#cbd5e1"><i class="fa-solid fa-laptop me-1"></i>Local estimate</div>
+                        <div id="cameraCoachStatus" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#cbd5e1"><i class="fa-solid fa-laptop me-1"></i>Local landmark estimate</div>
                     </div>
                     <div class="stat-row"><span>Face in frame</span><span id="stEyeContact" class="text-secondary">Waiting</span></div>
-                    <div class="stat-row mb-0"><span>Head alignment estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
-                    <div class="small mt-2" style="color:var(--tx3)">This estimates face visibility and head alignment only. Video is analyzed in your browser; no images or video are stored. Only derived timestamps and framing/head-alignment samples are saved for this report, and they are excluded from readiness.</div>
+                    <div class="stat-row"><span>Head alignment estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
+                    <div class="stat-row"><span>Hands / gesture movement</span><span id="stGesture" class="text-secondary">Waiting</span></div>
+                    <div class="stat-row"><span>Shoulders / posture pose</span><span id="stPose" class="text-secondary">Waiting</span></div>
+                    <div class="stat-row mb-0"><span>Movement steadiness</span><span id="stMovement" class="text-secondary">Waiting</span></div>
+                    <div class="small mt-2" style="color:var(--tx3)">This estimates visible framing, head alignment, hands, shoulders, posture pose, and movement steadiness only. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
                 </div>
                 @endif
 
@@ -1267,7 +1270,7 @@
                 });
             }
 
-            // Voice state and optional, non-scoring camera-framing state
+            // Voice state and optional, non-scoring body-language state
             let recognition = null;
             let recognitionActive = false;
             let shouldAutoRestartRecognition = false;
@@ -1291,6 +1294,8 @@
             let serverTranscriptionUnavailable = false;
             let serverTranscriptionSessionToken = 0;
             let cameraTrackingInFlight = false;
+            window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null, handLandmarker: null };
+            const cameraMovementBaselines = {};
 
             const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const serverTranscriptionEnabled = @json(\App\Services\AIService::speechTranscriptionAvailable());
@@ -1902,6 +1907,9 @@
                 }
                 const faceStatus = document.getElementById('stEyeContact');
                 const alignmentStatus = document.getElementById('stPosture');
+                const gestureStatus = document.getElementById('stGesture');
+                const poseStatus = document.getElementById('stPose');
+                const movementStatus = document.getElementById('stMovement');
                 const coachStatus = document.getElementById('cameraCoachStatus');
                 if (faceStatus) {
                     faceStatus.textContent = 'Camera unavailable';
@@ -1910,6 +1918,18 @@
                 if (alignmentStatus) {
                     alignmentStatus.textContent = 'Not measured';
                     alignmentStatus.className = 'text-secondary';
+                }
+                if (gestureStatus) {
+                    gestureStatus.textContent = 'Not measured';
+                    gestureStatus.className = 'text-secondary';
+                }
+                if (poseStatus) {
+                    poseStatus.textContent = 'Not measured';
+                    poseStatus.className = 'text-secondary';
+                }
+                if (movementStatus) {
+                    movementStatus.textContent = 'Not measured';
+                    movementStatus.className = 'text-secondary';
                 }
                 if (coachStatus) {
                     coachStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i>Not measured';
@@ -1946,15 +1966,87 @@
                 }
             }
             
+            function setCameraStat(id, content, className = 'text-secondary', asHtml = false) {
+                const element = document.getElementById(id);
+                if (!element) return;
+                if (asHtml) {
+                    element.innerHTML = content;
+                } else {
+                    element.textContent = content;
+                }
+                element.className = className;
+            }
+
+            function visibleLandmark(landmark, threshold = 0.35) {
+                if (!landmark || !Number.isFinite(Number(landmark.x)) || !Number.isFinite(Number(landmark.y))) {
+                    return false;
+                }
+                const visibility = Number(landmark.visibility ?? landmark.presence ?? 1);
+                return visibility >= threshold;
+            }
+
+            function centerOfNormalized(points) {
+                const usable = points.filter(point => point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
+                if (usable.length === 0) return null;
+                const total = usable.reduce(
+                    (point, current) => ({ x: point.x + current.x, y: point.y + current.y }),
+                    { x: 0, y: 0 }
+                );
+                return { x: total.x / usable.length, y: total.y / usable.length };
+            }
+
+            function pointDistance(left, right) {
+                if (!left || !right) return null;
+                return Math.hypot(Number(left.x) - Number(right.x), Number(left.y) - Number(right.y));
+            }
+
+            function detectVideoFrame(landmarker, video, timestamp) {
+                if (!landmarker || typeof landmarker.detectForVideo !== 'function') return null;
+                try {
+                    return landmarker.detectForVideo(video, timestamp);
+                } catch (error) {
+                    return landmarker.detectForVideo(video);
+                }
+            }
+
             async function trackBodyLanguage() {
-                if (!cameraCoachingEnabled || cameraTrackingInFlight || typeof faceapi === 'undefined') return;
+                const bodyLanguageState = window.bodyLanguageModelState || {};
+                const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker && bodyLanguageState.handLandmarker);
+                const canUseFaceModel = typeof faceapi !== 'undefined';
+                if (!cameraCoachingEnabled || cameraTrackingInFlight || (!canUseBodyModels && !canUseFaceModel)) return;
                 const video = document.getElementById('userCamera');
                 if (!video || !video.srcObject) return;
                 const trackedQuestionIndex = currentQIdx;
 
                 cameraTrackingInFlight = true;
                 try {
-                    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+                    let detection = null;
+                    if (canUseFaceModel) {
+                        try {
+                            detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+                        } catch (faceError) {
+                            console.error("Face framing tracking error", faceError);
+                        }
+                    }
+
+                    let poseLandmarks = null;
+                    let handLandmarks = [];
+                    if (canUseBodyModels) {
+                        try {
+                            const timestamp = performance.now();
+                            const poseResult = detectVideoFrame(bodyLanguageState.poseLandmarker, video, timestamp);
+                            const handResult = detectVideoFrame(bodyLanguageState.handLandmarker, video, timestamp);
+                            poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0
+                                ? poseResult.landmarks[0]
+                                : null;
+                            handLandmarks = Array.isArray(handResult?.landmarks)
+                                ? handResult.landmarks.slice(0, 2)
+                                : [];
+                        } catch (bodyError) {
+                            console.error("Body-language tracking error", bodyError);
+                        }
+                    }
+
                     const state = answersData[trackedQuestionIndex] || defaultAnswerState();
                     state.observation_data = state.observation_data || { filler_events: [], camera_samples: [] };
                     state.observation_data.camera_samples = Array.isArray(state.observation_data.camera_samples)
@@ -1962,6 +2054,16 @@
                         : [];
                     let cameraFacing = false;
                     let centered = false;
+                    let poseCameraFacing = null;
+                    let poseDetected = Array.isArray(poseLandmarks) && poseLandmarks.length > 0;
+                    let shouldersVisible = false;
+                    let shouldersLevel = null;
+                    let uprightPosture = null;
+                    let handCount = Math.min(2, handLandmarks.length);
+                    let gestureActive = false;
+                    let movementScore = null;
+                    let highMovement = null;
+                    const movementPoints = {};
 
                     if (detection) {
                         const leftEye = detection.landmarks.getLeftEye();
@@ -1991,20 +2093,134 @@
                         document.getElementById('stEyeContact').className = 'text-success';
                         document.getElementById('stPosture').textContent = cameraFacing ? 'Camera-facing estimate' : 'Head turned estimate';
                         document.getElementById('stPosture').className = cameraFacing ? 'text-success' : 'text-warning';
-                    } else {
-                        document.getElementById('stEyeContact').textContent = 'Outside frame / unavailable';
-                        document.getElementById('stEyeContact').className = 'text-warning';
-                        document.getElementById('stPosture').textContent = 'Excluded from scoring';
-                        document.getElementById('stPosture').className = 'text-secondary';
+                    }
+
+                    if (poseDetected) {
+                        const nose = poseLandmarks[0];
+                        const leftShoulder = poseLandmarks[11];
+                        const rightShoulder = poseLandmarks[12];
+                        const leftHip = poseLandmarks[23];
+                        const rightHip = poseLandmarks[24];
+                        const noseVisible = visibleLandmark(nose);
+                        shouldersVisible = visibleLandmark(leftShoulder) && visibleLandmark(rightShoulder);
+                        const hipsVisible = visibleLandmark(leftHip) && visibleLandmark(rightHip);
+                        const shoulderMidpoint = shouldersVisible ? centerOfNormalized([leftShoulder, rightShoulder]) : null;
+                        const hipMidpoint = hipsVisible ? centerOfNormalized([leftHip, rightHip]) : null;
+                        const shoulderWidth = shouldersVisible ? Math.max(0.01, pointDistance(leftShoulder, rightShoulder) ?? 0.01) : 0.01;
+
+                        if (noseVisible) {
+                            movementPoints.nose = { x: nose.x, y: nose.y };
+                        }
+                        if (shoulderMidpoint) {
+                            movementPoints.shoulders = shoulderMidpoint;
+                            shouldersLevel = Math.abs(Number(leftShoulder.y) - Number(rightShoulder.y)) <= 0.065;
+                        }
+                        if (noseVisible && shoulderMidpoint) {
+                            poseCameraFacing = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth) <= 0.38;
+                        }
+                        if (shoulderMidpoint && hipMidpoint) {
+                            const torsoHeight = Math.max(0.01, Math.abs(hipMidpoint.y - shoulderMidpoint.y));
+                            uprightPosture = Math.abs((shoulderMidpoint.x - hipMidpoint.x) / torsoHeight) <= 0.28;
+                        } else if (noseVisible && shoulderMidpoint) {
+                            uprightPosture = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth) <= 0.45;
+                        }
+                    }
+
+                    const handCenters = handLandmarks
+                        .map(hand => centerOfNormalized(Array.isArray(hand) ? hand : []))
+                        .filter(Boolean);
+                    handCenters.forEach((center, index) => {
+                        movementPoints['hand' + index] = center;
+                    });
+
+                    const previousPoints = cameraMovementBaselines[trackedQuestionIndex] || null;
+                    if (previousPoints && Object.keys(movementPoints).length > 0) {
+                        const distances = Object.entries(movementPoints)
+                            .map(([key, point]) => pointDistance(point, previousPoints[key]))
+                            .filter(distance => Number.isFinite(distance));
+                        if (distances.length > 0) {
+                            const averageDistance = distances.reduce((total, distance) => total + distance, 0) / distances.length;
+                            movementScore = Math.min(100, Math.round(averageDistance * 650));
+                            highMovement = movementScore >= 45;
+                        }
+                        const handDistances = handCenters
+                            .map((center, index) => pointDistance(center, previousPoints['hand' + index]))
+                            .filter(distance => Number.isFinite(distance));
+                        gestureActive = handCount > 0 && handDistances.some(distance => distance >= 0.045);
+                    }
+                    cameraMovementBaselines[trackedQuestionIndex] = movementPoints;
+
+                    const faceDetected = Boolean(detection || (poseDetected && visibleLandmark(poseLandmarks[0])));
+                    cameraFacing = Boolean(detection ? cameraFacing : poseCameraFacing);
+                    if (!detection && poseDetected && shouldersVisible) {
+                        const shoulderCenter = movementPoints.shoulders;
+                        centered = Boolean(shoulderCenter && Math.abs(shoulderCenter.x - 0.5) <= 0.24 && Math.abs(shoulderCenter.y - 0.5) <= 0.32);
+                    }
+
+                    if (!detection) {
+                        setCameraStat(
+                            'stEyeContact',
+                            faceDetected ? '<i class="fa-solid fa-check me-1"></i>Visible' : 'Outside frame / unavailable',
+                            faceDetected ? 'text-success' : 'text-warning',
+                            faceDetected
+                        );
+                        setCameraStat(
+                            'stPosture',
+                            faceDetected ? (cameraFacing ? 'Camera-facing estimate' : 'Head turned estimate') : 'Excluded from scoring',
+                            faceDetected ? (cameraFacing ? 'text-success' : 'text-warning') : 'text-secondary'
+                        );
+                    }
+
+                    setCameraStat(
+                        'stGesture',
+                        handCount > 0
+                            ? (gestureActive ? handCount + ' hand(s), gesture movement' : handCount + ' hand(s) visible')
+                            : 'Hands not visible',
+                        handCount > 0 ? 'text-success' : 'text-secondary'
+                    );
+                    setCameraStat(
+                        'stPose',
+                        shouldersVisible
+                            ? (shouldersLevel && uprightPosture !== false ? 'Balanced upper body' : 'Posture cue available')
+                            : (poseDetected ? 'Partial pose estimate' : 'Pose not detected'),
+                        shouldersVisible
+                            ? (shouldersLevel && uprightPosture !== false ? 'text-success' : 'text-warning')
+                            : 'text-secondary'
+                    );
+                    setCameraStat(
+                        'stMovement',
+                        movementScore === null
+                            ? 'Calibrating'
+                            : (highMovement ? 'Higher movement' : 'Steady'),
+                        movementScore === null
+                            ? 'text-secondary'
+                            : (highMovement ? 'text-warning' : 'text-success')
+                    );
+
+                    const coachStatus = document.getElementById('cameraCoachStatus');
+                    if (coachStatus) {
+                        coachStatus.innerHTML = canUseBodyModels
+                            ? '<i class="fa-solid fa-person-rays me-1"></i>Pose + hand estimate'
+                            : '<i class="fa-solid fa-laptop me-1"></i>Framing estimate';
+                        coachStatus.style.color = canUseBodyModels ? '#34d399' : '#cbd5e1';
                     }
 
                     state.observation_data.camera_samples.push({
                         at_seconds: Math.max(0, Number(state.voice_duration || recTimerSeconds || 0)),
-                        face_detected: Boolean(detection),
-                        camera_facing: Boolean(detection && cameraFacing),
-                        centered: Boolean(detection && centered)
+                        face_detected: faceDetected,
+                        camera_facing: Boolean(faceDetected && cameraFacing),
+                        centered: Boolean(faceDetected && centered),
+                        pose_detected: poseDetected,
+                        hand_count: handCount,
+                        hands_visible: handCount > 0,
+                        gesture_active: Boolean(gestureActive),
+                        shoulders_visible: shouldersVisible,
+                        shoulders_level: shouldersLevel,
+                        upright_posture: uprightPosture,
+                        movement_score: movementScore,
+                        high_movement: highMovement
                     });
-                    state.observation_data.camera_samples = state.observation_data.camera_samples.slice(-300);
+                    state.observation_data.camera_samples = state.observation_data.camera_samples.slice(-180);
                     answersData[trackedQuestionIndex] = state;
                 } catch(e) {
                     console.error("Tracking error", e);
@@ -3278,7 +3494,7 @@
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
 
-                    // Optional camera-framing guidance is descriptive and never affects readiness scoring.
+                    // Optional body-language guidance is descriptive and never affects readiness scoring.
                     if (cameraCoachingEnabled && recTimerSeconds % 2 === 0) {
                         trackBodyLanguage();
                     }
@@ -3812,11 +4028,77 @@
             faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
             faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
         ]).then(() => {
-            console.log("Optional camera-framing models loaded");
+            console.log("Optional face-framing models loaded");
         }).catch(err => {
-            console.error("Error loading optional camera models", err);
-            if (typeof markCameraUnavailable === 'function') markCameraUnavailable('model_unavailable');
+            window.faceFramingModelUnavailable = true;
+            console.error("Error loading optional face-framing models", err);
         });
+    }
+</script>
+<script type="module">
+    if (typeof cameraCoachingEnabled !== 'undefined' && cameraCoachingEnabled) {
+        const modelState = window.bodyLanguageModelState = window.bodyLanguageModelState || {
+            ready: false,
+            failed: false,
+            poseLandmarker: null,
+            handLandmarker: null
+        };
+
+        import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/vision_bundle.mjs')
+            .then(async ({ FilesetResolver, PoseLandmarker, HandLandmarker }) => {
+                const vision = await FilesetResolver.forVisionTasks(
+                    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21/wasm'
+                );
+                const [poseLandmarker, handLandmarker] = await Promise.all([
+                    PoseLandmarker.createFromOptions(vision, {
+                        baseOptions: {
+                            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'
+                        },
+                        runningMode: 'VIDEO',
+                        numPoses: 1,
+                        minPoseDetectionConfidence: 0.5,
+                        minPosePresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5,
+                        outputSegmentationMasks: false
+                    }),
+                    HandLandmarker.createFromOptions(vision, {
+                        baseOptions: {
+                            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task'
+                        },
+                        runningMode: 'VIDEO',
+                        numHands: 2,
+                        minHandDetectionConfidence: 0.5,
+                        minHandPresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5
+                    })
+                ]);
+
+                Object.assign(modelState, {
+                    ready: true,
+                    failed: false,
+                    poseLandmarker,
+                    handLandmarker
+                });
+                const coachStatus = document.getElementById('cameraCoachStatus');
+                if (coachStatus) {
+                    coachStatus.innerHTML = '<i class="fa-solid fa-person-rays me-1"></i>Pose + hand model ready';
+                    coachStatus.style.color = '#34d399';
+                }
+                console.log("Optional body-language models loaded");
+            })
+            .catch(err => {
+                modelState.ready = false;
+                modelState.failed = true;
+                console.error("Error loading optional body-language models", err);
+                const coachStatus = document.getElementById('cameraCoachStatus');
+                if (coachStatus) {
+                    coachStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation me-1"></i>Framing only';
+                    coachStatus.style.color = '#fbbf24';
+                }
+                if (window.faceFramingModelUnavailable && typeof markCameraUnavailable === 'function') {
+                    markCameraUnavailable('model_unavailable');
+                }
+            });
     }
 </script>
 @endif
@@ -3829,7 +4111,7 @@
         const stepsMobile = [
             { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Use private framing prompts if helpful. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Use private framing, hand, posture, and movement prompts if helpful. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }},
             { element: '#overallReadiness', popover: { title: 'Practice Signals', description: 'Use these live prompts for practice; the final evidence-linked assessment is produced after the session.', side: 'top', align: 'start' }},
             { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
             { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
@@ -3838,7 +4120,7 @@
         const stepsDesktop = [
             { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Optional Camera Coach', description: 'Use private framing prompts if helpful. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }},
+            { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Use private framing, hand, posture, and movement prompts if helpful. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }},
             { element: '#overallReadiness', popover: { title: 'Practice Signals', description: 'Use these live prompts for practice; the final evidence-linked assessment is produced after the session.', side: 'left', align: 'start' }},
             { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
             { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}

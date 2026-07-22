@@ -184,6 +184,37 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertGreaterThan(0, $item['relevance_score']);
         $this->assertSame(50, $item['scoring_confidence']);
         $this->assertStringContainsString('uses only evidence available in the submitted answer', $item['ai_feedback']);
+        $this->assertSame('verified', $item['feedback_quality']['status']);
+        $this->assertSame(100, $item['feedback_quality']['completeness_percent']);
+        $this->assertSame(
+            $item['feedback_quality']['checks_total'],
+            $item['feedback_quality']['checks_passed']
+        );
+        $this->assertSame(100, $normalized['feedback_quality']['completeness_percent']);
+    }
+
+    public function test_it_rejects_trait_inference_even_when_question_and_answer_quotes_are_valid(): void
+    {
+        $answer = [
+            'id' => 311,
+            'question_type' => 'Technical',
+            'question' => 'How would you verify a production fix?',
+            'answer' => 'I would reproduce the issue, apply the smallest safe change, run regression tests, and monitor the affected production metric after deployment.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $feedback['ai_feedback'] = 'For "'.$answer['question'].'", the exact answer evidence "'.$answer['answer'].'" supports the evaluation and demonstrates confidence and honesty.';
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$feedback],
+        ], [$answer]]));
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('local_evidence', $normalized['evaluation_source']);
+        $this->assertStringNotContainsString('confidence', strtolower($normalized['ai_feedback']));
+        $this->assertStringNotContainsString('honesty', strtolower($normalized['ai_feedback']));
+        $this->assertSame(100, $normalized['feedback_quality']['completeness_percent']);
+        $this->assertTrue($normalized['feedback_quality']['checks']['personal_trait_inference_excluded']);
     }
 
     public function test_it_replaces_unsupported_provider_feedback_and_caps_scores(): void
