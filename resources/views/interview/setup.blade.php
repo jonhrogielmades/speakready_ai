@@ -328,6 +328,92 @@
     #panel-summary #btn-start-interview i {
         margin-left: 0 !important;
     }
+    .finish-transition-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        min-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+        margin: 0;
+        padding: max(24px, env(safe-area-inset-top, 0px)) 20px max(24px, env(safe-area-inset-bottom, 0px));
+        background: var(--bg, #ffffff);
+        box-sizing: border-box;
+        overflow: hidden;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        text-align: center;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .finish-transition-overlay.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+    body.finish-transition-active {
+        overflow: hidden !important;
+        touch-action: none;
+    }
+    .finish-loading-wrapper {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        flex: 0 0 120px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .finish-loading-circle {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 4px solid var(--bd, #e2e8f0);
+        border-top: 4px solid var(--pur, #7c3aed);
+        animation: finishSpin 1s linear infinite;
+    }
+    .finish-loading-wrapper img {
+        width: 70px;
+        height: 70px;
+        object-fit: contain;
+        animation: finishPulse 1.5s ease-in-out infinite;
+    }
+    .finish-transition-overlay h4 {
+        margin: 0;
+        color: var(--tx);
+        font-weight: 600;
+        font-size: 1.2rem;
+        line-height: 1.25;
+        letter-spacing: 0;
+        max-width: min(100%, 420px);
+        overflow-wrap: anywhere;
+    }
+    .finish-transition-overlay p {
+        margin: 8px 0 0;
+        color: var(--tx3);
+        font-size: 0.9rem;
+        line-height: 1.45;
+        max-width: min(100%, 420px);
+        overflow-wrap: anywhere;
+    }
+    @keyframes finishSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    @keyframes finishPulse {
+        0% { transform: scale(0.9); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.8; }
+    }
     :root:not(.lm) #panel-summary {
         background:
             radial-gradient(circle at 12% 8%, rgba(37, 99, 235, 0.2), transparent 28%),
@@ -1861,6 +1947,30 @@
             padding: 10px 12px !important;
             touch-action: manipulation;
         }
+        .finish-transition-overlay {
+            padding: max(18px, env(safe-area-inset-top, 0px)) 16px max(18px, env(safe-area-inset-bottom, 0px));
+        }
+        .finish-loading-wrapper {
+            width: 96px;
+            height: 96px;
+            flex-basis: 96px;
+            margin-bottom: 16px;
+        }
+        .finish-loading-circle {
+            border-width: 3px;
+        }
+        .finish-loading-wrapper img {
+            width: 56px;
+            height: 56px;
+        }
+        .finish-transition-overlay h4 {
+            max-width: 300px;
+            font-size: 1.02rem;
+        }
+        .finish-transition-overlay p {
+            max-width: 300px;
+            font-size: 0.82rem;
+        }
     }
 
     @media (max-width: 390px) {
@@ -2526,6 +2636,15 @@
             </div>
         </div>
     </form>
+
+    <div id="setupTransitionOverlay" class="finish-transition-overlay" role="status" aria-live="polite" aria-atomic="true">
+        <div class="finish-loading-wrapper">
+            <div class="finish-loading-circle"></div>
+            <img src="{{ asset('img/logo.png') }}" alt="Loading interview">
+        </div>
+        <h4>Philippines Interview Ready</h4>
+        <p>Please wait while we begin or resume your customized interview session.</p>
+    </div>
 </div>
 
 <script>
@@ -2587,6 +2706,32 @@
     window.onload = () => {
         updateSummary();
     };
+
+    const setupForm = document.getElementById('setupForm');
+    const setupTransitionOverlay = document.getElementById('setupTransitionOverlay');
+    const startInterviewButton = document.getElementById('btn-start-interview');
+
+    if (setupForm && setupTransitionOverlay) {
+        setupForm.addEventListener('submit', function() {
+            setupTransitionOverlay.classList.add('active');
+            document.body.classList.add('finish-transition-active');
+
+            if (startInterviewButton) {
+                startInterviewButton.disabled = true;
+                startInterviewButton.innerHTML = 'Begin / Resume Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
+            }
+        });
+
+        window.addEventListener('pageshow', function() {
+            setupTransitionOverlay.classList.remove('active');
+            document.body.classList.remove('finish-transition-active');
+
+            if (startInterviewButton) {
+                startInterviewButton.disabled = false;
+                startInterviewButton.innerHTML = 'Start Philippine Interview <i class="fa-solid fa-play ms-2"></i>';
+            }
+        });
+    }
 </script>
 
 @push('scripts')

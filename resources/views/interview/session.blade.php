@@ -36,6 +36,30 @@
         margin-bottom: var(--session-gap) !important;
         box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.14)) !important;
     }
+    .interview-session-header {
+        margin-bottom: 18px;
+        overflow: visible;
+    }
+    .interview-session-title {
+        margin: 0 0 8px;
+        color: #0f172a;
+        font-size: 1.45rem;
+        font-weight: 900;
+        line-height: 1.15;
+        letter-spacing: 0;
+    }
+    :root:not(.lm) .interview-session-title {
+        color: #f8fafc;
+    }
+    .lm .interview-session-title {
+        color: #0f172a;
+    }
+    .interview-session-header .interview-meta-line span {
+        color: var(--tx);
+    }
+    .interview-session-header .interview-meta-line {
+        overflow: visible;
+    }
     #interviewControls {
         background: var(--sf);
         border: 1px solid var(--bd);
@@ -55,49 +79,6 @@
     }
     #chatTranscriptContainer:empty {
         display: none !important;
-    }
-    #introContainer {
-        border-radius: 16px !important;
-        margin-top: var(--session-gap) !important;
-    }
-    .intro-ai-icon {
-        width: 68px;
-        height: 68px;
-        border-radius: 18px;
-        background:
-            radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.72), transparent 28%),
-            linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(139, 92, 246, 0.14));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 22px;
-        border: 1px solid rgba(96, 165, 250, 0.28);
-        box-shadow: 0 12px 28px rgba(59, 130, 246, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.45);
-        color: #60a5fa;
-    }
-    .intro-ai-icon i {
-        font-size: 1.8rem;
-        filter: drop-shadow(0 4px 8px rgba(96, 165, 250, 0.28));
-    }
-    #introContainer .intro-badge-grid {
-        display: grid !important;
-        grid-template-columns: repeat(3, max-content);
-        justify-content: center !important;
-        justify-items: center;
-        gap: 7px 8px !important;
-        margin-bottom: 24px !important;
-    }
-    #introContainer .intro-badge-grid .db-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: fit-content;
-        max-width: 100%;
-        white-space: nowrap;
-    }
-    #introContainer .intro-badge-grid .db-badge:nth-child(4) {
-        grid-column: 1 / -1;
-        justify-self: center;
     }
     .interview-meta-line { flex-wrap: wrap; }
     .panel-title { font-weight:800;margin-bottom:16px;display:flex;align-items:center;font-size:1rem;color:var(--tx); letter-spacing: 0; }
@@ -152,6 +133,34 @@
         opacity: 0.55;
         cursor: not-allowed;
         box-shadow: none;
+    }
+    .response-panel {
+        padding: 14px;
+        border-radius: 16px;
+    }
+    .response-panel .panel-title {
+        margin-bottom: 10px;
+    }
+    .response-panel #answerTextarea {
+        width: 100%;
+        min-height: 76px;
+        max-height: 132px;
+        margin-bottom: 10px !important;
+        border-radius: 10px;
+        resize: vertical;
+    }
+    .response-count-bar {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 28px;
+        padding: 7px 10px;
+        border: 1px solid var(--bd);
+        border-radius: 9px;
+        background: var(--bg3);
+        color: var(--tx3);
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.2;
     }
     .panel-title > i {
         width: 28px;
@@ -222,6 +231,35 @@
     .source-card-line a:hover {
         color: #60a5fa;
         text-decoration: underline;
+    }
+    .question-source-panel {
+        padding: 14px;
+        border-radius: 16px;
+    }
+    .response-source-panel {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 8px;
+        padding: 0 !important;
+    }
+    .question-source-panel .source-card-line {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        border: 1px solid rgba(96, 165, 250, 0.08);
+        border-radius: 12px;
+        background: linear-gradient(180deg, rgba(96, 165, 250, 0.07), rgba(96, 165, 250, 0.025));
+        color: var(--tx);
+        font-size: 0.8rem;
+        line-height: 1.35;
+    }
+    .source-label {
+        color: #2563eb;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .response-source-panel .source-card-line {
+        min-height: 28px;
     }
     .question-caption-overlay {
         position: absolute;
@@ -388,6 +426,143 @@
         max-width: min(100%, 420px);
         overflow-wrap: anywhere;
     }
+    .interview-start-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        min-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: max(20px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px));
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-sizing: border-box;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .interview-start-modal::before {
+        display: none;
+    }
+    .interview-start-modal.active {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: none;
+    }
+    body.interview-start-modal-active {
+        overflow: auto !important;
+        touch-action: auto;
+    }
+    body.interview-start-modal-active #mob-header {
+        z-index: 1000002 !important;
+    }
+    body.interview-start-modal-active #mob-bottom-nav {
+        z-index: 1000002 !important;
+    }
+    .interview-start-dialog {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: min(100%, 430px);
+        max-height: calc(100dvh - 40px);
+        overflow-y: auto;
+        box-sizing: border-box;
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        background: var(--sf);
+        backdrop-filter: blur(18px) saturate(120%);
+        -webkit-backdrop-filter: blur(18px) saturate(120%);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.32);
+        padding: 22px;
+        text-align: center;
+        pointer-events: auto;
+    }
+    .interview-start-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #60a5fa;
+        background: linear-gradient(145deg, rgba(59, 130, 246, 0.16), rgba(139, 92, 246, 0.12));
+        border: 1px solid rgba(96, 165, 250, 0.28);
+    }
+    .interview-start-icon i {
+        font-size: 1.55rem;
+    }
+    .interview-start-dialog h4 {
+        margin: 0;
+        color: var(--tx);
+        font-size: 1.2rem;
+        font-weight: 800;
+        line-height: 1.25;
+        letter-spacing: 0;
+    }
+    .interview-start-dialog p {
+        margin: 10px auto 18px;
+        max-width: 340px;
+        color: var(--tx3);
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+    .interview-start-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        width: 100%;
+        margin: 0 0 18px;
+    }
+    .interview-start-meta .session-chip {
+        min-width: 0;
+        width: 100%;
+        justify-content: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .interview-start-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        width: 100%;
+    }
+    .interview-start-button {
+        min-height: 44px;
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 800;
+        line-height: 1.15;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+    .interview-start-button.cancel {
+        background: var(--bg3);
+        color: var(--tx);
+        border: 1px solid var(--bd);
+    }
+    .interview-start-button.begin {
+        background: linear-gradient(135deg, #2563eb, #0ea5e9);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
+    }
     .finish-retry-button {
         margin-top: 16px;
         border: 0;
@@ -459,39 +634,44 @@
             font-size: 0.66rem;
         }
         #sec-interview-session > .interview-session-header {
-            margin-bottom: 12px !important;
+            margin-bottom: 10px !important;
             text-align: center;
+            overflow: visible !important;
         }
         .interview-session-title {
-            font-size: 1.18rem !important;
-            line-height: 1.18 !important;
-            margin-bottom: 8px !important;
+            font-size: 1.1rem !important;
+            line-height: 1.1 !important;
+            margin-bottom: 6px !important;
             letter-spacing: 0 !important;
         }
         .interview-session-header .sr-page-actions.interview-meta-line,
         #sec-interview-session .interview-meta-line {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 6px !important;
+            gap: 5px !important;
             width: 100%;
             max-width: 100%;
             margin: 0 auto;
-            font-size: 0.68rem !important;
+            font-size: 0.62rem !important;
+            overflow: visible !important;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span,
         #sec-interview-session .interview-meta-line span {
             min-width: 0;
             width: 100%;
-            min-height: 34px;
-            padding: 6px 7px;
+            min-height: 28px;
+            height: 28px;
+            padding: 5px 6px;
             border: 1px solid var(--bd);
             border-radius: 999px;
             background: var(--bg3);
             overflow: hidden;
-            white-space: normal;
+            white-space: nowrap;
             line-height: 1.2;
             justify-content: center;
             gap: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span i,
         #sec-interview-session .interview-meta-line span i {
@@ -561,6 +741,7 @@
         }
         .response-title-actions {
             gap: 6px;
+            margin-left: 8px;
         }
         .response-fullscreen-toggle {
             width: 32px;
@@ -577,31 +758,46 @@
         .response-send-answer-btn i {
             font-size: 0.64rem;
         }
+        .response-panel {
+            padding: 10px !important;
+            border-radius: 12px !important;
+        }
+        .response-panel .panel-title {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            column-gap: 7px;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+        }
+        .response-panel .panel-title > i {
+            margin-right: 0 !important;
+        }
+        .response-panel .panel-title-text {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .response-panel #answerTextarea {
+            min-height: 72px !important;
+            max-height: 118px;
+            padding: 10px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.38;
+            border-radius: 9px;
+        }
+        .response-count-bar {
+            min-height: 26px;
+            padding: 6px 9px;
+            font-size: 0.66rem;
+            border-radius: 8px;
+        }
         .panel-title > i {
             width: 24px;
             height: 24px;
             border-radius: 7px;
             font-size: 0.72rem;
-        }
-        #liveFeedbackPanel .panel-title > i {
-            background: rgba(52, 211, 153, 0.13);
-            color: #34d399;
-        }
-        #starPanel .panel-title > i {
-            background: rgba(251, 191, 36, 0.14);
-            color: #fbbf24 !important;
-        }
-        #voiceAnalyticsPanel .panel-title > i {
-            background: rgba(6, 182, 212, 0.14);
-            color: #06b6d4;
-        }
-        #sec-interview-session .col-lg-4 > .panel:last-child .panel-title > i {
-            background: rgba(168, 85, 247, 0.13);
-            color: #a855f7;
-        }
-        #overallReadiness {
-            font-size: 1.7rem !important;
-            line-height: 1.05;
         }
         .stat-row {
             margin-bottom: 8px;
@@ -618,6 +814,21 @@
         }
         .star-item i {
             font-size: 0.92rem;
+        }
+        .question-source-panel {
+            padding: 10px !important;
+            border-radius: 12px !important;
+            margin-top: -6px !important;
+        }
+        .response-source-panel {
+            margin-top: 8px !important;
+            padding: 0 !important;
+        }
+        .question-source-panel .source-card-line {
+            padding: 8px 10px;
+            border-radius: 9px;
+            font-size: 0.68rem;
+            gap: 6px;
         }
         #workspaceRow { --bs-gutter-x: 0; --bs-gutter-y: var(--session-gap); }
         #interviewControls {
@@ -755,36 +966,6 @@
             display: inline-flex;
             margin-left: 6px !important;
         }
-        #introContainer { padding: 16px !important; max-width: 100% !important; }
-        body.mobile-interview-fullscreen #introContainer {
-            margin-top: 10px !important;
-        }
-        #introContainer .intro-ai-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 15px;
-            margin-bottom: 16px;
-        }
-        #introContainer .intro-ai-icon i {
-            font-size: 1.45rem;
-        }
-        #introContainer h4 { font-size: 1.18rem !important; line-height: 1.22 !important; }
-        #introContainer p { font-size: 0.9rem !important; margin-bottom: 18px !important; }
-        #introContainer .intro-badge-grid .db-badge {
-            font-size: 0.7rem !important;
-        }
-        #introContainer .intro-start-btn {
-            width: 100% !important;
-            min-height: 44px;
-            padding: 0.62rem 1rem !important;
-            border-radius: 11px !important;
-            font-size: 0.9rem !important;
-            box-shadow: 0 6px 16px rgba(96,165,250,0.32) !important;
-        }
-        #introContainer .intro-start-btn i {
-            font-size: 0.78rem;
-            margin-left: 0.45rem !important;
-        }
         .session-chip { width:auto;max-width:100%;justify-content:center; }
         .question-timer-anchor {
             top: 12px !important;
@@ -817,6 +998,47 @@
             max-width: 300px;
             font-size: 0.82rem;
         }
+        .interview-start-dialog {
+            width: min(calc(100vw - 28px), 420px);
+            max-height: calc(100dvh - 32px);
+            margin: auto;
+            padding: 22px 18px;
+            border-radius: 14px;
+            overflow: visible;
+        }
+        .interview-start-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            margin-bottom: 16px;
+        }
+        .interview-start-dialog h4 {
+            font-size: 1.16rem;
+        }
+        .interview-start-dialog p {
+            font-size: 0.9rem;
+            margin-bottom: 18px;
+        }
+        .interview-start-meta {
+            gap: 7px;
+            margin-bottom: 16px;
+        }
+        .interview-start-meta .session-chip {
+            min-height: 32px;
+            padding: 6px 7px;
+            font-size: 0.68rem;
+        }
+        .interview-start-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .interview-start-button {
+            width: 100%;
+            min-height: 40px;
+            padding: 9px 10px;
+            border-radius: 12px;
+            font-size: 0.84rem;
+        }
     }
 
     @media (max-width: 380px) {
@@ -837,6 +1059,52 @@
         .finish-transition-overlay p {
             font-size: 0.78rem;
         }
+        .interview-start-modal {
+            align-items: center !important;
+            justify-content: center !important;
+            padding: max(14px, env(safe-area-inset-top, 0px)) 12px max(14px, env(safe-area-inset-bottom, 0px));
+        }
+        .interview-start-dialog {
+            width: min(calc(100vw - 24px), 380px);
+            max-height: calc(100dvh - 28px);
+            margin: auto;
+            padding: 20px 16px;
+            border-radius: 14px;
+            overflow: visible;
+        }
+        .interview-start-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            margin-bottom: 14px;
+        }
+        .interview-start-icon i {
+            font-size: 1.45rem;
+        }
+        .interview-start-dialog h4 {
+            font-size: 1.08rem;
+            line-height: 1.22;
+        }
+        .interview-start-dialog p {
+            margin: 10px auto 16px;
+            font-size: 0.86rem;
+            line-height: 1.42;
+        }
+        .interview-start-meta {
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .interview-start-meta .session-chip {
+            min-height: 30px;
+            padding: 5px 6px;
+            font-size: 0.62rem;
+        }
+        .interview-start-button {
+            min-height: 38px;
+            padding: 8px 9px;
+            font-size: 0.78rem;
+            gap: 6px;
+        }
         .interview-session-title { font-size: 1.06rem !important; }
         .interview-session-header .sr-page-actions.interview-meta-line,
         #sec-interview-session .interview-meta-line {
@@ -846,6 +1114,9 @@
         .interview-session-header .sr-page-actions.interview-meta-line span,
         #sec-interview-session .interview-meta-line span {
             padding: 5px 4px;
+            min-height: 28px;
+            height: 28px;
+            white-space: nowrap;
         }
         .interview-session-header .sr-page-actions.interview-meta-line span i,
         #sec-interview-session .interview-meta-line span i {
@@ -881,6 +1152,49 @@
         }
         #voiceControls .btn i {
             font-size: 0.58rem;
+        }
+        .response-panel {
+            padding: 8px !important;
+        }
+        .response-panel .panel-title {
+            column-gap: 6px;
+            font-size: 0.72rem;
+        }
+        .response-send-answer-btn {
+            min-height: 28px;
+            padding: 0.32rem 0.42rem;
+            font-size: 0.58rem;
+            border-radius: 8px;
+        }
+        .response-fullscreen-toggle {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 0.66rem;
+        }
+        .response-panel #answerTextarea {
+            min-height: 66px !important;
+            max-height: 100px;
+            padding: 8px !important;
+            font-size: 0.68rem !important;
+        }
+        .response-count-bar {
+            min-height: 24px;
+            padding: 5px 8px;
+            font-size: 0.6rem;
+        }
+        .question-source-panel {
+            padding: 8px !important;
+            margin-top: -5px !important;
+        }
+        .response-source-panel {
+            margin-top: 8px !important;
+            padding: 0 !important;
+        }
+        .question-source-panel .source-card-line {
+            padding: 7px 8px;
+            font-size: 0.62rem;
+            line-height: 1.32;
         }
     }
 </style>
@@ -949,10 +1263,13 @@
         @endphp
 
         @if($sessionRecord && $questions->count() > 0)
+        @php
+            $showCameraPanel = (bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false);
+        @endphp
         <div id="workspaceWrapper" style="display:none;">
         <div class="row g-4" id="workspaceRow">
             <!-- Main Content Area -->
-            <div class="col-lg-8">
+            <div class="{{ $showCameraPanel ? 'col-lg-8' : 'col-lg-12' }}">
                 <!-- Progress Tracker Removed by User -->
 
                 <!-- Simulated AI Video Avatar Panel -->
@@ -1036,9 +1353,10 @@
                 </div>
 
                 <!-- Answer Response System -->
-                <div class="panel mb-4 animate-fade-up delay-200">
+                <div class="panel response-panel mb-4 animate-fade-up delay-200">
                     <div class="panel-title">
-                        <i class="fa-solid fa-pen-nib me-2"></i> Your Response
+                        <i class="fa-solid fa-pen-nib me-2"></i>
+                        <span class="panel-title-text">Your Response</span>
                         <div class="response-title-actions">
                             @if($sessionRecord->game_level_id)
                                 <span class="badge" style="background:#ef4444; color:white;"><i class="fa-solid fa-gamepad me-1"></i> GAME MODE</span>
@@ -1058,10 +1376,16 @@
                         <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
                         <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..."></textarea>
                         
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div style="font-size:.8rem;color:var(--tx3)">
+                        <div class="response-count-bar">
+                            <div>
                                 <span id="wordCount">0 words</span> - <span id="charCount">0 characters</span>
                                 <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
+                            </div>
+                        </div>
+
+                        <div class="question-source-panel response-source-panel" id="questionSourcePanel">
+                            <div id="aiQuestionSource" class="source-card-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}" data-default-type="{{ $primarySource->source_type ?? 'dataset' }}">
+                                <span style="color:var(--tx3);font-weight:600">Source will appear when the question starts.</span>
                             </div>
                         </div>
 
@@ -1071,10 +1395,10 @@
             </div>
 
             <!-- Side Panels -->
+            @if($showCameraPanel)
             <div class="col-lg-4">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
                 <!-- Optional descriptive body-language coach; never used in readiness scoring. -->
-                @if(data_get($sessionRecord->accommodation_profile, 'camera_coaching', false))
                 <div class="panel d-none d-lg-block animate-fade-up delay-100" id="cameraPanel">
                     <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Optional Body-Language Coach</div>
                     <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
@@ -1091,55 +1415,9 @@
                     <div class="stat-row mb-0"><span>Movement steadiness</span><span id="stMovement" class="text-secondary">Waiting</span></div>
                     <div class="small mt-2" style="color:var(--tx3)">This estimates visible framing, head alignment, hands, shoulders, posture pose, and movement steadiness only. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
                 </div>
-                @endif
 
-                <!-- Question Source -->
-                <div class="panel animate-fade-up delay-150" id="questionSourcePanel">
-                    <div class="panel-title"><i class="fa-solid fa-link me-2"></i> Question Source</div>
-                    <div id="aiQuestionSource" class="source-card-line" data-default-name="{{ $primarySource->source_name ?? '' }}" data-default-url="{{ $primarySource->source_url ?? '' }}" data-default-type="{{ $primarySource->source_type ?? 'dataset' }}">
-                        <span style="color:var(--tx3);font-weight:600">Source will appear when the question starts.</span>
-                    </div>
-                </div>
-
-                <!-- AI Visualizer Panel -->
-                <div class="panel animate-fade-up delay-200 coaching-only" id="liveFeedbackPanel">
-                    <div class="panel-title"><i class="fa-solid fa-chart-pie me-2"></i> Live Practice Signals</div>
-                    <div class="text-center mb-3">
-                        <div style="font-size:2rem;font-weight:700;color:#34d399" id="overallReadiness">--%</div>
-                        <div style="font-size:.75rem;color:var(--tx3)">Coaching estimate - not an assessment</div>
-                    </div>
-                    <div class="stat-row"><span>Clarity</span><span id="metClarity">--%</span></div>
-                    <div class="stat-row"><span>Relevance</span><span id="metRelevance">--%</span></div>
-                    <div class="stat-row"><span>Grammar</span><span id="metGrammar">--%</span></div>
-                    <div class="stat-row mb-0"><span>Professionalism</span><span id="metProf">--%</span></div>
-                </div>
-
-                <!-- STAR Framework Analyzer -->
-                <div class="panel animate-fade-up delay-300 coaching-only" id="starPanel">
-                    <div class="panel-title"><i class="fa-solid fa-star me-2" style="color:#fbbf24"></i> STAR Analyzer</div>
-                    <div class="star-item"><span>Situation</span><i class="fa-solid fa-circle-xmark text-danger" id="starS"></i></div>
-                    <div class="star-item"><span>Task</span><i class="fa-solid fa-circle-xmark text-danger" id="starT"></i></div>
-                    <div class="star-item"><span>Action</span><i class="fa-solid fa-circle-xmark text-danger" id="starA"></i></div>
-                    <div class="star-item"><span>Result</span><i class="fa-solid fa-circle-xmark text-danger" id="starR"></i></div>
-                    <div style="margin-top:10px;font-size:.8rem;color:#fbbf24;background:rgba(251,191,36,.1);padding:10px;border-radius:8px;border:1px solid rgba(251,191,36,.3)" id="coachingTip">
-                        <i class="fa-solid fa-lightbulb me-1"></i> <strong>Biggest Suggestion:</strong> Give one specific example, your role, the action you took, and the result.
-                    </div>
-                </div>
-
-                <!-- Voice Analytics Module -->
-                <div class="panel animate-fade-up delay-400 coaching-only" id="voiceAnalyticsPanel" style="display:none;">
-                    <div class="panel-title"><i class="fa-solid fa-wave-square me-2"></i> Voice Analytics</div>
-                    <div class="stat-row"><span>Speaking Duration</span><span id="vaDuration">0s</span></div>
-                    <div class="stat-row"><span>Speed (WPM)</span><span id="vaWpm">0</span></div>
-                    <div class="stat-row mb-0"><span>Possible transcript filler matches</span><span id="vaFillers" class="text-danger">0</span></div>
-                </div>
-
-                <!-- Interview Notes -->
-                <div class="panel animate-fade-up delay-400">
-                    <div class="panel-title"><i class="fa-solid fa-clipboard me-2"></i> Session Notes</div>
-                    <textarea id="sessionNotes" class="oinp" style="min-height:100px;font-size:.85rem;padding:10px" placeholder="Private notes, key reminders, etc...">{{ $sessionRecord->notes }}</textarea>
-                </div>
             </div>
+            @endif
         </div>
         </div>
 
@@ -1147,26 +1425,6 @@
             $savedStateForUi = json_decode($sessionRecord->session_state ?? '', true);
             $hasSavedInterviewState = is_array($savedStateForUi) && !empty($savedStateForUi['has_started']);
         @endphp
-        <div id="introContainer" class="text-center p-4 p-md-5 panel animate-fade-up" style="margin-top:40px;max-width:600px;margin-left:auto;margin-right:auto;border: 1px solid rgba(139,92,246,0.3);box-shadow: 0 20px 50px rgba(139,92,246,0.15);">
-            @if($hasSavedInterviewState)
-                <div class="recovery-pill"><i class="fa-solid fa-rotate-left"></i> Progress saved</div>
-            @endif
-            <div class="intro-ai-icon" aria-hidden="true">
-                <i class="fa-solid fa-robot"></i>
-            </div>
-            <h4 style="color:var(--tx);font-weight:700">{{ $hasSavedInterviewState ? 'Philippines Interview Saved' : 'Philippines Interview Ready' }}</h4>
-            <p style="color:var(--tx3);margin-bottom:30px">Your session is configured with {{ $num }} Philippines-focused questions. The AI greeting is not counted as a question.</p>
-            @if($sourceNames)
-                <div class="session-source-line"><i class="fa-solid fa-link me-1"></i> Scenario: {{ $scenarioLabel }}. Sources: {{ $sourceNames }}.</div>
-            @endif
-            <div class="intro-badge-grid" style="display:flex; justify-content:center; gap: 10px; flex-wrap: wrap; margin-bottom: 30px;">
-                <span class="db-badge" style="background:rgba(14,165,233,.13);color:#38bdf8"><i class="fa-solid fa-flag me-1"></i> {{ $scenarioLabel }}</span>
-                <span class="db-badge" style="background:rgba(59,130,246,.15);color:#60a5fa"><i class="fa-solid fa-microphone me-1"></i> {{ ucfirst($sessionRecord->response_mode) }} Mode</span>
-                <span class="db-badge" style="background:rgba(245,158,11,.12);color:#f59e0b"><i class="fa-solid fa-stopwatch me-1"></i> {{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
-                <span class="db-badge" style="background:rgba(52,211,153,.12);color:#34d399"><i class="fa-solid fa-list-check me-1"></i> {{ $num }} Questions</span>
-            </div>
-            <button class="btn px-4 py-3 w-100 btn-shine intro-start-btn" style="font-size:1.15rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'" onclick="startInterviewSession()">{{ $hasSavedInterviewState ? 'Resume PH Interview' : 'Begin PH Interview' }} <i class="fa-solid fa-play ms-2"></i></button>
-        </div>
 
         <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">
             @csrf
@@ -1183,6 +1441,30 @@
             <h4>Analyzing your response...</h4>
             <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
             <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
+        </div>
+
+        <div id="interviewStartModal" class="interview-start-modal" role="dialog" aria-modal="true" aria-labelledby="interviewStartTitle" aria-describedby="interviewStartDescription">
+            <div class="interview-start-dialog">
+                <div class="interview-start-icon" aria-hidden="true">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <h4 id="interviewStartTitle">Philippines Interview Ready</h4>
+                <p id="interviewStartDescription">{{ $hasSavedInterviewState ? 'Your saved interview is ready to resume.' : 'Your customized interview session is ready to begin.' }}</p>
+                <div class="interview-start-meta interview-meta-line">
+                    <span class="session-chip"><i class="fa-solid fa-flag"></i>{{ $scenarioLabel }}</span>
+                    <span class="session-chip"><i class="fa-solid fa-microphone"></i>{{ ucfirst($sessionRecord->response_mode) }} Mode</span>
+                    <span class="session-chip"><i class="fa-solid fa-list-check"></i>{{ $num }} Questions</span>
+                    <span class="session-chip"><i class="fa-regular fa-clock"></i>{{ $sessionRecord->time_limit ? $sessionRecord->time_limit . 'm / Q' : 'Self-paced' }}</span>
+                </div>
+                <div class="interview-start-actions">
+                    <button type="button" class="interview-start-button cancel" onclick="cancelInterviewStart()">
+                        <i class="fa-solid fa-xmark"></i> Cancel
+                    </button>
+                    <button type="button" id="confirmInterviewStartButton" class="interview-start-button begin" onclick="confirmInterviewStart()">
+                        {{ $hasSavedInterviewState ? 'Resume Interview' : 'Begin Interview' }} <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <script>
@@ -2967,7 +3249,6 @@
                 if (interviewStarted || interviewTerminated) return;
                 
                 interviewStarted = true;
-                document.getElementById('introContainer').style.display = 'none';
                 document.getElementById('workspaceWrapper').style.display = 'block';
                 document.getElementById('workspaceWrapper').classList.toggle('real-interview-mode', liveFeedbackMode === 'real_interview');
                 document.getElementById('interviewControls').style.opacity = '1';
@@ -2982,9 +3263,6 @@
                         setTranscriptionStatus(transcriptionUnavailableMessage(), '#f87171');
                     } else if (transcriptionEngine === 'server') {
                         setTranscriptionStatus('Server transcription ready');
-                    }
-                    if (liveFeedbackMode !== 'real_interview') {
-                        document.getElementById('voiceAnalyticsPanel').style.display = 'block';
                     }
                 }
 
@@ -3027,7 +3305,6 @@
                     const answerTextarea = document.getElementById('answerTextarea');
                     answerTextarea.addEventListener('input', triggerAnalysis);
                     answerTextarea.addEventListener('paste', handleAnswerPaste);
-                    document.getElementById('sessionNotes').addEventListener('input', scheduleStateSave);
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'hidden') autoSaveState();
                     });
@@ -3106,6 +3383,7 @@
                 const icon = document.createElement('i');
                 icon.className = 'fa-solid fa-link';
                 const label = document.createElement('span');
+                label.className = 'source-label';
                 label.textContent = isAiAdapted ? 'AI-adapted from:' : 'Source:';
                 const value = url ? document.createElement('a') : document.createElement('span');
                 value.textContent = name;
@@ -3382,13 +3660,22 @@
                 const scores = calculateLiveScores(text, currentQuestion, wordCount, fillers, starSignals);
                 const tip = biggestSuggestion(text, currentQuestion, wordCount, fillers, scores, starSignals);
 
-                document.getElementById('coachingTip').innerHTML = `<i class="fa-solid fa-lightbulb me-1"></i> <strong>Biggest Suggestion:</strong> ${escapeHtml(tip)}`;
-                document.getElementById('overallReadiness').innerText = scores.readiness + '%';
-                document.getElementById('metClarity').innerText = scores.clarity + '%';
-                document.getElementById('metRelevance').innerText = scores.relevance + '%';
-                document.getElementById('metGrammar').innerText = scores.grammar + '%';
-                document.getElementById('metProf').innerText = scores.professionalism + '%';
-                document.getElementById('vaFillers').innerText = fillers;
+                const coachingTip = document.getElementById('coachingTip');
+                if (coachingTip) {
+                    coachingTip.innerHTML = `<i class="fa-solid fa-lightbulb me-1"></i> <strong>Biggest Suggestion:</strong> ${escapeHtml(tip)}`;
+                }
+                const metricTargets = {
+                    overallReadiness: scores.readiness + '%',
+                    metClarity: scores.clarity + '%',
+                    metRelevance: scores.relevance + '%',
+                    metGrammar: scores.grammar + '%',
+                    metProf: scores.professionalism + '%',
+                    vaFillers: fillers,
+                };
+                Object.entries(metricTargets).forEach(([id, value]) => {
+                    const target = document.getElementById(id);
+                    if (target) target.innerText = value;
+                });
                 answersData[currentQIdx].text = text;
                 answersData[currentQIdx].filler_words = fillers;
                 answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
@@ -3400,6 +3687,7 @@
 
             function updateStarIcon(id, status) {
                 const el = document.getElementById(id);
+                if (!el) return;
                 if(status) {
                     el.className = 'fa-solid fa-circle-check text-success';
                 } else {
@@ -3481,7 +3769,8 @@
                     const m = Math.floor(recTimerSeconds / 60).toString().padStart(2, '0');
                     const s = (recTimerSeconds % 60).toString().padStart(2, '0');
                     document.getElementById('recordingTimer').innerText = m + ':' + s;
-                    document.getElementById('vaDuration').innerText = recTimerSeconds + 's';
+                    const durationTarget = document.getElementById('vaDuration');
+                    if (durationTarget) durationTarget.innerText = recTimerSeconds + 's';
                     answersData[currentQIdx].voice_duration = recTimerSeconds;
                     
                     const wordCount = String(answersData[currentQIdx]?.speech_transcript || '').trim().split(/\s+/).filter(w=>w.length>0).length;
@@ -3491,7 +3780,8 @@
                     const timedSeconds = Math.max(1, recTimerSeconds);
                     const wpm = Math.round((wordCount / timedSeconds) * 60);
                     
-                    document.getElementById('vaWpm').innerText = wpm;
+                    const wpmTarget = document.getElementById('vaWpm');
+                    if (wpmTarget) wpmTarget.innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
 
                     // Optional body-language guidance is descriptive and never affects readiness scoring.
@@ -3584,7 +3874,7 @@
                 formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
-                formData.append('notes', document.getElementById('sessionNotes').value);
+                formData.append('notes', '');
 
                 return managedFetch('{{ route("interview.answer") }}', {
                     method: 'POST',
@@ -3608,7 +3898,7 @@
 
                 const formData = new FormData();
                 formData.append('_token', '{{ csrf_token() }}');
-                formData.append('notes', document.getElementById('sessionNotes').value);
+                formData.append('notes', '');
                 formData.append('duration_seconds', timerSeconds);
                 formData.append('current_question_index', currentQIdx);
                 const answersForAutosave = answersData.map((answer, index) => {
@@ -3946,7 +4236,7 @@
                 cleanupInterviewProcesses();
                 stopQuestionTimer();
                 document.getElementById('formDuration').value = timerSeconds;
-                document.getElementById('formNotes').value = document.getElementById('sessionNotes').value;
+                document.getElementById('formNotes').value = '';
                 const transitionMessage = document.getElementById('finishTransitionMessage');
                 const retryButton = document.getElementById('finishRetryButton');
                 if (transitionMessage) transitionMessage.textContent = 'Please wait while we finalize your interview report.';
@@ -3996,6 +4286,32 @@
                 if (!feedbackSubmissionInFlight) finishInterview();
             }
 
+            function setInterviewStartModalVisible(visible) {
+                const modal = document.getElementById('interviewStartModal');
+                if (!modal) return;
+                if (visible && modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                modal.classList.toggle('active', visible);
+                document.body.classList.toggle('interview-start-modal-active', visible);
+
+                if (visible) {
+                    setTimeout(() => {
+                        const beginButton = document.getElementById('confirmInterviewStartButton');
+                        if (beginButton) beginButton.focus();
+                    }, 50);
+                }
+            }
+
+            function confirmInterviewStart() {
+                setInterviewStartModalVisible(false);
+                startInterviewSession();
+            }
+
+            function cancelInterviewStart() {
+                window.location.href = '{{ route("interview.setup") }}';
+            }
+
             function ucfirst(str) {
                 if(!str) return '';
                 return str.charAt(0).toUpperCase() + str.slice(1);
@@ -4004,12 +4320,7 @@
             document.addEventListener('DOMContentLoaded', () => {
                 updateMobileFullscreenToggle();
                 document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);
-
-                setTimeout(() => {
-                    if (!interviewStarted && !interviewTerminated) {
-                        startInterviewSession();
-                    }
-                }, 350);
+                setInterviewStartModalVisible(!interviewStarted && !interviewTerminated);
             });
         </script>
         @else
@@ -4111,19 +4422,13 @@
         const stepsMobile = [
             { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'bottom', align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Use private framing, hand, posture, and movement prompts if helpful. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'Practice Signals', description: 'Use these live prompts for practice; the final evidence-linked assessment is produced after the session.', side: 'top', align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
+            { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Use private framing, hand, posture, and movement prompts if helpful. Camera observations never affect readiness scoring.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
             { element: '.ai-avatar-panel', popover: { title: 'AI Interviewer', description: 'The interviewer presents each question and guides the session flow.', side: 'right', align: 'start' }},
             { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
-            { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Use private framing, hand, posture, and movement prompts if helpful. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }},
-            { element: '#overallReadiness', popover: { title: 'Practice Signals', description: 'Use these live prompts for practice; the final evidence-linked assessment is produced after the session.', side: 'left', align: 'start' }},
-            { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
-            { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
+            { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Use private framing, hand, posture, and movement prompts if helpful. Camera observations never affect readiness scoring.', side: 'left', align: 'start' }}
         ];
 
         const onboardingTour = window.createSpeakReadyTour({
