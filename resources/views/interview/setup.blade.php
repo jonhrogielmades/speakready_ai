@@ -74,18 +74,20 @@
     }
     .setup-hero {
         min-height: 98px;
-        margin-bottom: 20px;
-        border: 1px solid var(--bd);
+        margin-bottom: 14px;
+        border: 1px solid rgba(96, 165, 250, 0.26);
         border-radius: 16px;
         background:
             radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.2), transparent 25%),
             linear-gradient(110deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.045)),
             var(--sf);
-        border-color: rgba(96, 165, 250, 0.26);
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
         overflow: hidden;
         position: relative;
         isolation: isolate;
+    }
+    .setup-hero::before {
+        content: none;
     }
     .setup-hero::after {
         content: "";
@@ -234,10 +236,112 @@
     .custom-cbx:has(input[type="checkbox"]:checked) { border-color: #60a5fa; background: rgba(96, 165, 250, 0.05); }
     .custom-cbx input[type="checkbox"] { margin-right:10px;accent-color:#60a5fa; }
 
-    .summary-row { display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bd);font-size:.85rem; }
+    #panel-summary {
+        max-width: 360px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 18px !important;
+        border-radius: 26px !important;
+        background:
+            radial-gradient(circle at 12% 8%, rgba(219, 234, 254, 0.78), transparent 28%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.92)) !important;
+        border: 1px solid rgba(226, 232, 240, 0.96) !important;
+        box-shadow: 0 20px 46px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+    }
+    #panel-summary h5 {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: #0f172a !important;
+        text-align: left !important;
+        font-size: 1.3rem !important;
+        line-height: 1.15;
+        margin-bottom: 18px !important;
+        letter-spacing: 0 !important;
+    }
+    #panel-summary h5 i {
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #123a7a;
+        background: #e8f1ff;
+        font-size: 1rem;
+        flex: 0 0 auto;
+    }
+    .summary-row {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: 10px;
+        align-items: center;
+        min-height: 54px;
+        padding: 9px 0;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: .85rem;
+    }
     .summary-row:last-child { border-bottom:none; }
-    .summary-label { color:var(--tx3);font-weight:600; }
-    .summary-val { color:var(--tx);font-weight:700;text-align:right; }
+    .summary-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: #eaf3ff;
+        font-size: 0.82rem;
+    }
+    .summary-label {
+        color:#334155;
+        font-weight:500;
+        line-height: 1.2;
+    }
+    .summary-val {
+        color:#0f172a;
+        font-weight:800;
+        text-align:right;
+        line-height: 1.24;
+        overflow-wrap: anywhere;
+    }
+    .summary-val.text-success {
+        color: #16a34a !important;
+    }
+    #panel-summary .setup-start-action {
+        margin-top: 16px !important;
+    }
+    #panel-summary #btn-start-interview {
+        min-height: 50px;
+        border-radius: 14px !important;
+        background: linear-gradient(135deg, #1687ff, #0757ff) !important;
+        box-shadow: 0 12px 22px rgba(37, 99, 235, 0.26) !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        font-size: 0.98rem !important;
+        line-height: 1.15;
+        padding: 12px 14px !important;
+        white-space: normal;
+    }
+    #panel-summary #btn-start-interview i {
+        margin-left: 0 !important;
+    }
+    :root:not(.lm) #panel-summary {
+        background:
+            radial-gradient(circle at 12% 8%, rgba(37, 99, 235, 0.2), transparent 28%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.93)) !important;
+        border-color: rgba(96, 165, 250, 0.25) !important;
+    }
+    :root:not(.lm) #panel-summary h5,
+    :root:not(.lm) .summary-val { color: #f8fafc !important; }
+    :root:not(.lm) .summary-label { color: #cbd5e1; }
+    :root:not(.lm) .summary-row { border-bottom-color: rgba(148, 163, 184, 0.22); }
+    :root:not(.lm) .summary-icon {
+        color: #60a5fa;
+        background: rgba(96, 165, 250, 0.13);
+    }
 
     .setup-chip-panel {
         border: 1px solid var(--bd);
@@ -245,15 +349,947 @@
         padding: 14px;
         background: var(--bg3);
     }
+    #panel-content.setup-assistance-card {
+        max-width: 680px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: clamp(18px, 2.5vw, 28px);
+        border-radius: 24px;
+        border-color: rgba(203, 213, 225, 0.72);
+        background:
+            radial-gradient(circle at 10% 5%, rgba(254, 226, 226, 0.7), transparent 16%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.09);
+    }
+    :root:not(.lm) #panel-content.setup-assistance-card {
+        background:
+            radial-gradient(circle at 10% 5%, rgba(248, 113, 113, 0.14), transparent 16%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+        border-color: rgba(96, 165, 250, 0.24);
+    }
+    .assistance-head {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 26px;
+    }
+    .assistance-head-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        background: #fee2e2;
+        font-size: 1.6rem;
+        flex: 0 0 auto;
+    }
+    .assistance-title {
+        color: #0f172a;
+        font-size: clamp(1.45rem, 2.5vw, 2rem) !important;
+        font-weight: 900;
+        line-height: 1.12;
+        margin: 0 !important;
+    }
+    :root:not(.lm) .assistance-title { color: #f8fafc; }
+    .assistance-stack {
+        display: grid;
+        gap: 22px;
+    }
+    .assistance-field {
+        min-width: 0;
+    }
+    .assistance-field .olbl {
+        color: #26334f;
+        font-size: 1rem;
+        font-weight: 900;
+        margin-bottom: 10px;
+        letter-spacing: 0;
+    }
+    :root:not(.lm) .assistance-field .olbl { color: #e2e8f0; }
+    .assistance-select-wrap {
+        position: relative;
+    }
+    .assistance-select-wrap::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        width: 10px;
+        height: 10px;
+        border-right: 3px solid #111827;
+        border-bottom: 3px solid #111827;
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+    }
+    .assistance-select-wrap select.oinp {
+        appearance: none;
+        -webkit-appearance: none;
+        min-height: 58px;
+        border-radius: 15px;
+        border-color: rgba(148, 163, 184, 0.42);
+        background: rgba(255, 255, 255, 0.88);
+        background-image: none;
+        color: #0f172a;
+        font-size: 1rem;
+        padding: 13px 48px 13px 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    :root:not(.lm) .assistance-select-wrap select.oinp {
+        background: rgba(15, 23, 42, 0.74);
+        border-color: rgba(148, 163, 184, 0.28);
+        color: #f8fafc;
+    }
+    :root:not(.lm) .assistance-select-wrap::after {
+        border-color: #e2e8f0;
+    }
+    .assistance-question-list {
+        display: grid;
+        gap: 12px;
+    }
+    .assistance-question-card {
+        display: grid;
+        grid-template-columns: 24px 46px minmax(0, 1fr);
+        align-items: center;
+        gap: 16px;
+        min-height: 72px;
+        padding: 14px 18px;
+        border: 1px solid rgba(203, 213, 225, 0.76);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.78);
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.25;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+    .assistance-question-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(59, 130, 246, 0.64);
+    }
+    .assistance-question-card:has(input[type="checkbox"]:checked) {
+        border-color: rgba(37, 99, 235, 0.85);
+        background: linear-gradient(145deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.9));
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.09);
+    }
+    .assistance-question-card input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        margin: 0;
+        accent-color: #2563eb;
+    }
+    .assistance-question-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: linear-gradient(145deg, #e0edff, #f4f8ff);
+        font-size: 1.1rem;
+    }
+    .assistance-question-text {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+    :root:not(.lm) .assistance-question-card {
+        background: rgba(15, 23, 42, 0.74);
+        border-color: rgba(148, 163, 184, 0.28);
+        color: #f8fafc;
+    }
+    :root:not(.lm) .assistance-question-card:has(input[type="checkbox"]:checked) {
+        background: rgba(37, 99, 235, 0.12);
+    }
+    .assistance-context-panel {
+        display: grid;
+        grid-template-columns: 62px minmax(0, 1fr);
+        align-items: center;
+        gap: 16px;
+        padding: 18px;
+        border: 1px solid rgba(147, 197, 253, 0.78);
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 7% 18%, rgba(219, 234, 254, 0.88), transparent 24%),
+            linear-gradient(145deg, rgba(239, 246, 255, 0.94), rgba(255, 255, 255, 0.88));
+    }
+    .assistance-context-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: #dbeafe;
+        font-size: 1.45rem;
+    }
+    .assistance-context-title {
+        display: block;
+        color: #0f172a;
+        font-size: 1.08rem;
+        font-weight: 900;
+        line-height: 1.2;
+        margin-bottom: 5px;
+    }
+    .assistance-context-panel .desc-text {
+        color: #475569;
+        font-size: 0.86rem;
+        line-height: 1.45;
+        margin: 0;
+    }
+    :root:not(.lm) .assistance-context-panel {
+        background: rgba(37, 99, 235, 0.1);
+        border-color: rgba(96, 165, 250, 0.36);
+    }
+    :root:not(.lm) .assistance-context-title { color: #f8fafc; }
+    :root:not(.lm) .assistance-context-panel .desc-text { color: #cbd5e1; }
+    #panel-response.setup-response-card {
+        max-width: 680px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: clamp(18px, 2.5vw, 28px);
+        border-radius: 24px;
+        border-color: rgba(203, 213, 225, 0.72);
+        background:
+            radial-gradient(circle at 10% 8%, rgba(219, 234, 254, 0.7), transparent 16%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.09);
+    }
+    :root:not(.lm) #panel-response.setup-response-card {
+        background:
+            radial-gradient(circle at 10% 8%, rgba(59, 130, 246, 0.16), transparent 16%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+        border-color: rgba(96, 165, 250, 0.24);
+    }
+    .response-head {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+    .response-head-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: linear-gradient(145deg, #eff6ff, #dbeafe);
+        font-size: 1.7rem;
+        flex: 0 0 auto;
+    }
+    .response-title {
+        color: #0f172a;
+        font-size: clamp(1.45rem, 2.5vw, 2rem) !important;
+        font-weight: 900;
+        line-height: 1.12;
+        margin: 0 !important;
+    }
+    :root:not(.lm) .response-title { color: #f8fafc; }
+    .response-mode-list {
+        display: grid;
+        gap: 14px;
+    }
+    .response-mode-card {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        align-items: center;
+        gap: 26px;
+        min-height: 104px;
+        padding: 20px 26px;
+        border: 1px solid rgba(203, 213, 225, 0.76);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.78);
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+    .response-mode-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(59, 130, 246, 0.64);
+    }
+    .response-mode-card:has(input[type="radio"]:checked) {
+        border-color: rgba(37, 99, 235, 0.86);
+        background: linear-gradient(145deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.9));
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.09);
+    }
+    .response-mode-card input[type="radio"] {
+        width: 26px;
+        height: 26px;
+        margin: 0;
+        accent-color: #2563eb;
+    }
+    .response-mode-title {
+        display: block;
+        color: #0f172a;
+        font-size: 1.22rem;
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 7px;
+    }
+    .response-mode-desc {
+        display: block;
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1.35;
+    }
+    :root:not(.lm) .response-mode-card {
+        background: rgba(15, 23, 42, 0.74);
+        border-color: rgba(148, 163, 184, 0.28);
+    }
+    :root:not(.lm) .response-mode-card:has(input[type="radio"]:checked) {
+        background: rgba(37, 99, 235, 0.12);
+    }
+    :root:not(.lm) .response-mode-title { color: #f8fafc; }
+    :root:not(.lm) .response-mode-desc { color: #cbd5e1; }
+    #panel-basic.setup-details-card {
+        padding: clamp(24px, 3.2vw, 42px);
+        border-radius: 24px;
+        border-color: rgba(203, 213, 225, 0.7);
+        background:
+            radial-gradient(circle at 90% 8%, rgba(219, 234, 254, 0.42), transparent 18%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    }
+    :root:not(.lm) #panel-basic.setup-details-card {
+        background:
+            radial-gradient(circle at 90% 8%, rgba(59, 130, 246, 0.16), transparent 18%),
+            linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+        border-color: rgba(96, 165, 250, 0.24);
+    }
+    .setup-details-card-head {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+        padding-bottom: 30px;
+        margin-bottom: 32px;
+        border-bottom: 1px solid rgba(191, 219, 254, 0.86);
+    }
+    .setup-details-icon,
+    .setup-card-label-icon,
+    .setup-calibrated-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: linear-gradient(145deg, #eff6ff, #dbeafe);
+        flex: 0 0 auto;
+    }
+    .setup-details-icon {
+        width: 88px;
+        height: 88px;
+        border-radius: 24px;
+        font-size: 2.45rem;
+    }
+    .setup-details-card-title {
+        color: #0f172a;
+        font-size: clamp(1.8rem, 3vw, 2.7rem) !important;
+        font-weight: 900;
+        line-height: 1.12;
+        margin: 0 0 16px !important;
+    }
+    .setup-details-card-subtitle {
+        max-width: 740px;
+        color: #64748b;
+        font-size: clamp(1.08rem, 1.65vw, 1.55rem);
+        line-height: 1.52;
+        margin: 0;
+    }
+    :root:not(.lm) .setup-details-card-title { color: #f8fafc; }
+    :root:not(.lm) .setup-details-card-subtitle { color: #cbd5e1; }
+    .setup-card-fields {
+        display: grid;
+        gap: 34px;
+    }
+    .setup-card-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 18px;
+        color: #0f172a;
+        font-size: clamp(1.2rem, 1.9vw, 1.8rem);
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 18px;
+    }
+    :root:not(.lm) .setup-card-label { color: #f8fafc; }
+    .setup-card-label-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 1.22rem;
+    }
+    .setup-select-wrap,
+    .setup-search-wrap {
+        position: relative;
+    }
+    .setup-select-wrap::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 26px;
+        width: 12px;
+        height: 12px;
+        border-right: 3px solid #0f172a;
+        border-bottom: 3px solid #0f172a;
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+        z-index: 2;
+    }
+    #panel-basic.setup-details-card .oinp {
+        min-height: 76px;
+        border-radius: 18px;
+        border-color: rgba(148, 163, 184, 0.44);
+        background: rgba(255, 255, 255, 0.92);
+        color: #0f172a;
+        font-size: clamp(1rem, 1.55vw, 1.45rem);
+        padding: 16px 24px;
+    }
+    #panel-basic.setup-details-card select.oinp {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-left: 24px;
+        padding-right: 62px;
+        background-image: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #panel-basic.setup-details-card input.oinp {
+        padding-left: 24px;
+    }
+    #panel-basic.setup-details-card .oinp::placeholder {
+        color: #64748b;
+    }
+    #panel-basic.setup-details-card .desc-text {
+        color: #64748b;
+        font-size: clamp(0.96rem, 1.25vw, 1.28rem);
+        line-height: 1.55;
+        margin-top: 22px;
+    }
+    .setup-calibrated-simple {
+        display: grid;
+        grid-template-columns: 86px minmax(0, 1fr);
+        gap: 28px;
+        align-items: start;
+        padding: clamp(24px, 3vw, 34px);
+        border: 1px solid rgba(191, 219, 254, 0.86);
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 8% 15%, rgba(219, 234, 254, 0.72), transparent 25%),
+            linear-gradient(145deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.86));
+    }
+    .setup-calibrated-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 22px;
+        font-size: 2rem;
+    }
+    .setup-calibrated-simple h6 {
+        color: #0f172a;
+        font-size: clamp(1.28rem, 2vw, 2rem) !important;
+        font-weight: 900;
+        line-height: 1.2;
+        margin: 0 0 16px !important;
+    }
+    .setup-calibrated-simple p {
+        color: #64748b;
+        font-size: clamp(1rem, 1.35vw, 1.36rem);
+        line-height: 1.55;
+        margin: 0;
+    }
+    .setup-calibrated-simple strong {
+        color: #475569;
+        font-weight: 900;
+    }
+    :root:not(.lm) #panel-basic.setup-details-card .oinp {
+        background: rgba(15, 23, 42, 0.74);
+        border-color: rgba(148, 163, 184, 0.28);
+        color: #f8fafc;
+    }
+    :root:not(.lm) #panel-basic.setup-details-card select.oinp {
+        background-image: none;
+    }
+    :root:not(.lm) .setup-select-wrap::after {
+        border-color: #e2e8f0;
+    }
+    :root:not(.lm) .setup-calibrated-simple {
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.86), rgba(15, 23, 42, 0.72));
+        border-color: rgba(96, 165, 250, 0.3);
+    }
+    :root:not(.lm) .setup-calibrated-simple h6 { color: #f8fafc; }
+    :root:not(.lm) .setup-calibrated-simple p,
+    :root:not(.lm) .setup-calibrated-simple strong,
+    :root:not(.lm) #panel-basic.setup-details-card .desc-text { color: #cbd5e1; }
+
+    #panel-structure.setup-structure-card {
+        padding: clamp(22px, 3vw, 36px);
+        border-radius: 24px;
+        border-color: rgba(203, 213, 225, 0.7);
+        background:
+            radial-gradient(circle at 90% 8%, rgba(219, 234, 254, 0.38), transparent 18%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    }
+    :root:not(.lm) #panel-structure.setup-structure-card {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+        border-color: rgba(96, 165, 250, 0.24);
+    }
+    .setup-structure-head {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 28px;
+    }
+    .setup-structure-head-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: linear-gradient(145deg, #eff6ff, #dbeafe);
+        font-size: 1.65rem;
+        flex: 0 0 auto;
+    }
+    .setup-structure-title {
+        color: #0f172a;
+        font-size: clamp(1.55rem, 2.6vw, 2.3rem) !important;
+        font-weight: 900;
+        line-height: 1.1;
+        margin: 0 !important;
+    }
+    :root:not(.lm) .setup-structure-title { color: #f8fafc; }
+    .setup-structure-section-title {
+        color: #0f172a;
+        font-size: clamp(1.02rem, 1.45vw, 1.32rem);
+        font-weight: 900;
+        line-height: 1.2;
+        margin: 0 0 14px;
+    }
+    :root:not(.lm) .setup-structure-section-title { color: #f8fafc; }
+    .structure-difficulty-list {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 26px;
+    }
+    .structure-difficulty-card {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 52px;
+        align-items: center;
+        gap: 16px;
+        min-height: 86px;
+        padding: 16px 20px;
+        border: 1px solid rgba(203, 213, 225, 0.72);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.78);
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .structure-difficulty-card:hover {
+        transform: translateY(-1px);
+        border-color: rgba(96, 165, 250, 0.55);
+    }
+    .structure-difficulty-card:has(input[type="radio"]:checked) {
+        border-color: rgba(59, 130, 246, 0.78);
+        box-shadow: 0 10px 26px rgba(37, 99, 235, 0.1);
+        background: linear-gradient(145deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.86));
+    }
+    .structure-difficulty-card input[type="radio"] {
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        accent-color: #3b82f6;
+    }
+    .structure-difficulty-title {
+        display: block;
+        color: #0f172a;
+        font-size: 1.15rem;
+        font-weight: 900;
+        line-height: 1.15;
+        margin-bottom: 5px;
+    }
+    .structure-difficulty-desc {
+        display: block;
+        color: #64748b;
+        font-size: 0.92rem;
+        line-height: 1.3;
+    }
+    .structure-difficulty-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: linear-gradient(145deg, #e0edff, #f4f8ff);
+        border: 1px solid rgba(147, 197, 253, 0.45);
+        font-size: 1.18rem;
+    }
+    .structure-difficulty-icon i {
+        color: currentColor;
+        line-height: 1;
+    }
+    :root:not(.lm) .structure-difficulty-card {
+        background: rgba(15, 23, 42, 0.74);
+        border-color: rgba(148, 163, 184, 0.28);
+    }
+    :root:not(.lm) .structure-difficulty-title { color: #f8fafc; }
+    :root:not(.lm) .structure-difficulty-desc { color: #cbd5e1; }
+    .structure-select-grid {
+        display: grid;
+        gap: 18px;
+    }
+    .structure-select-wrap {
+        position: relative;
+    }
+    .structure-select-wrap::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 22px;
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid #475569;
+        border-bottom: 2px solid #475569;
+        transform: translateY(-65%) rotate(45deg);
+        pointer-events: none;
+    }
+    .structure-select-wrap select.oinp {
+        appearance: none;
+        -webkit-appearance: none;
+        min-height: 58px;
+        border-radius: 16px;
+        background-image: none;
+        background-color: rgba(255, 255, 255, 0.88);
+        border-color: rgba(148, 163, 184, 0.42);
+        color: #0f172a;
+        font-size: 1rem;
+        padding: 13px 48px 13px 18px;
+    }
+    .structure-info-note {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        margin-top: 22px;
+        padding: 16px 18px;
+        border: 1px solid rgba(191, 219, 254, 0.8);
+        border-radius: 16px;
+        background: linear-gradient(145deg, rgba(239, 246, 255, 0.9), rgba(255, 255, 255, 0.84));
+        color: #475569;
+        font-size: 0.94rem;
+        line-height: 1.45;
+    }
+    .structure-info-note i {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: #dbeafe;
+    }
+
+    #panel-inclusive.setup-inclusive-card {
+        padding: clamp(22px, 3vw, 36px);
+        border-radius: 24px;
+        border-color: rgba(203, 213, 225, 0.7);
+        background:
+            radial-gradient(circle at 88% 10%, rgba(219, 234, 254, 0.34), transparent 18%),
+            linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.96));
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+    }
+    :root:not(.lm) #panel-inclusive.setup-inclusive-card {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.94));
+        border-color: rgba(96, 165, 250, 0.24);
+    }
+    .setup-inclusive-head {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 22px;
+    }
+    .setup-inclusive-head-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 999px;
+        border: 1px solid rgba(147, 197, 253, 0.72);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        background: linear-gradient(145deg, #eff6ff, #f8fbff);
+        font-size: 1.65rem;
+        flex: 0 0 auto;
+    }
+    .setup-inclusive-title {
+        color: #0f172a;
+        font-size: clamp(1.42rem, 2.4vw, 2.1rem) !important;
+        font-weight: 900;
+        line-height: 1.12;
+        margin: 0 !important;
+    }
+    .setup-inclusive-copy {
+        color: #475569;
+        font-size: clamp(0.98rem, 1.45vw, 1.28rem);
+        line-height: 1.58;
+        margin: 0 0 26px;
+    }
+    :root:not(.lm) .setup-inclusive-title { color: #f8fafc; }
+    :root:not(.lm) .setup-inclusive-copy { color: #cbd5e1; }
+    .inclusive-option-list {
+        display: grid;
+        gap: 12px;
+    }
+    .inclusive-option {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        align-items: center;
+        gap: 18px;
+        min-height: 64px;
+        padding: 14px 18px;
+        border: 1px solid rgba(203, 213, 225, 0.72);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.78);
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.25;
+        cursor: pointer;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .inclusive-option input[type="checkbox"] {
+        width: 24px;
+        height: 24px;
+        margin: 0;
+        accent-color: #2563eb;
+    }
+    .inclusive-option:has(input[type="checkbox"]:checked) {
+        border-color: rgba(37, 99, 235, 0.7);
+        background: linear-gradient(145deg, rgba(239, 246, 255, 0.96), rgba(255, 255, 255, 0.9));
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+    }
+    :root:not(.lm) .inclusive-option {
+        background: rgba(15, 23, 42, 0.74);
+        border-color: rgba(148, 163, 184, 0.28);
+        color: #f8fafc;
+    }
+    .inclusive-note {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        margin-top: 18px;
+        padding: 16px 18px;
+        border: 1px solid rgba(191, 219, 254, 0.82);
+        border-radius: 16px;
+        background: linear-gradient(145deg, rgba(239, 246, 255, 0.92), rgba(255, 255, 255, 0.86));
+        color: #1e3a8a;
+        font-size: 0.92rem;
+        line-height: 1.48;
+    }
+    .inclusive-note i {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        background: #3b82f6;
+    }
+    .inclusive-note strong {
+        color: #1d4ed8;
+        font-weight: 900;
+    }
+
+    /* Interview setup contrast guard for both day and night themes. */
+    #sec-interview-setup {
+        --setup-card-bg: rgba(255, 255, 255, 0.94);
+        --setup-card-bg-soft: rgba(248, 250, 252, 0.96);
+        --setup-card-bg-selected: rgba(239, 246, 255, 0.98);
+        --setup-input-bg: rgba(255, 255, 255, 0.96);
+        --setup-text: #0f172a;
+        --setup-text-muted: #475569;
+        --setup-text-soft: #64748b;
+        --setup-icon-fg: #1d4ed8;
+        --setup-icon-bg: #dbeafe;
+        --setup-border: rgba(148, 163, 184, 0.46);
+        --setup-border-strong: rgba(37, 99, 235, 0.72);
+        color: var(--setup-text);
+    }
+    :root:not(.lm) #sec-interview-setup {
+        --setup-card-bg: rgba(15, 23, 42, 0.86);
+        --setup-card-bg-soft: rgba(30, 41, 59, 0.78);
+        --setup-card-bg-selected: rgba(37, 99, 235, 0.2);
+        --setup-input-bg: rgba(15, 23, 42, 0.9);
+        --setup-text: #f8fafc;
+        --setup-text-muted: #dbeafe;
+        --setup-text-soft: #cbd5e1;
+        --setup-icon-fg: #0f172a;
+        --setup-icon-bg: #dbeafe;
+        --setup-border: rgba(148, 163, 184, 0.34);
+        --setup-border-strong: rgba(96, 165, 250, 0.68);
+        color: var(--setup-text);
+    }
+    #sec-interview-setup :where(
+        .setup-details-card-title,
+        .setup-structure-title,
+        .setup-structure-section-title,
+        .setup-inclusive-title,
+        .assistance-title,
+        .response-title,
+        .setup-card-label,
+        .structure-difficulty-title,
+        .assistance-question-text,
+        .response-mode-title,
+        .assistance-context-title,
+        .setup-calibrated-simple h6,
+        .inclusive-option,
+        .summary-val
+    ) {
+        color: var(--setup-text) !important;
+        -webkit-text-fill-color: currentColor;
+    }
+    #sec-interview-setup :where(
+        .setup-hero-subtitle,
+        .setup-details-card-subtitle,
+        .desc-text,
+        .structure-difficulty-desc,
+        .setup-inclusive-copy,
+        .response-mode-desc,
+        .assistance-context-panel .desc-text,
+        .setup-calibrated-simple p,
+        .setup-calibrated-simple strong,
+        .summary-label
+    ) {
+        color: var(--setup-text-soft) !important;
+        -webkit-text-fill-color: currentColor;
+    }
+    #sec-interview-setup :where(
+        .oinp,
+        .structure-select-wrap select.oinp,
+        .assistance-select-wrap select.oinp,
+        #panel-basic.setup-details-card .oinp
+    ) {
+        background-color: var(--setup-input-bg) !important;
+        border-color: var(--setup-border) !important;
+        color: var(--setup-text) !important;
+        -webkit-text-fill-color: currentColor;
+        caret-color: var(--setup-text);
+    }
+    #sec-interview-setup :where(.oinp, select.oinp) option {
+        background: var(--setup-card-bg) !important;
+        color: var(--setup-text) !important;
+    }
+    #sec-interview-setup .oinp::placeholder {
+        color: var(--setup-text-soft) !important;
+        opacity: 1;
+        -webkit-text-fill-color: var(--setup-text-soft);
+    }
+    #sec-interview-setup :where(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon
+    ) {
+        background: var(--setup-icon-bg) !important;
+        border-color: var(--setup-border) !important;
+        color: var(--setup-icon-fg) !important;
+    }
+    #sec-interview-setup :where(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon
+    ) i,
+    #sec-interview-setup :where(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon
+    ) svg {
+        color: var(--setup-icon-fg) !important;
+        fill: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+    #sec-interview-setup :where(
+        .structure-difficulty-card,
+        .inclusive-option,
+        .assistance-question-card,
+        .response-mode-card,
+        .setup-calibrated-simple,
+        .structure-info-note,
+        .inclusive-note,
+        .assistance-context-panel
+    ) {
+        background: var(--setup-card-bg) !important;
+        border-color: var(--setup-border) !important;
+        color: var(--setup-text) !important;
+    }
+    #sec-interview-setup :where(
+        .structure-difficulty-card,
+        .inclusive-option,
+        .assistance-question-card,
+        .response-mode-card
+    ):has(input:checked) {
+        background: var(--setup-card-bg-selected) !important;
+        border-color: var(--setup-border-strong) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14) !important;
+    }
+    #sec-interview-setup :where(.structure-info-note, .inclusive-note) {
+        color: var(--setup-text-muted) !important;
+    }
+    #sec-interview-setup :where(.structure-info-note, .inclusive-note) strong {
+        color: var(--setup-text) !important;
+    }
+    #sec-interview-setup .setup-select-wrap::after,
+    #sec-interview-setup .structure-select-wrap::after,
+    #sec-interview-setup .assistance-select-wrap::after {
+        border-color: var(--setup-text-muted) !important;
+    }
+    :root:not(.lm) #sec-interview-setup .text-gradient-primary {
+        background: none !important;
+        -webkit-background-clip: initial;
+        background-clip: initial;
+        -webkit-text-fill-color: #dbeafe !important;
+        color: #dbeafe !important;
+    }
 
     #sec-interview-setup .custom-radio,
     #sec-interview-setup .custom-cbx {
         margin-bottom: 0;
         min-height: 100%;
-    }
-    #sec-interview-setup .summary-row {
-        gap: 14px;
-        align-items: flex-start;
     }
     #sec-interview-setup .summary-label,
     #sec-interview-setup .summary-val {
@@ -316,36 +1352,44 @@
             --bs-gutter-y: 14px;
         }
         #sec-interview-setup .setup-hero {
-            margin-bottom: 12px;
-            border-radius: 14px;
-            min-height: 104px;
-            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+            margin-bottom: 12px !important;
+            border-radius: 14px !important;
+            min-height: 104px !important;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08) !important;
+        }
+        #sec-interview-setup .setup-hero::after {
+            border-radius: 0;
         }
         #sec-interview-setup .setup-hero-inner {
-            justify-content: flex-start;
-            min-height: 104px;
-            padding: 14px 96px 14px 14px;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            min-height: 104px !important;
+            padding: 14px 96px 14px 14px !important;
         }
         #sec-interview-setup .setup-hero-title {
-            justify-content: flex-start;
-            gap: 7px;
-            font-size: 1.1rem !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            gap: 7px !important;
+            font-size: 0.92rem !important;
             margin-bottom: 4px;
             letter-spacing: 0;
+            white-space: nowrap;
         }
         #sec-interview-setup .setup-hero-title svg {
-            width: 20px;
-            height: 20px;
+            width: 20px !important;
+            height: 20px !important;
+            padding: 0;
+            border-radius: 0;
         }
         #sec-interview-setup .setup-hero-subtitle {
-            max-width: 100%;
-            font-size: 0.74rem;
-            line-height: 1.4;
+            max-width: 100% !important;
+            font-size: 0.74rem !important;
+            line-height: 1.4 !important;
         }
         #sec-interview-setup .setup-hero-art {
-            right: -10px;
-            bottom: -1px;
-            width: 112px;
+            right: -10px !important;
+            bottom: -1px !important;
+            width: 112px !important;
         }
         #sec-interview-setup .setup-panel {
             border-radius: 14px !important;
@@ -375,6 +1419,349 @@
             background: rgba(96, 165, 250, 0.12);
             margin-right: 0 !important;
             flex: 0 0 auto;
+        }
+        #panel-basic.setup-details-card {
+            padding: 12px !important;
+            border-radius: 13px !important;
+        }
+        #panel-basic .setup-details-card-head {
+            grid-template-columns: 28px minmax(0, 1fr);
+            gap: 8px;
+            padding-bottom: 13px;
+            margin-bottom: 15px;
+        }
+        #panel-basic .setup-details-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+        }
+        #panel-basic .setup-details-card-title {
+            font-size: clamp(0.98rem, 4.7vw, 1.18rem) !important;
+            line-height: 1.16;
+            margin-bottom: 5px !important;
+            white-space: nowrap;
+        }
+        #panel-basic .setup-details-card-subtitle {
+            font-size: 0.66rem;
+            line-height: 1.3;
+        }
+        #panel-basic .setup-card-fields {
+            gap: 14px;
+        }
+        #panel-basic .setup-card-label {
+            gap: 8px;
+            font-size: 0.82rem;
+            margin-bottom: 8px;
+        }
+        #panel-basic .setup-card-label-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+        }
+        #panel-basic.setup-details-card .oinp {
+            min-height: 34px;
+            border-radius: 9px;
+            font-size: 0.68rem;
+            padding-top: 7px;
+            padding-bottom: 7px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #panel-basic.setup-details-card select.oinp {
+            padding-left: 14px;
+            padding-right: 42px;
+            background-image: none;
+        }
+        #panel-basic .setup-select-wrap::after {
+            right: 17px;
+            width: 8px;
+            height: 8px;
+            border-width: 2px;
+        }
+        #panel-basic.setup-details-card input.oinp {
+            padding-left: 14px;
+        }
+        #panel-basic.setup-details-card .desc-text {
+            font-size: 0.63rem;
+            line-height: 1.32;
+            margin-top: 8px;
+        }
+        #panel-basic .setup-calibrated-simple {
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 8px;
+            align-items: flex-start;
+            padding: 11px;
+            border-radius: 12px;
+        }
+        #panel-basic .setup-calibrated-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 7px;
+            font-size: 0.66rem;
+        }
+        #panel-basic .setup-calibrated-simple h6 {
+            font-size: 0.82rem !important;
+            margin-bottom: 4px !important;
+        }
+        #panel-basic .setup-calibrated-simple p {
+            font-size: 0.64rem;
+            line-height: 1.36;
+            overflow-wrap: anywhere;
+        }
+        #panel-structure.setup-structure-card {
+            padding: 12px !important;
+            border-radius: 13px !important;
+        }
+        #panel-structure .setup-structure-head {
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        #panel-structure .setup-structure-head-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+        }
+        #panel-structure .setup-structure-title {
+            font-size: 1rem !important;
+            white-space: nowrap;
+        }
+        #panel-structure .setup-structure-section-title {
+            font-size: 0.78rem;
+            margin-bottom: 8px;
+        }
+        #panel-structure .structure-difficulty-list {
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        #panel-structure .structure-difficulty-card {
+            grid-template-columns: 22px minmax(0, 1fr) 30px;
+            gap: 8px;
+            min-height: 50px;
+            padding: 8px 10px;
+            border-radius: 11px;
+        }
+        #panel-structure .structure-difficulty-card input[type="radio"] {
+            width: 16px;
+            height: 16px;
+        }
+        #panel-structure .structure-difficulty-title {
+            font-size: 0.78rem;
+            margin-bottom: 2px;
+        }
+        #panel-structure .structure-difficulty-desc {
+            font-size: 0.6rem;
+            line-height: 1.22;
+        }
+        #panel-structure .structure-difficulty-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            font-size: 0.64rem;
+        }
+        #panel-structure .structure-select-grid {
+            gap: 12px;
+        }
+        #panel-structure .olbl {
+            font-size: 0.68rem;
+            margin-bottom: 6px;
+        }
+        #panel-structure .structure-select-wrap select.oinp {
+            min-height: 36px;
+            border-radius: 9px;
+            font-size: 0.68rem;
+            padding: 7px 34px 7px 10px;
+        }
+        #panel-structure .structure-select-wrap::after {
+            right: 15px;
+            width: 7px;
+            height: 7px;
+        }
+        #panel-structure .structure-info-note {
+            grid-template-columns: 26px minmax(0, 1fr);
+            gap: 8px;
+            margin-top: 14px;
+            padding: 10px;
+            border-radius: 11px;
+            font-size: 0.62rem;
+            line-height: 1.32;
+        }
+        #panel-structure .structure-info-note i {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+        }
+        #panel-inclusive.setup-inclusive-card {
+            padding: 12px !important;
+            border-radius: 13px !important;
+        }
+        #panel-inclusive .setup-inclusive-head {
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        #panel-inclusive .setup-inclusive-head-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 0.88rem;
+        }
+        #panel-inclusive .setup-inclusive-title {
+            font-size: 1rem !important;
+            white-space: nowrap;
+        }
+        #panel-inclusive .setup-inclusive-copy {
+            font-size: 0.68rem;
+            line-height: 1.42;
+            margin-bottom: 14px;
+        }
+        #panel-inclusive .inclusive-option-list {
+            gap: 8px;
+        }
+        #panel-inclusive .inclusive-option {
+            grid-template-columns: 20px minmax(0, 1fr);
+            gap: 10px;
+            min-height: 40px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+        }
+        #panel-inclusive .inclusive-option input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        #panel-inclusive .inclusive-note {
+            grid-template-columns: 26px minmax(0, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 11px;
+            font-size: 0.62rem;
+            line-height: 1.35;
+        }
+        #panel-inclusive .inclusive-note i {
+            width: 24px;
+            height: 24px;
+            font-size: 0.72rem;
+        }
+        #panel-content.setup-assistance-card {
+            max-width: 100%;
+            padding: 12px !important;
+            border-radius: 13px !important;
+        }
+        #panel-content .assistance-head {
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        #panel-content .assistance-head-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 0.88rem;
+        }
+        #panel-content .assistance-title {
+            font-size: 1rem !important;
+            white-space: nowrap;
+        }
+        #panel-content .assistance-stack {
+            gap: 14px;
+        }
+        #panel-content .assistance-field .olbl {
+            font-size: 0.72rem;
+            margin-bottom: 7px;
+        }
+        #panel-content .assistance-select-wrap select.oinp {
+            min-height: 38px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            padding: 8px 34px 8px 12px;
+        }
+        #panel-content .assistance-select-wrap::after {
+            right: 15px;
+            width: 7px;
+            height: 7px;
+            border-width: 2px;
+        }
+        #panel-content .assistance-question-list {
+            gap: 8px;
+        }
+        #panel-content .assistance-question-card {
+            grid-template-columns: 18px 34px minmax(0, 1fr);
+            gap: 10px;
+            min-height: 48px;
+            padding: 8px 10px;
+            border-radius: 11px;
+            font-size: 0.76rem;
+        }
+        #panel-content .assistance-question-card input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        #panel-content .assistance-question-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+        }
+        #panel-content .assistance-context-panel {
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 10px;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        #panel-content .assistance-context-icon {
+            width: 34px;
+            height: 34px;
+            font-size: 0.95rem;
+        }
+        #panel-content .assistance-context-title {
+            font-size: 0.82rem;
+            margin-bottom: 3px;
+        }
+        #panel-content .assistance-context-panel .desc-text {
+            font-size: 0.64rem;
+            line-height: 1.35;
+        }
+        #panel-response.setup-response-card {
+            max-width: 100%;
+            padding: 12px !important;
+            border-radius: 13px !important;
+        }
+        #panel-response .response-head {
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        #panel-response .response-head-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            font-size: 0.88rem;
+        }
+        #panel-response .response-title {
+            font-size: 1rem !important;
+            white-space: nowrap;
+        }
+        #panel-response .response-mode-list {
+            gap: 9px;
+        }
+        #panel-response .response-mode-card {
+            grid-template-columns: 18px minmax(0, 1fr);
+            gap: 14px;
+            min-height: 58px;
+            padding: 10px 12px;
+            border-radius: 12px;
+        }
+        #panel-response .response-mode-card input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+        #panel-response .response-mode-title {
+            font-size: 0.86rem;
+            margin-bottom: 3px;
+        }
+        #panel-response .response-mode-desc {
+            font-size: 0.7rem;
+            line-height: 1.28;
         }
         #sec-interview-setup .row.g-3,
         #sec-interview-setup .row.g-4 {
@@ -432,54 +1819,305 @@
             padding: 12px;
             border-radius: 12px;
         }
+        #panel-summary {
+            position: static !important;
+            top: auto !important;
+            max-width: min(360px, 100%);
+            padding: 16px !important;
+        }
+        #panel-summary h5 {
+            font-size: 1.14rem !important;
+            margin-bottom: 12px !important;
+        }
+        #panel-summary h5 i {
+            width: 38px;
+            height: 38px;
+            font-size: 0.9rem;
+        }
         #sec-interview-setup .summary-row {
-            display: grid;
-            grid-template-columns: minmax(92px, 0.8fr) minmax(0, 1.2fr);
-            padding: 8px 0;
-            gap: 10px;
-            font-size: 0.78rem;
-            align-items: start;
+            grid-template-columns: 30px minmax(72px, 0.78fr) minmax(0, 1.22fr);
+            min-height: 48px;
+            padding: 7px 0;
+            gap: 8px;
+            font-size: 0.74rem;
+            align-items: center;
+        }
+        #sec-interview-setup .summary-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            font-size: 0.72rem;
         }
         #sec-interview-setup .summary-val {
             overflow-wrap: anywhere;
         }
-        #sec-interview-setup .setup-start-action {
-            margin-top: 18px !important;
+        #panel-summary .setup-start-action {
+            margin-top: 14px !important;
         }
-        #sec-interview-setup #btn-start-interview {
-            min-height: 54px;
-            border-radius: 13px !important;
-            font-size: 0.98rem !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 10px 22px rgba(96, 165, 250, 0.32) !important;
+        #panel-summary #btn-start-interview {
+            min-height: 48px;
+            border-radius: 12px !important;
+            font-size: 0.88rem !important;
+            padding: 10px 12px !important;
             touch-action: manipulation;
-        }
-        #sec-interview-setup #btn-start-interview i {
-            margin-left: 0 !important;
-        }
-        #panel-summary {
-            position: static !important;
-            top: auto !important;
-            background: linear-gradient(145deg, rgba(59, 130, 246, 0.11), rgba(6, 182, 212, 0.04)) !important;
-            border-color: rgba(96, 165, 250, 0.28) !important;
-        }
-        #panel-summary h5 {
-            margin-bottom: 10px !important;
         }
     }
 
     @media (max-width: 390px) {
         #sec-interview-setup .setup-hero-inner {
-            padding-right: 82px;
+            padding-right: 82px !important;
         }
         #sec-interview-setup .setup-hero-title {
-            font-size: 1rem !important;
+            font-size: 0.78rem !important;
+            white-space: nowrap;
+        }
+        #sec-interview-setup .setup-hero-title svg {
+            width: 20px !important;
+            height: 20px !important;
+            padding: 0;
+            border-radius: 0;
         }
         #sec-interview-setup .setup-hero-art {
-            width: 98px;
+            width: 98px !important;
+        }
+        #panel-basic .setup-details-card-head {
+            grid-template-columns: 26px minmax(0, 1fr);
+            gap: 7px;
+        }
+        #panel-basic .setup-details-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+        }
+        #panel-basic .setup-details-card-title {
+            font-size: 0.96rem !important;
+        }
+        #panel-basic.setup-details-card select.oinp {
+            padding-left: 12px;
+            padding-right: 42px;
+            background-image: none;
+        }
+        #panel-basic.setup-details-card {
+            padding: 10px !important;
+        }
+        #panel-basic .setup-details-card-subtitle,
+        #panel-basic.setup-details-card .desc-text,
+        #panel-basic .setup-calibrated-simple p {
+            font-size: 0.6rem;
+        }
+        #panel-basic .setup-calibrated-simple {
+            grid-template-columns: 28px minmax(0, 1fr);
+            gap: 9px;
+        }
+        #panel-basic .setup-calibrated-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+        }
+        #panel-structure .setup-structure-title {
+            font-size: 0.92rem !important;
+        }
+        #panel-structure .structure-difficulty-card {
+            grid-template-columns: 20px minmax(0, 1fr) 26px;
+            gap: 7px;
+            padding: 7px 9px;
+        }
+        #panel-structure .structure-difficulty-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 0.58rem;
+        }
+        #panel-inclusive .setup-inclusive-title {
+            font-size: 0.92rem !important;
+        }
+        #panel-inclusive .setup-inclusive-head-icon {
+            width: 26px;
+            height: 26px;
+            font-size: 0.78rem;
+        }
+        #panel-inclusive .inclusive-option {
+            font-size: 0.66rem;
+            min-height: 36px;
+            padding: 7px 9px;
+        }
+        #panel-inclusive .inclusive-note {
+            font-size: 0.58rem;
+        }
+        #panel-content.setup-assistance-card {
+            padding: 10px !important;
+        }
+        #panel-content .assistance-head-icon {
+            width: 26px;
+            height: 26px;
+            font-size: 0.78rem;
+        }
+        #panel-content .assistance-title {
+            font-size: 0.92rem !important;
+        }
+        #panel-content .assistance-field .olbl {
+            font-size: 0.68rem;
+        }
+        #panel-content .assistance-select-wrap select.oinp {
+            min-height: 36px;
+            font-size: 0.66rem;
+            padding-left: 10px;
+            padding-right: 32px;
+        }
+        #panel-content .assistance-question-card {
+            grid-template-columns: 17px 30px minmax(0, 1fr);
+            gap: 8px;
+            min-height: 44px;
+            padding: 7px 9px;
+            font-size: 0.68rem;
+        }
+        #panel-content .assistance-question-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+        }
+        #panel-content .assistance-context-panel {
+            grid-template-columns: 32px minmax(0, 1fr);
+            gap: 8px;
+            padding: 9px;
+        }
+        #panel-content .assistance-context-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 0.82rem;
+        }
+        #panel-content .assistance-context-title {
+            font-size: 0.76rem;
+        }
+        #panel-content .assistance-context-panel .desc-text {
+            font-size: 0.58rem;
+        }
+        #panel-response.setup-response-card {
+            padding: 10px !important;
+        }
+        #panel-response .response-head-icon {
+            width: 26px;
+            height: 26px;
+            font-size: 0.78rem;
+        }
+        #panel-response .response-title {
+            font-size: 0.92rem !important;
+        }
+        #panel-response .response-mode-card {
+            grid-template-columns: 17px minmax(0, 1fr);
+            gap: 11px;
+            min-height: 52px;
+            padding: 9px 10px;
+            border-radius: 11px;
+        }
+        #panel-response .response-mode-card input[type="radio"] {
+            width: 17px;
+            height: 17px;
+        }
+        #panel-response .response-mode-title {
+            font-size: 0.78rem;
+        }
+        #panel-response .response-mode-desc {
+            font-size: 0.62rem;
+        }
+    }
+
+    /* Match the responsive banner sizing used by the Progress page. */
+    #sec-interview-setup .setup-hero {
+        --setup-hero-title-color: #1d4ed8;
+        --setup-hero-text-color: #334155;
+        --setup-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --setup-hero-icon-border: rgba(147, 197, 253, 0.42);
+        min-height: 104px;
+        margin-bottom: 12px;
+        border-radius: 14px;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(219, 234, 254, 0.78), transparent 35%),
+            linear-gradient(142deg, #ffffff 0%, #f8fbff 52%, #dbeafe 100%) !important;
+        border-color: rgba(147, 197, 253, 0.52) !important;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
+    }
+    html[data-theme="dark"] #sec-interview-setup .setup-hero,
+    :root:not(.lm) #sec-interview-setup .setup-hero {
+        --setup-hero-title-color: #93c5fd;
+        --setup-hero-text-color: #e2e8f0;
+        --setup-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --setup-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28) !important;
+    }
+    #sec-interview-setup .setup-hero-inner {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        justify-content: flex-start;
+        min-height: 104px;
+        padding: 14px 116px 14px 14px;
+    }
+    #sec-interview-setup .setup-hero-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--setup-hero-icon-border);
+        border-radius: 10px;
+        background: var(--setup-hero-icon-bg);
+        color: var(--setup-hero-title-color);
+    }
+    #sec-interview-setup .setup-hero-icon svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+    }
+    #sec-interview-setup .setup-hero-title {
+        display: block;
+        font-size: 1.1rem !important;
+        line-height: 1.15;
+        margin: 0 0 4px;
+        letter-spacing: 0;
+        white-space: nowrap;
+        -webkit-text-fill-color: var(--setup-hero-title-color) !important;
+        color: var(--setup-hero-title-color) !important;
+    }
+    #sec-interview-setup .setup-hero-subtitle {
+        max-width: 100%;
+        font-size: 0.74rem !important;
+        line-height: 1.4;
+        margin: 0;
+        color: var(--setup-hero-text-color) !important;
+    }
+    #sec-interview-setup .setup-hero-art {
+        right: -10px;
+        bottom: -1px;
+        width: 112px !important;
+    }
+
+    @media (max-width: 390px) {
+        #sec-interview-setup .setup-hero-inner {
+            grid-template-columns: 32px minmax(0, 1fr);
+            padding-right: 86px;
+        }
+        #sec-interview-setup .setup-hero-icon {
+            width: 32px;
+            height: 32px;
+        }
+        #sec-interview-setup .setup-hero-icon svg {
+            width: 16px;
+            height: 16px;
+        }
+        #sec-interview-setup .setup-hero-title {
+            font-size: 0.86rem !important;
+        }
+        #sec-interview-setup .setup-hero-subtitle {
+            font-size: 0.66rem !important;
+        }
+        #sec-interview-setup .setup-hero-art {
+            width: 78px !important;
         }
     }
 </style>
@@ -487,19 +2125,21 @@
 <div class="db-section active" id="sec-interview-setup">
     <div class="setup-hero">
         <div class="setup-hero-inner">
+            <span class="setup-hero-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" role="img">
+                    <path d="M4 7h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M17 7h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="15" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M4 12h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M11 12h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="9" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M4 17h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M15 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="13" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </span>
             <div class="setup-hero-copy">
                 <h4 class="setup-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" role="img">
-                        <path d="M4 7h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M17 7h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="15" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <path d="M4 12h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M11 12h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="9" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                        <path d="M4 17h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M15 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <circle cx="13" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                    </svg>
                     Philippines Interview Setup
                 </h4>
                 <p class="setup-hero-subtitle">Practice a Philippines-focused mock interview with local HR screening, role-fit, and communication expectations.</p>
@@ -545,12 +2185,25 @@
             <div class="col-lg-8" id="setup-left-col">
                 
                 <!-- Basic Info -->
-                <div class="setup-panel animate-fade-up delay-100" id="panel-basic">
-                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-briefcase me-2" style="color:#60a5fa"></i> Philippines Interview Details</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="olbl">Practice Scenario</label>
-                            <select class="oinp setup-input" name="source_pack_key" id="valScenario">
+                <div class="setup-panel setup-details-card animate-fade-up delay-100" id="panel-basic">
+                    <div class="setup-details-card-head">
+                        <div class="setup-details-icon" aria-hidden="true">
+                            <i class="fa-solid fa-briefcase"></i>
+                        </div>
+                        <div>
+                            <h5 class="setup-details-card-title">Philippines Interview Details</h5>
+                            <p class="setup-details-card-subtitle">Configure your practice scenario to get tailored questions and feedback.</p>
+                        </div>
+                    </div>
+
+                    <div class="setup-card-fields">
+                        <div class="setup-card-field">
+                            <label class="setup-card-label" for="valScenario">
+                                <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-clipboard-list"></i></span>
+                                Practice Scenario
+                            </label>
+                            <div class="setup-select-wrap">
+                                <select class="oinp setup-input" name="source_pack_key" id="valScenario">
                                 @foreach($scenarioOptions as $scenario)
                                     <option value="{{ $scenario['key'] }}"
                                         data-category-id="{{ $scenario['category_id'] }}"
@@ -561,83 +2214,99 @@
                                         {{ $scenario['label'] }}
                                     </option>
                                 @endforeach
-                            </select>
+                                </select>
+                            </div>
                             <input type="hidden" name="category_id" id="valCategory" value="{{ $selectedScenario['category_id'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
                             <div class="desc-text">One scenario sets the source pack, interview focus, and scoring context.</div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="olbl">Target Position</label>
-                            <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer..." value="{{ old('target_position') }}" required>
+
+                        <div class="setup-card-field">
+                            <label class="setup-card-label" for="valPosition">
+                                <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-bullseye-arrow"></i></span>
+                                Target Position
+                            </label>
+                            <div class="setup-search-wrap">
+                                <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ old('target_position') }}" required>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row g-3 mt-1">
-                        <div class="col-md-12">
-                            <div class="setup-chip-panel">
-                                <strong style="color:var(--tx)"><i class="fa-solid fa-shield-halved me-2 text-primary"></i>Philippines-calibrated practice</strong>
-                                <div class="desc-text" id="sourceSummary">Sources: {{ $selectedScenario['source_summary'] ?? 'Philippines career and education sources' }}</div>
+
+                        <div class="setup-calibrated-simple">
+                            <div class="setup-calibrated-icon" aria-hidden="true">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <div>
+                                <h6>Philippines-calibrated practice</h6>
+                                <p><strong>Sources:</strong> <span id="sourceSummary">{{ $selectedScenario['source_summary'] ?? 'Philippines career and education sources' }}</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Interview Structure -->
-                <div class="setup-panel animate-fade-up delay-300" id="panel-structure">
-                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-layer-group me-2" style="color:#60a5fa"></i> Interview Structure</h5>
-                    
-                    <label class="olbl mb-3">Difficulty Level</label>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="custom-radio">
-                                <input type="radio" name="difficulty" value="easy" class="setup-input" {{ $setupDefaults['difficulty'] === 'easy' ? 'checked' : '' }}>
-                                <div>
-                                    <span class="r-title">Easy</span>
-                                    <span class="r-desc">Basic and introductory questions</span>
-                                </div>
-                            </label>
+                <div class="setup-panel setup-structure-card animate-fade-up delay-300" id="panel-structure">
+                    <div class="setup-structure-head">
+                        <div class="setup-structure-head-icon" aria-hidden="true">
+                            <i class="fa-solid fa-layer-group"></i>
                         </div>
-                        <div class="col-md-4">
-                            <label class="custom-radio">
-                                <input type="radio" name="difficulty" value="medium" class="setup-input" {{ $setupDefaults['difficulty'] === 'medium' ? 'checked' : '' }}>
-                                <div>
-                                    <span class="r-title">Medium</span>
-                                    <span class="r-desc">Common interview questions</span>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="custom-radio">
-                                <input type="radio" name="difficulty" value="hard" class="setup-input" {{ $setupDefaults['difficulty'] === 'hard' ? 'checked' : '' }}>
-                                <div>
-                                    <span class="r-title">Hard</span>
-                                    <span class="r-desc">Advanced and situational questions</span>
-                                </div>
-                            </label>
-                        </div>
+                        <h5 class="setup-structure-title">Interview Structure</h5>
                     </div>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
+                    <div class="setup-structure-section-title">Difficulty Level</div>
+                    <div class="structure-difficulty-list">
+                        <label class="structure-difficulty-card">
+                            <input type="radio" name="difficulty" value="easy" class="setup-input" {{ $setupDefaults['difficulty'] === 'easy' ? 'checked' : '' }}>
+                            <span>
+                                <span class="structure-difficulty-title">Easy</span>
+                                <span class="structure-difficulty-desc">Basic and introductory questions</span>
+                            </span>
+                            <span class="structure-difficulty-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
+                        </label>
+                        <label class="structure-difficulty-card">
+                            <input type="radio" name="difficulty" value="medium" class="setup-input" {{ $setupDefaults['difficulty'] === 'medium' ? 'checked' : '' }}>
+                            <span>
+                                <span class="structure-difficulty-title">Medium</span>
+                                <span class="structure-difficulty-desc">Common interview questions</span>
+                            </span>
+                            <span class="structure-difficulty-icon" aria-hidden="true"><i class="fa-solid fa-star"></i></span>
+                        </label>
+                        <label class="structure-difficulty-card">
+                            <input type="radio" name="difficulty" value="hard" class="setup-input" {{ $setupDefaults['difficulty'] === 'hard' ? 'checked' : '' }}>
+                            <span>
+                                <span class="structure-difficulty-title">Hard</span>
+                                <span class="structure-difficulty-desc">Advanced and situational questions</span>
+                            </span>
+                            <span class="structure-difficulty-icon" aria-hidden="true"><i class="fa-solid fa-shield-alt"></i></span>
+                        </label>
+                    </div>
+
+                    <div class="structure-select-grid">
+                        <div>
                             <label class="olbl">Number of Questions</label>
-                            <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
+                            <div class="structure-select-wrap">
+                                <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
                                 <option value="5" {{ $setupDefaults['num_questions'] === '5' ? 'selected' : '' }}>5 Questions</option>
                                 <option value="10" {{ $setupDefaults['num_questions'] === '10' ? 'selected' : '' }}>10 Questions</option>
                                 <option value="15" {{ $setupDefaults['num_questions'] === '15' ? 'selected' : '' }}>15 Questions</option>
                                 <option value="20" {{ $setupDefaults['num_questions'] === '20' ? 'selected' : '' }}>20 Questions</option>
-                            </select>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-6">
+                        <div>
                             <label class="olbl">Time Limit</label>
-                            <select class="oinp setup-input" name="time_limit" id="valTimeLimit">
+                            <div class="structure-select-wrap">
+                                <select class="oinp setup-input" name="time_limit" id="valTimeLimit">
                                 <option value="0" {{ $setupDefaults['time_limit'] === '0' ? 'selected' : '' }}>No Limit</option>
                                 <option value="1" {{ $setupDefaults['time_limit'] === '1' ? 'selected' : '' }}>1 Minute per Question</option>
                                 <option value="2" {{ $setupDefaults['time_limit'] === '2' ? 'selected' : '' }}>2 Minutes per Question</option>
                                 <option value="3" {{ $setupDefaults['time_limit'] === '3' ? 'selected' : '' }}>3 Minutes per Question</option>
-                            </select>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-12">
+                        <div>
                             <label class="olbl">Interview Format Laboratory</label>
-                            <select class="oinp setup-input" name="interview_format" id="valInterviewFormat">
+                            <div class="structure-select-wrap">
+                                <select class="oinp setup-input" name="interview_format" id="valInterviewFormat">
                                 @foreach([
                                     'standard' => 'Standard live interview',
                                     'hr_screen' => 'HR screening',
@@ -651,17 +2320,26 @@
                                 ] as $formatValue => $formatLabel)
                                     <option value="{{ $formatValue }}" {{ $setupDefaults['interview_format'] === $formatValue ? 'selected' : '' }}>{{ $formatLabel }}</option>
                                 @endforeach
-                            </select>
-                            <div class="desc-text">Feedback is adjusted to the selected format; camera behavior remains optional.</div>
+                                </select>
+                            </div>
                         </div>
+                    </div>
+                    <div class="structure-info-note">
+                        <i class="fa-solid fa-info" aria-hidden="true"></i>
+                        <span>Feedback is adjusted to the selected format; camera behavior remains optional.</span>
                     </div>
                 </div>
 
-                <div class="setup-panel animate-fade-up delay-300" id="panel-inclusive">
-                    <h5 style="font-weight:700;margin-bottom:10px;color:var(--tx)"><i class="fa-solid fa-universal-access me-2 text-info"></i> Inclusive Practice Conditions</h5>
-                    <p class="desc-text mb-3">Choose conditions that give you an accurate opportunity to demonstrate job-related ability. These settings are recorded with the assessment.</p>
+                <div class="setup-panel setup-inclusive-card animate-fade-up delay-300" id="panel-inclusive">
+                    <div class="setup-inclusive-head">
+                        <div class="setup-inclusive-head-icon" aria-hidden="true">
+                            <i class="fa-solid fa-universal-access"></i>
+                        </div>
+                        <h5 class="setup-inclusive-title">Inclusive Practice Conditions</h5>
+                    </div>
+                    <p class="setup-inclusive-copy">Choose conditions that give you an accurate opportunity to demonstrate job-related ability. These settings are recorded with the assessment.</p>
                     @php $inclusive = Auth::user()->profile?->inclusive_preferences ?? []; @endphp
-                    <div class="cbx-grid">
+                    <div class="inclusive-option-list">
                         @foreach([
                             'camera_coaching' => 'Optional body-language coach',
                             'separate_language_scoring' => 'Separate language mechanics',
@@ -670,93 +2348,117 @@
                             'reduced_distraction' => 'Reduced-distraction workspace',
                             'simplified_questions' => 'Clearer question wording',
                         ] as $preferenceKey => $preferenceLabel)
-                            <label class="custom-cbx"><input type="checkbox" name="{{ $preferenceKey }}" value="1" {{ old($preferenceKey, data_get($inclusive, $preferenceKey, false)) ? 'checked' : '' }}> {{ $preferenceLabel }}</label>
+                            <label class="inclusive-option"><input type="checkbox" name="{{ $preferenceKey }}" value="1" {{ old($preferenceKey, data_get($inclusive, $preferenceKey, false)) ? 'checked' : '' }}> <span>{{ $preferenceLabel }}</span></label>
                         @endforeach
                     </div>
-                    <div class="desc-text mt-3"><strong>Important:</strong> body-language signals are never included in the readiness score. Camera coaching only reports visible framing, head alignment, hand/shoulder/posture cues, and movement steadiness. It does not infer confidence, honesty, personality, or employability.</div>
+                    <div class="inclusive-note">
+                        <i class="fa-solid fa-info" aria-hidden="true"></i>
+                        <span><strong>Important:</strong> body-language signals are never included in the readiness score. Camera coaching only reports visible framing, head alignment, hand/shoulder/posture cues, and movement steadiness. It does not infer confidence, honesty, personality, or employability.</span>
+                    </div>
                 </div>
 
                 <!-- Content & Assistance -->
-                <div class="setup-panel animate-fade-up delay-400" id="panel-content">
-                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-brain me-2" style="color:#f87171"></i> Content & Assistance</h5>
-                    
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
-                            <label class="olbl">AI Assistance Level</label>
-                            <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance">
-                                <option value="beginner" {{ $setupDefaults['ai_assistance_level'] === 'beginner' ? 'selected' : '' }}>Beginner Mode (More hints & feedback)</option>
-                                <option value="standard" {{ $setupDefaults['ai_assistance_level'] === 'standard' ? 'selected' : '' }}>Standard Mode (Balanced experience)</option>
-                                <option value="challenge" {{ $setupDefaults['ai_assistance_level'] === 'challenge' ? 'selected' : '' }}>Challenge Mode (No hints, harder follow-ups)</option>
-                            </select>
+                <div class="setup-panel setup-assistance-card animate-fade-up delay-400" id="panel-content">
+                    <div class="assistance-head">
+                        <div class="assistance-head-icon" aria-hidden="true">
+                            <i class="fa-solid fa-brain"></i>
                         </div>
-                        <div class="col-md-6">
+                        <h5 class="assistance-title">Content & Assistance</h5>
+                    </div>
+
+                    <div class="assistance-stack">
+                        <div class="assistance-field">
+                            <label class="olbl">AI Assistance Level</label>
+                            <div class="assistance-select-wrap">
+                                <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance">
+                                    <option value="beginner" {{ $setupDefaults['ai_assistance_level'] === 'beginner' ? 'selected' : '' }}>Beginner Mode (More hints & feedback)</option>
+                                    <option value="standard" {{ $setupDefaults['ai_assistance_level'] === 'standard' ? 'selected' : '' }}>Standard Mode (Balanced experience)</option>
+                                    <option value="challenge" {{ $setupDefaults['ai_assistance_level'] === 'challenge' ? 'selected' : '' }}>Challenge Mode (No hints, harder follow-ups)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="assistance-field">
                             <label class="olbl">Question Types</label>
-                            <div class="cbx-grid" style="grid-template-columns:1fr;">
-                                @foreach(['Behavioral', 'Situational', 'Technical', 'Personal'] as $questionType)
-                                    <label class="custom-cbx"><input type="checkbox" name="question_types[]" value="{{ $questionType }}" {{ in_array($questionType, $selectedQuestionTypes, true) ? 'checked' : '' }}> {{ $questionType }} Questions</label>
+                            <div class="assistance-question-list">
+                                @foreach([
+                                    'Behavioral' => 'fa-regular fa-message',
+                                    'Situational' => 'fa-regular fa-user',
+                                    'Technical' => 'fa-solid fa-code',
+                                    'Personal' => 'fa-regular fa-user-circle',
+                                ] as $questionType => $questionIcon)
+                                    <label class="assistance-question-card">
+                                        <input type="checkbox" name="question_types[]" value="{{ $questionType }}" {{ in_array($questionType, $selectedQuestionTypes, true) ? 'checked' : '' }}>
+                                        <span class="assistance-question-icon" aria-hidden="true"><i class="{{ $questionIcon }}"></i></span>
+                                        <span class="assistance-question-text">{{ $questionType }} Questions</span>
+                                    </label>
                                 @endforeach
                             </div>
                         </div>
-                    </div>
 
-                    <div class="row g-4 mb-4">
-                        <div class="col-md-6">
+                        <div class="assistance-field">
                             <label class="olbl">Interviewer Strictness</label>
-                            <select class="oinp setup-input" name="interviewer_strictness" id="valStrictness">
-                                <option value="friendly" {{ $setupDefaults['interviewer_strictness'] === 'friendly' ? 'selected' : '' }}>Friendly Interviewer</option>
-                                <option value="neutral" {{ $setupDefaults['interviewer_strictness'] === 'neutral' ? 'selected' : '' }}>Neutral HR Interviewer</option>
-                                <option value="strict" {{ $setupDefaults['interviewer_strictness'] === 'strict' ? 'selected' : '' }}>Strict Technical Lead</option>
-                                <option value="executive" {{ $setupDefaults['interviewer_strictness'] === 'executive' ? 'selected' : '' }}>Executive Panel</option>
-                            </select>
+                            <div class="assistance-select-wrap">
+                                <select class="oinp setup-input" name="interviewer_strictness" id="valStrictness">
+                                    <option value="friendly" {{ $setupDefaults['interviewer_strictness'] === 'friendly' ? 'selected' : '' }}>Friendly Interviewer</option>
+                                    <option value="neutral" {{ $setupDefaults['interviewer_strictness'] === 'neutral' ? 'selected' : '' }}>Neutral HR Interviewer</option>
+                                    <option value="strict" {{ $setupDefaults['interviewer_strictness'] === 'strict' ? 'selected' : '' }}>Strict Technical Lead</option>
+                                    <option value="executive" {{ $setupDefaults['interviewer_strictness'] === 'executive' ? 'selected' : '' }}>Executive Panel</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-6">
+
+                        <div class="assistance-field">
                             <label class="olbl">Live Feedback Mode</label>
-                            <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode">
-                                <option value="coaching" {{ $setupDefaults['live_feedback_mode'] === 'coaching' ? 'selected' : '' }}>Coaching On</option>
-                                <option value="real_interview" {{ $setupDefaults['live_feedback_mode'] === 'real_interview' ? 'selected' : '' }}>Real Interview Mode</option>
-                            </select>
+                            <div class="assistance-select-wrap">
+                                <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode">
+                                    <option value="coaching" {{ $setupDefaults['live_feedback_mode'] === 'coaching' ? 'selected' : '' }}>Coaching On</option>
+                                    <option value="real_interview" {{ $setupDefaults['live_feedback_mode'] === 'real_interview' ? 'selected' : '' }}>Real Interview Mode</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="assistance-context-panel">
+                            <input type="hidden" name="company_persona" id="valPersona" value="{{ $setupDefaults['company_persona'] }}" class="setup-input">
+                            <span class="assistance-context-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></span>
+                            <div>
+                                <strong class="assistance-context-title">Philippines hiring context</strong>
+                                <div class="desc-text">The interviewer stays within local Philippine workplace expectations, including HR screening, communication clarity, professionalism, and role fit.</div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="setup-chip-panel mb-4">
-                        <input type="hidden" name="company_persona" id="valPersona" value="{{ $setupDefaults['company_persona'] }}" class="setup-input">
-                        <strong style="color:var(--tx)"><i class="fa-solid fa-location-dot me-2 text-primary"></i>Philippines hiring context</strong>
-                        <div class="desc-text">The interviewer stays within local Philippine workplace expectations, including HR screening, communication clarity, professionalism, and role fit.</div>
-                    </div>
-
                 </div>
 
                 <!-- Response Mode -->
-                <div class="setup-panel animate-fade-up delay-400" id="panel-response">
-                    <h5 style="font-weight:700;margin-bottom:20px;color:var(--tx)"><i class="fa-solid fa-microphone me-2" style="color:#34d399"></i> Response Mode</h5>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="custom-radio">
-                                <input type="radio" name="response_mode" value="text" class="setup-input" {{ $setupDefaults['response_mode'] === 'text' ? 'checked' : '' }}>
-                                <div>
-                                    <span class="r-title">Text Mode</span>
-                                    <span class="r-desc">Type your answers manually</span>
-                                </div>
-                            </label>
+                <div class="setup-panel setup-response-card animate-fade-up delay-400" id="panel-response">
+                    <div class="response-head">
+                        <div class="response-head-icon" aria-hidden="true">
+                            <i class="fa-solid fa-microphone"></i>
                         </div>
-                        <div class="col-md-4">
-                            <label class="custom-radio">
-                                <input type="radio" name="response_mode" value="voice" class="setup-input" {{ $setupDefaults['response_mode'] === 'voice' ? 'checked' : '' }}>
-                                <div>
-                                    <span class="r-title">Voice Mode</span>
-                                    <span class="r-desc">Speak through your microphone</span>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="custom-radio">
-                                <input type="radio" name="response_mode" value="hybrid" class="setup-input" {{ $setupDefaults['response_mode'] === 'hybrid' ? 'checked' : '' }}>
-                                <div>
-                                    <span class="r-title">Hybrid Mode</span>
-                                    <span class="r-desc">Voice-to-text with manual editing</span>
-                                </div>
-                            </label>
-                        </div>
+                        <h5 class="response-title">Response Mode</h5>
+                    </div>
+                    <div class="response-mode-list">
+                        <label class="response-mode-card">
+                            <input type="radio" name="response_mode" value="text" class="setup-input" {{ $setupDefaults['response_mode'] === 'text' ? 'checked' : '' }}>
+                            <span>
+                                <span class="response-mode-title">Text Mode</span>
+                                <span class="response-mode-desc">Type your answers manually</span>
+                            </span>
+                        </label>
+                        <label class="response-mode-card">
+                            <input type="radio" name="response_mode" value="voice" class="setup-input" {{ $setupDefaults['response_mode'] === 'voice' ? 'checked' : '' }}>
+                            <span>
+                                <span class="response-mode-title">Voice Mode</span>
+                                <span class="response-mode-desc">Speak through your microphone</span>
+                            </span>
+                        </label>
+                        <label class="response-mode-card">
+                            <input type="radio" name="response_mode" value="hybrid" class="setup-input" {{ $setupDefaults['response_mode'] === 'hybrid' ? 'checked' : '' }}>
+                            <span>
+                                <span class="response-mode-title">Hybrid Mode</span>
+                                <span class="response-mode-desc">Voice-to-text with manual editing</span>
+                            </span>
+                        </label>
                     </div>
                 </div>
 
@@ -769,38 +2471,47 @@
                         <h5 style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
                         
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
                             <span class="summary-label">Scenario:</span>
                             <span class="summary-val" id="sumScenario">{{ $selectedScenario['context_label'] ?? 'Philippines Job Interview' }}</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>
                             <span class="summary-label">Position:</span>
                             <span class="summary-val" id="sumPosition">Not Specified</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
                             <span class="summary-label">Difficulty:</span>
                             <span class="summary-val" id="sumDifficulty">Medium</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-circle-question"></i></span>
                             <span class="summary-label">Questions:</span>
                             <span class="summary-val" id="sumQuestions">10</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
                             <span class="summary-label">Response Mode:</span>
                             <span class="summary-val" id="sumResponse">Voice</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-shield-alt"></i></span>
                             <span class="summary-label">Strictness:</span>
                             <span class="summary-val" id="sumStrictness">Neutral HR Interviewer</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-message"></i></span>
                             <span class="summary-label">Live Feedback:</span>
                             <span class="summary-val" id="sumFeedbackMode">Coaching On</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-building"></i></span>
                             <span class="summary-label">Hiring Context:</span>
                             <span class="summary-val" id="sumPersona">Philippines hiring context</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></span>
                             <span class="summary-label">Est. Duration:</span>
                             <span class="summary-val text-success" id="sumDuration">15 Minutes</span>
                         </div>
@@ -827,7 +2538,7 @@
             document.getElementById('valFocus').value = selectedOption?.dataset.focus || 'Philippines Job Interview';
             const sourceSummary = document.getElementById('sourceSummary');
             if (sourceSummary) {
-                sourceSummary.innerText = 'Sources: ' + (selectedOption?.dataset.sourceSummary || 'Philippines career and education sources');
+                sourceSummary.innerText = selectedOption?.dataset.sourceSummary || 'Philippines career and education sources';
             }
         }
 

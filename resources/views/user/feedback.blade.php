@@ -7,7 +7,7 @@
         max-width: 1120px;
         margin: 0 auto;
     }
-    .feedback-hero {
+    .feedback-shell .feedback-hero {
         min-height: 236px;
         margin-bottom: 24px;
         border: 1px solid rgba(191, 219, 254, 0.72);
@@ -651,10 +651,192 @@
             padding-right: 7px;
         }
     }
+
+    /* Match the compact Modules banner layout and theme behavior. */
+    .feedback-shell .feedback-hero {
+        --feedback-hero-title-color: #1d4ed8;
+        --feedback-hero-text-color: #334155;
+        --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 104px !important;
+        padding: 14px 116px 14px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(219, 234, 254, 0.78), transparent 35%),
+            linear-gradient(142deg, #ffffff 0%, #f8fbff 52%, #dbeafe 100%) !important;
+        border-color: rgba(147, 197, 253, 0.52) !important;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1) !important;
+    }
+    html[data-theme="dark"] .feedback-shell .feedback-hero,
+    :root:not(.lm) .feedback-shell .feedback-hero {
+        --feedback-hero-title-color: #93c5fd;
+        --feedback-hero-text-color: #e2e8f0;
+        --feedback-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --feedback-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28) !important;
+    }
+    .feedback-shell .feedback-hero::before {
+        content: none !important;
+    }
+    .feedback-shell .feedback-hero-copy {
+        display: contents !important;
+    }
+    .feedback-shell .feedback-chat-mark {
+        box-sizing: border-box;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 8px;
+        border: 1px solid var(--feedback-hero-icon-border);
+        border-radius: 10px;
+        background: var(--feedback-hero-icon-bg);
+        color: var(--feedback-hero-title-color) !important;
+        filter: none !important;
+    }
+    .feedback-shell .feedback-title {
+        margin: 0 0 4px !important;
+        font-size: 1.1rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        color: var(--feedback-hero-title-color) !important;
+        -webkit-text-fill-color: var(--feedback-hero-title-color) !important;
+        white-space: nowrap;
+    }
+    .feedback-shell .feedback-subtitle {
+        max-width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.74rem !important;
+        line-height: 1.4 !important;
+        color: var(--feedback-hero-text-color) !important;
+    }
+    .feedback-shell .feedback-hero-art {
+        position: absolute !important;
+        right: -10px;
+        bottom: -1px;
+        width: 112px !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    @media (max-width: 767px) {
+        .feedback-shell .feedback-hero {
+            grid-template-columns: 44px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            min-height: 104px !important;
+            padding: 14px 116px 14px 14px !important;
+        }
+        .feedback-shell .feedback-chat-mark {
+            width: 34px !important;
+            height: 34px !important;
+            padding: 8px;
+        }
+        .feedback-shell .feedback-title {
+            font-size: 1.1rem !important;
+        }
+        .feedback-shell .feedback-subtitle {
+            font-size: 0.74rem !important;
+            line-height: 1.4 !important;
+        }
+        .feedback-shell .feedback-hero-art {
+            width: 112px !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        .feedback-shell .feedback-hero {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            padding: 10px 86px 10px 10px !important;
+        }
+        .feedback-shell .feedback-chat-mark {
+            width: 32px !important;
+            height: 32px !important;
+            padding: 7px;
+        }
+        .feedback-shell .feedback-title {
+            font-size: 0.86rem !important;
+        }
+        .feedback-shell .feedback-subtitle {
+            font-size: 0.66rem !important;
+        }
+        .feedback-shell .feedback-hero-art {
+            width: 78px !important;
+        }
+    }
+
+    #feedbackModulesLikeHero.feedback-hero {
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 104px !important;
+        padding: 14px 116px 14px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+        position: relative !important;
+    }
+    #feedbackModulesLikeHero .feedback-hero-copy {
+        display: contents !important;
+    }
+    #feedbackModulesLikeHero .feedback-chat-mark {
+        width: 34px !important;
+        height: 34px !important;
+        padding: 8px !important;
+        border-radius: 10px !important;
+    }
+    #feedbackModulesLikeHero .feedback-title {
+        font-size: 1.1rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 4px !important;
+        white-space: nowrap !important;
+    }
+    #feedbackModulesLikeHero .feedback-subtitle {
+        font-size: 0.74rem !important;
+        line-height: 1.4 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+    #feedbackModulesLikeHero .feedback-hero-art {
+        position: absolute !important;
+        right: -10px !important;
+        bottom: -1px !important;
+        width: 112px !important;
+        min-width: 0 !important;
+    }
+    @media (max-width: 390px) {
+        #feedbackModulesLikeHero.feedback-hero {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            padding: 10px 86px 10px 10px !important;
+            gap: 8px !important;
+        }
+        #feedbackModulesLikeHero .feedback-chat-mark {
+            width: 32px !important;
+            height: 32px !important;
+            padding: 7px !important;
+        }
+        #feedbackModulesLikeHero .feedback-title {
+            font-size: 0.86rem !important;
+        }
+        #feedbackModulesLikeHero .feedback-subtitle {
+            font-size: 0.66rem !important;
+        }
+        #feedbackModulesLikeHero .feedback-hero-art {
+            width: 78px !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up feedback-shell">
-    <div class="feedback-hero">
+    <div class="feedback-hero" id="feedbackModulesLikeHero">
         <div class="feedback-hero-copy">
             <svg class="feedback-chat-mark" viewBox="0 0 64 64" aria-hidden="true">
                 <path d="M13 46.5 8 56l12.6-3.8c3.4 1.6 7.3 2.4 11.4 2.4 14.4 0 26-9.8 26-22S46.4 10.5 32 10.5 6 20.3 6 32.4c0 5.5 2.4 10.5 7 14.1Z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>

@@ -4312,10 +4312,107 @@
         background: rgba(148, 163, 184, 0.08) !important;
         color: #94a3b8 !important;
     }
+
+    #progressModulesLikeHero.progress-hero {
+        --progress-hero-title-color: #1d4ed8;
+        --progress-hero-text-color: #334155;
+        --progress-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --progress-hero-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 104px !important;
+        padding: 14px 116px 14px 14px !important;
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+        position: relative !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(219, 234, 254, 0.78), transparent 35%),
+            linear-gradient(142deg, #ffffff 0%, #f8fbff 52%, #dbeafe 100%) !important;
+        border-color: rgba(147, 197, 253, 0.52) !important;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1) !important;
+    }
+    html[data-theme="dark"] #progressModulesLikeHero.progress-hero,
+    :root:not(.lm) #progressModulesLikeHero.progress-hero {
+        --progress-hero-title-color: #93c5fd;
+        --progress-hero-text-color: #e2e8f0;
+        --progress-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --progress-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28) !important;
+    }
+    #progressModulesLikeHero .progress-hero-inner,
+    #progressModulesLikeHero .progress-hero-copy {
+        display: contents !important;
+    }
+    #progressModulesLikeHero .progress-hero-icon {
+        box-sizing: border-box;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border: 1px solid var(--progress-hero-icon-border) !important;
+        border-radius: 10px !important;
+        background: var(--progress-hero-icon-bg) !important;
+        color: var(--progress-hero-title-color) !important;
+        font-size: 0.9rem !important;
+    }
+    #progressModulesLikeHero .progress-hero-title {
+        margin: 0 0 4px !important;
+        font-size: 1.1rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+        color: var(--progress-hero-title-color) !important;
+        -webkit-text-fill-color: var(--progress-hero-title-color) !important;
+    }
+    #progressModulesLikeHero .progress-hero-subtitle {
+        max-width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.74rem !important;
+        line-height: 1.4 !important;
+        color: var(--progress-hero-text-color) !important;
+    }
+    #progressModulesLikeHero .progress-hero-art {
+        position: absolute !important;
+        right: -10px !important;
+        bottom: -1px !important;
+        width: 112px !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+    @media (max-width: 390px) {
+        #progressModulesLikeHero.progress-hero {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            padding: 10px 86px 10px 10px !important;
+        }
+        #progressModulesLikeHero .progress-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.82rem !important;
+        }
+        #progressModulesLikeHero .progress-hero-title {
+            font-size: 0.86rem !important;
+        }
+        #progressModulesLikeHero .progress-hero-subtitle {
+            font-size: 0.66rem !important;
+        }
+        #progressModulesLikeHero .progress-hero-art {
+            width: 78px !important;
+        }
+    }
 </style>
 
 <div class="db-section active" id="sec-progress-tracking">
-    <div class="progress-hero">
+    <div class="progress-hero" id="progressModulesLikeHero">
         <div class="progress-hero-inner">
             <div class="progress-hero-copy">
                 <div class="progress-hero-icon"><i class="fa-solid fa-chart-line"></i></div>

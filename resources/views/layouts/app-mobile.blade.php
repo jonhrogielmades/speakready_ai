@@ -1896,7 +1896,7 @@
                     aria-label="Open profile menu"
                     onclick="toggleMobileProfile(event, 'pages')">
                <span class="mob-nav-icon"><i class="fa-solid fa-ellipsis"></i></span>
-               <span>Profile</span>
+               <span>More</span>
             </button>
          </div>
       </nav>
