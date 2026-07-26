@@ -1,6 +1,7 @@
 FROM php:8.2-fpm
 
 ARG NODE_MAJOR=22
+ENV PORT=10000
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -50,12 +51,20 @@ RUN dos2unix composer.json composer.lock || true
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN php -d memory_limit=-1 /usr/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts --ignore-platform-reqs
 
+# Install frontend dependencies separately so Docker can cache them between app code changes.
+COPY package.json package-lock.json ./
+RUN npm ci
+
 # Send Laravel logs to container stderr by default so Render can collect them
 ENV LOG_CHANNEL=stderr
 ENV LOG_EMERGENCY_PATH=php://stderr
 
 # Copy existing application directory contents
 COPY . /var/www
+
+# Build production frontend assets inside the image. public/build is intentionally
+# ignored by Git/Docker context, so Render needs this step during the Docker build.
+RUN npm run build && rm -rf node_modules
 
 # Copy Nginx config
 COPY nginx.conf /etc/nginx/sites-enabled/default
@@ -72,8 +81,8 @@ RUN mkdir -p \
     && chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache \
     && chmod -R ug+rwX /var/www/storage /var/www/bootstrap/cache
 
-# Expose port (Render sets PORT environment variable, usually 80 or 10000. Nginx will listen on 80)
-EXPOSE 80
+# Render web services expect the app to bind to $PORT.
+EXPOSE 10000
 
 # Make the start script executable and fix line endings
 RUN dos2unix /var/www/render-start.sh && chmod +x /var/www/render-start.sh
