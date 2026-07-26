@@ -1813,7 +1813,7 @@
             <button class="mob-icon-btn" id="mobTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
                <i class="fa-solid fa-circle-play"></i>
             </button>
-            <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Fullscreen" onclick="toggleMobileFullscreen(event)">
+            <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
                <i class="fa-solid fa-expand" id="mobFullscreenIcon"></i>
             </button>
             <button class="mob-icon-btn" id="mobThBtn" onclick="toggleTheme()" title="Toggle theme">
@@ -1928,7 +1928,7 @@
 
       <!-- ===== PAGE CONTENT ===== -->
       <div id="mob-content">
-         <div class="db-content">
+         <div class="db-content" id="userAppContent" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
             @yield('content')
          </div>
       </div>
@@ -1998,6 +1998,7 @@
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
+      <script src="{{ asset('js/user-ui.js') }}?v=7" defer></script>
 
       <script>
          // Close open header menus with Escape
@@ -2028,51 +2029,6 @@
                  alert('A tutorial is not available for this specific page.');
              }
          }
-
-         function updateMobileFullscreenIcon() {
-            const button = document.getElementById('mobFullscreenBtn');
-            const icon = document.getElementById('mobFullscreenIcon');
-            const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
-
-            if (icon) {
-               icon.classList.toggle('fa-expand', !isFullscreen);
-               icon.classList.toggle('fa-compress', isFullscreen);
-            }
-
-            if (button) {
-               button.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
-               button.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Fullscreen');
-            }
-         }
-
-         async function toggleMobileFullscreen(e) {
-            if (e) e.stopPropagation();
-
-            try {
-               const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
-               if (isFullscreen) {
-                  if (document.exitFullscreen) {
-                     await document.exitFullscreen();
-                  } else if (document.webkitExitFullscreen) {
-                     document.webkitExitFullscreen();
-                  }
-               } else {
-                  const root = document.documentElement;
-                  if (root.requestFullscreen) {
-                     await root.requestFullscreen();
-                  } else if (root.webkitRequestFullscreen) {
-                     root.webkitRequestFullscreen();
-                  }
-               }
-            } catch (error) {
-               console.warn('Fullscreen toggle failed:', error);
-            }
-
-            updateMobileFullscreenIcon();
-         }
-
-         document.addEventListener('fullscreenchange', updateMobileFullscreenIcon);
-         document.addEventListener('webkitfullscreenchange', updateMobileFullscreenIcon);
 
          // PWA Install Prompt Logic
          let deferredPrompt;
@@ -2368,7 +2324,9 @@
          });
       </script>
 
+      <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')
+      <!-- USER_PAGE_SCRIPTS_END -->
       @include('layouts.logout-transition')
    </body>
 </html>

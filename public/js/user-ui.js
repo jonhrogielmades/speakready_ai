@@ -1,6 +1,11 @@
 (function () {
     'use strict';
 
+    var userApp = window.SpeakReadyUserApp || {};
+    if (!window.SpeakReadyUserApp) {
+        window.SpeakReadyUserApp = userApp;
+    }
+
     function onReady(callback) {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', callback, { once: true });
@@ -545,6 +550,387 @@
 
         enhanceMobileDrawer(function () { return paletteOpen; });
     });
+
+    onReady(function () {
+        setupUserFullscreen();
+        setupUserPartialNavigation();
+    });
+
+    function fullscreenElement() {
+        return document.fullscreenElement || null;
+    }
+
+    function setupUserFullscreen() {
+        if (userApp.fullscreenInitialized) {
+            updateFullscreenButtons();
+            return;
+        }
+
+        userApp.fullscreenInitialized = true;
+        userApp.fullscreenBusy = false;
+
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-user-fullscreen-toggle], #dbFullscreenBtn, #mobFullscreenBtn');
+            if (!button) return;
+
+            event.preventDefault();
+            event.stopPropagation();
+            toggleUserFullscreen(button);
+        });
+
+        document.addEventListener('fullscreenchange', updateFullscreenButtons);
+        updateFullscreenButtons();
+    }
+
+    async function toggleUserFullscreen(button) {
+        if (userApp.fullscreenBusy) return;
+
+        var root = document.documentElement;
+        var canEnter = typeof root.requestFullscreen === 'function';
+        var canExit = typeof document.exitFullscreen === 'function';
+
+        if (!fullscreenElement() && !canEnter) {
+            console.warn('Fullscreen API is not supported in this browser.');
+            showSafeNavigationStatus('Fullscreen is not supported in this browser.');
+            updateFullscreenButtons();
+            return;
+        }
+
+        userApp.fullscreenBusy = true;
+        button.setAttribute('aria-busy', 'true');
+
+        try {
+            if (fullscreenElement()) {
+                if (canExit) {
+                    await document.exitFullscreen();
+                }
+                rememberFullscreenPreference(false);
+            } else {
+                await root.requestFullscreen();
+                rememberFullscreenPreference(true);
+            }
+        } catch (error) {
+            console.warn('Fullscreen toggle failed:', error);
+            showSafeNavigationStatus('Fullscreen could not be changed. Try again from the button.');
+        } finally {
+            userApp.fullscreenBusy = false;
+            button.removeAttribute('aria-busy');
+            updateFullscreenButtons();
+        }
+    }
+
+    function rememberFullscreenPreference(value) {
+        try {
+            window.localStorage.setItem('speakready.user.fullscreenPreferred', value ? '1' : '0');
+        } catch (error) {
+            console.warn('Unable to save fullscreen preference:', error);
+        }
+    }
+
+    function updateFullscreenButtons() {
+        var isFullscreen = Boolean(fullscreenElement());
+        document.body.classList.toggle('user-app-fullscreen', isFullscreen);
+
+        document.querySelectorAll('[data-user-fullscreen-toggle], #dbFullscreenBtn, #mobFullscreenBtn').forEach(function (button) {
+            button.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
+            button.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
+        });
+
+        ['dbFullscreenIcon', 'mobFullscreenIcon'].forEach(function (id) {
+            var icon = document.getElementById(id);
+            if (!icon) return;
+            icon.classList.toggle('fa-expand', !isFullscreen);
+            icon.classList.toggle('fa-compress', isFullscreen);
+        });
+    }
+
+    function setupUserPartialNavigation() {
+        var content = document.querySelector('[data-user-ajax-content]');
+        if (!content || userApp.navigationInitialized) return;
+
+        userApp.navigationInitialized = true;
+        userApp.navigationController = null;
+        userApp.navigationToken = 0;
+
+        window.history.replaceState(makeHistoryState(window.location.href), document.title, window.location.href);
+
+        document.addEventListener('click', function (event) {
+            var anchor = event.target.closest('a[href]');
+            if (!anchor || !shouldHandleLink(anchor, event)) return;
+
+            event.preventDefault();
+            closeOpenUserMenus();
+            navigateUserApp(anchor.href, { push: true });
+        });
+
+        window.addEventListener('popstate', function () {
+            navigateUserApp(window.location.href, { push: false });
+        });
+    }
+
+    function makeHistoryState(url) {
+        return {
+            speakReadyUserShell: true,
+            url: new URL(url, window.location.href).href
+        };
+    }
+
+    function shouldHandleLink(anchor, event) {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
+        if (anchor.target && anchor.target !== '_self') return false;
+        if (anchor.hasAttribute('download')) return false;
+        if (anchor.dataset.fullReload === 'true' || anchor.dataset.noAjax === 'true') return false;
+        if (anchor.closest('form')) return false;
+
+        var href = anchor.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return false;
+
+        var url;
+        try {
+            url = new URL(anchor.href, window.location.href);
+        } catch (error) {
+            return false;
+        }
+
+        if (url.origin !== window.location.origin) return false;
+        if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return false;
+
+        var reloadPrefixes = ['/logout', '/login', '/register', '/auth/', '/shared/', '/admin'];
+        if (reloadPrefixes.some(function (prefix) { return url.pathname === prefix || url.pathname.startsWith(prefix); })) return false;
+
+        var userPrefixes = [
+            '/dashboard',
+            '/interview/setup',
+            '/interview/session',
+            '/interview/',
+            '/account',
+            '/notifications',
+            '/feedback',
+            '/coach',
+            '/learning',
+            '/skills',
+            '/modules',
+            '/game/match',
+            '/missions',
+            '/drills/voice',
+            '/progress',
+            '/session/',
+            '/reports',
+            '/personal-mastery',
+            '/community/leaderboard'
+        ];
+
+        return userPrefixes.some(function (prefix) {
+            return url.pathname === prefix || url.pathname.startsWith(prefix);
+        });
+    }
+
+    async function navigateUserApp(url, options) {
+        var content = document.querySelector('[data-user-ajax-content]');
+        if (!content) {
+            window.location.assign(url);
+            return;
+        }
+
+        var token = ++userApp.navigationToken;
+        if (userApp.navigationController) {
+            userApp.navigationController.abort();
+        }
+
+        var controller = new AbortController();
+        userApp.navigationController = controller;
+        content.setAttribute('aria-busy', 'true');
+        showSafeNavigationStatus('Loading page...');
+
+        try {
+            var response = await fetch(url, {
+                method: 'GET',
+                credentials: 'same-origin',
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'text/html, application/xhtml+xml',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-SpeakReady-Partial-Navigation': '1'
+                }
+            });
+
+            if (token !== userApp.navigationToken) return;
+            if (!response.ok || response.redirected && new URL(response.url).pathname !== new URL(url, window.location.href).pathname) {
+                throw new Error('Navigation response was not usable: ' + response.status);
+            }
+
+            var html = await response.text();
+            if (token !== userApp.navigationToken) return;
+
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var nextContent = doc.querySelector('[data-user-ajax-content]') || doc.querySelector('.db-content');
+            if (!nextContent) {
+                throw new Error('Fetched page did not include a User Side content container.');
+            }
+
+            var contentScripts = Array.from(nextContent.querySelectorAll('script'));
+            replaceUserContent(content, nextContent);
+            updateDocumentMetadata(doc, nextContent, url, options);
+            runPageScripts(html, contentScripts);
+            refreshCommonEnhancements();
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            hideSafeNavigationStatus();
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('User Side AJAX navigation failed, falling back to normal navigation:', error);
+            showSafeNavigationStatus('This page needs a normal reload. Redirecting...');
+            window.location.assign(url);
+        } finally {
+            if (token === userApp.navigationToken) {
+                content.removeAttribute('aria-busy');
+                userApp.navigationController = null;
+            }
+        }
+    }
+
+    function replaceUserContent(currentContent, nextContent) {
+        currentContent.innerHTML = nextContent.innerHTML;
+        Array.from(nextContent.attributes).forEach(function (attribute) {
+            if (attribute.name === 'id') return;
+            currentContent.setAttribute(attribute.name, attribute.value);
+        });
+    }
+
+    function updateDocumentMetadata(doc, nextContent, url, options) {
+        var nextTitle = (doc.querySelector('title') || {}).textContent || document.title;
+        document.title = nextTitle;
+
+        var contextTitle = nextContent.getAttribute('data-page-title') || nextTitle.replace(/\s*-\s*SpeakReady AI.*$/i, '');
+        var desktopContext = document.querySelector('.db-page-context strong');
+        if (desktopContext) desktopContext.textContent = contextTitle || 'Overview';
+
+        if (options && options.push) {
+            window.history.pushState(makeHistoryState(url), nextTitle, url);
+        }
+
+        updateActiveUserNavigation(new URL(url, window.location.href));
+    }
+
+    function updateActiveUserNavigation(url) {
+        document.querySelectorAll('.db-nav a[href], .profile-menu-item[href], .mob-nav-item[href], .mob-profile-link[href], .ucp-result[href]').forEach(function (anchor) {
+            var anchorUrl;
+            try {
+                anchorUrl = new URL(anchor.href, window.location.href);
+            } catch (error) {
+                return;
+            }
+
+            var active = anchorUrl.pathname === url.pathname || (
+                anchorUrl.pathname !== '/' && url.pathname.startsWith(anchorUrl.pathname + '/')
+            );
+            anchor.classList.toggle('active', active);
+        });
+    }
+
+    function extractPageScriptHtml(html) {
+        var start = html.indexOf('<!-- USER_PAGE_SCRIPTS_START -->');
+        var end = html.indexOf('<!-- USER_PAGE_SCRIPTS_END -->');
+        if (start === -1 || end === -1 || end <= start) return '';
+        return html.slice(start, end);
+    }
+
+    function runPageScripts(html, contentScripts) {
+        document.querySelectorAll('script[data-user-page-script-runtime]').forEach(function (script) {
+            script.remove();
+        });
+
+        var stackTemplate = document.createElement('template');
+        stackTemplate.innerHTML = extractPageScriptHtml(html);
+        var scripts = []
+            .concat(contentScripts || [])
+            .concat(Array.from(stackTemplate.content.querySelectorAll('script')));
+
+        scripts.forEach(function (script) {
+            if (!script.src && !script.textContent.trim()) return;
+
+            if (!script.src && (script.type || '').toLowerCase() !== 'module') {
+                executeInlinePageScript(script.textContent);
+                return;
+            }
+
+            var replacement = document.createElement('script');
+            Array.from(script.attributes).forEach(function (attribute) {
+                replacement.setAttribute(attribute.name, attribute.value);
+            });
+            replacement.dataset.userPageScriptRuntime = 'true';
+            if (!replacement.src) replacement.text = script.textContent;
+            document.body.appendChild(replacement);
+        });
+    }
+
+    function executeInlinePageScript(source) {
+        var exportedNames = [];
+        var functionPattern = /(?:^|\n)\s*(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/g;
+        var match;
+
+        while ((match = functionPattern.exec(source)) !== null) {
+            if (exportedNames.indexOf(match[1]) === -1) exportedNames.push(match[1]);
+        }
+
+        var exportSource = exportedNames.map(function (name) {
+            return 'try { if (typeof ' + name + ' === "function") window["' + name + '"] = ' + name + '; } catch (exportError) { console.warn("Unable to export page function ' + name + ':", exportError); }';
+        }).join('\n');
+
+        try {
+            new Function('"use strict";\n' + source + '\n' + exportSource + '\n//# sourceURL=speakready-user-page-inline.js')();
+        } catch (error) {
+            console.error('User Side page script failed:', error);
+            showSafeNavigationStatus('Some page behavior could not initialize. Reloading...');
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 250);
+        }
+    }
+
+    function refreshCommonEnhancements() {
+        if (window.AOS && typeof window.AOS.refreshHard === 'function') {
+            window.AOS.refreshHard();
+        } else if (window.AOS && typeof window.AOS.refresh === 'function') {
+            window.AOS.refresh();
+        }
+
+        if (typeof window.closeUserCommandPalette === 'function') {
+            window.closeUserCommandPalette();
+        }
+
+        closeOpenUserMenus();
+        updateFullscreenButtons();
+    }
+
+    function closeOpenUserMenus() {
+        if (typeof window.closeDashboardSidebar === 'function') window.closeDashboardSidebar();
+        if (typeof window.closeMobileNotif === 'function') window.closeMobileNotif();
+        if (typeof window.closeMobileProfile === 'function') window.closeMobileProfile();
+
+        document.getElementById('notifDropdown')?.classList.remove('open');
+        document.getElementById('profileDropdown')?.classList.remove('open');
+    }
+
+    function showSafeNavigationStatus(message) {
+        var status = document.getElementById('userAjaxNavigationStatus');
+        if (!status) {
+            status = document.createElement('div');
+            status.id = 'userAjaxNavigationStatus';
+            status.setAttribute('role', 'status');
+            status.setAttribute('aria-live', 'polite');
+            status.style.cssText = 'position:fixed;left:50%;bottom:18px;z-index:13000;transform:translateX(-50%);padding:8px 12px;border-radius:10px;background:rgba(15,23,42,.92);color:#fff;font:600 12px Poppins,Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.25);display:none;';
+            document.body.appendChild(status);
+        }
+
+        status.textContent = message;
+        status.style.display = 'block';
+    }
+
+    function hideSafeNavigationStatus() {
+        var status = document.getElementById('userAjaxNavigationStatus');
+        if (status) status.style.display = 'none';
+    }
 
     function enhanceMobileDrawer(isPaletteOpen) {
         var drawer = document.getElementById('mob-drawer');

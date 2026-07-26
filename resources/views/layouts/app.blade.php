@@ -115,6 +115,9 @@
                   <kbd aria-hidden="true">Ctrl K</kbd>
                </div>
                <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
+                  <button class="boc d-flex align-items-center justify-content-center" id="dbFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
+                     <i class="fa-solid fa-expand" id="dbFullscreenIcon" aria-hidden="true"></i>
+                  </button>
                   <button class="boc d-flex align-items-center justify-content-center" id="dbTutorialBtn" type="button" aria-label="Start tutorial" onclick="triggerMobTutorial()" title="Start tutorial" style="color:#60a5fa;border-color:rgba(96,165,250,0.3)">
                      <i class="fa-solid fa-circle-play"></i>
                   </button>
@@ -203,7 +206,7 @@
             </div>
             
             <!-- Dashboard Content -->
-            <div class="db-content">
+            <div class="db-content" id="userAppContent" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
                 @yield('content')
             </div>
          </div>
@@ -419,7 +422,9 @@
       <!-- Driver.js -->
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
+      <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')
+      <!-- USER_PAGE_SCRIPTS_END -->
       @include('layouts.logout-transition')
    </body>
 </html>
