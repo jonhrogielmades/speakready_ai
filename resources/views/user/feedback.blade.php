@@ -773,16 +773,39 @@
     }
 
     #feedbackModulesLikeHero.feedback-hero {
+        --feedback-hero-title-color: #1d4ed8;
+        --feedback-hero-text-color: #334155;
+        --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
         display: grid !important;
         grid-template-columns: 44px minmax(0, 1fr) !important;
         align-items: center !important;
         gap: 10px !important;
-        min-height: 104px !important;
-        padding: 14px 116px 14px 14px !important;
-        margin-bottom: 12px !important;
-        border-radius: 14px !important;
+        min-height: 78px !important;
+        padding: 8px 94px 8px 14px !important;
+        margin-bottom: 14px !important;
+        border-radius: 16px !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        border-color: rgba(191, 219, 254, 0.86) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08) !important;
         overflow: hidden !important;
         position: relative !important;
+    }
+    :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
+    .dm #feedbackModulesLikeHero.feedback-hero {
+        --feedback-hero-title-color: #93c5fd;
+        --feedback-hero-text-color: #e2e8f0;
+        --feedback-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --feedback-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28) !important;
+    }
+    #feedbackModulesLikeHero.feedback-hero::before {
+        display: none !important;
     }
     #feedbackModulesLikeHero .feedback-hero-copy {
         display: contents !important;
@@ -791,32 +814,44 @@
         width: 34px !important;
         height: 34px !important;
         padding: 8px !important;
+        border: 1px solid var(--feedback-hero-icon-border) !important;
         border-radius: 10px !important;
+        background: var(--feedback-hero-icon-bg) !important;
+        color: var(--feedback-hero-title-color) !important;
+        filter: none !important;
     }
     #feedbackModulesLikeHero .feedback-title {
-        font-size: 1.1rem !important;
-        line-height: 1.15 !important;
+        color: var(--feedback-hero-title-color) !important;
+        font-size: 1.02rem !important;
+        line-height: 1.08 !important;
         margin: 0 0 4px !important;
+        font-weight: 950 !important;
         white-space: nowrap !important;
     }
     #feedbackModulesLikeHero .feedback-subtitle {
-        font-size: 0.74rem !important;
-        line-height: 1.4 !important;
+        color: var(--feedback-hero-text-color) !important;
+        font-size: 0.64rem !important;
+        line-height: 1.32 !important;
         margin: 0 !important;
-        max-width: 100% !important;
+        max-width: 13.5rem !important;
+        font-weight: 500;
     }
     #feedbackModulesLikeHero .feedback-hero-art {
         position: absolute !important;
-        right: -10px !important;
-        bottom: -1px !important;
-        width: 112px !important;
+        right: 8px !important;
+        bottom: 2px !important;
+        width: 78px !important;
         min-width: 0 !important;
+        opacity: 0.92;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
     }
     @media (max-width: 390px) {
         #feedbackModulesLikeHero.feedback-hero {
-            grid-template-columns: 34px minmax(0, 1fr) !important;
-            padding: 10px 86px 10px 10px !important;
-            gap: 8px !important;
+            min-height: 74px !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            padding: 8px 76px 8px 12px !important;
+            border-radius: 16px !important;
         }
         #feedbackModulesLikeHero .feedback-chat-mark {
             width: 32px !important;
@@ -824,13 +859,18 @@
             padding: 7px !important;
         }
         #feedbackModulesLikeHero .feedback-title {
-            font-size: 0.86rem !important;
+            font-size: 0.9rem !important;
+            margin-bottom: 4px !important;
         }
         #feedbackModulesLikeHero .feedback-subtitle {
-            font-size: 0.66rem !important;
+            max-width: 12rem !important;
+            font-size: 0.64rem !important;
+            line-height: 1.28 !important;
         }
         #feedbackModulesLikeHero .feedback-hero-art {
-            width: 78px !important;
+            right: -4px !important;
+            bottom: 5px !important;
+            width: 68px !important;
         }
     }
 </style>
@@ -845,7 +885,7 @@
             </svg>
             <div>
                 <h4 class="feedback-title">Feedback Center</h4>
-                <p class="feedback-subtitle">Enter Philippines practice interview, receive scores, and get AI-powered feedback to improve faster.</p>
+                <p class="feedback-subtitle">Review scores and AI feedback from Philippines interview practice.</p>
             </div>
         </div>
         <svg class="feedback-hero-art" viewBox="0 0 270 190" aria-hidden="true">

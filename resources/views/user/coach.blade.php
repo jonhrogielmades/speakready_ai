@@ -6,11 +6,13 @@
     /* Chat specific styles */
     .chat-container {
         display: flex;
-        height: calc(100vh - 274px);
-        min-height: 420px;
+        height: min(620px, calc(100vh - 238px));
+        min-height: 390px;
+        max-width: 980px;
+        margin: 0 auto;
         background: var(--sf);
         border: 1px solid var(--bd);
-        border-radius: 24px;
+        border-radius: 20px;
         overflow: hidden;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(20px);
@@ -18,7 +20,42 @@
     }
     .chat-sidebar { width: 280px; border-right: 1px solid var(--bd); display: flex; flex-direction: column; background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%); }
     .chat-main { flex-grow: 1; display: flex; flex-direction: column; position: relative; min-height: 0; }
-    .chat-messages { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+    .coach-chat-header {
+        padding: 15px 22px;
+        border-bottom: 1px solid var(--bd);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,0.02);
+    }
+    .coach-chat-title {
+        margin: 0;
+        color: var(--tx);
+        font-size: 0.88rem;
+        font-weight: 800;
+        line-height: 1.14;
+        letter-spacing: 0;
+        max-width: 260px;
+    }
+    .coach-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 7px;
+        color: #10b981;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+    .coach-status::before {
+        content: "";
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+    }
+    .chat-messages { flex-grow: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 18px; }
 
     .chat-bubble { max-width: 80%; padding: 16px 20px; border-radius: 20px; font-size: .95rem; line-height: 1.5; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
     .bubble-ai { background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(139,92,246,0.05) 100%); border: 1px solid rgba(139,92,246,0.2); border-bottom-left-radius: 4px; color: var(--tx); align-self: flex-start; box-shadow: inset 0 2px 10px rgba(255,255,255,0.05); }
@@ -51,12 +88,56 @@
         font-size: .88em;
     }
 
-    .chat-input-area { padding: 20px; border-top: 1px solid var(--bd); background: rgba(255,255,255,0.02); flex-shrink: 0; }
-    .chat-input-wrapper { display: flex; align-items: flex-end; background: var(--bg3); border: 1px solid var(--bd); border-radius: 16px; padding: 8px 16px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    .coach-msg-row { display: flex; gap: 14px; }
+    .coach-avatar {
+        width: 34px;
+        height: 34px;
+        background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        flex-shrink: 0;
+        box-shadow: 0 8px 18px rgba(37,99,235,0.18);
+    }
+    .coach-user-avatar {
+        width: 34px;
+        height: 34px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--tx);
+        flex-shrink: 0;
+        font-weight: 700;
+        padding: 0;
+        overflow: hidden;
+        border: 1px solid var(--bd);
+    }
+    .chat-input-area { padding: 12px 14px 10px; border-top: 1px solid var(--bd); background: rgba(255,255,255,0.02); flex-shrink: 0; }
+    .chat-input-wrapper { display: flex; align-items: center; background: var(--bg3); border: 1px solid var(--bd); border-radius: 15px; padding: 7px 8px 7px 13px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .chat-input-wrapper:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf); }
-    .chat-textarea { flex-grow: 1; background: transparent; border: none; color: var(--tx); resize: none; max-height: 120px; padding: 8px 0; outline: none; font-family: "Space Grotesk", sans-serif; font-size: 0.95rem; }
-    .chat-send-btn { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #fff; border: none; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-left: 12px; margin-bottom: 4px; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
+    .chat-textarea { flex-grow: 1; min-width: 0; background: transparent; border: none; color: var(--tx); resize: none; height: 22px; max-height: 88px; overflow: hidden; padding: 2px 0; outline: none; font-family: "Space Grotesk", sans-serif; font-size: 0.74rem; line-height: 1.28; }
+    .chat-send-btn { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #fff; border: none; width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-left: 9px; margin-bottom: 0; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
     .chat-send-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .coach-disclaimer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-align: center;
+        margin-top: 6px;
+        color: var(--tx3);
+        font-size: 0.64rem;
+        line-height: 1.25;
+    }
+    .coach-disclaimer i {
+        color: #94a3b8;
+        font-size: 0.78rem;
+        flex: 0 0 auto;
+    }
 
     .history-item { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s; color: var(--tx3); font-size: .9rem; display: flex; align-items: center; }
     .history-item:hover, .history-item.active { background: rgba(255,255,255,0.05); color: var(--tx); }
@@ -171,35 +252,104 @@
         #ai-coach-page {
             height: auto !important;
         }
+        #ai-coach-page .sr-page-hero {
+            min-height: 86px;
+            max-width: 460px;
+            margin: 0 auto 10px;
+            border-radius: 16px;
+        }
+        #ai-coach-page .sr-page-hero-inner {
+            min-height: 86px;
+            padding: 11px 92px 11px 13px;
+        }
+        #ai-coach-page .sr-page-hero-title {
+            font-size: clamp(0.94rem, 5.2vw, 1.08rem) !important;
+            gap: 7px;
+            line-height: 1.14;
+        }
+        #ai-coach-page .sr-page-hero-title svg {
+            width: 19px;
+            height: 19px;
+        }
+        #ai-coach-page .sr-page-hero-subtitle {
+            font-size: 0.69rem;
+            line-height: 1.35;
+        }
+        #ai-coach-page .sr-page-hero-art {
+            width: 96px;
+            right: -4px;
+            bottom: -2px;
+        }
+        #mob-content #ai-coach-page .chat-container,
         .chat-container {
-            height: calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 132px) !important;
-            min-height: 380px;
-            border-radius: 14px !important;
+            width: min(100%, 460px);
+            height: calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 116px) !important;
+            min-height: 340px;
+            border-radius: 16px !important;
             flex-direction: column !important;
         }
         .chat-sidebar { display: none !important; }
-        .chat-main > div:first-child {
-            padding: 11px 12px !important;
+        .coach-chat-header {
+            padding: 12px 14px !important;
         }
-        .chat-main > div:first-child [style*="width:40px"] {
-            width: 34px !important;
-            height: 34px !important;
-            margin-right: 10px !important;
-            border-radius: 10px !important;
+        .coach-chat-title {
+            font-size: 0.82rem;
+            max-width: 210px;
         }
-        .chat-messages { padding: 12px; gap: 10px; }
-        .chat-input-area { padding: 10px 12px; }
-        .chat-bubble { max-width: 92%; padding: 10px 13px; font-size: 0.84rem; line-height: 1.45; }
+        .coach-status { font-size: 0.82rem; margin-top: 6px; }
+        #mob-content #ai-coach-page .chat-messages,
+        .chat-messages { padding: 12px !important; gap: 10px !important; }
+        .coach-msg-row { gap: 10px; }
+        .coach-avatar,
+        .coach-user-avatar { width: 32px; height: 32px; border-radius: 9px; }
+        #mob-content #ai-coach-page .chat-input-area,
+        .chat-input-area { padding: 8px 10px 8px !important; }
+        #mob-content #ai-coach-page .chat-bubble,
+        .chat-bubble { max-width: calc(100% - 42px) !important; padding: 11px 13px !important; font-size: 0.84rem !important; line-height: 1.48 !important; border-radius: 16px !important; }
         .ai-response { gap: 8px; line-height: 1.55; }
+        #mob-content #ai-coach-page .chat-input-wrapper,
         .chat-input-wrapper {
-            padding: 7px 8px 7px 12px;
-            border-radius: 14px;
+            padding: 7px 8px 7px 12px !important;
+            border-radius: 13px !important;
         }
+        .chat-textarea {
+            height: 20px;
+            font-size: 0.66rem;
+            line-height: 1.25;
+        }
+        #mob-content #ai-coach-page .chat-send-btn,
         .chat-send-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            margin-left: 8px;
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 12px !important;
+            margin-left: 8px !important;
+            margin-bottom: 0 !important;
+        }
+        .coach-disclaimer {
+            margin-top: 5px;
+            font-size: 0.58rem;
+            padding: 0 2px;
+        }
+    }
+
+    @media (max-width: 390px) {
+        #ai-coach-page .sr-page-hero-inner {
+            padding-right: 78px;
+        }
+        #ai-coach-page .sr-page-hero-art {
+            width: 84px;
+        }
+        .coach-chat-title {
+            font-size: 0.76rem;
+            max-width: 190px;
+        }
+        #mob-content #ai-coach-page .chat-container,
+        .chat-container {
+            min-height: 330px !important;
+        }
+        #mob-content #ai-coach-page .chat-bubble,
+        .chat-bubble {
+            font-size: 0.8rem !important;
         }
     }
     
@@ -216,16 +366,143 @@
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
 </style>
 @include('partials.page-hero-styles')
+<style>
+    #ai-coach-page .sr-page-hero.coach-progress-hero {
+        --coach-hero-title: #1d4ed8;
+        --coach-hero-text: #334155;
+        --coach-icon-bg: rgba(239, 246, 255, 0.92);
+        --coach-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 78px;
+        margin-bottom: 14px;
+        padding: 8px 76px 8px 14px !important;
+        border-radius: 16px;
+        border-color: rgba(191, 219, 254, 0.86);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+    }
+    :root:not(.lm) #ai-coach-page .sr-page-hero.coach-progress-hero,
+    .dm #ai-coach-page .sr-page-hero.coach-progress-hero {
+        --coach-hero-title: #93c5fd;
+        --coach-hero-text: #e2e8f0;
+        --coach-icon-bg: rgba(59, 130, 246, 0.2);
+        --coach-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28);
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-inner,
+    #ai-coach-page .coach-progress-hero .sr-page-hero-copy {
+        display: contents !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+    #ai-coach-page .coach-hero-icon {
+        box-sizing: border-box;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        border: 1px solid var(--coach-icon-border) !important;
+        border-radius: 10px !important;
+        background: var(--coach-icon-bg) !important;
+        color: var(--coach-hero-title) !important;
+        font-size: 0.9rem !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+        display: block !important;
+        color: var(--coach-hero-title) !important;
+        background: none !important;
+        -webkit-text-fill-color: var(--coach-hero-title) !important;
+        font-size: 1rem !important;
+        line-height: 1.08 !important;
+        margin: 0 0 4px !important;
+        font-weight: 950 !important;
+        text-transform: uppercase;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-title svg {
+        display: none;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+        color: var(--coach-hero-text) !important;
+        font-size: 0.66rem !important;
+        line-height: 1.32;
+        max-width: 14rem;
+        margin: 0;
+        font-weight: 500;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+        display: block;
+        width: 62px;
+        right: 8px;
+        bottom: 4px;
+        opacity: 0.92;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
+    }
+    @media (max-width: 767px) {
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            min-height: 74px !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            max-width: none;
+            padding: 8px 64px 8px 12px !important;
+            margin: 0 0 12px;
+        }
+        #ai-coach-page .coach-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.82rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.88rem !important;
+            line-height: 1.08;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            font-size: 0.64rem !important;
+            max-width: 12.5rem;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 56px;
+            right: -4px;
+            bottom: 5px;
+        }
+    }
+    @media (max-width: 390px) {
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            padding-right: 58px !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.82rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            font-size: 0.59rem !important;
+            max-width: 10.6rem;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 48px;
+        }
+    }
+</style>
 
 <div class="db-section active" id="ai-coach-page" style="height:100%">
-    <div class="sr-page-hero">
+    <div class="sr-page-hero coach-progress-hero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
-                <h4 class="sr-page-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1v-6H7v-1a5 5 0 0 1 10 0v1h-3v6h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Philippines Readiness Coach
-                </h4>
-                <p class="sr-page-hero-subtitle">Ask for interview advice, resume feedback, and focused practice guidance.</p>
+                <div class="coach-hero-icon"><i class="fa-solid fa-headset"></i></div>
+                <div>
+                    <h4 class="sr-page-hero-title text-gradient-primary">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a7 7 0 0 0-7 7v3a4 4 0 0 0 4 4h1v-6H7v-1a5 5 0 0 1 10 0v1h-3v6h1a4 4 0 0 0 4-4v-3a7 7 0 0 0-7-7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        Philippines Readiness Coach
+                    </h4>
+                    <p class="sr-page-hero-subtitle">Ask for advice, resume feedback, and focused practice guidance.</p>
+                </div>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -278,11 +555,10 @@
         <!-- Main Chat Area -->
         <div class="chat-main">
             <!-- Header -->
-            <div style="padding:16px 24px; border-bottom:1px solid var(--bd); display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02)">
+            <div class="coach-chat-header">
                 <div class="d-flex align-items-center">
                     <div>
-                        <h6 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">SpeakReady Philippines Readiness Coach</h6>
-                        <span style="font-size:.75rem;color:#34d399"><i class="fa-solid fa-circle text-success" style="font-size:.5rem;margin-right:4px"></i>Online</span>
+                        <span class="coach-status">Online</span>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
@@ -334,8 +610,8 @@
                     <span class="db-badge" style="background:rgba(255,255,255,0.05);color:var(--tx3)">Today</span>
                 </div>
 
-                <div class="d-flex" style="gap:16px" id="welcomeMsg">
-                    <div style="width:36px;height:36px;background:var(--pur);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">
+                <div class="coach-msg-row" id="welcomeMsg">
+                    <div class="coach-avatar">
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div class="chat-bubble bubble-ai">
@@ -343,8 +619,8 @@
                     </div>
                 </div>
                 
-                <div id="typingIndicator" class="d-none" style="gap:16px">
-                     <div style="width:36px;height:36px;background:var(--pur);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">
+                <div id="typingIndicator" class="d-none coach-msg-row">
+                     <div class="coach-avatar">
                         <i class="fa-solid fa-robot"></i>
                     </div>
                     <div class="chat-bubble bubble-ai" style="padding:12px 20px;display:flex;align-items:center;gap:4px">
@@ -358,10 +634,11 @@
             <!-- Input Area -->
             <div class="chat-input-area" id="coach-input-area">
                 <div class="chat-input-wrapper">
-                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about a Philippine HR screen, BPO answer, salary expectation, score, story, or target role..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your coach..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     <button class="chat-send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
-                <div style="text-align:center;margin-top:12px;font-size:.7rem;color:var(--tx3)">
+                <div class="coach-disclaimer">
+                    <i class="fa-regular fa-circle-info" aria-hidden="true"></i>
                     The coach can make mistakes. Verify advice and keep every personal claim truthful.
                 </div>
             </div>
@@ -412,10 +689,10 @@
             // Create user bubble
             const userMsgDiv = document.createElement('div');
             userMsgDiv.className = 'd-flex justify-content-end mt-3 dynamic-msg';
-            userMsgDiv.style.gap = '16px';
+            userMsgDiv.style.gap = '12px';
             userMsgDiv.innerHTML = `
                     <div class="chat-bubble bubble-user">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
-                    <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700;padding:0;overflow:hidden;border:1px solid var(--bd);">
+                    <div class="coach-user-avatar">
                         ${initialHtml}
                     </div>
             `;
@@ -486,10 +763,9 @@
 
                 // Add AI Message
                 const aiMsgDiv = document.createElement('div');
-                aiMsgDiv.className = 'd-flex mt-3 dynamic-msg';
-                aiMsgDiv.style.gap = '16px';
+                aiMsgDiv.className = 'coach-msg-row mt-3 dynamic-msg';
                 aiMsgDiv.innerHTML = `
-                        <div style="width:36px;height:36px;background:var(--pur);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">
+                        <div class="coach-avatar">
                             <i class="fa-solid fa-robot"></i>
                         </div>
                         <div class="chat-bubble bubble-ai">
@@ -504,10 +780,9 @@
                 typing.classList.add('d-none');
                 
                 const errorMsgDiv = document.createElement('div');
-                errorMsgDiv.className = 'd-flex mt-3 dynamic-msg';
-                errorMsgDiv.style.gap = '16px';
+                errorMsgDiv.className = 'coach-msg-row mt-3 dynamic-msg';
                 errorMsgDiv.innerHTML = `
-                        <div style="width:36px;height:36px;background:var(--pur);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">
+                        <div class="coach-avatar">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div class="chat-bubble bubble-ai" style="color:#ef4444; border-color:#ef4444">
@@ -648,10 +923,10 @@
                     const msgDiv = document.createElement('div');
                     if (msg.role === 'user') {
                         msgDiv.className = 'd-flex justify-content-end mt-3 dynamic-msg';
-                        msgDiv.style.gap = '16px';
+                        msgDiv.style.gap = '12px';
                         msgDiv.innerHTML = `
                                 <div class="chat-bubble bubble-user">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>
-                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--tx);flex-shrink:0;font-weight:700;padding:0;overflow:hidden;border:1px solid var(--bd);">
+                                <div class="coach-user-avatar">
                                     @if(Auth::check() && Auth::user()->profile_photo_path)
                                         @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
                                             <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
@@ -664,10 +939,9 @@
                                 </div>
                         `;
                     } else {
-                        msgDiv.className = 'd-flex mt-3 dynamic-msg';
-                        msgDiv.style.gap = '16px';
+                        msgDiv.className = 'coach-msg-row mt-3 dynamic-msg';
                         msgDiv.innerHTML = `
-                                <div style="width:36px;height:36px;background:var(--pur);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">
+                                <div class="coach-avatar">
                                     <i class="fa-solid fa-robot"></i>
                                 </div>
                                 <div class="chat-bubble bubble-ai">
@@ -814,6 +1088,3 @@
 </script>
 @endpush
 @endsection
-
-
-

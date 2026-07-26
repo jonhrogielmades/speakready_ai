@@ -64,6 +64,8 @@
         gap: var(--dash-section-gap);
         padding-top: 10px !important;
         padding-bottom: 28px !important;
+        max-width: 1440px;
+        margin-inline: auto;
     }
 
     #dashboard .db-content .db-section.active.sr-dashboard {
@@ -182,8 +184,13 @@
     }
 
     @media (min-width: 992px) {
+        .sr-dashboard {
+            --dash-section-gap: 18px;
+            --dash-card-pad: 18px;
+        }
+
         .sr-summary-grid {
-            align-items: start;
+            align-items: stretch;
         }
 
         .sr-welcome-stack {
@@ -202,14 +209,14 @@
 
         .sr-welcome-stack .sr-stats-desktop {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
+            gap: 14px;
             margin: 0;
         }
 
         .sr-welcome-stack .sr-stat-card {
-            min-height: 210px;
-            padding: 18px;
-            border-radius: 18px;
+            min-height: 150px;
+            padding: 16px;
+            border-radius: 16px;
         }
 
         .sr-welcome-stack .sr-stat-head {
@@ -231,13 +238,103 @@
         }
 
         .sr-welcome-stack .sr-stat-value {
-            margin-top: 28px;
-            font-size: clamp(2rem, 3vw, 2.6rem);
+            margin-top: 18px;
+            font-size: clamp(1.7rem, 2.35vw, 2.25rem);
         }
 
         .sr-welcome-stack .sr-stat-label {
-            font-size: clamp(0.98rem, 1.7vw, 1.2rem);
-            line-height: 1.18;
+            font-size: clamp(0.86rem, 1.15vw, 1rem);
+            line-height: 1.22;
+        }
+
+        .sr-summary-grid > .sr-score-panel {
+            height: 100%;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-layout {
+            flex: 1 1 auto;
+            align-content: center;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-layout {
+            grid-template-columns: 1fr;
+            gap: 26px;
+            align-items: center;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-meta {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            width: 100%;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-readiness-ring {
+            --ring-size: clamp(160px, 14vw, 190px);
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-readiness-ring::before {
+            inset: 10px;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-value {
+            font-size: clamp(2.85rem, 4vw, 3.45rem);
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-value span {
+            font-size: 1.05rem;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-ring-label {
+            font-size: 0.74rem;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-meta-item {
+            min-height: 106px;
+            padding: 18px;
+            border-radius: 16px;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-meta-label {
+            font-size: 0.86rem;
+            line-height: 1.35;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-meta-value {
+            font-size: 1.55rem;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-icon {
+            width: 48px;
+            height: 48px;
+            flex-basis: 48px;
+            border-radius: 16px;
+            font-size: 1.12rem;
+        }
+
+        .sr-summary-grid > .sr-score-panel .sr-score-note {
+            margin-top: 18px;
+        }
+
+        .sr-dashboard-shell {
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 340px);
+        }
+    }
+
+    @media (min-width: 1400px) {
+        .sr-dashboard {
+            --dash-section-gap: 20px;
+        }
+
+        .sr-summary-grid {
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 350px);
+        }
+
+        .sr-dashboard-shell {
+            grid-template-columns: minmax(0, 1fr) minmax(330px, 350px);
         }
     }
 
@@ -2382,6 +2479,35 @@
         font-size: 0.7rem;
         line-height: 1;
         font-weight: 900;
+    }
+
+    @media (min-width: 992px) {
+        .sr-side-stack .sr-achievement-showcase {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .sr-side-stack .sr-achievement-tile {
+            min-height: 132px;
+            padding: 14px 10px;
+            gap: 9px;
+        }
+
+        .sr-side-stack .sr-achievement-tile-icon {
+            min-height: 38px;
+            font-size: 2rem;
+        }
+
+        .sr-side-stack .sr-achievement-tile-title {
+            font-size: 0.86rem;
+            line-height: 1.18;
+            overflow-wrap: anywhere;
+        }
+
+        .sr-side-stack .sr-achievement-status {
+            padding: 7px 10px;
+            font-size: 0.68rem;
+            white-space: nowrap;
+        }
     }
 
     .sr-notification-list-polished {

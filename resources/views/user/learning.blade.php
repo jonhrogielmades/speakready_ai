@@ -636,20 +636,767 @@
     }
 </style>
 @include('partials.page-hero-styles')
+<style>
+    #learning-games-page {
+        --challenge-blue: #2563eb;
+        --challenge-ink: #071936;
+        --challenge-muted: #52617a;
+        --challenge-line: #dbe7fb;
+    }
+    #learning-games-page .sr-learning-hero {
+        --learning-hero-title-color: #1d4ed8;
+        --learning-hero-text-color: #334155;
+        --learning-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --learning-hero-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 104px;
+        margin-bottom: 14px;
+        padding: 14px 126px 14px 14px !important;
+        border-radius: 16px;
+        border-color: rgba(191, 219, 254, 0.86);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+    }
+    .lm #learning-games-page .sr-learning-hero {
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+    }
+    :root:not(.lm) #learning-games-page .sr-learning-hero,
+    .dm #learning-games-page .sr-learning-hero {
+        --learning-hero-title-color: #93c5fd;
+        --learning-hero-text-color: #e2e8f0;
+        --learning-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --learning-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28);
+    }
+    #learning-games-page .sr-learning-hero .sr-page-hero-inner,
+    #learning-games-page .sr-learning-hero .sr-page-hero-copy {
+        display: contents !important;
+    }
+    #learning-games-page .learning-hero-icon {
+        box-sizing: border-box;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border: 1px solid var(--learning-hero-icon-border) !important;
+        border-radius: 10px !important;
+        background: var(--learning-hero-icon-bg) !important;
+        color: var(--learning-hero-title-color) !important;
+        font-size: 0.9rem !important;
+    }
+    #learning-games-page .sr-learning-hero .sr-page-hero-title {
+        display: block !important;
+        color: var(--learning-hero-title-color) !important;
+        background: none !important;
+        -webkit-text-fill-color: var(--learning-hero-title-color) !important;
+        font-size: 1.02rem !important;
+        line-height: 1.08 !important;
+        max-width: none;
+        margin: 0 0 4px !important;
+        font-weight: 950 !important;
+        text-transform: uppercase;
+        overflow-wrap: normal;
+    }
+    #learning-games-page .sr-learning-hero .sr-page-hero-title svg {
+        display: none;
+    }
+    #learning-games-page .sr-learning-hero .sr-page-hero-subtitle {
+        color: var(--learning-hero-text-color) !important;
+        max-width: 15rem;
+        margin: 0;
+        font-size: 0.66rem !important;
+        line-height: 1.32 !important;
+        font-weight: 500;
+    }
+    #learning-games-page .sr-learning-hero .sr-page-hero-art {
+        width: 94px;
+        right: 8px;
+        bottom: 4px;
+        opacity: 0.92;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
+    }
+    #learning-games-page .sr-page-actions.learning-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 26px;
+    }
+    #learning-games-page #tour-search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: none !important;
+        border-radius: 18px !important;
+        padding: 16px 18px !important;
+        background: linear-gradient(135deg, rgba(240, 253, 250, 0.88), rgba(255, 255, 255, 0.94)) !important;
+        border-color: rgba(16, 185, 129, 0.25) !important;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+    #learning-games-page #btn-skill-tree {
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 13px !important;
+        background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(255, 255, 255, 0.92)) !important;
+        border-color: rgba(16, 185, 129, 0.28) !important;
+        color: #103d35 !important;
+        font-size: 0.82rem;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+    #learning-games-page .ll-stat-card {
+        border-radius: 18px;
+        border-color: rgba(203, 213, 225, 0.82);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+    }
+    #learning-games-page #dashboard-stats {
+        --bs-gutter-x: 14px;
+        --bs-gutter-y: 14px;
+    }
+    #learning-games-page #dashboard-stats .ll-stat-card {
+        min-height: 112px;
+        justify-content: center;
+    }
+    #learning-games-page #dashboard-stats .ll-stat-card.d-flex {
+        display: grid !important;
+        grid-template-columns: 54px minmax(0, 1fr);
+        align-items: center !important;
+        gap: 14px !important;
+        text-align: left;
+    }
+    #learning-games-page #dashboard-stats .ll-stat-card [style*="width:55px"] {
+        width: 46px !important;
+        height: 46px !important;
+        border-radius: 13px !important;
+        font-size: 1.18rem !important;
+        flex: 0 0 46px !important;
+    }
+    #learning-games-page #dashboard-stats .ll-stat-val {
+        font-size: 1.34rem !important;
+        line-height: 1.05;
+        margin: 0 0 3px !important;
+    }
+    #learning-games-page #dashboard-stats .ll-stat-val span {
+        font-size: 0.8rem !important;
+    }
+    #learning-games-page #dashboard-stats .ll-stat-card [style*="text-transform:uppercase"] {
+        font-size: 0.68rem !important;
+        line-height: 1.15;
+        letter-spacing: 0;
+    }
+    #learning-games-page #dashboard-stats .ll-progress-bar {
+        margin: 8px 0 6px !important;
+    }
+    #learning-games-page .journey-header {
+        margin-top: 8px;
+    }
+    #learning-games-page .journey-title {
+        color: var(--challenge-ink);
+        font-size: 1.85rem;
+        font-weight: 900;
+        letter-spacing: 0;
+    }
+    #learning-games-page .journey-lives {
+        background: linear-gradient(135deg, #fff7ed, #ffedd5) !important;
+        color: #071936 !important;
+        border: 1px solid #fed7aa;
+        border-radius: 999px !important;
+        padding: 11px 18px !important;
+        font-size: 0.98rem !important;
+    }
+    #learning-games-page .level-path-container {
+        padding: 18px 0 6px;
+        margin-top: 4px;
+    }
+    #learning-games-page .level-path-line {
+        left: 42px;
+        width: 5px;
+        background: #dce7f8;
+    }
+    #learning-games-page .level-icon {
+        width: 58px;
+        height: 58px;
+        border-width: 6px;
+        font-weight: 900;
+    }
+    #learning-games-page .level-node.active .level-icon {
+        background: linear-gradient(135deg, #60a5fa, #1d4ed8);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.26);
+    }
+    #learning-games-page .level-node.locked .level-icon {
+        background: #ffffff;
+        color: #0f1f3f;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14);
+    }
+    #learning-games-page .level-node.locked .level-card {
+        opacity: 1;
+        min-height: 210px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 180px;
+        align-items: start;
+        column-gap: 28px;
+        background:
+            radial-gradient(circle at 98% 86%, rgba(124, 58, 237, 0.1), rgba(124, 58, 237, 0) 30%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
+    }
+    #learning-games-page .level-node.locked .level-card::after {
+        display: none;
+    }
+    #learning-games-page .level-node.locked .locked-card-main {
+        min-width: 0;
+    }
+    #learning-games-page .locked-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        margin: 14px 0 16px;
+        padding: 9px 18px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(99, 102, 241, 0.12));
+        color: #6d5ac7;
+        font-size: 0.98rem;
+        font-weight: 900;
+    }
+    #learning-games-page .locked-card-art {
+        width: 154px;
+        aspect-ratio: 1;
+        justify-self: end;
+        align-self: start;
+        display: grid;
+        place-items: center;
+        border-radius: 42px;
+        background:
+            radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0) 34%),
+            linear-gradient(135deg, rgba(124, 58, 237, 0.09), rgba(99, 102, 241, 0.16));
+        color: #8177d9;
+        font-size: 4.4rem;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+        opacity: 0.78;
+    }
+    #learning-games-page .level-card {
+        border-radius: 20px;
+        padding: 28px 30px;
+        background:
+            radial-gradient(circle at 92% 28%, rgba(99, 102, 241, 0.09), rgba(99, 102, 241, 0) 26%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
+        border-color: #cfe0f7;
+        box-shadow: 0 14px 36px rgba(15, 23, 42, 0.07);
+    }
+    #learning-games-page .level-card > .d-flex:first-child {
+        margin-bottom: 12px !important;
+    }
+    #learning-games-page .level-card h5 {
+        color: #071936 !important;
+        font-weight: 900 !important;
+        line-height: 1.25;
+    }
+    #learning-games-page .level-card p {
+        color: #52617a !important;
+        font-size: 1rem !important;
+    }
+    #learning-games-page .level-card [style*="background:rgba(59,130,246,0.07)"] {
+        margin-top: 14px;
+        margin-bottom: 16px !important;
+        border-radius: 14px !important;
+        padding: 16px !important;
+    }
+    #learning-games-page .level-card .d-flex.flex-wrap.gap-2 {
+        gap: 9px !important;
+        margin-bottom: 18px !important;
+    }
+    #learning-games-page .score-badge,
+    #learning-games-page .requirement-badge,
+    #learning-games-page .level-card .badge {
+        border-radius: 999px !important;
+        padding: 9px 14px;
+        font-size: 0.85rem;
+        border-color: #d6e4f8 !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    }
+    #learning-games-page .active-challenge-panel {
+        background: linear-gradient(135deg, #eff6ff, #f8fbff) !important;
+        border-color: #cfe0f7 !important;
+        border-radius: 18px !important;
+        padding: 20px !important;
+        margin-bottom: 18px !important;
+    }
+    #learning-games-page .active-challenge-panel [style*="Contains"] {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px !important;
+        font-size: 0.94rem !important;
+        color: #173b67 !important;
+    }
+    #learning-games-page .active-challenge-panel [style*="Success checklist"] {
+        margin-bottom: 10px !important;
+        font-size: 0.8rem !important;
+        color: #44536a !important;
+    }
+    #learning-games-page .active-challenge-panel [style*="fa-check"] {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 8px !important;
+        line-height: 1.45 !important;
+        color: #334155 !important;
+    }
+    #learning-games-page .active-challenge-panel [style*="Best attempt"] {
+        margin-top: 14px !important;
+        margin-bottom: 10px;
+    }
+    #learning-games-page .start-challenge-btn {
+        width: 100%;
+        min-height: 58px;
+        border-radius: 16px !important;
+        font-size: 1.08rem;
+        font-weight: 900 !important;
+        background: linear-gradient(135deg, #3b82f6, #075dec) !important;
+        box-shadow: 0 16px 28px rgba(37, 99, 235, 0.28) !important;
+    }
+    :root:not(.lm) #learning-games-page,
+    .dm #learning-games-page {
+        --challenge-ink: #e5eefc;
+        --challenge-muted: #b8c5d8;
+        --challenge-line: rgba(148, 163, 184, 0.26);
+    }
+    :root:not(.lm) #learning-games-page #tour-search,
+    .dm #learning-games-page #tour-search,
+    :root:not(.lm) #learning-games-page #btn-skill-tree,
+    .dm #learning-games-page #btn-skill-tree,
+    :root:not(.lm) #learning-games-page .learning-category-select,
+    .dm #learning-games-page .learning-category-select {
+        background: rgba(15, 23, 42, 0.78) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
+        color: #e2e8f0 !important;
+    }
+    :root:not(.lm) #learning-games-page #tour-search input,
+    .dm #learning-games-page #tour-search input {
+        color: #e2e8f0 !important;
+    }
+    :root:not(.lm) #learning-games-page #tour-search input::placeholder,
+    .dm #learning-games-page #tour-search input::placeholder {
+        color: #94a3b8 !important;
+    }
+    :root:not(.lm) #learning-games-page .ll-nav-pill,
+    .dm #learning-games-page .ll-nav-pill,
+    :root:not(.lm) #learning-games-page .ll-stat-card,
+    .dm #learning-games-page .ll-stat-card,
+    :root:not(.lm) #learning-games-page .level-card,
+    .dm #learning-games-page .level-card {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.92)) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
+        color: #e2e8f0 !important;
+    }
+    :root:not(.lm) #learning-games-page .ll-nav-pill:not(.active),
+    .dm #learning-games-page .ll-nav-pill:not(.active) {
+        color: #cbd5e1 !important;
+    }
+    :root:not(.lm) #learning-games-page .journey-lives,
+    .dm #learning-games-page .journey-lives {
+        background: rgba(127, 29, 29, 0.28) !important;
+        border-color: rgba(248, 113, 113, 0.28) !important;
+        color: #fecaca !important;
+    }
+    :root:not(.lm) #learning-games-page .level-path-line,
+    .dm #learning-games-page .level-path-line {
+        background: rgba(148, 163, 184, 0.24) !important;
+    }
+    :root:not(.lm) #learning-games-page .level-card h5,
+    .dm #learning-games-page .level-card h5,
+    :root:not(.lm) #learning-games-page .ll-stat-val,
+    .dm #learning-games-page .ll-stat-val,
+    :root:not(.lm) #learning-games-page [style*="color:var(--tx)"],
+    .dm #learning-games-page [style*="color:var(--tx)"] {
+        color: #e5eefc !important;
+    }
+    :root:not(.lm) #learning-games-page .level-card p,
+    .dm #learning-games-page .level-card p,
+    :root:not(.lm) #learning-games-page [style*="color:var(--tx2)"],
+    .dm #learning-games-page [style*="color:var(--tx2)"] {
+        color: #cbd5e1 !important;
+    }
+    :root:not(.lm) #learning-games-page [style*="color:var(--tx3)"],
+    .dm #learning-games-page [style*="color:var(--tx3)"] {
+        color: #94a3b8 !important;
+    }
+    :root:not(.lm) #learning-games-page .level-node.locked .level-card,
+    .dm #learning-games-page .level-node.locked .level-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.88)) !important;
+        border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+    :root:not(.lm) #learning-games-page .level-node.locked .level-icon,
+    .dm #learning-games-page .level-node.locked .level-icon {
+        background: rgba(30, 41, 59, 0.94) !important;
+        color: #94a3b8 !important;
+        border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+    :root:not(.lm) #learning-games-page .locked-status-pill,
+    .dm #learning-games-page .locked-status-pill {
+        background: rgba(124, 58, 237, 0.18) !important;
+        border-color: rgba(167, 139, 250, 0.24) !important;
+        color: #c4b5fd !important;
+    }
+    :root:not(.lm) #learning-games-page .locked-card-art,
+    .dm #learning-games-page .locked-card-art,
+    :root:not(.lm) #learning-games-page .active-challenge-panel,
+    .dm #learning-games-page .active-challenge-panel,
+    :root:not(.lm) #learning-games-page .level-card [style*="background:rgba(59,130,246,0.07)"],
+    .dm #learning-games-page .level-card [style*="background:rgba(59,130,246,0.07)"],
+    :root:not(.lm) #learning-games-page .score-badge,
+    .dm #learning-games-page .score-badge,
+    :root:not(.lm) #learning-games-page .requirement-badge,
+    .dm #learning-games-page .requirement-badge,
+    :root:not(.lm) #learning-games-page .level-card .badge,
+    .dm #learning-games-page .level-card .badge {
+        background: rgba(30, 41, 59, 0.82) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
+        color: #e2e8f0 !important;
+    }
+    #learning-games-page .sr-learning-hero,
+    #learning-games-page .learning-mobile-control-row,
+    #learning-games-page #dashboard-stats,
+    #learning-games-page .level-card,
+    #learning-games-page .active-challenge-panel,
+    #learning-games-page .game-result-modal .modal-content {
+        max-width: 100%;
+    }
+    #learning-games-page .level-card,
+    #learning-games-page .ll-stat-card,
+    #learning-games-page .ll-nav-pill,
+    #learning-games-page .badge,
+    #learning-games-page .requirement-badge,
+    #learning-games-page .score-badge {
+        overflow-wrap: anywhere;
+    }
+    @media (max-width: 767px) {
+        #learning-games-page {
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+        #learning-games-page .sr-learning-hero {
+            min-height: 92px !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            border-radius: 16px;
+            padding: 11px 96px 11px 12px !important;
+            margin-bottom: 14px;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-inner {
+            display: contents !important;
+            padding-right: 0;
+        }
+        #learning-games-page .learning-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.82rem !important;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-title {
+            font-size: 0.9rem !important;
+            line-height: 1.08;
+            margin-bottom: 4px !important;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-title svg {
+            display: none;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-subtitle {
+            font-size: 0.64rem !important;
+            line-height: 1.28;
+            max-width: 12rem;
+            margin-top: 0;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-art {
+            display: block;
+            width: 84px;
+            right: -4px;
+            bottom: 5px;
+        }
+        #learning-games-page .sr-page-actions.learning-actions {
+            grid-template-columns: 1fr;
+            gap: 9px;
+            margin-bottom: 12px;
+        }
+        #learning-games-page #tour-search,
+        #learning-games-page #btn-skill-tree {
+            min-height: 44px;
+            border-radius: 13px !important;
+            padding: 10px 12px !important;
+            font-size: 0.84rem;
+        }
+        #learning-games-page #btn-skill-tree {
+            width: auto;
+        }
+        #learning-games-page .learning-mobile-control-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: stretch;
+            margin-bottom: 12px;
+        }
+        #learning-games-page .learning-mobile-control-row .learning-category-select-wrap {
+            margin-bottom: 0;
+            min-width: 0;
+        }
+        #learning-games-page .learning-mobile-control-row #btn-skill-tree {
+            min-width: 0;
+            height: 44px;
+            padding: 8px 12px !important;
+            justify-self: end;
+        }
+        #learning-games-page .learning-mobile-control-row .learning-category-select {
+            height: 44px;
+            min-height: 44px;
+            font-size: 0.78rem;
+            padding: 8px 28px 8px 10px;
+            text-overflow: ellipsis;
+        }
+        #learning-games-page .ll-stat-card {
+            min-height: 82px !important;
+            border-radius: 14px !important;
+            padding: 11px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card {
+            min-height: 84px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card.d-flex {
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 9px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card [style*="width:55px"] {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            font-size: 0.9rem !important;
+            flex-basis: 34px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-val {
+            font-size: 1rem !important;
+            line-height: 1.05;
+            margin-bottom: 2px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-val span {
+            font-size: 0.68rem !important;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card [style*="text-transform:uppercase"] {
+            font-size: 0.55rem !important;
+            line-height: 1.1;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between {
+            margin-bottom: 6px !important;
+            gap: 6px;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between span:first-child {
+            font-size: 0.74rem !important;
+            line-height: 1.15;
+            white-space: nowrap;
+        }
+        #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between span:last-child {
+            font-size: 0.56rem !important;
+            padding: 3px 6px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-progress-bar {
+            height: 9px !important;
+            margin: 6px 0 5px !important;
+        }
+        #learning-games-page #dashboard-stats .ll-progress-bar + div {
+            font-size: 0.58rem !important;
+            line-height: 1.1;
+        }
+        #learning-games-page .journey-header {
+            align-items: flex-start !important;
+            gap: 10px;
+            margin-bottom: 12px !important;
+        }
+        #learning-games-page .journey-title {
+            font-size: 1.28rem;
+            line-height: 1.15;
+        }
+        #learning-games-page .journey-lives {
+            padding: 8px 12px !important;
+            font-size: 0.78rem !important;
+        }
+        #learning-games-page .level-path-line {
+            left: 18px;
+            width: 4px;
+        }
+        #learning-games-page .level-icon-wrapper {
+            width: 38px;
+        }
+        #learning-games-page .level-icon {
+            width: 34px;
+            height: 34px;
+            border-width: 4px;
+            font-size: 0.9rem;
+        }
+        #learning-games-page .level-card {
+            margin-left: 10px;
+            padding: 16px;
+            border-radius: 16px;
+        }
+        #learning-games-page .level-node.locked .level-card {
+            min-height: 132px;
+            display: block;
+            position: relative;
+            padding-right: 16px;
+        }
+        #learning-games-page .level-node.locked .level-card > .locked-card-main > .d-flex:first-child {
+            padding-right: 76px;
+        }
+        #learning-games-page .locked-status-pill {
+            margin: 8px 0 10px;
+            padding: 6px 11px;
+            gap: 6px;
+            font-size: 0.76rem;
+        }
+        #learning-games-page .locked-card-art {
+            width: 62px;
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            border-radius: 20px;
+            font-size: 1.8rem;
+        }
+        #learning-games-page .level-card > .d-flex:first-child {
+            align-items: flex-start !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+        }
+        #learning-games-page .level-card h5 {
+            font-size: 1rem !important;
+        }
+        #learning-games-page .level-card p {
+            font-size: 0.82rem !important;
+            line-height: 1.45 !important;
+            margin-bottom: 10px !important;
+        }
+        #learning-games-page .level-card [style*="background:rgba(59,130,246,0.07)"] {
+            margin-top: 10px;
+            margin-bottom: 12px !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+        }
+        #learning-games-page .level-card .d-flex.flex-wrap.gap-2 {
+            gap: 7px !important;
+            margin-bottom: 12px !important;
+        }
+        #learning-games-page .score-badge,
+        #learning-games-page .requirement-badge,
+        #learning-games-page .level-card .badge {
+            padding: 7px 10px;
+            font-size: 0.72rem;
+            max-width: 100%;
+            white-space: normal;
+            text-align: left;
+        }
+        #learning-games-page .active-challenge-panel {
+            padding: 14px !important;
+            border-radius: 14px !important;
+            margin-bottom: 16px !important;
+        }
+        #learning-games-page .active-challenge-panel [style*="Contains"] {
+            margin-bottom: 12px !important;
+            font-size: 0.84rem !important;
+        }
+        #learning-games-page .active-challenge-panel [style*="Success checklist"] {
+            margin-bottom: 8px !important;
+        }
+        #learning-games-page .active-challenge-panel [style*="fa-check"] {
+            gap: 7px;
+            margin-bottom: 7px !important;
+            font-size: 0.75rem !important;
+        }
+        #learning-games-page .active-challenge-panel [style*="Best attempt"],
+        #learning-games-page .active-challenge-panel [style*="Cost"] {
+            font-size: 0.74rem !important;
+        }
+        #learning-games-page .start-challenge-btn {
+            min-height: 48px;
+            font-size: 0.94rem;
+        }
+    }
+    @media (max-width: 380px) {
+        #learning-games-page .sr-learning-hero {
+            min-height: 74px !important;
+            padding: 8px 76px 8px 12px !important;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-inner {
+            padding-right: 0;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-title {
+            font-size: 0.84rem !important;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-subtitle {
+            font-size: 0.6rem !important;
+            max-width: 10.5rem;
+        }
+        #learning-games-page .sr-learning-hero .sr-page-hero-art {
+            width: 68px;
+            right: -4px;
+        }
+        #learning-games-page #dashboard-stats > [class*="col-"] {
+            width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+        #learning-games-page .level-card {
+            padding: 13px;
+        }
+        #learning-games-page .level-node.locked .level-card {
+            padding-right: 13px;
+        }
+        #learning-games-page .level-node.locked .level-card > .locked-card-main > .d-flex:first-child {
+            padding-right: 60px;
+        }
+        #learning-games-page .locked-card-art {
+            width: 50px;
+            top: 12px;
+            right: 12px;
+            border-radius: 16px;
+            font-size: 1.45rem;
+        }
+        #learning-games-page .learning-mobile-control-row {
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 7px;
+        }
+        #learning-games-page .learning-mobile-control-row #btn-skill-tree,
+        #learning-games-page .learning-mobile-control-row .learning-category-select {
+            font-size: 0.72rem;
+        }
+        #learning-games-page .learning-mobile-control-row #btn-skill-tree {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
+</style>
 @php
     $gameResult = session('game_result');
 @endphp
 
 <div class="db-section active" id="learning-games-page">
     <!-- Header & Navigation -->
-    <div class="sr-page-hero">
+    <div class="sr-page-hero sr-learning-hero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
-                <h4 class="sr-page-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15h10l2 3a2 2 0 0 0 3-2l-1-5a6 6 0 0 0-6-5H9a6 6 0 0 0-6 5l-1 5a2 2 0 0 0 3 2l2-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 11h4M10 9v4M16 10h.01M18 13h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Philippines Interview Challenges
-                </h4>
-                <p class="sr-page-hero-subtitle">Complete Philippines interview challenges, earn XP, and strengthen practical answer skills.</p>
+                <div class="learning-hero-icon"><i class="fa-solid fa-gamepad"></i></div>
+                <div>
+                    <h4 class="sr-page-hero-title text-gradient-primary">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 15h10l2 3a2 2 0 0 0 3-2l-1-5a6 6 0 0 0-6-5H9a6 6 0 0 0-6 5l-1 5a2 2 0 0 0 3 2l2-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 11h4M10 9v4M16 10h.01M18 13h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        Philippines Interview Challenges
+                    </h4>
+                    <p class="sr-page-hero-subtitle">Complete interview challenges, earn XP, and build practical answer skills.</p>
+                </div>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -657,23 +1404,24 @@
             <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#gamesPanel)" stroke="#BFDBFE" stroke-width="3"/><path d="M67 84c5-26 18-36 43-36s38 10 43 36l4 22c2 12-11 18-18 8l-10-14H91l-10 14c-7 10-20 4-18-8l4-22Z" fill="url(#gamesBlue)"/><path d="M82 80h23M94 69v23M132 74h.01M146 88h.01" stroke="#EFF6FF" stroke-width="7" stroke-linecap="round"/><circle cx="164" cy="43" r="17" fill="#F59E0B"/><path d="m164 33 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1 3-7Z" fill="#fff"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
         </svg>
     </div>
-    <div class="sr-page-actions">
+    <div class="sr-page-actions learning-actions">
         <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
             <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
             <input type="text" placeholder="Search challenges, skills, scenarios..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
         </div>
-        <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-tree me-1" style="color:#10b981"></i> <span>Skill Tree</span></a>
+        <div class="learning-mobile-control-row">
+            <div class="learning-category-select-wrap">
+                <select id="learningCategorySelect" class="learning-category-select" aria-label="Select challenge path">
+                    @foreach($categories as $category)
+                        <option value="{{ route('user.learning', ['category_id' => $category->id]) }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->title }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm d-inline-flex align-items-center justify-content-center" style="background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); border-radius:10px; font-weight:600; white-space:nowrap;"><i class="fa-solid fa-tree me-1" style="color:#10b981"></i> <span>Skill Tree</span></a>
+        </div>
     </div>
 
     <!-- Sub-Navigation -->
-    <div class="learning-category-select-wrap">
-        <select id="learningCategorySelect" class="learning-category-select" aria-label="Select challenge path">
-            @foreach($categories as $category)
-                <option value="{{ route('user.learning', ['category_id' => $category->id]) }}" {{ request('category_id') == $category->id ? 'selected' : '' }}>{{ $category->title }}</option>
-            @endforeach
-        </select>
-    </div>
-
     <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
         @foreach($categories as $category)
             <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
@@ -749,9 +1497,9 @@
     <div class="row g-4">
         <div class="col-lg-12">
             
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 style="font-weight:700;color:var(--tx);margin:0">Challenge Journey</h5>
-                <span class="badge" style="background:rgba(245,158,11,0.1);color:#f59e0b;font-size:0.85rem;padding:8px 15px;border-radius:10px;"><i class="fa-solid fa-heart me-1"></i> {{ $currentEnergy }} / {{ $maxEnergy }} Lives</span>
+            <div class="journey-header d-flex justify-content-between align-items-center mb-3">
+                <h5 class="journey-title" style="margin:0">Challenge Journey</h5>
+                <span class="badge journey-lives"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> {{ $currentEnergy }} / {{ $maxEnergy }} Lives</span>
             </div>
 
             <div class="level-path-container" id="modules-list">
@@ -817,6 +1565,8 @@
                             
                             $score = $prog ? $prog->best_score : 0;
                             $successChecklist = $level->guidance_checklist;
+                            $lockedArtIcons = ['fa-lightbulb', 'fa-comment-dots', 'fa-chalkboard-user', 'fa-trophy'];
+                            $lockedArtIcon = $lockedArtIcons[$loop->index % count($lockedArtIcons)];
                             
                             $nodeClass = '';
                             $iconHtml = '';
@@ -837,16 +1587,20 @@
                                 <div class="level-icon">{!! $iconHtml !!}</div>
                             </div>
                             <div class="level-card">
+                                <div class="{{ $status === 'locked' ? 'locked-card-main' : '' }}">
                                 <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
                                     <div>
                                         <div style="font-size:0.75rem;color:{{ $status === 'completed' ? '#34d399' : ($status === 'active' ? 'var(--pur)' : 'var(--tx3)') }};font-weight:700;margin-bottom:5px;text-transform:uppercase">Level {{ $level->level_number }}</div>
                                         <h5 style="color:var(--tx);font-weight:700;margin:0">{{ $level->title }}</h5>
+                                        @if($status === 'locked')
+                                            <div class="locked-status-pill"><i class="fa-solid fa-lock"></i> Locked</div>
+                                        @endif
                                     </div>
                                     @if($status === 'completed')
                                         <div class="score-badge"><i class="fa-solid fa-star"></i> Score: {{ $score }}%</div>
                                     @elseif($status === 'active')
                                         <div class="requirement-badge"><i class="fa-solid fa-bullseye"></i> Goal: {{ $level->required_score }}%+</div>
-                                    @else
+                                    @elseif($status !== 'locked')
                                         <div class="requirement-badge" style="background:var(--bg3);color:var(--tx3)"><i class="fa-solid fa-lock"></i> Locked</div>
                                     @endif
                                 </div>
@@ -888,7 +1642,7 @@
                                 @endif
 
                                 @if($status === 'active')
-                                    <div style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
+                                    <div class="active-challenge-panel" style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
                                         <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count($level->parsed_questions) }} Questions</div>
                                         @if($successChecklist)
                                             <div style="margin-top:12px;">
@@ -905,7 +1659,7 @@
                                     </div>
                                     <form action="{{ route('user.game.start', $level->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="btn btn-shine" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
+                                        <button type="submit" class="btn btn-shine start-challenge-btn" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
                                     </form>
                                 @elseif($status === 'completed')
                                     <div style="margin-top:15px;">
@@ -920,6 +1674,12 @@
                                             </div>
                                         @endif
                                     @endif
+                                @endif
+                                </div>
+                                @if($status === 'locked')
+                                    <div class="locked-card-art" aria-hidden="true">
+                                        <i class="fa-solid {{ $lockedArtIcon }}"></i>
+                                    </div>
                                 @endif
                             </div>
                         </div>

@@ -22,3 +22,4 @@ yarn-error.log
 *.zip
 *.log
 _static_backup/
+.codex_tmp_git_push_*/

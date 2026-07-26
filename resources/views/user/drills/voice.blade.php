@@ -303,24 +303,1102 @@
     #voice-rehearsal-page .voice-history-actions form {
         margin: 0;
     }
+    #voice-rehearsal-page {
+        --vr-blue: #1673f6;
+        --vr-blue-2: #0d63df;
+        --vr-ink: #08142f;
+        --vr-muted: #516079;
+        --vr-line: rgba(113, 143, 190, 0.22);
+    }
+    #voice-rehearsal-page .vr-shell {
+        width: min(100%, 980px);
+        margin: 0 auto;
+    }
+    #voice-rehearsal-page .vr-practice-flow {
+        display: grid;
+        gap: 22px;
+    }
+    #voice-rehearsal-page .vr-option-panel {
+        border-radius: 24px;
+        background: rgba(255,255,255,.8);
+        border: 1px solid rgba(149, 184, 237, 0.32);
+        box-shadow: 0 16px 38px rgba(24, 84, 166, 0.08);
+        padding: 12px;
+    }
+    .dm #voice-rehearsal-page .vr-option-panel {
+        background: rgba(15, 23, 42, .82);
+    }
+    #voice-rehearsal-page .sr-page-hero.vr-hero {
+        --vr-hero-title-color: #1d4ed8;
+        --vr-hero-text-color: #334155;
+        --vr-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --vr-hero-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 104px;
+        margin-bottom: 14px;
+        padding: 14px 126px 14px 14px !important;
+        border-radius: 16px;
+        border-color: rgba(191, 219, 254, 0.86);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+        overflow: hidden;
+    }
+    .dm #voice-rehearsal-page .sr-page-hero.vr-hero {
+        --vr-hero-title-color: #93c5fd;
+        --vr-hero-text-color: #e2e8f0;
+        --vr-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --vr-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28);
+    }
+    #voice-rehearsal-page .sr-page-hero.vr-hero::after {
+        width: min(34%, 320px);
+        background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.055));
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-inner {
+        display: contents !important;
+        min-height: 0;
+        padding: 0;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-copy {
+        display: contents !important;
+    }
+    #voice-rehearsal-page .vr-hero-icon {
+        box-sizing: border-box;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border: 1px solid var(--vr-hero-icon-border) !important;
+        border-radius: 10px !important;
+        background: var(--vr-hero-icon-bg) !important;
+        color: var(--vr-hero-title-color) !important;
+        font-size: 0.9rem !important;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+        display: block !important;
+        color: var(--vr-hero-title-color) !important;
+        background: none !important;
+        -webkit-text-fill-color: var(--vr-hero-title-color) !important;
+        font-size: 1.02rem !important;
+        line-height: 1.08 !important;
+        margin: 0 0 4px;
+        font-weight: 950;
+        text-transform: uppercase;
+        overflow-wrap: normal;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-title svg {
+        display: none;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+        color: var(--vr-hero-text-color) !important;
+        max-width: 27rem;
+        margin: 0;
+        font-size: .78rem !important;
+        line-height: 1.32 !important;
+        font-weight: 500;
+    }
+    .dm #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+        color: var(--tx2);
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+        right: 8px;
+        bottom: 4px;
+        width: 94px;
+        max-width: none;
+        opacity: 0.92;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
+    }
+    #voice-rehearsal-page .sr-page-actions.vr-tabs-wrap {
+        display: block;
+        margin: 10px 0 14px;
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0;
+        padding: 0;
+        border: 1px solid rgba(149, 184, 237, 0.38);
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 8px 18px rgba(24, 84, 166, 0.06);
+    }
+    .dm #voice-rehearsal-page #moduleTabs.vr-tabs {
+        background: rgba(15, 23, 42, 0.72);
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs .nav-item {
+        width: 100%;
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+        width: 100%;
+        min-height: 36px;
+        border-radius: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        color: var(--vr-ink);
+        font-size: .76rem;
+        font-weight: 800;
+    }
+    .dm #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link.active {
+        background: linear-gradient(135deg, #1876ff, #0769ee);
+        color: #fff;
+        box-shadow: 0 8px 16px rgba(13, 99, 223, 0.18);
+    }
+    #voice-rehearsal-page .vr-prompt-card {
+        border-radius: 24px;
+        background: rgba(255,255,255,.8);
+        border: 1px solid rgba(149, 184, 237, 0.32);
+        box-shadow: 0 16px 38px rgba(24, 84, 166, 0.08);
+    }
+    .dm #voice-rehearsal-page .vr-prompt-card {
+        background: rgba(15, 23, 42, .82);
+    }
+    #voice-rehearsal-page .vr-option-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 0;
+    }
+    #voice-rehearsal-page .vr-option-row {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) 16px;
+        align-items: center;
+        gap: 7px;
+        min-height: 44px;
+        padding: 6px 8px;
+        border-radius: 11px;
+        border: 1px solid var(--vr-line);
+        background: linear-gradient(135deg, rgba(255,255,255,.9), rgba(248,251,255,.82));
+        color: var(--vr-ink);
+        text-align: left;
+        font-size: .68rem;
+        font-weight: 800;
+        cursor: pointer;
+        min-width: 0;
+    }
+    #voice-rehearsal-page .vr-option-row > span:not(.vr-option-icon) {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #voice-rehearsal-page .vr-option-row > .fa-chevron-right {
+        font-size: .72rem;
+        color: #324462;
+        justify-self: end;
+    }
+    .dm #voice-rehearsal-page .vr-option-row {
+        background: rgba(30, 41, 59, .62);
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .vr-option-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf2ff;
+        color: var(--vr-blue-2);
+        font-size: .78rem;
+        flex: 0 0 auto;
+    }
+    #voice-rehearsal-page .vr-option-icon i,
+    #voice-rehearsal-page .vr-option-row > i:not(.fa-chevron-right) {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 1em;
+        height: 1em;
+        color: currentColor;
+        opacity: 1 !important;
+    }
+    #voice-rehearsal-page .vr-hidden-selects {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+    #voice-rehearsal-page .vr-prompt-card {
+        padding: clamp(14px, 3vw, 24px);
+    }
+    #voice-rehearsal-page .vr-prompt-kicker {
+        color: var(--vr-blue);
+        font-size: .78rem;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    #voice-rehearsal-page #promptText.vr-prompt-text {
+        color: var(--vr-ink);
+        font-size: clamp(.98rem, 2.4vw, 1.45rem);
+        font-weight: 800;
+        line-height: 1.35;
+        max-width: 720px;
+        margin: 0 auto 16px;
+        text-align: center;
+    }
+    .dm #voice-rehearsal-page #promptText.vr-prompt-text {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .vr-mic-stage {
+        min-height: 116px;
+        margin-bottom: 14px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 20px;
+        border: 1px solid rgba(96,165,250,.34);
+        background: linear-gradient(135deg, rgba(239,246,255,.98), rgba(228,239,255,.82));
+        box-shadow: inset 0 2px 18px rgba(37,99,235,.06), 0 12px 30px rgba(37,99,235,.1);
+    }
+    .dm #voice-rehearsal-page .vr-mic-stage {
+        background: linear-gradient(135deg, rgba(30,41,59,.72), rgba(15,23,42,.8));
+    }
+    #voice-rehearsal-page .vr-mic-button {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #eff6ff, #cfe3ff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        color: var(--vr-blue-2);
+        font-size: 2rem;
+        border: 1px solid rgba(96,165,250,.28);
+        box-shadow: 0 10px 24px rgba(37,99,235,.18);
+    }
+    #voice-rehearsal-page .voice-recorder-controls {
+        margin-top: 4px;
+    }
+    #voice-rehearsal-page #btnStart {
+        min-width: 150px;
+        min-height: 46px;
+        border-radius: 13px !important;
+        background: linear-gradient(135deg, #2f89ff, #0769ee) !important;
+        border: 1px solid rgba(255,255,255,.35) !important;
+        color: #fff !important;
+        font-size: .92rem;
+        font-weight: 900 !important;
+        padding: 8px 18px !important;
+        box-shadow: 0 10px 22px rgba(13, 99, 223, .24), inset 0 1px 0 rgba(255,255,255,.35) !important;
+    }
+    #voice-rehearsal-page .vr-start-note {
+        color: var(--vr-ink);
+        font-size: 1.15rem;
+        line-height: 1.45;
+        text-align: center;
+        margin: 0 auto 28px;
+        max-width: 600px;
+    }
+    .dm #voice-rehearsal-page .vr-start-note {
+        color: var(--tx2);
+    }
+    #voice-rehearsal-page .voice-live-stats {
+        margin-bottom: 18px !important;
+    }
+    #voice-rehearsal-page .stat-box {
+        min-height: 86px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(255,255,255,.92), rgba(247,251,255,.78));
+        border: 1px solid rgba(149, 184, 237, .42);
+        box-shadow: 0 8px 18px rgba(24, 84, 166, .07);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 10px 8px;
+    }
+    .dm #voice-rehearsal-page .stat-box {
+        background: rgba(30, 41, 59, .65);
+    }
+    #voice-rehearsal-page .stat-ico {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--vr-blue);
+        background: #edf5ff;
+        font-size: .78rem;
+        box-shadow: inset 0 0 0 1px rgba(96,165,250,.12);
+    }
+    #voice-rehearsal-page .stat-ico.warn {
+        color: #f59e0b;
+        background: #fff7ed;
+    }
+    #voice-rehearsal-page .stat-ico.danger {
+        color: #f43f5e;
+        background: #fff1f2;
+    }
+    #voice-rehearsal-page .stat-val {
+        color: var(--vr-ink);
+        font-size: 1.15rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .dm #voice-rehearsal-page .stat-val {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .stat-lbl {
+        color: var(--vr-muted);
+        font-size: .58rem;
+        font-weight: 800;
+        letter-spacing: .01em;
+    }
+    #voice-rehearsal-page .vr-transcript-wrap {
+        margin-bottom: 20px;
+    }
+    #voice-rehearsal-page .vr-transcript-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--vr-ink);
+        font-size: .8rem;
+        font-weight: 900;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .dm #voice-rehearsal-page .vr-transcript-label {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .vr-transcript-label i {
+        width: 26px;
+        height: 26px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, #3b82f6, #0769ee);
+    }
+    #voice-rehearsal-page #transcriptView {
+        min-height: 112px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(149, 184, 237, .5) !important;
+        background: linear-gradient(135deg, rgba(248,251,255,.96), rgba(238,246,255,.84)) !important;
+        color: var(--vr-muted) !important;
+        font-size: .92rem !important;
+        padding: 14px !important;
+        box-shadow: inset 0 3px 18px rgba(37,99,235,.05);
+    }
+    #voice-rehearsal-page .instant-feedback-panel,
+    #voice-rehearsal-page .intention-coach-panel,
+    #voice-rehearsal-page .vr-assessment-card {
+        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(242,249,255,.88));
+        border: 1px solid rgba(149, 184, 237, .42);
+        box-shadow: 0 18px 42px rgba(24, 84, 166, .09);
+        padding: 26px;
+    }
+    #voice-rehearsal-page .instant-feedback-panel {
+        border-radius: 14px;
+        padding: 14px;
+    }
+    #voice-rehearsal-page .intention-coach-panel {
+        border-radius: 14px;
+        padding: 14px;
+    }
+    .dm #voice-rehearsal-page .instant-feedback-panel,
+    .dm #voice-rehearsal-page .intention-coach-panel,
+    .dm #voice-rehearsal-page .vr-assessment-card {
+        background: linear-gradient(145deg, rgba(30,41,59,.84), rgba(15,23,42,.82));
+    }
+    #voice-rehearsal-page .instant-feedback-head,
+    #voice-rehearsal-page .intention-coach-head {
+        align-items: center;
+        margin-bottom: 22px;
+    }
+    #voice-rehearsal-page .instant-feedback-head {
+        margin-bottom: 12px;
+    }
+    #voice-rehearsal-page .intention-coach-head {
+        margin-bottom: 12px;
+    }
+    #voice-rehearsal-page .instant-feedback-title,
+    #voice-rehearsal-page .intention-coach-title {
+        color: var(--vr-ink);
+        font-size: 1.35rem;
+        font-weight: 900;
+    }
+    #voice-rehearsal-page .instant-feedback-title {
+        font-size: .95rem;
+        line-height: 1.2;
+    }
+    #voice-rehearsal-page .intention-coach-title {
+        font-size: .95rem;
+        line-height: 1.2;
+    }
+    .dm #voice-rehearsal-page .instant-feedback-title,
+    .dm #voice-rehearsal-page .intention-coach-title {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .instant-feedback-title i,
+    #voice-rehearsal-page .intention-coach-title i {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf2ff;
+        color: var(--vr-blue) !important;
+        font-size: 1.65rem;
+        margin-right: 14px !important;
+    }
+    #voice-rehearsal-page .instant-feedback-title i {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        font-size: .9rem;
+        margin-right: 8px !important;
+    }
+    #voice-rehearsal-page .intention-coach-title i {
+        background: #dffaf4;
+        color: #14b8a6 !important;
+    }
+    #voice-rehearsal-page .intention-coach-title i {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        font-size: .9rem;
+        margin-right: 8px !important;
+    }
+    #voice-rehearsal-page .instant-feedback-summary,
+    #voice-rehearsal-page .intention-coach-summary {
+        color: var(--vr-muted);
+        font-size: 1rem;
+        line-height: 1.45;
+        margin-left: 76px;
+    }
+    #voice-rehearsal-page .instant-feedback-summary {
+        font-size: .8rem;
+        margin-left: 38px;
+    }
+    #voice-rehearsal-page .intention-coach-summary {
+        font-size: .8rem;
+        margin-left: 38px;
+    }
+    #voice-rehearsal-page .instant-feedback-status,
+    #voice-rehearsal-page .intention-coach-status {
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-size: .8rem;
+        font-weight: 900;
+        background: #eaf2ff;
+        color: var(--vr-blue);
+        border-color: rgba(96,165,250,.28);
+    }
+    #voice-rehearsal-page .instant-feedback-status {
+        padding: 6px 11px;
+        font-size: .66rem;
+    }
+    #voice-rehearsal-page .intention-coach-status {
+        padding: 6px 11px;
+        font-size: .66rem;
+    }
+    #voice-rehearsal-page .instant-feedback-grid,
+    #voice-rehearsal-page .intention-coach-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    #voice-rehearsal-page .instant-feedback-grid {
+        gap: 9px;
+    }
+    #voice-rehearsal-page .intention-coach-grid {
+        gap: 9px;
+    }
+    #voice-rehearsal-page .instant-feedback-signal,
+    #voice-rehearsal-page .intention-coach-metric {
+        min-height: 132px;
+        display: grid;
+        grid-template-columns: 94px minmax(0, 1fr);
+        align-items: center;
+        gap: 22px;
+        border-radius: 20px;
+        padding: 22px;
+        background: rgba(255,255,255,.88);
+        border: 1px solid rgba(149, 184, 237, .25);
+        box-shadow: 0 12px 24px rgba(24, 84, 166, .06);
+    }
+    #voice-rehearsal-page .instant-feedback-signal {
+        min-height: 88px;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        border-radius: 12px;
+        padding: 12px;
+    }
+    #voice-rehearsal-page .intention-coach-metric {
+        min-height: 76px;
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 10px;
+        border-radius: 12px;
+        padding: 12px;
+    }
+    .dm #voice-rehearsal-page .instant-feedback-signal,
+    .dm #voice-rehearsal-page .intention-coach-metric {
+        background: rgba(15,23,42,.55);
+    }
+    #voice-rehearsal-page .intention-metric-ico {
+        grid-row: 1 / span 4;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #14b8a6;
+        background: #e2fbf5;
+        font-size: .88rem;
+        align-self: center;
+    }
+    #voice-rehearsal-page .instant-signal-ico {
+        grid-row: 1 / span 4;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--vr-blue);
+        background: #e7f3ff;
+        font-size: .88rem;
+        align-self: center;
+    }
+    #voice-rehearsal-page .instant-signal-ico.filler {
+        color: #6d5dfc;
+        background: #f1efff;
+    }
+    #voice-rehearsal-page .instant-signal-ico.depth {
+        color: #16a34a;
+        background: #ecfdf3;
+    }
+    #voice-rehearsal-page .intention-metric-ico.detected {
+        color: var(--vr-blue);
+        background: #edf5ff;
+    }
+    #voice-rehearsal-page .intention-metric-ico.match {
+        color: #7c3aed;
+        background: #f4efff;
+    }
+    #voice-rehearsal-page .instant-feedback-kicker,
+    #voice-rehearsal-page .intention-coach-kicker {
+        color: var(--vr-blue);
+        font-size: .88rem;
+        font-weight: 900;
+        margin-bottom: 2px;
+    }
+    #voice-rehearsal-page .instant-feedback-kicker {
+        font-size: .68rem;
+        margin-bottom: 0;
+    }
+    #voice-rehearsal-page .intention-coach-kicker {
+        font-size: .68rem;
+        margin-bottom: 0;
+    }
+    #voice-rehearsal-page .instant-feedback-value,
+    #voice-rehearsal-page .intention-coach-value {
+        color: var(--vr-ink);
+        font-size: 1.7rem;
+        font-weight: 900;
+        margin-bottom: 4px;
+    }
+    #voice-rehearsal-page .instant-feedback-value {
+        font-size: .95rem;
+        margin-bottom: 2px;
+    }
+    #voice-rehearsal-page .intention-coach-value {
+        font-size: .95rem;
+        margin-bottom: 2px;
+    }
+    .dm #voice-rehearsal-page .instant-feedback-value,
+    .dm #voice-rehearsal-page .intention-coach-value {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .instant-feedback-note {
+        color: var(--vr-muted);
+        font-size: .96rem;
+        line-height: 1.45;
+    }
+    #voice-rehearsal-page .instant-feedback-note {
+        font-size: .76rem;
+        line-height: 1.35;
+    }
+    #voice-rehearsal-page .instant-feedback-actions,
+    #voice-rehearsal-page .intention-tip-list {
+        margin-top: 18px;
+    }
+    #voice-rehearsal-page .instant-feedback-actions li,
+    #voice-rehearsal-page .intention-tip-list li {
+        border-radius: 14px;
+        background: rgba(239,246,255,.9);
+        border: 1px solid rgba(149,184,237,.32);
+        color: var(--vr-ink);
+        font-size: .98rem;
+        padding: 12px 16px;
+        align-items: center;
+    }
+    .dm #voice-rehearsal-page .instant-feedback-actions li,
+    .dm #voice-rehearsal-page .intention-tip-list li {
+        color: var(--tx2);
+        background: rgba(30,41,59,.5);
+    }
+    #voice-rehearsal-page .vr-assessment-card {
+        border-radius: 14px !important;
+        padding: 14px !important;
+    }
+    #voice-rehearsal-page .vr-assessment-title {
+        color: var(--vr-ink);
+        font-size: .95rem;
+        font-weight: 900;
+        margin-bottom: 12px;
+    }
+    #voice-rehearsal-page .vr-assessment-title i {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #edf5ff;
+        color: var(--vr-blue) !important;
+        font-size: .82rem;
+        margin-right: 8px !important;
+    }
+    .dm #voice-rehearsal-page .vr-assessment-title {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .vr-assessment-scores {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px !important;
+    }
+    #voice-rehearsal-page .vr-score-row {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        text-align: left !important;
+        width: 100% !important;
+    }
+    #voice-rehearsal-page .vr-score-ring {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(16,185,129,.18);
+        color: #10b981;
+        font-size: .82rem !important;
+        font-weight: 900 !important;
+    }
+    #voice-rehearsal-page .vr-score-ring.blue {
+        border-color: rgba(59,130,246,.32);
+        color: #3b82f6;
+    }
+    #voice-rehearsal-page .vr-score-label {
+        color: var(--vr-muted);
+        font-size: .72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    #voice-rehearsal-page .vr-assessment-divider {
+        display: none;
+    }
+    #voice-rehearsal-page .vr-pace-card,
+    #voice-rehearsal-page .vr-keywords-card,
+    #voice-rehearsal-page .vr-ai-card {
+        border-radius: 12px;
+        border: 1px solid rgba(149,184,237,.32);
+        background: rgba(248,251,255,.88);
+        padding: 12px;
+    }
+    #voice-rehearsal-page .vr-assessment-kicker {
+        color: var(--vr-muted);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: .72rem;
+        font-weight: 900;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+    #voice-rehearsal-page .vr-assessment-kicker i {
+        color: var(--vr-blue);
+        font-size: .78rem;
+    }
+    .dm #voice-rehearsal-page .vr-pace-card,
+    .dm #voice-rehearsal-page .vr-keywords-card,
+    .dm #voice-rehearsal-page .vr-ai-card {
+        background: rgba(15,23,42,.5);
+    }
+    #voice-rehearsal-page .vr-ai-card.good {
+        background: rgba(16,185,129,.07);
+        border-color: rgba(16,185,129,.22);
+    }
+    #voice-rehearsal-page .vr-ai-card.warn {
+        background: rgba(248,113,113,.07);
+        border-color: rgba(248,113,113,.22);
+    }
+    #voice-rehearsal-page #btnSave {
+        min-height: 64px;
+        border-radius: 16px !important;
+        background: linear-gradient(135deg, #10b981, #00a870) !important;
+        font-size: 1.15rem;
+        font-weight: 900 !important;
+        margin-top: 8px;
+    }
+    #voice-rehearsal-page .vr-progress-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    #voice-rehearsal-page .vr-progress-panel {
+        border-radius: 14px;
+        background: linear-gradient(145deg, rgba(255,255,255,.94), rgba(242,249,255,.88));
+        border: 1px solid rgba(149, 184, 237, .42);
+        box-shadow: 0 12px 30px rgba(24, 84, 166, .075);
+        padding: 12px;
+    }
+    .dm #voice-rehearsal-page .vr-progress-panel {
+        background: linear-gradient(145deg, rgba(30,41,59,.84), rgba(15,23,42,.82));
+    }
+    #voice-rehearsal-page .vr-progress-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--vr-ink);
+        font-size: .9rem;
+        font-weight: 900;
+        margin: 0 0 10px;
+    }
+    .dm #voice-rehearsal-page .vr-progress-title {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .vr-progress-title i {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--vr-blue);
+        background: #edf5ff;
+        font-size: .78rem;
+    }
+    #voice-rehearsal-page .vr-chart-frame {
+        height: 180px;
+        border-radius: 0;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        position: relative;
+    }
+    .dm #voice-rehearsal-page .vr-chart-frame {
+        background: rgba(15,23,42,.45);
+    }
+    #voice-rehearsal-page .vr-suggestion-card {
+        border-radius: 12px;
+        border: 1px solid rgba(149,184,237,.32);
+        background: rgba(248,251,255,.84);
+        padding: 9px 10px;
+        margin-bottom: 8px;
+    }
+    #voice-rehearsal-page .vr-suggestion-card:nth-of-type(1) {
+        background: rgba(59,130,246,.07);
+        border-color: rgba(59,130,246,.18);
+    }
+    #voice-rehearsal-page .vr-suggestion-card:nth-of-type(2) {
+        background: rgba(244,63,94,.07);
+        border-color: rgba(244,63,94,.18);
+    }
+    #voice-rehearsal-page .vr-suggestion-card:nth-of-type(3) {
+        background: rgba(20,184,166,.07);
+        border-color: rgba(20,184,166,.18);
+    }
+    #voice-rehearsal-page .vr-suggestion-content {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+    }
+    #voice-rehearsal-page .vr-suggestion-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: .82rem;
+        background: linear-gradient(135deg, #60a5fa, #2563eb);
+    }
+    #voice-rehearsal-page .vr-suggestion-card:nth-of-type(2) .vr-suggestion-icon {
+        background: linear-gradient(135deg, #fb7185, #ef4444);
+    }
+    #voice-rehearsal-page .vr-suggestion-card:nth-of-type(3) .vr-suggestion-icon {
+        background: linear-gradient(135deg, #34d399, #10b981);
+    }
+    #voice-rehearsal-page .vr-suggestion-title {
+        color: var(--vr-ink);
+        font-size: .8rem;
+        font-weight: 900;
+        margin-bottom: 1px;
+    }
+    .dm #voice-rehearsal-page .vr-suggestion-title {
+        color: var(--tx);
+    }
+    #voice-rehearsal-page .vr-suggestion-text {
+        color: var(--vr-muted);
+        font-size: .72rem;
+        line-height: 1.3;
+    }
+    #voice-rehearsal-page .vr-history-empty {
+        min-height: 92px;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: var(--vr-muted);
+    }
+    #voice-rehearsal-page .vr-history-empty i {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--vr-blue);
+        background: #eaf2ff;
+        font-size: .86rem;
+        margin-bottom: 7px;
+    }
+    #voice-rehearsal-page .vr-history-empty strong {
+        display: block;
+        color: var(--vr-ink);
+        font-size: .82rem;
+        margin-bottom: 2px;
+    }
+    #voice-rehearsal-page .vr-history-empty span {
+        font-size: .72rem;
+        line-height: 1.3;
+    }
+    #voice-rehearsal-page .voice-history-head {
+        gap: 8px;
+        margin-bottom: 10px !important;
+    }
+    #voice-rehearsal-page .voice-history-actions .btn {
+        min-height: 34px;
+        padding: 6px 10px !important;
+        font-size: .72rem;
+    }
+    #voice-rehearsal-page .voice-history-table th,
+    #voice-rehearsal-page .voice-history-table td {
+        font-size: .68rem;
+        padding: 8px 6px;
+    }
+    .dm #voice-rehearsal-page .vr-suggestion-card {
+        background: rgba(15,23,42,.5);
+    }
+
+    /* Theme readability guard: keep Voice Rehearsal surfaces legible in day and night mode. */
+    #voice-rehearsal-page :is(select, button, .vr-option-panel, .vr-prompt-card, .stat-box, #transcriptView, .instant-feedback-panel, .intention-coach-panel, .instant-feedback-signal, .intention-coach-metric, .vr-assessment-card, .vr-pace-card, .vr-keywords-card, .vr-ai-card, .vr-progress-panel, .vr-suggestion-card) {
+        color-scheme: light dark;
+    }
+    #voice-rehearsal-page .form-select,
+    #voice-rehearsal-page .form-select option {
+        background-color: var(--bg3) !important;
+        border-color: var(--bd) !important;
+        color: var(--tx) !important;
+    }
+    #voice-rehearsal-page :is(.vr-option-row, #promptText.vr-prompt-text, .vr-start-note, .stat-val, .vr-transcript-label, .instant-feedback-title, .intention-coach-title, .instant-feedback-value, .intention-coach-value, .vr-assessment-title, .vr-progress-title, .vr-suggestion-title, .vr-history-empty strong) {
+        color: var(--tx) !important;
+    }
+    #voice-rehearsal-page :is(.stat-lbl, .instant-feedback-summary, .intention-coach-summary, .instant-feedback-note, .vr-score-label, .vr-assessment-kicker, .vr-suggestion-text, .vr-history-empty) {
+        color: var(--tx3) !important;
+    }
+    #voice-rehearsal-page :is(.instant-feedback-actions li, .intention-tip-list li, .voice-history-table th, .voice-history-table td) {
+        color: var(--tx2) !important;
+    }
+    #voice-rehearsal-page #transcriptView {
+        color: var(--tx) !important;
+    }
+    .lm #voice-rehearsal-page :is(.vr-option-panel, .vr-prompt-card, .stat-box, .instant-feedback-panel, .intention-coach-panel, .vr-assessment-card, .vr-progress-panel) {
+        background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(242,249,255,.9)) !important;
+        border-color: rgba(149, 184, 237, .42) !important;
+    }
+    .lm #voice-rehearsal-page :is(#transcriptView, .instant-feedback-signal, .intention-coach-metric, .vr-pace-card, .vr-keywords-card, .vr-suggestion-card) {
+        background: rgba(248,251,255,.9) !important;
+        border-color: rgba(149, 184, 237, .34) !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page :is(.vr-option-panel, .vr-prompt-card, .stat-box, .instant-feedback-panel, .intention-coach-panel, .vr-assessment-card, .vr-progress-panel),
+    .dm #voice-rehearsal-page :is(.vr-option-panel, .vr-prompt-card, .stat-box, .instant-feedback-panel, .intention-coach-panel, .vr-assessment-card, .vr-progress-panel) {
+        background: linear-gradient(145deg, rgba(30,41,59,.88), rgba(15,23,42,.9)) !important;
+        border-color: rgba(148, 163, 184, .22) !important;
+        box-shadow: 0 16px 38px rgba(0, 0, 0, .24);
+    }
+    :root:not(.lm) #voice-rehearsal-page :is(#transcriptView, .instant-feedback-signal, .intention-coach-metric, .vr-pace-card, .vr-keywords-card, .vr-suggestion-card),
+    .dm #voice-rehearsal-page :is(#transcriptView, .instant-feedback-signal, .intention-coach-metric, .vr-pace-card, .vr-keywords-card, .vr-suggestion-card) {
+        background: rgba(15,23,42,.62) !important;
+        border-color: rgba(148, 163, 184, .22) !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page :is(.vr-option-icon, .stat-ico, .instant-feedback-title i, .intention-coach-title i, .instant-signal-ico, .intention-metric-ico, .vr-assessment-title i, .vr-progress-title i, .vr-history-empty i),
+    .dm #voice-rehearsal-page :is(.vr-option-icon, .stat-ico, .instant-feedback-title i, .intention-coach-title i, .instant-signal-ico, .intention-metric-ico, .vr-assessment-title i, .vr-progress-title i, .vr-history-empty i) {
+        background: rgba(59,130,246,.16) !important;
+        color: #93c5fd !important;
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs {
+        background: rgba(226, 232, 240, 0.92) !important;
+        border-color: rgba(148, 163, 184, 0.5) !important;
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+        color: #475569 !important;
+        background: transparent !important;
+        opacity: 1 !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+    #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link.active {
+        color: #ffffff !important;
+        background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    #voice-rehearsal-page .vr-option-row {
+        background: rgba(241, 245, 249, 0.96) !important;
+        border-color: rgba(148, 163, 184, 0.38) !important;
+        color: #334155 !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+    #voice-rehearsal-page .vr-option-row > .fa-chevron-right,
+    #voice-rehearsal-page .vr-option-row > span:not(.vr-option-icon) {
+        color: inherit !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+    #voice-rehearsal-page .vr-option-icon {
+        background: rgba(219, 234, 254, 0.95) !important;
+        color: #2563eb !important;
+    }
+    #voice-rehearsal-page .vr-mic-stage {
+        background: linear-gradient(135deg, rgba(239,246,255,.98), rgba(219,234,254,.88)) !important;
+        border-color: rgba(96, 165, 250, 0.34) !important;
+    }
+    #voice-rehearsal-page #statusText {
+        color: #475569 !important;
+        -webkit-text-fill-color: #475569 !important;
+        font-weight: 700;
+    }
+    :root:not(.lm) #voice-rehearsal-page #moduleTabs.vr-tabs,
+    .dm #voice-rehearsal-page #moduleTabs.vr-tabs {
+        background: rgba(30, 41, 59, 0.82) !important;
+        border-color: rgba(148, 163, 184, 0.32) !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link,
+    .dm #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link.active,
+    .dm #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link.active {
+        color: #ffffff !important;
+        background: linear-gradient(135deg, #2563eb, #0ea5e9) !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page .vr-option-row,
+    .dm #voice-rehearsal-page .vr-option-row {
+        background: rgba(30, 41, 59, 0.88) !important;
+        border-color: rgba(148, 163, 184, 0.28) !important;
+        color: #e2e8f0 !important;
+        -webkit-text-fill-color: #e2e8f0 !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page .vr-option-icon,
+    .dm #voice-rehearsal-page .vr-option-icon {
+        background: rgba(59,130,246,.18) !important;
+        color: #93c5fd !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page .vr-mic-stage,
+    .dm #voice-rehearsal-page .vr-mic-stage {
+        background: linear-gradient(135deg, rgba(30,41,59,.88), rgba(15,23,42,.86)) !important;
+        border-color: rgba(96,165,250,.28) !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page #statusText,
+    .dm #voice-rehearsal-page #statusText {
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
+    }
+    #voice-rehearsal-page .sr-page-hero.vr-hero {
+        --vr-hero-title-color: #1d4ed8;
+        --vr-hero-text-color: #334155;
+        --vr-hero-icon-bg: rgba(239, 246, 255, 0.95);
+        --vr-hero-icon-border: rgba(147, 197, 253, 0.48);
+        background:
+            radial-gradient(circle at 88% 18%, rgba(59, 130, 246, 0.16), transparent 34%),
+            linear-gradient(142deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.96) 58%, rgba(239, 246, 255, 0.94) 100%) !important;
+        border-color: rgba(191, 219, 254, 0.88) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08) !important;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+        color: var(--vr-hero-title-color) !important;
+        -webkit-text-fill-color: var(--vr-hero-title-color) !important;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+        color: var(--vr-hero-text-color) !important;
+        -webkit-text-fill-color: var(--vr-hero-text-color) !important;
+    }
+    :root:not(.lm) #voice-rehearsal-page .sr-page-hero.vr-hero,
+    .dm #voice-rehearsal-page .sr-page-hero.vr-hero {
+        --vr-hero-title-color: #93c5fd;
+        --vr-hero-text-color: #dbeafe;
+        --vr-hero-icon-bg: rgba(59, 130, 246, 0.18);
+        --vr-hero-icon-border: rgba(147, 197, 253, 0.28);
+        background:
+            radial-gradient(circle at 88% 18%, rgba(59, 130, 246, 0.28), transparent 34%),
+            linear-gradient(142deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.96) 58%, rgba(30, 41, 59, 0.94) 100%) !important;
+        border-color: rgba(147, 197, 253, 0.24) !important;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+    }
     @media (max-width: 767px) {
         #voice-rehearsal-page .sr-page-actions {
             display: block !important;
-            margin-bottom: 12px !important;
+            margin-bottom: 8px !important;
         }
         #voice-rehearsal-page #moduleTabs {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
+            gap: 0;
             width: 100%;
         }
         #voice-rehearsal-page #moduleTabs .nav-link {
-            min-height: 42px;
+            min-height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 12px;
-            font-size: 0.78rem;
+            border-radius: 0;
+            font-size: 0.68rem;
+            gap: 5px;
             text-align: center;
         }
         #voice-rehearsal-page .premium-card {
@@ -454,18 +1532,19 @@
             margin-bottom: 14px !important;
         }
         #voice-rehearsal-page .voice-history-actions {
-            display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
+            display: flex !important;
+            justify-content: center;
+            gap: 6px;
             width: 100%;
         }
         #voice-rehearsal-page .voice-history-actions .btn {
-            width: 100% !important;
-            min-height: 42px;
-            padding: 8px 6px !important;
-            font-size: 0.72rem;
-            line-height: 1.15;
-            white-space: normal;
+            width: auto !important;
+            min-width: 118px;
+            min-height: 28px;
+            padding: 5px 10px !important;
+            font-size: 0.66rem;
+            line-height: 1;
+            white-space: nowrap;
         }
         #voice-rehearsal-page .voice-history-table {
             table-layout: fixed !important;
@@ -529,19 +1608,394 @@
             margin: 0;
             line-height: 1.25;
         }
+        #voice-rehearsal-page .vr-shell {
+            width: 100%;
+        }
+        #voice-rehearsal-page .vr-practice-flow {
+            gap: 14px;
+        }
+        #voice-rehearsal-page .vr-option-panel {
+            padding: 8px;
+            border-radius: 14px;
+        }
+        #voice-rehearsal-page .sr-page-hero.vr-hero {
+            min-height: 92px !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            padding: 11px 96px 11px 12px !important;
+            border-radius: 16px !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-inner {
+            display: contents !important;
+            min-height: 0;
+            padding: 0;
+        }
+        #voice-rehearsal-page .vr-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.82rem !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+            font-size: 0.9rem !important;
+            margin-bottom: 4px !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-title svg {
+            display: none;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+            max-width: 12rem !important;
+            font-size: 0.64rem !important;
+            line-height: 1.28 !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+            right: -4px !important;
+            bottom: 5px !important;
+            width: 84px !important;
+            max-width: none;
+        }
+        #voice-rehearsal-page .sr-page-actions.vr-tabs-wrap {
+            margin: 8px 0 10px !important;
+        }
+        #voice-rehearsal-page #moduleTabs.vr-tabs {
+            gap: 0;
+            border-radius: 12px;
+        }
+        #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+            min-height: 32px;
+            gap: 5px;
+            font-size: .68rem;
+        }
+        #voice-rehearsal-page .vr-prompt-card {
+            border-radius: 18px !important;
+        }
+        #voice-rehearsal-page .vr-option-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4px;
+            margin-bottom: 0;
+        }
+        #voice-rehearsal-page .vr-option-row {
+            min-height: 38px;
+            grid-template-columns: 24px minmax(0, 1fr);
+            gap: 5px;
+            padding: 5px 6px;
+            border-radius: 10px;
+            font-size: .56rem;
+        }
+        #voice-rehearsal-page .vr-option-row > .fa-chevron-right {
+            display: none;
+        }
+        #voice-rehearsal-page .vr-option-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            font-size: .68rem;
+        }
+        #voice-rehearsal-page .vr-prompt-card {
+            padding: 12px 10px !important;
+        }
+        #voice-rehearsal-page .vr-prompt-kicker {
+            font-size: .64rem;
+            margin-bottom: 6px;
+        }
+        #voice-rehearsal-page #promptText.vr-prompt-text {
+            font-size: .84rem !important;
+            line-height: 1.32 !important;
+            margin-bottom: 10px;
+        }
+        #voice-rehearsal-page .vr-mic-stage {
+            min-height: 94px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+        }
+        #voice-rehearsal-page .vr-mic-button {
+            width: 46px;
+            height: 46px;
+            font-size: 1.2rem;
+        }
+        #voice-rehearsal-page #btnStart {
+            min-width: 136px;
+            min-height: 42px;
+            border-radius: 12px !important;
+            font-size: .84rem;
+            padding: 7px 16px !important;
+        }
+        #voice-rehearsal-page .vr-start-note {
+            font-size: .85rem;
+            margin-bottom: 16px;
+        }
+        #voice-rehearsal-page .stat-box {
+            min-height: 78px;
+            gap: 3px;
+            padding: 8px 6px;
+        }
+        #voice-rehearsal-page .stat-ico {
+            width: 22px;
+            height: 22px;
+            font-size: .68rem;
+        }
+        #voice-rehearsal-page #transcriptView {
+            min-height: 96px !important;
+            border-radius: 12px !important;
+            font-size: .88rem !important;
+            padding: 12px !important;
+        }
+        #voice-rehearsal-page .vr-transcript-label {
+            font-size: .76rem;
+            gap: 7px;
+        }
+        #voice-rehearsal-page .vr-transcript-label i {
+            width: 24px;
+            height: 24px;
+            border-radius: 9px;
+        }
+        #voice-rehearsal-page .instant-feedback-panel,
+        #voice-rehearsal-page .intention-coach-panel,
+        #voice-rehearsal-page .vr-assessment-card {
+            padding: 12px !important;
+            border-radius: 14px;
+        }
+        #voice-rehearsal-page .vr-assessment-card {
+            padding: 10px !important;
+        }
+        #voice-rehearsal-page .instant-feedback-panel {
+            padding: 10px !important;
+        }
+        #voice-rehearsal-page .intention-coach-panel {
+            padding: 10px !important;
+        }
+        #voice-rehearsal-page .instant-feedback-title,
+        #voice-rehearsal-page .intention-coach-title,
+        #voice-rehearsal-page .vr-assessment-title {
+            font-size: 1rem;
+        }
+        #voice-rehearsal-page .vr-assessment-title {
+            font-size: .88rem;
+            margin-bottom: 10px;
+        }
+        #voice-rehearsal-page .instant-feedback-title {
+            font-size: .88rem;
+        }
+        #voice-rehearsal-page .intention-coach-title {
+            font-size: .88rem;
+        }
+        #voice-rehearsal-page .instant-feedback-title i,
+        #voice-rehearsal-page .intention-coach-title i {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            font-size: 1.15rem;
+            margin-right: 8px !important;
+        }
+        #voice-rehearsal-page .instant-feedback-title i {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            font-size: .82rem;
+        }
+        #voice-rehearsal-page .intention-coach-title i {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            font-size: .82rem;
+        }
+        #voice-rehearsal-page .instant-feedback-summary,
+        #voice-rehearsal-page .intention-coach-summary {
+            margin-left: 0;
+            font-size: .82rem;
+        }
+        #voice-rehearsal-page .instant-feedback-summary {
+            margin-left: 36px;
+            font-size: .76rem;
+        }
+        #voice-rehearsal-page .intention-coach-summary {
+            margin-left: 36px;
+            font-size: .76rem;
+        }
+        #voice-rehearsal-page .instant-feedback-status {
+            padding: 5px 9px;
+            font-size: .62rem;
+        }
+        #voice-rehearsal-page .intention-coach-status {
+            padding: 5px 9px;
+            font-size: .62rem;
+        }
+        #voice-rehearsal-page .instant-feedback-grid {
+            gap: 8px;
+        }
+        #voice-rehearsal-page .intention-coach-grid {
+            gap: 8px;
+        }
+        #voice-rehearsal-page .instant-feedback-signal,
+        #voice-rehearsal-page .intention-coach-metric,
+        #voice-rehearsal-page .vr-score-row {
+            grid-template-columns: 52px minmax(0, 1fr);
+            gap: 12px;
+            min-height: 88px;
+            padding: 13px;
+            border-radius: 15px;
+        }
+        #voice-rehearsal-page .vr-score-row {
+            grid-template-columns: 38px minmax(0, 1fr);
+            gap: 8px;
+            min-height: 44px;
+            padding: 0;
+            border-radius: 0;
+        }
+        #voice-rehearsal-page .instant-feedback-signal {
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 8px;
+            min-height: 76px;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        #voice-rehearsal-page .intention-coach-metric {
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 8px;
+            min-height: 68px;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        #voice-rehearsal-page .instant-signal-ico {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            font-size: .78rem;
+        }
+        #voice-rehearsal-page .intention-metric-ico {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            font-size: .78rem;
+        }
+        #voice-rehearsal-page .instant-feedback-value,
+        #voice-rehearsal-page .intention-coach-value {
+            font-size: 1.15rem;
+        }
+        #voice-rehearsal-page .instant-feedback-value {
+            font-size: .9rem;
+        }
+        #voice-rehearsal-page .intention-coach-value {
+            font-size: .9rem;
+        }
+        #voice-rehearsal-page .instant-feedback-note {
+            font-size: .72rem;
+        }
+        #voice-rehearsal-page .vr-score-ring {
+            width: 36px;
+            height: 36px;
+            border-width: 3px;
+            font-size: .72rem !important;
+        }
+        #voice-rehearsal-page .vr-score-label {
+            font-size: .66rem;
+        }
+        #voice-rehearsal-page .vr-assessment-scores {
+            gap: 7px;
+            margin-bottom: 10px !important;
+        }
+        #voice-rehearsal-page .vr-pace-card,
+        #voice-rehearsal-page .vr-keywords-card,
+        #voice-rehearsal-page .vr-ai-card {
+            padding: 10px !important;
+            border-radius: 10px;
+        }
+        #voice-rehearsal-page .vr-assessment-kicker {
+            font-size: .66rem;
+            margin-bottom: 6px;
+        }
+        #voice-rehearsal-page #btnSave {
+            min-height: 40px !important;
+            font-size: .86rem;
+        }
+        #voice-rehearsal-page .vr-progress-layout,
+        #voice-rehearsal-page .vr-progress-summary {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        #voice-rehearsal-page .vr-progress-panel {
+            padding: 10px;
+            border-radius: 12px;
+        }
+        #voice-rehearsal-page .vr-progress-title {
+            font-size: .84rem;
+            margin-bottom: 8px;
+        }
+        #voice-rehearsal-page .vr-progress-title i {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            font-size: .72rem;
+        }
+        #voice-rehearsal-page .vr-progress-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        #voice-rehearsal-page .vr-progress-stat {
+            min-height: 84px;
+            padding: 12px;
+            border-radius: 14px;
+        }
+        #voice-rehearsal-page .vr-progress-stat strong {
+            font-size: 1.15rem;
+        }
+        #voice-rehearsal-page .vr-chart-frame {
+            height: 150px;
+            padding: 0;
+            border-radius: 0;
+        }
+        #voice-rehearsal-page .vr-suggestion-content {
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 8px;
+        }
+        #voice-rehearsal-page .vr-suggestion-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            font-size: .76rem;
+        }
+        #voice-rehearsal-page .vr-suggestion-title {
+            font-size: .76rem;
+        }
+        #voice-rehearsal-page .vr-suggestion-text {
+            font-size: .68rem;
+        }
+        #voice-rehearsal-page .vr-suggestion-card {
+            padding: 8px;
+            margin-bottom: 7px;
+            border-radius: 11px;
+        }
+        #voice-rehearsal-page .vr-history-empty {
+            min-height: 78px;
+        }
+        #voice-rehearsal-page .vr-history-empty i {
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            font-size: .78rem;
+            margin-bottom: 5px;
+        }
+        #voice-rehearsal-page .vr-history-empty strong {
+            font-size: .78rem;
+        }
+        #voice-rehearsal-page .vr-history-empty span {
+            font-size: .66rem;
+        }
     }
 </style>
 @include('partials.page-hero-styles')
 
 <div class="db-section active" id="voice-rehearsal-page">
-    <div class="sr-page-hero">
+    <div class="vr-shell">
+    <div class="sr-page-hero vr-hero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
-                <h4 class="sr-page-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    Philippines Voice Rehearsal
-                </h4>
-                <p class="sr-page-hero-subtitle">Practice delivery, pacing, and answer clarity for Philippines interview scenarios.</p>
+                <div class="vr-hero-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                <div>
+                    <h4 class="sr-page-hero-title text-gradient-primary">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        Philippines Voice Rehearsal
+                    </h4>
+                    <p class="sr-page-hero-subtitle">Practice delivery, pacing, and answer clarity for Philippines interview scenarios.</p>
+                </div>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -549,20 +2003,36 @@
             <rect x="34" y="22" width="152" height="106" rx="18" fill="url(#voicePanel)" stroke="#BFDBFE" stroke-width="3"/><rect x="91" y="40" width="38" height="58" rx="19" fill="url(#voiceBlue)"/><path d="M75 78a35 35 0 0 0 70 0M110 113v14M92 127h36" fill="none" stroke="#2563EB" stroke-width="7" stroke-linecap="round"/><path d="M55 72v20M68 60v44M152 60v44M165 72v20" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" opacity=".75"/><circle cx="160" cy="44" r="17" fill="#22C55E"/><path d="M153 44l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
         </svg>
     </div>
-    <div class="sr-page-actions">
-        <ul class="nav nav-pills" id="moduleTabs" style="margin-bottom:0;">
-            <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice">Practice</a></li>
-            <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics">History & Analytics</a></li>
+    <div class="sr-page-actions vr-tabs-wrap">
+        <ul class="nav nav-pills vr-tabs" id="moduleTabs" style="margin-bottom:0;">
+            <li class="nav-item"><a class="nav-link active" href="#" data-target="tab-practice"><i class="fa-solid fa-crosshairs"></i> Practice</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-target="tab-analytics"><i class="fa-solid fa-chart-simple"></i> History & Analytics</a></li>
         </ul>
     </div>
 
     <!-- TAB: PRACTICE -->
     <div id="tab-practice" class="tab-pane active">
-        <div class="row g-4">
-            <!-- Left: Controls & Recording -->
-            <div class="col-lg-8 animate-fade-up delay-100">
-                <div class="premium-card mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="vr-practice-flow animate-fade-up delay-100">
+                <section class="vr-option-panel" aria-label="Voice rehearsal setup">
+                    <div class="vr-option-list">
+                        <button type="button" class="vr-option-row" onclick="cycleVoiceCategory()">
+                            <span class="vr-option-icon"><i class="fa-solid fa-briefcase"></i></span>
+                            <span id="categoryDisplay">General Job Interview</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button type="button" class="vr-option-row" onclick="cycleVoiceIntention()">
+                            <span class="vr-option-icon"><i id="intentionDisplayIcon" class="fa-solid fa-check"></i></span>
+                            <span id="intentionDisplay">Confident</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button id="btnRandomizePrompt" type="button" class="vr-option-row" onclick="randomizePrompt()">
+                            <span class="vr-option-icon"><i class="fa-solid fa-shuffle"></i></span>
+                            <span>Randomize</span>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4 vr-hidden-selects" aria-hidden="false">
                         <div class="d-flex flex-wrap gap-2">
                             <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
                                 <option value="Tell Me About Yourself">General Job Interview</option>
@@ -581,19 +2051,18 @@
                                 <option value="Accountable">Accountable</option>
                             </select>
                         </div>
-                        <button id="btnRandomizePrompt" class="btn btn-sm btn-outline-secondary" onclick="randomizePrompt()" style="border-radius:8px;"><i class="fa-solid fa-shuffle"></i> Randomize</button>
                     </div>
+                </section>
 
-                    <div class="text-center mb-5">
-                        <h5 style="color:#60a5fa;font-size:0.85rem;font-weight:700;letter-spacing:1px;margin-bottom:12px;">PHILIPPINES PROMPT</h5>
-                        <h3 id="promptText" style="color:var(--tx);font-weight:600;line-height:1.4;">"Tell me about a time you showed leadership."</h3>
-                    </div>
+                    <div class="vr-prompt-card">
+                        <div class="vr-prompt-kicker">PHILIPPINES PROMPT</div>
+                        <h3 id="promptText" class="vr-prompt-text">"Tell me about a time you showed leadership."</h3>
 
                     <!-- Mic Visualization -->
-                    <div style="margin-bottom:40px;position:relative;height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(139,92,246,0.05) 100%);border-radius:24px;border:1px solid rgba(139,92,246,0.2);box-shadow:inset 0 4px 20px rgba(0,0,0,0.1), 0 10px 30px rgba(59,130,246,0.1);">
+                    <div class="vr-mic-stage">
                         <!-- Idle State -->
                         <div id="micIdle" class="text-center">
-                            <div style="width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto;color:#60a5fa;font-size:1.8rem;transition:all 0.3s;">
+                            <div class="vr-mic-button">
                                 <i class="fa-solid fa-microphone"></i>
                             </div>
                             <div id="statusText" style="color:var(--tx3);margin-top:12px;font-size:0.9rem;">Ready to record</div>
@@ -610,6 +2079,7 @@
                             <div class="wave-bar" style="height:90px;animation-delay:0.7s"></div>
                         </div>
                     </div>
+                    </div>
 
                     <!-- Controls -->
                     <div class="voice-recorder-controls d-flex justify-content-center gap-3 mb-4">
@@ -619,30 +2089,35 @@
                         <button id="btnStop" class="btn btn-danger" style="display:none;color:#fff;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="stopRec()"><i class="fa-solid fa-stop me-2"></i> Stop & Analyze</button>
                         <button id="btnRerecord" class="btn btn-outline-secondary" style="display:none;border-radius:12px;padding:12px 24px;font-weight:600;" onclick="resetRec()"><i class="fa-solid fa-rotate-left me-2"></i> Retry</button>
                     </div>
+                    <p class="vr-start-note">Tap Start and choose Allow microphone when prompted.</p>
                     <div id="micPermissionHelp" class="text-center mb-4" style="display:none;color:var(--tx3);font-size:0.82rem;line-height:1.5;"></div>
 
                     <!-- Live Stats -->
                     <div class="row g-2 mb-4 voice-live-stats">
                         <div class="col-3">
                             <div class="stat-box">
+                                <span class="stat-ico"><i class="fa-solid fa-clock"></i></span>
                                 <div class="stat-val" id="timeDisp">0:00</div>
                                 <div class="stat-lbl">Duration</div>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="stat-box">
+                                <span class="stat-ico"><i class="fa-solid fa-gauge-high"></i></span>
                                 <div class="stat-val" id="wpmDisp">0</div>
                                 <div class="stat-lbl">WPM</div>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="stat-box">
+                                <span class="stat-ico warn"><i class="fa-solid fa-chart-line"></i></span>
                                 <div class="stat-val" id="stabilityDisp" style="color:#f59e0b;">0%</div>
                                 <div class="stat-lbl">Stability</div>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="stat-box">
+                                <span class="stat-ico danger"><i class="fa-solid fa-comment-slash"></i></span>
                                 <div class="stat-val" id="fillerDisp" style="color:#f87171;">0</div>
                                 <div class="stat-lbl">Fillers</div>
                             </div>
@@ -650,9 +2125,9 @@
                     </div>
 
                     <!-- Transcript Box -->
-                    <div class="mb-4">
+                    <div class="vr-transcript-wrap">
                         <div class="d-flex justify-content-between mb-2">
-                            <label style="font-size:0.85rem;color:var(--tx3);font-weight:600;text-transform:uppercase;">Live Answer Transcript</label>
+                            <label class="vr-transcript-label"><i class="fa-solid fa-comment-dots"></i> Live Answer Transcript</label>
                             <span id="transStatus" style="font-size:0.8rem;color:#34d399;display:none;"><i class="fa-solid fa-circle-dot fa-fade me-1"></i> Transcribing</span>
                         </div>
                         <div id="transcriptView" style="background:var(--bg3);border:1px solid var(--bd);border-radius:12px;padding:16px;min-height:120px;color:var(--tx);font-size:1.05rem;line-height:1.6;white-space:pre-wrap;" contenteditable="false">Your answer will appear here...</div>
@@ -669,18 +2144,21 @@
                         </div>
                         <div class="instant-feedback-grid">
                             <div class="instant-feedback-signal" id="instantPaceSignal">
+                                <span class="instant-signal-ico"><i class="fa-solid fa-gauge-high"></i></span>
                                 <div class="instant-feedback-kicker">Pace</div>
                                 <div class="instant-feedback-value" id="instantPaceValue">0 WPM</div>
                                 <span class="instant-feedback-badge" id="instantPaceBadge">Waiting</span>
                                 <div class="instant-feedback-note" id="instantPaceNote">Keep a natural rhythm once recording starts.</div>
                             </div>
                             <div class="instant-feedback-signal" id="instantFillerSignal">
+                                <span class="instant-signal-ico filler"><i class="fa-solid fa-comment-slash"></i></span>
                                 <div class="instant-feedback-kicker">Fillers</div>
                                 <div class="instant-feedback-value" id="instantFillerValue">0 found</div>
                                 <span class="instant-feedback-badge" id="instantFillerBadge">Waiting</span>
                                 <div class="instant-feedback-note" id="instantFillerNote">Silent pauses are counted better than filler words.</div>
                             </div>
                             <div class="instant-feedback-signal" id="instantDepthSignal">
+                                <span class="instant-signal-ico depth"><i class="fa-solid fa-file-lines"></i></span>
                                 <div class="instant-feedback-kicker">Answer Depth</div>
                                 <div class="instant-feedback-value" id="instantDepthValue">0 words</div>
                                 <span class="instant-feedback-badge" id="instantDepthBadge">Waiting</span>
@@ -702,14 +2180,17 @@
                         </div>
                         <div class="intention-coach-grid">
                             <div class="intention-coach-metric">
+                                <span class="intention-metric-ico"><i class="fa-solid fa-bullseye"></i></span>
                                 <div class="intention-coach-kicker">Target</div>
                                 <div class="intention-coach-value" id="intentionTargetValue">Confident</div>
                             </div>
                             <div class="intention-coach-metric">
+                                <span class="intention-metric-ico detected"><i class="fa-solid fa-ear-listen"></i></span>
                                 <div class="intention-coach-kicker">Detected</div>
                                 <div class="intention-coach-value" id="intentionDetectedValue">Waiting</div>
                             </div>
                             <div class="intention-coach-metric">
+                                <span class="intention-metric-ico match"><i class="fa-solid fa-chart-simple"></i></span>
                                 <div class="intention-coach-kicker">Match</div>
                                 <div class="intention-coach-value" id="intentionMatchValue">--%</div>
                                 <div class="intention-meter"><span id="intentionMatchMeter" style="--intent-score:0%;"></span></div>
@@ -719,32 +2200,29 @@
                             <li><i class="fa-solid fa-circle-info"></i><span>Waiting for enough words to compare your wording with the target intention.</span></li>
                         </ul>
                     </section>
-                </div>
-            </div>
 
-            <!-- Right: Post-Analysis Dashboard -->
-            <div class="col-lg-4 animate-fade-up delay-200">
+            <!-- Post-Analysis Dashboard -->
                 <div id="analysisPanel" style="opacity:0.5;pointer-events:none;transition:opacity 0.4s;">
-                    <div class="premium-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
-                        <h6 class="fw-bold mb-4"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> Practice Assessment</h6>
+                    <div class="premium-card vr-assessment-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
+                        <h6 class="vr-assessment-title"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> Practice Assessment</h6>
                         
                         <!-- Clarity & Delivery Stability -->
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <div class="text-center w-50">
-                                <div style="font-size:2rem;font-weight:800;color:#34d399;" id="resClarity">--%</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Clarity Score</div>
+                        <div class="d-flex justify-content-between align-items-center mb-4 vr-assessment-scores">
+                            <div class="text-center w-50 vr-score-row">
+                                <div class="vr-score-ring" id="resClarity">--%</div>
+                                <div class="vr-score-label">Clarity Score</div>
                             </div>
-                            <div style="width:1px;height:40px;background:var(--bd);"></div>
-                            <div class="text-center w-50">
-                                <div style="font-size:1.2rem;font-weight:700;color:#60a5fa;" id="resConfidence">--</div>
-                                <div style="font-size:0.75rem;color:var(--tx3);text-transform:uppercase;">Delivery Stability</div>
+                            <div class="vr-assessment-divider" style="width:1px;height:40px;background:var(--bd);"></div>
+                            <div class="text-center w-50 vr-score-row">
+                                <div class="vr-score-ring blue" id="resConfidence">--</div>
+                                <div class="vr-score-label">Delivery Stability</div>
                             </div>
                         </div>
 
                         <!-- Pace Rating -->
-                        <div class="mb-4 p-3" style="background:var(--bg3);border-radius:10px;border:1px solid var(--bd);">
+                        <div class="mb-3 p-3 vr-pace-card" style="background:var(--bg3);border-radius:10px;border:1px solid var(--bd);">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span style="font-size:0.85rem;color:var(--tx2);">Speaking Pace</span>
+                                <span style="font-size:0.78rem;color:var(--tx2);"><i class="fa-solid fa-gauge-high me-1"></i> Speaking Pace</span>
                                 <span style="font-weight:700;" id="resPaceRating">--</span>
                             </div>
                             <div class="progress-track" style="height:6px;">
@@ -754,29 +2232,28 @@
                         </div>
 
                         <!-- Pronunciation & Keywords -->
-                        <div class="mb-4">
-                            <h6 style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;margin-bottom:8px;">Detected Keywords</h6>
+                        <div class="mb-3 vr-keywords-card">
+                            <h6 class="vr-assessment-kicker"><i class="fa-solid fa-tags"></i> Detected Keywords</h6>
                             <div id="resKeywords" class="d-flex flex-wrap gap-2">
                                 <span style="color:var(--tx3);font-size:0.85rem;">Waiting for analysis...</span>
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <h6 style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;margin-bottom:8px;">AI Feedback</h6>
-                            <div class="p-2 mb-2" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px;">
+                        <div class="mb-3">
+                            <h6 class="vr-assessment-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Feedback</h6>
+                            <div class="p-2 mb-2 vr-ai-card good" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px;">
                                 <strong style="color:#34d399;font-size:0.8rem;"><i class="fa-solid fa-check"></i> Strengths</strong>
                                 <div id="resStrengths" style="font-size:0.85rem;color:var(--tx2);margin-top:4px;">--</div>
                             </div>
-                            <div class="p-2" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.2);border-radius:8px;">
+                            <div class="p-2 vr-ai-card warn" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.2);border-radius:8px;">
                                 <strong style="color:#f87171;font-size:0.8rem;"><i class="fa-solid fa-arrow-trend-up"></i> Needs Work</strong>
                                 <div id="resWeak" style="font-size:0.85rem;color:var(--tx2);margin-top:4px;">--</div>
                             </div>
                         </div>
 
-                        <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:600;border-radius:12px;border:none;box-shadow:0 4px 15px rgba(52,211,153,0.4);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
+                        <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:700;border-radius:10px;border:none;min-height:42px;box-shadow:0 4px 15px rgba(52,211,153,0.32);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
                     </div>
                 </div>
-            </div>
         </div>
         
         <!-- Fact-grounded revision comparison -->
@@ -798,21 +2275,21 @@
 
     <!-- TAB: HISTORY & ANALYTICS -->
     <div id="tab-analytics" class="tab-pane">
-        <div class="row g-4">
-            <div class="col-lg-8 animate-fade-up delay-100">
+        <div class="vr-progress-layout animate-fade-up delay-100">
+            <div>
                 <!-- Progress Charts -->
-                <div class="premium-card mb-4">
-                    <h5 class="fw-bold mb-4">Progress Analytics</h5>
-                    <div style="height:250px;">
+                <section class="vr-progress-panel mb-4">
+                    <h5 class="vr-progress-title"><i class="fa-solid fa-chart-line"></i> Progress Analytics</h5>
+                    <div class="vr-chart-frame">
                         <canvas id="voiceProgressChart"></canvas>
                     </div>
-                    <div id="voiceProgressEmpty" class="text-center mt-3" style="display:none;color:var(--tx3);font-size:0.85rem;">No saved rehearsal data yet.</div>
-                </div>
+                    <div id="voiceProgressEmpty" class="text-center mt-2" style="display:none;color:var(--tx3);font-size:0.78rem;">No saved rehearsal data yet. Start a practice to see your progress here.</div>
+                </section>
 
                 <!-- Rehearsal History -->
-                <div class="premium-card">
+                <section class="vr-progress-panel">
                     <div class="voice-history-head">
-                        <h5 class="fw-bold m-0">Rehearsal History</h5>
+                        <h5 class="vr-progress-title"><i class="fa-solid fa-clock-rotate-left"></i> Rehearsal History</h5>
                         <div class="voice-history-actions">
                             <button class="btn btn-sm btn-outline-primary" type="button" style="border-radius:8px;" onclick="downloadReport()"><i class="fa-solid fa-download me-1"></i> Download PDF</button>
                             @if($history->count() > 0)
@@ -842,57 +2319,60 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
             </div>
 
-            <div class="col-lg-4 animate-fade-up delay-200">
+            <aside>
                 <!-- AI Practice Suggestions -->
-                <div class="premium-card" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(251,191,36,0.05) 100%);">
-                    <h6 class="fw-bold mb-4"><i class="fa-solid fa-lightbulb me-2" style="color:#fbbf24;"></i> Recommended Voice Practice</h6>
+                <section class="vr-progress-panel">
+                    <h6 class="vr-progress-title mb-4"><i class="fa-solid fa-lightbulb"></i> Recommended Voice Practice</h6>
                     
-                    <div class="p-3 mb-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                        <div>
-                            <div class="voice-suggestion-head">
-                                <i class="fa-solid fa-gauge-high" style="color:#60a5fa;"></i>
-                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Pace Yourself</div>
+                    <div class="vr-suggestion-card">
+                        <div class="vr-suggestion-content">
+                            <span class="vr-suggestion-icon"><i class="fa-solid fa-gauge-high"></i></span>
+                            <div>
+                                <div class="vr-suggestion-title">Pace Yourself</div>
+                                <div class="vr-suggestion-text">Your average pace is 165 WPM. Try taking slight pauses between sentences.</div>
                             </div>
-                            <div style="font-size:0.8rem;color:var(--tx2);">Your average pace is 165 WPM. Try taking slight pauses between sentences.</div>
                         </div>
                     </div>
-                    <div class="p-3 mb-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                        <div>
-                            <div class="voice-suggestion-head">
-                                <i class="fa-solid fa-comment-slash" style="color:#f87171;"></i>
-                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Reduce Fillers</div>
+                    <div class="vr-suggestion-card">
+                        <div class="vr-suggestion-content">
+                            <span class="vr-suggestion-icon"><i class="fa-solid fa-comment-slash"></i></span>
+                            <div>
+                                <div class="vr-suggestion-title">Reduce Fillers</div>
+                                <div class="vr-suggestion-text">You used "Um" 12 times last session. Try silent pauses instead of filler words.</div>
                             </div>
-                            <div style="font-size:0.8rem;color:var(--tx2);">You used "Um" 12 times last session. Try silent pauses instead of filler words.</div>
                         </div>
                     </div>
-                    <div class="p-3" style="background:var(--bg3);border-radius:12px;border:1px solid var(--bd);">
-                        <div>
-                            <div class="voice-suggestion-head">
-                                <i class="fa-solid fa-briefcase" style="color:#34d399;"></i>
-                                <div class="voice-suggestion-title" style="font-weight:600;font-size:0.9rem;">Practice IT / Technical</div>
+                    <div class="vr-suggestion-card">
+                        <div class="vr-suggestion-content">
+                            <span class="vr-suggestion-icon"><i class="fa-solid fa-briefcase"></i></span>
+                            <div>
+                                <div class="vr-suggestion-title">Practice IT / Technical</div>
+                                <div class="vr-suggestion-text">Your clarity can drop on technical explanations. Practice the IT / Technical scenario next.</div>
                             </div>
-                            <div style="font-size:0.8rem;color:var(--tx2);">Your clarity can drop on technical explanations. Practice the IT / Technical scenario next.</div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </section>
+            </aside>
         </div>
     </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Tab Switching
-document.querySelectorAll('.nav-link').forEach(link => {
+document.querySelectorAll('#moduleTabs .nav-link').forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        e.target.classList.add('active');
-        document.getElementById(e.target.getAttribute('data-target')).classList.add('active');
+        const activeLink = e.target.closest('.nav-link');
+        if (!activeLink || !activeLink.dataset.target) return;
+        document.querySelectorAll('#moduleTabs .nav-link').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('#voice-rehearsal-page > .vr-shell > .tab-pane').forEach(p => p.classList.remove('active'));
+        activeLink.classList.add('active');
+        document.getElementById(activeLink.getAttribute('data-target')).classList.add('active');
     });
 });
 
@@ -940,6 +2420,46 @@ function categoryValueForPreset(category) {
     return labels[category] || category || "Tell Me About Yourself";
 }
 
+function syncVoiceOptionLabels() {
+    const categorySelect = document.getElementById('categorySelect');
+    const intentionSelect = document.getElementById('intentionSelect');
+    const categoryDisplay = document.getElementById('categoryDisplay');
+    const intentionDisplay = document.getElementById('intentionDisplay');
+    const intentionDisplayIcon = document.getElementById('intentionDisplayIcon');
+    const intentionIcons = {
+        Confident: 'fa-check',
+        Friendly: 'fa-face-smile',
+        Calm: 'fa-leaf',
+        Persuasive: 'fa-bullhorn',
+        Accountable: 'fa-clipboard-check'
+    };
+
+    if (categorySelect && categoryDisplay) {
+        categoryDisplay.innerText = voiceScenarioLabel(categorySelect.value);
+    }
+    if (intentionSelect && intentionDisplay) {
+        intentionDisplay.innerText = intentionSelect.value || 'Confident';
+        if (intentionDisplayIcon) {
+            intentionDisplayIcon.className = `fa-solid ${intentionIcons[intentionSelect.value] || 'fa-check'}`;
+        }
+    }
+}
+
+function cycleSelectOption(selectId) {
+    const select = document.getElementById(selectId);
+    if (!select || select.options.length === 0) return;
+    select.selectedIndex = (select.selectedIndex + 1) % select.options.length;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function cycleVoiceCategory() {
+    cycleSelectOption('categorySelect');
+}
+
+function cycleVoiceIntention() {
+    cycleSelectOption('intentionSelect');
+}
+
 function localFallbackPrompt(category) {
     const list = fallbackPrompts[category] || fallbackPrompts["Tell Me About Yourself"];
     return list[Math.floor(Math.random() * list.length)];
@@ -953,7 +2473,7 @@ async function randomizePrompt() {
 
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating';
+        btn.innerHTML = '<span class="vr-option-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><span>Generating</span><i class="fa-solid fa-chevron-right"></i>';
     }
     promptEl.innerText = '"Generating an AI practice question..."';
 
@@ -979,12 +2499,18 @@ async function randomizePrompt() {
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = originalBtn || '<i class="fa-solid fa-shuffle"></i> Randomize';
+            btn.innerHTML = originalBtn || '<span class="vr-option-icon"><i class="fa-solid fa-shuffle"></i></span><span>Randomize</span><i class="fa-solid fa-chevron-right"></i>';
         }
     }
 }
-document.getElementById('categorySelect').addEventListener('change', randomizePrompt);
-document.getElementById('intentionSelect').addEventListener('change', () => updateIntentionCoach());
+document.getElementById('categorySelect').addEventListener('change', () => {
+    syncVoiceOptionLabels();
+    randomizePrompt();
+});
+document.getElementById('intentionSelect').addEventListener('change', () => {
+    syncVoiceOptionLabels();
+    updateIntentionCoach();
+});
 
 // Recording Logic
 let recognition = null;
@@ -1629,10 +3155,6 @@ function instantDepthSignal() {
 function instantActionsFor(signals, wpm) {
     const actions = [];
 
-    if (wordCount === 0) {
-        actions.push('Open with a direct answer to the prompt.');
-    }
-
     if (signals.pace.state === 'bad') {
         actions.push(wpm < 90
             ? 'Move to your next point sooner to raise delivery energy.'
@@ -1651,10 +3173,6 @@ function instantActionsFor(signals, wpm) {
         actions.push(wordCount < 20
             ? 'Add one concrete action and one result.'
             : 'Close with the result or lesson learned.');
-    }
-
-    if (actions.length === 0) {
-        actions.push('Keep this rhythm and finish with one clear result.');
     }
 
     return actions.slice(0, 3);
@@ -1797,7 +3315,7 @@ function buildIntentionCoach(metrics = currentVoiceMetrics()) {
             match: 0,
             state: 'neutral',
             summary: 'Waiting for enough words to compare your wording with the target intention.',
-            tips: ['Start with one direct sentence that matches your chosen intention.']
+            tips: []
         };
     }
 
@@ -2308,7 +3826,7 @@ let voiceHistoryData = {!! json_encode($history->map(function($session) {
 function loadHistory() {
     let html = '';
     if (voiceHistoryData.length === 0) {
-        html = '<tr><td colspan="5" class="text-center text-muted">No history found. Practice a Philippines voice session to see it here.</td></tr>';
+        html = '<tr><td colspan="5"><div class="vr-history-empty"><div><i class="fa-solid fa-file-lines"></i><strong>No history found.</strong><span>Practice a Philippines voice session to see it here.</span></div></div></td></tr>';
     } else {
         voiceHistoryData.forEach(h => {
             html += `<tr>
@@ -2397,6 +3915,7 @@ document.addEventListener("DOMContentLoaded", function() {
     } else {
         randomizePrompt();
     }
+    syncVoiceOptionLabels();
     refreshMicrophoneAvailabilityUi();
     updateInstantFeedback();
     updateIntentionCoach();

@@ -72,7 +72,7 @@ class UserController extends Controller
             'description' => 'Permanently increases general XP earned from PH Challenges by 20%.',
             'cost' => 500,
             'type' => 'technical',
-            'icon' => 'fa-arrow-up-right-dots',
+            'icon' => 'fa-arrow-trend-up',
         ],
     ];
 

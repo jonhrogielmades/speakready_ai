@@ -2,113 +2,393 @@
 @section('title', 'Philippines Interview Personal Mastery')
 @section('content')
 <style>
-    .text-gradient-primary {
-        background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
+    #personal-mastery-page {
+        --mastery-blue: #1677f2;
+        --mastery-navy: #16233d;
+        --mastery-muted: #53617d;
+        --mastery-line: rgba(102, 147, 219, 0.22);
+        --mastery-hero-title: #1d4ed8;
+        --mastery-hero-text: #334155;
+        --mastery-icon-bg: rgba(239, 246, 255, 0.92);
+        --mastery-icon-border: rgba(147, 197, 253, 0.42);
+        max-width: 980px;
+        margin: 0 auto;
     }
-    #personal-mastery-page .sr-page-hero {
-        border-color: rgba(245, 158, 11, 0.3);
+    :root:not(.lm) #personal-mastery-page,
+    .dm #personal-mastery-page {
+        --mastery-muted: #cbd5e1;
+        --mastery-line: rgba(147, 197, 253, 0.28);
+        --mastery-hero-title: #93c5fd;
+        --mastery-hero-text: #e2e8f0;
+        --mastery-icon-bg: rgba(59, 130, 246, 0.2);
+        --mastery-icon-border: rgba(147, 197, 253, 0.32);
+    }
+    #personal-mastery-page .mastery-hero-card {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: center;
+        overflow: hidden;
+        min-height: 78px;
+        padding: 8px 76px 8px 12px;
+        border: 1px solid rgba(191, 219, 254, 0.86);
+        border-radius: 16px;
         background:
-            radial-gradient(circle at 91% 31%, rgba(245, 158, 11, 0.2), transparent 27%),
-            linear-gradient(110deg, rgba(245, 158, 11, 0.13), rgba(59, 130, 246, 0.055)),
-            var(--sf);
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
     }
-    #personal-mastery-page .sr-page-hero-title svg {
-        color: #f59e0b;
+    :root:not(.lm) #personal-mastery-page .mastery-hero-card,
+    .dm #personal-mastery-page .mastery-hero-card {
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%);
+        border-color: rgba(147, 197, 253, 0.28);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
     }
-    #personal-mastery-page .sr-page-hero-subtitle {
-        max-width: 760px;
+    #personal-mastery-page .mastery-hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto -12% -52px 52%;
+        height: 112px;
+        border-top: 8px solid rgba(37, 99, 235, 0.22);
+        border-radius: 50%;
+        transform: rotate(-5deg);
+    }
+    #personal-mastery-page .mastery-copy {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 36px minmax(0, 1fr);
+        gap: 10px;
+        align-items: center;
+    }
+    #personal-mastery-page .mastery-badge,
+    #personal-mastery-page .mastery-stat-icon,
+    #personal-mastery-page .mastery-info-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    #personal-mastery-page .mastery-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        color: var(--mastery-hero-title);
+        background: var(--mastery-icon-bg);
+        border: 1px solid var(--mastery-icon-border);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+    }
+    #personal-mastery-page .mastery-title {
+        margin: 0 0 4px;
+        color: var(--mastery-hero-title);
+        font-size: 1.02rem;
+        line-height: 1.08;
+        font-weight: 950;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+    #personal-mastery-page .mastery-title span {
+        display: inline;
+        color: inherit;
+    }
+    #personal-mastery-page .mastery-subtitle {
+        max-width: 14rem;
+        margin: 0;
+        color: var(--mastery-hero-text);
+        font-size: 0.66rem;
+        line-height: 1.32;
+        font-weight: 500;
+    }
+    #personal-mastery-page .mastery-visual {
+        position: absolute;
+        z-index: 1;
+        right: 8px;
+        bottom: 4px;
+        width: 94px;
+    }
+    #personal-mastery-page .mastery-visual svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
+        animation: masteryHeroFloat 4.8s ease-in-out infinite;
+        transform-origin: 50% 78%;
+    }
+    #personal-mastery-page .mastery-visual svg :is(circle, rect, path):nth-child(odd) {
+        transform-origin: center;
+        animation: masteryHeroPulse 3.4s ease-in-out infinite;
+    }
+    @keyframes masteryHeroFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-4px) rotate(-1deg); }
+    }
+    @keyframes masteryHeroPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: .78; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #personal-mastery-page .mastery-visual svg,
+        #personal-mastery-page .mastery-visual svg :is(circle, rect, path) {
+            animation: none !important;
+        }
     }
     #personal-mastery-page .mastery-stat-card {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        overflow: hidden;
         background: var(--sf);
-        border: 1px solid var(--bd);
-        border-radius: 16px;
-        padding: 24px;
+        border: 1px solid var(--mastery-line);
+        border-radius: 14px;
+        padding: 12px;
         height: 100%;
+        box-shadow: 0 12px 28px rgba(38, 83, 156, 0.08);
+    }
+    :root:not(.lm) #personal-mastery-page .mastery-stat-card,
+    :root:not(.lm) #personal-mastery-page .mastery-info-card,
+    .dm #personal-mastery-page .mastery-stat-card,
+    .dm #personal-mastery-page .mastery-info-card {
+        background: color-mix(in srgb, var(--bg3) 78%, transparent);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+    }
+    #personal-mastery-page .mastery-stat-watermark {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: currentColor;
+        font-size: 2.5rem;
+        opacity: 0.06;
+        pointer-events: none;
     }
     #personal-mastery-page .mastery-stats-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 24px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+    }
+    #personal-mastery-page .mastery-stat-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 11px;
+        background: color-mix(in srgb, currentColor 14%, transparent);
+        font-size: 0.9rem;
     }
     #personal-mastery-page .mastery-stat-value {
         color: var(--tx);
+        font-size: 1.34rem;
+        line-height: 1;
+        margin-bottom: 5px;
     }
     #personal-mastery-page .mastery-stat-label {
-        color: var(--tx3);
+        color: var(--tx2);
+        font-size: 0.72rem;
+        font-weight: 600;
+        line-height: 1.2;
     }
-    @media (max-width: 1199.98px) {
-        #personal-mastery-page .mastery-stats-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+    #personal-mastery-page .mastery-info-card {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        margin-top: 12px;
+        padding: 14px;
+        background: var(--sf);
+        border: 1px solid var(--mastery-line);
+        border-radius: 14px;
+        box-shadow: 0 12px 28px rgba(38, 83, 156, 0.08);
+    }
+    #personal-mastery-page .mastery-info-heading {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        margin-bottom: 9px;
+    }
+    #personal-mastery-page .mastery-info-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        color: var(--mastery-blue);
+        background: rgba(59, 130, 246, 0.13);
+        font-size: 0.88rem;
+    }
+    #personal-mastery-page .mastery-info-card h5 {
+        margin: 0;
+        color: var(--tx);
+        font-size: 0.95rem;
+        font-weight: 900;
+    }
+    #personal-mastery-page .mastery-info-card p {
+        margin: 0 0 12px;
+        color: var(--tx2);
+        max-width: 760px;
+        font-size: 0.78rem;
+        line-height: 1.42;
+        font-weight: 500;
+    }
+    #personal-mastery-page .mastery-progress-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        width: 100%;
+        min-height: 40px;
+        box-sizing: border-box;
+        padding: 0 13px;
+        border: 0;
+        border-radius: 10px;
+        color: #fff;
+        background: linear-gradient(100deg, #2457ff 0%, #00a4f4 100%);
+        font-size: 0.8rem;
+        font-weight: 800;
+        box-shadow: 0 12px 20px rgba(0, 118, 231, 0.2);
+        overflow: hidden;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    #personal-mastery-page .mastery-progress-btn span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    #personal-mastery-page .mastery-progress-btn i {
+        flex: 0 0 auto;
+    }
+    #personal-mastery-page .mastery-progress-btn .fa-chevron-right {
+        margin-left: auto;
+    }
+    #personal-mastery-page .mastery-info-art {
+        width: 124px;
+        color: #8ab5ff;
+        opacity: 0.55;
+    }
+    @media (max-width: 767.98px) {
+        #personal-mastery-page .mastery-hero-card {
+            grid-template-columns: minmax(0, 1fr);
+            min-height: 74px;
+            padding: 8px 64px 8px 12px;
+            border-radius: 16px;
+        }
+        #personal-mastery-page .mastery-copy {
+            grid-template-columns: 32px minmax(0, 1fr);
+            gap: 9px;
+        }
+        #personal-mastery-page .mastery-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 11px;
+            font-size: 0.8rem;
+        }
+        #personal-mastery-page .mastery-title {
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        #personal-mastery-page .mastery-subtitle {
+            max-width: 12rem;
+            font-size: 0.64rem;
+            line-height: 1.28;
+        }
+        #personal-mastery-page .mastery-visual {
+            right: -4px;
+            bottom: 5px;
+            width: 84px;
+        }
+        #personal-mastery-page .mastery-info-card {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        #personal-mastery-page .mastery-info-art {
+            display: none;
         }
     }
     @media (max-width: 575.98px) {
         #personal-mastery-page .mastery-stats-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
+            gap: 8px;
         }
         #personal-mastery-page .mastery-stat-card {
-            min-height: 120px;
-            padding: 16px 14px;
-            border-radius: 14px;
+            grid-template-columns: 30px minmax(0, 1fr);
+            align-content: start;
+            gap: 8px;
+            min-height: 78px;
+            padding: 10px;
+            border-radius: 13px;
         }
-        #personal-mastery-page .mastery-stat-card i {
-            font-size: 1.25rem !important;
-            margin-bottom: 12px !important;
+        #personal-mastery-page .mastery-stat-watermark {
+            right: 8px;
+            font-size: 2rem;
+        }
+        #personal-mastery-page .mastery-stat-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            font-size: 0.82rem;
         }
         #personal-mastery-page .mastery-stat-value {
-            font-size: 1.25rem;
-            line-height: 1.15;
-            margin-bottom: 8px;
+            font-size: 1.12rem;
+            margin-bottom: 3px;
         }
         #personal-mastery-page .mastery-stat-label {
-            font-size: 0.82rem;
+            font-size: 0.62rem;
             line-height: 1.25;
+        }
+        #personal-mastery-page .mastery-info-card p {
+            font-size: 0.7rem;
+        }
+    }
+    @media (max-width: 360px) {
+        #personal-mastery-page .mastery-stats-grid {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        #personal-mastery-page .mastery-stat-card {
+            grid-template-columns: auto minmax(0, 1fr);
+            min-height: 0;
         }
     }
 </style>
-@include('partials.page-hero-styles')
 
 <div class="db-section active" id="personal-mastery-page">
-    <div class="sr-page-hero">
-        <div class="sr-page-hero-inner">
-            <div class="sr-page-hero-copy">
-                <h4 class="sr-page-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                        <path d="M7 6H4v2a4 4 0 0 0 4 4M17 6h3v2a4 4 0 0 1-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Philippines Interview Personal Mastery
-                </h4>
-                <p class="sr-page-hero-subtitle">Private Philippines interview progress replaces public ranking because roles, languages, difficulties, and practice conditions are not fairly comparable.</p>
+    <div class="mastery-hero-card">
+        <div class="mastery-copy">
+            <div class="mastery-badge" aria-hidden="true">
+                <i class="fa-solid fa-trophy fa-xl"></i>
+            </div>
+            <div>
+                <h5 class="mastery-title">Philippines <span>Personal Mastery</span></h5>
+                <p class="mastery-subtitle">Track private interview growth without public rankings.</p>
             </div>
         </div>
-        <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
-            <defs>
-                <linearGradient id="masteryPanel" x1="34" y1="18" x2="178" y2="130" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#FEF3C7"/>
-                    <stop offset="1" stop-color="#DBEAFE"/>
-                </linearGradient>
-                <linearGradient id="masteryGold" x1="76" y1="28" x2="158" y2="118" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#F59E0B"/>
-                    <stop offset="1" stop-color="#3B82F6"/>
-                </linearGradient>
-            </defs>
-            <rect x="34" y="22" width="152" height="106" rx="19" fill="url(#masteryPanel)" stroke="#FDE68A" stroke-width="3"/>
-            <path d="M94 44h52v28c0 19-13 36-26 42-13-6-26-23-26-42V44Z" fill="url(#masteryGold)"/>
-            <path d="M104 57h32v16c0 11-8 21-16 25-8-4-16-14-16-25V57Z" fill="#fff" opacity=".88"/>
-            <path d="m111 76 7 7 14-18" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M58 111h94" stroke="#93C5FD" stroke-width="7" stroke-linecap="round" opacity=".8"/>
-            <rect x="64" y="82" width="14" height="29" rx="7" fill="#60A5FA"/>
-            <rect x="85" y="70" width="14" height="41" rx="7" fill="#38BDF8"/>
-            <rect x="156" y="61" width="14" height="50" rx="7" fill="#22C55E"/>
-            <circle cx="62" cy="48" r="13" fill="#F59E0B"/>
-            <circle cx="169" cy="39" r="10" fill="#3B82F6"/>
-            <path d="M30 135c32-10 72-10 108 0s58 8 78-4" fill="none" stroke="#FBBF24" stroke-width="5" stroke-linecap="round" opacity=".55"/>
-        </svg>
+        <div class="mastery-visual" aria-hidden="true">
+            <svg viewBox="0 0 260 170" role="img">
+                <defs>
+                    <linearGradient id="masteryPanel" x1="40" y1="18" x2="212" y2="142" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#fff7e6"/>
+                        <stop offset="1" stop-color="#dcebff"/>
+                    </linearGradient>
+                    <linearGradient id="masteryShield" x1="104" y1="52" x2="164" y2="118" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#263c62"/>
+                        <stop offset="1" stop-color="#1662b8"/>
+                    </linearGradient>
+                    <filter id="masteryShadow" x="0" y="0" width="260" height="170" filterUnits="userSpaceOnUse">
+                        <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#3266bc" flood-opacity=".2"/>
+                    </filter>
+                </defs>
+                <rect x="31" y="28" width="205" height="111" rx="23" fill="url(#masteryPanel)" stroke="#b6d2fb" stroke-width="2" filter="url(#masteryShadow)" transform="rotate(3 133.5 83.5)"/>
+                <path d="M111 58h54v31c0 19-14 36-27 43-14-7-27-24-27-43V58Z" fill="url(#masteryShield)"/>
+                <path d="M121 70h34v18c0 11-8 21-17 26-9-5-17-15-17-26V70Z" fill="#fff"/>
+                <path d="m130 91 8 8 18-24" fill="none" stroke="#fb9700" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M51 124h126" stroke="#8ab5ff" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+                <rect x="58" y="83" width="17" height="39" rx="9" fill="#1598ef"/>
+                <rect x="84" y="65" width="17" height="57" rx="9" fill="#15bce9"/>
+                <rect x="194" y="58" width="18" height="68" rx="9" fill="#36d56f"/>
+                <circle cx="62" cy="46" r="16" fill="#fb9700"/>
+                <circle cx="213" cy="48" r="15" fill="#2f80ed"/>
+                <path d="M26 155c39-17 77-18 118-3 31 12 67 12 92-4" fill="none" stroke="#78a7ff" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+            </svg>
+        </div>
     </div>
     <div class="mastery-stats-grid">
         @foreach([
@@ -118,18 +398,39 @@
             ['Practice streak', ($profile->current_streak ?? 0).' days', 'fa-fire', '#ef4444'],
         ] as [$label,$value,$icon,$color])
             <div>
-                <div class="mastery-stat-card">
-                    <i class="fa-solid {{ $icon }} mb-3" style="font-size:1.5rem;color:{{ $color }}"></i>
-                    <div class="h3 fw-bold mastery-stat-value">{{ $value }}</div>
-                    <div class="mastery-stat-label">{{ $label }}</div>
+                <div class="mastery-stat-card" style="color:{{ $color }}">
+                    <div class="mastery-stat-icon">
+                        <i class="fa-solid {{ $icon }}"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold mastery-stat-value">{{ $value }}</div>
+                        <div class="mastery-stat-label">{{ $label }}</div>
+                    </div>
+                    <i class="fa-solid {{ $icon }} mastery-stat-watermark" aria-hidden="true"></i>
                 </div>
             </div>
         @endforeach
     </div>
-    <div class="p-4 mt-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:16px">
-        <h5 class="fw-bold" style="color:var(--tx)">What counts here?</h5>
-        <p style="color:var(--tx3)">Only uncoached, score-eligible Philippines interview assessments and clearly labelled legacy sessions contribute. Coached practice remains visible in your history but does not change this mastery baseline.</p>
-        <a class="btn btn-primary" href="{{ route('user.progress') }}">Open Philippines Progress</a>
+    <div class="mastery-info-card">
+        <div>
+            <div class="mastery-info-heading">
+                <span class="mastery-info-icon"><i class="fa-solid fa-info"></i></span>
+                <h5>What counts here?</h5>
+            </div>
+            <p>Only score-eligible interview assessments count here. Coached practice stays in history but does not change your mastery baseline.</p>
+            <a class="mastery-progress-btn" href="{{ route('user.progress') }}">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Open Philippines Progress</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </div>
+        <svg class="mastery-info-art" viewBox="0 0 130 150" aria-hidden="true">
+            <path d="M26 22c15-18 48-24 77-8" fill="none" stroke="currentColor" stroke-width="8" opacity=".18" stroke-linecap="round"/>
+            <rect x="30" y="30" width="78" height="104" rx="13" fill="#eef5ff" stroke="currentColor" stroke-width="5"/>
+            <rect x="55" y="24" width="28" height="16" rx="6" fill="currentColor"/>
+            <path d="m45 61 8 8 15-17M45 88l8 8 15-17M45 115l8 8 15-17" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M78 64h21M78 91h21M78 118h21" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".45"/>
+        </svg>
     </div>
 </div>
 @endsection

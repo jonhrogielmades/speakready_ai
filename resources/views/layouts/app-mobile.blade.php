@@ -230,7 +230,7 @@
             white-space: nowrap;
          }
 
-         .mob-header-right { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+         .mob-header-right { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 
          .mob-icon-btn {
             width: 34px; height: 34px;
@@ -499,21 +499,81 @@
             background: linear-gradient(135deg, #ef4444, #f97316);
          }
 
+         .mob-profile-settings-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 8px;
+            align-items: start;
+         }
+
+         .mob-profile-settings-row > form {
+            min-width: 0;
+         }
+
          .mob-profile-language {
             border: 1px solid var(--bd);
             border-radius: 13px;
             padding: 10px;
             background: rgba(255, 255, 255, 0.035);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 9px;
+            min-height: 48px;
+            position: relative;
+            overflow: hidden;
          }
 
          .mob-profile-language label {
-            display: flex;
+            display: none;
+         }
+
+         .mob-profile-language-trigger {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2563eb, #60a5fa);
+            color: #fff;
+            pointer-events: none;
+         }
+
+         .mob-profile-language-trigger i {
+            font-size: 0.82rem;
+         }
+
+         .mob-profile-language-text {
+            color: var(--tx);
+            font-size: 0.76rem;
+            font-weight: 800;
+            line-height: 1.2;
+            pointer-events: none;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+         }
+
+         .mob-profile-language select {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+         }
+
+         .mob-profile-language label {
             align-items: center;
             gap: 9px;
             color: var(--tx);
             font-size: 0.76rem;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin-bottom: 0;
+            white-space: nowrap;
          }
 
          .mob-profile-language label i {
@@ -525,8 +585,17 @@
             border-color: var(--bd);
             color: var(--tx);
             border-radius: 11px;
-            min-height: 42px;
-            font-size: 0.82rem;
+            min-height: 36px;
+            font-size: 0.74rem;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            min-width: 0;
+         }
+
+         .mob-profile-settings-row .mob-profile-action {
+            min-height: 48px;
+            align-items: center;
+            padding: 10px;
          }
 
          @media (max-width: 360px) {
@@ -758,13 +827,11 @@
                max-width: 104px;
             }
 
-            .mob-header-right {
-               gap: 7px;
-            }
+            .mob-header-right { gap: 5px; }
 
             .mob-icon-btn {
-               width: 34px;
-               height: 34px;
+               width: 32px;
+               height: 32px;
             }
 
             .mob-avatar {
@@ -1746,6 +1813,9 @@
             <button class="mob-icon-btn" id="mobTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
                <i class="fa-solid fa-circle-play"></i>
             </button>
+            <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Fullscreen" onclick="toggleMobileFullscreen(event)">
+               <i class="fa-solid fa-expand" id="mobFullscreenIcon"></i>
+            </button>
             <button class="mob-icon-btn" id="mobThBtn" onclick="toggleTheme()" title="Toggle theme">
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
@@ -1814,19 +1884,23 @@
                   <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                </div>
                <div class="mob-profile-section-title">Settings</div>
-               <form action="{{ route('user.language.update') }}" method="POST" class="mob-profile-language mb-2">
-                  @csrf
-                  <label for="mobileProfileLanguageSelect"><i class="fa-solid fa-language"></i>Language</label>
-                  <select id="mobileProfileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()">
-                     @foreach($supportedLanguages as $languageCode => $language)
-                        <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
-                     @endforeach
-                  </select>
-               </form>
-               <form action="{{ route('logout') }}" method="POST">
-                  @csrf
-                  <button type="submit" class="mob-profile-action danger"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
-               </form>
+               <div class="mob-profile-settings-row">
+                  <form action="{{ route('user.language.update') }}" method="POST" class="mob-profile-language">
+                     @csrf
+                     <label for="mobileProfileLanguageSelect"><i class="fa-solid fa-language"></i>Language</label>
+                     <span class="mob-profile-language-trigger" aria-hidden="true"><i class="fa-solid fa-language"></i></span>
+                     <span class="mob-profile-language-text">Language</span>
+                     <select id="mobileProfileLanguageSelect" name="preferred_language" class="form-select form-select-sm" onchange="this.form.submit()">
+                        @foreach($supportedLanguages as $languageCode => $language)
+                           <option value="{{ $languageCode }}" {{ ($currentLanguageCode ?? 'en') === $languageCode ? 'selected' : '' }}>{{ $language['native_label'] ?? $language['label'] }}</option>
+                        @endforeach
+                     </select>
+                  </form>
+                  <form action="{{ route('logout') }}" method="POST">
+                     @csrf
+                     <button type="submit" class="mob-profile-action danger"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
+                  </form>
+               </div>
             </div>
          </div>
       </div>
@@ -1893,9 +1967,9 @@
                     type="button"
                     aria-controls="mobProfileDropdown"
                     aria-expanded="false"
-                    aria-label="Open profile menu"
+                    aria-label="Open more menu"
                     onclick="toggleMobileProfile(event, 'pages')">
-               <span class="mob-nav-icon"><i class="fa-solid fa-ellipsis"></i></span>
+               <span class="mob-nav-icon"><i class="fa-solid fa-grid-2"></i></span>
                <span>More</span>
             </button>
          </div>
@@ -1954,6 +2028,51 @@
                  alert('A tutorial is not available for this specific page.');
              }
          }
+
+         function updateMobileFullscreenIcon() {
+            const button = document.getElementById('mobFullscreenBtn');
+            const icon = document.getElementById('mobFullscreenIcon');
+            const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+
+            if (icon) {
+               icon.classList.toggle('fa-expand', !isFullscreen);
+               icon.classList.toggle('fa-compress', isFullscreen);
+            }
+
+            if (button) {
+               button.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
+               button.setAttribute('title', isFullscreen ? 'Exit fullscreen' : 'Fullscreen');
+            }
+         }
+
+         async function toggleMobileFullscreen(e) {
+            if (e) e.stopPropagation();
+
+            try {
+               const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+               if (isFullscreen) {
+                  if (document.exitFullscreen) {
+                     await document.exitFullscreen();
+                  } else if (document.webkitExitFullscreen) {
+                     document.webkitExitFullscreen();
+                  }
+               } else {
+                  const root = document.documentElement;
+                  if (root.requestFullscreen) {
+                     await root.requestFullscreen();
+                  } else if (root.webkitRequestFullscreen) {
+                     root.webkitRequestFullscreen();
+                  }
+               }
+            } catch (error) {
+               console.warn('Fullscreen toggle failed:', error);
+            }
+
+            updateMobileFullscreenIcon();
+         }
+
+         document.addEventListener('fullscreenchange', updateMobileFullscreenIcon);
+         document.addEventListener('webkitfullscreenchange', updateMobileFullscreenIcon);
 
          // PWA Install Prompt Logic
          let deferredPrompt;

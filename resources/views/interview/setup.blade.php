@@ -2230,6 +2230,816 @@
             width: 78px !important;
         }
     }
+    @media (min-width: 992px) {
+        #sec-interview-setup {
+            --setup-gap: 14px;
+            --setup-card-pad: 14px;
+            max-width: 1380px;
+            margin-inline: auto;
+            padding-top: 10px !important;
+            padding-bottom: 30px !important;
+        }
+
+        #sec-interview-setup .setup-hero {
+            margin-bottom: var(--setup-gap);
+            border-radius: 16px;
+        }
+
+        #sec-interview-setup .setup-hero-inner {
+            justify-content: flex-start;
+            min-height: 96px;
+            padding: 14px clamp(138px, 15vw, 170px) 14px 18px;
+        }
+
+        #sec-interview-setup .setup-hero-title {
+            font-size: clamp(1.2rem, 1.35vw, 1.45rem);
+            margin-bottom: 5px;
+        }
+
+        #sec-interview-setup .setup-hero-subtitle {
+            max-width: 760px;
+            font-size: 0.84rem;
+        }
+
+        #sec-interview-setup .setup-hero-art {
+            right: 14px;
+            width: clamp(116px, 11vw, 138px);
+        }
+
+        #sec-interview-setup #setupForm > .row {
+            --bs-gutter-x: var(--setup-gap);
+            --bs-gutter-y: var(--setup-gap);
+            align-items: flex-start;
+        }
+
+        #setup-left-col {
+            gap: var(--setup-gap);
+        }
+
+        #sec-interview-setup .setup-panel {
+            margin-bottom: 0;
+            padding: var(--setup-card-pad) !important;
+            border-radius: 14px !important;
+            width: 100%;
+            max-width: 100%;
+            min-height: 0 !important;
+            height: auto !important;
+            display: block;
+            overflow: hidden;
+        }
+
+        #sec-interview-setup .setup-panel *,
+        #sec-interview-setup .setup-stepper * {
+            min-width: 0;
+        }
+
+        #sec-interview-setup .setup-panel:hover {
+            transform: translateY(-1px);
+        }
+
+        #sec-interview-setup .setup-panel h5 {
+            margin-bottom: 10px !important;
+        }
+
+        #panel-basic.setup-details-card,
+        #panel-structure.setup-structure-card,
+        #panel-inclusive.setup-inclusive-card,
+        #panel-content.setup-assistance-card,
+        #panel-response.setup-response-card {
+            max-width: none;
+            margin-inline: 0;
+            padding: var(--setup-card-pad) !important;
+            border-radius: 14px !important;
+        }
+
+        #panel-basic .setup-details-card-head,
+        #panel-structure .setup-structure-head,
+        #panel-inclusive .setup-inclusive-head,
+        #panel-content .assistance-head,
+        #panel-response .response-head {
+            margin-bottom: 12px;
+            gap: 12px;
+            min-height: 42px;
+            align-items: center;
+        }
+
+        #panel-basic .setup-details-icon,
+        #panel-structure .setup-structure-head-icon,
+        #panel-inclusive .setup-inclusive-head-icon,
+        #panel-content .assistance-head-icon,
+        #panel-response .response-head-icon {
+            width: 42px;
+            height: 42px;
+            font-size: 1.1rem;
+        }
+
+        #panel-basic .setup-details-card-title,
+        #panel-structure .setup-structure-title,
+        #panel-inclusive .setup-inclusive-title,
+        #panel-content .assistance-title,
+        #panel-response .response-title {
+            font-size: 1.12rem !important;
+            line-height: 1.18;
+        }
+
+        #panel-basic .setup-details-card-subtitle,
+        #panel-inclusive .setup-inclusive-copy {
+            font-size: 0.82rem;
+            line-height: 1.42;
+            margin-bottom: 12px;
+        }
+
+        #panel-basic .setup-details-card-subtitle,
+        #panel-inclusive .setup-inclusive-copy,
+        #panel-basic.setup-details-card .desc-text,
+        #panel-content .assistance-context-panel .desc-text {
+            max-width: none;
+        }
+
+        #panel-content .assistance-field .olbl,
+        #panel-structure .setup-structure-section-title,
+        #panel-basic .setup-card-label {
+            font-size: 0.84rem;
+            margin-bottom: 8px;
+        }
+
+        #panel-basic .setup-card-label-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 11px;
+            font-size: 0.9rem;
+        }
+
+        #panel-basic .setup-card-fields,
+        #panel-inclusive .inclusive-option-list {
+            gap: 12px;
+            align-items: start;
+        }
+
+        #panel-content .assistance-stack {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            align-items: start;
+        }
+
+        #panel-content .assistance-field:first-child,
+        #panel-content .assistance-field:nth-child(2),
+        #panel-content .assistance-context-panel {
+            grid-column: 1 / -1;
+        }
+
+        #panel-basic .setup-card-fields {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+        }
+
+        #panel-basic .setup-card-field,
+        #panel-content .assistance-field {
+            min-width: 0;
+        }
+
+        #panel-basic .setup-calibrated-simple,
+        #panel-content .assistance-context-panel {
+            grid-column: 1 / -1;
+        }
+
+        #panel-basic.setup-details-card .oinp,
+        #panel-basic.setup-details-card select.oinp,
+        #panel-basic.setup-details-card input.oinp {
+            min-height: 48px !important;
+            padding: 10px 42px 10px 14px !important;
+            border-radius: 12px !important;
+            font-size: 0.92rem !important;
+        }
+
+        #panel-basic.setup-details-card input.oinp {
+            padding-right: 14px !important;
+        }
+
+        #panel-basic.setup-details-card .desc-text {
+            margin-top: 6px;
+            font-size: 0.76rem !important;
+            line-height: 1.35;
+        }
+
+        #panel-basic .setup-calibrated-simple {
+            min-height: 0;
+            padding: 14px !important;
+            border-radius: 14px !important;
+            gap: 14px;
+            align-items: center;
+            margin-top: 0 !important;
+        }
+
+        #panel-basic .setup-calibrated-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            font-size: 1.15rem;
+        }
+
+        #panel-basic .setup-calibrated-simple strong {
+            font-size: 1.1rem !important;
+            line-height: 1.2;
+        }
+
+        #panel-basic .setup-calibrated-simple p {
+            margin-top: 6px;
+            font-size: 0.84rem !important;
+            line-height: 1.42;
+        }
+
+        #panel-structure .structure-difficulty-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+            align-items: stretch;
+        }
+
+        #panel-structure .structure-difficulty-card {
+            min-height: 92px !important;
+            padding: 12px !important;
+            gap: 10px;
+            height: 100%;
+        }
+
+        #panel-structure .structure-difficulty-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+
+        #panel-structure .structure-difficulty-title {
+            font-size: 0.9rem !important;
+            line-height: 1.2;
+        }
+
+        #panel-structure .structure-difficulty-desc {
+            font-size: 0.72rem !important;
+            line-height: 1.32;
+        }
+
+        #panel-structure .structure-select-grid,
+        #panel-structure .structure-config-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            align-items: start;
+        }
+
+        #panel-structure .structure-select-grid .olbl {
+            min-height: 2.4em;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        #panel-structure .structure-select-wrap select.oinp {
+            min-height: 48px !important;
+            padding: 10px 42px 10px 14px !important;
+            border-radius: 12px !important;
+            font-size: 0.86rem !important;
+        }
+
+        #panel-structure .structure-info-note {
+            min-height: 0;
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
+            gap: 10px;
+            font-size: 0.78rem !important;
+            line-height: 1.38;
+            margin-top: 12px !important;
+        }
+
+        #panel-response .response-mode-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        #panel-content .assistance-question-list {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        #panel-response .response-mode-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        #sec-interview-setup .oinp,
+        #sec-interview-setup select.oinp,
+        #sec-interview-setup input.oinp,
+        #sec-interview-setup .custom-radio,
+        #sec-interview-setup .assistance-question-card,
+        #sec-interview-setup .response-mode-card,
+        #sec-interview-setup .structure-difficulty-card {
+            min-height: 54px;
+            font-size: 0.84rem;
+        }
+
+        #sec-interview-setup .custom-radio,
+        #sec-interview-setup .assistance-question-card,
+        #sec-interview-setup .response-mode-card,
+        #sec-interview-setup .structure-difficulty-card {
+            padding: 11px 12px;
+            border-radius: 12px;
+        }
+
+        #panel-inclusive .inclusive-option-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        #panel-inclusive .inclusive-option {
+            min-height: 46px !important;
+            padding: 11px 12px !important;
+            border-radius: 12px !important;
+            font-size: 0.82rem !important;
+            line-height: 1.25;
+        }
+
+        #panel-inclusive .inclusive-note {
+            min-height: 0;
+            margin-top: 12px;
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
+            gap: 10px;
+            font-size: 0.78rem !important;
+            line-height: 1.38;
+        }
+
+        #panel-inclusive .inclusive-note i {
+            width: 30px;
+            height: 30px;
+            border-radius: 10px;
+            font-size: 0.82rem;
+        }
+
+        #panel-content.setup-assistance-card {
+            padding: var(--setup-card-pad) !important;
+            border-radius: 14px !important;
+        }
+
+        #panel-content .assistance-select-wrap select.oinp {
+            min-height: 48px !important;
+            padding: 10px 42px 10px 14px !important;
+            border-radius: 12px !important;
+            font-size: 0.86rem !important;
+        }
+
+        #panel-content .assistance-question-card {
+            min-height: 48px !important;
+            padding: 10px !important;
+            border-radius: 12px !important;
+            gap: 8px;
+        }
+
+        #panel-content .assistance-question-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+        }
+
+        #panel-content .assistance-question-text {
+            font-size: 0.76rem !important;
+            line-height: 1.25;
+        }
+
+        #panel-content .assistance-context-panel {
+            min-height: 0;
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
+            gap: 10px;
+            margin-top: 0 !important;
+        }
+
+        #panel-content .assistance-context-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            font-size: 0.84rem;
+        }
+
+        #panel-content .assistance-context-title {
+            font-size: 0.86rem !important;
+        }
+
+        #panel-response.setup-response-card {
+            padding: var(--setup-card-pad) !important;
+            border-radius: 14px !important;
+        }
+
+        #panel-response .response-mode-card {
+            min-height: 72px !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
+            height: 100%;
+        }
+
+        #panel-response .response-mode-title {
+            font-size: 0.86rem !important;
+            line-height: 1.2;
+        }
+
+        #panel-response .response-mode-desc {
+            font-size: 0.72rem !important;
+            line-height: 1.32;
+        }
+
+        #sec-interview-setup .col-lg-4 > div[style*="sticky"] {
+            top: 92px !important;
+        }
+
+        #sec-interview-setup.setup-step-mode #setupForm > .row {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8 {
+            width: 70%;
+            max-width: none;
+        }
+
+        #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
+            display: block;
+            width: 30%;
+            max-width: none;
+        }
+
+        #sec-interview-setup.setup-step-mode #setup-left-col {
+            display: block;
+        }
+
+        #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel {
+            display: none;
+        }
+
+        #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active {
+            display: block;
+        }
+
+        #sec-interview-setup.setup-step-mode .col-lg-4 > div[style*="sticky"] {
+            position: sticky !important;
+            top: 92px !important;
+        }
+
+        .setup-stepper {
+            width: 100%;
+            max-width: none;
+            margin-left: 0;
+            margin-right: 0;
+            margin: 0 0 var(--setup-gap);
+            padding: 12px 14px;
+            border: 1px solid var(--bd);
+            border-radius: 14px;
+            background: var(--sf);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            box-shadow: var(--shadow-soft, 0 10px 28px rgba(0, 0, 0, 0.12));
+        }
+
+        .setup-stepper-track {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .setup-stepper-item {
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .setup-stepper-dot {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+            display: block;
+        }
+
+        .setup-stepper-item.is-active .setup-stepper-dot,
+        .setup-stepper-item.is-complete .setup-stepper-dot {
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+            border-color: transparent;
+        }
+
+        .setup-stepper-label {
+            display: block;
+            margin-top: 7px;
+            color: var(--tx3);
+            font-size: 0.68rem;
+            font-weight: 800;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .setup-stepper-item.is-active .setup-stepper-label {
+            color: var(--tx);
+            font-weight: 900;
+        }
+
+        .setup-stepper-item.is-complete .setup-stepper-label {
+            color: #2563eb;
+        }
+
+        .setup-stepper-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setup-step-btn {
+            min-height: 38px;
+            border-radius: 11px;
+            border: 1px solid var(--bd);
+            background: var(--bg3);
+            color: var(--tx);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .setup-step-btn.primary {
+            border-color: transparent;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            color: #fff;
+        }
+
+        .setup-step-btn:disabled {
+            opacity: 0.48;
+            cursor: not-allowed;
+        }
+
+        #panel-summary {
+            width: 100%;
+            max-width: none;
+            padding: 14px !important;
+            border-radius: 16px !important;
+        }
+
+        #panel-summary h5 {
+            font-size: 0.98rem !important;
+            margin-bottom: 10px !important;
+        }
+
+        #panel-summary h5 i {
+            width: 34px;
+            height: 34px;
+            font-size: 0.84rem;
+        }
+
+        #panel-summary .summary-row {
+            grid-template-columns: 28px minmax(70px, 0.8fr) minmax(0, 1.2fr);
+            min-height: 42px;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: 0.74rem;
+        }
+
+        #panel-summary .summary-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+        }
+
+        #panel-summary .setup-start-action {
+            margin-top: 14px !important;
+        }
+
+        #panel-summary #btn-start-interview {
+            min-height: 44px;
+            font-size: 0.82rem !important;
+            border-radius: 12px !important;
+        }
+    }
+
+    @media (min-width: 1200px) {
+        #sec-interview-setup {
+            --setup-gap: 16px;
+            --setup-card-pad: 16px;
+        }
+
+        #sec-interview-setup #setupForm > .row > .col-lg-8 {
+            width: 68%;
+        }
+
+        #sec-interview-setup #setupForm > .row > .col-lg-4 {
+            width: 32%;
+        }
+
+        #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8 {
+            width: 70%;
+        }
+
+        #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
+            width: 30%;
+        }
+
+        #sec-interview-setup.setup-step-mode .setup-stepper {
+            width: 100%;
+            max-width: none;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8 {
+            width: 66%;
+        }
+
+        #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
+            width: 34%;
+        }
+
+        #sec-interview-setup.setup-step-mode .setup-stepper {
+            width: 100%;
+        }
+
+        #panel-basic .setup-card-fields,
+        #panel-structure .structure-difficulty-list,
+        #panel-structure .structure-config-grid,
+        #panel-response .response-mode-list,
+        #panel-inclusive .inclusive-option-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #panel-content .assistance-question-list {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        #panel-structure .structure-select-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        #sec-interview-setup:not(.setup-step-mode) .col-lg-4 > div[style*="sticky"] {
+            position: static !important;
+        }
+    }
+
+    @media (max-width: 991.98px) {
+        .setup-stepper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin: 0 0 10px;
+            padding: 8px;
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            background: var(--sf);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .setup-stepper-track {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            column-gap: 8px;
+            row-gap: 6px;
+        }
+
+        .setup-stepper-item {
+            min-width: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            text-align: left;
+        }
+
+        .setup-stepper-dot {
+            display: block;
+            width: 100%;
+            height: 5px;
+            border-radius: 999px;
+            background: var(--bg3);
+            border: 1px solid var(--bd);
+        }
+
+        .setup-stepper-item.is-active .setup-stepper-dot,
+        .setup-stepper-item.is-complete .setup-stepper-dot {
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+            border-color: transparent;
+        }
+
+        .setup-stepper-label {
+            display: block;
+            margin-top: 4px;
+            color: var(--tx3);
+            font-size: 0.54rem;
+            font-weight: 800;
+            line-height: 1.15;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .setup-stepper-item.is-active .setup-stepper-label {
+            color: var(--tx);
+        }
+
+        .setup-stepper-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px;
+        }
+
+        .setup-step-btn {
+            min-height: 34px;
+            border-radius: 10px;
+            border: 1px solid var(--bd);
+            background: var(--bg3);
+            color: var(--tx);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 9px;
+            font-size: 0.68rem;
+            font-weight: 800;
+        }
+
+        .setup-step-btn.primary {
+            border-color: transparent;
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.18);
+        }
+
+        .setup-step-btn:disabled {
+            opacity: 0.48;
+            box-shadow: none;
+        }
+
+        #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel,
+        #sec-interview-setup.setup-step-mode #panel-summary {
+            display: none;
+        }
+
+        #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active,
+        #sec-interview-setup.setup-step-mode #panel-summary.setup-step-active {
+            display: block;
+        }
+
+        #sec-interview-setup.setup-step-mode .setup-step-transition-in {
+            animation: setupStepPanelIn 0.24s ease both;
+        }
+
+        #sec-interview-setup.setup-step-mode .setup-panel.setup-step-active {
+            border-color: rgba(37, 99, 235, 0.48) !important;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.14) !important;
+        }
+
+        #sec-interview-setup.setup-step-mode.setup-summary-step #setup-left-col > .setup-panel {
+            display: none;
+        }
+    }
+
+    @keyframes setupStepPanelIn {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #sec-interview-setup.setup-step-mode .setup-step-transition-in {
+            animation: none;
+        }
+    }
+
+    @media (min-width: 1500px) {
+        #sec-interview-setup {
+            max-width: 1440px;
+        }
+    }
+
+    #btn-start-interview.setup-start-disabled,
+    #btn-start-interview:disabled {
+        opacity: 0.52 !important;
+        cursor: not-allowed !important;
+        transform: none !important;
+        box-shadow: none !important;
+        filter: grayscale(0.25);
+    }
 </style>
 
 <div class="db-section active" id="sec-interview-setup">
@@ -2293,7 +3103,14 @@
         <div class="row g-4">
             <!-- Left Column: Form Settings -->
             <div class="col-lg-8" id="setup-left-col">
-                
+                <div class="setup-stepper" id="setupStepper" aria-label="Interview setup steps">
+                    <div class="setup-stepper-track" id="setupStepperTrack"></div>
+                    <div class="setup-stepper-actions">
+                        <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
                 <!-- Basic Info -->
                 <div class="setup-panel setup-details-card animate-fade-up delay-100" id="panel-basic">
                     <div class="setup-details-card-head">
@@ -2663,6 +3480,7 @@
 
         const posVal = document.getElementById('valPosition').value;
         document.getElementById('sumPosition').innerText = posVal || 'Not Specified';
+        updateStartInterviewState();
 
         const diff = document.querySelector('input[name="difficulty"]:checked');
         if(diff) document.getElementById('sumDifficulty').innerText = diff.value.charAt(0).toUpperCase() + diff.value.slice(1);
@@ -2696,6 +3514,39 @@
             durationStr = Math.round(numQ * 1.5) + " Minutes";
         }
         document.getElementById('sumDuration').innerText = durationStr;
+        updateStartInterviewState();
+    }
+
+    function updateStartInterviewState() {
+        const startButton = document.getElementById('btn-start-interview');
+        if (!startButton) return;
+
+        const requiredFields = [
+            'valScenario',
+            'valPosition',
+            'valNumQuestions',
+            'valTimeLimit',
+            'valInterviewFormat',
+            'valAssistance',
+            'valStrictness',
+            'valFeedbackMode',
+            'valPersona',
+        ];
+
+        const hasRequiredFields = requiredFields.every(id => {
+            const field = document.getElementById(id);
+            return field && String(field.value || '').trim().length > 0;
+        });
+
+        const hasDifficulty = Boolean(document.querySelector('input[name="difficulty"]:checked'));
+        const hasResponseMode = Boolean(document.querySelector('input[name="response_mode"]:checked'));
+        const hasQuestionType = Boolean(document.querySelector('input[name="question_types[]"]:checked'));
+        const canStart = hasRequiredFields && hasDifficulty && hasResponseMode && hasQuestionType;
+
+        startButton.disabled = !canStart;
+        startButton.classList.toggle('setup-start-disabled', !canStart);
+        startButton.setAttribute('aria-disabled', canStart ? 'false' : 'true');
+        startButton.title = canStart ? 'Start interview' : 'Complete all required details first';
     }
 
     document.querySelectorAll('.setup-input').forEach(el => {
@@ -2703,8 +3554,109 @@
         el.addEventListener('keyup', updateSummary);
     });
 
+    const setupStepState = {
+        index: 0,
+        desktopQuery: window.matchMedia('(min-width: 992px)'),
+        baseSteps: [
+            { id: 'panel-basic', label: 'Details' },
+            { id: 'panel-structure', label: 'Structure' },
+            { id: 'panel-inclusive', label: 'Access' },
+            { id: 'panel-content', label: 'Scenario' },
+            { id: 'panel-response', label: 'Response' },
+        ],
+    };
+
+    function getSetupSteps() {
+        const steps = [...setupStepState.baseSteps];
+        if (!setupStepState.desktopQuery.matches) {
+            steps.push({ id: 'panel-summary', label: 'Summary' });
+        }
+        return steps;
+    }
+
+    function renderSetupStepper() {
+        const track = document.getElementById('setupStepperTrack');
+        if (!track) return;
+
+        const steps = getSetupSteps();
+        const mode = setupStepState.desktopQuery.matches ? 'desktop' : 'mobile';
+        if (track.dataset.rendered === mode) return;
+
+        track.innerHTML = steps.map((step, index) => `
+            <button type="button" class="setup-stepper-item" data-setup-step="${index}" aria-label="Go to ${step.label}">
+                <span class="setup-stepper-dot"></span>
+                <span class="setup-stepper-label">${step.label}</span>
+            </button>
+        `).join('');
+        track.dataset.rendered = mode;
+
+        track.querySelectorAll('[data-setup-step]').forEach(button => {
+            button.addEventListener('click', () => {
+                showSetupStep(Number(button.dataset.setupStep));
+            });
+        });
+    }
+
+    function showSetupStep(nextIndex) {
+        const section = document.getElementById('sec-interview-setup');
+        const stepper = document.getElementById('setupStepper');
+        const prevButton = document.getElementById('setupStepPrev');
+        const nextButton = document.getElementById('setupStepNext');
+        const isDesktop = setupStepState.desktopQuery.matches;
+        const steps = getSetupSteps();
+
+        if (!section || !stepper) return;
+
+        renderSetupStepper();
+        setupStepState.index = Math.max(0, Math.min(steps.length - 1, nextIndex));
+
+        section.classList.add('setup-step-mode');
+        section.classList.toggle('setup-summary-step', !isDesktop && steps[setupStepState.index]?.id === 'panel-summary');
+        stepper.hidden = false;
+
+        steps.forEach((step, index) => {
+            const panel = document.getElementById(step.id);
+            if (panel) {
+                const isActivePanel = index === setupStepState.index;
+                panel.classList.toggle('setup-step-active', isActivePanel);
+                panel.classList.remove('setup-step-transition-in');
+                if (isActivePanel) {
+                    void panel.offsetWidth;
+                    panel.classList.add('setup-step-transition-in');
+                }
+            }
+
+            const stepButton = document.querySelector(`[data-setup-step="${index}"]`);
+            if (stepButton) {
+                stepButton.classList.toggle('is-active', index === setupStepState.index);
+                stepButton.classList.toggle('is-complete', index < setupStepState.index);
+                stepButton.setAttribute('aria-current', index === setupStepState.index ? 'step' : 'false');
+            }
+        });
+
+        if (prevButton) prevButton.disabled = setupStepState.index === 0;
+        if (nextButton) {
+            const isLast = setupStepState.index === steps.length - 1;
+            nextButton.hidden = isLast;
+        }
+
+    }
+
+    document.getElementById('setupStepPrev')?.addEventListener('click', () => {
+        showSetupStep(setupStepState.index - 1);
+    });
+
+    document.getElementById('setupStepNext')?.addEventListener('click', () => {
+        showSetupStep(setupStepState.index + 1);
+    });
+
+    setupStepState.desktopQuery.addEventListener?.('change', () => {
+        showSetupStep(setupStepState.index);
+    });
+
     window.onload = () => {
         updateSummary();
+        showSetupStep(0);
     };
 
     const setupForm = document.getElementById('setupForm');
@@ -2712,7 +3664,25 @@
     const startInterviewButton = document.getElementById('btn-start-interview');
 
     if (setupForm && setupTransitionOverlay) {
-        setupForm.addEventListener('submit', function() {
+        setupForm.addEventListener('submit', function(event) {
+            updateStartInterviewState();
+            if (startInterviewButton?.disabled) {
+                event.preventDefault();
+                const firstMissingField = [
+                    'valScenario',
+                    'valPosition',
+                    'valNumQuestions',
+                    'valTimeLimit',
+                    'valInterviewFormat',
+                    'valAssistance',
+                    'valStrictness',
+                    'valFeedbackMode',
+                    'valPersona',
+                ].map(id => document.getElementById(id)).find(field => field && String(field.value || '').trim().length === 0);
+                firstMissingField?.focus();
+                return;
+            }
+
             setupTransitionOverlay.classList.add('active');
             document.body.classList.add('finish-transition-active');
 

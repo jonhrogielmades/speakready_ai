@@ -66,10 +66,10 @@
         }
         #portfolioReport .report-export-actions > button {
             width: 100% !important;
-            height: 46px !important;
-            min-height: 46px !important;
-            padding: 7px 5px !important;
-            font-size: 0.72rem !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 6px 5px !important;
+            font-size: 0.62rem !important;
             line-height: 1.15 !important;
             display: inline-flex !important;
             align-items: center !important;
@@ -83,23 +83,259 @@
             font-size: 0.78rem !important;
         }
         #portfolioReport .report-export-actions > form {
-            grid-column: 1 / -1 !important;
+            grid-column: auto !important;
             width: 100% !important;
         }
     }
 </style>
 @include('partials.page-hero-styles')
+<style>
+    #portfolioReport {
+        max-width: 1040px;
+        margin-inline: auto;
+    }
+    #portfolioReport .sr-page-hero {
+        --reports-hero-title: #1d4ed8;
+        --reports-hero-text: #334155;
+        --reports-icon-bg: rgba(239, 246, 255, 0.92);
+        --reports-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 40px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 76px;
+        border-radius: 16px;
+        margin-bottom: 12px;
+        padding: 8px 76px 8px 12px !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        border-color: rgba(191, 219, 254, 0.86);
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+    }
+    :root:not(.lm) #portfolioReport .sr-page-hero,
+    .dm #portfolioReport .sr-page-hero {
+        --reports-hero-title: #93c5fd;
+        --reports-hero-text: #e2e8f0;
+        --reports-icon-bg: rgba(59, 130, 246, 0.2);
+        --reports-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28);
+    }
+    #portfolioReport .sr-page-hero::after {
+        width: min(34%, 240px);
+        background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.12));
+    }
+    #portfolioReport .sr-page-hero-inner,
+    #portfolioReport .sr-page-hero-copy {
+        display: contents !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+    #portfolioReport .reports-hero-icon {
+        box-sizing: border-box;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        border: 1px solid var(--reports-icon-border) !important;
+        border-radius: 10px !important;
+        background: var(--reports-icon-bg) !important;
+        color: var(--reports-hero-title) !important;
+        font-size: 0.82rem !important;
+    }
+    #portfolioReport .sr-page-hero-title {
+        display: block !important;
+        color: var(--reports-hero-title) !important;
+        background: none !important;
+        -webkit-text-fill-color: var(--reports-hero-title) !important;
+        font-size: 0.95rem !important;
+        line-height: 1.08 !important;
+        margin: 0 0 3px !important;
+        max-width: 15.5rem;
+        font-weight: 950 !important;
+        text-transform: uppercase;
+    }
+    #portfolioReport .sr-page-hero-title svg {
+        display: none;
+    }
+    #portfolioReport .sr-page-hero-subtitle {
+        max-width: 15rem;
+        font-size: 0.65rem !important;
+        line-height: 1.32;
+        color: var(--reports-hero-text) !important;
+        font-weight: 500;
+    }
+    #portfolioReport .sr-page-hero-art {
+        right: 8px;
+        bottom: 4px;
+        width: 52px;
+        opacity: 0.92;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
+    }
+    #portfolioReport .report-export-actions {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+        width: 100%;
+    }
+    #portfolioReport .report-export-actions .btn {
+        width: 100%;
+        min-height: 40px;
+        min-width: 0;
+        border: 0;
+        border-radius: 12px !important;
+        padding: 7px 9px;
+        font-size: 0.78rem;
+        line-height: 1.1;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.12);
+        white-space: nowrap;
+    }
+    #portfolioReport .report-export-actions .btn i {
+        font-size: 0.82rem;
+        margin-right: 5px !important;
+    }
+    #portfolioReport .report-export-actions > form {
+        width: 100%;
+    }
+    #portfolioReport .report-empty-card {
+        max-width: 100%;
+        border-radius: 22px !important;
+        padding: clamp(28px, 5vw, 44px) clamp(20px, 6vw, 56px) !important;
+        box-shadow: 0 18px 46px rgba(15, 23, 42, 0.08) !important;
+    }
+    #portfolioReport .report-empty-art {
+        width: min(150px, 38vw);
+        height: auto;
+        margin-bottom: 18px;
+        filter: drop-shadow(0 16px 24px rgba(37, 99, 235, 0.18));
+    }
+    #portfolioReport .report-empty-title {
+        font-size: clamp(1.45rem, 4.8vw, 2.2rem);
+        line-height: 1.12;
+        max-width: 520px;
+        margin-inline: auto;
+    }
+    #portfolioReport .report-empty-copy {
+        font-size: clamp(0.95rem, 3.6vw, 1.12rem);
+        line-height: 1.55;
+    }
+    #portfolioReport .report-start-btn {
+        width: min(100%, 560px);
+        min-height: 62px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        border-radius: 18px !important;
+        font-size: clamp(0.98rem, 3.6vw, 1.15rem);
+        box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
+    }
+
+    @media (max-width: 767px) {
+        #portfolioReport {
+            max-width: 100%;
+        }
+        #portfolioReport .sr-page-hero {
+            min-height: 74px;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            border-radius: 16px;
+            margin-bottom: 10px;
+            padding: 8px 64px 8px 12px !important;
+        }
+        #portfolioReport .sr-page-hero-title {
+            font-size: 0.86rem !important;
+            line-height: 1.08;
+            margin-bottom: 3px !important;
+            max-width: 12.5rem;
+        }
+        #portfolioReport .reports-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.8rem !important;
+        }
+        #portfolioReport .sr-page-hero-subtitle {
+            font-size: 0.64rem !important;
+            line-height: 1.3;
+            max-width: 12.5rem;
+        }
+        #portfolioReport .sr-page-hero-art {
+            right: -4px;
+            bottom: 5px;
+            width: 46px;
+        }
+        #portfolioReport .report-export-actions {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            margin-bottom: 14px;
+        }
+        #portfolioReport .report-export-actions .btn {
+            min-width: 0;
+            min-height: 38px !important;
+            height: 38px !important;
+            border-radius: 12px !important;
+            padding: 6px 5px !important;
+            font-size: 0.62rem !important;
+            line-height: 1.15 !important;
+        }
+        #portfolioReport .report-export-actions .btn i {
+            font-size: 0.72rem !important;
+        }
+        #portfolioReport .report-empty-card {
+            padding: 26px 16px !important;
+            border-radius: 18px !important;
+        }
+        #portfolioReport .report-empty-art {
+            width: min(118px, 36vw);
+            margin-bottom: 14px;
+        }
+        #portfolioReport .report-start-btn {
+            min-height: 54px;
+            border-radius: 16px !important;
+        }
+    }
+
+    @media (max-width: 374px) {
+        #portfolioReport .sr-page-hero {
+            padding-right: 56px !important;
+        }
+        #portfolioReport .sr-page-hero-title {
+            font-size: 0.8rem !important;
+            max-width: 10.7rem;
+        }
+        #portfolioReport .sr-page-hero-subtitle {
+            font-size: 0.58rem !important;
+            max-width: 10.7rem;
+        }
+        #portfolioReport .sr-page-hero-art {
+            width: 40px;
+            right: -6px;
+        }
+        #portfolioReport .report-export-actions .btn {
+            gap: 6px !important;
+            padding-inline: 7px !important;
+        }
+    }
+</style>
 
 <div class="db-section active animate-fade-up" id="portfolioReport">
     <!-- Feature 10: Interview Portfolio Report Header & Actions -->
     <div class="sr-page-hero btn-no-print">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
-                <h4 class="sr-page-hero-title text-gradient-primary">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 3v5h5M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    Philippines Interview Reports
-                </h4>
-                <p class="sr-page-hero-subtitle">A focused summary of your Philippines interview practice, readiness, feedback, and learning progress.</p>
+                <div class="reports-hero-icon"><i class="fa-solid fa-file-lines"></i></div>
+                <div>
+                    <h4 class="sr-page-hero-title text-gradient-primary">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 3v5h5M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Philippines Interview Reports
+                    </h4>
+                    <p class="sr-page-hero-subtitle">Review readiness, feedback, and interview progress.</p>
+                </div>
             </div>
         </div>
         <svg class="sr-page-hero-art" viewBox="0 0 220 150" aria-hidden="true">
@@ -399,17 +635,27 @@
     </div>
     @else
     <!-- Empty State -->
-    <div class="print-card text-center py-5 mb-4" style="border-radius:24px; padding:32px;">
-        <i class="fa-solid fa-folder-open text-primary mb-3" style="font-size: 4rem; opacity: 0.8;"></i>
-        <h4 style="color:var(--tx);font-weight:bold;">No Scored Portfolio Data Available</h4>
-        <p style="color:var(--tx3); margin-bottom: 24px; max-width: 460px; margin-left: auto; margin-right: auto;">
+    <div class="print-card report-empty-card text-center mb-4">
+        <svg class="report-empty-art" viewBox="0 0 220 170" aria-hidden="true">
+            <defs>
+                <linearGradient id="emptyFolderBack" x1="58" y1="36" x2="159" y2="142"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#60A5FA"/></linearGradient>
+                <linearGradient id="emptyFolderFront" x1="78" y1="72" x2="170" y2="144"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#2563EB"/></linearGradient>
+            </defs>
+            <circle cx="110" cy="84" r="70" fill="#DBEAFE" opacity=".82"/>
+            <path d="M54 60c0-9 7-16 16-16h39l15 15h42c8 0 15 7 15 15v53H54V60Z" fill="url(#emptyFolderBack)"/>
+            <path d="M69 82c2-10 10-17 20-17h83c10 0 17 9 15 19l-10 48c-2 9-10 15-19 15H67c-10 0-18-9-16-19l18-46Z" fill="url(#emptyFolderFront)"/>
+            <path d="M67 78c3-14 13-23 27-23h83" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".88"/>
+            <path d="M31 94h7M35 90v8M183 44h8M187 40v8M42 132h4M172 127h5" stroke="#60A5FA" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <h4 class="report-empty-title" style="color:var(--tx);font-weight:800;">No Scored Portfolio Data Available</h4>
+        <p class="report-empty-copy" style="color:var(--tx3); margin-bottom: 24px; max-width: 560px; margin-left: auto; margin-right: auto;">
             @if($sessions->count() > 0)
                 You have completed interview records, but none of them have score data yet. Once a scored Philippines interview is available, this report will show analytics, comparisons, and feedback summaries.
             @else
                 Your report is generated automatically from scored Philippines interview performance. Complete your first practice interview to unlock analytics, comparisons, and personalized feedback.
             @endif
         </p>
-        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine px-4 py-2" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-play me-2"></i>Start Philippine Interview</a>
+        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine report-start-btn" style="font-weight:700;"><i class="fa-solid fa-play"></i>Start Philippine Interview</a>
     </div>
     @endif
 </div>

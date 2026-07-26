@@ -1205,6 +1205,151 @@
         font-size: 0.82rem;
     }
 
+    @media (min-width: 992px) {
+        #interview-modules-page {
+            max-width: 1440px;
+            margin-inline: auto;
+        }
+        #interview-modules-page .modules-hero {
+            grid-template-columns: 78px minmax(0, 1fr) minmax(230px, 300px);
+            gap: 28px;
+            min-height: 230px;
+            padding: 30px 34px;
+            margin-bottom: 20px;
+            border-radius: 22px;
+        }
+        #interview-modules-page .modules-hero-icon {
+            width: 78px;
+            height: 78px;
+            border-radius: 18px;
+        }
+        #interview-modules-page .modules-hero-title {
+            max-width: 760px;
+            white-space: normal;
+            font-size: clamp(2.25rem, 3vw, 3.1rem);
+            line-height: 1.05;
+        }
+        #interview-modules-page .modules-hero-subtitle {
+            max-width: 690px;
+            margin-top: 14px;
+            font-size: 1rem;
+            line-height: 1.55;
+        }
+        #interview-modules-page .modules-hero-art {
+            width: min(100%, 285px);
+            justify-self: end;
+        }
+        #interview-modules-page .sr-page-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        #interview-modules-page .db-top-search {
+            max-width: 360px !important;
+            min-height: 46px;
+            padding: 10px 16px !important;
+            border-radius: 12px !important;
+            font-size: 0.92rem;
+        }
+        #interview-modules-page #nav-pills-container {
+            gap: 10px !important;
+            margin-bottom: 22px !important;
+            padding-bottom: 0 !important;
+        }
+        #interview-modules-page .ll-nav-pill {
+            min-height: 42px;
+            padding: 9px 18px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+        }
+        #interview-modules-page .module-smart-panel {
+            padding: 22px;
+            margin-bottom: 22px;
+            border-radius: 18px;
+        }
+        #interview-modules-page .module-smart-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 26px;
+            align-items: stretch;
+            margin-bottom: 26px;
+        }
+        #interview-modules-page .module-smart-row .module-smart-panel {
+            margin-bottom: 0;
+            min-height: 270px;
+        }
+        #interview-modules-page .module-smart-title {
+            font-size: 1.28rem;
+        }
+        #interview-modules-page .module-smart-subtitle {
+            font-size: 0.94rem;
+        }
+        #interview-modules-page .module-rec-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 14px;
+            margin-top: 16px;
+        }
+        #interview-modules-page .module-rec-item {
+            min-height: 94px;
+            align-items: flex-start;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        #interview-modules-page .module-path-panel .module-path-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 14px;
+        }
+        #interview-modules-page .module-path-panel .module-path-item {
+            min-height: 108px;
+            padding: 16px;
+        }
+        #interview-modules-page .module-path-panel .module-rec-icon {
+            width: 54px;
+            height: 54px;
+            flex-basis: 54px;
+        }
+        #interview-modules-page .modules-card-grid {
+            --bs-gutter-x: 1.5rem;
+            --bs-gutter-y: 1.5rem;
+        }
+        #interview-modules-page .module-card {
+            min-height: 342px;
+            border-radius: 16px;
+        }
+        #interview-modules-page .module-card-media {
+            height: 128px;
+        }
+        #interview-modules-page .module-card-body {
+            padding: 18px;
+        }
+        #interview-modules-page .module-card-title {
+            min-height: 2.35em;
+            font-size: 1.05rem;
+            line-height: 1.18;
+            margin-bottom: 9px;
+        }
+        #interview-modules-page .module-card-desc {
+            min-height: 4.35em;
+            font-size: 0.86rem;
+            line-height: 1.45;
+            margin-bottom: 14px;
+        }
+        #interview-modules-page .module-card-footer {
+            grid-template-columns: minmax(0, auto) minmax(150px, 1fr);
+            align-items: center;
+            gap: 12px;
+        }
+        #interview-modules-page .module-card-views {
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        #interview-modules-page .module-card-link {
+            min-height: 40px;
+            font-size: 0.86rem;
+        }
+    }
+
     @media (max-width: 767px) {
         #interview-modules-page .modules-hero {
             grid-template-columns: minmax(0, 1fr);
@@ -1644,16 +1789,6 @@
             <path d="M14 154l24 24M20 184l30 10" fill="none" stroke="#60A5FA" stroke-width="8" stroke-linecap="round" opacity=".8"/>
         </svg>
     </div>
-    <div class="sr-page-actions">
-        <form action="{{ route('user.modules.index') }}" method="GET" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
-            <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Philippines modules..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
-            @if(request('category'))
-                <input type="hidden" name="category" value="{{ request('category') }}">
-            @endif
-        </form>
-    </div>
-
     <!-- Sub-Navigation -->
     <div class="module-topic-select-wrap">
         <div class="module-topic-select-shell">
@@ -1666,61 +1801,58 @@
         </div>
     </div>
 
-    <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
-        <a href="{{ route('user.modules.index') }}" class="ll-nav-pill {{ !request('category') ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-layer-group"></i> All Topics</a>
-        @foreach($categories as $category)
-            <a href="{{ route('user.modules.index', ['category' => $category]) }}" class="ll-nav-pill {{ request('category') == $category ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category }}</a>
-        @endforeach
-    </div>
-
-    @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
-        <section class="module-smart-panel" aria-labelledby="module-recommendations-title">
-            <div class="module-smart-head">
-                <div>
-                    <h5 id="module-recommendations-title" class="module-smart-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#f59e0b"></i>Recommended For You</h5>
-                    <p class="module-smart-subtitle">Suggested from your latest Philippines interview scores, feedback, and module progress.</p>
-                </div>
-                <a href="{{ route('user.progress') }}" class="module-progress-link">View Progress</a>
-            </div>
-            <div class="module-rec-grid">
-                @foreach($moduleRecommendations as $recommendation)
-                    <a href="{{ $recommendation->url }}" class="module-rec-item">
-                        <div class="module-rec-icon" style="--rec-color: {{ $recommendation->color }}"><i class="fa-solid {{ $recommendation->icon }}"></i></div>
-                        <div class="module-rec-copy">
-                            <strong>{{ $recommendation->module->title }}</strong>
-                            <span>{{ $recommendation->reason }}</span>
+    @if((isset($moduleRecommendations) && $moduleRecommendations->count() > 0) || (isset($learningPaths) && $learningPaths->count() > 0))
+        <div class="module-smart-row">
+            @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
+                <section class="module-smart-panel" aria-labelledby="module-recommendations-title">
+                    <div class="module-smart-head">
+                        <div>
+                            <h5 id="module-recommendations-title" class="module-smart-title"><i class="fa-solid fa-wand-magic-sparkles me-2" style="color:#f59e0b"></i>Recommended For You</h5>
+                            <p class="module-smart-subtitle">Suggested from your latest Philippines interview scores, feedback, and module progress.</p>
                         </div>
-                    </a>
-                @endforeach
-            </div>
-        </section>
+                        <a href="{{ route('user.progress') }}" class="module-progress-link">View Progress</a>
+                    </div>
+                    <div class="module-rec-grid">
+                        @foreach($moduleRecommendations as $recommendation)
+                            <a href="{{ $recommendation->url }}" class="module-rec-item">
+                                <div class="module-rec-icon" style="--rec-color: {{ $recommendation->color }}"><i class="fa-solid {{ $recommendation->icon }}"></i></div>
+                                <div class="module-rec-copy">
+                                    <strong>{{ $recommendation->module->title }}</strong>
+                                    <span>{{ $recommendation->reason }}</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+
+            @if(isset($learningPaths) && $learningPaths->count() > 0)
+                <section class="module-smart-panel module-path-panel" aria-labelledby="module-paths-title">
+                    <div class="module-section-head">
+                        <span class="module-section-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
+                        <div>
+                            <h5 id="module-paths-title" class="module-smart-title">Learning Paths</h5>
+                            <p class="module-smart-subtitle">Track completion by topic so your Philippines interview preparation stays ordered.</p>
+                        </div>
+                    </div>
+                    <div class="module-path-grid">
+                        @foreach($learningPaths->take(6) as $path)
+                            <a href="{{ $path->url }}" class="module-path-item">
+                                <div class="module-rec-icon" style="--rec-color:#06b6d4"><i class="fa-solid fa-layer-group"></i></div>
+                                <div class="module-path-copy">
+                                    <strong>{{ $path->title }}</strong>
+                                    <span>{{ $path->completed }}/{{ $path->total }} modules completed</span>
+                                    <div class="module-path-progress" aria-label="{{ $path->progress }}% complete"><span style="--path-progress: {{ $path->progress }}%"></span></div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+        </div>
     @endif
 
-    @if(isset($learningPaths) && $learningPaths->count() > 0)
-        <section class="module-smart-panel module-path-panel" aria-labelledby="module-paths-title">
-            <div class="module-section-head">
-                <span class="module-section-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
-                <div>
-                    <h5 id="module-paths-title" class="module-smart-title">Learning Paths</h5>
-                    <p class="module-smart-subtitle">Track completion by topic so your Philippines interview preparation stays ordered.</p>
-                </div>
-            </div>
-            <div class="module-path-grid">
-                @foreach($learningPaths->take(6) as $path)
-                    <a href="{{ $path->url }}" class="module-path-item">
-                        <div class="module-rec-icon" style="--rec-color:#06b6d4"><i class="fa-solid fa-layer-group"></i></div>
-                        <div class="module-path-copy">
-                            <strong>{{ $path->title }}</strong>
-                            <span>{{ $path->completed }}/{{ $path->total }} modules completed</span>
-                            <div class="module-path-progress" aria-label="{{ $path->progress }}% complete"><span style="--path-progress: {{ $path->progress }}%"></span></div>
-                        </div>
-                    </a>
-                @endforeach
-            </div>
-        </section>
-    @endif
-
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 modules-card-grid">
         @forelse($modules as $index => $module)
             <div class="col-12 col-md-6 col-lg-4 animate-fade-up" style="animation-delay: {{ $index * 0.1 }}s">
                 <div class="module-card">
@@ -1785,4 +1917,3 @@
 </script>
 @endpush
 @endsection
-
