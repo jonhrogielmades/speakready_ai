@@ -103,10 +103,11 @@
         grid-template-columns: 40px minmax(0, 1fr) !important;
         align-items: center !important;
         gap: 10px !important;
-        min-height: 76px;
+        min-height: 78px !important;
+        height: auto !important;
         border-radius: 16px;
         margin-bottom: 12px;
-        padding: 8px 76px 8px 12px !important;
+        padding: 8px 108px 8px 12px !important;
         background:
             radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
             linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
@@ -139,8 +140,8 @@
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        width: 32px !important;
-        height: 32px !important;
+        width: 30px !important;
+        height: 30px !important;
         border: 1px solid var(--reports-icon-border) !important;
         border-radius: 10px !important;
         background: var(--reports-icon-bg) !important;
@@ -154,8 +155,8 @@
         -webkit-text-fill-color: var(--reports-hero-title) !important;
         font-size: 0.95rem !important;
         line-height: 1.08 !important;
-        margin: 0 0 3px !important;
-        max-width: 15.5rem;
+        margin: 0 0 2px !important;
+        max-width: 14rem;
         font-weight: 950 !important;
         text-transform: uppercase;
     }
@@ -163,17 +164,18 @@
         display: none;
     }
     #portfolioReport .sr-page-hero-subtitle {
-        max-width: 15rem;
+        max-width: 13rem;
         font-size: 0.65rem !important;
-        line-height: 1.32;
+        line-height: 1.22;
         color: var(--reports-hero-text) !important;
         font-weight: 500;
     }
     #portfolioReport .sr-page-hero-art {
-        right: 8px;
-        bottom: 4px;
-        width: 52px;
-        opacity: 0.92;
+        right: 8px !important;
+        bottom: 0 !important;
+        width: 82px !important;
+        height: auto !important;
+        opacity: 0.96;
         filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
     }
     #portfolioReport .report-export-actions {
@@ -241,33 +243,35 @@
             max-width: 100%;
         }
         #portfolioReport .sr-page-hero {
-            min-height: 74px;
+            min-height: 72px !important;
+            height: auto !important;
             grid-template-columns: 36px minmax(0, 1fr) !important;
             gap: 8px !important;
             border-radius: 16px;
             margin-bottom: 10px;
-            padding: 8px 64px 8px 12px !important;
+            padding: 7px 88px 7px 10px !important;
         }
         #portfolioReport .sr-page-hero-title {
-            font-size: 0.86rem !important;
+            font-size: 0.9rem !important;
             line-height: 1.08;
-            margin-bottom: 3px !important;
-            max-width: 12.5rem;
+            margin-bottom: 2px !important;
+            max-width: 11.5rem;
         }
         #portfolioReport .reports-hero-icon {
-            width: 32px !important;
-            height: 32px !important;
+            width: 30px !important;
+            height: 30px !important;
             font-size: 0.8rem !important;
         }
         #portfolioReport .sr-page-hero-subtitle {
             font-size: 0.64rem !important;
-            line-height: 1.3;
-            max-width: 12.5rem;
+            line-height: 1.2;
+            max-width: 11.5rem;
         }
         #portfolioReport .sr-page-hero-art {
-            right: -4px;
-            bottom: 5px;
-            width: 46px;
+            right: 6px !important;
+            bottom: 0 !important;
+            width: 76px !important;
+            height: auto !important;
         }
         #portfolioReport .report-export-actions {
             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
@@ -302,19 +306,21 @@
 
     @media (max-width: 374px) {
         #portfolioReport .sr-page-hero {
-            padding-right: 56px !important;
+            min-height: 68px !important;
+            height: auto !important;
+            padding: 6px 72px 6px 10px !important;
         }
         #portfolioReport .sr-page-hero-title {
             font-size: 0.8rem !important;
-            max-width: 10.7rem;
+            max-width: 10.2rem;
         }
         #portfolioReport .sr-page-hero-subtitle {
             font-size: 0.58rem !important;
-            max-width: 10.7rem;
+            max-width: 10.2rem;
         }
         #portfolioReport .sr-page-hero-art {
-            width: 40px;
-            right: -6px;
+            width: 64px !important;
+            right: 4px !important;
         }
         #portfolioReport .report-export-actions .btn {
             gap: 6px !important;
@@ -332,9 +338,9 @@
                 <div>
                     <h4 class="sr-page-hero-title text-gradient-primary">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5V3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15 3v5h5M8 13h8M8 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        Philippines Interview Reports
+                        Interview Reports
                     </h4>
-                    <p class="sr-page-hero-subtitle">Review readiness, feedback, and interview progress.</p>
+                    <p class="sr-page-hero-subtitle">Review readiness, feedback, and progress.</p>
                 </div>
             </div>
         </div>

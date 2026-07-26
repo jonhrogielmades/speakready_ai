@@ -171,16 +171,54 @@
         font-size: 1.25rem;
     }
     .feedback-empty-state {
-        display: block;
-        width: 100%;
-        border: 1px solid rgba(191, 219, 254, 0.72);
-        border-radius: 14px;
-        background: rgba(96, 165, 250, 0.08);
-        color: #475569;
-        font-size: 0.95rem;
-        line-height: 1.45;
-        padding: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: min(100%, 430px);
+        margin: 8px auto 0;
+        border: 1px solid rgba(147, 197, 253, 0.72);
+        border-radius: 12px;
+        background: rgba(239, 246, 255, 0.72);
+        color: #334155;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.35;
+        padding: 12px;
         text-align: left;
+    }
+    .feedback-empty-state i {
+        width: 28px;
+        height: 28px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+        font-size: 0.8rem;
+    }
+    :root:not(.lm) .feedback-empty-state {
+        border-color: rgba(96, 165, 250, 0.34);
+        background: rgba(30, 41, 59, 0.62);
+        color: #e2e8f0;
+    }
+    :root:not(.lm) .feedback-empty-state i {
+        background: rgba(96, 165, 250, 0.18);
+        color: #93c5fd;
+    }
+    #feedbackTable tbody tr.feedback-empty-row {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+    #feedbackTable tbody tr.feedback-empty-row td {
+        padding: 8px 0 !important;
+        border-radius: 0 !important;
+    }
+    #feedbackTable tbody tr.feedback-empty-row td::before {
+        content: none !important;
+        display: none !important;
     }
     .feedback-table-wrap { overflow: visible; }
     #feedbackTable {
@@ -454,6 +492,15 @@
             padding: 10px !important;
             border-radius: 12px !important;
         }
+        #feedbackTable tbody tr.feedback-empty-row {
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        #feedbackTable tbody tr.feedback-empty-row td {
+            padding: 0 !important;
+        }
         #feedbackTable tbody td {
             display: block !important;
             width: 100% !important;
@@ -606,6 +653,9 @@
         }
         #feedbackTable tbody tr {
             padding: 9px !important;
+        }
+        #feedbackTable tbody tr.feedback-empty-row {
+            padding: 0 !important;
         }
         #feedbackTable tbody td:nth-child(2) {
             font-size: 0.74rem !important;
@@ -930,6 +980,12 @@
             </div>
         </div>
 
+        @if($sessions->count() == 0)
+            <div class="feedback-empty-state">
+                <i class="fa-solid fa-message" aria-hidden="true"></i>
+                Complete a practice interview to generate feedback.
+            </div>
+        @else
         <div class="table-responsive feedback-table-wrap">
             <table class="table custom-table align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent;" id="feedbackTable">
                 <thead>
@@ -976,16 +1032,10 @@
                         </td>
                     </tr>
                     @endforeach
-                    @if($sessions->count() == 0)
-                    <tr>
-                        <td colspan="5" class="border-0 py-3">
-                            <span class="feedback-empty-state">No feedback available yet. Complete a Philippines practice interview to generate detailed feedback.</span>
-                        </td>
-                    </tr>
-                    @endif
                 </tbody>
             </table>
         </div>
+        @endif
         
         <!-- Pagination UI -->
         <div class="mt-4 d-flex justify-content-end" id="feedbackPagination">
@@ -1003,6 +1053,7 @@
         let sortDesc = true;
 
         function filterTable() {
+            if (!tbody) return;
             const search = searchInput.value.toLowerCase();
             const scenario = scenarioFilter.value.toLowerCase();
             const rows = tbody.querySelectorAll('tr');
@@ -1025,7 +1076,7 @@
         if(searchInput) searchInput.addEventListener('keyup', filterTable);
         if(scenarioFilter) scenarioFilter.addEventListener('change', filterTable);
 
-        if(sortBtn) {
+        if(sortBtn && tbody) {
             sortBtn.addEventListener('click', function() {
                 sortDesc = !sortDesc;
                 sortBtn.innerHTML = sortDesc ? '<i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date' : '<i class="fa-solid fa-arrow-up-wide-short me-1"></i> Sort by Date';
