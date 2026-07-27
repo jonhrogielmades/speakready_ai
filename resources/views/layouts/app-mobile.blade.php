@@ -2171,10 +2171,10 @@
                     type="button"
                     aria-controls="mobProfileDropdown"
                     aria-expanded="false"
-                    aria-label="Open profile menu"
+                    aria-label="Open more menu"
                     onclick="toggleMobileProfile(event, 'pages')">
                <span class="mob-nav-icon"><i class="fa-solid fa-grid-2"></i></span>
-               <span>Profile</span>
+               <span>More</span>
             </button>
          </div>
       </nav>

@@ -133,7 +133,7 @@ class MobileLayoutTest extends TestCase
         $response->assertOk()
             ->assertSee('class="mob-nav-primary-icon"', false)
             ->assertSee('<span>Interview</span>', false)
-            ->assertSee('<span>Profile</span>', false);
+            ->assertSee('<span>More</span>', false);
 
         $content = $response->getContent();
 
