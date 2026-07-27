@@ -155,6 +155,28 @@ class UserSideHardeningTest extends TestCase
         $this->assertDatabaseCount('interview_sessions', 0);
     }
 
+    public function test_interview_setup_uses_active_core_admin_categories(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $bpoCategory = $this->category([
+            'title' => 'BPO / Customer Support',
+            'description' => 'Customer support interview practice',
+            'sort_order' => 1,
+        ]);
+        $this->category(['title' => 'Inactive Interview', 'status' => 'inactive']);
+        $this->category(['title' => 'Game Category', 'type' => 'game']);
+
+        $this->actingAs($user)
+            ->get(route('interview.setup'))
+            ->assertOk()
+            ->assertSee('name="category_id"', false)
+            ->assertSee('value="'.$bpoCategory->id.'"', false)
+            ->assertSee('Philippines BPO / Customer Support Interview')
+            ->assertSee('data-source-pack-key="ph_bpo_communication"', false)
+            ->assertDontSee('Inactive Interview')
+            ->assertDontSee('Game Category');
+    }
+
     public function test_interview_start_accepts_active_core_category(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -178,6 +200,27 @@ class UserSideHardeningTest extends TestCase
             'difficulty' => 'medium',
             'game_level_id' => null,
             'status' => 'in_progress',
+        ]);
+    }
+
+    public function test_interview_start_uses_category_source_pack_when_posted_pack_mismatches(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'BPO / Customer Support']);
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+                'source_pack_key' => 'ph_scholarship',
+                'question_types' => ['Situational'],
+            ]))
+            ->assertRedirect(route('interview.session'));
+
+        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'category_id' => $category->id,
+            'source_type' => 'philippines_competency_source',
         ]);
     }
 

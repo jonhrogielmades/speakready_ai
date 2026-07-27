@@ -50,6 +50,8 @@ Route::middleware(['auth', 'user'])->group(function () {
 
     Route::get('/interview/setup', function () {
         $categories = \App\Models\Category::where('status', 'active')
+            ->where('type', 'core')
+            ->orderBy('sort_order')
             ->orderBy('title')
             ->get();
         $sourcePacks = \App\Services\QuestionDatasetProvider::all();

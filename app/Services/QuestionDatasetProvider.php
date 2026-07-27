@@ -383,6 +383,7 @@ class QuestionDatasetProvider
             str_contains($title, 'scholar') => 'ph_scholarship',
             str_contains($title, 'college'), str_contains($title, 'admission') => 'ph_college_admission',
             str_contains($title, 'it'), str_contains($title, 'program'), str_contains($title, 'software'), str_contains($title, 'web') => 'ph_it_programming',
+            str_contains($title, 'bpo'), str_contains($title, 'customer support'), str_contains($title, 'contact center'), str_contains($title, 'call center') => 'ph_bpo_communication',
             str_contains($title, 'communication'), str_contains($title, 'public speaking'), str_contains($title, 'conflict') => 'ph_bpo_communication',
             default => 'ph_job_interview',
         };

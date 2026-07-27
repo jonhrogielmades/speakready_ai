@@ -79,8 +79,11 @@ class InterviewController extends Controller
                 ->withInput();
         }
 
-        $dataset = QuestionDatasetProvider::find($validated['source_pack_key'] ?? null)
-            ?? QuestionDatasetProvider::forCategory($category);
+        $categoryDatasetKey = QuestionDatasetProvider::defaultKeyForCategory($category->title);
+        $requestedDataset = QuestionDatasetProvider::find($validated['source_pack_key'] ?? null);
+        $dataset = ($requestedDataset && ($requestedDataset['key'] ?? null) === $categoryDatasetKey)
+            ? $requestedDataset
+            : QuestionDatasetProvider::forCategory($category);
         if (($dataset['country'] ?? null) !== 'Philippines') {
             return back()
                 ->withErrors(['category_id' => 'Interview setup is limited to Philippines interview practice.'])

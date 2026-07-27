@@ -2,54 +2,81 @@
 @section('title', 'Philippines Interview Setup')
 @section('content')
 @php
-    $categoryByTitle = ($categories ?? collect())->keyBy('title');
-    $defaultCategory = $categoryByTitle->get('Job Interview') ?? ($categories ?? collect())->first();
-    $scenarioDefinitions = [
-        'ph_job_interview' => [
-            'label' => 'Philippines General Job Interview',
-            'focus' => 'Philippines Job Interview',
-            'category_titles' => ['Job Interview'],
-        ],
-        'ph_bpo_communication' => [
-            'label' => 'Philippines BPO / Customer Support Interview',
-            'focus' => 'BPO / Customer Support Interview',
-            'category_titles' => ['Communication', 'Job Interview'],
-        ],
-        'ph_it_programming' => [
-            'label' => 'Philippines IT / Programming Interview',
-            'focus' => 'IT / Programming Interview',
-            'category_titles' => ['IT/Programming', 'Job Interview'],
-        ],
-        'ph_scholarship' => [
-            'label' => 'Philippines Scholarship Interview',
-            'focus' => 'Philippines Scholarship Interview',
-            'category_titles' => ['Scholarship Interview', 'Job Interview'],
-        ],
-        'ph_college_admission' => [
-            'label' => 'Philippines College Admission Interview',
-            'focus' => 'Philippines College Admission Interview',
-            'category_titles' => ['College Admission', 'Job Interview'],
-        ],
-    ];
-    $scenarioOptions = collect($scenarioDefinitions)
-        ->filter(fn ($definition, $key) => isset(($sourcePacks ?? [])[$key]))
-        ->map(function ($definition, $key) use ($categoryByTitle, $defaultCategory, $sourcePacks) {
-            $category = collect($definition['category_titles'])
-                ->map(fn ($title) => $categoryByTitle->get($title))
-                ->first()
-                ?? $defaultCategory;
-            $pack = $sourcePacks[$key];
+    $sourcePacks = $sourcePacks ?? [];
+    $interviewCategories = ($categories ?? collect())->values();
 
-            return array_merge($definition, [
+    $scenarioLabelForCategory = function (?string $categoryTitle): string {
+        $title = trim((string) $categoryTitle);
+        $displayTitle = trim(preg_replace('/\s*\/\s*/', ' / ', $title) ?? $title);
+        $key = strtolower(trim(preg_replace('/\s+/', ' ', $displayTitle) ?? $displayTitle));
+        $knownLabels = [
+            'job interview' => 'Philippines General Job Interview',
+            'general job interview' => 'Philippines General Job Interview',
+            'bpo' => 'Philippines BPO / Customer Support Interview',
+            'bpo / customer support' => 'Philippines BPO / Customer Support Interview',
+            'bpo / customer support interview' => 'Philippines BPO / Customer Support Interview',
+            'customer support' => 'Philippines BPO / Customer Support Interview',
+            'customer support interview' => 'Philippines BPO / Customer Support Interview',
+            'it / programming' => 'Philippines IT / Programming Interview',
+            'it / programming interview' => 'Philippines IT / Programming Interview',
+            'it/programming' => 'Philippines IT / Programming Interview',
+            'it/programming interview' => 'Philippines IT / Programming Interview',
+            'scholarship interview' => 'Philippines Scholarship Interview',
+            'college admission' => 'Philippines College Admission Interview',
+            'college admission interview' => 'Philippines College Admission Interview',
+        ];
+
+        if (isset($knownLabels[$key])) {
+            return $knownLabels[$key];
+        }
+
+        if ($displayTitle === '') {
+            return 'Philippines General Job Interview';
+        }
+
+        if (! str_contains($key, 'interview')) {
+            $displayTitle .= ' Interview';
+        }
+
+        return str_contains($key, 'philipp') ? $displayTitle : "Philippines {$displayTitle}";
+    };
+
+    $focusForCategory = function (?string $categoryTitle, string $label): string {
+        $title = strtolower((string) $categoryTitle);
+
+        if (str_contains($title, 'job') && ! str_contains($title, 'bpo') && ! str_contains($title, 'customer')) {
+            return 'Philippines Job Interview';
+        }
+
+        return $label;
+    };
+
+    $scenarioOptions = $interviewCategories
+        ->map(function ($category) use ($sourcePacks, $scenarioLabelForCategory, $focusForCategory) {
+            $key = \App\Services\QuestionDatasetProvider::defaultKeyForCategory($category->title);
+            $pack = $sourcePacks[$key] ?? collect($sourcePacks)->first() ?? [];
+            $label = $scenarioLabelForCategory($category->title);
+            $sourceSummary = collect($pack['sources'] ?? [])
+                ->pluck('name')
+                ->take(3)
+                ->implode(', ');
+
+            return [
                 'key' => $key,
-                'category_id' => $category?->id,
-                'context_label' => $definition['label'],
-                'source_summary' => collect($pack['sources'] ?? [])->pluck('name')->take(3)->implode(', '),
-            ]);
+                'category_id' => $category->id,
+                'label' => $label,
+                'focus' => $focusForCategory($category->title, $label),
+                'context_label' => $label,
+                'source_summary' => $sourceSummary ?: 'Philippines career and education sources',
+            ];
         })
         ->values();
-    $selectedSourcePackKey = old('source_pack_key', 'ph_job_interview');
-    $selectedScenario = $scenarioOptions->firstWhere('key', $selectedSourcePackKey) ?? $scenarioOptions->first();
+    $firstScenario = $scenarioOptions->first();
+    $selectedCategoryId = (int) old('category_id', $firstScenario['category_id'] ?? 0);
+    $selectedSourcePackKey = old('source_pack_key');
+    $selectedScenario = $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId)
+        ?? $scenarioOptions->firstWhere('key', $selectedSourcePackKey)
+        ?? $scenarioOptions->first();
     $setupDefaults = [
         'difficulty' => old('difficulty', 'medium'),
         'num_questions' => (string) old('num_questions', 10),
@@ -3333,22 +3360,22 @@
                                 Practice Scenario
                             </label>
                             <div class="setup-select-wrap">
-                                <select class="oinp setup-input" name="source_pack_key" id="valScenario">
+                                <select class="oinp setup-input" name="category_id" id="valScenario" required>
                                 @foreach($scenarioOptions as $scenario)
-                                    <option value="{{ $scenario['key'] }}"
-                                        data-category-id="{{ $scenario['category_id'] }}"
+                                    <option value="{{ $scenario['category_id'] }}"
+                                        data-source-pack-key="{{ $scenario['key'] }}"
                                         data-focus="{{ $scenario['focus'] }}"
                                         data-context-label="{{ $scenario['context_label'] }}"
                                         data-source-summary="{{ $scenario['source_summary'] }}"
-                                        {{ $selectedScenario && $selectedScenario['key'] === $scenario['key'] ? 'selected' : '' }}>
+                                        {{ $selectedScenario && (int) $selectedScenario['category_id'] === (int) $scenario['category_id'] ? 'selected' : '' }}>
                                         {{ $scenario['label'] }}
                                     </option>
                                 @endforeach
                                 </select>
                             </div>
-                            <input type="hidden" name="category_id" id="valCategory" value="{{ $selectedScenario['category_id'] ?? '' }}">
+                            <input type="hidden" name="source_pack_key" id="valSourcePack" value="{{ $selectedScenario['key'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
-                            <div class="desc-text">One scenario sets the source pack, interview focus, and scoring context.</div>
+                            <div class="desc-text">Active core categories from admin appear here with the matching Philippines source pack.</div>
                         </div>
 
                         <div class="setup-card-field">
@@ -3673,7 +3700,7 @@
         if (scenarioSelect) {
             const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
             document.getElementById('sumScenario').innerText = selectedOption?.dataset.contextLabel || selectedOption?.text || 'Philippines Job Interview';
-            document.getElementById('valCategory').value = selectedOption?.dataset.categoryId || '';
+            document.getElementById('valSourcePack').value = selectedOption?.dataset.sourcePackKey || '';
             document.getElementById('valFocus').value = selectedOption?.dataset.focus || 'Philippines Job Interview';
             const sourceSummary = document.getElementById('sourceSummary');
             if (sourceSummary) {
