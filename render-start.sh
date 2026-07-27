@@ -8,6 +8,23 @@ export PORT="${PORT:-10000}"
 export LOG_CHANNEL=stderr
 export LOG_EMERGENCY_PATH=php://stderr
 
+# Render's dashboard sometimes shows a short internal Postgres host such as
+# dpg-...-a. That only resolves on Render's private network. If the service is
+# not on that network, expand it to the public hostname before Laravel caches
+# configuration.
+if [ -z "${DATABASE_URL:-}" ]; then
+    case "${DB_HOST:-}" in
+        dpg-*.*)
+            ;;
+        dpg-*)
+            export RENDER_POSTGRES_REGION="${RENDER_POSTGRES_REGION:-singapore}"
+            export DB_HOST="${DB_HOST}.${RENDER_POSTGRES_REGION}-postgres.render.com"
+            export DB_SSLMODE="${DB_SSLMODE:-require}"
+            echo "Expanded Render Postgres DB_HOST for ${RENDER_POSTGRES_REGION} region." >&2
+            ;;
+    esac
+fi
+
 case "$PORT" in
     ''|*[!0-9]*)
         echo "Invalid PORT value: $PORT" >&2

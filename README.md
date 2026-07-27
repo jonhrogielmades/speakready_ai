@@ -70,6 +70,11 @@ full External Database URL from the database Connect/Info page. Do not use only
 a partial Render host such as `dpg-...-a` for `DB_HOST`; that can produce
 `could not translate host name ... to address`.
 
+If production still has only a partial `DB_HOST`, the Render start script expands
+it to the Singapore public Postgres hostname by default. Set
+`RENDER_POSTGRES_REGION=oregon`, `frankfurt`, `ohio`, or `virginia` if your
+database was created in a different Render region.
+
 **Mail Configuration (SMTP):**
 *(If you are using Gmail, you MUST use a Google "App Password" instead of your regular password)*
 ```env
