@@ -83,6 +83,7 @@ php artisan view:cache || true
 
 # Repair existing partial voice session schemas before accepting web traffic.
 php artisan app:ensure-voice-schema --force || true
+php artisan app:ensure-question-schema --force || true
 
 # Create storage symlink for public uploads
 php artisan storage:link --force || true
@@ -95,6 +96,7 @@ php-fpm -D
 (
     php artisan migrate --force || true
     php artisan app:ensure-voice-schema --force --create-missing || true
+    php artisan app:ensure-question-schema --force --create-missing || true
 
     # Repair Learning Game session tables if a previous migration was marked as run
     # while production schema drifted or missed the table creation.

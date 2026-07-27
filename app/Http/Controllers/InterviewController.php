@@ -21,6 +21,7 @@ use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\FeedbackCoachingRepair;
+use App\Support\QuestionSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,8 @@ class InterviewController extends Controller
         if (! Auth::check()) {
             abort(403);
         }
+
+        QuestionSchema::ensure();
 
         $validated = $request->validate([
             'category_id' => [
