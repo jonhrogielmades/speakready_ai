@@ -3042,7 +3042,7 @@
     }
 </style>
 
-<div class="db-section active" id="sec-interview-setup">
+<div class="db-section active setup-step-mode" id="sec-interview-setup">
     <div class="setup-hero">
         <div class="setup-hero-inner">
             <span class="setup-hero-icon" aria-hidden="true">
@@ -3112,7 +3112,7 @@
                 </div>
 
                 <!-- Basic Info -->
-                <div class="setup-panel setup-details-card animate-fade-up delay-100" id="panel-basic">
+                <div class="setup-panel setup-details-card setup-step-active animate-fade-up delay-100" id="panel-basic">
                     <div class="setup-details-card-head">
                         <div class="setup-details-icon" aria-hidden="true">
                             <i class="fa-solid fa-briefcase"></i>
@@ -3654,10 +3654,13 @@
         showSetupStep(setupStepState.index);
     });
 
-    window.onload = () => {
+    function initializeInterviewSetupPage() {
         updateSummary();
         showSetupStep(0);
-    };
+    }
+
+    initializeInterviewSetupPage();
+    window.addEventListener('load', initializeInterviewSetupPage, { once: true });
 
     const setupForm = document.getElementById('setupForm');
     const setupTransitionOverlay = document.getElementById('setupTransitionOverlay');
