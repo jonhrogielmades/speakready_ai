@@ -11,15 +11,35 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('voice_sessions')) {
+            return;
+        }
+
         Schema::table('voice_sessions', function (Blueprint $table) {
-            $table->string('category')->nullable();
-            $table->text('prompt')->nullable();
-            $table->text('transcript')->nullable();
-            $table->text('ai_feedback_strengths')->nullable();
-            $table->text('ai_feedback_weaknesses')->nullable();
-            $table->text('ai_improved_answer')->nullable();
-            $table->integer('duration_seconds')->nullable();
-            $table->integer('wpm')->nullable();
+            if (! Schema::hasColumn('voice_sessions', 'category')) {
+                $table->string('category')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'prompt')) {
+                $table->text('prompt')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'transcript')) {
+                $table->text('transcript')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'ai_feedback_strengths')) {
+                $table->text('ai_feedback_strengths')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'ai_feedback_weaknesses')) {
+                $table->text('ai_feedback_weaknesses')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'ai_improved_answer')) {
+                $table->text('ai_improved_answer')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'duration_seconds')) {
+                $table->integer('duration_seconds')->nullable();
+            }
+            if (! Schema::hasColumn('voice_sessions', 'wpm')) {
+                $table->integer('wpm')->nullable();
+            }
         });
     }
 
@@ -28,17 +48,25 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('voice_sessions')) {
+            return;
+        }
+
         Schema::table('voice_sessions', function (Blueprint $table) {
-            $table->dropColumn([
-                'category',
-                'prompt',
-                'transcript',
-                'ai_feedback_strengths',
-                'ai_feedback_weaknesses',
-                'ai_improved_answer',
-                'duration_seconds',
-                'wpm'
-            ]);
+            $columns = array_values(array_filter([
+                Schema::hasColumn('voice_sessions', 'category') ? 'category' : null,
+                Schema::hasColumn('voice_sessions', 'prompt') ? 'prompt' : null,
+                Schema::hasColumn('voice_sessions', 'transcript') ? 'transcript' : null,
+                Schema::hasColumn('voice_sessions', 'ai_feedback_strengths') ? 'ai_feedback_strengths' : null,
+                Schema::hasColumn('voice_sessions', 'ai_feedback_weaknesses') ? 'ai_feedback_weaknesses' : null,
+                Schema::hasColumn('voice_sessions', 'ai_improved_answer') ? 'ai_improved_answer' : null,
+                Schema::hasColumn('voice_sessions', 'duration_seconds') ? 'duration_seconds' : null,
+                Schema::hasColumn('voice_sessions', 'wpm') ? 'wpm' : null,
+            ]));
+
+            if ($columns !== []) {
+                $table->dropColumn($columns);
+            }
         });
     }
 };
