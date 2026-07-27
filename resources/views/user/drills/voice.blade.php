@@ -1980,6 +1980,493 @@
             font-size: .66rem;
         }
     }
+
+    @media (max-width: 767px) {
+        #voice-rehearsal-page {
+            --voice-saas-radius: 12px;
+            --voice-saas-gap: 10px;
+            --voice-saas-border: rgba(37, 99, 235, 0.14);
+            --voice-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --voice-saas-card: rgba(248, 250, 252, 0.76);
+            --voice-saas-muted: #475569;
+        }
+        html[data-theme="dark"] #voice-rehearsal-page,
+        :root:not(.lm) #voice-rehearsal-page,
+        .dm #voice-rehearsal-page {
+            --voice-saas-border: rgba(147, 197, 253, 0.18);
+            --voice-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --voice-saas-card: rgba(255, 255, 255, 0.045);
+            --voice-saas-muted: #cbd5e1;
+        }
+        #voice-rehearsal-page .vr-shell {
+            width: 100% !important;
+        }
+        #voice-rehearsal-page .sr-page-hero.vr-hero {
+            min-height: 92px !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            padding: 11px 86px 11px 12px !important;
+            margin-bottom: 10px !important;
+            border-radius: var(--voice-saas-radius) !important;
+            border-color: var(--voice-saas-border) !important;
+            box-shadow: var(--voice-saas-shadow) !important;
+        }
+        #voice-rehearsal-page .vr-hero-icon {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            font-size: 0.82rem !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+            font-size: 0.9rem !important;
+            line-height: 1.12 !important;
+            margin-bottom: 4px !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+            max-width: 12.5rem !important;
+            font-size: 0.64rem !important;
+            line-height: 1.3 !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+            right: -4px !important;
+            bottom: 5px !important;
+            width: 78px !important;
+        }
+        #voice-rehearsal-page .sr-page-actions.vr-tabs-wrap {
+            position: sticky;
+            top: calc(var(--mob-top-h, 56px) + env(safe-area-inset-top, 0px) + 8px);
+            z-index: 12;
+            padding: 7px;
+            border: 1px solid var(--voice-saas-border);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--sf) 88%, transparent);
+            box-shadow: var(--voice-saas-shadow);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        #voice-rehearsal-page #moduleTabs.vr-tabs {
+            gap: 6px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+        #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+            min-height: 34px !important;
+            border-radius: 999px !important;
+            font-size: 0.64rem !important;
+            font-weight: 900 !important;
+            white-space: nowrap;
+        }
+        #voice-rehearsal-page .vr-practice-flow {
+            gap: var(--voice-saas-gap) !important;
+        }
+        #voice-rehearsal-page :is(
+            .vr-option-panel,
+            .vr-prompt-card,
+            .premium-card,
+            .instant-feedback-panel,
+            .intention-coach-panel,
+            .vr-progress-panel,
+            #comparisonPanel
+        ) {
+            padding: 12px !important;
+            border-radius: var(--voice-saas-radius) !important;
+            border-color: var(--voice-saas-border) !important;
+            box-shadow: var(--voice-saas-shadow) !important;
+        }
+        #voice-rehearsal-page :is(.vr-option-row, .stat-box, #transcriptView, .instant-feedback-signal, .intention-coach-metric, .vr-pace-card, .vr-ai-card, .vr-suggestion-card, .quiz-question-box) {
+            border-radius: 10px !important;
+            border-color: var(--voice-saas-border) !important;
+            background: var(--voice-saas-card) !important;
+            box-shadow: none !important;
+        }
+        #voice-rehearsal-page .vr-option-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+        }
+        #voice-rehearsal-page .vr-option-row {
+            grid-template-columns: 24px minmax(0, 1fr) !important;
+            min-height: 38px !important;
+            padding: 6px 7px !important;
+            gap: 5px !important;
+            font-size: 0.58rem !important;
+            font-weight: 850 !important;
+        }
+        #voice-rehearsal-page .vr-option-row > span:not(.vr-option-icon) {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap !important;
+        }
+        #voice-rehearsal-page .vr-option-row > .fa-chevron-right {
+            display: none !important;
+        }
+        #voice-rehearsal-page .vr-option-icon,
+        #voice-rehearsal-page :is(.stat-ico, .instant-signal-ico, .intention-metric-ico, .vr-suggestion-icon) {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 8px !important;
+            font-size: 0.68rem !important;
+        }
+        #voice-rehearsal-page .vr-prompt-kicker {
+            margin-bottom: 6px !important;
+            font-size: 0.62rem !important;
+            letter-spacing: 0.08em !important;
+        }
+        #voice-rehearsal-page #promptText.vr-prompt-text {
+            font-size: 0.92rem !important;
+            line-height: 1.32 !important;
+        }
+        #voice-rehearsal-page .vr-mic-stage {
+            min-height: 100px !important;
+            margin: 10px 0 !important;
+            border-radius: 12px !important;
+            border-color: var(--voice-saas-border) !important;
+        }
+        #voice-rehearsal-page .vr-mic-button {
+            width: 58px !important;
+            height: 58px !important;
+            font-size: 1.25rem !important;
+            box-shadow: none !important;
+        }
+        #voice-rehearsal-page #statusText {
+            margin-top: 8px !important;
+            font-size: 0.72rem !important;
+        }
+        #voice-rehearsal-page .voice-recorder-controls {
+            position: static !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: stretch !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px;
+            margin-bottom: 10px !important;
+            border: 1px solid var(--voice-saas-border);
+            border-radius: 12px;
+            background: color-mix(in srgb, var(--sf) 88%, transparent);
+            box-shadow: var(--voice-saas-shadow);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        #voice-rehearsal-page .voice-recorder-controls .btn {
+            flex: 1 1 calc(50% - 4px) !important;
+            width: auto !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            border-radius: 9px !important;
+            padding: 0.45rem 0.56rem !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+            white-space: nowrap;
+        }
+        #voice-rehearsal-page .voice-recorder-controls #btnStart {
+            flex-basis: 100% !important;
+        }
+        #voice-rehearsal-page #btnSave {
+            width: 100% !important;
+            min-height: 38px !important;
+            border-radius: 9px !important;
+            padding: 0.45rem 0.56rem !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+            white-space: nowrap;
+        }
+        #voice-rehearsal-page .vr-start-note,
+        #voice-rehearsal-page #micPermissionHelp {
+            margin-bottom: 10px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.32 !important;
+            color: var(--voice-saas-muted) !important;
+        }
+        #voice-rehearsal-page .voice-live-stats {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            --bs-gutter-x: 8px;
+            --bs-gutter-y: 8px;
+            gap: 6px !important;
+            margin-bottom: 10px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        #voice-rehearsal-page .voice-live-stats > [class*="col-"] {
+            width: 100% !important;
+            flex: none !important;
+            max-width: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        #voice-rehearsal-page .stat-box {
+            min-height: 72px !important;
+            padding: 8px 4px !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            gap: 3px !important;
+        }
+        #voice-rehearsal-page .stat-ico {
+            width: 22px !important;
+            height: 22px !important;
+            font-size: 0.62rem !important;
+        }
+        #voice-rehearsal-page .stat-val {
+            margin-top: 4px !important;
+            font-size: 0.9rem !important;
+            line-height: 1 !important;
+        }
+        #voice-rehearsal-page .stat-lbl {
+            margin-top: 3px !important;
+            font-size: 0.46rem !important;
+            letter-spacing: 0 !important;
+            line-height: 1.15 !important;
+            white-space: normal !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+            hyphens: none !important;
+        }
+        #voice-rehearsal-page .vr-transcript-wrap {
+            margin-bottom: 10px !important;
+        }
+        #voice-rehearsal-page .vr-transcript-label {
+            font-size: 0.72rem !important;
+            gap: 7px !important;
+        }
+        #voice-rehearsal-page #transStatus {
+            font-size: 0.64rem !important;
+        }
+        #voice-rehearsal-page #transcriptView {
+            min-height: 110px !important;
+            padding: 10px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.42 !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-head, .intention-coach-head, .voice-history-head) {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px !important;
+            align-items: start !important;
+            margin-bottom: 10px !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-title, .intention-coach-title, .vr-assessment-title, .vr-progress-title) {
+            font-size: 0.86rem !important;
+            line-height: 1.16 !important;
+            margin-bottom: 4px !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-summary, .intention-coach-summary, .instant-feedback-note, .intention-tip-list li, .instant-feedback-actions li) {
+            font-size: 0.68rem !important;
+            line-height: 1.34 !important;
+            color: var(--voice-saas-muted) !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-status, .intention-coach-status, .instant-feedback-badge) {
+            padding: 4px 7px !important;
+            font-size: 0.56rem !important;
+            border-radius: 999px !important;
+        }
+        #voice-rehearsal-page .instant-feedback-grid,
+        #voice-rehearsal-page .intention-coach-grid {
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-signal, .intention-coach-metric) {
+            min-height: 0 !important;
+            padding: 10px !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-kicker, .intention-coach-kicker, .vr-assessment-kicker) {
+            margin-bottom: 6px !important;
+            font-size: 0.58rem !important;
+            letter-spacing: 0.06em !important;
+        }
+        #voice-rehearsal-page :is(.instant-feedback-value, .intention-coach-value) {
+            font-size: 0.92rem !important;
+        }
+        #voice-rehearsal-page .vr-assessment-scores {
+            margin-bottom: 12px !important;
+        }
+        #voice-rehearsal-page .vr-score-row {
+            display: grid !important;
+            grid-template-columns: 58px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: center !important;
+            min-height: 64px !important;
+            width: 100% !important;
+            text-align: left !important;
+        }
+        #voice-rehearsal-page .vr-score-ring {
+            width: 58px !important;
+            height: 58px !important;
+            font-size: 0.9rem !important;
+            flex: 0 0 58px !important;
+        }
+        #voice-rehearsal-page .vr-score-label {
+            font-size: 0.62rem !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+            hyphens: none !important;
+            min-width: 0;
+        }
+        #voice-rehearsal-page .vr-pace-card,
+        #voice-rehearsal-page .vr-ai-card,
+        #voice-rehearsal-page .vr-keywords-card {
+            padding: 10px !important;
+            margin-bottom: 10px !important;
+        }
+        #voice-rehearsal-page #comparisonPanel h5 {
+            margin-bottom: 10px !important;
+            font-size: 0.9rem !important;
+        }
+        #voice-rehearsal-page #comparisonPanel .row {
+            --bs-gutter-x: 8px;
+            --bs-gutter-y: 8px;
+        }
+        #voice-rehearsal-page #comparisonPanel :is(#compUser, #compAI) {
+            min-height: 86px !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.38 !important;
+        }
+        #voice-rehearsal-page .vr-chart-frame {
+            height: 170px !important;
+        }
+        #voice-rehearsal-page .voice-history-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 7px !important;
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+        #voice-rehearsal-page .voice-history-actions form,
+        #voice-rehearsal-page .voice-history-actions .btn {
+            width: 100% !important;
+        }
+        #voice-rehearsal-page .voice-history-actions > .btn:only-child {
+            grid-column: 1 / -1;
+        }
+        #voice-rehearsal-page .voice-history-table {
+            border-spacing: 0 8px !important;
+        }
+        #voice-rehearsal-page .voice-history-table thead {
+            display: none;
+        }
+        #voice-rehearsal-page .voice-history-table :is(tbody, tr, td) {
+            display: block;
+            width: 100%;
+        }
+        #voice-rehearsal-page .voice-history-table tbody tr {
+            padding: 10px !important;
+            border: 1px solid var(--voice-saas-border) !important;
+            border-radius: 10px !important;
+            background: var(--voice-saas-card) !important;
+        }
+        #voice-rehearsal-page .voice-history-table td {
+            padding: 3px 0 !important;
+            border: 0 !important;
+            font-size: 0.68rem !important;
+            text-align: left !important;
+        }
+        #voice-rehearsal-page .voice-history-table td:first-child {
+            color: var(--voice-saas-muted) !important;
+            font-size: 0.6rem !important;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        #voice-rehearsal-page .voice-history-table td:first-child::before {
+            content: "Date: ";
+            color: var(--voice-saas-muted);
+            font-weight: 800;
+            text-transform: none;
+        }
+        #voice-rehearsal-page .voice-history-table td:nth-child(2)::before {
+            content: "Prompt: ";
+            color: var(--voice-saas-muted);
+            font-weight: 800;
+        }
+        #voice-rehearsal-page .voice-history-table td:nth-child(3)::before {
+            content: "Clarity: ";
+            color: var(--voice-saas-muted);
+            font-weight: 800;
+        }
+        #voice-rehearsal-page .voice-history-table td:nth-child(4)::before {
+            content: "WPM: ";
+            color: var(--voice-saas-muted);
+            font-weight: 800;
+        }
+        #voice-rehearsal-page .voice-history-table td:nth-child(5)::before {
+            content: "Fillers: ";
+            color: var(--voice-saas-muted);
+            font-weight: 800;
+        }
+        #voice-rehearsal-page .vr-suggestion-card {
+            padding: 10px !important;
+        }
+        #voice-rehearsal-page .vr-suggestion-content {
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            gap: 9px !important;
+        }
+        #voice-rehearsal-page .vr-suggestion-title {
+            font-size: 0.74rem !important;
+        }
+        #voice-rehearsal-page .vr-suggestion-text {
+            font-size: 0.66rem !important;
+            line-height: 1.3 !important;
+        }
+    }
+    /* Final compact hero override shared across user pages. */
+    #voice-rehearsal-page .sr-page-hero.vr-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #voice-rehearsal-page .vr-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
+    }
+    @media (max-width: 390px) {
+        #voice-rehearsal-page .sr-page-hero.vr-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #voice-rehearsal-page .vr-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+            width: 66px !important;
+        }
+    }
 </style>
 @include('partials.page-hero-styles')
 

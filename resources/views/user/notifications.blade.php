@@ -520,6 +520,223 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @media (max-width: 991px) {
+        #notifications-page {
+            --notif-saas-radius: 12px;
+            --notif-saas-gap: 8px;
+            --notif-saas-border: rgba(37, 99, 235, 0.14);
+            --notif-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --notif-saas-muted: #475569;
+            max-width: 100% !important;
+            display: flex;
+            flex-direction: column;
+            gap: var(--notif-saas-gap);
+            padding-inline: 0 !important;
+            padding-bottom: 14px !important;
+        }
+        html[data-theme="dark"] #notifications-page,
+        :root:not(.lm) #notifications-page,
+        .dm #notifications-page {
+            --notif-saas-border: rgba(147, 197, 253, 0.18);
+            --notif-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --notif-saas-muted: #cbd5e1;
+        }
+        #notifications-page .notif-hero {
+            min-height: 82px !important;
+            padding: 10px 76px 10px 12px !important;
+            margin: 0 !important;
+            border-radius: var(--notif-saas-radius) !important;
+            border-color: var(--notif-saas-border) !important;
+            box-shadow: var(--notif-saas-shadow) !important;
+        }
+        #notifications-page .notif-hero-copy {
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            gap: 9px !important;
+        }
+        #notifications-page .notif-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 10px !important;
+            font-size: 0.82rem !important;
+        }
+        #notifications-page .notif-hero .notif-hero-title {
+            font-size: 0.88rem !important;
+            line-height: 1.12 !important;
+            margin-bottom: 4px !important;
+        }
+        #notifications-page .notif-hero-subtitle {
+            max-width: 12rem !important;
+            max-height: 2.7em;
+            overflow: hidden;
+            font-size: 0.62rem !important;
+            line-height: 1.34 !important;
+        }
+        #notifications-page .notif-hero-art {
+            width: 70px !important;
+            right: -4px !important;
+            bottom: 6px !important;
+        }
+        #notifications-page .notif-bulk-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: var(--notif-saas-gap) !important;
+            margin: 0 !important;
+        }
+        #notifications-page .notif-bulk-btn {
+            min-height: 36px !important;
+            padding: 0 10px !important;
+            border-radius: 10px !important;
+            gap: 6px !important;
+            font-size: 0.66rem !important;
+            box-shadow: none !important;
+        }
+        #notifications-page .premium-panel {
+            gap: var(--notif-saas-gap) !important;
+            padding: 8px !important;
+            border-radius: var(--notif-saas-radius) !important;
+            border-color: var(--notif-saas-border) !important;
+            box-shadow: var(--notif-saas-shadow) !important;
+            margin: 0 !important;
+        }
+        #notifications-page .notification-row {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 0 !important;
+            padding: 10px !important;
+            border-radius: var(--notif-saas-radius) !important;
+            border-color: var(--notif-saas-border) !important;
+            box-shadow: none !important;
+        }
+        #notifications-page .notification-row:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        #notifications-page .notification-icon-box {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 10px !important;
+            font-size: 0.78rem !important;
+        }
+        #notifications-page .notification-head {
+            gap: 5px 6px !important;
+            margin-bottom: 6px !important;
+        }
+        #notifications-page .notification-title {
+            font-size: 0.78rem !important;
+            line-height: 1.2 !important;
+        }
+        #notifications-page .notification-status-badge {
+            padding: 3px 7px !important;
+            font-size: 0.54rem !important;
+            box-shadow: none !important;
+        }
+        #notifications-page .notification-meta {
+            padding: 3px 7px !important;
+            font-size: 0.58rem !important;
+            line-height: 1.15 !important;
+            color: var(--notif-saas-muted) !important;
+        }
+        #notifications-page .notification-message {
+            margin-bottom: 8px !important;
+            font-size: 0.66rem !important;
+            line-height: 1.36 !important;
+            color: var(--notif-saas-muted) !important;
+        }
+        #notifications-page .notification-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            max-width: none !important;
+        }
+        #notifications-page .notification-action-btn {
+            min-height: 32px !important;
+            padding: 0 8px !important;
+            border-radius: 9px !important;
+            gap: 5px !important;
+            font-size: 0.6rem !important;
+            box-shadow: none !important;
+        }
+        #notifications-page .notification-actions > :only-child {
+            grid-column: 1 / -1 !important;
+        }
+        #notifications-page .notifications-empty-state {
+            padding: 30px 14px !important;
+            border-radius: var(--notif-saas-radius) !important;
+        }
+        #notifications-page .notifications-empty-icon {
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 15px !important;
+            font-size: 1.2rem !important;
+        }
+        #notifications-page .notifications-pagination {
+            margin-top: 0 !important;
+        }
+        #notifications-page .notifications-pagination .page-link,
+        #notifications-page .notifications-pagination span.page-link {
+            min-width: 34px !important;
+            height: 34px !important;
+            min-height: 34px !important;
+            padding: 0 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.76rem !important;
+        }
+    }
+    /* Final compact hero override shared across user pages. */
+    #notifications-page .notif-hero {
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #notifications-page .notif-hero-copy {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+    #notifications-page .notif-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #notifications-page .notif-hero .notif-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #notifications-page .notif-hero-subtitle {
+        max-width: 13.5rem !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #notifications-page .notif-hero-art {
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
+    }
+    @media (max-width: 390px) {
+        #notifications-page .notif-hero {
+            padding: 8px 66px 8px 9px !important;
+        }
+        #notifications-page .notif-hero-copy {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+        }
+        #notifications-page .notif-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #notifications-page .notif-hero .notif-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #notifications-page .notif-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #notifications-page .notif-hero-art {
+            width: 66px !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="notifications-page">

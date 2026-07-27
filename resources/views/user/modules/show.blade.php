@@ -227,6 +227,186 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @media (max-width: 767px) {
+        .db-section.active {
+            --module-detail-radius: 12px;
+            --module-detail-gap: 10px;
+            --module-detail-border: rgba(37, 99, 235, 0.14);
+            --module-detail-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --module-detail-card: rgba(248, 250, 252, 0.76);
+            --module-detail-muted: #475569;
+        }
+        html[data-theme="dark"] .db-section.active,
+        :root:not(.lm) .db-section.active {
+            --module-detail-border: rgba(147, 197, 253, 0.18);
+            --module-detail-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --module-detail-card: rgba(255, 255, 255, 0.045);
+            --module-detail-muted: #cbd5e1;
+        }
+        .db-section.active > .mb-3 .btn {
+            min-height: 36px !important;
+            border-radius: 9px !important;
+            border-color: var(--module-detail-border) !important;
+            background: var(--module-detail-card) !important;
+            font-size: 0.7rem !important;
+            font-weight: 800 !important;
+        }
+        .mod-hero {
+            padding: 12px !important;
+            margin-bottom: 10px !important;
+            border-radius: var(--module-detail-radius) !important;
+            border-color: var(--module-detail-border) !important;
+            background:
+                radial-gradient(circle at 92% 10%, rgba(37, 99, 235, 0.12), transparent 34%),
+                var(--sf) !important;
+            box-shadow: var(--module-detail-shadow) !important;
+        }
+        .mod-hero-bg {
+            right: -18px !important;
+            top: -20px !important;
+            font-size: 5.5rem !important;
+            opacity: 0.7;
+        }
+        .mod-hero .badge {
+            min-height: 24px;
+            padding: 4px 7px !important;
+            border-radius: 999px !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+        }
+        .mod-hero h2 {
+            margin-bottom: 7px !important;
+            font-size: 1rem !important;
+            line-height: 1.16 !important;
+        }
+        .mod-hero p {
+            font-size: 0.72rem !important;
+            line-height: 1.36 !important;
+            color: var(--module-detail-muted) !important;
+        }
+        .module-progress-panel {
+            gap: 10px !important;
+            padding: 10px !important;
+            margin-top: 12px !important;
+            border-radius: 10px !important;
+            border-color: var(--module-detail-border) !important;
+            background: var(--module-detail-card) !important;
+            box-shadow: none !important;
+        }
+        .module-progress-panel .d-flex {
+            font-size: 0.72rem !important;
+        }
+        .module-progress-track {
+            height: 7px !important;
+        }
+        .module-action-row {
+            gap: 8px !important;
+        }
+        .module-action-row button {
+            min-height: 36px !important;
+            border-radius: 9px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+        #moduleTabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            margin-bottom: 10px !important;
+            padding: 7px;
+            border: 1px solid var(--module-detail-border) !important;
+            border-radius: 12px;
+            background: var(--module-detail-card);
+            scrollbar-width: none;
+        }
+        #moduleTabs::-webkit-scrollbar {
+            display: none;
+        }
+        #moduleTabs .nav-item {
+            flex: 0 0 auto;
+        }
+        #moduleTabs .nav-link {
+            min-height: 34px;
+            padding: 7px 10px !important;
+            border: 1px solid transparent !important;
+            border-radius: 999px !important;
+            color: var(--module-detail-muted) !important;
+            font-size: 0.68rem !important;
+            font-weight: 850 !important;
+            white-space: nowrap;
+        }
+        #moduleTabs .nav-link.active {
+            border-color: transparent !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #fff !important;
+        }
+        .chapter-card,
+        .resource-item,
+        .quiz-question-box,
+        .module-next-item {
+            padding: 11px !important;
+            border-radius: var(--module-detail-radius) !important;
+            border-color: var(--module-detail-border) !important;
+            background: var(--sf) !important;
+            box-shadow: var(--module-detail-shadow) !important;
+        }
+        .chapter-title {
+            margin-bottom: 7px !important;
+            font-size: 0.9rem !important;
+            line-height: 1.2 !important;
+        }
+        .chapter-content {
+            color: var(--module-detail-muted) !important;
+            font-size: 0.74rem !important;
+            line-height: 1.48 !important;
+        }
+        .chapter-content :is(h1, h2, h3, h4, h5, h6) {
+            margin-top: 1rem !important;
+            margin-bottom: 0.55rem !important;
+            font-size: 0.9rem !important;
+        }
+        .chapter-content :is(p, ul, ol) {
+            margin-bottom: 0.85rem !important;
+        }
+        .resource-item {
+            gap: 10px !important;
+        }
+        .resource-icon,
+        .module-next-icon {
+            width: 34px !important;
+            height: 34px !important;
+            flex-basis: 34px !important;
+            border-radius: 9px !important;
+            font-size: 0.82rem !important;
+        }
+        .quiz-question-box,
+        .module-next-item {
+            box-shadow: none !important;
+            background: var(--module-detail-card) !important;
+        }
+        .quiz-option {
+            padding: 8px 9px !important;
+            border-radius: 9px !important;
+            border-color: var(--module-detail-border) !important;
+            background: var(--sf) !important;
+            font-size: 0.7rem !important;
+        }
+        .module-next-grid {
+            gap: 8px !important;
+        }
+        section.mt-4 > h5 {
+            font-size: 0.92rem !important;
+            line-height: 1.16 !important;
+        }
+        section.mt-4 > p {
+            font-size: 0.7rem !important;
+            line-height: 1.32 !important;
+            color: var(--module-detail-muted) !important;
+        }
+    }
 </style>
 
 <div class="db-section active">

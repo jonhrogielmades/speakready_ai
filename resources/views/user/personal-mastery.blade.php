@@ -348,6 +348,205 @@
             min-height: 0;
         }
     }
+
+    @media (max-width: 991px) {
+        #personal-mastery-page {
+            --mastery-saas-radius: 12px;
+            --mastery-saas-gap: 8px;
+            --mastery-saas-border: rgba(37, 99, 235, 0.14);
+            --mastery-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --mastery-saas-card: rgba(248, 250, 252, 0.78);
+            --mastery-saas-muted: #475569;
+            max-width: 100% !important;
+            display: flex;
+            flex-direction: column;
+            gap: var(--mastery-saas-gap);
+            padding-inline: 0 !important;
+            padding-bottom: 14px !important;
+        }
+        html[data-theme="dark"] #personal-mastery-page,
+        :root:not(.lm) #personal-mastery-page,
+        .dm #personal-mastery-page {
+            --mastery-saas-border: rgba(147, 197, 253, 0.18);
+            --mastery-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --mastery-saas-card: rgba(255, 255, 255, 0.045);
+            --mastery-saas-muted: #cbd5e1;
+        }
+        #personal-mastery-page .mastery-hero-card {
+            min-height: 86px !important;
+            padding: 10px 74px 11px 12px !important;
+            border-radius: var(--mastery-saas-radius) !important;
+            border-color: var(--mastery-saas-border) !important;
+            box-shadow: var(--mastery-saas-shadow) !important;
+            margin: 0 !important;
+        }
+        #personal-mastery-page .mastery-hero-card::after {
+            height: 96px;
+            border-top-width: 6px;
+            opacity: 0.82;
+        }
+        #personal-mastery-page .mastery-copy {
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            gap: 9px !important;
+        }
+        #personal-mastery-page .mastery-badge {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 10px !important;
+            font-size: 0.78rem !important;
+        }
+        #personal-mastery-page .mastery-title {
+            font-size: 0.86rem !important;
+            line-height: 1.12 !important;
+            margin-bottom: 4px !important;
+            white-space: normal !important;
+        }
+        #personal-mastery-page .mastery-subtitle {
+            max-width: 12rem !important;
+            max-height: 2.7em;
+            overflow: hidden;
+            font-size: 0.62rem !important;
+            line-height: 1.34 !important;
+            color: var(--mastery-hero-text) !important;
+        }
+        #personal-mastery-page .mastery-visual {
+            width: 72px !important;
+            right: -6px !important;
+            bottom: 7px !important;
+        }
+        #personal-mastery-page .mastery-stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: var(--mastery-saas-gap) !important;
+            margin-top: 0 !important;
+        }
+        #personal-mastery-page .mastery-stat-card {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            min-height: 72px !important;
+            padding: 9px !important;
+            border-radius: var(--mastery-saas-radius) !important;
+            border-color: var(--mastery-saas-border) !important;
+            background: var(--sf) !important;
+            box-shadow: var(--mastery-saas-shadow) !important;
+        }
+        #personal-mastery-page .mastery-stat-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 9px !important;
+            font-size: 0.74rem !important;
+        }
+        #personal-mastery-page .mastery-stat-value {
+            font-size: 1rem !important;
+            line-height: 1.05 !important;
+            margin-bottom: 3px !important;
+        }
+        #personal-mastery-page .mastery-stat-label {
+            font-size: 0.58rem !important;
+            line-height: 1.2 !important;
+            color: var(--mastery-saas-muted) !important;
+        }
+        #personal-mastery-page .mastery-stat-watermark {
+            right: 7px !important;
+            font-size: 1.8rem !important;
+            opacity: 0.05 !important;
+        }
+        #personal-mastery-page .mastery-info-card {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-top: 0 !important;
+            padding: 10px !important;
+            border-radius: var(--mastery-saas-radius) !important;
+            border-color: var(--mastery-saas-border) !important;
+            background: var(--sf) !important;
+            box-shadow: var(--mastery-saas-shadow) !important;
+        }
+        #personal-mastery-page .mastery-info-heading {
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+        }
+        #personal-mastery-page .mastery-info-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 10px !important;
+            font-size: 0.76rem !important;
+        }
+        #personal-mastery-page .mastery-info-card h5 {
+            font-size: 0.86rem !important;
+            line-height: 1.16 !important;
+        }
+        #personal-mastery-page .mastery-info-card p {
+            margin-bottom: 9px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.34 !important;
+            color: var(--mastery-saas-muted) !important;
+        }
+        #personal-mastery-page .mastery-progress-btn {
+            min-height: 38px !important;
+            padding: 0 11px !important;
+            border-radius: 10px !important;
+            font-size: 0.72rem !important;
+            box-shadow: none !important;
+        }
+        #personal-mastery-page .mastery-info-art {
+            display: none !important;
+        }
+    }
+    /* Final compact hero override shared across user pages. */
+    #personal-mastery-page .mastery-hero-card {
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #personal-mastery-page .mastery-copy {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+    }
+    #personal-mastery-page .mastery-badge {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #personal-mastery-page .mastery-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #personal-mastery-page .mastery-subtitle {
+        max-width: 13.5rem !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #personal-mastery-page .mastery-visual {
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
+    }
+    @media (max-width: 390px) {
+        #personal-mastery-page .mastery-hero-card {
+            padding: 8px 66px 8px 9px !important;
+        }
+        #personal-mastery-page .mastery-copy {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+        }
+        #personal-mastery-page .mastery-badge {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #personal-mastery-page .mastery-title {
+            font-size: 0.68rem !important;
+        }
+        #personal-mastery-page .mastery-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #personal-mastery-page .mastery-visual {
+            width: 66px !important;
+        }
+    }
 </style>
 
 <div class="db-section active" id="personal-mastery-page">

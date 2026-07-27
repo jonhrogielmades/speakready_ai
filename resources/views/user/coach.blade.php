@@ -364,6 +364,165 @@
     /* Animations */
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    /* Compact hero size shared with Progress, Setup, and Feedback. */
+    #ai-coach-page .sr-page-hero.coach-progress-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #ai-coach-page .coach-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        max-height: none !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+        width: 72px !important;
+        right: -5px !important;
+        bottom: -2px !important;
+    }
+    @media (max-width: 390px) {
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #ai-coach-page .coach-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 66px !important;
+        }
+    }
+    /* Final compact hero override after all Coach breakpoints. */
+    #ai-coach-page .sr-page-hero.coach-progress-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin: 0 0 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #ai-coach-page .coach-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        max-height: none !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+        width: 72px !important;
+        right: -5px !important;
+        bottom: -2px !important;
+    }
+    @media (max-width: 390px) {
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #ai-coach-page .coach-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 66px !important;
+        }
+    }
+    /* Final compact hero override after all Coach breakpoints. */
+    #ai-coach-page .sr-page-hero.coach-progress-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin: 0 0 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #ai-coach-page .coach-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        max-height: none !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+        width: 72px !important;
+        right: -5px !important;
+        bottom: -2px !important;
+    }
+    @media (max-width: 390px) {
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #ai-coach-page .coach-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 66px !important;
+        }
+    }
 </style>
 @include('partials.page-hero-styles')
 <style>
@@ -487,6 +646,270 @@
         }
         #ai-coach-page .coach-progress-hero .sr-page-hero-art {
             width: 48px;
+        }
+    }
+
+    @media (max-width: 991px) {
+        #ai-coach-page {
+            --coach-saas-radius: 12px;
+            --coach-saas-gap: 8px;
+            --coach-saas-border: rgba(37, 99, 235, 0.14);
+            --coach-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --coach-saas-card: rgba(248, 250, 252, 0.78);
+            --coach-saas-muted: #475569;
+            display: flex;
+            flex-direction: column;
+            gap: var(--coach-saas-gap);
+            height: auto !important;
+            padding-inline: 0 !important;
+            padding-bottom: 10px !important;
+        }
+        html[data-theme="dark"] #ai-coach-page,
+        :root:not(.lm) #ai-coach-page,
+        .dm #ai-coach-page {
+            --coach-saas-border: rgba(147, 197, 253, 0.18);
+            --coach-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --coach-saas-card: rgba(255, 255, 255, 0.045);
+            --coach-saas-muted: #cbd5e1;
+        }
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            min-height: 84px !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            padding: 10px 72px 11px 12px !important;
+            margin: 0 !important;
+            border-radius: var(--coach-saas-radius) !important;
+            border-color: var(--coach-saas-border) !important;
+            box-shadow: var(--coach-saas-shadow) !important;
+            overflow: hidden !important;
+        }
+        #ai-coach-page .coach-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 10px !important;
+            font-size: 0.82rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.86rem !important;
+            line-height: 1.12 !important;
+            margin-bottom: 4px !important;
+            white-space: normal !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            max-width: 12rem !important;
+            max-height: 2.7em !important;
+            overflow: hidden !important;
+            font-size: 0.62rem !important;
+            line-height: 1.34 !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 58px !important;
+            right: -4px !important;
+            bottom: 6px !important;
+        }
+        #mob-content #ai-coach-page .chat-container,
+        #ai-coach-page .chat-container {
+            width: 100% !important;
+            height: calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 104px) !important;
+            min-height: 430px !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: var(--coach-saas-radius) !important;
+            border-color: var(--coach-saas-border) !important;
+            background: var(--sf) !important;
+            box-shadow: var(--coach-saas-shadow) !important;
+            overflow: hidden !important;
+        }
+        #ai-coach-page .chat-sidebar {
+            display: none !important;
+        }
+        #ai-coach-page .chat-main {
+            min-height: 0;
+        }
+        #ai-coach-page .coach-chat-header {
+            min-height: 46px;
+            padding: 8px 10px !important;
+            border-color: var(--coach-saas-border) !important;
+            background: color-mix(in srgb, var(--sf) 90%, transparent);
+        }
+        #ai-coach-page .coach-status {
+            min-height: 28px;
+            margin-top: 0 !important;
+            padding: 5px 8px;
+            border: 1px solid rgba(16, 185, 129, 0.16);
+            border-radius: 999px;
+            background: rgba(16, 185, 129, 0.08);
+            font-size: 0.66rem !important;
+            font-weight: 900;
+        }
+        #ai-coach-page .coach-status::before {
+            width: 7px;
+            height: 7px;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+        }
+        #ai-coach-page .coach-actions-toggle {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            border-color: var(--coach-saas-border) !important;
+            background: var(--coach-saas-card) !important;
+        }
+        #ai-coach-page .coach-actions-menu {
+            top: calc(100% + 6px);
+            right: 0;
+            width: min(318px, calc(100vw - 24px));
+            max-height: min(62dvh, 430px);
+            padding: 6px;
+            border-radius: 12px;
+            border-color: var(--coach-saas-border);
+            box-shadow: var(--coach-saas-shadow);
+        }
+        #ai-coach-page .coach-actions-item,
+        #ai-coach-page .coach-actions-history {
+            min-height: 34px;
+            padding: 8px 9px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+        }
+        #ai-coach-page .coach-actions-heading {
+            padding: 7px 8px 4px;
+            font-size: 0.58rem;
+        }
+        #mob-content #ai-coach-page .chat-messages,
+        #ai-coach-page .chat-messages {
+            padding: 10px !important;
+            gap: 8px !important;
+        }
+        #ai-coach-page #chatDateBadge {
+            margin-bottom: 4px !important;
+        }
+        #ai-coach-page .coach-msg-row,
+        #ai-coach-page .dynamic-msg {
+            gap: 8px !important;
+            margin-top: 8px !important;
+        }
+        #ai-coach-page .coach-avatar,
+        #ai-coach-page .coach-user-avatar {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+        #mob-content #ai-coach-page .chat-bubble,
+        #ai-coach-page .chat-bubble {
+            max-width: calc(100% - 38px) !important;
+            padding: 10px 11px !important;
+            border-radius: 12px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.42 !important;
+            box-shadow: none !important;
+        }
+        #ai-coach-page .bubble-ai {
+            background: var(--coach-saas-card) !important;
+            border-color: var(--coach-saas-border) !important;
+        }
+        #ai-coach-page .bubble-user {
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+        }
+        #ai-coach-page .ai-response {
+            gap: 7px;
+            line-height: 1.46;
+        }
+        #ai-coach-page .ai-response .ai-section-title {
+            font-size: 0.64rem;
+        }
+        #ai-coach-page .ai-response :is(ul, ol) {
+            gap: 5px;
+            padding-left: 1rem;
+        }
+        #mob-content #ai-coach-page .chat-input-area,
+        #ai-coach-page .chat-input-area {
+            padding: 8px 9px 7px !important;
+            border-color: var(--coach-saas-border) !important;
+            background: color-mix(in srgb, var(--sf) 92%, transparent);
+        }
+        #mob-content #ai-coach-page .chat-input-wrapper,
+        #ai-coach-page .chat-input-wrapper {
+            min-height: 44px;
+            padding: 7px 7px 7px 10px !important;
+            border-radius: 12px !important;
+            border-color: var(--coach-saas-border) !important;
+            background: var(--coach-saas-card) !important;
+            box-shadow: none !important;
+        }
+        #ai-coach-page .chat-textarea {
+            height: 22px;
+            max-height: 86px;
+            font-size: 0.72rem !important;
+            line-height: 1.25 !important;
+        }
+        #mob-content #ai-coach-page .chat-send-btn,
+        #ai-coach-page .chat-send-btn {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            margin-left: 7px !important;
+            box-shadow: none !important;
+        }
+        #ai-coach-page .coach-disclaimer {
+            margin-top: 5px !important;
+            gap: 5px;
+            font-size: 0.56rem !important;
+            line-height: 1.18 !important;
+            color: var(--coach-saas-muted) !important;
+        }
+    }
+    /* Final compact hero override after all Coach breakpoints. */
+    #ai-coach-page .sr-page-hero.coach-progress-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin: 0 0 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #ai-coach-page .coach-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        max-height: none !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+        width: 72px !important;
+        right: -5px !important;
+        bottom: -2px !important;
+    }
+    @media (max-width: 390px) {
+        #ai-coach-page .sr-page-hero.coach-progress-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #ai-coach-page .coach-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 66px !important;
         }
     }
 </style>

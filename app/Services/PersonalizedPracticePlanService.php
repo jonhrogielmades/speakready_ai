@@ -141,7 +141,7 @@ class PersonalizedPracticePlanService
             20,
             route('interview.setup'),
             'Start Interview',
-            'fa-clipboard-question',
+            'fa-clipboard-list',
             '#3b82f6',
             ['Answer at least 3 questions', 'Review the first feedback summary']
         );

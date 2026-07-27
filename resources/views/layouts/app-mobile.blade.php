@@ -246,7 +246,7 @@
 
          .mob-avatar {
             width: 34px; height: 34px; border-radius: 50%;
-            background: var(--grad);
+            background: #1d4ed8;
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 0.8rem; font-weight: 700;
             flex-shrink: 0; cursor: pointer;
@@ -325,7 +325,7 @@
             width: 42px;
             height: 42px;
             border-radius: 14px;
-            background: var(--grad);
+            background: #1d4ed8;
             color: #fff;
             display: flex;
             align-items: center;
@@ -1767,8 +1767,212 @@
                margin-right: auto !important;
             }
 
-            #mob-content > .db-content > :is(.db-section, .container-fluid) > .mb-4:not(.d-flex) > p {
+         #mob-content > .db-content > :is(.db-section, .container-fluid) > .mb-4:not(.d-flex) > p {
                max-width: 34rem;
+            }
+         }
+
+         /* --- SaaSPro mobile app chrome --- */
+         @media (max-width: 991px) {
+            :root {
+               --mob-top-h: 58px;
+               --mob-nav-h: 70px;
+               --mob-chrome-radius: 16px;
+               --mob-chrome-border: rgba(148, 163, 184, 0.2);
+               --mob-chrome-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
+               --mob-chrome-soft: rgba(255, 255, 255, 0.06);
+               --mob-chrome-active: rgba(59, 130, 246, 0.15);
+            }
+
+            .lm {
+               --mob-chrome-border: rgba(37, 99, 235, 0.14);
+               --mob-chrome-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+               --mob-chrome-soft: rgba(248, 250, 252, 0.9);
+               --mob-chrome-active: rgba(37, 99, 235, 0.1);
+            }
+
+            #mob-header {
+               height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
+               padding: var(--mob-safe-top) 10px 0 !important;
+               background: rgba(10, 15, 25, 0.88) !important;
+               border-bottom-color: var(--mob-chrome-border) !important;
+               box-shadow: var(--mob-chrome-shadow) !important;
+            }
+
+            .lm #mob-header {
+               background: rgba(255, 255, 255, 0.92) !important;
+            }
+
+            .mob-header-logo {
+               gap: 8px !important;
+               flex: 0 1 auto !important;
+               max-width: 44vw !important;
+               font-size: 0.82rem !important;
+            }
+
+            .mob-logo-ring {
+               width: 32px !important;
+               height: 32px !important;
+               border-radius: 11px !important;
+               padding: 3px !important;
+               box-shadow: 0 8px 18px rgba(37, 99, 235, 0.14) !important;
+            }
+
+            .mob-header-logo img {
+               border-radius: 8px !important;
+            }
+
+            .mob-header-logo span:last-child {
+               max-width: 116px !important;
+               font-size: 0.78rem !important;
+               line-height: 1.1 !important;
+               font-weight: 900 !important;
+            }
+
+            .mob-header-right {
+               gap: 6px !important;
+            }
+
+            .mob-icon-btn,
+            .mob-avatar,
+            .mob-profile-close,
+            .mob-notif-action {
+               box-shadow: none !important;
+               -webkit-tap-highlight-color: transparent;
+            }
+
+            .mob-icon-btn {
+               width: 34px !important;
+               height: 34px !important;
+               border-radius: 11px !important;
+               border-color: var(--mob-chrome-border) !important;
+               background: var(--mob-chrome-soft) !important;
+               color: var(--tx) !important;
+               font-size: 0.78rem !important;
+            }
+
+            .mob-icon-btn:active {
+               transform: scale(0.94) !important;
+               background: var(--mob-chrome-active) !important;
+            }
+
+            .mob-avatar {
+               width: 34px !important;
+               height: 34px !important;
+               border-radius: 11px !important;
+               border-color: rgba(96, 165, 250, 0.28) !important;
+               font-size: 0.74rem !important;
+               box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18) !important;
+            }
+
+            #mobNotifBadge {
+               top: 6px !important;
+               right: 6px !important;
+               width: 8px !important;
+               height: 8px !important;
+               border-width: 2px !important;
+            }
+
+            #mob-bottom-nav {
+               height: calc(var(--mob-nav-h) + var(--mob-safe-bottom)) !important;
+               padding-bottom: var(--mob-safe-bottom) !important;
+               background: rgba(10, 15, 25, 0.9) !important;
+               border-top-color: var(--mob-chrome-border) !important;
+               box-shadow: 0 -12px 28px rgba(2, 6, 23, 0.24) !important;
+            }
+
+            .lm #mob-bottom-nav {
+               background: rgba(255, 255, 255, 0.94) !important;
+            }
+
+            .mob-nav-items {
+               gap: 4px !important;
+               padding: 7px max(8px, env(safe-area-inset-left, 0px)) 7px max(8px, env(safe-area-inset-right, 0px)) !important;
+            }
+
+            .mob-nav-item {
+               min-height: 52px !important;
+               gap: 3px !important;
+               padding: 5px 2px !important;
+               border-radius: 13px !important;
+               color: #94a3b8 !important;
+               font-size: 0.58rem !important;
+               font-weight: 800 !important;
+            }
+
+            .lm .mob-nav-item {
+               color: #64748b !important;
+            }
+
+            .mob-nav-icon {
+               width: 28px !important;
+               height: 28px !important;
+               border-radius: 10px !important;
+               background: transparent !important;
+            }
+
+            .mob-nav-icon i,
+            .mob-nav-primary-icon i {
+               font-size: 1rem !important;
+            }
+
+            .mob-nav-item.active:not(.mob-nav-primary) {
+               color: #60a5fa !important;
+               background: var(--mob-chrome-active) !important;
+            }
+
+            .lm .mob-nav-item.active:not(.mob-nav-primary) {
+               color: #2563eb !important;
+            }
+
+            .mob-nav-item.active .mob-nav-icon {
+               background: rgba(96, 165, 250, 0.16) !important;
+               color: currentColor !important;
+            }
+
+            .mob-nav-item > span:last-child {
+               max-width: 58px !important;
+               line-height: 1.05 !important;
+            }
+
+            .mob-nav-primary {
+               min-height: 64px !important;
+               transform: translateY(-18px) !important;
+               color: #60a5fa !important;
+               background: transparent !important;
+            }
+
+            .lm .mob-nav-primary {
+               color: #2563eb !important;
+            }
+
+            .mob-nav-primary-icon {
+               width: 54px !important;
+               height: 54px !important;
+               border-width: 4px !important;
+               border-radius: 18px !important;
+               background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+               box-shadow: 0 14px 24px rgba(37, 99, 235, 0.34) !important;
+            }
+
+            .mob-nav-primary.active .mob-nav-primary-icon {
+               box-shadow: 0 16px 28px rgba(37, 99, 235, 0.4), 0 0 0 1px rgba(125, 211, 252, 0.34) !important;
+            }
+
+            .mob-profile-dropdown,
+            .mob-notif-dropdown {
+               top: calc(var(--mob-top-h) + var(--mob-safe-top) + 8px) !important;
+               left: max(8px, env(safe-area-inset-left, 0px)) !important;
+               right: max(8px, env(safe-area-inset-right, 0px)) !important;
+               max-width: 430px !important;
+               border-radius: var(--mob-chrome-radius) !important;
+               border-color: var(--mob-chrome-border) !important;
+               box-shadow: 0 22px 52px rgba(2, 6, 23, 0.34) !important;
+            }
+
+            .mob-profile-dropdown[data-origin="bottom"] {
+               top: auto !important;
+               bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 8px) !important;
             }
          }
 
@@ -1967,10 +2171,10 @@
                     type="button"
                     aria-controls="mobProfileDropdown"
                     aria-expanded="false"
-                    aria-label="Open more menu"
+                    aria-label="Open profile menu"
                     onclick="toggleMobileProfile(event, 'pages')">
                <span class="mob-nav-icon"><i class="fa-solid fa-grid-2"></i></span>
-               <span>More</span>
+               <span>Profile</span>
             </button>
          </div>
       </nav>
@@ -1998,7 +2202,7 @@
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=7" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=8" defer></script>
 
       <script>
          // Close open header menus with Escape
@@ -2014,7 +2218,7 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=10').then(function(registration) {
                   console.log('ServiceWorker registration successful');
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
@@ -2323,6 +2527,346 @@
             });
          });
       </script>
+
+      <style>
+         #progressModulesLikeHero.progress-hero,
+         #feedbackModulesLikeHero.feedback-hero,
+         #sec-interview-setup .setup-hero,
+         #interview-modules-page .modules-hero,
+         #voice-rehearsal-page .sr-page-hero.vr-hero,
+         #mission-mode-page .mission-progress-hero.sr-page-hero,
+         #learning-games-page .sr-learning-hero,
+         #ai-coach-page .sr-page-hero.coach-progress-hero,
+         #portfolioReport .sr-page-hero,
+         #personal-mastery-page .mastery-hero-card,
+         #notifications-page .notif-hero,
+         #account-page .sr-page-hero,
+         #skill-trees-page .sr-page-hero.skill-tree-hero,
+         .sr-page-hero {
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         :root:not(.lm) #progressModulesLikeHero.progress-hero,
+         :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
+         :root:not(.lm) #sec-interview-setup .setup-hero,
+         :root:not(.lm) #interview-modules-page .modules-hero,
+         :root:not(.lm) #voice-rehearsal-page .sr-page-hero.vr-hero,
+         :root:not(.lm) #mission-mode-page .mission-progress-hero.sr-page-hero,
+         :root:not(.lm) #learning-games-page .sr-learning-hero,
+         :root:not(.lm) #ai-coach-page .sr-page-hero.coach-progress-hero,
+         :root:not(.lm) #portfolioReport .sr-page-hero,
+         :root:not(.lm) #personal-mastery-page .mastery-hero-card,
+         :root:not(.lm) #notifications-page .notif-hero,
+         :root:not(.lm) #account-page .sr-page-hero,
+         :root:not(.lm) #skill-trees-page .sr-page-hero.skill-tree-hero,
+         :root:not(.lm) .sr-page-hero,
+         .dm #progressModulesLikeHero.progress-hero,
+         .dm #feedbackModulesLikeHero.feedback-hero,
+         .dm #sec-interview-setup .setup-hero,
+         .dm #interview-modules-page .modules-hero,
+         .dm #voice-rehearsal-page .sr-page-hero.vr-hero,
+         .dm #mission-mode-page .mission-progress-hero.sr-page-hero,
+         .dm #learning-games-page .sr-learning-hero,
+         .dm #ai-coach-page .sr-page-hero.coach-progress-hero,
+         .dm #portfolioReport .sr-page-hero,
+         .dm #personal-mastery-page .mastery-hero-card,
+         .dm #notifications-page .notif-hero,
+         .dm #account-page .sr-page-hero,
+         .dm #skill-trees-page .sr-page-hero.skill-tree-hero,
+         .dm .sr-page-hero {
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         #progressModulesLikeHero :is(.progress-hero-title, .progress-hero-subtitle, .progress-hero-icon),
+         #feedbackModulesLikeHero :is(.feedback-title, .feedback-subtitle, .feedback-chat-mark),
+         #sec-interview-setup .setup-hero :is(.setup-hero-title, .setup-hero-subtitle, .setup-hero-icon),
+         #interview-modules-page .modules-hero :is(.modules-hero-title, .modules-hero-subtitle, .modules-hero-icon),
+         #voice-rehearsal-page .vr-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .vr-hero-icon),
+         #mission-mode-page .mission-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .mission-hero-icon),
+         #learning-games-page .sr-learning-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .learning-hero-icon),
+         #ai-coach-page .coach-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .coach-hero-icon),
+         #portfolioReport .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .reports-hero-icon),
+         #personal-mastery-page .mastery-hero-card :is(.mastery-title, .mastery-subtitle, .mastery-badge),
+         #notifications-page .notif-hero :is(.notif-hero-title, .notif-hero-subtitle, .notif-hero-icon),
+         #account-page .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .account-hero-icon),
+         #skill-trees-page .skill-tree-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .skill-tree-hero-icon),
+         .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         #progressModulesLikeHero .progress-hero-subtitle,
+         #feedbackModulesLikeHero .feedback-subtitle,
+         #sec-interview-setup .setup-hero-subtitle,
+         #interview-modules-page .modules-hero-subtitle,
+         #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle,
+         #mission-mode-page .mission-progress-hero .sr-page-hero-subtitle,
+         #learning-games-page .sr-learning-hero .sr-page-hero-subtitle,
+         #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle,
+         #portfolioReport .sr-page-hero-subtitle,
+         #personal-mastery-page .mastery-subtitle,
+         #notifications-page .notif-hero-subtitle,
+         #account-page .sr-page-hero-subtitle,
+         #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle,
+         .sr-page-hero .sr-page-hero-subtitle {
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         #progressModulesLikeHero .progress-hero-icon,
+         #sec-interview-setup .setup-hero-icon,
+         #interview-modules-page .modules-hero-icon,
+         #voice-rehearsal-page .vr-hero-icon,
+         #mission-mode-page .mission-hero-icon,
+         #learning-games-page .learning-hero-icon,
+         #ai-coach-page .coach-hero-icon,
+         #portfolioReport .reports-hero-icon,
+         #personal-mastery-page .mastery-badge,
+         #notifications-page .notif-hero-icon,
+         #account-page .account-hero-icon,
+         #skill-trees-page .skill-tree-hero-icon,
+         #feedbackModulesLikeHero .feedback-chat-mark {
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         #progressModulesLikeHero.progress-hero::before,
+         #progressModulesLikeHero.progress-hero::after,
+         #interview-modules-page .modules-hero::before,
+         #interview-modules-page .modules-hero::after,
+         #learning-games-page .sr-learning-hero::before,
+         #learning-games-page .sr-learning-hero::after {
+            content: none !important;
+            display: none !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero :is(.progress-hero-title, .progress-hero-subtitle, .progress-hero-icon) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-subtitle {
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-title {
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            margin: 0 0 3px !important;
+            white-space: nowrap !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-subtitle {
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero :is(.modules-hero-title, .modules-hero-subtitle, .modules-hero-icon) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon svg {
+            width: 15px !important;
+            height: 15px !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            margin: 0 0 3px !important;
+            white-space: nowrap !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+         }
+
+         @media (max-width: 390px) {
+            html body #interview-modules-page .modules-hero.modules-hero {
+               grid-template-columns: 28px minmax(0, 1fr) !important;
+               gap: 7px !important;
+               padding: 8px 66px 8px 9px !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon {
+               width: 27px !important;
+               height: 27px !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+               font-size: 0.68rem !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+               font-size: 0.46rem !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+               width: 66px !important;
+            }
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .learning-hero-icon) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-title {
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            margin: 0 0 3px !important;
+            white-space: nowrap !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-subtitle {
+            max-width: 13.5rem !important;
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .learning-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+         }
+
+         @media (max-width: 390px) {
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero {
+               grid-template-columns: 28px minmax(0, 1fr) !important;
+               gap: 7px !important;
+               padding: 8px 66px 8px 9px !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .learning-hero-icon {
+               width: 27px !important;
+               height: 27px !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-title {
+               font-size: 0.68rem !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-subtitle {
+               font-size: 0.46rem !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-art {
+               width: 66px !important;
+            }
+         }
+      </style>
 
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')

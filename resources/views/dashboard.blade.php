@@ -1222,6 +1222,13 @@
         height: 280px;
     }
 
+    .chart-container-mobile canvas,
+    .sr-chart-box canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
     .sr-two-col {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2023,13 +2030,20 @@
     }
 
     .sr-section-actions {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
         gap: 10px;
         margin-bottom: 14px;
     }
 
+    .sr-section-actions form {
+        margin: 0;
+    }
+
     .sr-section-action {
+        width: min(100%, 180px);
         min-height: 42px;
         border-radius: 10px;
         justify-content: center;
@@ -3366,11 +3380,13 @@
         }
 
         .sr-section-actions {
+            justify-content: center;
             gap: 8px;
             margin-bottom: 12px;
         }
 
         .sr-section-action {
+            width: min(100%, 160px);
             min-height: 36px;
             border-radius: 9px;
             font-size: 0.62rem;
@@ -3993,6 +4009,298 @@
             font-size: 0.95rem;
         }
     }
+
+    @media (max-width: 767px) {
+        #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.07), transparent 230px),
+                var(--bg);
+        }
+
+        #mob-content > .db-content {
+            padding: 12px 14px !important;
+        }
+
+        .sr-dashboard {
+            --dash-section-gap: 14px;
+            --dash-card-radius: 8px;
+            --dash-card-pad: 14px;
+            --dash-mobile-panel: #ffffff;
+            --dash-mobile-panel-2: #f8fafc;
+            --dash-mobile-line: rgba(15, 23, 42, 0.09);
+            --dash-mobile-line-strong: rgba(15, 23, 42, 0.14);
+            --dash-mobile-ink: #0f172a;
+            --dash-mobile-copy: #334155;
+            --dash-mobile-muted: #64748b;
+            --dash-mobile-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.06);
+            padding: 8px 0 12px !important;
+        }
+
+        :root:not(.lm) .sr-dashboard {
+            --dash-mobile-panel: #111827;
+            --dash-mobile-panel-2: #172033;
+            --dash-mobile-line: rgba(148, 163, 184, 0.18);
+            --dash-mobile-line-strong: rgba(148, 163, 184, 0.28);
+            --dash-mobile-ink: #f8fafc;
+            --dash-mobile-copy: #cbd5e1;
+            --dash-mobile-muted: #94a3b8;
+            --dash-mobile-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 34px rgba(0, 0, 0, 0.24);
+        }
+
+        .sr-dashboard .sr-card:not(.sr-hero-card),
+        .sr-dashboard .sr-polished-card,
+        .sr-dashboard .sr-side-feature,
+        .sr-dashboard .sr-stat-card,
+        .sr-dashboard .sr-recommendation-card,
+        .sr-dashboard .sr-notification-card,
+        .sr-dashboard .sr-session-card-polished,
+        .sr-dashboard .sr-rec-item,
+        .sr-dashboard .sr-learning-item,
+        .sr-dashboard .sr-trend-metric {
+            background: var(--dash-mobile-panel) !important;
+            border: 1px solid var(--dash-mobile-line) !important;
+            border-radius: var(--dash-card-radius) !important;
+            box-shadow: var(--dash-mobile-shadow) !important;
+        }
+
+        .sr-dashboard .sr-card-title,
+        .sr-dashboard .sr-polished-title,
+        .sr-dashboard .sr-side-title,
+        .sr-dashboard .sr-plan-title,
+        .sr-dashboard .sr-plan-task-title,
+        .sr-dashboard .sr-learning-title,
+        .sr-dashboard .sr-recommendation-title,
+        .sr-dashboard .sr-notification-title,
+        .sr-dashboard .sr-session-title,
+        .sr-dashboard .sr-trend-title {
+            color: var(--dash-mobile-ink) !important;
+            letter-spacing: 0;
+        }
+
+        .sr-dashboard .sr-card-kicker,
+        .sr-dashboard .sr-polished-subtitle,
+        .sr-dashboard .sr-side-subtitle,
+        .sr-dashboard .sr-plan-subtitle,
+        .sr-dashboard .sr-plan-action,
+        .sr-dashboard .sr-recommendation-reason,
+        .sr-dashboard .sr-notification-message,
+        .sr-dashboard .sr-session-date,
+        .sr-dashboard .sr-trend-subtitle,
+        .sr-dashboard .sr-trend-note {
+            color: var(--dash-mobile-muted) !important;
+        }
+
+        .sr-hero-card {
+            min-height: 126px;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.97), rgba(8, 145, 178, 0.92)),
+                #2563eb;
+            border: 0 !important;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.22) !important;
+        }
+
+        :root:not(.lm) .sr-hero-card {
+            background:
+                linear-gradient(135deg, rgba(30, 64, 175, 0.94), rgba(8, 47, 73, 0.92)),
+                #1e3a8a;
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28) !important;
+        }
+
+        .sr-hero-inner {
+            min-height: 126px;
+            padding: 18px 116px 18px 16px;
+        }
+
+        .sr-hero-card .sr-title {
+            color: #ffffff !important;
+            font-size: 1.28rem;
+            line-height: 1.15;
+            font-weight: 900;
+        }
+
+        .sr-title-name {
+            color: #dbeafe !important;
+        }
+
+        .sr-hero-card .sr-subtitle {
+            color: rgba(255, 255, 255, 0.86) !important;
+            font-size: 0.72rem;
+            line-height: 1.45;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .sr-welcome-art {
+            right: -10px;
+            bottom: -2px;
+            width: clamp(120px, 38vw, 146px);
+            opacity: 0.98;
+        }
+
+        .sr-score-panel {
+            padding: 14px;
+        }
+
+        .sr-score-top {
+            align-items: flex-start;
+        }
+
+        .sr-score-layout {
+            grid-template-columns: 104px minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        .sr-readiness-ring {
+            --ring-size: 104px;
+        }
+
+        .sr-score-meta-item,
+        .sr-plan-full-link,
+        .sr-feedback-panel,
+        .sr-trend-note {
+            background: var(--dash-mobile-panel-2) !important;
+            border-color: var(--dash-mobile-line) !important;
+            border-radius: 8px !important;
+        }
+
+        .sr-mobile-stat-grid {
+            gap: 10px;
+            margin: 14px 0 !important;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-card {
+            min-height: 118px;
+            padding: 12px;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-icon,
+        .sr-polished-icon,
+        .sr-side-icon,
+        .sr-trend-icon,
+        .sr-plan-header-icon,
+        .sr-recommendation-icon,
+        .sr-notification-card-icon,
+        .sr-learning-icon,
+        .sr-session-icon {
+            border-radius: 8px !important;
+        }
+
+        .sr-mobile-stat-grid .sr-chip,
+        .sr-status-pill,
+        .sr-tag,
+        .sr-rec-badge {
+            border-radius: 999px !important;
+            font-size: 0.58rem;
+            font-weight: 850;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-value {
+            color: var(--dash-mobile-ink);
+            font-size: 1.14rem;
+            margin-top: 16px;
+        }
+
+        .sr-mobile-stat-grid .sr-stat-label {
+            color: var(--dash-mobile-muted);
+            font-size: 0.6rem;
+            line-height: 1.2;
+            white-space: normal;
+        }
+
+        .sr-card-header,
+        .sr-polished-header,
+        .sr-side-feature-header,
+        .sr-trend-header {
+            margin-bottom: 14px;
+        }
+
+        .sr-card-title,
+        .sr-polished-title,
+        .sr-side-title,
+        .sr-trend-title {
+            font-size: 1rem;
+            line-height: 1.2;
+        }
+
+        .sr-btn,
+        .sr-section-action,
+        .sr-trend-detail-btn,
+        .sr-trend-filter,
+        .sr-session-review-btn,
+        .sr-session-delete-btn {
+            border-radius: 8px !important;
+            font-weight: 850;
+        }
+
+        #card-practice-plan .sr-rec-item,
+        .sr-recommendation-card,
+        .sr-notification-card,
+        .sr-session-card-polished {
+            min-height: 0;
+            padding: 12px;
+        }
+
+        .sr-session-card-polished {
+            grid-template-columns: 32px minmax(0, 1fr) auto;
+            grid-template-areas:
+                "icon copy score"
+                "icon copy actions";
+        }
+
+        .sr-session-card-polished .sr-session-icon {
+            grid-area: icon;
+        }
+
+        .sr-session-card-polished > div:nth-child(2) {
+            grid-area: copy;
+        }
+
+        .sr-session-score-pill {
+            grid-area: score;
+            justify-self: end;
+        }
+
+        .sr-session-review-btn {
+            grid-area: actions;
+            justify-self: end;
+            width: auto;
+        }
+
+        .sr-session-delete-btn {
+            grid-area: actions;
+            justify-self: end;
+            margin-right: 74px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .sr-hero-inner {
+            min-height: 118px;
+            padding-right: 100px;
+        }
+
+        .sr-score-layout {
+            grid-template-columns: 96px minmax(0, 1fr);
+        }
+
+        .sr-readiness-ring {
+            --ring-size: 96px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .sr-hero-inner {
+            padding-right: 82px;
+        }
+
+        .sr-score-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .sr-readiness-ring {
+            --ring-size: 104px;
+        }
+    }
 </style>
 
 <div class="db-section active sr-dashboard" id="sec-overview">
@@ -4201,7 +4509,7 @@
                     <div class="sr-rec-list">
                         @foreach($practicePlan as $item)
                             <a href="{{ $item->url }}" class="sr-rec-item" style="--accent: {{ $item->color }}; text-decoration:none;color:inherit;">
-                                <div class="sr-rec-icon" style="--accent: {{ $item->color }}"><i class="fa-solid {{ $item->icon }}"></i></div>
+                                <div class="sr-rec-icon" style="--accent: {{ $item->color }}"><i class="fa-solid {{ $item->icon ?? 'fa-clipboard-list' }}"></i></div>
                                 <div class="sr-plan-copy">
                                     <div class="sr-plan-top">
                                         <span class="sr-plan-step">{{ $item->day }}</span>
@@ -4621,21 +4929,57 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('js/chart.umd.min.js') }}"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof Chart === 'undefined') return;
 
     const rootStyle = getComputedStyle(document.documentElement);
     const getThemeColor = (varName, fallback) => rootStyle.getPropertyValue(varName).trim() || fallback;
-    const txColor = getThemeColor('--tx3', '#8792a6');
-    const sfColor = getThemeColor('--sf', '#171d2d');
     const isLightMode = document.documentElement.classList.contains('lm');
-    const gridColor = isLightMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.07)';
-    const radarGridColor = isLightMode ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.12)';
+    const txColor = isLightMode ? '#334155' : getThemeColor('--tx2', '#dbeafe');
+    const mutedColor = isLightMode ? '#64748b' : getThemeColor('--tx3', '#a8b4c7');
+    const surfaceColor = isLightMode ? '#ffffff' : getThemeColor('--sf', '#171d2d');
+    const gridColor = isLightMode ? 'rgba(100,116,139,0.28)' : 'rgba(219,234,254,0.42)';
+    const trendLineColor = isLightMode ? '#2563eb' : '#60a5fa';
+    const trendPointFill = isLightMode ? '#ffffff' : '#0f172a';
+    const radarGridColor = isLightMode ? 'rgba(100,116,139,0.32)' : 'rgba(219,234,254,0.58)';
+    const radarAngleColor = isLightMode ? 'rgba(100,116,139,0.34)' : 'rgba(219,234,254,0.42)';
+    const radarGridWidth = isLightMode ? 1.25 : 1.6;
+    const radarLabelColor = isLightMode ? '#334155' : '#e2e8f0';
 
     Chart.defaults.color = txColor;
     Chart.defaults.font.family = "'Poppins', sans-serif";
+
+    const emptyChartPlugin = {
+        id: 'emptyChartMessage',
+        afterDraw(chart, args, options) {
+            const datasets = chart.data.datasets || [];
+            const hasValues = datasets.some((dataset) => {
+                return (dataset.data || []).some((value) => Number(value) > 0);
+            });
+
+            if (hasValues && !options?.force) return;
+            if (!options?.text) return;
+
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+
+            ctx.save();
+            ctx.fillStyle = options?.color || mutedColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = "700 13px 'Poppins', sans-serif";
+            ctx.fillText(
+                options?.text || 'Complete a scored interview to see this chart.',
+                (chartArea.left + chartArea.right) / 2,
+                (chartArea.top + chartArea.bottom) / 2
+            );
+            ctx.restore();
+        }
+    };
+
+    Chart.register(emptyChartPlugin);
 
     const progressCanvas = document.getElementById('progressChart');
     if (progressCanvas) {
@@ -4664,8 +5008,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const initialTrend = trendSlice(initialTrendRange);
 
         const gradientLine = progressCtx.createLinearGradient(0, 0, 0, 320);
-        gradientLine.addColorStop(0, 'rgba(37, 99, 235, 0.24)');
-        gradientLine.addColorStop(0.58, 'rgba(59, 130, 246, 0.10)');
+        gradientLine.addColorStop(0, isLightMode ? 'rgba(37, 99, 235, 0.24)' : 'rgba(96, 165, 250, 0.28)');
+        gradientLine.addColorStop(0.58, isLightMode ? 'rgba(59, 130, 246, 0.10)' : 'rgba(96, 165, 250, 0.14)');
         gradientLine.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
 
         const progressChart = new Chart(progressCtx, {
@@ -4675,13 +5019,13 @@ document.addEventListener("DOMContentLoaded", function() {
                 datasets: [{
                     label: 'Readiness Score',
                     data: initialTrend.data.length ? initialTrend.data : [0],
-                    borderColor: '#3b82f6',
+                    borderColor: trendLineColor,
                     backgroundColor: gradientLine,
                     borderWidth: isCompactTrend() ? 2 : 3,
                     tension: 0.38,
                     fill: true,
-                    pointBackgroundColor: isLightMode ? '#ffffff' : sfColor,
-                    pointBorderColor: '#3b82f6',
+                    pointBackgroundColor: trendPointFill,
+                    pointBorderColor: trendLineColor,
                     pointBorderWidth: isCompactTrend() ? 2 : 3,
                     pointRadius: isCompactTrend() ? 3 : 5,
                     pointHoverRadius: isCompactTrend() ? 5 : 6
@@ -4692,13 +5036,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
+                    emptyChartMessage: {
+                        color: mutedColor,
+                        text: ''
+                    },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
                         backgroundColor: isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)',
                         titleColor: isLightMode ? '#0f172a' : '#fff',
                         bodyColor: isLightMode ? '#334155' : '#dbeafe',
-                        borderColor: '#3b82f6',
+                        borderColor: trendLineColor,
                         borderWidth: 1,
                         padding: 12,
                         displayColors: false,
@@ -4716,9 +5064,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         ticks: {
                             stepSize: 25,
                             padding: isCompactTrend() ? 4 : 8,
+                            color: txColor,
                             font: { size: isCompactTrend() ? 10 : 12, weight: 600 }
                         },
-                        grid: { color: gridColor, borderDash: [6, 6], drawTicks: false },
+                        grid: { color: gridColor, lineWidth: isLightMode ? 1.1 : 1.35, borderDash: [6, 6], drawTicks: false },
                         border: { display: false }
                     },
                     x: {
@@ -4727,7 +5076,8 @@ document.addEventListener("DOMContentLoaded", function() {
                             font: { size: isCompactTrend() ? 9 : 11, weight: 600 },
                             maxRotation: 0,
                             autoSkip: true,
-                            maxTicksLimit: isCompactTrend() ? 4 : 8
+                            maxTicksLimit: isCompactTrend() ? 4 : 8,
+                            color: txColor
                         },
                         grid: { display: false },
                         border: { display: false }
@@ -4764,37 +5114,49 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const radarCanvas = document.getElementById('radarChart');
     if (radarCanvas) {
+        const radarScores = [
+            {{ (int) ($radarData['clarity'] ?? 0) }},
+            {{ (int) ($radarData['relevance'] ?? 0) }},
+            {{ (int) ($radarData['grammar'] ?? 0) }},
+            {{ (int) ($radarData['professionalism'] ?? 0) }},
+            {{ (int) ($radarData['delivery_stability'] ?? 0) }}
+        ];
+        const hasRadarScores = radarScores.some((value) => Number(value) > 0);
+        const radarDisplayScores = hasRadarScores ? radarScores : [35, 35, 35, 35, 35];
+
         new Chart(radarCanvas.getContext('2d'), {
             type: 'radar',
             data: {
                 labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Delivery Stability'],
                 datasets: [{
                     label: 'Score Level',
-                    data: [
-                        {{ max(8, (int) ($radarData['clarity'] ?? 0)) }},
-                        {{ max(8, (int) ($radarData['relevance'] ?? 0)) }},
-                        {{ max(8, (int) ($radarData['grammar'] ?? 0)) }},
-                        {{ max(8, (int) ($radarData['professionalism'] ?? 0)) }},
-                        {{ max(8, (int) ($radarData['delivery_stability'] ?? 0)) }}
-                    ],
-                    backgroundColor: 'rgba(236, 72, 153, 0.14)',
-                    borderColor: '#ec4899',
-                    pointBackgroundColor: '#ec4899',
-                    pointBorderColor: sfColor,
-                    pointHoverBackgroundColor: sfColor,
+                    data: radarDisplayScores,
+                    backgroundColor: hasRadarScores ? (isLightMode ? 'rgba(236, 72, 153, 0.18)' : 'rgba(244, 114, 182, 0.22)') : (isLightMode ? 'rgba(236, 72, 153, 0.1)' : 'rgba(244, 114, 182, 0.16)'),
+                    borderColor: hasRadarScores ? (isLightMode ? '#db2777' : '#f472b6') : (isLightMode ? 'rgba(219, 39, 119, 0.72)' : 'rgba(251, 113, 133, 0.92)'),
+                    pointBackgroundColor: hasRadarScores ? (isLightMode ? '#db2777' : '#f472b6') : (isLightMode ? '#ec4899' : '#fecdd3'),
+                    pointBorderColor: surfaceColor,
+                    pointHoverBackgroundColor: surfaceColor,
                     pointHoverBorderColor: '#ec4899',
-                    borderWidth: 2
+                    borderWidth: hasRadarScores ? 2 : 1.5,
+                    borderDash: hasRadarScores ? [] : [6, 5]
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    emptyChartMessage: {
+                        color: mutedColor,
+                        force: false,
+                        text: ''
+                    }
+                },
                 scales: {
                     r: {
-                        angleLines: { color: radarGridColor },
-                        grid: { color: radarGridColor },
-                        pointLabels: { color: txColor, font: { size: 10, weight: 700 } },
+                        angleLines: { color: radarAngleColor, lineWidth: radarGridWidth },
+                        grid: { color: radarGridColor, lineWidth: radarGridWidth },
+                        pointLabels: { color: radarLabelColor, font: { size: 10, weight: 800 } },
                         suggestedMin: 0,
                         suggestedMax: 100,
                         ticks: { display: false, stepSize: 20 }

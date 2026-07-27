@@ -760,6 +760,245 @@
             width: 68px !important;
         }
     }
+
+    @media (max-width: 991px) {
+        #account-page {
+            --acct-saas-radius: 12px;
+            --acct-saas-gap: 8px;
+            --acct-saas-border: rgba(37, 99, 235, 0.14);
+            --acct-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --acct-saas-muted: #475569;
+            max-width: 100% !important;
+            display: flex;
+            flex-direction: column;
+            gap: var(--acct-saas-gap);
+            padding-inline: 0 !important;
+            padding-bottom: 14px !important;
+        }
+        html[data-theme="dark"] #account-page,
+        :root:not(.lm) #account-page,
+        .dm #account-page {
+            --acct-saas-border: rgba(147, 197, 253, 0.18);
+            --acct-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --acct-saas-muted: #cbd5e1;
+        }
+        #account-page .sr-page-hero {
+            min-height: 84px !important;
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            padding: 10px 76px 10px 12px !important;
+            margin: 0 !important;
+            border-radius: var(--acct-saas-radius) !important;
+            border-color: var(--acct-saas-border) !important;
+            box-shadow: var(--acct-saas-shadow) !important;
+        }
+        #account-page .account-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 10px !important;
+            font-size: 0.8rem !important;
+        }
+        #account-page .sr-page-hero-title {
+            font-size: 0.86rem !important;
+            line-height: 1.12 !important;
+            margin-bottom: 4px !important;
+        }
+        #account-page .sr-page-hero-subtitle {
+            max-width: 12rem !important;
+            max-height: 2.7em;
+            overflow: hidden;
+            font-size: 0.62rem !important;
+            line-height: 1.34 !important;
+        }
+        #account-page .sr-page-hero .sr-page-hero-art {
+            width: 72px !important;
+            right: -5px !important;
+            bottom: 6px !important;
+        }
+        #account-page .row.account-grid {
+            --bs-gutter-x: 0.5rem !important;
+            --bs-gutter-y: 0.5rem !important;
+            margin-top: 0 !important;
+        }
+        #account-page .row.account-grid > [class*="col-"] {
+            padding-inline: 4px !important;
+        }
+        #account-page .premium-panel,
+        #account-page .account-card {
+            padding: 10px !important;
+            margin: 0 !important;
+            border-radius: var(--acct-saas-radius) !important;
+            border-color: var(--acct-saas-border) !important;
+            box-shadow: var(--acct-saas-shadow) !important;
+        }
+        #account-page .premium-panel:hover,
+        #account-page .account-card:hover {
+            transform: none !important;
+        }
+        #account-page .account-card-title {
+            gap: 7px !important;
+            margin-bottom: 10px !important;
+            font-size: 0.84rem !important;
+            line-height: 1.16 !important;
+        }
+        #account-page .account-title-icon,
+        #account-page .danger-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 10px !important;
+            font-size: 0.76rem !important;
+        }
+        #account-page .account-photo-row {
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+        #account-page .account-photo-avatar {
+            width: 58px !important;
+            height: 58px !important;
+            flex-basis: 58px !important;
+            border-radius: 16px !important;
+            border-width: 4px !important;
+        }
+        #account-page .upload-picture-btn {
+            min-height: 32px !important;
+            padding: 0 12px !important;
+            border-radius: 9px !important;
+            font-size: 0.66rem !important;
+            box-shadow: none !important;
+        }
+        #account-page .upload-hint {
+            margin-top: 6px !important;
+            font-size: 0.6rem !important;
+            line-height: 1.28 !important;
+            color: var(--acct-saas-muted) !important;
+        }
+        #account-page .account-field {
+            margin-bottom: 9px !important;
+        }
+        #account-page .account-field-label,
+        #account-page .olbl {
+            gap: 6px !important;
+            margin-bottom: 5px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.2 !important;
+        }
+        #account-page .account-label-icon {
+            width: 25px !important;
+            height: 25px !important;
+            border-radius: 8px !important;
+            font-size: 0.66rem !important;
+        }
+        #account-page .oinp {
+            min-height: 36px !important;
+            padding: 7px 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.72rem !important;
+        }
+        #account-page .password-field .oinp {
+            padding-left: 38px !important;
+            padding-right: 32px !important;
+        }
+        #account-page .password-prefix-icon {
+            width: 30px !important;
+            border-radius: 8px !important;
+            font-size: 0.66rem !important;
+        }
+        #account-page .password-toggle {
+            right: 5px !important;
+            width: 24px !important;
+            height: 24px !important;
+            font-size: 0.74rem !important;
+        }
+        #account-page .account-submit-btn,
+        #account-page .premium-panel form button[type="submit"] {
+            min-height: 38px !important;
+            border-radius: 10px !important;
+            gap: 6px !important;
+            font-size: 0.72rem !important;
+        }
+        #account-page .danger-card {
+            margin-top: 8px !important;
+        }
+        #account-page .danger-title {
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+            font-size: 0.82rem !important;
+            line-height: 1.18 !important;
+        }
+        #account-page .danger-copy {
+            margin-bottom: 10px !important;
+            font-size: 0.66rem !important;
+            line-height: 1.36 !important;
+            color: var(--acct-saas-muted) !important;
+        }
+        #account-page .danger-card form .delete-account-btn {
+            width: min(100%, 170px) !important;
+            min-height: 34px !important;
+            padding: 0 12px !important;
+            border-radius: 9px !important;
+            font-size: 0.66rem !important;
+            box-shadow: none !important;
+        }
+        #account-page .alert {
+            margin: 0 !important;
+            padding: 10px 12px !important;
+            border-radius: var(--acct-saas-radius) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.32 !important;
+        }
+    }
+    /* Final compact hero override shared across user pages. */
+    #account-page .sr-page-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #account-page .account-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #account-page .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #account-page .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #account-page .sr-page-hero-art {
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
+    }
+    @media (max-width: 390px) {
+        #account-page .sr-page-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #account-page .account-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #account-page .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #account-page .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #account-page .sr-page-hero-art {
+            width: 66px !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="account-page">

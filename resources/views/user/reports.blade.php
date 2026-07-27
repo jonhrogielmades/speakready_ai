@@ -327,6 +327,306 @@
             padding-inline: 7px !important;
         }
     }
+
+    @media (max-width: 991px) {
+        #portfolioReport {
+            --reports-saas-radius: 12px;
+            --reports-saas-gap: 8px;
+            --reports-saas-border: rgba(37, 99, 235, 0.14);
+            --reports-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --reports-saas-card: rgba(248, 250, 252, 0.78);
+            --reports-saas-muted: #475569;
+            max-width: 100% !important;
+            padding-inline: 0 !important;
+            padding-bottom: 14px !important;
+        }
+        html[data-theme="dark"] #portfolioReport,
+        :root:not(.lm) #portfolioReport,
+        .dm #portfolioReport {
+            --reports-saas-border: rgba(147, 197, 253, 0.18);
+            --reports-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --reports-saas-card: rgba(255, 255, 255, 0.045);
+            --reports-saas-muted: #cbd5e1;
+        }
+        #portfolioReport .sr-page-hero {
+            min-height: 84px !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            padding: 10px 76px 11px 12px !important;
+            margin: 0 0 var(--reports-saas-gap) !important;
+            border-radius: var(--reports-saas-radius) !important;
+            border-color: var(--reports-saas-border) !important;
+            box-shadow: var(--reports-saas-shadow) !important;
+            overflow: hidden !important;
+        }
+        #portfolioReport .reports-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 10px !important;
+            font-size: 0.82rem !important;
+        }
+        #portfolioReport .sr-page-hero-title {
+            font-size: 0.86rem !important;
+            line-height: 1.12 !important;
+            max-width: 12rem !important;
+            margin-bottom: 4px !important;
+            white-space: normal !important;
+        }
+        #portfolioReport .sr-page-hero-subtitle {
+            max-width: 12rem !important;
+            max-height: 2.7em !important;
+            overflow: hidden !important;
+            font-size: 0.62rem !important;
+            line-height: 1.34 !important;
+        }
+        #portfolioReport .sr-page-hero-art {
+            width: 70px !important;
+            right: -5px !important;
+            bottom: 6px !important;
+        }
+        #portfolioReport .report-export-actions {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            margin-bottom: var(--reports-saas-gap) !important;
+        }
+        #portfolioReport .report-export-actions .btn {
+            min-height: 36px !important;
+            height: 36px !important;
+            padding: 6px 5px !important;
+            border-radius: 10px !important;
+            font-size: 0.58rem !important;
+            line-height: 1.1 !important;
+            box-shadow: none !important;
+            white-space: normal !important;
+        }
+        #portfolioReport .report-export-actions .btn i {
+            font-size: 0.68rem !important;
+            margin-right: 4px !important;
+        }
+        #portfolioReport > .row,
+        #portfolioReport .row.g-4,
+        #portfolioReport .row.mb-4 {
+            --bs-gutter-x: 0;
+            --bs-gutter-y: var(--reports-saas-gap);
+            margin-bottom: var(--reports-saas-gap) !important;
+        }
+        #portfolioReport .col-lg-7,
+        #portfolioReport .col-lg-5,
+        #portfolioReport .col-md-8,
+        #portfolioReport .col-md-4,
+        #portfolioReport .col-md-6,
+        #portfolioReport .col-12 {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        #portfolioReport .print-card {
+            padding: 10px !important;
+            border-radius: var(--reports-saas-radius) !important;
+            border-color: var(--reports-saas-border) !important;
+            background: var(--sf) !important;
+            box-shadow: var(--reports-saas-shadow) !important;
+            transform: none !important;
+            margin-bottom: 0 !important;
+        }
+        #portfolioReport .print-card:hover {
+            transform: none !important;
+        }
+        #portfolioReport #report-readiness {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(16, 185, 129, 0.07)) !important;
+        }
+        #portfolioReport #report-readiness .row {
+            --bs-gutter-y: 8px;
+            text-align: left !important;
+        }
+        #portfolioReport #report-readiness [class*="col-"] {
+            border-right: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 0 !important;
+        }
+        #portfolioReport h4,
+        #portfolioReport h5,
+        #portfolioReport h6 {
+            line-height: 1.18 !important;
+            letter-spacing: 0 !important;
+        }
+        #portfolioReport h5 {
+            margin-bottom: 10px !important;
+            font-size: 0.9rem !important;
+        }
+        #portfolioReport h6 {
+            margin-bottom: 6px !important;
+            font-size: 0.66rem !important;
+        }
+        #portfolioReport p,
+        #portfolioReport li,
+        #portfolioReport td,
+        #portfolioReport small {
+            font-size: 0.68rem !important;
+            line-height: 1.34 !important;
+        }
+        #portfolioReport .bg-light.bg-opacity-10 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px !important;
+            padding: 9px !important;
+            margin-bottom: 10px !important;
+            border-radius: 10px !important;
+            background: var(--reports-saas-card) !important;
+            border: 1px solid var(--reports-saas-border);
+        }
+        #portfolioReport .bg-light.bg-opacity-10 > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #portfolioReport .row.g-3.text-center {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px !important;
+        }
+        #portfolioReport .row.g-3.text-center > .col {
+            width: 100% !important;
+            padding: 0 !important;
+        }
+        #portfolioReport .row.g-3.text-center [style*="width:60px"] {
+            width: 48px !important;
+            height: 48px !important;
+            margin-bottom: 6px !important;
+            font-size: 0.9rem !important;
+        }
+        #portfolioReport .table-responsive {
+            border: 1px solid var(--reports-saas-border);
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+        #portfolioReport table {
+            min-width: 520px;
+            margin-bottom: 0 !important;
+        }
+        #portfolioReport :is(#trendChart, #catChart) {
+            max-height: 180px !important;
+        }
+        #portfolioReport [style*="height:250px"] {
+            height: 180px !important;
+        }
+        #portfolioReport #report-feedback .row.g-4 {
+            --bs-gutter-y: 8px;
+        }
+        #portfolioReport #report-feedback .p-3,
+        #portfolioReport .print-card .p-3 {
+            padding: 9px !important;
+            border-radius: 10px !important;
+        }
+        #portfolioReport .col-md-6.d-flex.flex-column.gap-4 {
+            gap: var(--reports-saas-gap) !important;
+        }
+        #portfolioReport .row.text-center.align-items-center.h-100 {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0 !important;
+        }
+        #portfolioReport .row.text-center.align-items-center.h-100 > .col-4 {
+            width: 100% !important;
+            padding: 0 4px !important;
+        }
+        #portfolioReport #report-learning .row {
+            --bs-gutter-y: 8px;
+        }
+        #portfolioReport #report-learning ul {
+            font-size: 0.72rem !important;
+        }
+        #portfolioReport .d-flex.flex-wrap.gap-4 {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px !important;
+            justify-content: stretch !important;
+        }
+        #portfolioReport .d-flex.flex-wrap.gap-4 > .text-center {
+            width: 100% !important;
+        }
+        #portfolioReport .d-flex.flex-wrap.gap-4 [style*="width:80px"] {
+            width: 52px !important;
+            height: 52px !important;
+            margin-bottom: 6px !important;
+        }
+        #portfolioReport .report-empty-card {
+            padding: 20px 12px !important;
+            border-radius: var(--reports-saas-radius) !important;
+        }
+        #portfolioReport .report-empty-art {
+            width: min(104px, 34vw) !important;
+            margin-bottom: 12px !important;
+        }
+        #portfolioReport .report-empty-title {
+            font-size: 1.08rem !important;
+            line-height: 1.16 !important;
+        }
+        #portfolioReport .report-empty-copy {
+            margin-bottom: 14px !important;
+            font-size: 0.74rem !important;
+            line-height: 1.42 !important;
+        }
+        #portfolioReport .report-start-btn {
+            min-height: 42px !important;
+            border-radius: 10px !important;
+            font-size: 0.78rem !important;
+            box-shadow: none !important;
+        }
+    }
+    /* Final compact hero override shared across user pages. */
+    #portfolioReport .sr-page-hero {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
+    }
+    #portfolioReport .reports-hero-icon {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.8rem !important;
+    }
+    #portfolioReport .sr-page-hero-title {
+        font-size: 0.72rem !important;
+        line-height: 1.15 !important;
+        margin: 0 0 3px !important;
+        white-space: nowrap !important;
+    }
+    #portfolioReport .sr-page-hero-subtitle {
+        max-width: 13.5rem !important;
+        font-size: 0.49rem !important;
+        line-height: 1.32 !important;
+    }
+    #portfolioReport .sr-page-hero-art {
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
+    }
+    @media (max-width: 390px) {
+        #portfolioReport .sr-page-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+        #portfolioReport .reports-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+        #portfolioReport .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+        #portfolioReport .sr-page-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+        #portfolioReport .sr-page-hero-art {
+            width: 66px !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="portfolioReport">

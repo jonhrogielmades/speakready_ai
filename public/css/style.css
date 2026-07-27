@@ -5391,7 +5391,7 @@ body.admin-shell .alert {
   }
 
   #dashboard .db-sidebar {
-    background: color-mix(in srgb, var(--bg2) 92%, #1d4ed8 8%);
+    background: var(--sidebar-bg);
   }
 
   #dashboard .db-nl {
@@ -5452,10 +5452,32 @@ body.admin-shell .alert {
 /* ======================== NAVIGATION SHELL REFINEMENT ======================== */
 #dashboard .db-sidebar {
   isolation: isolate;
+  --sidebar-bg: linear-gradient(180deg, rgba(37, 99, 235, 0.13), transparent 240px), #0f172a;
+  --sidebar-logo-bg: rgba(15, 23, 42, 0.88);
+  --sidebar-bottom-bg: rgba(15, 23, 42, 0.88);
+  --sidebar-link-color: #cbd5e1;
+  --sidebar-link-hover: #f8fafc;
+  --sidebar-link-hover-bg: rgba(96, 165, 250, 0.13);
+  --sidebar-link-active: #bfdbfe;
+  --sidebar-link-active-bg: rgba(37, 99, 235, 0.24);
+  --sidebar-border: rgba(148, 163, 184, 0.22);
+  background: var(--sidebar-bg);
+}
+
+.lm #dashboard .db-sidebar {
+  --sidebar-bg: linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent 240px), #ffffff;
+  --sidebar-logo-bg: rgba(248, 250, 252, 0.96);
+  --sidebar-bottom-bg: rgba(248, 250, 252, 0.96);
+  --sidebar-link-color: #334155;
+  --sidebar-link-hover: #0f172a;
+  --sidebar-link-hover-bg: rgba(37, 99, 235, 0.08);
+  --sidebar-link-active: #1d4ed8;
+  --sidebar-link-active-bg: rgba(37, 99, 235, 0.12);
+  --sidebar-border: rgba(15, 23, 42, 0.12);
 }
 
 #dashboard .db-logo {
-  background: color-mix(in srgb, var(--bg2) 87%, transparent);
+  background: var(--sidebar-logo-bg);
 }
 
 #dashboard .db-logo::after {
@@ -5485,11 +5507,24 @@ body.admin-shell .alert {
   content: "";
   height: 1px;
   flex: 1;
-  background: var(--shell-border);
+  background: var(--sidebar-border);
 }
 
 #dashboard .db-nl {
   overflow: hidden;
+  color: var(--sidebar-link-color);
+}
+
+#dashboard .db-nl:hover {
+  background: var(--sidebar-link-hover-bg);
+  border-color: var(--sidebar-border);
+  color: var(--sidebar-link-hover);
+}
+
+#dashboard .db-nl.active {
+  background: var(--sidebar-link-active-bg);
+  border-color: var(--shell-border-strong);
+  color: var(--sidebar-link-active);
 }
 
 #dashboard .db-nl::after {
@@ -5508,7 +5543,8 @@ body.admin-shell .alert {
 
 #dashboard .db-bottom {
   padding: 12px;
-  background: color-mix(in srgb, var(--bg2) 90%, transparent);
+  background: var(--sidebar-bottom-bg);
+  border-top-color: var(--sidebar-border);
 }
 
 #dashboard .db-bottom .db-nl {
@@ -5774,8 +5810,48 @@ body.admin-shell .alert {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+/* Final user sidebar theme guard */
+#dashboard .db-sidebar {
+  background: var(--sidebar-bg) !important;
+  border-right-color: var(--sidebar-border);
+}
+
+#dashboard .db-logo {
+  background: var(--sidebar-logo-bg);
+  border-bottom-color: var(--sidebar-border);
+}
+
+#dashboard .db-bottom {
+  background: var(--sidebar-bottom-bg);
+  border-top-color: var(--sidebar-border);
+}
+
+#dashboard .db-nav-section {
+  color: var(--tx3);
+}
+
+#dashboard .db-nav-section::after {
+  background: var(--sidebar-border);
+}
+
+#dashboard .db-nl {
+  color: var(--sidebar-link-color);
+}
+
+#dashboard .db-nl:hover {
+  background: var(--sidebar-link-hover-bg);
+  border-color: var(--sidebar-border);
+  color: var(--sidebar-link-hover);
+}
+
+#dashboard .db-nl.active {
+  background: var(--sidebar-link-active-bg);
+  color: var(--sidebar-link-active);
+}
+
 #dashboard .db-avatar {
-  background: linear-gradient(135deg, #60a5fa, #10b981);
+  background: #1d4ed8;
+  color: #fff;
 }
 
 /* Admin table contrast hardening */
@@ -6465,4 +6541,476 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   border-color: #cbd5e1;
   color: #334155 !important;
   -webkit-text-fill-color: #334155 !important;
+}
+
+/* ======================== USER DESKTOP PROFESSIONAL SYSTEM PASS ======================== */
+@media (min-width: 992px) {
+  body:not(.admin-shell) {
+    --user-desktop-max: 1320px;
+    --user-page-pad-x: clamp(24px, 2.4vw, 36px);
+    --user-page-pad-y: 28px;
+    --user-panel-radius: 8px;
+    --user-control-radius: 7px;
+    --user-panel-border: rgba(148, 163, 184, 0.22);
+    --user-panel-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    --user-panel-shadow-hover: 0 14px 34px rgba(15, 23, 42, 0.09);
+    --user-surface: rgba(255, 255, 255, 0.94);
+    --user-surface-soft: rgba(248, 250, 252, 0.86);
+  }
+
+  body:not(.admin-shell):not(.lm) {
+    --user-panel-border: rgba(148, 163, 184, 0.18);
+    --user-panel-shadow: 0 14px 32px rgba(0, 0, 0, 0.2);
+    --user-panel-shadow-hover: 0 18px 40px rgba(0, 0, 0, 0.26);
+    --user-surface: rgba(15, 23, 42, 0.88);
+    --user-surface-soft: rgba(30, 41, 59, 0.58);
+  }
+
+  body:not(.admin-shell) .db-main {
+    min-height: 100vh;
+  }
+
+  body:not(.admin-shell) .db-content {
+    max-width: var(--user-desktop-max);
+    padding: var(--user-page-pad-y) var(--user-page-pad-x) 40px !important;
+  }
+
+  body:not(.admin-shell) .db-section.active {
+    width: 100%;
+  }
+
+  body:not(.admin-shell) .db-section.active > :is(.container, .container-fluid) {
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body:not(.admin-shell) .db-top {
+    height: 72px;
+    padding-inline: var(--user-page-pad-x);
+    border-bottom: 1px solid var(--bd);
+    box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+  }
+
+  body:not(.admin-shell) .db-page-context {
+    min-width: 210px;
+  }
+
+  body:not(.admin-shell) .db-page-eyebrow {
+    font-size: 0.66rem;
+    letter-spacing: 0.08em !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--tx3);
+  }
+
+  body:not(.admin-shell) .db-page-context strong {
+    color: var(--tx);
+    font-size: 0.96rem;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  body:not(.admin-shell) .db-sidebar {
+    border-right: 1px solid var(--bd);
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) .db-logo {
+    border-bottom: 1px solid var(--bd);
+  }
+
+  body:not(.admin-shell) .db-logo .logo-i {
+    width: 34px;
+    height: 34px;
+  }
+
+  body:not(.admin-shell) .db-logo span {
+    font-size: 0.98rem;
+    font-weight: 800;
+  }
+
+  body:not(.admin-shell) .db-nav {
+    padding: 14px 12px 28px;
+  }
+
+  body:not(.admin-shell) .db-nav-section {
+    margin: 18px 10px 8px;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em !important;
+  }
+
+  body:not(.admin-shell) .db-nl {
+    min-height: 42px;
+    border-radius: 7px !important;
+    padding: 9px 11px;
+    gap: 10px;
+    font-size: 0.86rem;
+    font-weight: 750;
+  }
+
+  body:not(.admin-shell) .db-nl i {
+    width: 20px;
+    min-width: 20px;
+    text-align: center;
+    font-size: 0.92rem;
+  }
+
+  body:not(.admin-shell) .db-nl:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) .db-nl.active {
+    background: rgba(37, 99, 235, 0.12) !important;
+    border-color: rgba(37, 99, 235, 0.24) !important;
+    color: #60a5fa !important;
+  }
+
+  body:not(.admin-shell).lm .db-nl.active {
+    color: #1d4ed8 !important;
+    background: rgba(37, 99, 235, 0.08) !important;
+  }
+
+  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .db-stat-card, .ll-stat-card, .print-card, .module-card, .perk-card, .level-card, .sr-card, .sr-stat-card, .tracker-panel, .chapter-card, .mod-hero, .retry-panel, .stat-box, .card, .accordion-item) {
+    border-radius: var(--user-panel-radius) !important;
+    border-color: var(--user-panel-border) !important;
+    background: var(--user-surface) !important;
+    box-shadow: var(--user-panel-shadow) !important;
+  }
+
+  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .db-stat-card, .ll-stat-card, .print-card, .module-card, .perk-card, .level-card, .sr-card, .sr-stat-card, .tracker-panel, .chapter-card, .mod-hero, .retry-panel, .stat-box, .card):hover {
+    transform: none !important;
+    border-color: rgba(37, 99, 235, 0.24) !important;
+    box-shadow: var(--user-panel-shadow-hover) !important;
+  }
+
+  body:not(.admin-shell) :is(.card, .premium-card, .premium-panel, .setup-panel, .panel) :is(.card, .premium-card, .premium-panel, .setup-panel, .panel) {
+    background: var(--user-surface-soft) !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) :is(.btn, button:not(.db-nl):not(.boc):not(.dd-close), .nav-pills .nav-link, .form-control, .form-select, .oinp, .db-top-search, .db-user-pill, .db-dropdown, .badge, .alert, .progress, .progress-track) {
+    border-radius: var(--user-control-radius) !important;
+  }
+
+  body:not(.admin-shell) :is(.btn, button:not(.db-nl):not(.boc):not(.dd-close)) {
+    min-height: 40px;
+    font-weight: 800;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) .btn-shine::after {
+    display: none !important;
+  }
+
+  body:not(.admin-shell) .nav-pills {
+    gap: 6px;
+  }
+
+  body:not(.admin-shell) .nav-pills .nav-link {
+    min-height: 38px;
+    padding: 8px 14px;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) .nav-pills .nav-link.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) :is(.form-control, .form-select, .oinp, textarea) {
+    background: var(--user-surface-soft) !important;
+    border-color: var(--user-panel-border) !important;
+  }
+
+  body:not(.admin-shell) :is(.table-responsive, .custom-table) {
+    border-radius: var(--user-panel-radius);
+  }
+
+  body:not(.admin-shell) .custom-table th {
+    background: var(--user-surface-soft);
+    color: var(--tx3) !important;
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.06em !important;
+    padding: 13px 14px;
+  }
+
+  body:not(.admin-shell) .custom-table td {
+    padding: 14px;
+    font-size: 0.86rem;
+  }
+
+  body:not(.admin-shell) .custom-table tbody tr:hover {
+    background: rgba(37, 99, 235, 0.045) !important;
+  }
+
+  body:not(.admin-shell) :is(h1, h2, h3, h4, h5, h6) {
+    letter-spacing: 0 !important;
+  }
+
+  body:not(.admin-shell) :is(.text-gradient-primary, .gradient-text, [class*="text-gradient"]) {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: var(--tx) !important;
+    -webkit-text-fill-color: var(--tx) !important;
+  }
+
+  body:not(.admin-shell).lm :is(.text-gradient-primary, .gradient-text, [class*="text-gradient"]) {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+  }
+
+  body:not(.admin-shell) :is(.sr-page-hero, .mod-hero, .ll-hero, .setup-hero, .premium-hero) {
+    border-radius: var(--user-panel-radius) !important;
+    border: 1px solid var(--user-panel-border) !important;
+    box-shadow: var(--user-panel-shadow) !important;
+  }
+
+  body:not(.admin-shell).lm :is(.sr-page-hero, .mod-hero, .ll-hero, .setup-hero, .premium-hero) {
+    background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+  }
+
+  body:not(.admin-shell):not(.lm) :is(.sr-page-hero, .mod-hero, .ll-hero, .setup-hero, .premium-hero) {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.78)) !important;
+  }
+
+  body:not(.admin-shell) :is(.fa, .fa-solid, .fa-regular, .fa-light, .fa-brands) {
+    line-height: 1;
+  }
+
+  body:not(.admin-shell) .db-dropdown {
+    border: 1px solid var(--user-panel-border);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+  }
+
+  body:not(.admin-shell).lm .db-dropdown {
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+  }
+
+  body:not(.admin-shell) .boc {
+    border-radius: var(--user-control-radius) !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) .boc:hover {
+    transform: none !important;
+  }
+}
+
+/* ======================== USER DESKTOP SAAS PRO UI SYSTEM ======================== */
+@media (min-width: 992px) {
+  body:not(.admin-shell) {
+    --saas-bg: #f5f7fb;
+    --saas-shell: #ffffff;
+    --saas-panel: #ffffff;
+    --saas-panel-2: #f8fafc;
+    --saas-line: #e2e8f0;
+    --saas-line-strong: #cbd5e1;
+    --saas-ink: #0f172a;
+    --saas-copy: #334155;
+    --saas-muted: #64748b;
+    --saas-blue: #2563eb;
+    --saas-blue-soft: rgba(37, 99, 235, 0.09);
+    --saas-green: #059669;
+    --saas-amber: #d97706;
+    --saas-red: #dc2626;
+    --saas-radius: 8px;
+    --saas-radius-sm: 6px;
+    --saas-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.05);
+    --saas-shadow-lg: 0 18px 38px rgba(15, 23, 42, 0.08);
+    --bg: var(--saas-bg);
+    --bg2: #eef2f7;
+    --bg3: var(--saas-panel-2);
+    --sf: var(--saas-panel);
+    --sf2: var(--saas-panel-2);
+    --bd: rgba(15, 23, 42, 0.09);
+    --bd2: rgba(15, 23, 42, 0.16);
+    --tx: var(--saas-ink);
+    --tx2: var(--saas-copy);
+    --tx3: var(--saas-muted);
+    --pur: var(--saas-blue);
+    --blu: #0284c7;
+    --grad: linear-gradient(135deg, #2563eb, #0284c7);
+    background: var(--saas-bg) !important;
+  }
+
+  body:not(.admin-shell):not(.lm) {
+    --saas-bg: #0b1120;
+    --saas-shell: #111827;
+    --saas-panel: #111827;
+    --saas-panel-2: #172033;
+    --saas-line: rgba(148, 163, 184, 0.18);
+    --saas-line-strong: rgba(148, 163, 184, 0.28);
+    --saas-ink: #f8fafc;
+    --saas-copy: #cbd5e1;
+    --saas-muted: #94a3b8;
+    --saas-blue-soft: rgba(59, 130, 246, 0.14);
+    --saas-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 34px rgba(0, 0, 0, 0.24);
+    --saas-shadow-lg: 0 24px 52px rgba(0, 0, 0, 0.32);
+  }
+
+  body:not(.admin-shell) #dashboard,
+  body:not(.admin-shell) .db-main {
+    background:
+      linear-gradient(180deg, rgba(37, 99, 235, 0.035), transparent 260px),
+      var(--saas-bg) !important;
+  }
+
+  body:not(.admin-shell) .db-sidebar {
+    background: var(--saas-shell) !important;
+    border-right: 1px solid var(--saas-line) !important;
+  }
+
+  body:not(.admin-shell) .db-logo {
+    min-height: 72px;
+    padding: 18px 18px !important;
+    border-bottom: 1px solid var(--saas-line) !important;
+  }
+
+  body:not(.admin-shell) .db-logo span {
+    color: var(--saas-ink) !important;
+    font-size: .95rem;
+    font-weight: 850;
+  }
+
+  body:not(.admin-shell) .db-nav-section {
+    color: var(--saas-muted) !important;
+    font-size: .64rem;
+  }
+
+  body:not(.admin-shell) .db-nl {
+    color: var(--saas-copy) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+
+  body:not(.admin-shell) .db-nl:hover {
+    color: var(--saas-ink) !important;
+    background: var(--saas-panel-2) !important;
+    border-color: var(--saas-line) !important;
+  }
+
+  body:not(.admin-shell) .db-nl.active {
+    color: var(--saas-blue) !important;
+    background: var(--saas-blue-soft) !important;
+    border-color: rgba(37, 99, 235, .18) !important;
+  }
+
+  body:not(.admin-shell) .db-nl.active::before {
+    display: none !important;
+  }
+
+  body:not(.admin-shell) .db-top {
+    background: color-mix(in srgb, var(--saas-bg) 86%, transparent) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--saas-line) !important;
+  }
+
+  body:not(.admin-shell) .db-content {
+    max-width: 1360px;
+    padding: 26px clamp(24px, 2.6vw, 38px) 44px !important;
+  }
+
+  body:not(.admin-shell) .db-page-context strong,
+  body:not(.admin-shell) :is(h1, h2, h3, h4, h5, h6) {
+    color: var(--saas-ink) !important;
+  }
+
+  body:not(.admin-shell) :is(p, small, label, .text-muted) {
+    color: var(--saas-copy);
+  }
+
+  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .db-stat-card, .ll-stat-card, .print-card, .module-card, .perk-card, .level-card, .sr-card, .sr-stat-card, .tracker-panel, .chapter-card, .mod-hero, .retry-panel, .stat-box, .card, .accordion-item, .sr-page-hero, .ll-hero, .setup-hero, .premium-hero) {
+    background: var(--saas-panel) !important;
+    border: 1px solid var(--saas-line) !important;
+    border-radius: var(--saas-radius) !important;
+    box-shadow: var(--saas-shadow) !important;
+  }
+
+  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .db-stat-card, .ll-stat-card, .print-card, .module-card, .perk-card, .level-card, .sr-card, .sr-stat-card, .tracker-panel, .chapter-card, .mod-hero, .retry-panel, .stat-box, .card):hover {
+    border-color: var(--saas-line-strong) !important;
+    box-shadow: var(--saas-shadow-lg) !important;
+  }
+
+  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .card) :is(.premium-card, .premium-panel, .setup-panel, .panel, .card, .stat-box) {
+    background: var(--saas-panel-2) !important;
+    box-shadow: none !important;
+  }
+
+  body:not(.admin-shell) :is(.btn, button:not(.db-nl):not(.boc):not(.dd-close), .nav-pills .nav-link, .form-control, .form-select, .oinp, .db-user-pill, .db-dropdown, .badge, .alert, .progress, .progress-track, .table-responsive) {
+    border-radius: var(--saas-radius-sm) !important;
+  }
+
+  body:not(.admin-shell) :is(.btn-primary, .btn-shine, .nav-pills .nav-link.active, button[style*="background:var(--dash-primary"], button[style*="background:#34d399"]) {
+    background: var(--saas-blue) !important;
+    border-color: var(--saas-blue) !important;
+    color: #fff !important;
+  }
+
+  body:not(.admin-shell) :is(.btn-outline-primary, .btn-outline-info) {
+    border-color: rgba(37, 99, 235, .35) !important;
+    color: var(--saas-blue) !important;
+    background: transparent !important;
+  }
+
+  body:not(.admin-shell) :is(.form-control, .form-select, .oinp, textarea, .db-top-search) {
+    background: var(--saas-panel) !important;
+    border: 1px solid var(--saas-line) !important;
+    color: var(--saas-ink) !important;
+  }
+
+  body:not(.admin-shell) :is(.form-control, .form-select, .oinp, textarea):focus {
+    border-color: rgba(37, 99, 235, .55) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, .12) !important;
+  }
+
+  body:not(.admin-shell) .custom-table {
+    border: 1px solid var(--saas-line);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    background: var(--saas-panel) !important;
+  }
+
+  body:not(.admin-shell) .custom-table th {
+    background: var(--saas-panel-2) !important;
+    border-bottom: 1px solid var(--saas-line) !important;
+    color: var(--saas-muted) !important;
+  }
+
+  body:not(.admin-shell) .custom-table td {
+    border-bottom: 1px solid var(--saas-line) !important;
+    color: var(--saas-copy) !important;
+  }
+
+  body:not(.admin-shell) .custom-table tr:last-child td {
+    border-bottom: 0 !important;
+  }
+
+  body:not(.admin-shell) .db-dropdown {
+    background: var(--saas-panel) !important;
+    border-color: var(--saas-line) !important;
+    box-shadow: var(--saas-shadow-lg) !important;
+  }
+
+  body:not(.admin-shell) :is(.badge, .chip, .tag) {
+    font-weight: 800;
+    border: 1px solid var(--saas-line);
+  }
+
+  body:not(.admin-shell) :is(.progress, .progress-track) {
+    height: 8px;
+    background: var(--saas-panel-2) !important;
+    overflow: hidden;
+  }
+
+  body:not(.admin-shell) :is(.progress-bar, .progress-fill) {
+    background: var(--saas-blue) !important;
+  }
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speakready-pwa-v9';
+const CACHE_NAME = 'speakready-pwa-v10';
 const STATIC_ASSET_PATTERN = /\.(?:css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
 
 function isSameOrigin(requestUrl) {
@@ -44,20 +44,16 @@ self.addEventListener('fetch', event => {
   if (!isCacheableStaticAsset(event.request)) return;
 
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) return cachedResponse;
+    fetch(event.request, { cache: 'no-cache' }).then(response => {
+      if (!response || !response.ok) return response;
 
-      return fetch(event.request).then(response => {
-        if (!response || !response.ok) return response;
-
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
-        });
-
-        return response;
+      const responseClone = response.clone();
+      caches.open(CACHE_NAME).then(cache => {
+        cache.put(event.request, responseClone);
       });
-    })
+
+      return response;
+    }).catch(() => caches.match(event.request))
   );
 });
 

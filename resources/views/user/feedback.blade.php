@@ -828,18 +828,18 @@
         --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
         display: grid !important;
-        grid-template-columns: 44px minmax(0, 1fr) !important;
+        grid-template-columns: 30px minmax(0, 1fr) !important;
         align-items: center !important;
-        gap: 10px !important;
-        min-height: 78px !important;
-        padding: 8px 94px 8px 14px !important;
-        margin-bottom: 14px !important;
-        border-radius: 16px !important;
+        gap: 8px !important;
+        min-height: 69px !important;
+        padding: 8px 72px 8px 10px !important;
+        margin-bottom: 10px !important;
+        border-radius: 8px !important;
         background:
-            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
-            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
-        border-color: rgba(191, 219, 254, 0.86) !important;
-        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08) !important;
+            radial-gradient(circle at 86% 20%, rgba(219, 234, 254, 0.72), transparent 34%),
+            linear-gradient(142deg, #ffffff 0%, #f8fbff 54%, #dbeafe 100%) !important;
+        border-color: rgba(147, 197, 253, 0.52) !important;
+        box-shadow: 0 5px 14px rgba(37, 99, 235, 0.1) !important;
         overflow: hidden !important;
         position: relative !important;
     }
@@ -861,26 +861,26 @@
         display: contents !important;
     }
     #feedbackModulesLikeHero .feedback-chat-mark {
-        width: 34px !important;
-        height: 34px !important;
-        padding: 8px !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 6px !important;
         border: 1px solid var(--feedback-hero-icon-border) !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
         background: var(--feedback-hero-icon-bg) !important;
         color: var(--feedback-hero-title-color) !important;
         filter: none !important;
     }
     #feedbackModulesLikeHero .feedback-title {
         color: var(--feedback-hero-title-color) !important;
-        font-size: 1.02rem !important;
+        font-size: 0.72rem !important;
         line-height: 1.08 !important;
-        margin: 0 0 4px !important;
+        margin: 0 0 3px !important;
         font-weight: 950 !important;
         white-space: nowrap !important;
     }
     #feedbackModulesLikeHero .feedback-subtitle {
         color: var(--feedback-hero-text-color) !important;
-        font-size: 0.64rem !important;
+        font-size: 0.49rem !important;
         line-height: 1.32 !important;
         margin: 0 !important;
         max-width: 13.5rem !important;
@@ -888,39 +888,252 @@
     }
     #feedbackModulesLikeHero .feedback-hero-art {
         position: absolute !important;
-        right: 8px !important;
-        bottom: 2px !important;
-        width: 78px !important;
+        right: -5px !important;
+        bottom: -2px !important;
+        width: 72px !important;
         min-width: 0 !important;
         opacity: 0.92;
         filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
     }
     @media (max-width: 390px) {
         #feedbackModulesLikeHero.feedback-hero {
-            min-height: 74px !important;
-            grid-template-columns: 36px minmax(0, 1fr) !important;
-            gap: 9px !important;
-            padding: 8px 76px 8px 12px !important;
-            border-radius: 16px !important;
+            min-height: 69px !important;
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+            border-radius: 8px !important;
         }
         #feedbackModulesLikeHero .feedback-chat-mark {
-            width: 32px !important;
-            height: 32px !important;
-            padding: 7px !important;
+            width: 27px !important;
+            height: 27px !important;
+            padding: 6px !important;
         }
         #feedbackModulesLikeHero .feedback-title {
-            font-size: 0.9rem !important;
-            margin-bottom: 4px !important;
+            font-size: 0.68rem !important;
+            margin-bottom: 3px !important;
         }
         #feedbackModulesLikeHero .feedback-subtitle {
             max-width: 12rem !important;
-            font-size: 0.64rem !important;
+            font-size: 0.46rem !important;
             line-height: 1.28 !important;
         }
         #feedbackModulesLikeHero .feedback-hero-art {
-            right: -4px !important;
-            bottom: 5px !important;
-            width: 68px !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 66px !important;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .feedback-shell {
+            --feedback-saas-radius: 12px;
+            --feedback-saas-gap: 10px;
+            --feedback-saas-border: rgba(37, 99, 235, 0.14);
+            --feedback-saas-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            --feedback-saas-card: rgba(248, 250, 252, 0.76);
+            --feedback-saas-muted: #475569;
+        }
+        html[data-theme="dark"] .feedback-shell,
+        :root:not(.lm) .feedback-shell,
+        .dm .feedback-shell {
+            --feedback-saas-border: rgba(147, 197, 253, 0.18);
+            --feedback-saas-shadow: 0 12px 26px rgba(0, 0, 0, 0.26);
+            --feedback-saas-card: rgba(255, 255, 255, 0.045);
+            --feedback-saas-muted: #cbd5e1;
+        }
+        .feedback-shell .premium-panel {
+            padding: 12px !important;
+            border-radius: var(--feedback-saas-radius) !important;
+            border-color: var(--feedback-saas-border) !important;
+            box-shadow: var(--feedback-saas-shadow) !important;
+        }
+        .feedback-shell .feedback-history-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 10px !important;
+            color: var(--tx) !important;
+            font-size: 0.98rem !important;
+            line-height: 1.14 !important;
+            letter-spacing: 0 !important;
+        }
+        .feedback-shell .feedback-history-title::before {
+            content: "\f0e6";
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--feedback-saas-border);
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            color: #2563eb;
+            background: rgba(37, 99, 235, 0.08);
+            font-family: "Font Awesome 6 Free";
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+        :root:not(.lm) .feedback-shell .feedback-history-title::before,
+        .dm .feedback-shell .feedback-history-title::before {
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.18);
+        }
+        .feedback-shell #feedback-filters {
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+            padding: 8px;
+            border: 1px solid var(--feedback-saas-border);
+            border-radius: 12px;
+            background: var(--feedback-saas-card);
+        }
+        .feedback-shell #feedback-filters .db-filter-input,
+        .feedback-shell #feedback-filters .btn,
+        .feedback-shell #feedback-filters .form-select {
+            min-height: 40px !important;
+            border-radius: 9px !important;
+            border-color: var(--feedback-saas-border) !important;
+            box-shadow: none !important;
+            font-size: 0.7rem !important;
+            font-weight: 800;
+        }
+        .feedback-shell #feedback-filters .feedback-search-wrap {
+            min-height: 40px !important;
+            background: color-mix(in srgb, var(--sf) 74%, transparent) !important;
+        }
+        .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+        .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+            color: var(--feedback-saas-muted) !important;
+            font-size: 0.7rem !important;
+        }
+        .feedback-shell #feedback-filters #sortDateBtn,
+        .feedback-shell #feedback-filters .feedback-clear-form .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .feedback-shell .feedback-table-wrap {
+            margin-top: 0;
+        }
+        .feedback-shell #feedbackTable {
+            border-spacing: 0 8px !important;
+        }
+        .feedback-shell #feedbackTable tbody tr {
+            position: relative;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 7px 10px;
+            padding: 11px !important;
+            border-radius: 12px !important;
+            border-color: var(--feedback-saas-border) !important;
+            background: var(--feedback-saas-card) !important;
+            box-shadow: none !important;
+        }
+        .feedback-shell #feedbackTable tbody tr.feedback-empty-row {
+            display: block !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+        .feedback-shell #feedbackTable tbody td {
+            width: auto !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+            line-height: 1.25;
+        }
+        .feedback-shell #feedbackTable tbody td:nth-child(1) {
+            grid-column: 1 / -1;
+            display: flex !important;
+            align-items: center;
+            gap: 6px;
+            color: var(--feedback-saas-muted) !important;
+            font-size: 0.62rem !important;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .feedback-shell #feedbackTable tbody td:nth-child(1)::before {
+            margin-right: 0 !important;
+            color: #64748b !important;
+            font-size: 0.66rem;
+        }
+        .feedback-shell #feedbackTable tbody td:nth-child(2) {
+            grid-column: 1 / -1;
+            color: var(--tx) !important;
+            font-size: 0.86rem !important;
+            font-weight: 900 !important;
+        }
+        .feedback-shell #feedbackTable tbody td:nth-child(3),
+        .feedback-shell #feedbackTable tbody td:nth-child(4) {
+            align-self: center;
+            color: var(--feedback-saas-muted) !important;
+            font-size: 0.68rem !important;
+            font-weight: 850 !important;
+        }
+        .feedback-shell #feedbackTable tbody td:nth-child(3)::before,
+        .feedback-shell #feedbackTable tbody td:nth-child(4)::before {
+            color: var(--feedback-saas-muted) !important;
+        }
+        .feedback-shell #feedbackTable tbody td:nth-child(5) {
+            grid-column: 1 / -1;
+            padding-top: 3px !important;
+        }
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 38px;
+            gap: 8px !important;
+            margin-top: 0 !important;
+        }
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions > a,
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions > form {
+            width: 100% !important;
+        }
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
+            min-height: 38px !important;
+            border-radius: 9px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger {
+            padding-inline: 0 !important;
+        }
+        .feedback-shell .feedback-history-delete-label {
+            display: none !important;
+        }
+        .feedback-shell #feedbackTable .badge {
+            padding: 4px 8px !important;
+            border-radius: 999px !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+        }
+        .feedback-shell .feedback-empty-state {
+            width: 100%;
+            margin-top: 0;
+            border-radius: 10px;
+            border-color: var(--feedback-saas-border);
+            background: var(--feedback-saas-card);
+            font-size: 0.72rem;
+        }
+        .feedback-shell #feedbackPagination {
+            justify-content: center !important;
+            margin-top: 12px !important;
+        }
+        .feedback-shell #feedbackPagination .pagination {
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .feedback-shell #feedbackPagination .page-link {
+            min-width: 34px;
+            min-height: 34px;
+            border-radius: 9px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-color: var(--feedback-saas-border);
+            font-size: 0.72rem;
+            font-weight: 800;
         }
     }
 </style>

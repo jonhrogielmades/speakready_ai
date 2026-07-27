@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=16') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=19') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -246,7 +246,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=10').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
@@ -421,6 +421,345 @@
       </script>
       <!-- Driver.js -->
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+      <style>
+         #progressModulesLikeHero.progress-hero,
+         #feedbackModulesLikeHero.feedback-hero,
+         #sec-interview-setup .setup-hero,
+         #interview-modules-page .modules-hero,
+         #voice-rehearsal-page .sr-page-hero.vr-hero,
+         #mission-mode-page .mission-progress-hero.sr-page-hero,
+         #learning-games-page .sr-learning-hero,
+         #ai-coach-page .sr-page-hero.coach-progress-hero,
+         #portfolioReport .sr-page-hero,
+         #personal-mastery-page .mastery-hero-card,
+         #notifications-page .notif-hero,
+         #account-page .sr-page-hero,
+         #skill-trees-page .sr-page-hero.skill-tree-hero,
+         .sr-page-hero {
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         :root:not(.lm) #progressModulesLikeHero.progress-hero,
+         :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
+         :root:not(.lm) #sec-interview-setup .setup-hero,
+         :root:not(.lm) #interview-modules-page .modules-hero,
+         :root:not(.lm) #voice-rehearsal-page .sr-page-hero.vr-hero,
+         :root:not(.lm) #mission-mode-page .mission-progress-hero.sr-page-hero,
+         :root:not(.lm) #learning-games-page .sr-learning-hero,
+         :root:not(.lm) #ai-coach-page .sr-page-hero.coach-progress-hero,
+         :root:not(.lm) #portfolioReport .sr-page-hero,
+         :root:not(.lm) #personal-mastery-page .mastery-hero-card,
+         :root:not(.lm) #notifications-page .notif-hero,
+         :root:not(.lm) #account-page .sr-page-hero,
+         :root:not(.lm) #skill-trees-page .sr-page-hero.skill-tree-hero,
+         :root:not(.lm) .sr-page-hero,
+         .dm #progressModulesLikeHero.progress-hero,
+         .dm #feedbackModulesLikeHero.feedback-hero,
+         .dm #sec-interview-setup .setup-hero,
+         .dm #interview-modules-page .modules-hero,
+         .dm #voice-rehearsal-page .sr-page-hero.vr-hero,
+         .dm #mission-mode-page .mission-progress-hero.sr-page-hero,
+         .dm #learning-games-page .sr-learning-hero,
+         .dm #ai-coach-page .sr-page-hero.coach-progress-hero,
+         .dm #portfolioReport .sr-page-hero,
+         .dm #personal-mastery-page .mastery-hero-card,
+         .dm #notifications-page .notif-hero,
+         .dm #account-page .sr-page-hero,
+         .dm #skill-trees-page .sr-page-hero.skill-tree-hero,
+         .dm .sr-page-hero {
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         #progressModulesLikeHero :is(.progress-hero-title, .progress-hero-subtitle, .progress-hero-icon),
+         #feedbackModulesLikeHero :is(.feedback-title, .feedback-subtitle, .feedback-chat-mark),
+         #sec-interview-setup .setup-hero :is(.setup-hero-title, .setup-hero-subtitle, .setup-hero-icon),
+         #interview-modules-page .modules-hero :is(.modules-hero-title, .modules-hero-subtitle, .modules-hero-icon),
+         #voice-rehearsal-page .vr-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .vr-hero-icon),
+         #mission-mode-page .mission-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .mission-hero-icon),
+         #learning-games-page .sr-learning-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .learning-hero-icon),
+         #ai-coach-page .coach-progress-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .coach-hero-icon),
+         #portfolioReport .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .reports-hero-icon),
+         #personal-mastery-page .mastery-hero-card :is(.mastery-title, .mastery-subtitle, .mastery-badge),
+         #notifications-page .notif-hero :is(.notif-hero-title, .notif-hero-subtitle, .notif-hero-icon),
+         #account-page .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .account-hero-icon),
+         #skill-trees-page .skill-tree-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .skill-tree-hero-icon),
+         .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         #progressModulesLikeHero .progress-hero-subtitle,
+         #feedbackModulesLikeHero .feedback-subtitle,
+         #sec-interview-setup .setup-hero-subtitle,
+         #interview-modules-page .modules-hero-subtitle,
+         #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle,
+         #mission-mode-page .mission-progress-hero .sr-page-hero-subtitle,
+         #learning-games-page .sr-learning-hero .sr-page-hero-subtitle,
+         #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle,
+         #portfolioReport .sr-page-hero-subtitle,
+         #personal-mastery-page .mastery-subtitle,
+         #notifications-page .notif-hero-subtitle,
+         #account-page .sr-page-hero-subtitle,
+         #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle,
+         .sr-page-hero .sr-page-hero-subtitle {
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         #progressModulesLikeHero .progress-hero-icon,
+         #sec-interview-setup .setup-hero-icon,
+         #interview-modules-page .modules-hero-icon,
+         #voice-rehearsal-page .vr-hero-icon,
+         #mission-mode-page .mission-hero-icon,
+         #learning-games-page .learning-hero-icon,
+         #ai-coach-page .coach-hero-icon,
+         #portfolioReport .reports-hero-icon,
+         #personal-mastery-page .mastery-badge,
+         #notifications-page .notif-hero-icon,
+         #account-page .account-hero-icon,
+         #skill-trees-page .skill-tree-hero-icon,
+         #feedbackModulesLikeHero .feedback-chat-mark {
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         #progressModulesLikeHero.progress-hero::before,
+         #progressModulesLikeHero.progress-hero::after,
+         #interview-modules-page .modules-hero::before,
+         #interview-modules-page .modules-hero::after,
+         #learning-games-page .sr-learning-hero::before,
+         #learning-games-page .sr-learning-hero::after {
+            content: none !important;
+            display: none !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero :is(.progress-hero-title, .progress-hero-subtitle, .progress-hero-icon) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-subtitle {
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-title {
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            margin: 0 0 3px !important;
+            white-space: nowrap !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-subtitle {
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+         }
+
+         html body #progressModulesLikeHero.progress-hero .progress-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero :is(.modules-hero-title, .modules-hero-subtitle, .modules-hero-icon) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon svg {
+            width: 15px !important;
+            height: 15px !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            margin: 0 0 3px !important;
+            white-space: nowrap !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+         }
+
+         html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+         }
+
+         @media (max-width: 390px) {
+            html body #interview-modules-page .modules-hero.modules-hero {
+               grid-template-columns: 28px minmax(0, 1fr) !important;
+               gap: 7px !important;
+               padding: 8px 66px 8px 9px !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon {
+               width: 27px !important;
+               height: 27px !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+               font-size: 0.68rem !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+               font-size: 0.46rem !important;
+            }
+
+            html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+               width: 66px !important;
+            }
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 8px !important;
+            background:
+               radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+               radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+               linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle, .learning-hero-icon) {
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-title {
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            margin: 0 0 3px !important;
+            white-space: nowrap !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-subtitle {
+            max-width: 13.5rem !important;
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .learning-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            border-color: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+         }
+
+         @media (max-width: 390px) {
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero {
+               grid-template-columns: 28px minmax(0, 1fr) !important;
+               gap: 7px !important;
+               padding: 8px 66px 8px 9px !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .learning-hero-icon {
+               width: 27px !important;
+               height: 27px !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-title {
+               font-size: 0.68rem !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-subtitle {
+               font-size: 0.46rem !important;
+            }
+
+            html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-art {
+               width: 66px !important;
+            }
+         }
+      </style>
       @include('partials.onboarding-script')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')

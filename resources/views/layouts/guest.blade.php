@@ -624,36 +624,136 @@
          }
 
          @media (max-width: 767px) {
+            :root {
+               --nav: 64px;
+            }
+
+            body {
+               background:
+                  radial-gradient(circle at 20% 0%, rgba(20, 184, 166, 0.12), transparent 32%),
+                  radial-gradient(circle at 88% 8%, rgba(59, 130, 246, 0.14), transparent 30%),
+                  var(--bg);
+            }
+
+            #nbar {
+               height: calc(var(--nav) + env(safe-area-inset-top, 0px));
+               padding-top: env(safe-area-inset-top, 0px);
+               background: rgba(255, 255, 255, 0.82);
+               border-bottom: 1px solid rgba(37, 99, 235, 0.13);
+               box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+               backdrop-filter: blur(20px) saturate(1.18);
+               -webkit-backdrop-filter: blur(20px) saturate(1.18);
+            }
+
+            html:not(.lm) #nbar {
+               background: rgba(8, 13, 26, 0.86);
+               border-bottom-color: rgba(96, 165, 250, 0.18);
+               box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+            }
+
+            #nbar .container {
+               padding-left: 14px;
+               padding-right: 14px;
+            }
+
+            .guest-brand {
+               max-width: calc(100vw - 108px) !important;
+               gap: 8px !important;
+               font-size: 0.92rem !important;
+            }
+
+            .guest-brand .logo-i {
+               width: 34px !important;
+               height: 34px !important;
+               border-radius: 12px;
+               background: #fff !important;
+               border: 1px solid rgba(59, 130, 246, 0.18);
+               box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+            }
+
+            .guest-brand-name {
+               font-size: 0.9rem;
+               font-weight: 800;
+               letter-spacing: 0;
+            }
+
+            #thbtn,
+            #mbtog {
+               width: 36px !important;
+               height: 36px !important;
+               border-radius: 10px !important;
+               background: rgba(255, 255, 255, 0.72);
+               border-color: rgba(37, 99, 235, 0.14);
+               box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+            }
+
+            html:not(.lm) #thbtn,
+            html:not(.lm) #mbtog {
+               background: rgba(15, 23, 42, 0.72);
+               border-color: rgba(148, 163, 184, 0.16);
+            }
+
             #hero {
                min-height: auto;
-               padding-top: calc(var(--nav) + 18px);
+               padding-top: calc(var(--nav) + env(safe-area-inset-top, 0px) + 14px);
+               padding-bottom: 20px;
                justify-content: flex-start;
+               background:
+                  linear-gradient(180deg, rgba(248, 250, 252, 0.82) 0%, rgba(239, 246, 255, 0.36) 54%, transparent 100%);
+            }
+
+            html:not(.lm) #hero {
+               background:
+                  linear-gradient(180deg, rgba(15, 23, 42, 0.44) 0%, rgba(8, 8, 15, 0) 72%);
             }
 
             #hero .container {
                max-width: 100%;
-               padding-left: 18px;
-               padding-right: 18px;
+               padding-left: 16px;
+               padding-right: 16px;
+            }
+
+            #hero .text-center.mt-3.pt-3 {
+               margin-top: 0 !important;
+               padding-top: 0 !important;
             }
 
             #hero .hbadge {
-               display: inline-block !important;
+               display: inline-flex !important;
+               align-items: center;
+               justify-content: center;
+               gap: 7px;
                max-width: min(100%, 320px);
-               margin-bottom: 18px;
-               padding: 8px 12px;
+               margin-bottom: 14px;
+               padding: 7px 11px;
+               border-radius: 999px;
+               background: rgba(59, 130, 246, 0.09);
+               border: 1px solid rgba(59, 130, 246, 0.18);
                white-space: normal;
                text-align: center;
-               line-height: 1.35;
-               font-size: clamp(0.64rem, 2.55vw, 0.72rem);
+               line-height: 1.25;
+               font-size: 0.66rem;
+               font-weight: 800;
                letter-spacing: 0;
+               color: #2563eb;
+            }
+
+            #hero .hbadge::before {
+               content: "";
+               width: 7px;
+               height: 7px;
+               border-radius: 999px;
+               background: #14b8a6;
+               box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.12);
+               flex: 0 0 auto;
             }
 
             #hero .h1 {
-               max-width: 330px;
+               max-width: 350px;
                margin-left: auto;
                margin-right: auto;
-               font-size: clamp(1.86rem, 8.1vw, 2.05rem) !important;
-               line-height: 1.08;
+               font-size: clamp(2rem, 8.4vw, 2.35rem) !important;
+               line-height: 1.04;
                letter-spacing: 0;
             }
 
@@ -662,10 +762,10 @@
             }
 
             #hero p.mx-auto {
-               max-width: 340px !important;
-               margin-bottom: 26px !important;
-               font-size: clamp(0.86rem, 3.6vw, 0.98rem) !important;
-               line-height: 1.55;
+               max-width: 352px !important;
+               margin-bottom: 18px !important;
+               font-size: 0.9rem !important;
+               line-height: 1.5;
             }
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
@@ -673,10 +773,11 @@
                grid-template-columns: repeat(2, minmax(0, 1fr));
                align-items: stretch !important;
                justify-content: center !important;
-               gap: 8px !important;
-               width: min(100%, 350px);
+               gap: 9px !important;
+               width: min(100%, 360px);
                margin-left: auto;
                margin-right: auto;
+               margin-bottom: 14px;
                flex-wrap: nowrap !important;
             }
 
@@ -684,14 +785,14 @@
                width: 100% !important;
                max-width: none !important;
                min-width: 0;
-               min-height: 42px;
-               padding: 9px 8px !important;
+               min-height: 44px;
+               padding: 10px 9px !important;
                border-radius: 8px;
                display: inline-flex;
                align-items: center;
                justify-content: center;
                gap: 4px;
-               font-size: clamp(0.72rem, 3vw, 0.82rem) !important;
+               font-size: 0.8rem !important;
                line-height: 1.1;
                white-space: nowrap;
             }
@@ -705,6 +806,143 @@
                font-size: 0.75rem;
                flex: 0 0 auto;
             }
+
+            .mobile-saas-metrics {
+               display: grid !important;
+               grid-template-columns: repeat(3, minmax(0, 1fr));
+               width: min(100%, 360px);
+               margin: 0 auto 14px;
+               padding: 8px;
+               gap: 7px;
+               border-radius: 12px;
+               background: rgba(255, 255, 255, 0.72);
+               border: 1px solid rgba(148, 163, 184, 0.18);
+               box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
+               backdrop-filter: blur(16px);
+               -webkit-backdrop-filter: blur(16px);
+            }
+
+            html:not(.lm) .mobile-saas-metrics {
+               background: rgba(15, 23, 42, 0.58);
+               border-color: rgba(148, 163, 184, 0.14);
+               box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
+            }
+
+            .mobile-saas-metric {
+               min-width: 0;
+               padding: 8px 6px;
+               border-radius: 8px;
+               background: rgba(248, 250, 252, 0.82);
+               border: 1px solid rgba(226, 232, 240, 0.72);
+               text-align: center;
+            }
+
+            html:not(.lm) .mobile-saas-metric {
+               background: rgba(30, 41, 59, 0.58);
+               border-color: rgba(148, 163, 184, 0.14);
+            }
+
+            .mobile-saas-metric strong {
+               display: block;
+               color: var(--tx);
+               font-size: 0.92rem;
+               font-weight: 800;
+               line-height: 1;
+            }
+
+            .mobile-saas-metric span {
+               display: block;
+               margin-top: 4px;
+               color: var(--tx3);
+               font-size: 0.56rem;
+               font-weight: 700;
+               line-height: 1.15;
+               text-transform: uppercase;
+            }
+
+            #hero .row.align-items-center.mt-4 {
+               margin-top: 0 !important;
+            }
+
+            #hero .col-lg-5 img {
+               max-height: 210px !important;
+               margin-top: 0;
+               margin-bottom: 4px;
+               filter: drop-shadow(0 18px 28px rgba(37, 99, 235, 0.16));
+            }
+
+            #hero .col-lg-5 {
+               margin-bottom: 6px !important;
+            }
+
+            #hero .mt-3.mb-3.afu.text-center {
+               width: min(100%, 360px);
+               margin: 12px auto 10px !important;
+               padding: 10px 12px;
+               border-radius: 10px;
+               background: rgba(255, 255, 255, 0.62);
+               border: 1px solid rgba(148, 163, 184, 0.18);
+               box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+            }
+
+            html:not(.lm) #hero .mt-3.mb-3.afu.text-center {
+               background: rgba(15, 23, 42, 0.48);
+               border-color: rgba(148, 163, 184, 0.12);
+            }
+
+            #hero .mt-3.mb-3.afu.text-center p {
+               margin-bottom: 8px !important;
+               font-size: 0.58rem !important;
+               letter-spacing: 0.09em !important;
+            }
+
+            #hero .tech-icons {
+               gap: 18px !important;
+               font-size: 1.12rem !important;
+            }
+
+            #hero .row.justify-content-center.mt-3.mb-3 {
+               margin-top: 12px !important;
+               margin-bottom: 6px !important;
+            }
+
+            #landing .sp {
+               padding: 54px 0;
+            }
+
+            .landing-section-heading {
+               align-items: flex-start;
+               text-align: left;
+            }
+
+            .landing-section-heading .slbl {
+               justify-content: flex-start;
+            }
+
+            .slbl {
+               margin-bottom: 10px;
+               font-size: 0.66rem;
+               letter-spacing: 0.1em;
+            }
+
+            .stitle {
+               font-size: 1.7rem;
+               line-height: 1.12;
+               margin-bottom: 10px;
+            }
+
+            .gc {
+               border-radius: 10px;
+               box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+            }
+
+            .gc.p-4 {
+               padding: 17px !important;
+            }
+         }
+
+         .mobile-saas-metrics {
+            display: none;
          }
 
          .ui-showcase {
@@ -1209,6 +1447,12 @@
                  AI-Powered Practice | Real-Time Feedback
                     </span>
                 </div>
+                @php
+                   $previewReadiness = number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0);
+                   $previewInterviews = number_format(\App\Models\InterviewSession::count() ?: 6);
+                   $previewClarity = number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0);
+                   $previewGrammar = number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0);
+                @endphp
                 <div class="row align-items-center mt-4">
                   <div class="col-lg-5 col-md-6 mb-4 mb-lg-0 text-center position-relative order-1 order-lg-2">
                      <style>
@@ -1236,6 +1480,20 @@
                         <button class="bgrd btn px-4 py-3 fs-6" id="guestGetStartedTourBtn" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
+                     </div>
+                     <div class="mobile-saas-metrics afu" aria-label="SpeakReady AI platform highlights" style="animation-delay:.34s">
+                        <div class="mobile-saas-metric">
+                           <strong>{{ $previewReadiness }}%</strong>
+                           <span>Readiness</span>
+                        </div>
+                        <div class="mobile-saas-metric">
+                           <strong>{{ $previewInterviews }}</strong>
+                           <span>Sessions</span>
+                        </div>
+                        <div class="mobile-saas-metric">
+                           <strong>{{ $previewClarity }}%</strong>
+                           <span>Clarity</span>
+                        </div>
                      </div>
 
                    </div>
@@ -1272,12 +1530,6 @@
                    </div>
                 </div>
 
-                @php
-                   $previewReadiness = number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0);
-                   $previewInterviews = number_format(\App\Models\InterviewSession::count() ?: 6);
-                   $previewClarity = number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0);
-                   $previewGrammar = number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0);
-                @endphp
                 <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-12 adi">
                      <div class="ui-showcase">
@@ -2322,7 +2574,7 @@
       <script>
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=10').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);

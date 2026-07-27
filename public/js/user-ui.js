@@ -745,6 +745,7 @@
         try {
             var response = await fetch(url, {
                 method: 'GET',
+                cache: 'no-store',
                 credentials: 'same-origin',
                 signal: controller.signal,
                 headers: {
