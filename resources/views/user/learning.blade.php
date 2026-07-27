@@ -1379,6 +1379,832 @@
             padding-right: 10px !important;
         }
     }
+
+    /* SaaSPro mobile polish for Challenges. */
+    @media (max-width: 767px) {
+        body #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(20, 184, 166, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        body #mob-content > .db-content {
+            padding: 12px 12px 18px !important;
+        }
+
+        html body #learning-games-page {
+            --challenge-pro-card: rgba(255, 255, 255, 0.98);
+            --challenge-pro-field: rgba(255, 255, 255, 0.96);
+            --challenge-pro-soft: #f8fafc;
+            --challenge-pro-border: rgba(15, 23, 42, 0.1);
+            --challenge-pro-title: #0f172a;
+            --challenge-pro-muted: #64748b;
+            --challenge-pro-accent: #2563eb;
+            --challenge-pro-accent-2: #0891b2;
+            --challenge-pro-success: #059669;
+            --challenge-pro-warn: #d97706;
+            --challenge-pro-danger: #dc2626;
+            --challenge-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            max-width: 520px;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--challenge-pro-title) !important;
+        }
+
+        html[data-theme="dark"] body #learning-games-page,
+        :root:not(.lm) body #learning-games-page,
+        body.dm #learning-games-page,
+        .dm #learning-games-page {
+            --challenge-pro-card: rgba(15, 23, 42, 0.94);
+            --challenge-pro-field: rgba(30, 41, 59, 0.9);
+            --challenge-pro-soft: rgba(51, 65, 85, 0.78);
+            --challenge-pro-border: rgba(148, 163, 184, 0.24);
+            --challenge-pro-title: #f8fafc;
+            --challenge-pro-muted: #cbd5e1;
+            --challenge-pro-accent: #93c5fd;
+            --challenge-pro-accent-2: #67e8f9;
+            --challenge-pro-success: #86efac;
+            --challenge-pro-warn: #fbbf24;
+            --challenge-pro-danger: #fca5a5;
+            --challenge-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #learning-games-page .sr-learning-hero.sr-page-hero {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin: 0 0 10px !important;
+            padding: 8px 72px 8px 10px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(115deg, rgba(37, 99, 235, 0.98), rgba(8, 145, 178, 0.94)),
+                #2563eb !important;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24) !important;
+            overflow: hidden !important;
+            position: relative;
+            isolation: isolate;
+        }
+
+        html[data-theme="dark"] body #learning-games-page .sr-learning-hero.sr-page-hero,
+        :root:not(.lm) body #learning-games-page .sr-learning-hero.sr-page-hero,
+        body.dm #learning-games-page .sr-learning-hero.sr-page-hero,
+        .dm #learning-games-page .sr-learning-hero.sr-page-hero {
+            background:
+                linear-gradient(115deg, rgba(30, 64, 175, 0.96), rgba(15, 118, 110, 0.9)),
+                #1e3a8a !important;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero.sr-page-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.22;
+            pointer-events: none;
+        }
+
+        html body #learning-games-page .sr-learning-hero.sr-page-hero::after {
+            display: none !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-inner,
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-copy {
+            display: contents !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #learning-games-page .learning-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            font-size: 0.76rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-copy > div:last-child {
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-title {
+            display: block !important;
+            margin: 0 0 3px !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.08 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-title svg {
+            display: none !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-subtitle {
+            display: -webkit-box !important;
+            max-width: 11.8rem !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-art {
+            display: block !important;
+            width: 72px !important;
+            height: auto !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            opacity: 0.98 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.22));
+            pointer-events: none;
+        }
+
+        html body #learning-games-page .sr-page-actions.learning-actions {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+        }
+
+        html body #learning-games-page #tour-search {
+            width: 100% !important;
+            max-width: none !important;
+            min-height: 38px !important;
+            display: none !important;
+            grid-template-columns: 16px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px 10px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-field) !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+        }
+
+        html body #learning-games-page #tour-search i {
+            color: var(--challenge-pro-accent) !important;
+            font-size: 0.76rem !important;
+        }
+
+        html body #learning-games-page #tour-search input {
+            min-width: 0;
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.74rem !important;
+            font-weight: 700 !important;
+        }
+
+        html body #learning-games-page #tour-search input::placeholder {
+            color: var(--challenge-pro-muted) !important;
+            opacity: 1;
+        }
+
+        html body #learning-games-page .learning-mobile-control-row {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: stretch !important;
+            gap: 7px !important;
+            margin: 0 !important;
+        }
+
+        html body #learning-games-page .learning-category-select-wrap {
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body #learning-games-page .learning-category-select,
+        html body #learning-games-page #btn-skill-tree {
+            min-height: 40px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-field) !important;
+            color: var(--challenge-pro-title) !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+            font-size: 0.72rem !important;
+            font-weight: 800 !important;
+        }
+
+        html body #learning-games-page .learning-category-select {
+            width: 100% !important;
+            height: 40px !important;
+            padding: 8px 28px 8px 10px !important;
+            text-overflow: ellipsis;
+        }
+
+        html body #learning-games-page #btn-skill-tree {
+            width: auto !important;
+            min-width: 92px !important;
+            padding: 8px 10px !important;
+            white-space: nowrap !important;
+        }
+
+        html body #learning-games-page #btn-skill-tree i {
+            color: var(--challenge-pro-success) !important;
+        }
+
+        html body #learning-games-page #nav-pills-container {
+            display: none !important;
+        }
+
+        html body #learning-games-page #dashboard-stats {
+            --bs-gutter-x: 0;
+            --bs-gutter-y: 0;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats > [class*="col-"] {
+            width: auto !important;
+            flex: 0 0 auto !important;
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body #learning-games-page .ll-stat-card {
+            min-height: 78px !important;
+            padding: 9px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-card) !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+            color: var(--challenge-pro-title) !important;
+            overflow: hidden !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card.d-flex {
+            display: grid !important;
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card [style*="width:55px"] {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 8px !important;
+            font-size: 0.86rem !important;
+            flex-basis: 32px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-val {
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.92rem !important;
+            line-height: 1.05 !important;
+            margin: 0 0 2px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-val span,
+        html body #learning-games-page #dashboard-stats .ll-stat-card [style*="color:var(--tx3)"] {
+            color: var(--challenge-pro-muted) !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card [style*="text-transform:uppercase"] {
+            font-size: 0.52rem !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between {
+            gap: 5px !important;
+            margin-bottom: 6px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between span:first-child {
+            min-width: 0;
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.7rem !important;
+            line-height: 1.12 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between span:last-child {
+            flex: 0 0 auto;
+            color: var(--challenge-pro-accent) !important;
+            background: var(--challenge-pro-soft) !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 6px !important;
+            padding: 3px 6px !important;
+            font-size: 0.52rem !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-progress-bar {
+            height: 8px !important;
+            margin: 5px 0 4px !important;
+            background: var(--challenge-pro-soft) !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-progress-bar + div {
+            color: var(--challenge-pro-muted) !important;
+            font-size: 0.54rem !important;
+            line-height: 1.1 !important;
+        }
+
+        html body #learning-games-page .journey-header {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 9px !important;
+        }
+
+        html body #learning-games-page .journey-title {
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.9rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+            margin: 0 !important;
+        }
+
+        html body #learning-games-page .journey-lives {
+            min-height: 28px;
+            padding: 5px 8px !important;
+            border: 1px solid rgba(239, 68, 68, 0.22) !important;
+            border-radius: 8px !important;
+            background: rgba(239, 68, 68, 0.08) !important;
+            color: var(--challenge-pro-danger) !important;
+            font-size: 0.6rem !important;
+            font-weight: 900 !important;
+            white-space: nowrap;
+        }
+
+        html body #learning-games-page .level-path-container {
+            padding: 6px 0 0 !important;
+            margin: 0 !important;
+        }
+
+        html body #learning-games-page .level-path-line {
+            left: 16px !important;
+            width: 3px !important;
+            border-radius: 999px !important;
+            background: var(--challenge-pro-border) !important;
+        }
+
+        html body #learning-games-page .level-path-line-progress {
+            background: linear-gradient(180deg, var(--challenge-pro-accent), var(--challenge-pro-accent-2)) !important;
+        }
+
+        html body #learning-games-page .level-node {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 0 !important;
+            margin-bottom: 10px !important;
+        }
+
+        html body #learning-games-page .level-icon-wrapper {
+            width: 34px !important;
+            flex: 0 0 34px !important;
+        }
+
+        html body #learning-games-page .level-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-width: 3px !important;
+            border-radius: 8px !important;
+            font-size: 0.78rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #learning-games-page .level-node.completed .level-icon {
+            background: rgba(16, 185, 129, 0.14) !important;
+            border-color: rgba(16, 185, 129, 0.42) !important;
+            color: var(--challenge-pro-success) !important;
+        }
+
+        html body #learning-games-page .level-node.active .level-icon {
+            background: rgba(37, 99, 235, 0.14) !important;
+            border-color: rgba(37, 99, 235, 0.42) !important;
+            color: var(--challenge-pro-accent) !important;
+        }
+
+        html body #learning-games-page .level-node.locked .level-icon {
+            background: var(--challenge-pro-soft) !important;
+            border-color: var(--challenge-pro-border) !important;
+            color: var(--challenge-pro-muted) !important;
+        }
+
+        html body #learning-games-page .level-card {
+            min-width: 0 !important;
+            width: calc(100% - 42px) !important;
+            margin-left: 8px !important;
+            padding: 10px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-card) !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+            color: var(--challenge-pro-title) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html body #learning-games-page .level-node.locked .level-card {
+            min-height: 0 !important;
+            display: block !important;
+            position: relative !important;
+            padding-right: 10px !important;
+            opacity: 1 !important;
+            background: var(--challenge-pro-field) !important;
+        }
+
+        html body #learning-games-page .level-node.locked .level-card > .locked-card-main > .d-flex:first-child {
+            padding-right: 54px !important;
+        }
+
+        html body #learning-games-page .locked-card-art {
+            width: 48px !important;
+            height: 48px !important;
+            top: 10px !important;
+            right: 10px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-soft) !important;
+            color: var(--challenge-pro-muted) !important;
+            font-size: 1.35rem !important;
+        }
+
+        html body #learning-games-page .locked-status-pill {
+            width: fit-content !important;
+            margin: 6px 0 8px !important;
+            padding: 4px 7px !important;
+            gap: 5px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 6px !important;
+            background: var(--challenge-pro-soft) !important;
+            color: var(--challenge-pro-muted) !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #learning-games-page .level-card > .d-flex:first-child {
+            align-items: flex-start !important;
+            gap: 7px !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #learning-games-page .level-card h5 {
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.82rem !important;
+            font-weight: 900 !important;
+            line-height: 1.16 !important;
+            margin: 0 !important;
+        }
+
+        html body #learning-games-page .level-card p {
+            color: var(--challenge-pro-muted) !important;
+            font-size: 0.68rem !important;
+            line-height: 1.36 !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #learning-games-page .level-card [style*="font-size:0.75rem"] {
+            color: var(--challenge-pro-accent) !important;
+            font-size: 0.58rem !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #learning-games-page .level-node.completed .level-card [style*="font-size:0.75rem"] {
+            color: var(--challenge-pro-success) !important;
+        }
+
+        html body #learning-games-page .level-node.locked .level-card [style*="font-size:0.75rem"] {
+            color: var(--challenge-pro-muted) !important;
+        }
+
+        html body #learning-games-page .level-card [style*="background:rgba(59,130,246,0.07)"] {
+            margin: 8px 0 9px !important;
+            padding: 9px !important;
+            border: 1px solid rgba(37, 99, 235, 0.18) !important;
+            border-radius: 8px !important;
+            background: rgba(37, 99, 235, 0.07) !important;
+        }
+
+        html body #learning-games-page .level-card [style*="font-size:0.78rem"],
+        html body #learning-games-page .level-card [style*="font-size:0.84rem"] {
+            font-size: 0.66rem !important;
+            line-height: 1.3 !important;
+        }
+
+        html body #learning-games-page .level-card [style*="color:var(--tx2)"] {
+            color: var(--challenge-pro-title) !important;
+        }
+
+        html body #learning-games-page .level-card [style*="color:var(--tx3)"] {
+            color: var(--challenge-pro-muted) !important;
+        }
+
+        html body #learning-games-page .level-card .d-flex.flex-wrap.gap-2 {
+            gap: 6px !important;
+            margin-bottom: 9px !important;
+        }
+
+        html body #learning-games-page .score-badge,
+        html body #learning-games-page .requirement-badge,
+        html body #learning-games-page .level-card .badge {
+            min-height: 24px !important;
+            max-width: 100% !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            padding: 5px 7px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 6px !important;
+            background: var(--challenge-pro-soft) !important;
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            white-space: normal !important;
+            text-align: left !important;
+        }
+
+        html body #learning-games-page .score-badge {
+            border-color: rgba(16, 185, 129, 0.28) !important;
+            color: var(--challenge-pro-success) !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        html body #learning-games-page .requirement-badge {
+            border-color: rgba(245, 158, 11, 0.28) !important;
+            color: var(--challenge-pro-warn) !important;
+            background: rgba(245, 158, 11, 0.1) !important;
+        }
+
+        html body #learning-games-page .active-challenge-panel {
+            padding: 9px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-field) !important;
+            box-shadow: none !important;
+            margin-bottom: 10px !important;
+        }
+
+        html body #learning-games-page .active-challenge-panel [style*="Contains"] {
+            color: var(--challenge-pro-title) !important;
+            margin-bottom: 8px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.25 !important;
+        }
+
+        html body #learning-games-page .active-challenge-panel [style*="Success checklist"] {
+            color: var(--challenge-pro-muted) !important;
+            margin-bottom: 6px !important;
+            font-size: 0.62rem !important;
+        }
+
+        html body #learning-games-page .active-challenge-panel [style*="fa-check"] {
+            gap: 5px !important;
+            margin-bottom: 5px !important;
+            color: var(--challenge-pro-title) !important;
+            font-size: 0.62rem !important;
+            line-height: 1.28 !important;
+        }
+
+        html body #learning-games-page .active-challenge-panel [style*="Best attempt"],
+        html body #learning-games-page .active-challenge-panel [style*="Cost"] {
+            color: var(--challenge-pro-muted) !important;
+            font-size: 0.62rem !important;
+            line-height: 1.25 !important;
+        }
+
+        html body #learning-games-page .start-challenge-btn,
+        html body #learning-games-page .level-card .btn {
+            min-height: 36px !important;
+            max-width: 100% !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+            white-space: normal !important;
+        }
+
+        html body #learning-games-page .start-challenge-btn {
+            width: 100% !important;
+            background: linear-gradient(135deg, var(--challenge-pro-accent), var(--challenge-pro-accent-2)) !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24) !important;
+        }
+
+        html body #learning-games-page .learning-notice {
+            display: grid !important;
+            grid-template-columns: 26px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            padding: 9px !important;
+            border-radius: 8px !important;
+            margin-bottom: 10px !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+        }
+
+        html body #learning-games-page .learning-notice-icon {
+            width: 26px !important;
+            height: 26px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #learning-games-page .learning-notice-message {
+            font-size: 0.68rem !important;
+            line-height: 1.3 !important;
+        }
+
+        html body #learning-games-page .text-info {
+            color: #0284c7 !important;
+        }
+
+        html body #learning-games-page .text-success {
+            color: #059669 !important;
+        }
+
+        html body #learning-games-page .text-danger {
+            color: #dc2626 !important;
+        }
+
+        html body #learning-games-page .text-warning {
+            color: #d97706 !important;
+        }
+
+        html[data-theme="dark"] body #learning-games-page .text-info,
+        :root:not(.lm) body #learning-games-page .text-info,
+        body.dm #learning-games-page .text-info,
+        .dm #learning-games-page .text-info {
+            color: #67e8f9 !important;
+        }
+
+        html[data-theme="dark"] body #learning-games-page .text-success,
+        :root:not(.lm) body #learning-games-page .text-success,
+        body.dm #learning-games-page .text-success,
+        .dm #learning-games-page .text-success {
+            color: #86efac !important;
+        }
+
+        html[data-theme="dark"] body #learning-games-page .text-danger,
+        :root:not(.lm) body #learning-games-page .text-danger,
+        body.dm #learning-games-page .text-danger,
+        .dm #learning-games-page .text-danger {
+            color: #fca5a5 !important;
+        }
+
+        html[data-theme="dark"] body #learning-games-page .text-warning,
+        :root:not(.lm) body #learning-games-page .text-warning,
+        body.dm #learning-games-page .text-warning,
+        .dm #learning-games-page .text-warning {
+            color: #fbbf24 !important;
+        }
+
+        html body #learning-games-page .text-center.py-5 {
+            padding: 22px 12px !important;
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-card) !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+        }
+
+        html body #learning-games-page .text-center.py-5 h5 {
+            color: var(--challenge-pro-muted) !important;
+            font-size: 0.82rem !important;
+        }
+
+        html body .game-result-modal {
+            --challenge-pro-card: rgba(255, 255, 255, 0.98);
+            --challenge-pro-field: rgba(255, 255, 255, 0.96);
+            --challenge-pro-border: rgba(15, 23, 42, 0.1);
+            --challenge-pro-title: #0f172a;
+            --challenge-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+        }
+
+        html[data-theme="dark"] body .game-result-modal,
+        :root:not(.lm) body .game-result-modal,
+        body.dm .game-result-modal,
+        .dm .game-result-modal {
+            --challenge-pro-card: rgba(15, 23, 42, 0.94);
+            --challenge-pro-field: rgba(30, 41, 59, 0.9);
+            --challenge-pro-border: rgba(148, 163, 184, 0.24);
+            --challenge-pro-title: #f8fafc;
+            --challenge-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body .game-result-modal .modal-dialog {
+            margin: 10px !important;
+        }
+
+        html body .game-result-modal .modal-content {
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-card) !important;
+            color: var(--challenge-pro-title) !important;
+            box-shadow: var(--challenge-pro-shadow) !important;
+        }
+
+        html body .game-result-modal .game-result-hero {
+            padding: 12px !important;
+        }
+
+        html body .game-result-modal .game-result-score {
+            width: 72px !important;
+            height: 72px !important;
+        }
+
+        html body .game-result-modal .game-result-score-inner {
+            width: 52px !important;
+            height: 52px !important;
+        }
+
+        html body .game-result-modal .game-result-stat,
+        html body .game-result-modal .game-result-breakdown-card {
+            border: 1px solid var(--challenge-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--challenge-pro-field) !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #learning-games-page .sr-learning-hero.sr-page-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            padding: 8px 66px 8px 10px !important;
+        }
+
+        html body #learning-games-page .learning-hero-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-subtitle {
+            max-width: 10.7rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #learning-games-page .sr-learning-hero .sr-page-hero-art {
+            width: 66px !important;
+            right: -6px !important;
+        }
+
+        html body #learning-games-page .level-node.locked .level-card > .locked-card-main > .d-flex:first-child {
+            padding-right: 48px !important;
+        }
+
+        html body #learning-games-page .locked-card-art {
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 1.12rem !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #learning-games-page .learning-mobile-control-row {
+            grid-template-columns: 1fr !important;
+        }
+
+        html body #learning-games-page #btn-skill-tree {
+            width: 100% !important;
+        }
+
+        html body #learning-games-page #dashboard-stats {
+            gap: 7px !important;
+        }
+
+        html body #learning-games-page .ll-stat-card {
+            min-height: 74px !important;
+            padding: 8px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between span:first-child {
+            font-size: 0.64rem !important;
+        }
+    }
 </style>
 @php
     $gameResult = session('game_result');

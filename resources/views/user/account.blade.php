@@ -999,6 +999,676 @@
             width: 66px !important;
         }
     }
+
+    /* SaaSPro mobile polish for Account. */
+    @media (max-width: 767px) {
+        body #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(20, 184, 166, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        body #mob-content > .db-content {
+            padding: 12px 12px 18px !important;
+        }
+
+        html body #account-page,
+        html body .profile-crop-modal {
+            --account-pro-card: rgba(255, 255, 255, 0.98);
+            --account-pro-field: rgba(255, 255, 255, 0.96);
+            --account-pro-soft: #f8fafc;
+            --account-pro-border: rgba(15, 23, 42, 0.1);
+            --account-pro-title: #0f172a;
+            --account-pro-text: #334155;
+            --account-pro-muted: #64748b;
+            --account-pro-accent: #2563eb;
+            --account-pro-accent-2: #0891b2;
+            --account-pro-success: #059669;
+            --account-pro-danger: #dc2626;
+            --account-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            color: var(--account-pro-title) !important;
+        }
+
+        html body #account-page {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            max-width: 520px !important;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+        }
+
+        html[data-theme="dark"] body #account-page,
+        html[data-theme="dark"] body .profile-crop-modal,
+        :root:not(.lm) body #account-page,
+        :root:not(.lm) body .profile-crop-modal,
+        body.dm #account-page,
+        body.dm .profile-crop-modal,
+        .dm #account-page,
+        .dm .profile-crop-modal {
+            --account-pro-card: rgba(15, 23, 42, 0.94);
+            --account-pro-field: rgba(30, 41, 59, 0.9);
+            --account-pro-soft: rgba(51, 65, 85, 0.78);
+            --account-pro-border: rgba(148, 163, 184, 0.24);
+            --account-pro-title: #f8fafc;
+            --account-pro-text: #e2e8f0;
+            --account-pro-muted: #cbd5e1;
+            --account-pro-accent: #93c5fd;
+            --account-pro-accent-2: #67e8f9;
+            --account-pro-success: #86efac;
+            --account-pro-danger: #fca5a5;
+            --account-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #account-page .sr-page-hero {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin: 0 !important;
+            padding: 8px 72px 8px 10px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(115deg, rgba(37, 99, 235, 0.98), rgba(8, 145, 178, 0.94)),
+                #2563eb !important;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24) !important;
+            overflow: hidden !important;
+            position: relative;
+            isolation: isolate;
+        }
+
+        html[data-theme="dark"] body #account-page .sr-page-hero,
+        :root:not(.lm) body #account-page .sr-page-hero,
+        body.dm #account-page .sr-page-hero,
+        .dm #account-page .sr-page-hero {
+            background:
+                linear-gradient(115deg, rgba(30, 64, 175, 0.96), rgba(15, 118, 110, 0.9)),
+                #1e3a8a !important;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        html body #account-page .sr-page-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.22;
+            pointer-events: none;
+        }
+
+        html body #account-page .sr-page-hero::after {
+            display: none !important;
+        }
+
+        html body #account-page .sr-page-hero-inner,
+        html body #account-page .sr-page-hero-copy {
+            display: contents !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #account-page .account-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 0.76rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #account-page .sr-page-hero-copy > div:last-child {
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        html body #account-page .sr-page-hero-title {
+            display: block !important;
+            max-width: 100% !important;
+            margin: 0 0 3px !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.08 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #account-page .sr-page-hero-title svg {
+            display: none !important;
+        }
+
+        html body #account-page .sr-page-hero-subtitle {
+            display: -webkit-box !important;
+            max-width: 11.8rem !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        html body #account-page .sr-page-hero .sr-page-hero-art {
+            display: block !important;
+            width: 72px !important;
+            height: auto !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            opacity: 0.98 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.22));
+            pointer-events: none;
+        }
+
+        html body #account-page .alert {
+            margin: 0 !important;
+            padding: 9px 34px 9px 10px !important;
+            border-radius: 8px !important;
+            border-width: 1px !important;
+            box-shadow: var(--account-pro-shadow) !important;
+            font-size: 0.68rem !important;
+            font-weight: 750 !important;
+            line-height: 1.3 !important;
+        }
+
+        html body #account-page .alert-success {
+            border-color: rgba(16, 185, 129, 0.28) !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+            color: var(--account-pro-success) !important;
+        }
+
+        html body #account-page .alert-danger {
+            border-color: rgba(220, 38, 38, 0.28) !important;
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: var(--account-pro-danger) !important;
+        }
+
+        html body #account-page .alert ul {
+            padding-left: 1rem !important;
+        }
+
+        html body #account-page .row.account-grid {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 10px !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            margin: 0 !important;
+        }
+
+        html body #account-page .row.account-grid > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body #account-page .premium-panel,
+        html body #account-page .account-card {
+            padding: 10px !important;
+            margin: 0 !important;
+            border: 1px solid var(--account-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--account-pro-card) !important;
+            box-shadow: var(--account-pro-shadow) !important;
+            color: var(--account-pro-title) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            transform: none !important;
+        }
+
+        html body #account-page .premium-panel:hover,
+        html body #account-page .account-card:hover {
+            transform: none !important;
+            box-shadow: var(--account-pro-shadow) !important;
+        }
+
+        html body #account-page .account-card-title {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+            color: var(--account-pro-title) !important;
+            font-size: 0.84rem !important;
+            font-weight: 900 !important;
+            line-height: 1.16 !important;
+        }
+
+        html body #account-page .account-card-title::after {
+            display: none !important;
+        }
+
+        html body #account-page .account-title-icon,
+        html body #account-page .danger-icon,
+        html body #account-page .account-label-icon,
+        html body #account-page .password-prefix-icon {
+            border: 1px solid rgba(37, 99, 235, 0.18) !important;
+            background: rgba(37, 99, 235, 0.1) !important;
+            color: var(--account-pro-accent) !important;
+            box-shadow: none !important;
+        }
+
+        html body #account-page .account-title-icon,
+        html body #account-page .danger-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+            font-size: 0.76rem !important;
+        }
+
+        html body #account-page .account-title-icon i,
+        html body #account-page .danger-icon i {
+            color: inherit !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body #account-page .account-photo-row {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            align-items: center !important;
+            justify-items: center !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+            text-align: center !important;
+        }
+
+        html body #account-page .account-photo-avatar {
+            width: 54px !important;
+            height: 54px !important;
+            min-width: 54px !important;
+            flex: 0 0 54px !important;
+            justify-self: center !important;
+            margin: 0 auto !important;
+            border: 3px solid var(--account-pro-field) !important;
+            border-radius: 8px !important;
+            outline: 1px solid rgba(37, 99, 235, 0.24) !important;
+            background: linear-gradient(135deg, var(--account-pro-accent), var(--account-pro-accent-2)) !important;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18) !important;
+            color: #ffffff !important;
+            font-size: 1.2rem !important;
+        }
+
+        html body #account-page .account-photo-avatar img {
+            border-radius: 6px !important;
+        }
+
+        html body #account-page .account-photo-actions {
+            width: 100% !important;
+            min-width: 0 !important;
+            display: grid !important;
+            gap: 5px !important;
+            justify-items: center !important;
+            text-align: center !important;
+        }
+
+        html body #account-page .upload-picture-btn {
+            width: auto !important;
+            min-width: 156px !important;
+            max-width: 210px !important;
+            min-height: 30px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            padding: 6px 12px !important;
+            border: 1px solid rgba(37, 99, 235, 0.2) !important;
+            border-radius: 8px !important;
+            background: var(--account-pro-field) !important;
+            color: var(--account-pro-accent) !important;
+            box-shadow: none !important;
+            font-size: 0.64rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            white-space: nowrap !important;
+        }
+
+        html body #account-page .upload-picture-btn i {
+            color: inherit !important;
+        }
+
+        html body #account-page .upload-hint {
+            margin: 0 !important;
+            width: 100% !important;
+            color: var(--account-pro-muted) !important;
+            font-size: 0.58rem !important;
+            font-weight: 700 !important;
+            line-height: 1.22 !important;
+            text-align: center !important;
+        }
+
+        html body #account-page .row.g-3.mb-3 {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0 !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 9px !important;
+            margin: 0 0 9px !important;
+        }
+
+        html body #account-page .row.g-3.mb-3 > [class*="col-"] {
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        html body #account-page .account-field {
+            margin-bottom: 9px !important;
+        }
+
+        html body #account-page .account-field-label,
+        html body #account-page .olbl {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin: 0 0 5px !important;
+            color: var(--account-pro-title) !important;
+            font-size: 0.66rem !important;
+            font-weight: 900 !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #account-page .account-label-icon {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 8px !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #account-page .oinp {
+            width: 100% !important;
+            min-height: 38px !important;
+            padding: 8px 10px !important;
+            border: 1px solid var(--account-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--account-pro-field) !important;
+            color: var(--account-pro-title) !important;
+            box-shadow: none !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #account-page .oinp:focus {
+            border-color: rgba(37, 99, 235, 0.54) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+            outline: 0 !important;
+        }
+
+        html body #account-page .oinp::placeholder {
+            color: var(--account-pro-muted) !important;
+            opacity: 1;
+        }
+
+        html body #account-page .password-field {
+            position: relative !important;
+            display: flex !important;
+            align-items: stretch !important;
+        }
+
+        html body #account-page .password-field .oinp {
+            padding-left: 38px !important;
+            padding-right: 34px !important;
+        }
+
+        html body #account-page .password-prefix-icon {
+            position: absolute !important;
+            inset: 4px auto 4px 4px !important;
+            z-index: 2 !important;
+            width: 28px !important;
+            height: auto !important;
+            border-radius: 7px !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #account-page .password-toggle {
+            position: absolute !important;
+            top: 50% !important;
+            right: 5px !important;
+            transform: translateY(-50%) !important;
+            z-index: 3 !important;
+            width: 28px !important;
+            height: 28px !important;
+            border: 0 !important;
+            border-radius: 7px !important;
+            background: transparent !important;
+            color: var(--account-pro-muted) !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #account-page .password-toggle:hover {
+            color: var(--account-pro-accent) !important;
+            background: var(--account-pro-soft) !important;
+        }
+
+        html body #account-page .text-end {
+            text-align: left !important;
+        }
+
+        html body #account-page .account-submit-btn,
+        html body #account-page .premium-panel form > .btn,
+        html body #account-page .premium-panel form button[type="submit"] {
+            width: 100% !important;
+            min-height: 38px !important;
+            padding: 8px 11px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background: linear-gradient(135deg, var(--account-pro-accent), var(--account-pro-accent-2)) !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24) !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            white-space: normal !important;
+        }
+
+        html body #account-page .account-submit-btn i {
+            color: inherit !important;
+        }
+
+        html body #account-page .danger-card {
+            margin-top: 10px !important;
+            border-color: rgba(220, 38, 38, 0.24) !important;
+            background: rgba(220, 38, 38, 0.08) !important;
+            box-shadow: none !important;
+        }
+
+        html[data-theme="dark"] body #account-page .danger-card,
+        :root:not(.lm) body #account-page .danger-card,
+        body.dm #account-page .danger-card,
+        .dm #account-page .danger-card {
+            background: rgba(127, 29, 29, 0.22) !important;
+        }
+
+        html body #account-page .danger-title {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 7px !important;
+            color: var(--account-pro-danger) !important;
+            font-size: 0.8rem !important;
+            font-weight: 900 !important;
+            line-height: 1.16 !important;
+        }
+
+        html body #account-page .danger-icon {
+            border-color: rgba(220, 38, 38, 0.24) !important;
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: var(--account-pro-danger) !important;
+        }
+
+        html body #account-page .danger-copy {
+            margin: 0 0 9px !important;
+            color: var(--account-pro-muted) !important;
+            font-size: 0.64rem !important;
+            font-weight: 700 !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #account-page .danger-card form {
+            text-align: left !important;
+        }
+
+        html body #account-page .danger-card form .delete-account-btn,
+        html body #account-page .delete-account-btn {
+            width: 100% !important;
+            min-height: 34px !important;
+            margin: 0 !important;
+            padding: 7px 10px !important;
+            border: 1px solid rgba(220, 38, 38, 0.24) !important;
+            border-radius: 8px !important;
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: var(--account-pro-danger) !important;
+            box-shadow: none !important;
+            font-size: 0.66rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #account-page .delete-account-btn i {
+            color: inherit !important;
+        }
+
+        html body .profile-crop-modal {
+            padding: 12px !important;
+            background: rgba(2, 6, 23, 0.66) !important;
+        }
+
+        html body .profile-crop-dialog {
+            width: min(100%, 360px) !important;
+            padding: 12px !important;
+            border: 1px solid var(--account-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--account-pro-card) !important;
+            box-shadow: var(--account-pro-shadow) !important;
+        }
+
+        html body .profile-crop-dialog h6 {
+            color: var(--account-pro-title) !important;
+            font-size: 0.84rem !important;
+            line-height: 1.16 !important;
+        }
+
+        html body .profile-crop-frame {
+            margin: 10px 0 !important;
+            border: 1px solid var(--account-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--account-pro-field) !important;
+        }
+
+        html body .profile-crop-controls {
+            gap: 7px !important;
+        }
+
+        html body .profile-crop-dialog .olbl {
+            color: var(--account-pro-title) !important;
+            font-size: 0.66rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body .profile-crop-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            margin-top: 10px !important;
+        }
+
+        html body .profile-crop-actions .btn {
+            min-height: 36px !important;
+            border-radius: 8px !important;
+            padding: 7px 9px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body .profile-crop-actions .btn-outline-secondary {
+            border-color: var(--account-pro-border) !important;
+            background: var(--account-pro-field) !important;
+            color: var(--account-pro-title) !important;
+        }
+
+        html body .profile-crop-actions .bgrd {
+            border: 0 !important;
+            background: linear-gradient(135deg, var(--account-pro-accent), var(--account-pro-accent-2)) !important;
+            color: #ffffff !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #account-page .sr-page-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            padding: 8px 66px 8px 10px !important;
+        }
+
+        html body #account-page .account-hero-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #account-page .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #account-page .sr-page-hero-subtitle {
+            max-width: 10.7rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #account-page .sr-page-hero .sr-page-hero-art {
+            width: 66px !important;
+            right: -6px !important;
+        }
+
+        html body #account-page .account-photo-row {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 8px !important;
+            justify-items: center !important;
+            text-align: center !important;
+        }
+
+        html body #account-page .account-photo-avatar {
+            width: 50px !important;
+            height: 50px !important;
+            min-width: 50px !important;
+            flex-basis: 50px !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #account-page .account-photo-row,
+        html body .profile-crop-actions {
+            grid-template-columns: 1fr !important;
+        }
+
+        html body #account-page .account-photo-actions {
+            justify-items: stretch !important;
+        }
+
+        html body #account-page .account-photo-avatar {
+            justify-self: center !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="account-page">

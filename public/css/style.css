@@ -4049,8 +4049,181 @@ body.admin-shell textarea.oinp {
   min-height: 112px;
 }
 
-body.admin-shell .alert {
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) {
+  --crud-alert-accent: #3b82f6;
+  --crud-alert-text: #bfdbfe;
+  --crud-alert-bg: rgba(59, 130, 246, 0.12);
+  --crud-alert-border: rgba(96, 165, 250, 0.3);
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 14px 48px 14px 52px !important;
+  border: 1px solid var(--crud-alert-border) !important;
   border-radius: 8px !important;
+  background: var(--crud-alert-bg) !important;
+  color: var(--crud-alert-text) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert)::before {
+  content: "\f05a";
+  position: absolute;
+  top: 13px;
+  left: 14px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--crud-alert-accent) 18%, transparent);
+  color: var(--crud-alert-accent);
+  font-family: "Font Awesome 6 Pro", "Font Awesome 6 Free", "FontAwesome", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert)::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--crud-alert-accent);
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-success) {
+  --crud-alert-accent: #22c55e;
+  --crud-alert-text: #bbf7d0;
+  --crud-alert-bg: rgba(34, 197, 94, 0.12);
+  --crud-alert-border: rgba(74, 222, 128, 0.32);
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-success)::before {
+  content: "\f00c";
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-danger) {
+  --crud-alert-accent: #ef4444;
+  --crud-alert-text: #fecaca;
+  --crud-alert-bg: rgba(239, 68, 68, 0.12);
+  --crud-alert-border: rgba(248, 113, 113, 0.34);
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-danger)::before {
+  content: "\f071";
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-warning) {
+  --crud-alert-accent: #f59e0b;
+  --crud-alert-text: #fde68a;
+  --crud-alert-bg: rgba(245, 158, 11, 0.12);
+  --crud-alert-border: rgba(251, 191, 36, 0.34);
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-warning)::before {
+  content: "\f071";
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-info) {
+  --crud-alert-accent: #3b82f6;
+  --crud-alert-text: #bfdbfe;
+  --crud-alert-bg: rgba(59, 130, 246, 0.12);
+  --crud-alert-border: rgba(96, 165, 250, 0.3);
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) > i:first-child {
+  display: none !important;
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) :where(strong, .fw-bold, h6, p, li, span) {
+  color: inherit !important;
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) :where(ul, ol) {
+  margin: 4px 0 0 !important;
+  padding-left: 1.1rem !important;
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) :where(li + li) {
+  margin-top: 3px;
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) .btn-close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0 !important;
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--crud-alert-accent) 16%, transparent);
+  background-position: center;
+  background-size: 11px;
+  opacity: 0.78;
+  filter: invert(1) grayscale(100%) brightness(220%) !important;
+  transform: translateY(-50%);
+}
+
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) .btn-close:hover,
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) .btn-close:focus {
+  opacity: 1;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crud-alert-accent) 22%, transparent);
+}
+
+.lm :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.lm :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-success) {
+  --crud-alert-text: #166534;
+  --crud-alert-bg: #ecfdf5;
+  --crud-alert-border: #bbf7d0;
+}
+
+.lm :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-danger) {
+  --crud-alert-text: #991b1b;
+  --crud-alert-bg: #fef2f2;
+  --crud-alert-border: #fecaca;
+}
+
+.lm :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-warning) {
+  --crud-alert-text: #92400e;
+  --crud-alert-bg: #fffbeb;
+  --crud-alert-border: #fde68a;
+}
+
+.lm :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert-info) {
+  --crud-alert-text: #1d4ed8;
+  --crud-alert-bg: #eff6ff;
+  --crud-alert-border: #bfdbfe;
+}
+
+.lm :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) .btn-close {
+  filter: none !important;
+}
+
+@media (max-width: 575.98px) {
+  :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) {
+    padding: 12px 44px 12px 48px !important;
+    font-size: 0.8rem;
+  }
+
+  :where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert)::before {
+    top: 11px;
+    left: 12px;
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @media (min-width: 1200px) {
@@ -6327,9 +6500,8 @@ body.admin-shell .modal[id^="modal-"] .btn-close-white {
   }
 }
 
-body.admin-shell #dashboard .db-content :where(.alert) {
+:where(body.admin-shell, body.admin-mobile-shell) #dashboard .db-content :where(.alert) {
   margin: 0 !important;
-  padding: 14px 16px !important;
 }
 
 /* Final admin sidebar behavior
@@ -7013,4 +7185,83 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   body:not(.admin-shell) :is(.progress-bar, .progress-fill) {
     background: var(--saas-blue) !important;
   }
+}
+
+/* ======================== GLOBAL PAGE TITLE ACCENT ======================== */
+:root {
+  --sr-page-title-accent: #fde047;
+  --sr-page-title-accent-shadow: 0 2px 12px rgba(15, 23, 42, 0.18);
+}
+
+.lm {
+  --sr-page-title-accent: #fde047;
+  --sr-page-title-accent-shadow: 0 2px 10px rgba(15, 23, 42, 0.14);
+}
+
+#dashboard .db-page-context strong,
+body :is(.stitle, .landing-section-heading h1, .landing-section-heading h2, .hero-title, .page-title),
+#dashboard .db-content .db-section.active > .mb-4:first-child :is(h1, h2, h3, h4),
+#dashboard .db-content .db-section.active > form > .mb-4:first-child :is(h1, h2, h3, h4),
+#dashboard .db-content :is(
+  .text-gradient-primary,
+  .gradient-text,
+  [class*="text-gradient"],
+  [class*="page-title"],
+  [class*="hero-title"],
+  .progress-hero-title,
+  .setup-hero-title,
+  .modules-hero-title,
+  .sr-page-hero-title,
+  .admin-dashboard-title,
+  .feedback-page-title,
+  .feedback-title,
+  .session-page-title,
+  .archive-page-title,
+  .mastery-title,
+  .notif-hero-title,
+  .sr-title,
+  .sr-title-name
+) {
+  background: none !important;
+  background-clip: initial !important;
+  -webkit-background-clip: initial !important;
+  color: var(--sr-page-title-accent) !important;
+  -webkit-text-fill-color: var(--sr-page-title-accent) !important;
+  text-shadow: var(--sr-page-title-accent-shadow);
+  text-transform: uppercase !important;
+  letter-spacing: 0 !important;
+}
+
+#dashboard .db-content :is(
+  .text-gradient-primary,
+  .gradient-text,
+  [class*="text-gradient"],
+  [class*="page-title"],
+  [class*="hero-title"],
+  .progress-hero-title,
+  .setup-hero-title,
+  .modules-hero-title,
+  .sr-page-hero-title,
+  .admin-dashboard-title,
+  .feedback-page-title,
+  .feedback-title,
+  .session-page-title,
+  .archive-page-title,
+  .mastery-title,
+  .notif-hero-title,
+  .sr-title,
+  .sr-title-name
+) :is(.fa, .fa-solid, .fa-regular, .fa-light, .fa-brands, svg) {
+  color: var(--sr-page-title-accent) !important;
+  -webkit-text-fill-color: var(--sr-page-title-accent) !important;
+}
+
+body :is(.modal-title, .btn, button, .badge, .form-label, label, input, textarea, select, option, .dropdown-item) {
+  text-transform: none !important;
+}
+
+body .modal-title {
+  color: var(--tx) !important;
+  -webkit-text-fill-color: var(--tx) !important;
+  text-shadow: none !important;
 }

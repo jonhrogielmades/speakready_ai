@@ -3270,6 +3270,968 @@
             box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2) !important;
         }
     }
+
+    /* Final mobile SaaSPro layer for Interview Setup. */
+    @media (max-width: 767px) {
+        #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(16, 185, 129, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        #mob-content > .db-content {
+            padding: 12px 12px 16px !important;
+        }
+
+        html body #sec-interview-setup {
+            --setup-pro-radius: 8px;
+            --setup-pro-gap: 12px;
+            --setup-pro-card: rgba(255, 255, 255, 0.98);
+            --setup-pro-soft: #f8fafc;
+            --setup-pro-field: rgba(255, 255, 255, 0.96);
+            --setup-pro-border: rgba(15, 23, 42, 0.1);
+            --setup-pro-strong-border: rgba(37, 99, 235, 0.46);
+            --setup-pro-title: #0f172a;
+            --setup-pro-muted: #64748b;
+            --setup-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            --setup-gap: var(--setup-pro-gap);
+            max-width: 520px;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--setup-pro-title);
+        }
+
+        html[data-theme="dark"] body #sec-interview-setup,
+        :root:not(.lm) body #sec-interview-setup,
+        .dm #sec-interview-setup,
+        body.dm #sec-interview-setup {
+            --setup-pro-card: rgba(17, 24, 39, 0.98);
+            --setup-pro-soft: #162033;
+            --setup-pro-field: rgba(15, 23, 42, 0.92);
+            --setup-pro-border: rgba(148, 163, 184, 0.2);
+            --setup-pro-strong-border: rgba(96, 165, 250, 0.58);
+            --setup-pro-title: #f8fafc;
+            --setup-pro-muted: #9aa8bd;
+            --setup-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #sec-interview-setup #setupForm > .row,
+        html body #sec-interview-setup #setupForm > .row.g-4 {
+            --bs-gutter-x: 0;
+            --bs-gutter-y: var(--setup-pro-gap);
+            display: block !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-interview-setup #setupForm > .row > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-interview-setup #setup-left-col {
+            display: block !important;
+            gap: 0 !important;
+        }
+
+        html body #sec-interview-setup .setup-hero {
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin-bottom: var(--setup-pro-gap) !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(147, 197, 253, 0.48) !important;
+            border-radius: var(--setup-pro-radius) !important;
+            background:
+                radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+                radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+                linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+        }
+
+        html body #sec-interview-setup .setup-hero::before,
+        html body #sec-interview-setup .setup-hero::after {
+            content: none !important;
+            display: none !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-inner {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 8px !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            padding: 8px 72px 8px 10px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: var(--setup-pro-radius) !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-icon svg {
+            width: 15px !important;
+            height: 15px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-title {
+            display: block !important;
+            margin: 0 0 3px !important;
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-subtitle {
+            max-width: 13.5rem !important;
+            margin: 0 !important;
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+            font-weight: 650 !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-art {
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+            opacity: 0.96 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.18)) !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper {
+            position: static !important;
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+            margin: 0 0 var(--setup-pro-gap) !important;
+            padding: 8px !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            border-radius: var(--setup-pro-radius) !important;
+            background: var(--setup-pro-card) !important;
+            box-shadow: var(--setup-pro-shadow) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-track {
+            counter-reset: setupStep;
+            display: grid !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            gap: 5px !important;
+            width: 100% !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-item {
+            counter-increment: setupStep;
+            min-width: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            text-align: center !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-dot {
+            width: 22px !important;
+            height: 22px !important;
+            margin: 0 auto !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            border-radius: var(--setup-pro-radius) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: var(--setup-pro-soft) !important;
+            color: var(--setup-pro-muted) !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-dot::before {
+            content: counter(setupStep);
+        }
+
+        html body #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-dot,
+        html body #sec-interview-setup .setup-stepper-item.is-complete .setup-stepper-dot {
+            border-color: transparent !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-label {
+            display: block !important;
+            max-width: 100% !important;
+            margin-top: 4px !important;
+            color: var(--setup-pro-muted) !important;
+            font-size: 0.48rem !important;
+            font-weight: 850 !important;
+            line-height: 1.05 !important;
+            letter-spacing: 0 !important;
+            text-align: center !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-label {
+            color: var(--setup-pro-title) !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-top: 0 !important;
+        }
+
+        html body #sec-interview-setup .setup-step-btn {
+            min-height: 38px !important;
+            width: 100% !important;
+            border-radius: 6px !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            background: var(--setup-pro-field) !important;
+            color: var(--setup-pro-title) !important;
+            font-size: 0.7rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-setup .setup-step-btn.primary {
+            border-color: transparent !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+        }
+
+        html body #sec-interview-setup .setup-panel,
+        html body #sec-interview-setup #panel-summary {
+            margin: 0 0 var(--setup-pro-gap) !important;
+            padding: 12px !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            border-radius: var(--setup-pro-radius) !important;
+            background: var(--setup-pro-card) !important;
+            box-shadow: var(--setup-pro-shadow) !important;
+            transform: none !important;
+        }
+
+        html body #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel,
+        html body #sec-interview-setup.setup-step-mode #panel-summary {
+            display: none !important;
+        }
+
+        html body #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active,
+        html body #sec-interview-setup.setup-step-mode #panel-summary.setup-step-active {
+            display: block !important;
+        }
+
+        html body #sec-interview-setup .setup-step-active {
+            border-color: var(--setup-pro-strong-border) !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .setup-details-card-head,
+            .setup-structure-head,
+            .setup-inclusive-head,
+            .assistance-head,
+            .response-head
+        ) {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 9px !important;
+            margin: 0 0 10px !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .setup-details-icon,
+            .setup-structure-head-icon,
+            .setup-inclusive-head-icon,
+            .assistance-head-icon,
+            .response-head-icon,
+            .setup-card-label-icon,
+            .setup-calibrated-icon,
+            .assistance-context-icon,
+            .structure-info-note i,
+            .inclusive-note i,
+            .summary-icon,
+            #panel-summary h5 i
+        ) {
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px !important;
+            border-radius: var(--setup-pro-radius) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #dbeafe !important;
+            border: 1px solid rgba(147, 197, 253, 0.42) !important;
+            color: #2563eb !important;
+            font-size: 0.78rem !important;
+            box-shadow: none !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-setup :is(
+            .setup-details-icon,
+            .setup-structure-head-icon,
+            .setup-inclusive-head-icon,
+            .assistance-head-icon,
+            .response-head-icon,
+            .setup-card-label-icon,
+            .setup-calibrated-icon,
+            .assistance-context-icon,
+            .structure-info-note i,
+            .inclusive-note i,
+            .summary-icon,
+            #panel-summary h5 i
+        ),
+        .dm #sec-interview-setup :is(
+            .setup-details-icon,
+            .setup-structure-head-icon,
+            .setup-inclusive-head-icon,
+            .assistance-head-icon,
+            .response-head-icon,
+            .setup-card-label-icon,
+            .setup-calibrated-icon,
+            .assistance-context-icon,
+            .structure-info-note i,
+            .inclusive-note i,
+            .summary-icon,
+            #panel-summary h5 i
+        ),
+        :root:not(.lm) body #sec-interview-setup :is(
+            .setup-details-icon,
+            .setup-structure-head-icon,
+            .setup-inclusive-head-icon,
+            .assistance-head-icon,
+            .response-head-icon,
+            .setup-card-label-icon,
+            .setup-calibrated-icon,
+            .assistance-context-icon,
+            .structure-info-note i,
+            .inclusive-note i,
+            .summary-icon,
+            #panel-summary h5 i
+        ) {
+            background: rgba(59, 130, 246, 0.18) !important;
+            border-color: rgba(147, 197, 253, 0.28) !important;
+            color: #93c5fd !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .setup-details-card-title,
+            .setup-structure-title,
+            .setup-inclusive-title,
+            .assistance-title,
+            .response-title,
+            #panel-summary h5
+        ) {
+            margin: 0 !important;
+            color: var(--setup-pro-title) !important;
+            -webkit-text-fill-color: var(--setup-pro-title) !important;
+            font-size: 0.94rem !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            text-align: left !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .setup-details-card-subtitle,
+            .setup-inclusive-copy,
+            .desc-text,
+            .structure-info-note,
+            .inclusive-note
+        ) {
+            color: var(--setup-pro-muted) !important;
+            font-size: 0.68rem !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #sec-interview-setup .setup-details-card-subtitle,
+        html body #sec-interview-setup .setup-inclusive-copy {
+            margin: 3px 0 0 !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .setup-card-fields,
+            .assistance-stack,
+            .structure-select-grid,
+            .structure-difficulty-list,
+            .inclusive-option-list,
+            .assistance-question-list,
+            .response-mode-list
+        ) {
+            display: grid !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-interview-setup .setup-card-field,
+        html body #sec-interview-setup .assistance-field {
+            display: grid !important;
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-setup .setup-card-label,
+        html body #sec-interview-setup .olbl {
+            display: flex !important;
+            align-items: center !important;
+            gap: 7px !important;
+            margin: 0 !important;
+            color: var(--setup-pro-muted) !important;
+            font-size: 0.66rem !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+            letter-spacing: 0 !important;
+            text-transform: uppercase !important;
+        }
+
+        html body #sec-interview-setup .setup-card-label-icon {
+            width: 24px !important;
+            height: 24px !important;
+            min-width: 24px !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-select-wrap, .setup-search-wrap, .structure-select-wrap, .assistance-select-wrap) {
+            width: 100% !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-select-wrap, .structure-select-wrap, .assistance-select-wrap)::after {
+            right: 14px !important;
+            width: 7px !important;
+            height: 7px !important;
+            border-width: 0 2px 2px 0 !important;
+            border-color: var(--setup-pro-muted) !important;
+        }
+
+        html body #sec-interview-setup .oinp,
+        html body #sec-interview-setup select.oinp,
+        html body #sec-interview-setup input.oinp,
+        html body #sec-interview-setup textarea.oinp {
+            min-height: 40px !important;
+            width: 100% !important;
+            padding: 9px 36px 9px 10px !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            border-radius: 6px !important;
+            background: var(--setup-pro-field) !important;
+            color: var(--setup-pro-title) !important;
+            font-size: 0.74rem !important;
+            font-weight: 750 !important;
+            letter-spacing: 0 !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-setup input.oinp,
+        html body #sec-interview-setup textarea.oinp {
+            padding-right: 10px !important;
+        }
+
+        html body #sec-interview-setup textarea.oinp {
+            min-height: 84px !important;
+        }
+
+        html body #sec-interview-setup .setup-calibrated-simple,
+        html body #sec-interview-setup .assistance-context-panel,
+        html body #sec-interview-setup .structure-info-note,
+        html body #sec-interview-setup .inclusive-note {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 9px !important;
+            min-height: 0 !important;
+            margin: 2px 0 0 !important;
+            padding: 10px !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            border-radius: var(--setup-pro-radius) !important;
+            background: var(--setup-pro-soft) !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-setup .inclusive-note {
+            align-items: start !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-calibrated-simple h6, .assistance-context-title) {
+            margin: 0 0 2px !important;
+            color: var(--setup-pro-title) !important;
+            font-size: 0.76rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-setup .structure-difficulty-card {
+            display: grid !important;
+            grid-template-columns: 22px minmax(0, 1fr) 30px !important;
+        }
+
+        html body #sec-interview-setup .response-mode-card,
+        html body #sec-interview-setup .custom-radio {
+            display: grid !important;
+            grid-template-columns: 22px minmax(0, 1fr) !important;
+        }
+
+        html body #sec-interview-setup .assistance-question-list,
+        html body #sec-interview-setup .inclusive-option-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        html body #sec-interview-setup .assistance-question-card,
+        html body #sec-interview-setup .inclusive-option {
+            display: grid !important;
+            grid-template-columns: 24px minmax(0, 1fr) !important;
+        }
+
+        html body #sec-interview-setup #panel-content .assistance-question-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            align-items: stretch !important;
+        }
+
+        html body #sec-interview-setup #panel-content .assistance-question-card {
+            grid-template-columns: 18px 26px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 6px !important;
+            min-height: 52px !important;
+            padding: 8px !important;
+            overflow: hidden !important;
+        }
+
+        html body #sec-interview-setup #panel-content .assistance-question-card input[type="checkbox"] {
+            width: 16px !important;
+            height: 16px !important;
+        }
+
+        html body #sec-interview-setup #panel-content .assistance-question-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            border-radius: 7px !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #sec-interview-setup #panel-content .assistance-question-text {
+            min-width: 0 !important;
+            color: var(--setup-pro-title) !important;
+            font-size: 0.66rem !important;
+            line-height: 1.14 !important;
+            font-weight: 900 !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+
+        html body #sec-interview-setup :is(
+            .custom-radio,
+            .custom-cbx,
+            .structure-difficulty-card,
+            .assistance-question-card,
+            .response-mode-card,
+            .inclusive-option
+        ) {
+            min-height: 46px !important;
+            gap: 8px !important;
+            padding: 9px !important;
+            border: 1px solid var(--setup-pro-border) !important;
+            border-radius: var(--setup-pro-radius) !important;
+            background: var(--setup-pro-soft) !important;
+            color: var(--setup-pro-title) !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .custom-radio,
+            .custom-cbx,
+            .structure-difficulty-card,
+            .assistance-question-card,
+            .response-mode-card,
+            .inclusive-option
+        ):has(input:checked) {
+            border-color: var(--setup-pro-strong-border) !important;
+            background: rgba(37, 99, 235, 0.08) !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .custom-radio input,
+            .custom-cbx input,
+            .structure-difficulty-card input,
+            .assistance-question-card input,
+            .response-mode-card input,
+            .inclusive-option input
+        ) {
+            width: 18px !important;
+            height: 18px !important;
+            margin: 0 !important;
+            align-self: center !important;
+            accent-color: #2563eb !important;
+        }
+
+        html body #sec-interview-setup :is(.structure-difficulty-icon, .assistance-question-icon) {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border-radius: 7px !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #sec-interview-setup :is(
+            .r-title,
+            .structure-difficulty-title,
+            .response-mode-title,
+            .assistance-question-text
+        ) {
+            color: var(--setup-pro-title) !important;
+            font-size: 0.74rem !important;
+            line-height: 1.16 !important;
+            font-weight: 900 !important;
+            overflow-wrap: anywhere;
+        }
+
+        html body #sec-interview-setup :is(.r-desc, .structure-difficulty-desc, .response-mode-desc) {
+            margin-top: 2px !important;
+            color: var(--setup-pro-muted) !important;
+            font-size: 0.62rem !important;
+            line-height: 1.22 !important;
+        }
+
+        html body #sec-interview-setup #panel-summary {
+            background:
+                linear-gradient(180deg, rgba(239, 246, 255, 0.78), var(--setup-pro-card) 44%) !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-setup #panel-summary,
+        :root:not(.lm) body #sec-interview-setup #panel-summary,
+        .dm #sec-interview-setup #panel-summary,
+        body.dm #sec-interview-setup #panel-summary {
+            background:
+                linear-gradient(180deg, rgba(30, 64, 175, 0.18), var(--setup-pro-card) 48%) !important;
+        }
+
+        html body #sec-interview-setup #panel-summary h5 {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            margin-bottom: 10px !important;
+        }
+
+        html body #sec-interview-setup #panel-summary .summary-row {
+            display: grid !important;
+            grid-template-columns: 26px minmax(66px, 0.45fr) minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-height: 38px !important;
+            padding: 6px 0 !important;
+            border-bottom: 1px solid var(--setup-pro-border) !important;
+        }
+
+        html body #sec-interview-setup .summary-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #sec-interview-setup .summary-label {
+            color: var(--setup-pro-muted) !important;
+            font-size: 0.6rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+            letter-spacing: 0 !important;
+            text-transform: uppercase !important;
+        }
+
+        html body #sec-interview-setup .summary-val {
+            color: var(--setup-pro-title) !important;
+            font-size: 0.7rem !important;
+            font-weight: 850 !important;
+            line-height: 1.18 !important;
+            text-align: right !important;
+            overflow-wrap: anywhere;
+        }
+
+        html body #sec-interview-setup #panel-summary .setup-start-action {
+            margin-top: 12px !important;
+        }
+
+        html body #sec-interview-setup #btn-start-interview {
+            min-height: 42px !important;
+            padding: 10px 12px !important;
+            border-radius: var(--setup-pro-radius) !important;
+            border: 0 !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+            font-size: 0.78rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+            letter-spacing: 0 !important;
+            box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22) !important;
+            transform: none !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup {
+            --setup-pro-accent: #2563eb;
+            --setup-pro-icon-bg: #dbeafe;
+            --setup-pro-icon-fg: #1d4ed8;
+            --setup-pro-selected: rgba(37, 99, 235, 0.09);
+            --setup-pro-success: #15803d;
+        }
+
+        html[data-theme="dark"] body #sec-interview-setup#sec-interview-setup,
+        :root:not(.lm) body #sec-interview-setup#sec-interview-setup,
+        .dm #sec-interview-setup#sec-interview-setup,
+        body.dm #sec-interview-setup#sec-interview-setup {
+            --setup-pro-accent: #93c5fd;
+            --setup-pro-icon-bg: rgba(59, 130, 246, 0.2);
+            --setup-pro-icon-fg: #bfdbfe;
+            --setup-pro-selected: rgba(59, 130, 246, 0.18);
+            --setup-pro-success: #86efac;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .setup-details-card-title,
+            .setup-structure-title,
+            .setup-structure-section-title,
+            .setup-inclusive-title,
+            .assistance-title,
+            .response-title,
+            .setup-calibrated-simple h6,
+            .assistance-context-title,
+            .r-title,
+            .structure-difficulty-title,
+            .response-mode-title,
+            .assistance-question-text,
+            .inclusive-option,
+            .inclusive-option span,
+            .summary-val,
+            #panel-summary h5
+        ) {
+            color: var(--setup-pro-title) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .setup-details-card-subtitle,
+            .setup-inclusive-copy,
+            .setup-card-label,
+            .olbl,
+            .desc-text,
+            .r-desc,
+            .structure-difficulty-desc,
+            .response-mode-desc,
+            .setup-stepper-label,
+            .summary-label,
+            .setup-calibrated-simple p,
+            .setup-calibrated-simple strong,
+            .assistance-context-panel .desc-text,
+            .structure-info-note,
+            .inclusive-note,
+            .inclusive-note span
+        ) {
+            color: var(--setup-pro-muted) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .setup-details-icon,
+            .setup-structure-head-icon,
+            .setup-inclusive-head-icon,
+            .assistance-head-icon,
+            .response-head-icon,
+            .setup-card-label-icon,
+            .setup-calibrated-icon,
+            .assistance-context-icon,
+            .structure-difficulty-icon,
+            .assistance-question-icon,
+            .structure-info-note i,
+            .inclusive-note i,
+            .summary-icon,
+            #panel-summary h5 i
+        ) {
+            background: var(--setup-pro-icon-bg) !important;
+            border-color: var(--setup-pro-border) !important;
+            color: var(--setup-pro-icon-fg) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .oinp,
+            select.oinp,
+            input.oinp,
+            textarea.oinp
+        ) {
+            background: var(--setup-pro-field) !important;
+            border-color: var(--setup-pro-border) !important;
+            color: var(--setup-pro-title) !important;
+            -webkit-text-fill-color: currentColor !important;
+            caret-color: var(--setup-pro-title) !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(.oinp, input.oinp, textarea.oinp)::placeholder {
+            color: var(--setup-pro-muted) !important;
+            -webkit-text-fill-color: var(--setup-pro-muted) !important;
+            opacity: 0.86 !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(.oinp, select.oinp) option {
+            background: var(--setup-pro-card) !important;
+            color: var(--setup-pro-title) !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .custom-radio,
+            .custom-cbx,
+            .structure-difficulty-card,
+            .assistance-question-card,
+            .response-mode-card,
+            .inclusive-option,
+            .setup-calibrated-simple,
+            .assistance-context-panel,
+            .structure-info-note,
+            .inclusive-note
+        ) {
+            background: var(--setup-pro-soft) !important;
+            border-color: var(--setup-pro-border) !important;
+            color: var(--setup-pro-title) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .custom-radio,
+            .custom-cbx,
+            .structure-difficulty-card,
+            .assistance-question-card,
+            .response-mode-card,
+            .inclusive-option
+        ):has(input:checked) {
+            background: var(--setup-pro-selected) !important;
+            border-color: var(--setup-pro-strong-border) !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .custom-radio,
+            .custom-cbx,
+            .structure-difficulty-card,
+            .assistance-question-card,
+            .response-mode-card,
+            .inclusive-option
+        ):has(input:checked) :is(
+            .r-title,
+            .structure-difficulty-title,
+            .response-mode-title,
+            .assistance-question-text,
+            span
+        ) {
+            color: var(--setup-pro-title) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .setup-stepper-item.is-active .setup-stepper-label,
+            .setup-stepper-item.is-complete .setup-stepper-label,
+            .inclusive-note strong
+        ) {
+            color: var(--setup-pro-accent) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(.summary-val.text-success, #sumDuration) {
+            color: var(--setup-pro-success) !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup :is(
+            .setup-hero-title,
+            .setup-hero-subtitle,
+            .setup-hero-icon,
+            .setup-step-btn.primary,
+            #btn-start-interview,
+            #btn-start-interview i
+        ) {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup .setup-hero .setup-hero-title {
+            color: #fde047 !important;
+            -webkit-text-fill-color: #fde047 !important;
+            text-transform: uppercase !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #sec-interview-setup .setup-hero-inner {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-subtitle {
+            max-width: 12rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-art {
+            width: 66px !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-label {
+            font-size: 0.44rem !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #sec-interview-setup .setup-hero-inner {
+            grid-template-columns: 27px minmax(0, 1fr) !important;
+            padding-right: 62px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-subtitle {
+            max-width: 10.25rem !important;
+            font-size: 0.43rem !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-art {
+            width: 62px !important;
+            right: -6px !important;
+        }
+
+        html body #sec-interview-setup .assistance-question-list,
+        html body #sec-interview-setup .inclusive-option-list {
+            grid-template-columns: 1fr !important;
+        }
+
+        html body #sec-interview-setup #panel-content .assistance-question-card {
+            min-height: 46px !important;
+        }
+
+        html body #sec-interview-setup #panel-summary .summary-row {
+            grid-template-columns: 26px minmax(58px, 0.4fr) minmax(0, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+        html body #sec-interview-setup .setup-hero-art,
+        html body #sec-interview-setup.setup-step-mode .setup-step-transition-in {
+            animation: none !important;
+        }
+    }
 </style>
 
 <div class="db-section active setup-step-mode" id="sec-interview-setup">

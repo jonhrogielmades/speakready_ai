@@ -523,6 +523,591 @@
             width: 66px !important;
         }
     }
+
+    /* SaaSPro mobile polish for Coach. */
+    @media (max-width: 767px) {
+        body #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(20, 184, 166, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        body #mob-content > .db-content {
+            padding: 12px 12px 18px !important;
+        }
+
+        html body #ai-coach-page {
+            --coach-pro-panel: rgba(255, 255, 255, 0.98);
+            --coach-pro-field: rgba(255, 255, 255, 0.96);
+            --coach-pro-soft: #f8fafc;
+            --coach-pro-border: rgba(15, 23, 42, 0.1);
+            --coach-pro-title: #0f172a;
+            --coach-pro-text: #334155;
+            --coach-pro-muted: #64748b;
+            --coach-pro-accent: #2563eb;
+            --coach-pro-accent-2: #0891b2;
+            --coach-pro-success: #059669;
+            --coach-pro-danger: #dc2626;
+            --coach-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            max-width: 520px;
+            height: auto !important;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--coach-pro-title) !important;
+        }
+
+        html[data-theme="dark"] body #ai-coach-page,
+        :root:not(.lm) body #ai-coach-page,
+        body.dm #ai-coach-page,
+        .dm #ai-coach-page {
+            --coach-pro-panel: rgba(15, 23, 42, 0.94);
+            --coach-pro-field: rgba(30, 41, 59, 0.9);
+            --coach-pro-soft: rgba(51, 65, 85, 0.78);
+            --coach-pro-border: rgba(148, 163, 184, 0.24);
+            --coach-pro-title: #f8fafc;
+            --coach-pro-text: #e2e8f0;
+            --coach-pro-muted: #cbd5e1;
+            --coach-pro-accent: #93c5fd;
+            --coach-pro-accent-2: #67e8f9;
+            --coach-pro-success: #86efac;
+            --coach-pro-danger: #fca5a5;
+            --coach-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #ai-coach-page .sr-page-hero.coach-progress-hero {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin: 0 !important;
+            padding: 8px 72px 8px 10px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(115deg, rgba(37, 99, 235, 0.98), rgba(8, 145, 178, 0.94)),
+                #2563eb !important;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24) !important;
+            overflow: hidden !important;
+            position: relative;
+            isolation: isolate;
+        }
+
+        html[data-theme="dark"] body #ai-coach-page .sr-page-hero.coach-progress-hero,
+        :root:not(.lm) body #ai-coach-page .sr-page-hero.coach-progress-hero,
+        body.dm #ai-coach-page .sr-page-hero.coach-progress-hero,
+        .dm #ai-coach-page .sr-page-hero.coach-progress-hero {
+            background:
+                linear-gradient(115deg, rgba(30, 64, 175, 0.96), rgba(15, 118, 110, 0.9)),
+                #1e3a8a !important;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        html body #ai-coach-page .sr-page-hero.coach-progress-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.22;
+            pointer-events: none;
+        }
+
+        html body #ai-coach-page .sr-page-hero.coach-progress-hero::after {
+            display: none !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-inner,
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-copy {
+            display: contents !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #ai-coach-page .coach-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 0.76rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-copy > div:last-child {
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            display: block !important;
+            margin: 0 0 3px !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.08 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-title svg {
+            display: none !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            display: -webkit-box !important;
+            max-width: 12.2rem !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            display: block !important;
+            width: 72px !important;
+            height: auto !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            opacity: 0.98 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.22));
+            pointer-events: none;
+        }
+
+        html body #mob-content #ai-coach-page .chat-container,
+        html body #ai-coach-page .chat-container {
+            width: 100% !important;
+            height: calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 108px) !important;
+            min-height: 360px !important;
+            max-height: 680px !important;
+            margin: 0 !important;
+            border: 1px solid var(--coach-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--coach-pro-panel) !important;
+            box-shadow: var(--coach-pro-shadow) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            overflow: hidden !important;
+            flex-direction: column !important;
+        }
+
+        html body #ai-coach-page .chat-sidebar {
+            display: none !important;
+        }
+
+        html body #ai-coach-page .chat-main {
+            min-height: 0 !important;
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.04), transparent 120px),
+                var(--coach-pro-panel) !important;
+        }
+
+        html body #ai-coach-page .coach-chat-header {
+            min-height: 44px !important;
+            padding: 7px 8px !important;
+            border-color: var(--coach-pro-border) !important;
+            background: var(--coach-pro-panel) !important;
+            gap: 8px !important;
+        }
+
+        html body #ai-coach-page .coach-status {
+            min-height: 28px !important;
+            margin-top: 0 !important;
+            padding: 5px 8px !important;
+            border: 1px solid rgba(16, 185, 129, 0.22) !important;
+            border-radius: 8px !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+            color: var(--coach-pro-success) !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            white-space: nowrap;
+        }
+
+        html body #ai-coach-page .coach-status::before {
+            width: 7px !important;
+            height: 7px !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.13) !important;
+        }
+
+        html body #ai-coach-page .coach-actions {
+            position: relative;
+        }
+
+        html body #ai-coach-page .coach-actions-toggle {
+            width: 32px !important;
+            height: 32px !important;
+            border: 1px solid var(--coach-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--coach-pro-field) !important;
+            color: var(--coach-pro-title) !important;
+            box-shadow: none !important;
+        }
+
+        html body #ai-coach-page .coach-actions-toggle:hover,
+        html body #ai-coach-page .coach-actions-toggle[aria-expanded="true"] {
+            background: var(--coach-pro-soft) !important;
+            color: var(--coach-pro-accent) !important;
+        }
+
+        html body #ai-coach-page .coach-actions-menu {
+            top: calc(100% + 6px) !important;
+            right: 0 !important;
+            width: min(312px, calc(100vw - 24px)) !important;
+            max-height: min(62dvh, 430px) !important;
+            padding: 6px !important;
+            border: 1px solid var(--coach-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--coach-pro-panel) !important;
+            box-shadow: var(--coach-pro-shadow) !important;
+            color: var(--coach-pro-title) !important;
+        }
+
+        html body #ai-coach-page .coach-actions-heading {
+            padding: 7px 8px 4px !important;
+            color: var(--coach-pro-muted) !important;
+            font-size: 0.56rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+        }
+
+        html body #ai-coach-page .coach-actions-divider {
+            background: var(--coach-pro-border) !important;
+            margin: 5px !important;
+        }
+
+        html body #ai-coach-page .coach-actions-item,
+        html body #ai-coach-page .coach-actions-history {
+            min-height: 34px !important;
+            padding: 8px 9px !important;
+            border-radius: 8px !important;
+            color: var(--coach-pro-title) !important;
+            background: transparent !important;
+            font-size: 0.7rem !important;
+            line-height: 1.15 !important;
+        }
+
+        html body #ai-coach-page .coach-actions-item:hover,
+        html body #ai-coach-page .coach-actions-history:hover {
+            background: var(--coach-pro-soft) !important;
+        }
+
+        html body #ai-coach-page .coach-actions-item i,
+        html body #ai-coach-page .coach-actions-history i {
+            color: var(--coach-pro-accent) !important;
+        }
+
+        html body #ai-coach-page .coach-actions-item.danger,
+        html body #ai-coach-page .coach-actions-item.danger i {
+            color: var(--coach-pro-danger) !important;
+        }
+
+        html body #ai-coach-page .coach-actions-history span {
+            color: inherit !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #ai-coach-page .coach-actions-empty {
+            padding: 8px 9px !important;
+            color: var(--coach-pro-muted) !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body #mob-content #ai-coach-page .chat-messages,
+        html body #ai-coach-page .chat-messages {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            padding: 9px !important;
+            gap: 8px !important;
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.035), transparent 80px),
+                var(--coach-pro-panel) !important;
+            scrollbar-width: thin;
+        }
+
+        html body #ai-coach-page #chatDateBadge {
+            margin: 0 0 4px !important;
+        }
+
+        html body #ai-coach-page #chatDateBadge .db-badge {
+            min-height: 22px !important;
+            padding: 4px 8px !important;
+            border: 1px solid var(--coach-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--coach-pro-soft) !important;
+            color: var(--coach-pro-muted) !important;
+            font-size: 0.56rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #ai-coach-page .coach-msg-row,
+        html body #ai-coach-page .dynamic-msg {
+            align-items: flex-end !important;
+            gap: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        html body #ai-coach-page #welcomeMsg {
+            margin-top: 0 !important;
+        }
+
+        html body #ai-coach-page .coach-avatar,
+        html body #ai-coach-page .coach-user-avatar {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #ai-coach-page .coach-avatar {
+            border: 1px solid rgba(37, 99, 235, 0.18) !important;
+            background: linear-gradient(135deg, var(--coach-pro-accent), var(--coach-pro-accent-2)) !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18) !important;
+        }
+
+        html body #ai-coach-page .coach-user-avatar {
+            border: 1px solid var(--coach-pro-border) !important;
+            background: var(--coach-pro-soft) !important;
+            color: var(--coach-pro-title) !important;
+            font-weight: 900 !important;
+        }
+
+        html body #ai-coach-page .coach-user-avatar img {
+            border-radius: 8px !important;
+        }
+
+        html body #mob-content #ai-coach-page .chat-bubble,
+        html body #ai-coach-page .chat-bubble {
+            max-width: calc(100% - 36px) !important;
+            padding: 9px 10px !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            font-size: 0.74rem !important;
+            line-height: 1.42 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        html body #ai-coach-page .bubble-ai {
+            border: 1px solid var(--coach-pro-border) !important;
+            border-bottom-left-radius: 3px !important;
+            background: var(--coach-pro-field) !important;
+            color: var(--coach-pro-text) !important;
+        }
+
+        html body #ai-coach-page .bubble-user {
+            border: 0 !important;
+            border-bottom-right-radius: 3px !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+        }
+
+        html body #ai-coach-page .ai-response {
+            display: grid !important;
+            gap: 7px !important;
+            color: var(--coach-pro-text) !important;
+            line-height: 1.45 !important;
+        }
+
+        html body #ai-coach-page .ai-response :is(p, li) {
+            color: var(--coach-pro-text) !important;
+        }
+
+        html body #ai-coach-page .ai-response strong {
+            color: var(--coach-pro-title) !important;
+        }
+
+        html body #ai-coach-page .ai-response em {
+            color: var(--coach-pro-muted) !important;
+        }
+
+        html body #ai-coach-page .ai-response .ai-section-title {
+            color: var(--coach-pro-accent) !important;
+            font-size: 0.62rem !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #ai-coach-page .ai-response :is(ul, ol) {
+            gap: 5px !important;
+            padding-left: 1rem !important;
+        }
+
+        html body #ai-coach-page .ai-response code {
+            border: 1px solid var(--coach-pro-border) !important;
+            background: var(--coach-pro-soft) !important;
+            color: var(--coach-pro-title) !important;
+        }
+
+        html body #ai-coach-page #typingIndicator .chat-bubble {
+            min-height: 34px !important;
+            padding: 9px 10px !important;
+        }
+
+        html body #ai-coach-page #typingIndicator [style*="width:8px"] {
+            width: 6px !important;
+            height: 6px !important;
+            background: var(--coach-pro-accent) !important;
+            opacity: 0.7;
+            animation-name: coachTypingPulse !important;
+        }
+
+        html body #mob-content #ai-coach-page .chat-input-area,
+        html body #ai-coach-page .chat-input-area {
+            flex: 0 0 auto !important;
+            padding: 8px 8px 7px !important;
+            border-color: var(--coach-pro-border) !important;
+            background: var(--coach-pro-panel) !important;
+        }
+
+        html body #mob-content #ai-coach-page .chat-input-wrapper,
+        html body #ai-coach-page .chat-input-wrapper {
+            min-height: 42px !important;
+            padding: 6px 6px 6px 10px !important;
+            border: 1px solid var(--coach-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--coach-pro-field) !important;
+            box-shadow: none !important;
+        }
+
+        html body #ai-coach-page .chat-input-wrapper:focus-within {
+            border-color: rgba(37, 99, 235, 0.54) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+            background: var(--coach-pro-panel) !important;
+        }
+
+        html body #ai-coach-page .chat-textarea {
+            height: 22px !important;
+            max-height: 86px !important;
+            padding: 3px 0 !important;
+            color: var(--coach-pro-title) !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+        }
+
+        html body #ai-coach-page .chat-textarea::placeholder {
+            color: var(--coach-pro-muted) !important;
+            opacity: 1;
+        }
+
+        html body #mob-content #ai-coach-page .chat-send-btn,
+        html body #ai-coach-page .chat-send-btn {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border-radius: 8px !important;
+            margin: 0 0 0 7px !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22) !important;
+        }
+
+        html body #ai-coach-page .chat-send-btn:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.26) !important;
+        }
+
+        html body #ai-coach-page .coach-disclaimer {
+            margin-top: 5px !important;
+            padding: 0 2px !important;
+            color: var(--coach-pro-muted) !important;
+            font-size: 0.54rem !important;
+            line-height: 1.18 !important;
+            gap: 5px !important;
+        }
+
+        html body #ai-coach-page .coach-disclaimer i {
+            color: var(--coach-pro-accent) !important;
+            font-size: 0.64rem !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #ai-coach-page .sr-page-hero.coach-progress-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            padding: 8px 66px 8px 10px !important;
+        }
+
+        html body #ai-coach-page .coach-hero-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            max-width: 10.8rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            width: 66px !important;
+            right: -6px !important;
+        }
+
+        html body #mob-content #ai-coach-page .chat-container,
+        html body #ai-coach-page .chat-container {
+            height: calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 104px) !important;
+            min-height: 350px !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #mob-content #ai-coach-page .chat-container,
+        html body #ai-coach-page .chat-container {
+            min-height: 330px !important;
+        }
+
+        html body #ai-coach-page .coach-actions-menu {
+            width: min(296px, calc(100vw - 20px)) !important;
+        }
+
+        html body #mob-content #ai-coach-page .chat-bubble,
+        html body #ai-coach-page .chat-bubble {
+            font-size: 0.7rem !important;
+        }
+
+        html body #ai-coach-page .coach-disclaimer {
+            font-size: 0.5rem !important;
+        }
+    }
+
+    @keyframes coachTypingPulse {
+        0%, 100% {
+            opacity: 0.35;
+            transform: translateY(0);
+        }
+        50% {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+    }
 </style>
 @include('partials.page-hero-styles')
 <style>

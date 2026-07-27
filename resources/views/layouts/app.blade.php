@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=19') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=23') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -496,6 +496,17 @@
          .sr-page-hero :is(.sr-page-hero-title, .sr-page-hero-subtitle) {
             color: #f8fbff !important;
             -webkit-text-fill-color: #f8fbff !important;
+         }
+
+         #feedbackModulesLikeHero .feedback-title {
+            color: #fde047 !important;
+            -webkit-text-fill-color: #fde047 !important;
+         }
+
+         #sec-interview-setup .setup-hero .setup-hero-title {
+            color: #fde047 !important;
+            -webkit-text-fill-color: #fde047 !important;
+            text-transform: uppercase !important;
          }
 
          #progressModulesLikeHero .progress-hero-subtitle,

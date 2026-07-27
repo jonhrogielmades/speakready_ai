@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=1') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=5') }}" />
       <style>
          html, body {
             overflow-x: hidden;

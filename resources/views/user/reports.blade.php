@@ -627,6 +627,673 @@
             width: 66px !important;
         }
     }
+
+    /* SaaSPro mobile polish for Reports. */
+    @media screen and (max-width: 767px) {
+        body #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(20, 184, 166, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        body #mob-content > .db-content {
+            padding: 12px 12px 18px !important;
+        }
+
+        html body #portfolioReport {
+            --reports-pro-card: rgba(255, 255, 255, 0.98);
+            --reports-pro-field: rgba(255, 255, 255, 0.96);
+            --reports-pro-soft: #f8fafc;
+            --reports-pro-border: rgba(15, 23, 42, 0.1);
+            --reports-pro-title: #0f172a;
+            --reports-pro-text: #334155;
+            --reports-pro-muted: #64748b;
+            --reports-pro-accent: #2563eb;
+            --reports-pro-accent-2: #0891b2;
+            --reports-pro-success: #059669;
+            --reports-pro-warn: #d97706;
+            --reports-pro-danger: #dc2626;
+            --reports-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            max-width: 520px !important;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--reports-pro-title) !important;
+        }
+
+        html[data-theme="dark"] body #portfolioReport,
+        :root:not(.lm) body #portfolioReport,
+        body.dm #portfolioReport,
+        .dm #portfolioReport {
+            --reports-pro-card: rgba(15, 23, 42, 0.94);
+            --reports-pro-field: rgba(30, 41, 59, 0.9);
+            --reports-pro-soft: rgba(51, 65, 85, 0.78);
+            --reports-pro-border: rgba(148, 163, 184, 0.24);
+            --reports-pro-title: #f8fafc;
+            --reports-pro-text: #e2e8f0;
+            --reports-pro-muted: #cbd5e1;
+            --reports-pro-accent: #93c5fd;
+            --reports-pro-accent-2: #67e8f9;
+            --reports-pro-success: #86efac;
+            --reports-pro-warn: #fbbf24;
+            --reports-pro-danger: #fca5a5;
+            --reports-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #portfolioReport .sr-page-hero {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin: 0 0 10px !important;
+            padding: 8px 72px 8px 10px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(115deg, rgba(37, 99, 235, 0.98), rgba(8, 145, 178, 0.94)),
+                #2563eb !important;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24) !important;
+            overflow: hidden !important;
+            position: relative;
+            isolation: isolate;
+        }
+
+        html[data-theme="dark"] body #portfolioReport .sr-page-hero,
+        :root:not(.lm) body #portfolioReport .sr-page-hero,
+        body.dm #portfolioReport .sr-page-hero,
+        .dm #portfolioReport .sr-page-hero {
+            background:
+                linear-gradient(115deg, rgba(30, 64, 175, 0.96), rgba(15, 118, 110, 0.9)),
+                #1e3a8a !important;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        html body #portfolioReport .sr-page-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.22;
+            pointer-events: none;
+        }
+
+        html body #portfolioReport .sr-page-hero::after {
+            display: none !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-inner,
+        html body #portfolioReport .sr-page-hero-copy {
+            display: contents !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #portfolioReport .reports-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 0.76rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-copy > div:last-child {
+            min-width: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        html body #portfolioReport .sr-page-hero-title {
+            display: block !important;
+            margin: 0 0 3px !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.08 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-title svg {
+            display: none !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-subtitle {
+            display: -webkit-box !important;
+            max-width: 11.8rem !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        html body #portfolioReport .sr-page-hero-art {
+            display: block !important;
+            width: 72px !important;
+            height: auto !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            opacity: 0.98 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.22));
+            pointer-events: none;
+        }
+
+        html body #portfolioReport .report-export-actions {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)) !important;
+            gap: 7px !important;
+            width: 100% !important;
+            margin: 0 0 10px !important;
+            align-items: stretch !important;
+        }
+
+        html body #portfolioReport .report-export-actions > form {
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        html body #portfolioReport .report-export-actions .btn {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            padding: 6px 7px !important;
+            border-radius: 8px !important;
+            border: 1px solid transparent !important;
+            box-shadow: var(--reports-pro-shadow) !important;
+            color: #ffffff !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            text-align: center !important;
+            white-space: normal !important;
+        }
+
+        html body #portfolioReport .report-export-actions .btn i {
+            margin: 0 !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #portfolioReport #exportPdfBtn {
+            background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+        }
+
+        html body #portfolioReport #exportExcelBtn {
+            background: linear-gradient(135deg, #059669, #0d9488) !important;
+        }
+
+        html body #portfolioReport .report-export-actions .btn-outline-danger {
+            border-color: rgba(220, 38, 38, 0.24) !important;
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: var(--reports-pro-danger) !important;
+            box-shadow: none !important;
+        }
+
+        html body #portfolioReport > .row,
+        html body #portfolioReport .row.g-4,
+        html body #portfolioReport .row.mb-4 {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 8px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #portfolioReport :is(.col-lg-7, .col-lg-5, .col-md-8, .col-md-4, .col-md-6, .col-md-3, .col-12) {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        html body #portfolioReport .print-card {
+            padding: 10px !important;
+            border: 1px solid var(--reports-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--reports-pro-card) !important;
+            box-shadow: var(--reports-pro-shadow) !important;
+            color: var(--reports-pro-title) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            transform: none !important;
+            margin-bottom: 0 !important;
+        }
+
+        html body #portfolioReport .print-card:hover {
+            transform: none !important;
+            box-shadow: var(--reports-pro-shadow) !important;
+        }
+
+        html body #portfolioReport h4,
+        html body #portfolioReport h5,
+        html body #portfolioReport h6 {
+            color: var(--reports-pro-title) !important;
+            line-height: 1.16 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body #portfolioReport h5 {
+            margin-bottom: 9px !important;
+            font-size: 0.86rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #portfolioReport h6 {
+            margin-bottom: 6px !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #portfolioReport p,
+        html body #portfolioReport li,
+        html body #portfolioReport td,
+        html body #portfolioReport th,
+        html body #portfolioReport small {
+            color: var(--reports-pro-text) !important;
+            font-size: 0.66rem !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #portfolioReport small,
+        html body #portfolioReport [style*="color:var(--tx3)"] {
+            color: var(--reports-pro-muted) !important;
+        }
+
+        html body #portfolioReport [style*="color:var(--tx)"] {
+            color: var(--reports-pro-title) !important;
+        }
+
+        html body #portfolioReport #report-readiness {
+            padding: 10px !important;
+            border: 1px solid rgba(37, 99, 235, 0.16) !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(20, 184, 166, 0.07)),
+                var(--reports-pro-card) !important;
+        }
+
+        html body #portfolioReport #report-readiness .row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+            text-align: left !important;
+        }
+
+        html body #portfolioReport #report-readiness [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 9px !important;
+            border: 1px solid var(--reports-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--reports-pro-field) !important;
+        }
+
+        html body #portfolioReport #report-readiness [style*="font-size:3.5rem"] {
+            font-size: 2.1rem !important;
+        }
+
+        html body #portfolioReport #report-readiness [style*="font-size:2rem"] {
+            font-size: 1.3rem !important;
+        }
+
+        html body #portfolioReport #report-readiness [style*="font-size:2.5rem"] {
+            font-size: 1.42rem !important;
+        }
+
+        html body #portfolioReport #report-readiness .fs-1 {
+            font-size: 1.25rem !important;
+        }
+
+        html body #portfolioReport #report-readiness .badge {
+            padding: 5px 7px !important;
+            border-radius: 6px !important;
+            font-size: 0.6rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #portfolioReport #report-readiness .d-flex.align-items-center.gap-3 {
+            gap: 8px !important;
+            justify-content: flex-start !important;
+        }
+
+        html body #portfolioReport .bg-light.bg-opacity-10 {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            padding: 8px !important;
+            margin: 0 0 9px !important;
+            border: 1px solid var(--reports-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--reports-pro-field) !important;
+        }
+
+        html body #portfolioReport .bg-light.bg-opacity-10 > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body #portfolioReport .bg-light.bg-opacity-10 div[style*="font-weight:bold"] {
+            color: var(--reports-pro-title) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.2 !important;
+            overflow-wrap: anywhere;
+        }
+
+        html body #portfolioReport .row.g-3.text-center {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            text-align: center !important;
+        }
+
+        html body #portfolioReport .row.g-3.text-center > .col {
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        html body #portfolioReport .row.g-3.text-center [style*="width:60px"] {
+            width: 42px !important;
+            height: 42px !important;
+            margin-bottom: 5px !important;
+            border-width: 2px !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body #portfolioReport .row.g-3.text-center [style*="font-size:0.8rem"] {
+            color: var(--reports-pro-muted) !important;
+            font-size: 0.56rem !important;
+            line-height: 1.15 !important;
+        }
+
+        html body #portfolioReport .table-responsive {
+            border: 1px solid var(--reports-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--reports-pro-field) !important;
+            overflow-x: auto !important;
+        }
+
+        html body #portfolioReport table {
+            min-width: 500px !important;
+            margin-bottom: 0 !important;
+            color: var(--reports-pro-text) !important;
+            --bs-table-color: var(--reports-pro-text) !important;
+        }
+
+        html body #portfolioReport thead {
+            border-color: var(--reports-pro-border) !important;
+        }
+
+        html body #portfolioReport :is(th, td) {
+            padding: 7px 8px !important;
+            border-color: var(--reports-pro-border) !important;
+        }
+
+        html body #portfolioReport .text-primary {
+            color: #2563eb !important;
+        }
+
+        html body #portfolioReport .text-info {
+            color: #0284c7 !important;
+        }
+
+        html body #portfolioReport .text-success {
+            color: #059669 !important;
+        }
+
+        html body #portfolioReport .text-warning {
+            color: #d97706 !important;
+        }
+
+        html body #portfolioReport .text-danger {
+            color: #dc2626 !important;
+        }
+
+        html[data-theme="dark"] body #portfolioReport .text-primary,
+        :root:not(.lm) body #portfolioReport .text-primary,
+        body.dm #portfolioReport .text-primary,
+        .dm #portfolioReport .text-primary {
+            color: #93c5fd !important;
+        }
+
+        html[data-theme="dark"] body #portfolioReport .text-info,
+        :root:not(.lm) body #portfolioReport .text-info,
+        body.dm #portfolioReport .text-info,
+        .dm #portfolioReport .text-info {
+            color: #67e8f9 !important;
+        }
+
+        html[data-theme="dark"] body #portfolioReport .text-success,
+        :root:not(.lm) body #portfolioReport .text-success,
+        body.dm #portfolioReport .text-success,
+        .dm #portfolioReport .text-success {
+            color: #86efac !important;
+        }
+
+        html[data-theme="dark"] body #portfolioReport .text-warning,
+        :root:not(.lm) body #portfolioReport .text-warning,
+        body.dm #portfolioReport .text-warning,
+        .dm #portfolioReport .text-warning {
+            color: #fbbf24 !important;
+        }
+
+        html[data-theme="dark"] body #portfolioReport .text-danger,
+        :root:not(.lm) body #portfolioReport .text-danger,
+        body.dm #portfolioReport .text-danger,
+        .dm #portfolioReport .text-danger {
+            color: #fca5a5 !important;
+        }
+
+        html body #portfolioReport :is(#trendChart, #catChart) {
+            max-height: 168px !important;
+        }
+
+        html body #portfolioReport [style*="height:250px"] {
+            height: 168px !important;
+        }
+
+        html body #portfolioReport #report-feedback .row.g-4 {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+
+        html body #portfolioReport #report-feedback .p-3,
+        html body #portfolioReport .print-card .p-3 {
+            padding: 8px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #portfolioReport #report-feedback ul {
+            margin-bottom: 0 !important;
+            padding-left: 1rem !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #portfolioReport .mb-3 {
+            margin-bottom: 9px !important;
+        }
+
+        html body #portfolioReport .progress {
+            height: 7px !important;
+            background: var(--reports-pro-soft) !important;
+        }
+
+        html body #portfolioReport .col-md-6.d-flex.flex-column.gap-4 {
+            gap: 8px !important;
+        }
+
+        html body #portfolioReport .row.text-center.align-items-center.h-100 {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 0 !important;
+            text-align: center !important;
+        }
+
+        html body #portfolioReport .row.text-center.align-items-center.h-100 > .col-4 {
+            width: 100% !important;
+            padding: 0 4px !important;
+        }
+
+        html body #portfolioReport .row.text-center.align-items-center.h-100 [style*="font-size:clamp(1.2rem"] {
+            font-size: 1rem !important;
+            line-height: 1.1 !important;
+        }
+
+        html body #portfolioReport .row.text-center.align-items-center.h-100 [style*="font-size:clamp(0.55rem"] {
+            color: var(--reports-pro-muted) !important;
+            font-size: 0.52rem !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #portfolioReport #report-learning .row {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+        }
+
+        html body #portfolioReport #report-learning [style*="font-size:clamp(2rem"] {
+            font-size: 1.8rem !important;
+        }
+
+        html body #portfolioReport #report-learning ul {
+            margin: 0 !important;
+            color: var(--reports-pro-text) !important;
+        }
+
+        html body #portfolioReport #report-learning li {
+            min-height: 28px !important;
+            padding: 6px 8px !important;
+            border: 1px solid var(--reports-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--reports-pro-field) !important;
+        }
+
+        html body #portfolioReport .d-flex.flex-wrap.gap-4 {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            justify-content: stretch !important;
+        }
+
+        html body #portfolioReport .d-flex.flex-wrap.gap-4 > .text-center {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        html body #portfolioReport .d-flex.flex-wrap.gap-4 [style*="width:80px"] {
+            width: 48px !important;
+            height: 48px !important;
+            margin-bottom: 6px !important;
+            background: var(--reports-pro-soft) !important;
+            box-shadow: none !important;
+        }
+
+        html body #portfolioReport .d-flex.flex-wrap.gap-4 [style*="font-size:0.8rem"] {
+            color: var(--reports-pro-title) !important;
+            font-size: 0.58rem !important;
+            line-height: 1.16 !important;
+            overflow-wrap: anywhere;
+        }
+
+        html body #portfolioReport .report-empty-card {
+            padding: 22px 12px !important;
+            border-radius: 8px !important;
+            background: var(--reports-pro-card) !important;
+        }
+
+        html body #portfolioReport .report-empty-art {
+            width: min(104px, 34vw) !important;
+            margin-bottom: 12px !important;
+        }
+
+        html body #portfolioReport .report-empty-title {
+            color: var(--reports-pro-title) !important;
+            font-size: 1.02rem !important;
+            line-height: 1.14 !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #portfolioReport .report-empty-copy {
+            color: var(--reports-pro-muted) !important;
+            margin-bottom: 14px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.4 !important;
+        }
+
+        html body #portfolioReport .report-start-btn {
+            min-height: 40px !important;
+            width: 100% !important;
+            border-radius: 8px !important;
+            padding: 8px 12px !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+            font-size: 0.74rem !important;
+            font-weight: 900 !important;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24) !important;
+        }
+    }
+
+    @media screen and (max-width: 390px) {
+        html body #portfolioReport .sr-page-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            padding: 8px 66px 8px 10px !important;
+        }
+
+        html body #portfolioReport .reports-hero-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-subtitle {
+            max-width: 10.7rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #portfolioReport .sr-page-hero-art {
+            width: 66px !important;
+            right: -6px !important;
+        }
+
+    }
+
+    @media screen and (max-width: 360px) {
+        html body #portfolioReport .bg-light.bg-opacity-10,
+        html body #portfolioReport .row.g-3.text-center,
+        html body #portfolioReport .row.text-center.align-items-center.h-100,
+        html body #portfolioReport .d-flex.flex-wrap.gap-4 {
+            grid-template-columns: 1fr !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="portfolioReport">

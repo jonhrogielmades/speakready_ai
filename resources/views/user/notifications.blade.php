@@ -737,6 +737,500 @@
             width: 66px !important;
         }
     }
+
+    /* SaaSPro mobile polish for Notifications. */
+    @media (max-width: 767px) {
+        body #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(20, 184, 166, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        body #mob-content > .db-content {
+            padding: 12px 12px 18px !important;
+        }
+
+        html body #notifications-page {
+            --notif-pro-card: rgba(255, 255, 255, 0.98);
+            --notif-pro-field: rgba(255, 255, 255, 0.96);
+            --notif-pro-soft: #f8fafc;
+            --notif-pro-border: rgba(15, 23, 42, 0.1);
+            --notif-pro-title: #0f172a;
+            --notif-pro-text: #334155;
+            --notif-pro-muted: #64748b;
+            --notif-pro-accent: #2563eb;
+            --notif-pro-accent-2: #0891b2;
+            --notif-pro-success: #059669;
+            --notif-pro-danger: #dc2626;
+            --notif-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            max-width: 520px !important;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--notif-pro-title) !important;
+        }
+
+        html[data-theme="dark"] body #notifications-page,
+        :root:not(.lm) body #notifications-page,
+        body.dm #notifications-page,
+        .dm #notifications-page {
+            --notif-pro-card: rgba(15, 23, 42, 0.94);
+            --notif-pro-field: rgba(30, 41, 59, 0.9);
+            --notif-pro-soft: rgba(51, 65, 85, 0.78);
+            --notif-pro-border: rgba(148, 163, 184, 0.24);
+            --notif-pro-title: #f8fafc;
+            --notif-pro-text: #e2e8f0;
+            --notif-pro-muted: #cbd5e1;
+            --notif-pro-accent: #93c5fd;
+            --notif-pro-accent-2: #67e8f9;
+            --notif-pro-success: #86efac;
+            --notif-pro-danger: #fca5a5;
+            --notif-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #notifications-page .notif-hero {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            align-items: center !important;
+            width: 100% !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin: 0 !important;
+            padding: 8px 72px 8px 10px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(115deg, rgba(37, 99, 235, 0.98), rgba(8, 145, 178, 0.94)),
+                #2563eb !important;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.24) !important;
+            overflow: hidden !important;
+            position: relative;
+            isolation: isolate;
+        }
+
+        html[data-theme="dark"] body #notifications-page .notif-hero,
+        :root:not(.lm) body #notifications-page .notif-hero,
+        body.dm #notifications-page .notif-hero,
+        .dm #notifications-page .notif-hero {
+            background:
+                linear-gradient(115deg, rgba(30, 64, 175, 0.96), rgba(15, 118, 110, 0.9)),
+                #1e3a8a !important;
+            box-shadow: 0 18px 34px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        html body #notifications-page .notif-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.22;
+            pointer-events: none;
+        }
+
+        html body #notifications-page .notif-hero::after {
+            display: none !important;
+        }
+
+        html body #notifications-page .notif-hero-copy {
+            position: relative;
+            z-index: 1;
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
+
+        html body #notifications-page .notif-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 0.76rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #notifications-page .notif-hero .notif-hero-title {
+            display: block !important;
+            max-width: 100% !important;
+            margin: 0 0 3px !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.08 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #notifications-page .notif-hero-subtitle {
+            display: -webkit-box !important;
+            max-width: 12rem !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        html body #notifications-page .notif-hero-art {
+            display: block !important;
+            width: 72px !important;
+            height: auto !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            opacity: 0.98 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.22));
+            pointer-events: none;
+        }
+
+        html body #notifications-page .notif-bulk-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            margin: 0 !important;
+        }
+
+        html body #notifications-page .notif-bulk-btn {
+            min-width: 0 !important;
+            min-height: 38px !important;
+            padding: 7px 8px !important;
+            border: 1px solid rgba(37, 99, 235, 0.2) !important;
+            border-radius: 8px !important;
+            background: var(--notif-pro-field) !important;
+            color: var(--notif-pro-accent) !important;
+            box-shadow: var(--notif-pro-shadow) !important;
+            gap: 5px !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            white-space: normal !important;
+            text-align: center !important;
+        }
+
+        html body #notifications-page .notif-bulk-btn i {
+            color: inherit !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #notifications-page .notif-bulk-btn.danger {
+            border-color: rgba(220, 38, 38, 0.24) !important;
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: var(--notif-pro-danger) !important;
+            box-shadow: none !important;
+        }
+
+        html body #notifications-page .notif-bulk-btn:hover,
+        html body #notifications-page .notification-action-btn:hover {
+            transform: none !important;
+        }
+
+        html body #notifications-page .premium-panel {
+            display: grid !important;
+            gap: 8px !important;
+            width: 100% !important;
+            max-width: none !important;
+            justify-self: stretch !important;
+            align-self: stretch !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html body #notifications-page .notification-row {
+            display: grid !important;
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            min-height: 0 !important;
+            padding: 10px !important;
+            border: 1px solid var(--notif-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--notif-pro-card) !important;
+            box-shadow: var(--notif-pro-shadow) !important;
+            color: var(--notif-pro-title) !important;
+            overflow: hidden !important;
+        }
+
+        html body #notifications-page .notification-row:hover {
+            transform: none !important;
+            box-shadow: var(--notif-pro-shadow) !important;
+        }
+
+        html body #notifications-page .notification-row.is-unread {
+            border-color: rgba(37, 99, 235, 0.32) !important;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.07), rgba(20, 184, 166, 0.04)),
+                var(--notif-pro-card) !important;
+        }
+
+        html[data-theme="dark"] body #notifications-page .notification-row.is-unread,
+        :root:not(.lm) body #notifications-page .notification-row.is-unread,
+        body.dm #notifications-page .notification-row.is-unread,
+        .dm #notifications-page .notification-row.is-unread {
+            border-color: rgba(147, 197, 253, 0.36) !important;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(20, 184, 166, 0.08)),
+                var(--notif-pro-card) !important;
+        }
+
+        html body #notifications-page .notification-icon-box {
+            width: 32px !important;
+            height: 32px !important;
+            min-width: 32px !important;
+            border: 1px solid var(--notif-pro-border) !important;
+            border-radius: 8px !important;
+            font-size: 0.76rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #notifications-page .notification-content {
+            min-width: 0 !important;
+        }
+
+        html body #notifications-page .notification-head {
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 5px 6px !important;
+            margin-bottom: 6px !important;
+        }
+
+        html body #notifications-page .notification-title {
+            flex: 1 1 100%;
+            min-width: 0 !important;
+            color: var(--notif-pro-title) !important;
+            font-size: 0.76rem !important;
+            font-weight: 900 !important;
+            line-height: 1.18 !important;
+            margin: 0 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        html body #notifications-page .notification-status-badge {
+            min-height: 20px !important;
+            padding: 4px 6px !important;
+            border-radius: 6px !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+            font-size: 0.5rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+        }
+
+        html body #notifications-page .notification-meta {
+            min-height: 20px !important;
+            max-width: 100% !important;
+            padding: 4px 6px !important;
+            border: 1px solid var(--notif-pro-border) !important;
+            border-radius: 6px !important;
+            background: var(--notif-pro-soft) !important;
+            color: var(--notif-pro-muted) !important;
+            font-size: 0.54rem !important;
+            font-weight: 800 !important;
+            line-height: 1 !important;
+        }
+
+        html body #notifications-page .notification-meta i {
+            color: var(--notif-pro-accent) !important;
+        }
+
+        html body #notifications-page .notification-message {
+            margin: 0 0 8px !important;
+            color: var(--notif-pro-text) !important;
+            font-size: 0.66rem !important;
+            font-weight: 650 !important;
+            line-height: 1.34 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        html body #notifications-page .notification-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            max-width: none !important;
+        }
+
+        html body #notifications-page .notification-actions > :only-child {
+            grid-column: 1 / -1 !important;
+        }
+
+        html body #notifications-page .notification-action-btn {
+            min-width: 0 !important;
+            min-height: 32px !important;
+            padding: 7px 8px !important;
+            border: 1px solid rgba(37, 99, 235, 0.2) !important;
+            border-radius: 8px !important;
+            background: var(--notif-pro-field) !important;
+            color: var(--notif-pro-accent) !important;
+            box-shadow: none !important;
+            gap: 5px !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            white-space: normal !important;
+            text-align: center !important;
+        }
+
+        html body #notifications-page .notification-action-btn i {
+            color: inherit !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #notifications-page .notification-action-btn.delete {
+            border-color: rgba(220, 38, 38, 0.24) !important;
+            background: rgba(220, 38, 38, 0.1) !important;
+            color: var(--notif-pro-danger) !important;
+        }
+
+        html body #notifications-page .notifications-empty-state {
+            width: 100% !important;
+            max-width: none !important;
+            box-sizing: border-box !important;
+            padding: 30px 14px !important;
+            border: 1px dashed var(--notif-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--notif-pro-card) !important;
+            color: var(--notif-pro-text) !important;
+            box-shadow: var(--notif-pro-shadow) !important;
+        }
+
+        html body #notifications-page .notifications-empty-icon {
+            width: 46px !important;
+            height: 46px !important;
+            margin-bottom: 10px !important;
+            border: 1px solid rgba(37, 99, 235, 0.2) !important;
+            border-radius: 8px !important;
+            background: rgba(37, 99, 235, 0.1) !important;
+            color: var(--notif-pro-accent) !important;
+            font-size: 1.05rem !important;
+        }
+
+        html body #notifications-page .notifications-empty-state p {
+            color: var(--notif-pro-muted) !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            line-height: 1.32 !important;
+        }
+
+        html body #notifications-page .notifications-pagination {
+            margin-top: 0 !important;
+            gap: 7px !important;
+        }
+
+        html body #notifications-page .notifications-pagination .pagination {
+            gap: 5px !important;
+        }
+
+        html body #notifications-page .notifications-pagination .page-link,
+        html body #notifications-page .notifications-pagination span.page-link {
+            min-width: 32px !important;
+            height: 32px !important;
+            min-height: 32px !important;
+            padding: 0 9px !important;
+            border: 1px solid var(--notif-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--notif-pro-field) !important;
+            color: var(--notif-pro-title) !important;
+            font-size: 0.7rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+
+        html body #notifications-page .notifications-pagination .page-item.active .page-link {
+            border-color: transparent !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+        }
+
+        html body #notifications-page .notifications-pagination p,
+        html body #notifications-page .notifications-pagination .text-sm {
+            color: var(--notif-pro-muted) !important;
+            font-size: 0.66rem !important;
+            font-weight: 700 !important;
+            line-height: 1.3 !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #notifications-page .notif-hero {
+            padding: 8px 66px 8px 10px !important;
+        }
+
+        html body #notifications-page .notif-hero-copy {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+        }
+
+        html body #notifications-page .notif-hero-icon {
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #notifications-page .notif-hero .notif-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #notifications-page .notif-hero-subtitle {
+            max-width: 10.8rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #notifications-page .notif-hero-art {
+            width: 66px !important;
+            right: -6px !important;
+        }
+
+        html body #notifications-page .notification-row {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            padding: 9px !important;
+        }
+
+        html body #notifications-page .notification-icon-box {
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #notifications-page .notif-bulk-actions,
+        html body #notifications-page .notification-actions {
+            grid-template-columns: 1fr !important;
+        }
+
+        html body #notifications-page .notification-title {
+            font-size: 0.72rem !important;
+        }
+
+        html body #notifications-page .notification-message {
+            font-size: 0.62rem !important;
+        }
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="notifications-page">
@@ -769,7 +1263,7 @@
     </div>
     @endif
 
-    <div class="premium-panel animate-fade-up" style="animation-delay: 0.2s;" id="notificationsPageList">
+    <div class="premium-panel notifications-list-panel animate-fade-up" style="animation-delay: 0.2s; width: 100% !important; min-width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;" id="notificationsPageList">
         @forelse($notifications as $notification)
         @php
             $isRead = !is_null($notification->read_at);
@@ -808,7 +1302,7 @@
             </div>
         </div>
         @empty
-        <div class="notifications-empty-state">
+        <div class="notifications-empty-state notifications-empty-state-wide" style="width: 100% !important; min-width: 100% !important; max-width: none !important; margin: 0 !important; box-sizing: border-box !important;">
             <div class="notifications-empty-icon"><i class="fa-regular fa-bell-slash"></i></div>
             <p class="mb-0">You have no notifications at the moment.</p>
         </div>

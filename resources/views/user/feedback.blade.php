@@ -704,7 +704,7 @@
 
     /* Match the compact Modules banner layout and theme behavior. */
     .feedback-shell .feedback-hero {
-        --feedback-hero-title-color: #1d4ed8;
+        --feedback-hero-title-color: #fde047;
         --feedback-hero-text-color: #334155;
         --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
@@ -724,7 +724,7 @@
     }
     html[data-theme="dark"] .feedback-shell .feedback-hero,
     :root:not(.lm) .feedback-shell .feedback-hero {
-        --feedback-hero-title-color: #93c5fd;
+        --feedback-hero-title-color: #fde047;
         --feedback-hero-text-color: #e2e8f0;
         --feedback-hero-icon-bg: rgba(59, 130, 246, 0.2);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.32);
@@ -823,7 +823,7 @@
     }
 
     #feedbackModulesLikeHero.feedback-hero {
-        --feedback-hero-title-color: #1d4ed8;
+        --feedback-hero-title-color: #fde047;
         --feedback-hero-text-color: #334155;
         --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
@@ -845,7 +845,7 @@
     }
     :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
     .dm #feedbackModulesLikeHero.feedback-hero {
-        --feedback-hero-title-color: #93c5fd;
+        --feedback-hero-title-color: #fde047;
         --feedback-hero-text-color: #e2e8f0;
         --feedback-hero-icon-bg: rgba(59, 130, 246, 0.2);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.32);
@@ -872,6 +872,7 @@
     }
     #feedbackModulesLikeHero .feedback-title {
         color: var(--feedback-hero-title-color) !important;
+        -webkit-text-fill-color: var(--feedback-hero-title-color) !important;
         font-size: 0.72rem !important;
         line-height: 1.08 !important;
         margin: 0 0 3px !important;
@@ -1134,6 +1135,589 @@
             border-color: var(--feedback-saas-border);
             font-size: 0.72rem;
             font-weight: 800;
+        }
+    }
+
+    /* Final mobile SaaSPro layer for the Feedback screen. */
+    @media (max-width: 767px) {
+        #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(16, 185, 129, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        #mob-content > .db-content {
+            padding: 12px 12px 16px !important;
+        }
+
+        #mob-content .feedback-shell {
+            --feedback-mobile-radius: 8px;
+            --feedback-mobile-card: rgba(255, 255, 255, 0.98);
+            --feedback-mobile-panel: #f8fafc;
+            --feedback-mobile-field: rgba(255, 255, 255, 0.96);
+            --feedback-mobile-border: rgba(15, 23, 42, 0.1);
+            --feedback-mobile-title: #0f172a;
+            --feedback-mobile-muted: #64748b;
+            --feedback-mobile-shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+            max-width: 520px;
+            margin: 0 auto !important;
+            gap: 12px !important;
+        }
+
+        html[data-theme="dark"] #mob-content .feedback-shell,
+        :root:not(.lm) #mob-content .feedback-shell,
+        .dm #mob-content .feedback-shell {
+            --feedback-mobile-card: rgba(15, 23, 42, 0.96);
+            --feedback-mobile-panel: rgba(30, 41, 59, 0.82);
+            --feedback-mobile-field: rgba(15, 23, 42, 0.9);
+            --feedback-mobile-border: rgba(148, 163, 184, 0.18);
+            --feedback-mobile-title: #f8fafc;
+            --feedback-mobile-muted: #94a3b8;
+            --feedback-mobile-shadow: 0 16px 32px rgba(2, 6, 23, 0.34);
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero {
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px 72px 8px 10px !important;
+            overflow: hidden !important;
+            border: 0 !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            background:
+                radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+                radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+                linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+        }
+
+        html[data-theme="dark"] #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero,
+        :root:not(.lm) #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero,
+        .dm #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero {
+            background:
+                radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+                radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+                linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            display: block !important;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 26px 26px;
+            opacity: 0.25;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-copy {
+            display: contents !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-chat-mark {
+            box-sizing: border-box;
+            position: relative;
+            z-index: 2;
+            width: 28px !important;
+            height: 28px !important;
+            padding: 6px !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            border: 1px solid rgba(255, 255, 255, 0.26) !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-copy > div {
+            position: relative;
+            z-index: 2;
+            min-width: 0;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-title {
+            margin: 0 0 3px !important;
+            color: #fde047 !important;
+            -webkit-text-fill-color: #fde047 !important;
+            font-size: 0.72rem !important;
+            line-height: 1.15 !important;
+            letter-spacing: 0 !important;
+            text-transform: uppercase !important;
+            white-space: nowrap !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-subtitle {
+            margin: 0 !important;
+            max-width: 13.5rem !important;
+            color: rgba(255, 255, 255, 0.86) !important;
+            font-size: 0.49rem !important;
+            line-height: 1.32 !important;
+            font-weight: 650 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-art {
+            width: 72px !important;
+            height: auto !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            top: auto !important;
+            opacity: 0.96 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.18));
+            transform-origin: 50% 60%;
+            animation: srFeedbackHeroFloat 5s ease-in-out infinite;
+        }
+
+        #mob-content .feedback-shell .premium-panel {
+            padding: 12px !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            border: 1px solid var(--feedback-mobile-border) !important;
+            background: var(--feedback-mobile-card) !important;
+            box-shadow: var(--feedback-mobile-shadow) !important;
+        }
+
+        #mob-content .feedback-shell .feedback-history-head {
+            display: block !important;
+        }
+
+        #mob-content .feedback-shell .feedback-history-title {
+            display: flex !important;
+            align-items: center !important;
+            gap: 9px !important;
+            margin: 0 0 10px !important;
+            color: var(--feedback-mobile-title) !important;
+            font-size: 0.93rem !important;
+            line-height: 1.1 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        #mob-content .feedback-shell .feedback-history-title::before {
+            content: "";
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            border-radius: var(--feedback-mobile-radius);
+            background:
+                linear-gradient(#ffffff, #ffffff) center 9px / 15px 2px no-repeat,
+                linear-gradient(#ffffff, #ffffff) center 15px / 18px 2px no-repeat,
+                linear-gradient(135deg, #2563eb, #14b8a6);
+        }
+
+        #mob-content .feedback-shell .feedback-history-title::after {
+            content: "";
+            min-width: 28px;
+            height: 1px;
+            flex: 1;
+            background: linear-gradient(90deg, var(--feedback-mobile-border), transparent);
+        }
+
+        #mob-content .feedback-shell #feedback-filters {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            margin: 0 0 12px !important;
+            padding: 8px !important;
+            border: 1px solid var(--feedback-mobile-border) !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            background: var(--feedback-mobile-panel) !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters #scenarioFilter,
+        #mob-content .feedback-shell #feedback-filters .feedback-search-wrap {
+            grid-column: 1 / -1 !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters:not(:has(.feedback-clear-form)) #sortDateBtn {
+            grid-column: 1 / -1 !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters .feedback-clear-form,
+        #mob-content .feedback-shell #feedback-filters .feedback-clear-form .btn,
+        #mob-content .feedback-shell #feedback-filters #sortDateBtn {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters .db-filter-input,
+        #mob-content .feedback-shell #feedback-filters .btn,
+        #mob-content .feedback-shell #feedback-filters .form-select {
+            min-height: 38px !important;
+            border-radius: 6px !important;
+            border-color: var(--feedback-mobile-border) !important;
+            background-color: var(--feedback-mobile-field) !important;
+            color: var(--feedback-mobile-title) !important;
+            font-size: 0.68rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            box-shadow: none !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters .feedback-search-wrap {
+            overflow: hidden !important;
+            border-radius: 6px !important;
+            background: var(--feedback-mobile-field) !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text {
+            width: 36px !important;
+            justify-content: center !important;
+            color: var(--feedback-mobile-muted) !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
+            color: var(--feedback-mobile-muted) !important;
+            opacity: 0.8;
+        }
+
+        #mob-content .feedback-shell .feedback-table-wrap {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable {
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0 8px !important;
+            margin: 0 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable thead {
+            display: none !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody,
+        #mob-content .feedback-shell #feedbackTable tbody tr,
+        #mob-content .feedback-shell #feedbackTable tbody td {
+            width: 100% !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(108px, auto) !important;
+            gap: 7px 10px !important;
+            padding: 11px !important;
+            border: 1px solid var(--feedback-mobile-border) !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            background: var(--feedback-mobile-panel) !important;
+            box-shadow: none !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr.feedback-empty-row {
+            display: block !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td {
+            min-width: 0;
+            display: flex !important;
+            align-items: center !important;
+            padding: 0 !important;
+            border: 0 !important;
+            color: var(--feedback-mobile-title) !important;
+            text-align: left !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr.feedback-empty-row td {
+            display: block !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(1) {
+            grid-column: 1 / -1 !important;
+            color: var(--feedback-mobile-muted) !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(1)::before {
+            display: none !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(2) {
+            grid-column: 1 / -1 !important;
+            color: var(--feedback-mobile-title) !important;
+            font-size: 0.82rem !important;
+            font-weight: 900 !important;
+            line-height: 1.25 !important;
+            overflow-wrap: anywhere;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(3),
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(4) {
+            min-height: 42px;
+            flex-direction: column;
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding: 7px 8px !important;
+            border-radius: 6px !important;
+            background: var(--feedback-mobile-field) !important;
+            font-size: 0.76rem !important;
+            font-weight: 900 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(3)::before,
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(4)::before {
+            margin-bottom: 2px;
+            color: var(--feedback-mobile-muted) !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: 0 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(3)::before {
+            content: "Score";
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(4)::before {
+            content: "Rating";
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) {
+            grid-column: 1 / -1 !important;
+            display: block !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable .badge {
+            max-width: 100%;
+            min-height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px !important;
+            padding: 0 9px !important;
+            font-size: 0.61rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+            white-space: normal !important;
+            text-align: left;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 38px !important;
+            gap: 8px !important;
+            width: 100% !important;
+            justify-content: stretch !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions > a,
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions > form {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
+            width: 100% !important;
+            min-height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 7px !important;
+            border-radius: 6px !important;
+            font-size: 0.7rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn i {
+            margin: 0 !important;
+            flex: 0 0 auto;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-primary {
+            border-color: transparent !important;
+            background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger {
+            border-color: rgba(239, 68, 68, 0.2) !important;
+            background: rgba(254, 242, 242, 0.9) !important;
+            color: #dc2626 !important;
+        }
+
+        html[data-theme="dark"] #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger,
+        :root:not(.lm) #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger,
+        .dm #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger {
+            background: rgba(127, 29, 29, 0.26) !important;
+            color: #fecaca !important;
+        }
+
+        #mob-content .feedback-shell .feedback-history-delete-label {
+            display: none !important;
+        }
+
+        #mob-content .feedback-shell .feedback-empty-state {
+            min-height: 112px !important;
+            padding: 18px 14px !important;
+            border: 1px dashed var(--feedback-mobile-border) !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            background: var(--feedback-mobile-panel) !important;
+            color: var(--feedback-mobile-muted) !important;
+            font-size: 0.78rem !important;
+            font-weight: 800 !important;
+            line-height: 1.35 !important;
+            text-align: center !important;
+        }
+
+        #mob-content .feedback-shell .feedback-empty-state i {
+            color: #2563eb !important;
+        }
+
+        #mob-content .feedback-shell #feedbackPagination {
+            justify-content: center !important;
+            margin-top: 12px !important;
+        }
+
+        #mob-content .feedback-shell #feedbackPagination .pagination {
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #mob-content .feedback-shell #feedbackPagination .page-link {
+            min-width: 34px !important;
+            min-height: 34px !important;
+            border-radius: var(--feedback-mobile-radius) !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-color: var(--feedback-mobile-border) !important;
+            background: var(--feedback-mobile-field) !important;
+            color: var(--feedback-mobile-title) !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero {
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-chat-mark {
+            width: 28px !important;
+            height: 28px !important;
+            padding: 6px !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-title {
+            font-size: 0.68rem !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-subtitle {
+            max-width: 12rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-art {
+            width: 66px !important;
+            right: -5px !important;
+            bottom: -2px !important;
+        }
+
+        #mob-content .feedback-shell .premium-panel {
+            padding: 10px !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #mob-content .feedback-shell #feedbackModulesLikeHero.feedback-hero {
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            grid-template-columns: 27px minmax(0, 1fr) !important;
+            padding-right: 62px !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-chat-mark {
+            width: 27px !important;
+            height: 27px !important;
+            padding: 6px !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-title {
+            font-size: 0.64rem !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-subtitle {
+            max-width: 10.25rem !important;
+            font-size: 0.43rem !important;
+        }
+
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-art {
+            width: 62px !important;
+            right: -6px !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters {
+            grid-template-columns: 1fr !important;
+        }
+
+        #mob-content .feedback-shell #feedback-filters #sortDateBtn,
+        #mob-content .feedback-shell #feedback-filters .feedback-clear-form {
+            grid-column: 1 / -1 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr {
+            grid-template-columns: 1fr !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(3),
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(4) {
+            grid-column: 1 / -1 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions {
+            grid-template-columns: minmax(0, 1fr) 36px !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
+            min-height: 36px !important;
+            font-size: 0.65rem !important;
+        }
+    }
+
+    @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+        #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-art {
+            animation: none !important;
+        }
+    }
+
+    @keyframes srFeedbackHeroFloat {
+        0%, 100% {
+            transform: translateY(0) rotate(-1deg);
+        }
+
+        50% {
+            transform: translateY(-5px) rotate(1.5deg);
         }
     }
 </style>

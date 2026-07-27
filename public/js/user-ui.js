@@ -771,9 +771,10 @@
             }
 
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
+            cleanupUserPageRuntime();
             replaceUserContent(content, nextContent);
             updateDocumentMetadata(doc, nextContent, url, options);
-            runPageScripts(html, contentScripts);
+            await runPageScripts(html, contentScripts);
             refreshCommonEnhancements();
             window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
             hideSafeNavigationStatus();
@@ -836,36 +837,64 @@
         return html.slice(start, end);
     }
 
-    function runPageScripts(html, contentScripts) {
-        document.querySelectorAll('script[data-user-page-script-runtime]').forEach(function (script) {
-            script.remove();
-        });
+    async function runPageScripts(html, contentScripts) {
+        removeRuntimePageScripts();
 
+        var readyListeners = [];
         var stackTemplate = document.createElement('template');
         stackTemplate.innerHTML = extractPageScriptHtml(html);
         var scripts = []
             .concat(contentScripts || [])
             .concat(Array.from(stackTemplate.content.querySelectorAll('script')));
 
-        scripts.forEach(function (script) {
-            if (!script.src && !script.textContent.trim()) return;
+        for (var index = 0; index < scripts.length; index += 1) {
+            var script = scripts[index];
+            if (!script.src && !script.textContent.trim()) continue;
 
             if (!script.src && (script.type || '').toLowerCase() !== 'module') {
-                executeInlinePageScript(script.textContent);
-                return;
+                executeInlinePageScript(script.textContent, readyListeners);
+                continue;
             }
 
+            await appendRuntimePageScript(script);
+        }
+
+        runDeferredReadyListeners(readyListeners);
+    }
+
+    function appendRuntimePageScript(script) {
+        return new Promise(function (resolve) {
             var replacement = document.createElement('script');
+            var settled = false;
+            var fallbackTimer = 0;
+
+            function finish() {
+                if (settled) return;
+                settled = true;
+                if (fallbackTimer) window.clearTimeout(fallbackTimer);
+                resolve();
+            }
+
             Array.from(script.attributes).forEach(function (attribute) {
                 replacement.setAttribute(attribute.name, attribute.value);
             });
             replacement.dataset.userPageScriptRuntime = 'true';
+            replacement.async = false;
+
+            replacement.addEventListener('load', finish, { once: true });
+            replacement.addEventListener('error', function () {
+                console.warn('User Side page script failed to load:', replacement.src || '[inline module]');
+                finish();
+            }, { once: true });
+
             if (!replacement.src) replacement.text = script.textContent;
             document.body.appendChild(replacement);
+
+            fallbackTimer = window.setTimeout(finish, 15000);
         });
     }
 
-    function executeInlinePageScript(source) {
+    function executeInlinePageScript(source, readyListeners) {
         var exportedNames = [];
         var functionPattern = /(?:^|\n)\s*(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/g;
         var match;
@@ -875,18 +904,279 @@
         }
 
         var exportSource = exportedNames.map(function (name) {
-            return 'try { if (typeof ' + name + ' === "function") window["' + name + '"] = ' + name + '; } catch (exportError) { console.warn("Unable to export page function ' + name + ':", exportError); }';
+            return 'try { if (typeof ' + name + ' === "function") __speakReadyExportPageFunction("' + name + '", ' + name + '); } catch (exportError) { console.warn("Unable to export page function ' + name + ':", exportError); }';
         }).join('\n');
 
         try {
-            new Function('"use strict";\n' + source + '\n' + exportSource + '\n//# sourceURL=speakready-user-page-inline.js')();
+            var proxyTargets = createReadyAwareGlobals(readyListeners);
+            new Function(
+                'window',
+                'document',
+                'setTimeout',
+                'clearTimeout',
+                'setInterval',
+                'clearInterval',
+                'requestAnimationFrame',
+                'cancelAnimationFrame',
+                '__speakReadyExportPageFunction',
+                '"use strict";\n' + source + '\n' + exportSource + '\n//# sourceURL=speakready-user-page-inline.js'
+            )(
+                proxyTargets.window,
+                proxyTargets.document,
+                proxyTargets.setTimeout,
+                proxyTargets.clearTimeout,
+                proxyTargets.setInterval,
+                proxyTargets.clearInterval,
+                proxyTargets.requestAnimationFrame,
+                proxyTargets.cancelAnimationFrame,
+                exportPageFunction
+            );
         } catch (error) {
             console.error('User Side page script failed:', error);
             showSafeNavigationStatus('Some page behavior could not initialize. Reloading...');
-            window.setTimeout(function () {
-                window.location.reload();
-            }, 250);
+            throw error;
         }
+    }
+
+    function createReadyAwareGlobals(readyListeners) {
+        var timers = createPageTimerProxies();
+
+        if (typeof Proxy === 'undefined') {
+            return Object.assign({ window: window, document: document }, timers);
+        }
+
+        var documentMappings = {};
+        var readyDocument = createReadyAwareEventTargetProxy(document, readyListeners, documentMappings);
+        var windowMappings = Object.assign({ document: readyDocument }, timers);
+        var readyWindow = createReadyAwareEventTargetProxy(window, readyListeners, windowMappings);
+
+        documentMappings.defaultView = readyWindow;
+        windowMappings.window = readyWindow;
+        windowMappings.self = readyWindow;
+        windowMappings.globalThis = readyWindow;
+
+        return Object.assign({
+            window: readyWindow,
+            document: readyDocument
+        }, timers);
+    }
+
+    function createReadyAwareEventTargetProxy(target, readyListeners, mappedProperties) {
+        var proxy = new Proxy(target, {
+            get: function (realTarget, property) {
+                if (mappedProperties && Object.prototype.hasOwnProperty.call(mappedProperties, property)) {
+                    return mappedProperties[property];
+                }
+
+                if (property === 'addEventListener') {
+                    return function (type, listener, options) {
+                        if (listener && shouldReplayReadyEvent(realTarget, type)) {
+                            readyListeners.push({
+                                target: realTarget,
+                                type: String(type),
+                                listener: listener
+                            });
+                            return undefined;
+                        }
+
+                        realTarget.addEventListener.call(realTarget, type, listener, options);
+                        trackUserPageCleanup(function () {
+                            realTarget.removeEventListener.call(realTarget, type, listener, options);
+                        });
+                        return undefined;
+                    };
+                }
+
+                if (property === 'removeEventListener') {
+                    return function (type, listener, options) {
+                        return realTarget.removeEventListener.call(realTarget, type, listener, options);
+                    };
+                }
+
+                var value = realTarget[property];
+                return typeof value === 'function' ? value.bind(realTarget) : value;
+            },
+            set: function (realTarget, property, value) {
+                realTarget[property] = value;
+                return true;
+            }
+        });
+
+        return proxy;
+    }
+
+    function shouldReplayReadyEvent(target, type) {
+        var eventType = String(type || '').toLowerCase();
+
+        if (target === document && eventType === 'domcontentloaded') {
+            return document.readyState !== 'loading';
+        }
+
+        if (target === window && eventType === 'load') {
+            return document.readyState === 'complete';
+        }
+
+        if (target === window && eventType === 'pageshow') {
+            return document.readyState === 'complete';
+        }
+
+        return false;
+    }
+
+    function runDeferredReadyListeners(readyListeners) {
+        readyListeners.forEach(function (entry) {
+            try {
+                invokePageEventListener(entry.target, entry.type, entry.listener);
+            } catch (error) {
+                console.error('User Side ready callback failed:', error);
+                showSafeNavigationStatus('Some page behavior could not initialize. Reloading...');
+                throw error;
+            }
+        });
+    }
+
+    function invokePageEventListener(target, type, listener) {
+        var event = createSyntheticReadyEvent(target, type);
+
+        if (typeof listener === 'function') {
+            listener.call(target, event);
+            return;
+        }
+
+        if (listener && typeof listener.handleEvent === 'function') {
+            listener.handleEvent(event);
+        }
+    }
+
+    function createSyntheticReadyEvent(target, type) {
+        return {
+            type: type,
+            target: target,
+            currentTarget: target,
+            eventPhase: 2,
+            bubbles: false,
+            cancelable: false,
+            defaultPrevented: false,
+            persisted: false,
+            timeStamp: Date.now(),
+            preventDefault: function () {
+                this.defaultPrevented = true;
+            },
+            stopPropagation: function () {},
+            stopImmediatePropagation: function () {}
+        };
+    }
+
+    function createPageTimerProxies() {
+        return {
+            setTimeout: function () {
+                var timeoutId = window.setTimeout.apply(window, arguments);
+                trackUserPageCleanup(function () {
+                    window.clearTimeout(timeoutId);
+                });
+                return timeoutId;
+            },
+            clearTimeout: function (timeoutId) {
+                return window.clearTimeout(timeoutId);
+            },
+            setInterval: function () {
+                var intervalId = window.setInterval.apply(window, arguments);
+                trackUserPageCleanup(function () {
+                    window.clearInterval(intervalId);
+                });
+                return intervalId;
+            },
+            clearInterval: function (intervalId) {
+                return window.clearInterval(intervalId);
+            },
+            requestAnimationFrame: function () {
+                var frameId = window.requestAnimationFrame.apply(window, arguments);
+                trackUserPageCleanup(function () {
+                    window.cancelAnimationFrame(frameId);
+                });
+                return frameId;
+            },
+            cancelAnimationFrame: function (frameId) {
+                return window.cancelAnimationFrame(frameId);
+            }
+        };
+    }
+
+    function trackUserPageCleanup(cleanup) {
+        if (typeof cleanup !== 'function') return;
+        if (!Array.isArray(userApp.pageRuntimeCleanups)) {
+            userApp.pageRuntimeCleanups = [];
+        }
+        userApp.pageRuntimeCleanups.push(cleanup);
+    }
+
+    function exportPageFunction(name, fn) {
+        if (!name || typeof fn !== 'function') return;
+
+        if (!userApp.pageRuntimeExportNames) {
+            userApp.pageRuntimeExportNames = Object.create(null);
+            userApp.pageRuntimeExports = [];
+        }
+
+        if (!userApp.pageRuntimeExportNames[name]) {
+            userApp.pageRuntimeExportNames[name] = true;
+            userApp.pageRuntimeExports.push({
+                name: name,
+                hadOwnValue: Object.prototype.hasOwnProperty.call(window, name),
+                value: window[name]
+            });
+        }
+
+        window[name] = fn;
+    }
+
+    function cleanupUserPageRuntime() {
+        removeRuntimePageScripts();
+        restorePageFunctionExports();
+
+        if (!Array.isArray(userApp.pageRuntimeCleanups)) {
+            userApp.pageRuntimeCleanups = [];
+            return;
+        }
+
+        while (userApp.pageRuntimeCleanups.length) {
+            var cleanup = userApp.pageRuntimeCleanups.pop();
+            try {
+                cleanup();
+            } catch (error) {
+                console.warn('User Side page cleanup failed:', error);
+            }
+        }
+    }
+
+    function restorePageFunctionExports() {
+        if (!Array.isArray(userApp.pageRuntimeExports)) {
+            userApp.pageRuntimeExports = [];
+            userApp.pageRuntimeExportNames = Object.create(null);
+            return;
+        }
+
+        while (userApp.pageRuntimeExports.length) {
+            var previous = userApp.pageRuntimeExports.pop();
+
+            try {
+                if (previous.hadOwnValue) {
+                    window[previous.name] = previous.value;
+                } else {
+                    delete window[previous.name];
+                }
+            } catch (error) {
+                window[previous.name] = previous.hadOwnValue ? previous.value : undefined;
+            }
+        }
+
+        userApp.pageRuntimeExportNames = Object.create(null);
+    }
+
+    function removeRuntimePageScripts() {
+        document.querySelectorAll('script[data-user-page-script-runtime]').forEach(function (script) {
+            script.remove();
+        });
     }
 
     function refreshCommonEnhancements() {

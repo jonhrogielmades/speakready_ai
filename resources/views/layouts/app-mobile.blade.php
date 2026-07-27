@@ -19,7 +19,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=11') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=15') }}" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       @include('partials.onboarding-styles')
       <style>
@@ -1974,6 +1974,624 @@
                top: auto !important;
                bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 8px) !important;
             }
+
+            .mob-profile-dropdown {
+               --mob-menu-panel: rgba(15, 23, 42, 0.96);
+               --mob-menu-soft: rgba(30, 41, 59, 0.82);
+               --mob-menu-tile: rgba(30, 41, 59, 0.72);
+               --mob-menu-tile-border: rgba(148, 163, 184, 0.24);
+               --mob-menu-title: #f8fafc;
+               --mob-menu-muted: #cbd5e1;
+               --mob-menu-active: rgba(37, 99, 235, 0.24);
+               --mob-menu-active-border: rgba(96, 165, 250, 0.46);
+               --mob-menu-danger: #fca5a5;
+               --mob-menu-danger-bg: rgba(239, 68, 68, 0.14);
+               --mob-menu-danger-border: rgba(248, 113, 113, 0.34);
+               background: var(--mob-menu-panel) !important;
+               border-color: var(--mob-menu-tile-border) !important;
+               border-radius: 16px !important;
+               box-shadow: 0 22px 52px rgba(2, 6, 23, 0.38) !important;
+               color: var(--mob-menu-title) !important;
+            }
+
+            .lm .mob-profile-dropdown {
+               --mob-menu-panel: rgba(255, 255, 255, 0.98);
+               --mob-menu-soft: #f8fafc;
+               --mob-menu-tile: #ffffff;
+               --mob-menu-tile-border: rgba(148, 163, 184, 0.28);
+               --mob-menu-title: #0f172a;
+               --mob-menu-muted: #64748b;
+               --mob-menu-active: #eff6ff;
+               --mob-menu-active-border: rgba(37, 99, 235, 0.32);
+               --mob-menu-danger: #ef4444;
+               --mob-menu-danger-bg: #fff1f2;
+               --mob-menu-danger-border: rgba(248, 113, 113, 0.28);
+               box-shadow: 0 18px 44px rgba(15, 23, 42, 0.16) !important;
+            }
+
+            .mob-profile-head,
+            .mob-profile-pages-close {
+               min-height: 56px !important;
+               padding: 12px 14px !important;
+               border-bottom: 1px solid var(--mob-menu-tile-border) !important;
+               background: var(--mob-menu-panel) !important;
+               color: var(--mob-menu-title) !important;
+            }
+
+            .mob-profile-pages-close span {
+               font-size: 0.9rem !important;
+               font-weight: 900 !important;
+               line-height: 1.12 !important;
+               color: var(--mob-menu-title) !important;
+            }
+
+            .mob-profile-close {
+               width: 30px !important;
+               height: 30px !important;
+               border-radius: 8px !important;
+               border-color: var(--mob-menu-tile-border) !important;
+               background: var(--mob-menu-soft) !important;
+               color: var(--mob-menu-title) !important;
+               font-size: 0.72rem !important;
+            }
+
+            .mob-profile-close:active {
+               transform: scale(0.94) !important;
+            }
+
+            .mob-profile-head-avatar {
+               width: 42px !important;
+               height: 42px !important;
+               border-radius: 12px !important;
+               border: 1px solid rgba(255, 255, 255, 0.22) !important;
+               background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+               color: #ffffff !important;
+               box-shadow: 0 10px 22px rgba(37, 99, 235, 0.26) !important;
+            }
+
+            .lm .mob-profile-head-avatar {
+               border-color: rgba(191, 219, 254, 0.82) !important;
+            }
+
+            .mob-profile-name {
+               color: var(--mob-menu-title) !important;
+               font-size: 0.82rem !important;
+               font-weight: 900 !important;
+               line-height: 1.18 !important;
+            }
+
+            .mob-profile-role {
+               display: inline-flex !important;
+               align-items: center !important;
+               min-height: 16px !important;
+               margin-top: 4px !important;
+               padding: 1px 6px !important;
+               border-radius: 6px !important;
+               background: rgba(37, 99, 235, 0.12) !important;
+               color: var(--mob-menu-muted) !important;
+               font-size: 0.56rem !important;
+               font-weight: 900 !important;
+               letter-spacing: 0 !important;
+            }
+
+            .mob-profile-menu {
+               padding: 10px !important;
+               background: var(--mob-menu-panel) !important;
+            }
+
+            .mob-profile-section-title {
+               padding: 7px 4px 6px !important;
+               color: var(--mob-menu-muted) !important;
+               font-size: 0.58rem !important;
+               font-weight: 900 !important;
+               letter-spacing: 0.02em !important;
+            }
+
+            .mob-profile-grid,
+            .mob-profile-settings-row {
+               gap: 8px !important;
+            }
+
+            .mob-profile-link,
+            .mob-profile-action,
+            .mob-profile-language {
+               min-height: 44px !important;
+               border: 1px solid var(--mob-menu-tile-border) !important;
+               border-radius: 8px !important;
+               background: var(--mob-menu-tile) !important;
+               color: var(--mob-menu-title) !important;
+               box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+            }
+
+            .mob-profile-link,
+            .mob-profile-action {
+               gap: 8px !important;
+               padding: 8px !important;
+               font-size: 0.68rem !important;
+               font-weight: 900 !important;
+            }
+
+            .mob-profile-link.active {
+               border-color: var(--mob-menu-active-border) !important;
+               background: var(--mob-menu-active) !important;
+               color: var(--mob-menu-title) !important;
+               box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.08) !important;
+            }
+
+            .mob-profile-link i,
+            .mob-profile-action i,
+            .mob-profile-language-trigger {
+               width: 30px !important;
+               height: 30px !important;
+               border-radius: 8px !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+               font-size: 0.78rem !important;
+            }
+
+            .mob-profile-link span,
+            .mob-profile-action span,
+            .mob-profile-language-text {
+               color: inherit !important;
+               line-height: 1.16 !important;
+               overflow-wrap: anywhere !important;
+            }
+
+            .mob-profile-action.danger {
+               border-color: var(--mob-menu-danger-border) !important;
+               background: var(--mob-menu-danger-bg) !important;
+               color: var(--mob-menu-danger) !important;
+            }
+
+            .mob-profile-action.danger i {
+               background: linear-gradient(135deg, #ef4444, #f97316) !important;
+            }
+
+            .mob-profile-language {
+               padding: 8px !important;
+               gap: 8px !important;
+            }
+
+            .mob-profile-language-text {
+               color: var(--mob-menu-title) !important;
+               font-size: 0.68rem !important;
+               font-weight: 900 !important;
+            }
+
+            .mob-notif-dropdown {
+               --mob-notif-panel: rgba(15, 23, 42, 0.96);
+               --mob-notif-card: rgba(30, 41, 59, 0.72);
+               --mob-notif-soft: rgba(30, 41, 59, 0.82);
+               --mob-notif-border: rgba(148, 163, 184, 0.24);
+               --mob-notif-title: #f8fafc;
+               --mob-notif-text: #e2e8f0;
+               --mob-notif-muted: #cbd5e1;
+               --mob-notif-accent: #93c5fd;
+               --mob-notif-danger: #fca5a5;
+               --mob-notif-danger-bg: rgba(239, 68, 68, 0.14);
+               --mob-notif-danger-border: rgba(248, 113, 113, 0.34);
+               background: var(--mob-notif-panel) !important;
+               border-color: var(--mob-notif-border) !important;
+               border-radius: 14px !important;
+               color: var(--mob-notif-title) !important;
+               overflow: hidden !important;
+            }
+
+            .lm .mob-notif-dropdown {
+               --mob-notif-panel: rgba(255, 255, 255, 0.98);
+               --mob-notif-card: #ffffff;
+               --mob-notif-soft: #f8fafc;
+               --mob-notif-border: rgba(148, 163, 184, 0.28);
+               --mob-notif-title: #0f172a;
+               --mob-notif-text: #334155;
+               --mob-notif-muted: #64748b;
+               --mob-notif-accent: #2563eb;
+               --mob-notif-danger: #ef4444;
+               --mob-notif-danger-bg: #fff1f2;
+               --mob-notif-danger-border: rgba(248, 113, 113, 0.28);
+            }
+
+            .mob-notif-header {
+               min-height: 56px !important;
+               padding: 10px 10px 10px 12px !important;
+               gap: 8px !important;
+               border-bottom: 1px solid var(--mob-notif-border) !important;
+               background: var(--mob-notif-panel) !important;
+            }
+
+            .mob-notif-title {
+               gap: 7px !important;
+               color: var(--mob-notif-title) !important;
+               font-size: 0.84rem !important;
+               font-weight: 900 !important;
+               line-height: 1.12 !important;
+            }
+
+            .mob-notif-title > i {
+               width: 24px !important;
+               height: 24px !important;
+               display: inline-flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               border-radius: 8px !important;
+               background: rgba(37, 99, 235, 0.1) !important;
+               color: var(--mob-notif-accent) !important;
+               -webkit-text-fill-color: var(--mob-notif-accent) !important;
+               font-size: 0.78rem !important;
+            }
+
+            .mob-notif-count {
+               border: 1px solid var(--mob-notif-danger-border) !important;
+               background: var(--mob-notif-danger-bg) !important;
+               color: var(--mob-notif-danger) !important;
+               font-size: 0.58rem !important;
+               font-weight: 900 !important;
+               padding: 2px 6px !important;
+            }
+
+            .mob-notif-actions {
+               gap: 5px !important;
+            }
+
+            .mob-notif-action {
+               min-width: 30px !important;
+               min-height: 30px !important;
+               padding: 6px 8px !important;
+               border: 1px solid var(--mob-notif-border) !important;
+               border-radius: 8px !important;
+               background: var(--mob-notif-soft) !important;
+               color: var(--mob-notif-title) !important;
+               font-size: 0.62rem !important;
+               font-weight: 900 !important;
+               line-height: 1 !important;
+            }
+
+            .mob-notif-action i {
+               color: inherit !important;
+               font-size: 0.68rem !important;
+            }
+
+            .mob-notif-action.danger {
+               border-color: var(--mob-notif-danger-border) !important;
+               background: var(--mob-notif-danger-bg) !important;
+               color: var(--mob-notif-danger) !important;
+            }
+
+            .mob-notif-action:active,
+            .mob-notif-view-all:active {
+               transform: scale(0.98) !important;
+            }
+
+            .mob-notif-list {
+               min-height: 72px !important;
+               max-height: min(58dvh, 390px) !important;
+               padding: 10px !important;
+               background: var(--mob-notif-panel) !important;
+            }
+
+            .mob-notif-empty {
+               min-height: 72px !important;
+               display: flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               padding: 18px 10px !important;
+               color: var(--mob-notif-muted) !important;
+               font-size: 0.74rem !important;
+               font-weight: 700 !important;
+               line-height: 1.25 !important;
+               text-align: center !important;
+            }
+
+            .mob-notif-item {
+               display: grid !important;
+               grid-template-columns: 32px minmax(0, 1fr) !important;
+               gap: 9px !important;
+               padding: 10px !important;
+               border: 1px solid var(--mob-notif-border) !important;
+               border-radius: 8px !important;
+               background: var(--mob-notif-card) !important;
+               box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+               margin-bottom: 8px !important;
+            }
+
+            .mob-notif-item.unread {
+               border-color: rgba(96, 165, 250, 0.42) !important;
+               background: color-mix(in srgb, var(--mob-notif-card) 86%, #2563eb 14%) !important;
+            }
+
+            .mob-notif-ico {
+               width: 32px !important;
+               height: 32px !important;
+               border-radius: 8px !important;
+               background: rgba(37, 99, 235, 0.12) !important;
+               color: var(--mob-notif-accent) !important;
+               font-size: 0.84rem !important;
+            }
+
+            .mob-notif-copy strong {
+               color: var(--mob-notif-title) !important;
+               font-size: 0.76rem !important;
+               font-weight: 900 !important;
+               line-height: 1.22 !important;
+            }
+
+            .mob-notif-copy span {
+               color: var(--mob-notif-text) !important;
+               font-size: 0.68rem !important;
+               font-weight: 700 !important;
+               line-height: 1.32 !important;
+            }
+
+            .mob-notif-copy small {
+               color: var(--mob-notif-muted) !important;
+               font-size: 0.58rem !important;
+               font-weight: 800 !important;
+            }
+
+            .mob-notif-link-btn {
+               color: var(--mob-notif-accent) !important;
+               font-size: 0.64rem !important;
+               font-weight: 900 !important;
+            }
+
+            .mob-notif-link-btn.danger {
+               color: var(--mob-notif-danger) !important;
+            }
+
+            .mob-notif-footer {
+               padding: 10px !important;
+               border-top: 1px solid var(--mob-notif-border) !important;
+               background: var(--mob-notif-panel) !important;
+            }
+
+            .mob-notif-view-all {
+               min-height: 36px !important;
+               border: 1px solid var(--mob-notif-border) !important;
+               border-radius: 8px !important;
+               background: var(--mob-notif-card) !important;
+               color: var(--mob-notif-title) !important;
+               font-size: 0.7rem !important;
+               font-weight: 900 !important;
+               gap: 6px !important;
+               box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+            }
+
+            .mob-notif-view-all i {
+               color: var(--mob-notif-accent) !important;
+               font-size: 0.72rem !important;
+            }
+
+            /* Final SaaSPro topbar and mobile navigation polish. */
+            :root {
+               --mob-top-h: 60px;
+               --mob-nav-h: 74px;
+            }
+
+            #mob-header {
+               --mob-shell-bg: rgba(15, 23, 42, 0.92);
+               --mob-shell-bg-2: rgba(15, 23, 42, 0.82);
+               --mob-shell-card: rgba(30, 41, 59, 0.78);
+               --mob-shell-border: rgba(148, 163, 184, 0.22);
+               --mob-shell-text: #f8fafc;
+               --mob-shell-muted: #cbd5e1;
+               --mob-shell-accent: #60a5fa;
+               --mob-shell-accent-2: #22d3ee;
+               height: calc(60px + var(--mob-safe-top)) !important;
+               padding: var(--mob-safe-top) 10px 0 !important;
+               background:
+                  linear-gradient(180deg, var(--mob-shell-bg), var(--mob-shell-bg-2)) !important;
+               border-bottom: 1px solid var(--mob-shell-border) !important;
+               box-shadow: 0 12px 30px rgba(2, 6, 23, 0.26) !important;
+               color: var(--mob-shell-text) !important;
+            }
+
+            .lm #mob-header {
+               --mob-shell-bg: rgba(255, 255, 255, 0.96);
+               --mob-shell-bg-2: rgba(248, 250, 252, 0.92);
+               --mob-shell-card: rgba(255, 255, 255, 0.9);
+               --mob-shell-border: rgba(148, 163, 184, 0.22);
+               --mob-shell-text: #0f172a;
+               --mob-shell-muted: #64748b;
+               --mob-shell-accent: #2563eb;
+               --mob-shell-accent-2: #0891b2;
+               box-shadow: 0 10px 26px rgba(15, 23, 42, 0.1) !important;
+            }
+
+            .mob-header-logo {
+               min-height: 38px !important;
+               max-width: clamp(132px, 46vw, 184px) !important;
+               padding: 3px 8px 3px 3px !important;
+               border: 1px solid var(--mob-shell-border) !important;
+               border-radius: 12px !important;
+               background: var(--mob-shell-card) !important;
+               color: var(--mob-shell-text) !important;
+               box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+            }
+
+            .mob-logo-ring {
+               width: 32px !important;
+               height: 32px !important;
+               border-radius: 9px !important;
+               padding: 3px !important;
+               border: 1px solid rgba(147, 197, 253, 0.34) !important;
+               background: #ffffff !important;
+               box-shadow: none !important;
+            }
+
+            .mob-header-logo img {
+               border-radius: 7px !important;
+            }
+
+            .mob-header-logo span:last-child {
+               max-width: 118px !important;
+               color: var(--mob-shell-text) !important;
+               font-size: 0.72rem !important;
+               font-weight: 900 !important;
+               line-height: 1.08 !important;
+            }
+
+            .mob-header-right {
+               gap: 5px !important;
+            }
+
+            .mob-icon-btn,
+            .mob-avatar {
+               width: 36px !important;
+               height: 36px !important;
+               border: 1px solid var(--mob-shell-border) !important;
+               border-radius: 10px !important;
+               background: var(--mob-shell-card) !important;
+               color: var(--mob-shell-text) !important;
+               box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+            }
+
+            .mob-icon-btn i {
+               color: inherit !important;
+               -webkit-text-fill-color: currentColor !important;
+               font-size: 0.84rem !important;
+            }
+
+            .mob-icon-btn:active,
+            .mob-avatar:active {
+               transform: scale(0.94) !important;
+               background: color-mix(in srgb, var(--mob-shell-card) 82%, var(--mob-shell-accent) 18%) !important;
+            }
+
+            .mob-avatar {
+               background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+               color: #ffffff !important;
+               font-size: 0.72rem !important;
+               font-weight: 900 !important;
+            }
+
+            .mob-avatar img {
+               border-radius: 9px !important;
+            }
+
+            #mobNotifBadge {
+               top: 6px !important;
+               right: 6px !important;
+               width: 8px !important;
+               height: 8px !important;
+               background: #ef4444 !important;
+               border: 2px solid var(--mob-shell-bg) !important;
+               box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.24) !important;
+            }
+
+            .lm #mobNotifBadge {
+               border-color: #ffffff !important;
+            }
+
+            #mob-bottom-nav {
+               --mob-dock-bg: rgba(15, 23, 42, 0.94);
+               --mob-dock-card: rgba(30, 41, 59, 0.72);
+               --mob-dock-border: rgba(148, 163, 184, 0.22);
+               --mob-dock-text: #94a3b8;
+               --mob-dock-active: #e0f2fe;
+               --mob-dock-accent: #60a5fa;
+               --mob-dock-active-bg: rgba(37, 99, 235, 0.2);
+               height: calc(74px + var(--mob-safe-bottom)) !important;
+               padding-bottom: var(--mob-safe-bottom) !important;
+               background:
+                  linear-gradient(180deg, rgba(15, 23, 42, 0.86), var(--mob-dock-bg)) !important;
+               border-top: 1px solid var(--mob-dock-border) !important;
+               box-shadow: 0 -14px 32px rgba(2, 6, 23, 0.3) !important;
+            }
+
+            .lm #mob-bottom-nav {
+               --mob-dock-bg: rgba(255, 255, 255, 0.96);
+               --mob-dock-card: rgba(248, 250, 252, 0.92);
+               --mob-dock-border: rgba(148, 163, 184, 0.24);
+               --mob-dock-text: #64748b;
+               --mob-dock-active: #1d4ed8;
+               --mob-dock-accent: #2563eb;
+               --mob-dock-active-bg: rgba(37, 99, 235, 0.1);
+               background:
+                  linear-gradient(180deg, rgba(255, 255, 255, 0.9), var(--mob-dock-bg)) !important;
+               box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.12) !important;
+            }
+
+            .mob-nav-items {
+               max-width: 520px !important;
+               margin: 0 auto !important;
+               gap: 5px !important;
+               padding: 7px max(8px, env(safe-area-inset-left, 0px)) 7px max(8px, env(safe-area-inset-right, 0px)) !important;
+            }
+
+            .mob-nav-item {
+               min-height: 54px !important;
+               padding: 5px 2px !important;
+               border: 1px solid transparent !important;
+               border-radius: 12px !important;
+               color: var(--mob-dock-text) !important;
+               font-size: 0.58rem !important;
+               font-weight: 900 !important;
+               line-height: 1.05 !important;
+               background: transparent !important;
+            }
+
+            .mob-nav-icon {
+               width: 28px !important;
+               height: 28px !important;
+               border-radius: 9px !important;
+               background: transparent !important;
+               color: currentColor !important;
+            }
+
+            .mob-nav-icon i {
+               color: inherit !important;
+               -webkit-text-fill-color: currentColor !important;
+               font-size: 0.98rem !important;
+            }
+
+            .mob-nav-item > span:last-child {
+               max-width: 58px !important;
+               color: inherit !important;
+               line-height: 1.05 !important;
+            }
+
+            .mob-nav-item.active:not(.mob-nav-primary) {
+               border-color: color-mix(in srgb, var(--mob-dock-accent) 34%, transparent) !important;
+               background: var(--mob-dock-active-bg) !important;
+               color: var(--mob-dock-active) !important;
+            }
+
+            .mob-nav-item.active:not(.mob-nav-primary) .mob-nav-icon {
+               background: color-mix(in srgb, var(--mob-dock-accent) 18%, transparent) !important;
+               color: inherit !important;
+            }
+
+            .mob-nav-primary {
+               min-height: 66px !important;
+               transform: translateY(-18px) !important;
+               color: var(--mob-dock-active) !important;
+               background: transparent !important;
+            }
+
+            .mob-nav-primary-icon {
+               width: 54px !important;
+               height: 54px !important;
+               border: 4px solid var(--mob-dock-bg) !important;
+               border-radius: 16px !important;
+               background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
+               color: #ffffff !important;
+               box-shadow:
+                  0 14px 24px rgba(37, 99, 235, 0.34),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+            }
+
+            .mob-nav-primary-icon i {
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+               font-size: 1.1rem !important;
+            }
+
+            .mob-nav-primary.active .mob-nav-primary-icon {
+               box-shadow:
+                  0 16px 28px rgba(37, 99, 235, 0.42),
+                  0 0 0 1px rgba(125, 211, 252, 0.34),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+            }
          }
 
          /* --- Difficulty radio columns: stack on mobile --- */
@@ -2202,7 +2820,7 @@
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=8" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=10" defer></script>
 
       <script>
          // Close open header menus with Escape
@@ -2408,7 +3026,7 @@
             if (!listContainer || (!forceRender && !document.getElementById('mobNotifDropdown')?.classList.contains('open'))) return;
 
             if (!data.notifications || data.notifications.length === 0) {
-               listContainer.innerHTML = '<div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;">No notifications to show.</div>';
+               listContainer.innerHTML = '<div class="mob-notif-empty">No notifications to show.</div>';
                return;
             }
 
@@ -2605,6 +3223,17 @@
             -webkit-text-fill-color: #f8fbff !important;
          }
 
+         #feedbackModulesLikeHero .feedback-title {
+            color: #fde047 !important;
+            -webkit-text-fill-color: #fde047 !important;
+         }
+
+         #sec-interview-setup .setup-hero .setup-hero-title {
+            color: #fde047 !important;
+            -webkit-text-fill-color: #fde047 !important;
+            text-transform: uppercase !important;
+         }
+
          #progressModulesLikeHero .progress-hero-subtitle,
          #feedbackModulesLikeHero .feedback-subtitle,
          #sec-interview-setup .setup-hero-subtitle,
@@ -2634,6 +3263,7 @@
          #personal-mastery-page .mastery-badge,
          #notifications-page .notif-hero-icon,
          #account-page .account-hero-icon,
+         #skill-trees-page .skill-hero-icon,
          #skill-trees-page .skill-tree-hero-icon,
          #feedbackModulesLikeHero .feedback-chat-mark {
             background: rgba(15, 23, 42, 0.16) !important;
@@ -2650,6 +3280,26 @@
          #learning-games-page .sr-learning-hero::after {
             content: none !important;
             display: none !important;
+         }
+
+         html body #notifications-page #notificationsPageList.notifications-list-panel {
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: none !important;
+            justify-self: stretch !important;
+            align-self: stretch !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+         }
+
+         html body #notifications-page #notificationsPageList .notifications-empty-state.notifications-empty-state-wide {
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            box-sizing: border-box !important;
          }
 
          html body #progressModulesLikeHero.progress-hero {
@@ -2864,6 +3514,216 @@
 
             html body #learning-games-page .sr-learning-hero.sr-learning-hero .sr-page-hero-art {
                width: 66px !important;
+            }
+         }
+
+         @media (max-width: 991px) {
+            #mob-content {
+               --sr-unified-hero-bg:
+                  radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.26), transparent 24%),
+                  radial-gradient(circle at 73% 86%, rgba(125, 211, 252, 0.24), transparent 28%),
+                  linear-gradient(112deg, #2563eb 0%, #1d7fe4 50%, #38a9dc 100%);
+               --sr-unified-hero-border: rgba(147, 197, 253, 0.5);
+               --sr-unified-hero-shadow: 0 10px 26px rgba(37, 99, 235, 0.18);
+               --sr-unified-hero-text: #f8fbff;
+               --sr-unified-hero-muted: rgba(248, 251, 255, 0.9);
+               --sr-unified-hero-icon: rgba(15, 23, 42, 0.16);
+            }
+
+            html body #mob-content :is(
+               .sr-hero-card,
+               .sr-page-hero,
+               .progress-hero,
+               .feedback-hero,
+               .setup-hero,
+               .modules-hero,
+               .vr-hero,
+               .mission-progress-hero,
+               .sr-learning-hero,
+               .coach-progress-hero,
+               .mastery-hero-card,
+               .notif-hero,
+               .skill-tree-hero,
+               .mod-hero
+            ) {
+               background: var(--sr-unified-hero-bg) !important;
+               border-color: var(--sr-unified-hero-border) !important;
+               box-shadow: var(--sr-unified-hero-shadow) !important;
+            }
+
+            html body #mob-content :is(
+               .sr-hero-card,
+               .sr-page-hero,
+               .progress-hero,
+               .feedback-hero,
+               .setup-hero,
+               .modules-hero,
+               .vr-hero,
+               .mission-progress-hero,
+               .sr-learning-hero,
+               .coach-progress-hero,
+               .mastery-hero-card,
+               .notif-hero,
+               .skill-tree-hero,
+               .mod-hero
+            )::before {
+               background-image:
+                  linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px) !important;
+               background-size: 24px 24px !important;
+               opacity: 0.2 !important;
+            }
+
+            html body #mob-content :is(
+               .sr-hero-card,
+               .sr-page-hero,
+               .progress-hero,
+               .feedback-hero,
+               .setup-hero,
+               .modules-hero,
+               .vr-hero,
+               .mission-progress-hero,
+               .sr-learning-hero,
+               .coach-progress-hero,
+               .mastery-hero-card,
+               .notif-hero,
+               .skill-tree-hero,
+               .mod-hero
+            ) :is(
+               h1,
+               h2,
+               h3,
+               h4,
+               .sr-title,
+               .sr-title-name,
+               .sr-page-hero-title,
+               .progress-hero-title,
+               .feedback-title,
+               .setup-hero-title,
+               .modules-hero-title,
+               .mastery-title,
+               .notif-hero-title
+            ) {
+               color: var(--sr-unified-hero-text) !important;
+               -webkit-text-fill-color: var(--sr-unified-hero-text) !important;
+               background: none !important;
+            }
+
+            html body #mob-content :is(
+               .sr-hero-card,
+               .sr-page-hero,
+               .progress-hero,
+               .feedback-hero,
+               .setup-hero,
+               .modules-hero,
+               .vr-hero,
+               .mission-progress-hero,
+               .sr-learning-hero,
+               .coach-progress-hero,
+               .mastery-hero-card,
+               .notif-hero,
+               .skill-tree-hero,
+               .mod-hero
+            ) :is(
+               p,
+               .sr-subtitle,
+               .sr-page-hero-subtitle,
+               .progress-hero-subtitle,
+               .feedback-subtitle,
+               .setup-hero-subtitle,
+               .modules-hero-subtitle,
+               .mastery-subtitle,
+               .notif-hero-subtitle
+            ) {
+               color: var(--sr-unified-hero-muted) !important;
+               -webkit-text-fill-color: var(--sr-unified-hero-muted) !important;
+            }
+
+            html body #mob-content .sr-hero-card .sr-subtitle .sr-subtitle-accent {
+               color: #fde047 !important;
+               -webkit-text-fill-color: #fde047 !important;
+               text-shadow: 0 2px 10px rgba(15, 23, 42, 0.22) !important;
+            }
+
+            html body #mob-content .sr-hero-card .sr-subtitle .sr-subtitle-accent.is-sky {
+               color: #7dd3fc !important;
+               -webkit-text-fill-color: #7dd3fc !important;
+            }
+
+            html body #mob-content .sr-hero-card .sr-subtitle .sr-subtitle-accent.is-mint {
+               color: #86efac !important;
+               -webkit-text-fill-color: #86efac !important;
+            }
+
+            html body #mob-content :is(
+               .sr-hero-card,
+               .sr-page-hero,
+               .progress-hero,
+               .feedback-hero,
+               .setup-hero,
+               .modules-hero,
+               .vr-hero,
+               .mission-progress-hero,
+               .sr-learning-hero,
+               .coach-progress-hero,
+               .mastery-hero-card,
+               .notif-hero,
+               .skill-tree-hero,
+               .mod-hero
+            ) :is(
+               h1,
+               h2,
+               h3,
+               h4,
+               .sr-title,
+               .sr-title-name,
+               .sr-page-hero-title,
+               .progress-hero-title,
+               .feedback-title,
+               .setup-hero-title,
+               .modules-hero-title,
+               .mastery-title,
+               .notif-hero-title
+            ) {
+               color: var(--sr-page-title-accent, #fde047) !important;
+               -webkit-text-fill-color: var(--sr-page-title-accent, #fde047) !important;
+               text-transform: uppercase !important;
+               text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18) !important;
+            }
+
+            html body #mob-content :is(
+               .sr-page-hero,
+               .progress-hero,
+               .feedback-hero,
+               .setup-hero,
+               .modules-hero,
+               .vr-hero,
+               .mission-progress-hero,
+               .sr-learning-hero,
+               .coach-progress-hero,
+               .notif-hero,
+               .skill-tree-hero
+            ) :is(
+               .sr-page-hero-icon,
+               .progress-hero-icon,
+               .feedback-chat-mark,
+               .setup-hero-icon,
+               .modules-hero-icon,
+               .vr-hero-icon,
+               .mission-hero-icon,
+               .learning-hero-icon,
+               .coach-hero-icon,
+               .reports-hero-icon,
+               .account-hero-icon,
+               .skill-hero-icon,
+               .skill-tree-hero-icon,
+               .notif-hero-icon,
+               .mastery-badge
+            ) {
+               background: var(--sr-unified-hero-icon) !important;
+               border-color: rgba(255, 255, 255, 0.28) !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
             }
          }
       </style>

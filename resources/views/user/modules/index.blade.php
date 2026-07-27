@@ -1764,6 +1764,687 @@
             font-size: 0.9rem !important;
         }
     }
+
+    /* SaaSPro mobile polish for the Modules screen. */
+    @media (max-width: 767px) {
+        body #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(20, 184, 166, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        body #mob-content > .db-content {
+            padding: 12px 12px 18px !important;
+        }
+
+        html body #interview-modules-page {
+            --modules-pro-card: rgba(255, 255, 255, 0.98);
+            --modules-pro-field: rgba(255, 255, 255, 0.96);
+            --modules-pro-soft: #f8fafc;
+            --modules-pro-border: rgba(15, 23, 42, 0.1);
+            --modules-pro-title: #0f172a;
+            --modules-pro-muted: #64748b;
+            --modules-pro-accent: #2563eb;
+            --modules-pro-badge-bg: rgba(255, 255, 255, 0.92);
+            --modules-pro-badge-text: #1e293b;
+            --modules-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            max-width: 520px;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--modules-pro-title) !important;
+        }
+
+        html[data-theme="dark"] body #interview-modules-page,
+        :root:not(.lm) body #interview-modules-page,
+        body.dm #interview-modules-page,
+        .dm #interview-modules-page {
+            --modules-pro-card: rgba(15, 23, 42, 0.96);
+            --modules-pro-field: rgba(15, 23, 42, 0.95);
+            --modules-pro-soft: rgba(30, 41, 59, 0.96);
+            --modules-pro-border: rgba(148, 163, 184, 0.24);
+            --modules-pro-title: #f8fafc;
+            --modules-pro-muted: #cbd5e1;
+            --modules-pro-accent: #93c5fd;
+            --modules-pro-badge-bg: rgba(15, 23, 42, 0.84);
+            --modules-pro-badge-text: #f8fafc;
+            --modules-pro-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero {
+            position: relative !important;
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            overflow: hidden !important;
+            padding: 8px 72px 8px 10px !important;
+            margin: 0 0 10px !important;
+            border-radius: 8px !important;
+            background:
+                radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+                radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+                linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+            border-color: rgba(147, 197, 253, 0.48) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero::before,
+        html body #interview-modules-page .modules-hero.modules-hero::after {
+            content: none !important;
+            display: none !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 28px !important;
+            height: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(15, 23, 42, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon svg {
+            width: 15px !important;
+            height: 15px !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-copy {
+            display: block !important;
+            min-width: 0 !important;
+            overflow: hidden !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+            display: block !important;
+            margin: 0 0 3px !important;
+            color: #f8fbff !important;
+            -webkit-text-fill-color: #f8fbff !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            display: -webkit-box !important;
+            margin: 0 !important;
+            color: rgba(248, 251, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 750 !important;
+            line-height: 1.32 !important;
+            overflow: hidden !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+            display: block !important;
+            position: absolute !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            width: 72px !important;
+            max-width: none !important;
+            pointer-events: none !important;
+            filter: drop-shadow(0 10px 18px rgba(15, 23, 42, 0.16)) !important;
+        }
+
+        #interview-modules-page .module-topic-select-wrap {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 0 10px !important;
+        }
+
+        #interview-modules-page .module-topic-select-shell {
+            position: relative !important;
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        #interview-modules-page .module-topic-select-shell::after {
+            content: "" !important;
+            position: absolute !important;
+            top: 50% !important;
+            right: 14px !important;
+            width: 7px !important;
+            height: 7px !important;
+            border-right: 2px solid var(--modules-pro-muted) !important;
+            border-bottom: 2px solid var(--modules-pro-muted) !important;
+            transform: translateY(-65%) rotate(45deg) !important;
+            pointer-events: none !important;
+        }
+
+        #interview-modules-page .module-topic-select {
+            width: 100% !important;
+            min-height: 40px !important;
+            padding: 9px 36px 9px 12px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background: var(--modules-pro-field) !important;
+            color: var(--modules-pro-title) !important;
+            font-size: 0.78rem !important;
+            font-weight: 800 !important;
+            line-height: 1.2 !important;
+            box-shadow: var(--modules-pro-shadow) !important;
+        }
+
+        #interview-modules-page .module-smart-row {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 10px !important;
+            margin: 0 0 12px !important;
+        }
+
+        #interview-modules-page .module-smart-panel {
+            padding: 10px !important;
+            margin: 0 0 10px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.045), rgba(20, 184, 166, 0.025)),
+                var(--modules-pro-card) !important;
+            color: var(--modules-pro-title) !important;
+            box-shadow: var(--modules-pro-shadow) !important;
+        }
+
+        #interview-modules-page .module-smart-row .module-smart-panel {
+            margin-bottom: 0 !important;
+        }
+
+        #interview-modules-page .module-smart-head {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: start !important;
+            gap: 8px !important;
+        }
+
+        #interview-modules-page .module-section-head {
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 8px !important;
+        }
+
+        #interview-modules-page .module-smart-title {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin: 0 !important;
+            color: var(--modules-pro-title) !important;
+            -webkit-text-fill-color: var(--modules-pro-title) !important;
+            font-size: 0.86rem !important;
+            font-weight: 900 !important;
+            line-height: 1.16 !important;
+            letter-spacing: 0 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        #interview-modules-page .module-smart-title i {
+            margin-right: 0 !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        #interview-modules-page .module-smart-subtitle {
+            display: -webkit-box !important;
+            margin: 4px 0 0 !important;
+            color: var(--modules-pro-muted) !important;
+            -webkit-text-fill-color: var(--modules-pro-muted) !important;
+            font-size: 0.68rem !important;
+            font-weight: 650 !important;
+            line-height: 1.34 !important;
+            overflow: hidden !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+        }
+
+        #interview-modules-page .module-progress-link {
+            width: auto !important;
+            min-height: 30px !important;
+            margin: 0 !important;
+            padding: 0 9px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-field) !important;
+            color: var(--modules-pro-accent) !important;
+            -webkit-text-fill-color: var(--modules-pro-accent) !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+        }
+
+        #interview-modules-page .module-rec-grid,
+        #interview-modules-page .module-path-grid,
+        #interview-modules-page .module-path-panel .module-path-grid {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-top: 8px !important;
+        }
+
+        #interview-modules-page .module-rec-item,
+        #interview-modules-page .module-path-item,
+        #interview-modules-page .module-path-panel .module-path-item {
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            align-items: center !important;
+            min-height: 0 !important;
+            gap: 8px !important;
+            padding: 8px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-field) !important;
+            color: var(--modules-pro-title) !important;
+            box-shadow: none !important;
+        }
+
+        #interview-modules-page .module-section-icon,
+        #interview-modules-page .module-rec-icon,
+        #interview-modules-page .module-path-panel .module-rec-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 34px !important;
+            height: 34px !important;
+            flex: 0 0 34px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-soft) !important;
+            color: var(--rec-color, var(--modules-pro-accent)) !important;
+            -webkit-text-fill-color: var(--rec-color, var(--modules-pro-accent)) !important;
+            font-size: 0.8rem !important;
+            box-shadow: none !important;
+        }
+
+        #interview-modules-page .module-section-icon i,
+        #interview-modules-page .module-rec-icon i,
+        #interview-modules-page .module-path-panel .module-rec-icon i {
+            color: inherit !important;
+            -webkit-text-fill-color: currentColor !important;
+            font-size: inherit !important;
+            line-height: 1 !important;
+        }
+
+        #interview-modules-page .module-rec-copy,
+        #interview-modules-page .module-path-copy {
+            min-width: 0 !important;
+        }
+
+        #interview-modules-page .module-rec-copy strong,
+        #interview-modules-page .module-path-copy strong,
+        #interview-modules-page .module-path-panel .module-path-copy strong {
+            display: block !important;
+            color: var(--modules-pro-title) !important;
+            -webkit-text-fill-color: var(--modules-pro-title) !important;
+            font-size: 0.78rem !important;
+            font-weight: 900 !important;
+            line-height: 1.2 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        #interview-modules-page .module-rec-copy span,
+        #interview-modules-page .module-path-copy span,
+        #interview-modules-page .module-path-panel .module-path-copy span {
+            display: -webkit-box !important;
+            margin-top: 3px !important;
+            color: var(--modules-pro-muted) !important;
+            -webkit-text-fill-color: var(--modules-pro-muted) !important;
+            font-size: 0.66rem !important;
+            font-weight: 650 !important;
+            line-height: 1.28 !important;
+            overflow: hidden !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+        }
+
+        #interview-modules-page .module-path-progress,
+        #interview-modules-page .module-path-panel .module-path-progress {
+            width: 100% !important;
+            height: 5px !important;
+            margin-top: 6px !important;
+            border-radius: 999px !important;
+            background: rgba(148, 163, 184, 0.24) !important;
+            overflow: hidden !important;
+        }
+
+        #interview-modules-page .module-path-progress span {
+            display: block !important;
+            height: 100% !important;
+            width: var(--path-progress, 0%) !important;
+            border-radius: inherit !important;
+            background: linear-gradient(90deg, #22c55e, #38bdf8, #2563eb) !important;
+        }
+
+        #interview-modules-page .modules-card-grid {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0 !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 10px !important;
+            margin: 0 !important;
+        }
+
+        #interview-modules-page .modules-card-grid > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        #interview-modules-page .module-card {
+            min-height: 0 !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-card) !important;
+            color: var(--modules-pro-title) !important;
+            box-shadow: var(--modules-pro-shadow) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            overflow: hidden !important;
+        }
+
+        #interview-modules-page .module-card:hover {
+            transform: none !important;
+            border-color: rgba(37, 99, 235, 0.24) !important;
+        }
+
+        #interview-modules-page .module-card-media {
+            position: relative !important;
+            height: 84px !important;
+            overflow: hidden !important;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(20, 184, 166, 0.14)),
+                repeating-linear-gradient(90deg, rgba(37, 99, 235, 0.12) 0 1px, transparent 1px 18px),
+                var(--modules-pro-soft) !important;
+        }
+
+        #interview-modules-page .module-card-media::before,
+        #interview-modules-page .module-card-media::after {
+            content: none !important;
+            display: none !important;
+        }
+
+        #interview-modules-page .module-card-badges {
+            top: 8px !important;
+            left: 8px !important;
+            right: 8px !important;
+            gap: 5px !important;
+            align-items: flex-start !important;
+        }
+
+        #interview-modules-page .module-card-badge {
+            min-width: 0 !important;
+            min-height: 22px !important;
+            max-width: 100% !important;
+            padding: 4px 7px !important;
+            border: 1px solid rgba(148, 163, 184, 0.22) !important;
+            border-radius: 999px !important;
+            background: var(--modules-pro-badge-bg) !important;
+            color: var(--modules-pro-badge-text) !important;
+            -webkit-text-fill-color: var(--modules-pro-badge-text) !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            box-shadow: none !important;
+        }
+
+        #interview-modules-page .module-card-badge i {
+            color: var(--modules-pro-accent) !important;
+            -webkit-text-fill-color: var(--modules-pro-accent) !important;
+        }
+
+        #interview-modules-page .module-card-badge.difficulty-beginner {
+            background: #ecfdf5 !important;
+            color: #047857 !important;
+            -webkit-text-fill-color: #047857 !important;
+        }
+
+        #interview-modules-page .module-card-badge.difficulty-intermediate {
+            background: #fffbeb !important;
+            color: #92400e !important;
+            -webkit-text-fill-color: #92400e !important;
+        }
+
+        #interview-modules-page .module-card-badge.difficulty-advanced {
+            background: #fef2f2 !important;
+            color: #b91c1c !important;
+            -webkit-text-fill-color: #b91c1c !important;
+        }
+
+        html[data-theme="dark"] body #interview-modules-page .module-card-badge.difficulty-beginner,
+        :root:not(.lm) body #interview-modules-page .module-card-badge.difficulty-beginner,
+        body.dm #interview-modules-page .module-card-badge.difficulty-beginner,
+        .dm #interview-modules-page .module-card-badge.difficulty-beginner {
+            background: rgba(6, 78, 59, 0.72) !important;
+            color: #bbf7d0 !important;
+            -webkit-text-fill-color: #bbf7d0 !important;
+        }
+
+        html[data-theme="dark"] body #interview-modules-page .module-card-badge.difficulty-intermediate,
+        :root:not(.lm) body #interview-modules-page .module-card-badge.difficulty-intermediate,
+        body.dm #interview-modules-page .module-card-badge.difficulty-intermediate,
+        .dm #interview-modules-page .module-card-badge.difficulty-intermediate {
+            background: rgba(120, 53, 15, 0.74) !important;
+            color: #fde68a !important;
+            -webkit-text-fill-color: #fde68a !important;
+        }
+
+        html[data-theme="dark"] body #interview-modules-page .module-card-badge.difficulty-advanced,
+        :root:not(.lm) body #interview-modules-page .module-card-badge.difficulty-advanced,
+        body.dm #interview-modules-page .module-card-badge.difficulty-advanced,
+        .dm #interview-modules-page .module-card-badge.difficulty-advanced {
+            background: rgba(127, 29, 29, 0.76) !important;
+            color: #fecaca !important;
+            -webkit-text-fill-color: #fecaca !important;
+        }
+
+        #interview-modules-page .module-card-icon {
+            left: 10px !important;
+            bottom: 8px !important;
+            width: 36px !important;
+            height: 36px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-card) !important;
+            color: var(--modules-pro-accent) !important;
+            -webkit-text-fill-color: var(--modules-pro-accent) !important;
+            font-size: 0.92rem !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.1) !important;
+        }
+
+        #interview-modules-page .module-card-body {
+            padding: 10px !important;
+        }
+
+        #interview-modules-page .module-card-title {
+            display: -webkit-box !important;
+            margin: 0 0 6px !important;
+            color: var(--modules-pro-title) !important;
+            -webkit-text-fill-color: var(--modules-pro-title) !important;
+            font-size: 0.86rem !important;
+            font-weight: 900 !important;
+            line-height: 1.22 !important;
+            overflow: hidden !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+        }
+
+        #interview-modules-page .module-card-desc {
+            display: -webkit-box !important;
+            margin: 0 0 10px !important;
+            color: var(--modules-pro-muted) !important;
+            -webkit-text-fill-color: var(--modules-pro-muted) !important;
+            font-size: 0.7rem !important;
+            font-weight: 650 !important;
+            line-height: 1.38 !important;
+            overflow: hidden !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+        }
+
+        #interview-modules-page .module-card-footer {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-top: auto !important;
+            padding-top: 9px !important;
+            border-top: 1px solid var(--modules-pro-border) !important;
+        }
+
+        #interview-modules-page .module-card-views {
+            min-width: 0 !important;
+            color: var(--modules-pro-muted) !important;
+            -webkit-text-fill-color: var(--modules-pro-muted) !important;
+            font-size: 0.68rem !important;
+            font-weight: 800 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        #interview-modules-page .module-card-views i {
+            color: var(--modules-pro-accent) !important;
+            -webkit-text-fill-color: var(--modules-pro-accent) !important;
+        }
+
+        #interview-modules-page .module-card-link {
+            width: auto !important;
+            min-width: 108px !important;
+            min-height: 34px !important;
+            padding: 0 10px !important;
+            border-radius: 8px !important;
+            background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 0.74rem !important;
+            font-weight: 900 !important;
+            white-space: nowrap !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.16) !important;
+        }
+
+        #interview-modules-page .module-card-link i {
+            color: inherit !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        #interview-modules-page .modules-card-grid .text-center {
+            padding: 24px 12px !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-card) !important;
+            box-shadow: var(--modules-pro-shadow) !important;
+        }
+
+        #interview-modules-page .modules-card-grid .text-center i,
+        #interview-modules-page .modules-card-grid .text-center h5 {
+            color: var(--modules-pro-muted) !important;
+            -webkit-text-fill-color: var(--modules-pro-muted) !important;
+        }
+
+        #interview-modules-page .pagination {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            margin: 12px 0 0 !important;
+        }
+
+        #interview-modules-page .page-link {
+            min-width: 34px !important;
+            min-height: 34px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid var(--modules-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--modules-pro-field) !important;
+            color: var(--modules-pro-title) !important;
+            -webkit-text-fill-color: var(--modules-pro-title) !important;
+            font-size: 0.74rem !important;
+            font-weight: 800 !important;
+            box-shadow: none !important;
+        }
+
+        #interview-modules-page .page-item.active .page-link {
+            border-color: #2563eb !important;
+            background: #2563eb !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        #interview-modules-page .page-item.disabled .page-link {
+            opacity: 0.55 !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #interview-modules-page .modules-hero.modules-hero {
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            padding: 8px 66px 8px 9px !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-icon {
+            width: 27px !important;
+            height: 27px !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            font-size: 0.46rem !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+            width: 66px !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #interview-modules-page .modules-hero.modules-hero {
+            padding-right: 62px !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+            font-size: 0.64rem !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            font-size: 0.44rem !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
+            right: -8px !important;
+            width: 62px !important;
+        }
+
+        #interview-modules-page .module-card-footer {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        #interview-modules-page .module-card-link {
+            width: 100% !important;
+        }
+    }
 </style>
 
 <div class="db-section active" id="interview-modules-page">

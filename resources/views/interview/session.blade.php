@@ -54,6 +54,11 @@
     .lm .interview-session-title {
         color: #0f172a;
     }
+    html body #sec-interview-session .interview-session-title {
+        color: #fde047 !important;
+        -webkit-text-fill-color: #fde047 !important;
+        text-transform: uppercase !important;
+    }
     .interview-session-header .interview-meta-line span {
         color: var(--tx);
     }
@@ -1423,6 +1428,653 @@
             background: var(--session-saas-card) !important;
             color: var(--session-saas-muted) !important;
             font-size: 0.64rem !important;
+        }
+    }
+
+    /* Final mobile SaaSPro layer for Interview Session. */
+    @media (max-width: 767px) {
+        #mob-content {
+            background:
+                linear-gradient(180deg, rgba(37, 99, 235, 0.08) 0, rgba(16, 185, 129, 0.035) 260px, transparent 520px),
+                var(--bg) !important;
+        }
+
+        #mob-content > .db-content {
+            padding: 10px 12px 16px !important;
+        }
+
+        html body #sec-interview-session {
+            --session-pro-radius: 8px;
+            --session-pro-gap: 10px;
+            --session-pro-card: rgba(255, 255, 255, 0.98);
+            --session-pro-soft: #f8fafc;
+            --session-pro-field: rgba(255, 255, 255, 0.96);
+            --session-pro-border: rgba(15, 23, 42, 0.1);
+            --session-pro-title: #0f172a;
+            --session-pro-muted: #64748b;
+            --session-pro-accent: #2563eb;
+            --session-pro-danger: #dc2626;
+            --session-pro-success: #15803d;
+            --session-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            --session-gap: var(--session-pro-gap);
+            max-width: 520px;
+            margin: 0 auto !important;
+            padding-bottom: 16px !important;
+            color: var(--session-pro-title);
+        }
+
+        html[data-theme="dark"] body #sec-interview-session,
+        :root:not(.lm) body #sec-interview-session,
+        .dm #sec-interview-session,
+        body.dm #sec-interview-session {
+            --session-pro-card: rgba(17, 24, 39, 0.98);
+            --session-pro-soft: #162033;
+            --session-pro-field: rgba(15, 23, 42, 0.92);
+            --session-pro-border: rgba(148, 163, 184, 0.2);
+            --session-pro-title: #f8fafc;
+            --session-pro-muted: #9aa8bd;
+            --session-pro-accent: #93c5fd;
+            --session-pro-danger: #fca5a5;
+            --session-pro-success: #86efac;
+            --session-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #sec-interview-session #workspaceWrapper {
+            width: 100% !important;
+        }
+
+        html body #sec-interview-session #workspaceRow {
+            --bs-gutter-x: 0;
+            --bs-gutter-y: var(--session-pro-gap);
+            display: block !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-interview-session #workspaceRow > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-interview-session :is(.panel, .ai-avatar-panel, #interviewControls, .response-panel, .question-source-panel) {
+            border: 1px solid var(--session-pro-border) !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: var(--session-pro-card) !important;
+            box-shadow: var(--session-pro-shadow) !important;
+        }
+
+        html body #sec-interview-session .ai-avatar-panel {
+            height: 208px !important;
+            margin: 0 0 var(--session-pro-gap) !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            border-color: rgba(147, 197, 253, 0.32) !important;
+            background: #020617 !important;
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.2) !important;
+        }
+
+        html body #sec-interview-session .ai-avatar-panel > div[style*="radial-gradient"] {
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0 1px, transparent 1px) 0 0 / 24px 24px,
+                linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(20, 184, 166, 0.12)) !important;
+            opacity: 0.95;
+        }
+
+        html body #sec-interview-session #aiAvatarContainer {
+            background:
+                radial-gradient(circle at 50% 42%, rgba(96, 165, 250, 0.34), transparent 26%),
+                linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #0f766e 100%) !important;
+        }
+
+        html body #sec-interview-session #aiAvatarHead.avatar-wrapper {
+            width: 88px !important;
+            height: 88px !important;
+            transform: none !important;
+        }
+
+        html body #sec-interview-session .circular-spectrum {
+            transform: scale(0.72) !important;
+            opacity: 0.88;
+        }
+
+        html body #sec-interview-session .mobile-camera-pip {
+            top: 10px !important;
+            right: 10px !important;
+            bottom: auto !important;
+            width: 60px !important;
+            height: 60px !important;
+            border-radius: var(--session-pro-radius) !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            background: #0f172a !important;
+            box-shadow: 0 10px 22px rgba(2, 6, 23, 0.34) !important;
+        }
+
+        html body #sec-interview-session .mobile-camera-placeholder {
+            color: rgba(255, 255, 255, 0.86) !important;
+            background: linear-gradient(135deg, #0f172a, #1e40af) !important;
+        }
+
+        html body #sec-interview-session #qCounter {
+            min-height: 28px !important;
+            padding: 5px 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.28) !important;
+            border-radius: 999px !important;
+            background: rgba(255, 255, 255, 0.94) !important;
+            color: #0f172a !important;
+            font-size: 0.64rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session .interviewer-panel-badge {
+            top: 12px !important;
+            left: 54px !important;
+            max-width: calc(100% - 132px) !important;
+            transform: none !important;
+            padding: 5px 8px !important;
+            border: 1px solid rgba(255, 255, 255, 0.22) !important;
+            border-radius: 999px !important;
+            background: rgba(15, 23, 42, 0.42) !important;
+            color: #ffffff !important;
+            font-size: 0.56rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        html body #sec-interview-session .question-timer-anchor {
+            display: none !important;
+        }
+
+        html body #sec-interview-session .question-caption-overlay {
+            inset: auto 10px 10px 10px !important;
+            z-index: 58 !important;
+        }
+
+        html body #sec-interview-session .question-caption-line {
+            max-width: 100% !important;
+            min-height: 32px !important;
+            padding: 7px 9px !important;
+            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: rgba(15, 23, 42, 0.78) !important;
+            color: #f8fafc !important;
+            font-size: 0.68rem !important;
+            line-height: 1.3 !important;
+            font-weight: 750 !important;
+            box-shadow: none !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        html body #sec-interview-session .question-caption-word.active {
+            color: #fde68a !important;
+        }
+
+        html body #sec-interview-session .ai-question-card {
+            display: none !important;
+        }
+
+        html body #sec-interview-session #interviewControls {
+            position: sticky !important;
+            top: calc(var(--mob-top-h, 56px) + env(safe-area-inset-top, 0px) + 8px) !important;
+            z-index: 14 !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin: 0 0 var(--session-pro-gap) !important;
+            padding: 8px !important;
+            background: color-mix(in srgb, var(--session-pro-card) 92%, transparent) !important;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        html body #sec-interview-session #interviewControls > div:first-child {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+
+        html body #sec-interview-session #interviewControls > div:nth-child(2) {
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn {
+            min-width: 0 !important;
+            min-height: 38px !important;
+            width: 100% !important;
+            padding: 8px 9px !important;
+            border-radius: 6px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn i {
+            margin-right: 5px !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn-outline-info {
+            border-color: rgba(14, 165, 233, 0.28) !important;
+            background: rgba(14, 165, 233, 0.1) !important;
+            color: #0369a1 !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-session #interviewControls .btn-outline-info,
+        :root:not(.lm) body #sec-interview-session #interviewControls .btn-outline-info,
+        .dm #sec-interview-session #interviewControls .btn-outline-info {
+            color: #7dd3fc !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn-outline-danger {
+            border-color: rgba(239, 68, 68, 0.24) !important;
+            background: rgba(254, 242, 242, 0.9) !important;
+            color: var(--session-pro-danger) !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-session #interviewControls .btn-outline-danger,
+        :root:not(.lm) body #sec-interview-session #interviewControls .btn-outline-danger,
+        .dm #sec-interview-session #interviewControls .btn-outline-danger {
+            background: rgba(127, 29, 29, 0.22) !important;
+        }
+
+        html body #sec-interview-session #recordingTimer {
+            min-width: 52px !important;
+            min-height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            padding: 0 8px !important;
+            border: 1px solid rgba(239, 68, 68, 0.22) !important;
+            border-radius: 6px !important;
+            background: rgba(254, 242, 242, 0.88) !important;
+            color: var(--session-pro-danger) !important;
+            font-size: 0.66rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-session #recordingTimer,
+        :root:not(.lm) body #sec-interview-session #recordingTimer,
+        .dm #sec-interview-session #recordingTimer {
+            background: rgba(127, 29, 29, 0.22) !important;
+        }
+
+        html body #sec-interview-session #voiceControls {
+            width: 100% !important;
+        }
+
+        html body #sec-interview-session #voiceControls .d-flex.gap-2 {
+            display: grid !important;
+            grid-template-columns: repeat(2, 38px) !important;
+            gap: 8px !important;
+            justify-content: start !important;
+        }
+
+        html body #sec-interview-session #voiceControls .btn {
+            width: 38px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        html body #sec-interview-session #voiceControls .btn i {
+            margin: 0 !important;
+        }
+
+        html body #sec-interview-session #holdToTalkBtn {
+            width: 100% !important;
+        }
+
+        html body #sec-interview-session #transcriptionStatus:not(:empty) {
+            grid-column: 1 / -1;
+            display: block !important;
+            max-width: 100% !important;
+            color: var(--session-pro-muted) !important;
+            font-size: 0.62rem !important;
+            line-height: 1.25 !important;
+        }
+
+        html body #sec-interview-session .response-panel {
+            margin: 0 0 var(--session-pro-gap) !important;
+            padding: 12px !important;
+            background: var(--session-pro-card) !important;
+        }
+
+        html body #sec-interview-session .response-panel .panel-title {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+            color: var(--session-pro-title) !important;
+            font-size: 0.88rem !important;
+            font-weight: 900 !important;
+            line-height: 1.15 !important;
+        }
+
+        html body #sec-interview-session .panel-title > i {
+            width: 30px !important;
+            height: 30px !important;
+            margin: 0 !important;
+            border-radius: var(--session-pro-radius) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #dbeafe !important;
+            color: #2563eb !important;
+            font-size: 0.78rem !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-session .panel-title > i,
+        :root:not(.lm) body #sec-interview-session .panel-title > i,
+        .dm #sec-interview-session .panel-title > i {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        html body #sec-interview-session .panel-title-text {
+            min-width: 0 !important;
+            color: var(--session-pro-title) !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        html body #sec-interview-session .response-title-actions {
+            display: inline-grid !important;
+            grid-template-columns: minmax(88px, auto) 34px !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin-left: 0 !important;
+        }
+
+        html body #sec-interview-session .response-send-answer-btn {
+            min-height: 34px !important;
+            padding: 8px 9px !important;
+            border-radius: 6px !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+            font-size: 0.64rem !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session .response-send-answer-btn i {
+            margin-left: 4px !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #sec-interview-session .response-fullscreen-toggle {
+            width: 34px !important;
+            height: 34px !important;
+            border: 1px solid var(--session-pro-border) !important;
+            border-radius: 6px !important;
+            background: var(--session-pro-field) !important;
+            color: var(--session-pro-title) !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session #chatTranscriptContainer {
+            gap: 8px !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #sec-interview-session #chatTranscriptContainer > div {
+            max-width: 94% !important;
+            padding: 8px 10px !important;
+            border-radius: var(--session-pro-radius) !important;
+            color: var(--session-pro-title) !important;
+            font-size: 0.74rem !important;
+            line-height: 1.35 !important;
+        }
+
+        html body #sec-interview-session #chatTranscriptContainer > div[style*="139,92,246"] {
+            background: rgba(37, 99, 235, 0.1) !important;
+            border-color: rgba(37, 99, 235, 0.22) !important;
+        }
+
+        html body #sec-interview-session #chatTranscriptContainer > div[style*="59,130,246"] {
+            background: rgba(20, 184, 166, 0.1) !important;
+            border-color: rgba(20, 184, 166, 0.22) !important;
+        }
+
+        html body #sec-interview-session #answerTextarea {
+            min-height: 132px !important;
+            max-height: 190px !important;
+            width: 100% !important;
+            margin-bottom: 8px !important;
+            padding: 10px !important;
+            border: 1px solid var(--session-pro-border) !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: var(--session-pro-field) !important;
+            color: var(--session-pro-title) !important;
+            -webkit-text-fill-color: currentColor !important;
+            caret-color: var(--session-pro-title) !important;
+            font-size: 0.78rem !important;
+            line-height: 1.42 !important;
+            resize: vertical !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session #answerTextarea::placeholder {
+            color: var(--session-pro-muted) !important;
+            -webkit-text-fill-color: var(--session-pro-muted) !important;
+            opacity: 0.78 !important;
+        }
+
+        html body #sec-interview-session .response-count-bar {
+            min-height: 30px !important;
+            padding: 7px 9px !important;
+            border: 1px solid var(--session-pro-border) !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: var(--session-pro-soft) !important;
+            color: var(--session-pro-muted) !important;
+            font-size: 0.64rem !important;
+            font-weight: 800 !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #sec-interview-session #autoSaveIndicator {
+            color: var(--session-pro-success) !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-session .question-source-panel {
+            padding: 0 !important;
+            margin-top: 8px !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session .question-source-panel .source-card-line {
+            min-height: 34px !important;
+            padding: 8px 9px !important;
+            border: 1px solid var(--session-pro-border) !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: var(--session-pro-soft) !important;
+            color: var(--session-pro-muted) !important;
+            font-size: 0.64rem !important;
+            line-height: 1.28 !important;
+        }
+
+        html body #sec-interview-session .question-source-panel .source-card-line :is(span, a) {
+            color: var(--session-pro-muted) !important;
+        }
+
+        html body #sec-interview-session .interview-start-modal {
+            padding: max(16px, env(safe-area-inset-top, 0px)) 12px max(16px, env(safe-area-inset-bottom, 0px)) !important;
+        }
+
+        html body #sec-interview-session .interview-start-dialog {
+            width: min(calc(100vw - 24px), 420px) !important;
+            padding: 18px !important;
+            border: 1px solid var(--session-pro-border) !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: var(--session-pro-card) !important;
+            color: var(--session-pro-title) !important;
+            box-shadow: 0 20px 44px rgba(2, 6, 23, 0.28) !important;
+        }
+
+        html body #sec-interview-session .interview-start-icon {
+            width: 52px !important;
+            height: 52px !important;
+            margin-bottom: 12px !important;
+            border-radius: var(--session-pro-radius) !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+        }
+
+        html body #sec-interview-session .interview-start-dialog h4 {
+            color: var(--session-pro-title) !important;
+            font-size: 1.02rem !important;
+            line-height: 1.18 !important;
+        }
+
+        html body #sec-interview-session .interview-start-dialog p {
+            margin: 8px auto 12px !important;
+            color: var(--session-pro-muted) !important;
+            font-size: 0.8rem !important;
+            line-height: 1.35 !important;
+        }
+
+        html body #sec-interview-session .interview-start-meta {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            margin-bottom: 12px !important;
+        }
+
+        html body #sec-interview-session .interview-start-meta .session-chip {
+            min-height: 30px !important;
+            justify-content: center !important;
+            border: 1px solid var(--session-pro-border) !important;
+            background: var(--session-pro-soft) !important;
+            color: var(--session-pro-title) !important;
+            font-size: 0.6rem !important;
+        }
+
+        html body #sec-interview-session .interview-start-actions {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-interview-session .interview-start-button {
+            min-height: 40px !important;
+            border-radius: 6px !important;
+            font-size: 0.74rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-session .interview-start-button.cancel {
+            border: 1px solid var(--session-pro-border) !important;
+            background: var(--session-pro-field) !important;
+            color: var(--session-pro-title) !important;
+        }
+
+        html body #sec-interview-session .interview-start-button.begin,
+        html body #sec-interview-session .finish-retry-button {
+            border: 0 !important;
+            background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
+            color: #ffffff !important;
+        }
+
+        html body #sec-interview-session .finish-transition-overlay {
+            background:
+                radial-gradient(circle at 50% 22%, rgba(37, 99, 235, 0.16), transparent 30%),
+                rgba(2, 6, 23, 0.92) !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #sec-interview-session .ai-avatar-panel {
+            height: 192px !important;
+        }
+
+        html body #sec-interview-session #aiAvatarHead.avatar-wrapper {
+            width: 80px !important;
+            height: 80px !important;
+        }
+
+        html body #sec-interview-session .mobile-camera-pip {
+            width: 54px !important;
+            height: 54px !important;
+        }
+
+        html body #sec-interview-session .interviewer-panel-badge {
+            left: 50px !important;
+            max-width: calc(100% - 116px) !important;
+            font-size: 0.52rem !important;
+        }
+
+        html body #sec-interview-session .response-panel .panel-title {
+            grid-template-columns: 28px minmax(0, 1fr) auto !important;
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-session .response-title-actions {
+            grid-template-columns: minmax(80px, auto) 32px !important;
+            gap: 5px !important;
+        }
+
+        html body #sec-interview-session .response-send-answer-btn {
+            min-height: 32px !important;
+            padding: 7px 8px !important;
+            font-size: 0.58rem !important;
+        }
+
+        html body #sec-interview-session .response-fullscreen-toggle {
+            width: 32px !important;
+            height: 32px !important;
+        }
+
+        html body #sec-interview-session #answerTextarea {
+            min-height: 112px !important;
+            font-size: 0.74rem !important;
+        }
+    }
+
+    @media (max-width: 360px) {
+        html body #sec-interview-session #interviewControls > div:first-child {
+            grid-template-columns: 1fr !important;
+        }
+
+        html body #sec-interview-session .interview-start-meta,
+        html body #sec-interview-session .interview-start-actions {
+            grid-template-columns: 1fr !important;
+        }
+
+        html body #sec-interview-session .response-send-answer-btn {
+            width: 76px !important;
+        }
+
+        html body #sec-interview-session .response-send-answer-btn i {
+            display: none !important;
+        }
+    }
+
+    @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+        html body #sec-interview-session .circular-spectrum,
+        html body #sec-interview-session .spectrum-bar,
+        html body #sec-interview-session .finish-loading-circle,
+        html body #sec-interview-session .finish-loading-wrapper img {
+            animation: none !important;
         }
     }
 </style>
