@@ -56,6 +56,20 @@ DB_USERNAME=root            # Your database username (usually 'root' locally)
 DB_PASSWORD=                # Your database password (leave blank if none)
 ```
 
+**Render Production Database:**
+For Render Postgres, prefer the full connection URL instead of splitting the
+credentials into separate `DB_*` values:
+```env
+DB_CONNECTION=pgsql
+DATABASE_URL=postgresql://user:password@host:5432/database
+```
+
+Use the Internal Database URL only when the Render web service and Render
+Postgres database are in the same account and region. If they are not, use the
+full External Database URL from the database Connect/Info page. Do not use only
+a partial Render host such as `dpg-...-a` for `DB_HOST`; that can produce
+`could not translate host name ... to address`.
+
 **Mail Configuration (SMTP):**
 *(If you are using Gmail, you MUST use a Google "App Password" instead of your regular password)*
 ```env

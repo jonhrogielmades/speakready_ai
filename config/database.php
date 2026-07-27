@@ -2,6 +2,16 @@
 
 use Illuminate\Support\Str;
 
+$databaseUrl = env('DATABASE_URL');
+$databaseUrlScheme = is_string($databaseUrl) ? parse_url($databaseUrl, PHP_URL_SCHEME) : null;
+$defaultDatabaseConnection = match ($databaseUrlScheme) {
+    'postgres', 'postgresql', 'pgsql' => 'pgsql',
+    'mysql', 'mysql2', 'mariadb' => 'mysql',
+    'sqlite', 'sqlite3' => 'sqlite',
+    'sqlsrv', 'mssql' => 'sqlsrv',
+    default => 'mysql',
+};
+
 return [
 
     /*
@@ -15,7 +25,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', $defaultDatabaseConnection),
 
     /*
     |--------------------------------------------------------------------------
