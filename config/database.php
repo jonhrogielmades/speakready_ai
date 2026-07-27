@@ -4,6 +4,7 @@ use Illuminate\Support\Str;
 
 $databaseUrl = env('DATABASE_URL');
 $databaseUrlScheme = is_string($databaseUrl) ? parse_url($databaseUrl, PHP_URL_SCHEME) : null;
+$databaseUrlHost = is_string($databaseUrl) ? parse_url($databaseUrl, PHP_URL_HOST) : null;
 $defaultDatabaseConnection = match ($databaseUrlScheme) {
     'postgres', 'postgresql', 'pgsql' => 'pgsql',
     'mysql', 'mysql2', 'mariadb' => 'mysql',
@@ -17,6 +18,18 @@ $postgresHostWasPartialRenderHost = is_string($postgresHost) && preg_match('/^dp
 if ($postgresHostWasPartialRenderHost) {
     $postgresRegion = env('RENDER_POSTGRES_REGION', 'singapore');
     $postgresHost = "{$postgresHost}.{$postgresRegion}-postgres.render.com";
+}
+
+if (is_string($databaseUrlHost) && preg_match('/^dpg-[^.]+$/', $databaseUrlHost)) {
+    $postgresRegion = env('RENDER_POSTGRES_REGION', 'singapore');
+    $expandedDatabaseUrlHost = "{$databaseUrlHost}.{$postgresRegion}-postgres.render.com";
+    $databaseUrl = preg_replace(
+        '/(^[a-z][a-z0-9+.-]*:\/\/(?:[^@\/?#]*@)?)'.preg_quote($databaseUrlHost, '/').'(?=[:\/?#]|$)/i',
+        '${1}'.$expandedDatabaseUrlHost,
+        $databaseUrl,
+        1
+    );
+    $postgresHostWasPartialRenderHost = true;
 }
 
 return [
@@ -54,7 +67,7 @@ return [
 
         'sqlite' => [
             'driver' => 'sqlite',
-            'url' => env('DATABASE_URL'),
+            'url' => $databaseUrl,
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
@@ -62,7 +75,7 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('DATABASE_URL'),
+            'url' => $databaseUrl,
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'forge'),
@@ -82,7 +95,7 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DATABASE_URL'),
+            'url' => $databaseUrl,
             'host' => $postgresHost,
             'port' => env('DB_PORT', '5432'),
             'database' => env('DB_DATABASE', 'forge'),
@@ -97,7 +110,7 @@ return [
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',
-            'url' => env('DATABASE_URL'),
+            'url' => $databaseUrl,
             'host' => env('DB_HOST', 'localhost'),
             'port' => env('DB_PORT', '1433'),
             'database' => env('DB_DATABASE', 'forge'),

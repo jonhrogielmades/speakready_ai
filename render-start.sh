@@ -12,7 +12,21 @@ export LOG_EMERGENCY_PATH=php://stderr
 # dpg-...-a. That only resolves on Render's private network. If the service is
 # not on that network, expand it to the public hostname before Laravel caches
 # configuration.
-if [ -z "${DATABASE_URL:-}" ]; then
+if [ -n "${DATABASE_URL:-}" ]; then
+    database_url_host="$(printf '%s' "$DATABASE_URL" | sed -n 's#^[a-zA-Z][a-zA-Z0-9+.-]*://[^@]*@\([^:/?]*\).*#\1#p')"
+
+    case "$database_url_host" in
+        dpg-*.*|'')
+            ;;
+        dpg-*)
+            export RENDER_POSTGRES_REGION="${RENDER_POSTGRES_REGION:-singapore}"
+            database_url_expanded_host="${database_url_host}.${RENDER_POSTGRES_REGION}-postgres.render.com"
+            export DATABASE_URL="$(printf '%s' "$DATABASE_URL" | sed "s#@${database_url_host}#@${database_url_expanded_host}#")"
+            export DB_SSLMODE="${DB_SSLMODE:-require}"
+            echo "Expanded Render Postgres DATABASE_URL host for ${RENDER_POSTGRES_REGION} region." >&2
+            ;;
+    esac
+else
     case "${DB_HOST:-}" in
         dpg-*.*)
             ;;
