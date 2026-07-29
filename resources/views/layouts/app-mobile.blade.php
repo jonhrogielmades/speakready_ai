@@ -2621,7 +2621,7 @@
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
       </style>
    </head>
-   <body>
+   <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">
 
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">
@@ -2749,8 +2749,8 @@
       </div>
 
       <!-- ===== PAGE CONTENT ===== -->
-      <div id="mob-content">
-         <div class="db-content" id="userAppContent" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
+      <div id="mob-content" data-layout-shell="mobile">
+         <div class="db-content" id="userAppContent" data-layout-shell="mobile" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
             @yield('content')
          </div>
       </div>
@@ -3224,14 +3224,19 @@
          }
 
          #feedbackModulesLikeHero .feedback-title {
-            color: #fde047 !important;
-            -webkit-text-fill-color: #fde047 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          #sec-interview-setup .setup-hero .setup-hero-title {
-            color: #fde047 !important;
-            -webkit-text-fill-color: #fde047 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
             text-transform: uppercase !important;
+         }
+
+         #sec-interview-setup .setup-hero .setup-hero-subtitle {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          #progressModulesLikeHero .progress-hero-subtitle,
@@ -3402,11 +3407,15 @@
             line-height: 1.15 !important;
             margin: 0 0 3px !important;
             white-space: nowrap !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
             font-size: 0.49rem !important;
             line-height: 1.32 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
@@ -3685,8 +3694,8 @@
                .mastery-title,
                .notif-hero-title
             ) {
-               color: var(--sr-page-title-accent, #fde047) !important;
-               -webkit-text-fill-color: var(--sr-page-title-accent, #fde047) !important;
+               color: var(--sr-page-title-accent, #ffffff) !important;
+               -webkit-text-fill-color: var(--sr-page-title-accent, #ffffff) !important;
                text-transform: uppercase !important;
                text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18) !important;
             }

@@ -5463,6 +5463,960 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @media (min-width: 992px) {
+        html body #sec-progress-tracking {
+            --progress-desktop-radius: 12px;
+            --progress-desktop-gap: 8px;
+            --progress-desktop-border: rgba(15, 23, 42, 0.12);
+            --progress-desktop-card: rgba(255, 255, 255, 0.98);
+            --progress-desktop-field: rgba(248, 250, 252, 0.92);
+            --progress-desktop-soft: #f8fafc;
+            --progress-desktop-title: #0f172a;
+            --progress-desktop-text: #334155;
+            --progress-desktop-muted: #64748b;
+            --progress-desktop-accent: #2563eb;
+            --progress-desktop-accent-2: #0891b2;
+            --progress-desktop-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 0 0 24px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: var(--progress-desktop-gap) !important;
+            color: var(--progress-desktop-title) !important;
+            overflow-x: hidden !important;
+        }
+
+        html[data-theme="dark"] body #sec-progress-tracking,
+        :root:not(.lm) body #sec-progress-tracking,
+        body.dm #sec-progress-tracking,
+        .dm #sec-progress-tracking {
+            --progress-desktop-border: rgba(148, 163, 184, 0.24);
+            --progress-desktop-card: rgba(15, 23, 42, 0.96);
+            --progress-desktop-field: rgba(30, 41, 59, 0.92);
+            --progress-desktop-soft: rgba(51, 65, 85, 0.78);
+            --progress-desktop-title: #f8fafc;
+            --progress-desktop-text: #e2e8f0;
+            --progress-desktop-muted: #cbd5e1;
+            --progress-desktop-accent: #93c5fd;
+            --progress-desktop-accent-2: #67e8f9;
+            --progress-desktop-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+        }
+
+        html body #sec-progress-tracking > .row {
+            --bs-gutter-x: var(--progress-desktop-gap) !important;
+            --bs-gutter-y: var(--progress-desktop-gap) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        html body #sec-progress-tracking > .row > [class*="col-"] {
+            min-width: 0 !important;
+            padding-left: calc(var(--progress-desktop-gap) * 0.5) !important;
+            padding-right: calc(var(--progress-desktop-gap) * 0.5) !important;
+        }
+
+        html body #sec-progress-tracking > .row > [class*="col-"]:first-child {
+            padding-left: 0 !important;
+        }
+
+        html body #sec-progress-tracking > .row > [class*="col-"]:last-child {
+            padding-right: 0 !important;
+        }
+
+        html body #sec-progress-tracking #progress-stats {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        html body #sec-progress-tracking #progress-stats > [class*="col-"] {
+            min-width: 0 !important;
+            padding-left: calc(var(--progress-desktop-gap) * 0.5) !important;
+            padding-right: calc(var(--progress-desktop-gap) * 0.5) !important;
+        }
+
+        html body #progressModulesLikeHero.progress-hero {
+            position: relative !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 180px !important;
+            align-items: center !important;
+            min-height: 116px !important;
+            max-height: none !important;
+            height: auto !important;
+            gap: 14px !important;
+            margin: 0 !important;
+            padding: 18px 178px 18px 20px !important;
+            border-radius: var(--progress-desktop-radius) !important;
+            border: 1px solid rgba(191, 219, 254, 0.86) !important;
+            background:
+                radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+                linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+            overflow: hidden !important;
+        }
+
+        html[data-theme="dark"] body #progressModulesLikeHero.progress-hero,
+        :root:not(.lm) body #progressModulesLikeHero.progress-hero,
+        body.dm #progressModulesLikeHero.progress-hero,
+        .dm #progressModulesLikeHero.progress-hero {
+            border-color: rgba(147, 197, 253, 0.28) !important;
+            background:
+                radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+                linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        }
+
+        html body #progressModulesLikeHero.progress-hero::before,
+        html body #progressModulesLikeHero.progress-hero::after {
+            content: none !important;
+            display: none !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-inner,
+        html body #progressModulesLikeHero .progress-hero-copy {
+            display: flex !important;
+            align-items: center !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-copy {
+            gap: 12px !important;
+            max-width: 780px !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-icon {
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            flex: 0 0 44px !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(147, 197, 253, 0.42) !important;
+            background: rgba(239, 246, 255, 0.92) !important;
+            color: #1d4ed8 !important;
+            font-size: 1.05rem !important;
+            box-shadow: none !important;
+        }
+
+        html[data-theme="dark"] body #progressModulesLikeHero .progress-hero-icon,
+        :root:not(.lm) body #progressModulesLikeHero .progress-hero-icon,
+        body.dm #progressModulesLikeHero .progress-hero-icon,
+        .dm #progressModulesLikeHero .progress-hero-icon {
+            border-color: rgba(147, 197, 253, 0.32) !important;
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #93c5fd !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-title {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 5px !important;
+            color: var(--progress-desktop-title) !important;
+            -webkit-text-fill-color: var(--progress-desktop-title) !important;
+            background: none !important;
+            font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            text-transform: none !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-title svg {
+            display: none !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-subtitle {
+            display: block !important;
+            max-width: 640px !important;
+            color: #334155 !important;
+            font-size: 0.84rem !important;
+            line-height: 1.42 !important;
+            font-weight: 600 !important;
+            overflow: visible !important;
+        }
+
+        html[data-theme="dark"] body #progressModulesLikeHero .progress-hero-subtitle,
+        :root:not(.lm) body #progressModulesLikeHero .progress-hero-subtitle,
+        body.dm #progressModulesLikeHero .progress-hero-subtitle,
+        .dm #progressModulesLikeHero .progress-hero-subtitle {
+            color: #e2e8f0 !important;
+        }
+
+        html body #progressModulesLikeHero .progress-hero-art {
+            display: block !important;
+            position: absolute !important;
+            right: 12px !important;
+            bottom: -10px !important;
+            width: clamp(140px, 12vw, 174px) !important;
+            max-width: none !important;
+            opacity: 0.96 !important;
+            filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+            animation: none !important;
+        }
+
+        html body #sec-progress-tracking .progress-actions {
+            position: static !important;
+            display: flex !important;
+            justify-content: flex-end !important;
+            gap: 8px !important;
+            margin: 8px 0 10px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html body #sec-progress-tracking .progress-export-btn {
+            min-height: 34px !important;
+            padding: 7px 11px !important;
+            border-radius: 9px !important;
+            gap: 7px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-progress-tracking .progress-export-btn i {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 7px !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #progress-stats {
+            --bs-gutter-x: var(--progress-desktop-gap) !important;
+            --bs-gutter-y: var(--progress-desktop-gap) !important;
+            margin-bottom: var(--progress-desktop-gap) !important;
+        }
+
+        html body #sec-progress-tracking .progress-stat-card {
+            min-height: 86px !important;
+            padding: 10px !important;
+            border: 1px solid var(--progress-desktop-border) !important;
+            border-radius: var(--progress-desktop-radius) !important;
+            background: var(--progress-desktop-card) !important;
+            box-shadow: var(--progress-desktop-shadow) !important;
+            text-align: left !important;
+            transform: none !important;
+        }
+
+        html body #sec-progress-tracking .progress-stat-icon {
+            width: 32px !important;
+            height: 32px !important;
+            margin: 0 0 9px !important;
+            border-radius: 9px !important;
+            font-size: 0.86rem !important;
+        }
+
+        html body #sec-progress-tracking .progress-stat-value {
+            color: var(--progress-desktop-title) !important;
+            font-size: 1.02rem !important;
+            line-height: 1.05 !important;
+        }
+
+        html body #sec-progress-tracking .progress-stat-label {
+            margin-top: 4px !important;
+            color: var(--progress-desktop-muted) !important;
+            font-size: 0.56rem !important;
+            line-height: 1.12 !important;
+            font-weight: 850 !important;
+            text-transform: uppercase !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .premium-panel,
+            .progress-chart-panel,
+            .strengths-star-panel,
+            .history-panel,
+            .learning-panel,
+            .recommend-panel,
+            .voice-panel,
+            .activity-panel,
+            .goals-panel,
+            .badges-panel,
+            .practice-plan-panel,
+            .progress-ai-insight
+        ) {
+            padding: 14px !important;
+            border: 1px solid var(--progress-desktop-border) !important;
+            border-radius: var(--progress-desktop-radius) !important;
+            background: var(--progress-desktop-card) !important;
+            color: var(--progress-desktop-title) !important;
+            box-shadow: var(--progress-desktop-shadow) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        html body #sec-progress-tracking .premium-panel:hover {
+            transform: none !important;
+        }
+
+        html body #sec-progress-tracking .progress-ai-insight {
+            min-height: 0 !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+        }
+
+        html body #sec-progress-tracking > #ai-insights,
+        html body #sec-progress-tracking > #personalized-practice-plan {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        html body #sec-progress-tracking .progress-ai-content {
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: center !important;
+        }
+
+        html body #sec-progress-tracking .progress-ai-art {
+            display: none !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .progress-panel-heading,
+            .practice-plan-heading,
+            .learning-heading,
+            .recommend-heading,
+            .voice-heading,
+            .activity-heading,
+            .goals-heading,
+            .badges-heading,
+            .history-heading,
+            .strengths-overview,
+            .star-overview
+        ) {
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: center !important;
+            margin: 0 0 10px !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .progress-ai-icon,
+            .progress-panel-icon,
+            .practice-plan-heading-icon,
+            .learning-heading-icon,
+            .recommend-heading-icon,
+            .voice-heading-icon,
+            .activity-heading-icon,
+            .goals-heading-icon,
+            .badges-heading-icon,
+            .strengths-icon,
+            .star-icon,
+            .history-icon
+        ) {
+            width: 34px !important;
+            height: 34px !important;
+            flex: 0 0 34px !important;
+            border-radius: 10px !important;
+            font-size: 0.88rem !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .progress-panel-title,
+            .practice-plan-heading-title,
+            .learning-title,
+            .recommend-title,
+            .voice-title,
+            .activity-title,
+            .goals-title,
+            .badges-title,
+            .strengths-title,
+            .star-title,
+            .history-title,
+            .progress-ai-title
+        ) {
+            color: var(--progress-desktop-title) !important;
+            font-size: 0.94rem !important;
+            line-height: 1.18 !important;
+            letter-spacing: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .progress-panel-subtitle,
+            .practice-plan-heading-text,
+            .learning-subtitle,
+            .recommend-subtitle,
+            .voice-subtitle,
+            .activity-subtitle,
+            .goals-subtitle,
+            .badges-subtitle,
+            .strengths-text,
+            .star-text,
+            .progress-ai-text
+        ) {
+            color: var(--progress-desktop-muted) !important;
+            margin-top: 4px !important;
+            font-size: 0.7rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body #readiness-trend,
+        html body #category-perf {
+            width: 50% !important;
+            max-width: 50% !important;
+            flex: 0 0 50% !important;
+        }
+
+        html body #learning-progress,
+        html body #recommended-next,
+        html body #voice-progress,
+        html body #skill-tracker,
+        html body #strengths-tracker,
+        html body #history-table,
+        html body #activity-calendar,
+        html body #goals-milestones,
+        html body #achievements-badges {
+            width: 33.333333% !important;
+            max-width: 33.333333% !important;
+            flex: 0 0 33.333333% !important;
+        }
+
+        html body #personalized-practice-plan {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+        }
+
+        html body #sec-progress-tracking .progress-chart-frame {
+            height: 182px !important;
+            margin-top: 8px !important;
+            border: 1px solid var(--progress-desktop-border) !important;
+            border-radius: 10px !important;
+            background: var(--progress-desktop-field) !important;
+        }
+
+        html body #sec-progress-tracking .progress-chart-frame.scenario {
+            height: 182px !important;
+        }
+
+        html body #sec-progress-tracking .skill-metric-row {
+            margin-bottom: 8px !important;
+            padding: 9px !important;
+            border: 1px solid var(--progress-desktop-border) !important;
+            border-radius: 10px !important;
+            background: var(--progress-desktop-field) !important;
+        }
+
+        html body #sec-progress-tracking .skill-metric-top {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            margin-bottom: 8px !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #sec-progress-tracking .skill-metric-label,
+        html body #sec-progress-tracking .skill-metric-value {
+            color: var(--progress-desktop-text) !important;
+        }
+
+        html body #sec-progress-tracking :is(.skill-metric-bar, .learning-track, .goal-track) {
+            height: 7px !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .practice-plan-row,
+            .strengths-list-card,
+            .star-note,
+            .history-search,
+            .history-card,
+            .learning-module,
+            .learning-summary,
+            .recommend-item,
+            .voice-empty,
+            .goal-note,
+            .goal-row,
+            .badge-item,
+            .skill-empty-state
+        ) {
+            border: 1px solid var(--progress-desktop-border) !important;
+            border-radius: 10px !important;
+            background: var(--progress-desktop-field) !important;
+        }
+
+        html body #sec-progress-tracking .practice-plan-list,
+        html body #sec-progress-tracking .history-list,
+        html body #sec-progress-tracking .learning-list,
+        html body #sec-progress-tracking .recommend-list {
+            display: grid !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-progress-tracking .practice-plan-list,
+        html body #sec-progress-tracking .history-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        html body #sec-progress-tracking .practice-plan-row,
+        html body #sec-progress-tracking .learning-module,
+        html body #sec-progress-tracking .recommend-item {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            padding: 10px !important;
+        }
+
+        html body #sec-progress-tracking .recommend-item {
+            grid-template-columns: 34px minmax(0, 1fr) 20px !important;
+        }
+
+        html body #sec-progress-tracking :is(.practice-plan-icon, .learning-module-icon, .recommend-item-icon) {
+            width: 34px !important;
+            height: 34px !important;
+            flex-basis: 34px !important;
+            border-radius: 9px !important;
+            font-size: 0.84rem !important;
+        }
+
+        html body #sec-progress-tracking :is(.practice-plan-step, .practice-plan-pill) {
+            padding: 4px 7px !important;
+            font-size: 0.58rem !important;
+            line-height: 1.1 !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .practice-plan-title,
+            .learning-module-title,
+            .recommend-item-title,
+            .history-scenario,
+            .goal-title,
+            .goal-note-title
+        ) {
+            color: var(--progress-desktop-title) !important;
+            font-size: 0.76rem !important;
+            line-height: 1.2 !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-progress-tracking :is(
+            .practice-plan-text,
+            .practice-plan-tasks li,
+            .recommend-item-text,
+            .history-meta,
+            .history-date,
+            .goal-note-text,
+            .learning-summary-label
+        ) {
+            color: var(--progress-desktop-muted) !important;
+            font-size: 0.66rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body #sec-progress-tracking .practice-plan-footer {
+            gap: 8px !important;
+            margin-top: 9px !important;
+        }
+
+        html body #sec-progress-tracking .practice-plan-link {
+            font-size: 0.66rem !important;
+            white-space: nowrap !important;
+        }
+
+        html body #sec-progress-tracking .strengths-lists {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-progress-tracking .strengths-list-card,
+        html body #sec-progress-tracking .star-note,
+        html body #sec-progress-tracking .history-card,
+        html body #sec-progress-tracking .goal-row {
+            padding: 10px !important;
+        }
+
+        html body #sec-progress-tracking .strengths-list-card h6,
+        html body #sec-progress-tracking .star-note-title,
+        html body #sec-progress-tracking .voice-empty-title,
+        html body #sec-progress-tracking .activity-empty-title {
+            font-size: 0.78rem !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #sec-progress-tracking .strengths-list-card li,
+        html body #sec-progress-tracking .star-note-text,
+        html body #sec-progress-tracking .voice-empty-text,
+        html body #sec-progress-tracking .activity-empty-text {
+            color: var(--progress-desktop-muted) !important;
+            font-size: 0.66rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body #sec-progress-tracking .history-top {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        html body #sec-progress-tracking .history-search {
+            min-height: 40px !important;
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            margin-bottom: 10px !important;
+            padding: 0 10px !important;
+        }
+
+        html body #history-table .history-heading {
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            margin-bottom: 0 !important;
+        }
+
+        html body #history-table .history-panel {
+            min-height: 0 !important;
+            height: 100% !important;
+        }
+
+        html body #history-table .history-top {
+            margin-bottom: 8px !important;
+        }
+
+        html body #history-table .history-title {
+            font-size: 0.84rem !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #history-table .history-icon {
+            width: 30px !important;
+            height: 30px !important;
+            flex-basis: 30px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body #history-table .history-search {
+            min-height: 34px !important;
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            margin-bottom: 8px !important;
+            padding: 0 8px !important;
+        }
+
+        html body #history-table .history-search i {
+            font-size: 0.78rem !important;
+        }
+
+        html body #sec-progress-tracking .history-search input {
+            color: var(--progress-desktop-title) !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #history-table .skill-empty-state {
+            min-height: 112px !important;
+            padding: 12px 8px !important;
+        }
+
+        html body #history-table .skill-empty-text {
+            max-width: 24ch !important;
+            font-size: 0.66rem !important;
+            line-height: 1.22 !important;
+        }
+
+        html body #sec-progress-tracking .history-card-actions {
+            grid-template-columns: minmax(0, 1fr) 36px !important;
+            gap: 8px !important;
+            margin-top: 10px !important;
+        }
+
+        html body #sec-progress-tracking .history-clear-btn,
+        html body #sec-progress-tracking :is(.history-feedback-btn, .history-delete-btn),
+        html body #sec-progress-tracking .activity-cta {
+            min-height: 34px !important;
+            border-radius: 9px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-progress-tracking .history-delete-btn {
+            width: 36px !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-progress-tracking .learning-summary {
+            grid-template-columns: 38px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            margin-top: 10px !important;
+            padding: 10px !important;
+        }
+
+        html body #sec-progress-tracking .learning-summary-icon {
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 1rem !important;
+        }
+
+        html body #sec-progress-tracking .learning-summary-value {
+            color: var(--progress-desktop-title) !important;
+            font-size: 1.16rem !important;
+            line-height: 1 !important;
+        }
+
+        html body #voice-progress .row.text-center {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+        }
+
+        html body #voice-progress .row.text-center > .col-4 {
+            width: auto !important;
+            padding: 9px 5px !important;
+            border: 1px solid var(--progress-desktop-border) !important;
+            border-radius: 10px !important;
+            background: var(--progress-desktop-field) !important;
+        }
+
+        html body #voice-progress .row.text-center h3 {
+            margin-bottom: 3px !important;
+            color: var(--progress-desktop-title) !important;
+            font-size: 0.9rem !important;
+            line-height: 1 !important;
+        }
+
+        html body #voice-progress .row.text-center small {
+            display: block !important;
+            color: var(--progress-desktop-muted) !important;
+            font-size: 0.52rem !important;
+            line-height: 1.15 !important;
+        }
+
+        html body #sec-progress-tracking .activity-empty,
+        html body #sec-progress-tracking .voice-empty,
+        html body #sec-progress-tracking .skill-empty-state {
+            min-height: 132px !important;
+            padding: 14px 10px !important;
+            text-align: center !important;
+        }
+
+        html body #activity-calendar .activity-illustration {
+            width: min(128px, 46%) !important;
+            margin-bottom: 6px !important;
+        }
+
+        html body #activity-calendar .activity-heading {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #activity-calendar .activity-heading-icon {
+            width: 30px !important;
+            height: 30px !important;
+            flex-basis: 30px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body #activity-calendar .activity-title {
+            font-size: 0.84rem !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #activity-calendar .activity-subtitle {
+            font-size: 0.64rem !important;
+            line-height: 1.22 !important;
+        }
+
+        html body #activity-calendar .activity-empty {
+            min-height: 120px !important;
+            padding: 10px 8px !important;
+            justify-content: center !important;
+        }
+
+        html body #activity-calendar .activity-empty-title {
+            max-width: 22ch !important;
+            margin: 0 auto 5px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.16 !important;
+        }
+
+        html body #activity-calendar .activity-empty-text {
+            margin-bottom: 7px !important;
+            font-size: 0.6rem !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #activity-calendar .activity-cta {
+            min-height: 30px !important;
+            width: auto !important;
+            min-width: 150px !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 6px 12px !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #sec-progress-tracking .badge-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-progress-tracking .badge-item {
+            min-height: 90px !important;
+            padding: 10px 8px !important;
+        }
+
+        html body #sec-progress-tracking .badge-medal {
+            width: 38px !important;
+            height: 38px !important;
+            margin-bottom: 6px !important;
+            border-radius: 10px !important;
+            font-size: 0.95rem !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-progress-tracking .badge-title {
+            color: var(--progress-desktop-title) !important;
+            font-size: 0.64rem !important;
+            line-height: 1.14 !important;
+        }
+
+        html body #sec-progress-tracking .badge-desc {
+            color: var(--progress-desktop-muted) !important;
+            font-size: 0.54rem !important;
+            line-height: 1.15 !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        html body #sec-progress-tracking {
+            max-width: 100% !important;
+        }
+
+        html body #sec-progress-tracking .practice-plan-list,
+        html body #sec-progress-tracking .history-list {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        html body #readiness-trend,
+        html body #category-perf {
+            width: 50% !important;
+            max-width: 50% !important;
+            flex: 0 0 50% !important;
+        }
+
+        html body #learning-progress,
+        html body #recommended-next,
+        html body #voice-progress,
+        html body #skill-tracker,
+        html body #strengths-tracker,
+        html body #history-table,
+        html body #activity-calendar,
+        html body #goals-milestones,
+        html body #achievements-badges {
+            width: 33.333333% !important;
+            max-width: 33.333333% !important;
+            flex: 0 0 33.333333% !important;
+        }
+    }
+
+    @media (min-width: 992px) {
+        html body #sec-progress-tracking {
+            gap: 8px !important;
+        }
+
+        html body #sec-progress-tracking > #progress-stats,
+        html body #sec-progress-tracking > #ai-insights,
+        html body #sec-progress-tracking > #personalized-practice-plan {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        html body #sec-progress-tracking > #progress-stats {
+            margin: 0 !important;
+        }
+
+        html body #sec-progress-tracking > #ai-insights {
+            margin: 0 !important;
+        }
+
+        html body #sec-progress-tracking > #personalized-practice-plan {
+            margin: 0 !important;
+        }
+
+        html body #sec-progress-tracking > #personalized-practice-plan > .col-12 {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        html body #sec-progress-tracking > #personalized-practice-plan .practice-plan-panel {
+            margin-top: 0 !important;
+        }
+    }
+
+    body.user-desktop-shell #sec-progress-tracking {
+        --progress-shell-panel-gap: 10px;
+        display: block !important;
+        gap: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > :is(.progress-hero, .progress-actions, .row, #ai-insights) {
+        margin-top: 0 !important;
+        margin-bottom: var(--progress-shell-panel-gap) !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > .row {
+        --bs-gutter-x: var(--progress-shell-panel-gap) !important;
+        --bs-gutter-y: var(--progress-shell-panel-gap) !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > .row > [class*="col-"] {
+        padding-left: calc(var(--progress-shell-panel-gap) * 0.5) !important;
+        padding-right: calc(var(--progress-shell-panel-gap) * 0.5) !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > .row > [class*="col-"]:first-child {
+        padding-left: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > .row > [class*="col-"]:last-child {
+        padding-right: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > #progress-stats,
+    body.user-desktop-shell #sec-progress-tracking > #ai-insights,
+    body.user-desktop-shell #sec-progress-tracking > #personalized-practice-plan {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        margin: 0 0 var(--progress-shell-panel-gap) !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > .progress-actions {
+        margin: 8px 0 var(--progress-shell-panel-gap) !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > #personalized-practice-plan > .col-12 {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > #personalized-practice-plan .practice-plan-panel {
+        margin-top: 0 !important;
+    }
+
+    body.user-desktop-shell #sec-progress-tracking > :last-child {
+        margin-bottom: 0 !important;
+    }
 </style>
 
 <div class="db-section active" id="sec-progress-tracking">
@@ -5509,7 +6463,7 @@
     </div>
 
     <!-- Feature 9, 14: Top Stats (Streaks, Comparison) -->
-    <div id="progress-stats" class="row g-4 mb-4">
+    <div id="progress-stats" class="row g-4">
         <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.1s;">
             <div class="premium-panel progress-stat-card" style="--stat-accent:#f59e0b">
                 <div class="progress-stat-icon"><i class="fa-solid fa-fire"></i></div>
@@ -5542,7 +6496,7 @@
 
     <!-- Feature 13: AI Progress Insights -->
     @if($readinessMovement)
-        <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
+        <div id="ai-insights" class="alert border-0 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
             <div class="progress-ai-content">
                 <div class="progress-ai-icon"><i class="fa-solid fa-robot"></i></div>
                 <div>
@@ -5554,7 +6508,7 @@
             </div>
         </div>
     @elseif($scoredSessions->count() === 1)
-        <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
+        <div id="ai-insights" class="alert border-0 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
             <div class="progress-ai-content">
                 <div class="progress-ai-icon"><i class="fa-solid fa-robot"></i></div>
                 <div>
@@ -5565,7 +6519,7 @@
             </div>
         </div>
     @else
-        <div id="ai-insights" class="alert border-0 mb-4 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
+        <div id="ai-insights" class="alert border-0 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
             <div class="progress-ai-content">
                 <div class="progress-ai-icon"><i class="fa-solid fa-robot"></i></div>
                 <div>
@@ -5577,7 +6531,7 @@
         </div>
     @endif
 
-    <div class="row mb-4 animate-fade-up" id="personalized-practice-plan" style="animation-delay: 0.55s;">
+    <div class="row animate-fade-up" id="personalized-practice-plan" style="animation-delay: 0.55s;">
         <div class="col-12">
             <div class="premium-panel practice-plan-panel">
                 <div class="practice-plan-heading">
@@ -5750,11 +6704,8 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Feature 2: Interview Performance History -->
-    <div class="row mb-4 animate-fade-up" id="history-table" style="animation-delay: 1s;">
-        <div class="col-12">
+        <!-- Feature 2: Interview Performance History -->
+        <div class="col-12 animate-fade-up" id="history-table" style="animation-delay: 1s;">
             <div class="premium-panel history-panel" style="--panel-accent:#4f46e5;">
                 <div class="history-top">
                     <div class="history-heading">
@@ -6006,9 +6957,9 @@
         </div>
     </div>
 
-    <!-- Feature 8: Practice Activity Calendar -->
-    <div class="row mb-4" id="activity-calendar">
-        <div class="col-12">
+    <div class="row g-4">
+        <!-- Feature 8: Practice Activity Calendar -->
+        <div class="col-12" id="activity-calendar">
             <div class="activity-panel" style="--panel-accent:#6d5dfc;">
                 <div class="activity-heading">
                     <div class="activity-heading-icon"><i class="fa-regular fa-calendar"></i></div>
@@ -6050,9 +7001,7 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row g-4">
         <!-- Feature 10: Goals & Milestones -->
         <div class="col-12" id="goals-milestones">
             <div class="goals-panel" style="--panel-accent:#10b981;">

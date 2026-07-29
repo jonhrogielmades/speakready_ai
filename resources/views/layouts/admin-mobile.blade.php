@@ -1482,7 +1482,7 @@
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--adm, #f87171); color: #fff; font-weight: 600; cursor: pointer; }
       </style>
    </head>
-   <body class="admin-mobile-shell">
+   <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin">
 
       <!-- ===== ADMIN MOBILE TOP HEADER ===== -->
       <header id="mob-header">
@@ -1548,8 +1548,8 @@
       </header>
 
       <!-- ===== PAGE CONTENT ===== -->
-      <div id="mob-content">
-         <div class="db-content">
+      <div id="mob-content" data-layout-shell="mobile">
+         <div class="db-content" data-layout-shell="mobile">
             @yield('content')
             @include('partials.admin-motion-title-svg')
          </div>
@@ -2426,8 +2426,8 @@
 
             body.admin-mobile-shell #mob-content > .db-content > :is(.db-section, .container-fluid) > :is(.d-flex.justify-content-between.mb-4, .mb-4.d-flex.justify-content-between) > div:first-child :is(h1, h2, h3, h4),
             body.admin-mobile-shell #mob-content :is(.feedback-page-title, .session-page-title, .archive-page-title, .admin-dashboard-title) {
-               color: var(--sr-page-title-accent, #fde047) !important;
-               -webkit-text-fill-color: var(--sr-page-title-accent, #fde047) !important;
+               color: var(--sr-page-title-accent, #ffffff) !important;
+               -webkit-text-fill-color: var(--sr-page-title-accent, #ffffff) !important;
                text-transform: uppercase !important;
                text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18) !important;
             }

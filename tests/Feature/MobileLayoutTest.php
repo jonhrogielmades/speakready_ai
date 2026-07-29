@@ -26,6 +26,8 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->get(route('dashboard'))
             ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
             ->assertSee('--mob-card-gap: 12px', false)
             ->assertSee('.tracker-panel', false)
@@ -46,6 +48,8 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->get(route('admin.dashboard'))
             ->assertOk()
+            ->assertSee('class="admin-mobile-shell mobile-shell"', false)
+            ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -64,6 +68,8 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $desktopUserAgent)
             ->get(route('admin.dashboard'))
             ->assertOk()
+            ->assertSee('class="admin-shell desktop-shell"', false)
+            ->assertSee('data-layout-shell="desktop"', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-content"', false);
     }
@@ -96,8 +102,11 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $desktopUserAgent)
             ->get(route('dashboard'))
             ->assertOk()
+            ->assertSee('class="user-desktop-shell desktop-shell"', false)
+            ->assertSee('data-layout-shell="desktop"', false)
             ->assertSee('class="db-sidebar"', false)
-            ->assertDontSee('id="mob-bottom-nav"', false);
+            ->assertDontSee('id="mob-bottom-nav"', false)
+            ->assertDontSee('html body #progressModulesLikeHero.progress-hero', false);
     }
 
     public function test_user_dashboard_uses_mobile_shell_from_viewport_cookie(): void
@@ -112,6 +121,8 @@ class MobileLayoutTest extends TestCase
             ->withUnencryptedCookie('sr_viewport_width', '390')
             ->get(route('dashboard'))
             ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -206,7 +217,7 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $iphoneUserAgent)
             ->get(route('interview.session'))
             ->assertOk()
-            ->assertSee('<body>', false)
+            ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
             ->assertDontSee('<body class="mobile-interview-fullscreen"', false)
             ->assertSee('id="responseFullscreenToggle"', false)
             ->assertSee('aria-label="Enter fullscreen"', false)

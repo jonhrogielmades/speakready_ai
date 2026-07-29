@@ -373,94 +373,6 @@
             display: none;
          }
 
-         .guest-tour-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1000000;
-            display: none;
-            background: rgba(15, 23, 42, 0.18);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-         }
-
-         .guest-tour-overlay.show {
-            display: block;
-         }
-
-         .guest-tour-card {
-            position: fixed;
-            z-index: 1000004;
-            width: min(300px, calc(100vw - 32px));
-            display: none;
-            padding: 14px;
-            border-radius: 12px;
-            background: var(--sf);
-            border: 1px solid var(--bd);
-            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
-            color: var(--tx);
-            animation: guestTourIn 0.22s ease both;
-         }
-
-         .guest-tour-card h6 {
-            margin: 0 0 6px;
-            font-size: 0.92rem;
-            font-weight: 800;
-         }
-
-         .guest-tour-card p {
-            margin: 0 0 12px;
-            color: var(--tx2);
-            font-size: 0.78rem;
-            line-height: 1.45;
-         }
-
-         .guest-tour-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-         }
-
-         .guest-tour-actions button {
-            min-height: 32px;
-            padding: 7px 11px;
-            border-radius: 8px;
-            font-size: 0.76rem;
-            font-weight: 700;
-         }
-
-         .guest-tour-skip {
-            border: 1px solid var(--bd);
-            background: transparent;
-            color: var(--tx2);
-         }
-
-         .guest-tour-next {
-            border: 0;
-            background: var(--grad);
-            color: #fff;
-         }
-
-         .guest-tour-highlight {
-            position: relative;
-            z-index: 1000003 !important;
-            box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.18), 0 16px 38px rgba(37, 99, 235, 0.24) !important;
-         }
-
-         @keyframes guestTourIn {
-            from { opacity: 0; transform: translateY(8px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-         }
-
-         @media (max-width: 575.98px) {
-            .guest-tour-card {
-               left: 16px !important;
-               right: 16px !important;
-               bottom: 18px !important;
-               top: auto !important;
-               width: auto;
-            }
-         }
-
          @media (max-width: 575.98px) {
             .guest-header-clock { font-size: 0.53rem; }
          }
@@ -1477,7 +1389,7 @@
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
-                        <button class="bgrd btn px-4 py-3 fs-6" id="guestGetStartedTourBtn" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
+                        <button class="bgrd btn px-4 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Get Started Free</button>
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
@@ -2399,16 +2311,6 @@
          </div>
       </div>
 
-      <div class="guest-tour-overlay" id="guestAuthTourOverlay" aria-hidden="true"></div>
-      <div class="guest-tour-card" id="guestAuthTourCard" role="dialog" aria-modal="true" aria-labelledby="guestAuthTourTitle">
-         <h6 id="guestAuthTourTitle">Click Get Started Free</h6>
-         <p id="guestAuthTourText">Start here to open Login/Register and create your free practice account.</p>
-         <div class="guest-tour-actions">
-            <button type="button" class="guest-tour-skip" id="guestAuthTourSkip">Skip</button>
-            <button type="button" class="guest-tour-next" id="guestAuthTourNext">Got it</button>
-         </div>
-      </div>
-
 <!-- ======================== SCRIPTS ======================== -->
       <!-- jQuery -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
@@ -2468,106 +2370,6 @@
                      },
                  });
              }
-         });
-      </script>
-      <script>
-         document.addEventListener('DOMContentLoaded', function() {
-            const startBtn = document.getElementById('guestGetStartedTourBtn');
-            const authModal = document.getElementById('lofc');
-            const overlay = document.getElementById('guestAuthTourOverlay');
-            const card = document.getElementById('guestAuthTourCard');
-            const title = document.getElementById('guestAuthTourTitle');
-            const text = document.getElementById('guestAuthTourText');
-            const next = document.getElementById('guestAuthTourNext');
-            const skip = document.getElementById('guestAuthTourSkip');
-            let tourActive = false;
-
-            function positionTourCard(target) {
-               if (!card || !target) return;
-               const rect = target.getBoundingClientRect();
-               const cardWidth = Math.min(300, window.innerWidth - 32);
-               const left = Math.min(Math.max(16, rect.left + rect.width / 2 - cardWidth / 2), window.innerWidth - cardWidth - 16);
-               const top = Math.min(rect.bottom + 12, window.innerHeight - 170);
-               card.style.left = `${left}px`;
-               card.style.top = `${top}px`;
-            }
-
-            function clearTourHighlight() {
-               document.querySelectorAll('.guest-tour-highlight').forEach(el => el.classList.remove('guest-tour-highlight'));
-            }
-
-            function closeGuestTour() {
-               tourActive = false;
-               overlay?.classList.remove('show');
-               overlay?.setAttribute('aria-hidden', 'true');
-               if (card) card.style.display = 'none';
-               clearTourHighlight();
-            }
-
-            function showGuestTourStep(target, heading, copy, buttonText) {
-               if (!target || !overlay || !card) return;
-               tourActive = true;
-               clearTourHighlight();
-               target.classList.add('guest-tour-highlight');
-               title.textContent = heading;
-               text.textContent = copy;
-               next.textContent = buttonText;
-               overlay.classList.add('show');
-               overlay.setAttribute('aria-hidden', 'false');
-               card.style.display = 'block';
-               positionTourCard(target);
-            }
-
-            function showStartGuide() {
-               showGuestTourStep(
-                  startBtn,
-                  'Click Get Started Free',
-                  'Use this button to open Login/Register and begin your free interview practice.',
-                  'Got it'
-               );
-            }
-
-            function showAuthGuide() {
-               const tabSwitch = authModal?.querySelector('.tab-switch');
-               showGuestTourStep(
-                  tabSwitch,
-                  'Login or Register',
-                  'Choose Register for a new account, or Log In if you already have one.',
-                  'Done'
-               );
-            }
-
-            startBtn?.addEventListener('click', function() {
-               if (tourActive) {
-                  sessionStorage.setItem('guest_get_started_tour_seen', 'true');
-               }
-            });
-
-            authModal?.addEventListener('shown.bs.modal', function() {
-               if (!sessionStorage.getItem('guest_get_started_tour_seen')) return;
-               if (sessionStorage.getItem('guest_auth_modal_tour_seen')) return;
-               sessionStorage.setItem('guest_auth_modal_tour_seen', 'true');
-               window.setTimeout(showAuthGuide, 140);
-            });
-
-            next?.addEventListener('click', closeGuestTour);
-            skip?.addEventListener('click', closeGuestTour);
-            overlay?.addEventListener('click', closeGuestTour);
-
-            window.addEventListener('resize', function() {
-               if (!tourActive || !card || card.style.display === 'none') return;
-               const target = document.querySelector('.guest-tour-highlight');
-               positionTourCard(target);
-            });
-
-            window.setTimeout(function waitForSplash() {
-               if (!startBtn || sessionStorage.getItem('guest_get_started_tour_seen')) return;
-               if (document.body.classList.contains('guest-splash-pending')) {
-                  window.setTimeout(waitForSplash, 500);
-                  return;
-               }
-               showStartGuide();
-            }, 900);
          });
       </script>
       <!-- PWA Service Worker Registration -->

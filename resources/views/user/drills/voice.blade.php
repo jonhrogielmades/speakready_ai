@@ -318,6 +318,10 @@
         display: grid;
         gap: 22px;
     }
+    #voice-rehearsal-page .vr-practice-main-col,
+    #voice-rehearsal-page .vr-practice-side-col {
+        display: contents;
+    }
     #voice-rehearsal-page .vr-option-panel {
         border-radius: 24px;
         background: rgba(255,255,255,.8);
@@ -3411,6 +3415,976 @@
             min-height: 60px !important;
         }
     }
+
+    @media (min-width: 992px) {
+        html body #voice-rehearsal-page {
+            --vr-desktop-radius: 12px;
+            --vr-desktop-gap: 12px;
+            --vr-desktop-border: rgba(148, 163, 184, 0.2);
+            --vr-desktop-card-shadow: 0 10px 28px rgba(2, 6, 23, 0.12);
+        }
+
+        html.lm body #voice-rehearsal-page {
+            --vr-desktop-border: rgba(15, 23, 42, 0.12);
+            --vr-desktop-card-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        }
+
+        html body #voice-rehearsal-page .vr-shell {
+            width: 100% !important;
+            max-width: 1480px !important;
+            margin: 0 auto !important;
+        }
+
+        html body #voice-rehearsal-page .sr-page-hero.vr-hero {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 180px !important;
+            align-items: center !important;
+            min-height: 116px !important;
+            max-height: none !important;
+            height: auto !important;
+            gap: 14px !important;
+            margin: 0 0 12px !important;
+            padding: 18px 178px 18px 20px !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+        }
+
+        html body #voice-rehearsal-page .vr-hero .sr-page-hero-inner,
+        html body #voice-rehearsal-page .vr-hero .sr-page-hero-copy {
+            display: flex !important;
+            align-items: center !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #voice-rehearsal-page .vr-hero .sr-page-hero-copy {
+            gap: 12px !important;
+            max-width: 780px !important;
+        }
+
+        html body #voice-rehearsal-page .vr-hero-icon {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
+            font-size: 1.05rem !important;
+            flex: 0 0 44px !important;
+        }
+
+        html body #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 5px !important;
+            font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            text-transform: none !important;
+        }
+
+        html body #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+            display: block !important;
+            max-width: 640px !important;
+            font-size: 0.84rem !important;
+            line-height: 1.42 !important;
+            font-weight: 600 !important;
+            overflow: visible !important;
+            -webkit-line-clamp: unset !important;
+            -webkit-box-orient: initial !important;
+        }
+
+        html body #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+            display: block !important;
+            position: absolute !important;
+            right: 12px !important;
+            bottom: -10px !important;
+            width: clamp(140px, 12vw, 174px) !important;
+            max-width: none !important;
+            opacity: 0.96 !important;
+        }
+
+        #voice-rehearsal-page .sr-page-actions.vr-tabs-wrap {
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin: 0 0 10px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            position: static !important;
+        }
+
+        #voice-rehearsal-page #moduleTabs.vr-tabs {
+            width: min(100%, 440px) !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 5px !important;
+            padding: 4px !important;
+            border-radius: 10px !important;
+            overflow: visible !important;
+        }
+
+        #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+            min-height: 30px !important;
+            border-radius: 8px !important;
+            gap: 5px !important;
+            padding: 5px 10px !important;
+            font-size: 0.68rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link i {
+            font-size: 0.7rem !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-flow {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) clamp(330px, 34%, 470px) !important;
+            gap: var(--vr-desktop-gap) !important;
+            align-items: start !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col,
+        #voice-rehearsal-page .vr-practice-side-col {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: var(--vr-desktop-gap) !important;
+            min-width: 0 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col {
+            display: grid !important;
+            grid-column: 1 / 2 !important;
+            grid-template-columns: minmax(0, 1fr) clamp(132px, 18%, 170px) !important;
+            row-gap: 8px !important;
+            column-gap: var(--vr-desktop-gap) !important;
+            align-items: stretch !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col {
+            grid-column: 2 / 3 !important;
+        }
+
+        #voice-rehearsal-page .vr-option-panel,
+        #voice-rehearsal-page .vr-prompt-card {
+            grid-column: 1 / 2 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-option-panel {
+            grid-column: 1 / -1 !important;
+            grid-row: 1 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-prompt-card {
+            grid-column: 1 / 2 !important;
+            grid-row: 2 !important;
+        }
+
+        #voice-rehearsal-page .voice-recorder-controls,
+        #voice-rehearsal-page .vr-start-note,
+        #voice-rehearsal-page #micPermissionHelp,
+        #voice-rehearsal-page .voice-live-stats,
+        #voice-rehearsal-page .vr-transcript-wrap,
+        #voice-rehearsal-page #comparisonPanel {
+            grid-column: 1 / 2 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-recorder-controls {
+            grid-column: 1 / -1 !important;
+            grid-row: 3 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-start-note {
+            grid-column: 1 / -1 !important;
+            grid-row: 4 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > #micPermissionHelp {
+            grid-column: 1 / -1 !important;
+            grid-row: 5 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-transcript-wrap {
+            grid-column: 1 / -1 !important;
+            grid-row: 6 !important;
+            margin-top: -2px !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > #analysisPanel {
+            grid-column: 1 / -1 !important;
+            grid-row: 7 !important;
+            margin-top: -2px !important;
+        }
+
+        #voice-rehearsal-page .instant-feedback-panel,
+        #voice-rehearsal-page .intention-coach-panel {
+            grid-column: 2 / 3 !important;
+        }
+
+        #voice-rehearsal-page .instant-feedback-panel {
+            grid-row: auto !important;
+        }
+
+        #voice-rehearsal-page .intention-coach-panel {
+            grid-row: auto !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > *,
+        #voice-rehearsal-page .vr-practice-side-col > * {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-recorder-controls {
+            margin-top: -6px !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-start-note {
+            margin-top: -8px !important;
+        }
+
+        #voice-rehearsal-page .vr-prompt-card > .voice-recorder-controls,
+        #voice-rehearsal-page .vr-prompt-card > .vr-start-note,
+        #voice-rehearsal-page .vr-prompt-card > #micPermissionHelp {
+            grid-column: auto !important;
+            grid-row: auto !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > #micPermissionHelp[style*="display:none"] {
+            display: none !important;
+        }
+
+        #voice-rehearsal-page #comparisonPanel {
+            grid-column: 1 / -1 !important;
+            margin-top: 0 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-card {
+            margin-bottom: 0 !important;
+        }
+
+        #voice-rehearsal-page :is(.vr-option-panel, .vr-prompt-card, .instant-feedback-panel, .intention-coach-panel, .vr-assessment-card, .premium-card, .vr-progress-panel, #comparisonPanel) {
+            border-radius: var(--vr-desktop-radius) !important;
+            border-color: var(--vr-desktop-border) !important;
+            box-shadow: var(--vr-desktop-card-shadow) !important;
+        }
+
+        #voice-rehearsal-page .vr-option-panel,
+        #voice-rehearsal-page .vr-prompt-card,
+        #voice-rehearsal-page .instant-feedback-panel,
+        #voice-rehearsal-page .intention-coach-panel,
+        #voice-rehearsal-page .vr-assessment-card,
+        #voice-rehearsal-page .vr-progress-panel {
+            padding: 14px !important;
+        }
+
+        #voice-rehearsal-page .vr-prompt-card {
+            display: grid !important;
+            grid-template-rows: auto auto minmax(92px, 1fr) auto auto auto !important;
+            align-content: stretch !important;
+            padding: 12px 16px !important;
+            min-height: 286px !important;
+        }
+
+        #voice-rehearsal-page .vr-option-list {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        #voice-rehearsal-page .vr-option-row {
+            grid-template-columns: 34px minmax(0, 1fr) 14px !important;
+            min-height: 46px !important;
+            padding: 7px 9px !important;
+            border-radius: 10px !important;
+            font-size: 0.76rem !important;
+            line-height: 1.2 !important;
+            text-align: left !important;
+        }
+
+        #voice-rehearsal-page .vr-option-row > .fa-chevron-right {
+            display: inline-flex !important;
+        }
+
+        #voice-rehearsal-page .vr-option-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        #voice-rehearsal-page .vr-prompt-kicker {
+            font-size: 0.7rem !important;
+            margin-bottom: 6px !important;
+        }
+
+        #voice-rehearsal-page #promptText.vr-prompt-text {
+            max-width: 840px !important;
+            margin: 0 auto 10px !important;
+            font-size: clamp(1rem, 1.28vw, 1.42rem) !important;
+            line-height: 1.22 !important;
+        }
+
+        #voice-rehearsal-page .vr-mic-stage {
+            min-height: 92px !important;
+            margin: 0 0 8px !important;
+            border-radius: 12px !important;
+        }
+
+        #voice-rehearsal-page .vr-mic-button {
+            width: 58px !important;
+            height: 58px !important;
+            font-size: 1.35rem !important;
+        }
+
+        #voice-rehearsal-page .voice-recorder-controls {
+            position: static !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            margin: 0 0 5px !important;
+        }
+
+        #voice-rehearsal-page .voice-recorder-controls .btn {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            min-width: 92px !important;
+            min-height: 32px !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+            font-size: 0.72rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        #voice-rehearsal-page .voice-recorder-controls .btn i {
+            margin-right: 5px !important;
+        }
+
+        #voice-rehearsal-page .voice-recorder-controls #btnStart {
+            flex-basis: auto !important;
+        }
+
+        #voice-rehearsal-page .vr-start-note,
+        #voice-rehearsal-page #micPermissionHelp {
+            margin: 0 !important;
+            font-size: 0.7rem !important;
+            line-height: 1.3 !important;
+        }
+
+        #voice-rehearsal-page .voice-live-stats {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 12px !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats {
+            grid-column: 2 / 3 !important;
+            grid-row: 2 !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-rows: repeat(4, minmax(0, 1fr)) !important;
+            align-self: stretch !important;
+            gap: 6px !important;
+            margin: 0 !important;
+            min-height: 286px !important;
+        }
+
+        #voice-rehearsal-page .voice-live-stats > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            flex: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        #voice-rehearsal-page .stat-box {
+            min-height: 78px !important;
+            padding: 10px 8px !important;
+            border-radius: 10px !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats .stat-box {
+            min-height: 0 !important;
+            height: 100% !important;
+            padding: 7px 6px !important;
+            gap: 2px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        #voice-rehearsal-page .stat-ico {
+            width: 26px !important;
+            height: 26px !important;
+            font-size: 0.7rem !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats .stat-ico {
+            width: 22px !important;
+            height: 22px !important;
+            font-size: 0.62rem !important;
+        }
+
+        #voice-rehearsal-page .stat-val {
+            margin-top: 4px !important;
+            font-size: 1.08rem !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats .stat-val {
+            margin-top: 2px !important;
+            font-size: 0.92rem !important;
+        }
+
+        #voice-rehearsal-page .stat-lbl {
+            margin-top: 3px !important;
+            font-size: 0.58rem !important;
+            letter-spacing: 0.02em !important;
+            line-height: 1.2 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats .stat-lbl {
+            margin-top: 1px !important;
+            font-size: 0.48rem !important;
+            line-height: 1.08 !important;
+        }
+
+        #voice-rehearsal-page .vr-transcript-wrap {
+            margin-bottom: 6px !important;
+        }
+
+        #voice-rehearsal-page .vr-transcript-wrap > .d-flex {
+            align-items: center !important;
+            margin-bottom: 6px !important;
+        }
+
+        #voice-rehearsal-page .vr-transcript-label {
+            margin: 0 !important;
+            font-size: 0.72rem !important;
+            line-height: 1 !important;
+        }
+
+        #voice-rehearsal-page .vr-transcript-label i {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 8px !important;
+            font-size: 0.68rem !important;
+        }
+
+        #voice-rehearsal-page #transcriptView {
+            min-height: 92px !important;
+            padding: 10px 12px !important;
+            border-radius: 10px !important;
+            font-size: 0.84rem !important;
+            line-height: 1.38 !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-head, .intention-coach-head) {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-title, .intention-coach-title, .vr-assessment-title, .vr-progress-title) {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            margin: 0 0 4px !important;
+            font-size: 0.88rem !important;
+            line-height: 1.2 !important;
+            font-weight: 900 !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-title i, .intention-coach-title i, .vr-assessment-title i, .vr-progress-title i) {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            margin-right: 0 !important;
+            font-size: 0.78rem !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-summary, .intention-coach-summary) {
+            margin-left: 34px !important;
+            font-size: 0.7rem !important;
+            line-height: 1.34 !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-status, .intention-coach-status, .instant-feedback-badge) {
+            min-height: auto !important;
+            padding: 5px 8px !important;
+            font-size: 0.58rem !important;
+            white-space: nowrap !important;
+        }
+
+        #voice-rehearsal-page .instant-feedback-grid,
+        #voice-rehearsal-page .intention-coach-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            margin: 0 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col .instant-feedback-grid,
+        #voice-rehearsal-page .vr-practice-side-col .intention-coach-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 6px !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-signal, .intention-coach-metric) {
+            display: block !important;
+            min-height: 112px !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+            box-shadow: none !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col :is(.instant-feedback-signal, .intention-coach-metric) {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            min-height: 0 !important;
+            column-gap: 8px !important;
+            row-gap: 2px !important;
+            padding: 9px !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-signal-ico, .intention-metric-ico) {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 9px !important;
+            display: inline-flex !important;
+            margin-bottom: 10px !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col :is(.instant-signal-ico, .intention-metric-ico) {
+            grid-row: 1 / span 4 !important;
+            margin-bottom: 0 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col :is(.instant-feedback-kicker, .intention-coach-kicker, .instant-feedback-value, .intention-coach-value, .instant-feedback-badge, .instant-feedback-note, .intention-meter) {
+            grid-column: 2 / -1 !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-kicker, .intention-coach-kicker, .vr-assessment-kicker) {
+            font-size: 0.6rem !important;
+            line-height: 1.15 !important;
+            margin-bottom: 5px !important;
+            letter-spacing: 0.04em !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-value, .intention-coach-value) {
+            margin-bottom: 5px !important;
+            font-size: 0.86rem !important;
+            line-height: 1.16 !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
+
+        #voice-rehearsal-page .instant-feedback-note {
+            margin-top: 5px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.32 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col .instant-feedback-note {
+            margin-top: 2px !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-actions, .intention-tip-list) {
+            gap: 6px !important;
+            margin-top: 8px !important;
+        }
+
+        #voice-rehearsal-page :is(.instant-feedback-actions li, .intention-tip-list li) {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+            padding: 7px 8px !important;
+            border-radius: 8px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.3 !important;
+        }
+
+        #voice-rehearsal-page .vr-assessment-scores {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-card {
+            display: grid !important;
+            grid-template-columns: 1.1fr 1.45fr 1.35fr 1.55fr 126px !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+            padding: 10px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-title {
+            grid-column: 1 / -1 !important;
+            margin-bottom: 0 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-scores {
+            grid-column: auto !important;
+            margin: 0 !important;
+            min-height: 74px !important;
+            align-items: stretch !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-pace-card {
+            grid-column: auto !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-keywords-card {
+            grid-column: auto !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-pace-card,
+        #voice-rehearsal-page #analysisPanel .vr-keywords-card {
+            margin: 0 !important;
+            min-height: 74px !important;
+            padding: 8px 10px !important;
+            border-radius: 10px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-wrap {
+            grid-column: auto !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            min-height: 74px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-wrap .vr-assessment-kicker {
+            grid-column: 1 / -1 !important;
+            margin: 0 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-card {
+            margin: 0 !important;
+            min-height: 54px !important;
+            padding: 8px !important;
+            overflow: hidden !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-card > div {
+            font-size: 0.66rem !important;
+            line-height: 1.28 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel #btnSave {
+            grid-column: auto !important;
+            align-self: stretch !important;
+            height: 100% !important;
+            min-height: 74px !important;
+            white-space: normal !important;
+            padding: 8px !important;
+        }
+
+        #voice-rehearsal-page .vr-score-row {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            place-items: center !important;
+            min-height: 64px !important;
+            padding: 5px !important;
+            text-align: center !important;
+        }
+
+        #voice-rehearsal-page .vr-score-ring {
+            width: 38px !important;
+            height: 38px !important;
+            font-size: 0.7rem !important;
+        }
+
+        #voice-rehearsal-page .vr-score-label {
+            margin-top: 4px !important;
+            font-size: 0.56rem !important;
+            line-height: 1.15 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-divider {
+            display: none !important;
+        }
+
+        #voice-rehearsal-page #btnSave {
+            width: 100% !important;
+            min-height: 38px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        #voice-rehearsal-page #comparisonPanel .row {
+            display: flex !important;
+        }
+
+        #voice-rehearsal-page .vr-progress-layout {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 380px) !important;
+            gap: var(--vr-desktop-gap) !important;
+            align-items: start !important;
+        }
+
+        #voice-rehearsal-page .vr-chart-frame {
+            height: 240px !important;
+            padding: 0 !important;
+            border-radius: 10px !important;
+            background: transparent !important;
+        }
+
+        #voice-rehearsal-page .voice-history-head {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        #voice-rehearsal-page .voice-history-actions {
+            display: flex !important;
+            grid-template-columns: none !important;
+            flex: 0 0 auto !important;
+            gap: 8px !important;
+            width: auto !important;
+        }
+
+        #voice-rehearsal-page .voice-history-actions form,
+        #voice-rehearsal-page .voice-history-actions .btn {
+            width: auto !important;
+        }
+
+        #voice-rehearsal-page .table-responsive {
+            overflow-x: auto !important;
+        }
+
+        #voice-rehearsal-page .voice-history-table {
+            display: table !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border-spacing: 0 !important;
+            margin: 0 !important;
+            table-layout: auto !important;
+        }
+
+        #voice-rehearsal-page .voice-history-table thead {
+            display: table-header-group !important;
+        }
+
+        #voice-rehearsal-page .voice-history-table tbody {
+            display: table-row-group !important;
+        }
+
+        #voice-rehearsal-page .voice-history-table tr {
+            display: table-row !important;
+            width: auto !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+
+        #voice-rehearsal-page .voice-history-table th,
+        #voice-rehearsal-page .voice-history-table td {
+            display: table-cell !important;
+            width: auto !important;
+            padding: 9px 8px !important;
+            border-bottom: 1px solid var(--bd) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.35 !important;
+            text-align: left !important;
+            white-space: normal !important;
+        }
+
+        #voice-rehearsal-page .voice-history-table td::before {
+            content: none !important;
+            display: none !important;
+        }
+
+        #voice-rehearsal-page .vr-suggestion-card {
+            padding: 10px !important;
+            border-radius: 10px !important;
+            margin-bottom: 8px !important;
+        }
+
+        #voice-rehearsal-page .vr-suggestion-content {
+            display: grid !important;
+            grid-template-columns: 32px minmax(0, 1fr) !important;
+            gap: 8px !important;
+        }
+
+        #voice-rehearsal-page .vr-suggestion-icon {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        #voice-rehearsal-page .vr-suggestion-title {
+            font-size: 0.78rem !important;
+            line-height: 1.25 !important;
+            margin-bottom: 2px !important;
+        }
+
+        #voice-rehearsal-page .vr-suggestion-text {
+            font-size: 0.68rem !important;
+            line-height: 1.34 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-flow {
+            grid-template-columns: minmax(0, 1fr) clamp(132px, 18%, 170px) clamp(330px, 34%, 470px) !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col,
+        #voice-rehearsal-page .vr-practice-side-col {
+            display: contents !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-option-panel {
+            grid-column: 1 / 3 !important;
+            grid-row: 1 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-prompt-card {
+            grid-column: 1 / 2 !important;
+            grid-row: 2 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats {
+            grid-column: 2 / 3 !important;
+            grid-row: 2 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > .vr-transcript-wrap {
+            grid-column: 1 / 3 !important;
+            grid-row: 3 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-side-col > .vr-feedback-row {
+            grid-column: 1 / 3 !important;
+            grid-row: 4 !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: var(--vr-desktop-gap) !important;
+            align-items: stretch !important;
+        }
+
+        #voice-rehearsal-page .vr-feedback-row > .instant-feedback-panel,
+        #voice-rehearsal-page .vr-feedback-row > .intention-coach-panel {
+            grid-column: auto !important;
+            grid-row: auto !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col > #analysisPanel {
+            grid-column: 3 / 4 !important;
+            grid-row: 1 / span 5 !important;
+            align-self: start !important;
+            margin-top: 0 !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-card {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 12px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-title,
+        #voice-rehearsal-page #analysisPanel .vr-assessment-scores,
+        #voice-rehearsal-page #analysisPanel .vr-pace-card,
+        #voice-rehearsal-page #analysisPanel .vr-keywords-card,
+        #voice-rehearsal-page #analysisPanel .vr-ai-wrap,
+        #voice-rehearsal-page #analysisPanel #btnSave {
+            grid-column: auto !important;
+            width: 100% !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-scores {
+            min-height: 82px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-pace-card,
+        #voice-rehearsal-page #analysisPanel .vr-keywords-card {
+            min-height: 76px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-wrap {
+            grid-template-columns: minmax(0, 1fr) !important;
+            min-height: auto !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-card {
+            min-height: 62px !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel #btnSave {
+            min-height: 38px !important;
+            height: auto !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        #voice-rehearsal-page .vr-practice-flow {
+            grid-template-columns: minmax(0, 1fr) clamp(118px, 16%, 144px) clamp(300px, 31%, 380px) !important;
+        }
+
+        #voice-rehearsal-page .vr-practice-main-col {
+            display: contents !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-card {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-assessment-scores {
+            grid-column: auto !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-pace-card {
+            grid-column: auto !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-keywords-card {
+            grid-column: auto !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel .vr-ai-wrap {
+            grid-column: auto !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        #voice-rehearsal-page #analysisPanel #btnSave {
+            grid-column: auto !important;
+            min-height: 38px !important;
+            height: auto !important;
+        }
+
+        #voice-rehearsal-page .vr-prompt-card,
+        #voice-rehearsal-page .vr-practice-main-col > .voice-live-stats {
+            min-height: 270px !important;
+        }
+
+        #voice-rehearsal-page .vr-mic-stage {
+            min-height: 86px !important;
+        }
+    }
 </style>
 
 <div class="db-section active" id="voice-rehearsal-page">
@@ -3443,6 +4417,7 @@
     <!-- TAB: PRACTICE -->
     <div id="tab-practice" class="tab-pane active">
         <div class="vr-practice-flow animate-fade-up delay-100">
+            <div class="vr-practice-main-col">
                 <section class="vr-option-panel" aria-label="Voice rehearsal setup">
                     <div class="vr-option-list">
                         <button type="button" class="vr-option-row" onclick="cycleVoiceCategory()">
@@ -3509,7 +4484,6 @@
                             <div class="wave-bar" style="height:90px;animation-delay:0.7s"></div>
                         </div>
                     </div>
-                    </div>
 
                     <!-- Controls -->
                     <div class="voice-recorder-controls d-flex justify-content-center gap-3 mb-4">
@@ -3521,6 +4495,7 @@
                     </div>
                     <p class="vr-start-note">Tap Start and choose Allow microphone when prompted.</p>
                     <div id="micPermissionHelp" class="text-center mb-4" style="display:none;color:var(--tx3);font-size:0.82rem;line-height:1.5;"></div>
+                    </div>
 
                     <!-- Live Stats -->
                     <div class="row g-2 mb-4 voice-live-stats">
@@ -3564,6 +4539,63 @@
                         <p class="mt-2 mb-0" style="font-size:0.8rem;color:var(--tx3);display:none;" id="editHint"><i class="fa-solid fa-pencil me-1"></i> You can edit the transcript above manually before saving.</p>
                     </div>
 
+                    <!-- Post-Analysis Dashboard -->
+                    <div id="analysisPanel" style="opacity:0.5;pointer-events:none;transition:opacity 0.4s;">
+                        <div class="premium-card vr-assessment-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
+                            <h6 class="vr-assessment-title"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> Practice Assessment</h6>
+
+                            <!-- Clarity & Delivery Stability -->
+                            <div class="d-flex justify-content-between align-items-center mb-4 vr-assessment-scores">
+                                <div class="text-center w-50 vr-score-row">
+                                    <div class="vr-score-ring" id="resClarity">--%</div>
+                                    <div class="vr-score-label">Clarity Score</div>
+                                </div>
+                                <div class="vr-assessment-divider" style="width:1px;height:40px;background:var(--bd);"></div>
+                                <div class="text-center w-50 vr-score-row">
+                                    <div class="vr-score-ring blue" id="resConfidence">--</div>
+                                    <div class="vr-score-label">Delivery Stability</div>
+                                </div>
+                            </div>
+
+                            <!-- Pace Rating -->
+                            <div class="mb-3 p-3 vr-pace-card" style="background:var(--bg3);border-radius:10px;border:1px solid var(--bd);">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span style="font-size:0.78rem;color:var(--tx2);"><i class="fa-solid fa-gauge-high me-1"></i> Speaking Pace</span>
+                                    <span style="font-weight:700;" id="resPaceRating">--</span>
+                                </div>
+                                <div class="progress-track" style="height:6px;">
+                                    <div id="paceBar" class="progress-fill" style="width:0%;background:#3b82f6;"></div>
+                                </div>
+                                <div style="font-size:0.75rem;color:var(--tx3);margin-top:6px;text-align:right;" id="resPaceDesc">Optimal: 100-150 WPM</div>
+                            </div>
+
+                            <!-- Pronunciation & Keywords -->
+                            <div class="mb-3 vr-keywords-card">
+                                <h6 class="vr-assessment-kicker"><i class="fa-solid fa-tags"></i> Detected Keywords</h6>
+                                <div id="resKeywords" class="d-flex flex-wrap gap-2">
+                                    <span style="color:var(--tx3);font-size:0.85rem;">Waiting for analysis...</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 vr-ai-wrap">
+                                <h6 class="vr-assessment-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Feedback</h6>
+                                <div class="p-2 mb-2 vr-ai-card good" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px;">
+                                    <strong style="color:#34d399;font-size:0.8rem;"><i class="fa-solid fa-check"></i> Strengths</strong>
+                                    <div id="resStrengths" style="font-size:0.85rem;color:var(--tx2);margin-top:4px;">--</div>
+                                </div>
+                                <div class="p-2 vr-ai-card warn" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.2);border-radius:8px;">
+                                    <strong style="color:#f87171;font-size:0.8rem;"><i class="fa-solid fa-arrow-trend-up"></i> Needs Work</strong>
+                                    <div id="resWeak" style="font-size:0.85rem;color:var(--tx2);margin-top:4px;">--</div>
+                                </div>
+                            </div>
+
+                            <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:700;border-radius:10px;border:none;min-height:42px;box-shadow:0 4px 15px rgba(52,211,153,0.32);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
+                        </div>
+                    </div>
+            </div>
+
+            <aside class="vr-practice-side-col">
+                <div class="vr-feedback-row">
                     <section class="instant-feedback-panel mb-4" aria-label="Instant speaking feedback">
                         <div class="instant-feedback-head">
                             <div>
@@ -3630,61 +4662,8 @@
                             <li><i class="fa-solid fa-circle-info"></i><span>Waiting for enough words to compare your wording with the target intention.</span></li>
                         </ul>
                     </section>
-
-            <!-- Post-Analysis Dashboard -->
-                <div id="analysisPanel" style="opacity:0.5;pointer-events:none;transition:opacity 0.4s;">
-                    <div class="premium-card vr-assessment-card mb-4" style="background: linear-gradient(180deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
-                        <h6 class="vr-assessment-title"><i class="fa-solid fa-chart-pie me-2" style="color:#60a5fa;"></i> Practice Assessment</h6>
-                        
-                        <!-- Clarity & Delivery Stability -->
-                        <div class="d-flex justify-content-between align-items-center mb-4 vr-assessment-scores">
-                            <div class="text-center w-50 vr-score-row">
-                                <div class="vr-score-ring" id="resClarity">--%</div>
-                                <div class="vr-score-label">Clarity Score</div>
-                            </div>
-                            <div class="vr-assessment-divider" style="width:1px;height:40px;background:var(--bd);"></div>
-                            <div class="text-center w-50 vr-score-row">
-                                <div class="vr-score-ring blue" id="resConfidence">--</div>
-                                <div class="vr-score-label">Delivery Stability</div>
-                            </div>
-                        </div>
-
-                        <!-- Pace Rating -->
-                        <div class="mb-3 p-3 vr-pace-card" style="background:var(--bg3);border-radius:10px;border:1px solid var(--bd);">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span style="font-size:0.78rem;color:var(--tx2);"><i class="fa-solid fa-gauge-high me-1"></i> Speaking Pace</span>
-                                <span style="font-weight:700;" id="resPaceRating">--</span>
-                            </div>
-                            <div class="progress-track" style="height:6px;">
-                                <div id="paceBar" class="progress-fill" style="width:0%;background:#3b82f6;"></div>
-                            </div>
-                            <div style="font-size:0.75rem;color:var(--tx3);margin-top:6px;text-align:right;" id="resPaceDesc">Optimal: 100-150 WPM</div>
-                        </div>
-
-                        <!-- Pronunciation & Keywords -->
-                        <div class="mb-3 vr-keywords-card">
-                            <h6 class="vr-assessment-kicker"><i class="fa-solid fa-tags"></i> Detected Keywords</h6>
-                            <div id="resKeywords" class="d-flex flex-wrap gap-2">
-                                <span style="color:var(--tx3);font-size:0.85rem;">Waiting for analysis...</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <h6 class="vr-assessment-kicker"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Feedback</h6>
-                            <div class="p-2 mb-2 vr-ai-card good" style="background:rgba(52,211,153,0.05);border:1px solid rgba(52,211,153,0.2);border-radius:8px;">
-                                <strong style="color:#34d399;font-size:0.8rem;"><i class="fa-solid fa-check"></i> Strengths</strong>
-                                <div id="resStrengths" style="font-size:0.85rem;color:var(--tx2);margin-top:4px;">--</div>
-                            </div>
-                            <div class="p-2 vr-ai-card warn" style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.2);border-radius:8px;">
-                                <strong style="color:#f87171;font-size:0.8rem;"><i class="fa-solid fa-arrow-trend-up"></i> Needs Work</strong>
-                                <div id="resWeak" style="font-size:0.85rem;color:var(--tx2);margin-top:4px;">--</div>
-                            </div>
-                        </div>
-
-                        <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:700;border-radius:10px;border:none;min-height:42px;box-shadow:0 4px 15px rgba(52,211,153,0.32);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
-                    </div>
                 </div>
-        </div>
+            </aside>
         
         <!-- Fact-grounded revision comparison -->
         <div id="comparisonPanel" class="premium-card mt-4" style="display:none;">
@@ -3700,6 +4679,7 @@
                     <div class="mt-2" style="color:var(--tx3);font-size:.78rem;">Uses your transcript as its source. Fill placeholders only with facts you can verify.</div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

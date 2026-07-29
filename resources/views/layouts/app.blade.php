@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=23') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=25') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -49,19 +49,41 @@
                   padding: 16px !important;
               }
           }
+
+          @media (min-width: 992px) {
+              body.user-desktop-shell .db-section :is(
+                  h1, h2, h3, h4, h5, h6,
+                  .text-gradient-primary,
+                  .sr-page-hero-title,
+                  .modules-hero-title,
+                  .module-smart-title,
+                  .module-card-title,
+                  .module-rec-copy strong,
+                  .module-path-copy strong,
+                  .mission-title,
+                  .mission-card-name,
+                  .vr-assessment-title,
+                  .vr-progress-title,
+                  .instant-feedback-title,
+                  .intention-coach-title
+              ) {
+                  color: #0f172a !important;
+                  -webkit-text-fill-color: #0f172a !important;
+              }
+          }
       </style>
       <!-- Driver.js -->
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       @include('partials.onboarding-styles')
    </head>
-   <body>
+   <body class="user-desktop-shell desktop-shell" data-layout-shell="desktop" data-app-surface="user">
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
             <div class="db-logo d-flex justify-content-between align-items-center">
-               <div class="d-flex align-items-center gap-2">
+               <div class="db-brand d-flex align-items-center gap-2">
                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
-                  <span>SpeakReady AI</span>
+                  <span class="db-brand-text">SpeakReady AI</span>
                </div>
                <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                   <i class="fa-solid fa-xmark"></i>
@@ -69,32 +91,26 @@
             </div>
             <div class="db-nav">
                <div class="db-nav-section">Dashboard</div>
-               <a href="{{ route('dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Overview</a>
+               <a href="{{ route('dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Overview"><i class="fa-solid fa-gauge-high"></i><span class="db-nav-label">Overview</span></a>
 
 
                 <div class="db-nav-section">Interview Practice</div>
-                <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}"><i class="fa-solid fa-microphone-lines"></i> Mock Interview</a>
+                <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Mock Interview"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Mock Interview</span></a>
 
                 <div class="db-nav-section">Specialized Training</div>
-               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open-reader"></i> Modules</a>
-               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}"><i class="fa-solid fa-ear-listen"></i> Voice Rehearsal</a>
-               <a href="{{ route('user.missions') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.missions') ? 'active' : '' }}"><i class="fa-solid fa-route"></i> Missions</a>
-               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Challenges</a>
-               <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}"><i class="fa-solid fa-robot"></i> Readiness Coach</a>
+               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Modules"><i class="fa-solid fa-book-open-reader"></i><span class="db-nav-label">Modules</span></a>
+               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}" title="Voice Rehearsal"><i class="fa-solid fa-ear-listen"></i><span class="db-nav-label">Voice Rehearsal</span></a>
+               <a href="{{ route('user.missions') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.missions') ? 'active' : '' }}" title="Missions"><i class="fa-solid fa-route"></i><span class="db-nav-label">Missions</span></a>
+               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}" title="Challenges"><i class="fa-solid fa-gamepad"></i><span class="db-nav-label">Challenges</span></a>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="Readiness Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">Readiness Coach</span></a>
 
                <div class="db-nav-section">Performance</div>
-               <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}"><i class="fa-solid fa-chart-line"></i> Progress</a>
-               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback</a>
-               <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}"><i class="fa-solid fa-folder-open"></i> Reports</a>
+               <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
+               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-clipboard-check"></i><span class="db-nav-label">Feedback</span></a>
+               <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-folder-open"></i><span class="db-nav-label">Reports</span></a>
 
                <div class="db-nav-section">Personal Goals</div>
-               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}"><i class="fa-solid fa-medal"></i> Mastery</a>
-            </div>
-            <div class="db-bottom">
-               <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                  @csrf
-                  <button type="submit" class="db-nl db-nav-danger" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
-               </form>
+               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}" title="Mastery"><i class="fa-solid fa-medal"></i><span class="db-nav-label">Mastery</span></a>
             </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
@@ -102,19 +118,10 @@
          <div class="db-main">
             <!-- Top bar -->
             <div class="db-top">
-               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" onclick="toggleDashboardSidebar()">
+               <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-expanded="true" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
-               <div class="db-page-context d-none d-xl-flex">
-                  <span class="db-page-eyebrow">Workspace</span>
-                  <strong>{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}</strong>
-               </div>
-               <div class="db-top-search">
-                  <i class="fa-solid fa-bolt" aria-hidden="true"></i>
-                  <button type="button" class="db-quick-launcher" data-ucp-open aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false" aria-keyshortcuts="Control+K Meta+K" title="Open quick navigation (Ctrl/Command + K)">Quick navigation</button>
-                  <kbd aria-hidden="true">Ctrl K</kbd>
-               </div>
-               <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
+               <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <button class="boc d-flex align-items-center justify-content-center" id="dbFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
                      <i class="fa-solid fa-expand" id="dbFullscreenIcon" aria-hidden="true"></i>
                   </button>
@@ -206,7 +213,7 @@
             </div>
             
             <!-- Dashboard Content -->
-            <div class="db-content" id="userAppContent" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
+            <div class="db-content" id="userAppContent" data-layout-shell="desktop" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
                 @yield('content')
             </div>
          </div>
@@ -234,15 +241,68 @@
             document.body.classList.remove('sidebar-open');
          }
 
+         function getUserSidebarPreference() {
+            try {
+               return localStorage.getItem('user_sidebar_collapsed');
+            } catch (error) {
+               return null;
+            }
+         }
+
+         function setUserSidebarPreference(isCollapsed) {
+            try {
+               localStorage.setItem('user_sidebar_collapsed', isCollapsed ? '1' : '0');
+            } catch (error) {
+               // Sidebar still toggles for the current page when storage is unavailable.
+            }
+         }
+
+         function syncSidebarToggleState() {
+            const toggle = document.querySelector('.db-sidebar-toggle');
+            const isDesktopCollapsed = window.innerWidth >= 992 && document.body.classList.contains('collapsed-sidebar');
+            if (toggle) {
+               toggle.setAttribute('aria-expanded', isDesktopCollapsed ? 'false' : 'true');
+               toggle.setAttribute('aria-label', isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation');
+               toggle.title = isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation';
+            }
+         }
+
          function toggleDashboardSidebar() {
             if (window.innerWidth < 992) {
+               document.body.classList.remove('collapsed-sidebar');
                const sidebar = document.getElementById('dbSidebar');
                const isOpen = sidebar?.classList.toggle('mob-open');
                document.body.classList.toggle('sidebar-open', Boolean(isOpen));
+               syncSidebarToggleState();
                return;
             }
-            document.body.classList.toggle('collapsed-sidebar');
+            const isCollapsed = document.body.classList.toggle('collapsed-sidebar');
+            setUserSidebarPreference(isCollapsed);
+            closeDashboardSidebar();
+            syncSidebarToggleState();
          }
+
+         function initializeDashboardSidebar() {
+            if (window.innerWidth >= 992 && getUserSidebarPreference() === '1') {
+               document.body.classList.add('collapsed-sidebar');
+            } else if (window.innerWidth < 992) {
+               document.body.classList.remove('collapsed-sidebar');
+            }
+            closeDashboardSidebar();
+            syncSidebarToggleState();
+         }
+
+         initializeDashboardSidebar();
+
+         window.addEventListener('resize', function() {
+            if (window.innerWidth < 992) {
+               document.body.classList.remove('collapsed-sidebar');
+            } else if (getUserSidebarPreference() === '1') {
+               document.body.classList.add('collapsed-sidebar');
+            }
+            closeDashboardSidebar();
+            syncSidebarToggleState();
+         });
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
@@ -422,6 +482,36 @@
       <!-- Driver.js -->
       <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       <style>
+         @media (min-width: 992px) {
+            body.user-desktop-shell .db-section :is(
+               h1, h2, h3, h4, h5, h6,
+               .text-gradient-primary,
+               .sr-page-hero-title,
+               .modules-hero-title,
+               .module-smart-title,
+               .module-card-title,
+               .module-rec-copy strong,
+               .module-path-copy strong,
+               .mission-title,
+               .mission-card-name,
+               .vr-assessment-title,
+               .vr-progress-title,
+               .instant-feedback-title,
+               .intention-coach-title,
+               .setup-hero-title,
+               .progress-hero-title,
+               .feedback-title,
+               .notif-hero-title,
+               .mastery-title
+            ) {
+               color: #0f172a !important;
+               -webkit-text-fill-color: #0f172a !important;
+            }
+
+         }
+      </style>
+      @if($isMobile ?? false)
+      <style>
          #progressModulesLikeHero.progress-hero,
          #feedbackModulesLikeHero.feedback-hero,
          #sec-interview-setup .setup-hero,
@@ -499,14 +589,19 @@
          }
 
          #feedbackModulesLikeHero .feedback-title {
-            color: #fde047 !important;
-            -webkit-text-fill-color: #fde047 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          #sec-interview-setup .setup-hero .setup-hero-title {
-            color: #fde047 !important;
-            -webkit-text-fill-color: #fde047 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
             text-transform: uppercase !important;
+         }
+
+         #sec-interview-setup .setup-hero .setup-hero-subtitle {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          #progressModulesLikeHero .progress-hero-subtitle,
@@ -656,11 +751,15 @@
             line-height: 1.15 !important;
             margin: 0 0 3px !important;
             white-space: nowrap !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
             font-size: 0.49rem !important;
             line-height: 1.32 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
          }
 
          html body #interview-modules-page .modules-hero.modules-hero .modules-hero-art {
@@ -771,6 +870,7 @@
             }
          }
       </style>
+      @endif
       @include('partials.onboarding-script')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')

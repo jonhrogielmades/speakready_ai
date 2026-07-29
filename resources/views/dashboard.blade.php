@@ -298,6 +298,33 @@
             --dash-card-pad: 18px;
         }
 
+        .sr-hero-card {
+            min-height: 172px;
+        }
+
+        .sr-hero-inner {
+            min-height: 172px;
+            padding: 28px clamp(232px, 28%, 320px) 26px 28px;
+        }
+
+        .sr-hero-card .sr-subtitle {
+            max-width: 560px;
+            font-size: clamp(0.94rem, 1.35vw, 1.18rem);
+            line-height: 1.38;
+        }
+
+        .sr-welcome-art {
+            right: clamp(18px, 2.4vw, 30px);
+            bottom: 2px;
+            width: clamp(168px, 15vw, 198px);
+        }
+
+        .sr-robot-hand-message {
+            top: -8%;
+            left: -60%;
+            width: clamp(142px, 82%, 172px);
+        }
+
         .sr-summary-grid {
             align-items: stretch;
         }
@@ -440,6 +467,18 @@
 
         .sr-summary-grid {
             grid-template-columns: minmax(0, 1fr) minmax(320px, 350px);
+        }
+
+        .sr-hero-inner {
+            padding-right: clamp(280px, 30%, 360px);
+        }
+
+        .sr-hero-card .sr-subtitle {
+            max-width: 660px;
+        }
+
+        .sr-welcome-art {
+            width: clamp(188px, 15vw, 218px);
         }
 
         .sr-dashboard-shell {
@@ -4748,7 +4787,7 @@
         }
 
         .sr-hero-card .sr-title-name {
-            color: #facc15 !important;
+            color: #ffffff !important;
             text-shadow: 0 2px 10px rgba(15, 23, 42, 0.22);
         }
 

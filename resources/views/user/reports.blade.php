@@ -91,8 +91,8 @@
 @include('partials.page-hero-styles')
 <style>
     #portfolioReport {
-        max-width: 1040px;
-        margin-inline: auto;
+        max-width: none;
+        margin-inline: 0;
     }
     #portfolioReport .sr-page-hero {
         --reports-hero-title: #1d4ed8;
@@ -1293,6 +1293,278 @@
         html body #portfolioReport .d-flex.flex-wrap.gap-4 {
             grid-template-columns: 1fr !important;
         }
+    }
+
+    body.user-desktop-shell #portfolioReport {
+        --reports-shell-gap: 10px;
+        --reports-shell-radius: 12px;
+        --reports-shell-border: rgba(15, 23, 42, 0.12);
+        --reports-shell-card: rgba(255, 255, 255, 0.98);
+        --reports-shell-field: rgba(248, 250, 252, 0.92);
+        --reports-shell-title: #0f172a;
+        --reports-shell-text: #334155;
+        --reports-shell-muted: #64748b;
+        --reports-shell-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 24px !important;
+        color: var(--reports-shell-title) !important;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        overflow-x: hidden !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #portfolioReport,
+    :root:not(.lm) body.user-desktop-shell #portfolioReport,
+    body.user-desktop-shell.dm #portfolioReport,
+    body.user-desktop-shell .dm #portfolioReport {
+        --reports-shell-border: rgba(148, 163, 184, 0.24);
+        --reports-shell-card: rgba(15, 23, 42, 0.96);
+        --reports-shell-field: rgba(30, 41, 59, 0.92);
+        --reports-shell-title: #f8fafc;
+        --reports-shell-text: #e2e8f0;
+        --reports-shell-muted: #cbd5e1;
+        --reports-shell-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    body.user-desktop-shell #portfolioReport > :is(.sr-page-hero, .report-export-actions, .row, .report-empty-card) {
+        margin-top: 0 !important;
+        margin-bottom: var(--reports-shell-gap) !important;
+    }
+
+    body.user-desktop-shell #portfolioReport > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport > .row {
+        --bs-gutter-x: var(--reports-shell-gap) !important;
+        --bs-gutter-y: var(--reports-shell-gap) !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport > .row > [class*="col-"] {
+        min-width: 0 !important;
+        padding-left: calc(var(--reports-shell-gap) * 0.5) !important;
+        padding-right: calc(var(--reports-shell-gap) * 0.5) !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport > .row > [class*="col-"]:first-child {
+        padding-left: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport > .row > [class*="col-"]:last-child {
+        padding-right: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 180px !important;
+        align-items: center !important;
+        min-height: 116px !important;
+        height: auto !important;
+        gap: 14px !important;
+        padding: 18px 178px 18px 20px !important;
+        border: 1px solid rgba(191, 219, 254, 0.86) !important;
+        border-radius: var(--reports-shell-radius) !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+        overflow: hidden !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero::before,
+    body.user-desktop-shell #portfolioReport .sr-page-hero::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero-inner,
+    body.user-desktop-shell #portfolioReport .sr-page-hero-copy {
+        display: flex !important;
+        align-items: center !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero-copy {
+        gap: 12px !important;
+        max-width: 780px !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .reports-hero-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(147, 197, 253, 0.42) !important;
+        background: rgba(239, 246, 255, 0.92) !important;
+        color: #1d4ed8 !important;
+        font-size: 1.05rem !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero-title {
+        margin: 0 0 5px !important;
+        color: var(--reports-shell-title) !important;
+        -webkit-text-fill-color: var(--reports-shell-title) !important;
+        background: none !important;
+        font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero-title svg {
+        display: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero-subtitle {
+        max-width: 640px !important;
+        margin: 0 !important;
+        color: var(--reports-shell-text) !important;
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+        font-weight: 600 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .sr-page-hero-art {
+        display: block !important;
+        position: absolute !important;
+        right: 12px !important;
+        bottom: -10px !important;
+        width: clamp(140px, 12vw, 174px) !important;
+        max-width: none !important;
+        opacity: 0.96 !important;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+        animation: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-export-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 8px 0 var(--reports-shell-gap) !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-export-actions > button,
+    body.user-desktop-shell #portfolioReport .report-export-actions > form {
+        width: auto !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+        margin: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-export-actions .btn {
+        min-height: 34px !important;
+        width: auto !important;
+        min-width: 126px !important;
+        max-width: 160px !important;
+        padding: 7px 11px !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        white-space: nowrap !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-export-actions .btn i {
+        margin: 0 !important;
+        font-size: 0.72rem !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .print-card {
+        padding: 14px !important;
+        border: 1px solid var(--reports-shell-border) !important;
+        border-radius: var(--reports-shell-radius) !important;
+        background: var(--reports-shell-card) !important;
+        color: var(--reports-shell-title) !important;
+        box-shadow: var(--reports-shell-shadow) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .print-card:hover {
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #portfolioReport :is(h4, h5, h6) {
+        color: var(--reports-shell-title) !important;
+        font-size: 0.94rem !important;
+        line-height: 1.18 !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport h6 {
+        font-size: 0.78rem !important;
+    }
+
+    body.user-desktop-shell #portfolioReport :is(p, li, td, th, small) {
+        color: var(--reports-shell-text) !important;
+        font-size: 0.68rem !important;
+        line-height: 1.32 !important;
+    }
+
+    body.user-desktop-shell #portfolioReport :is(#trendChart, #catChart),
+    body.user-desktop-shell #portfolioReport [style*="height:250px"] {
+        height: 180px !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .table-responsive {
+        margin: 0 !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--reports-shell-border) !important;
+        background: var(--reports-shell-field) !important;
+    }
+
+    body.user-desktop-shell #portfolioReport :is(th, td) {
+        padding: 8px 9px !important;
+        border-color: var(--reports-shell-border) !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-empty-card {
+        padding: 22px 14px !important;
+        border: 1px solid var(--reports-shell-border) !important;
+        border-radius: var(--reports-shell-radius) !important;
+        background: var(--reports-shell-card) !important;
+        box-shadow: var(--reports-shell-shadow) !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-empty-art {
+        width: 120px !important;
+        margin-bottom: 10px !important;
+    }
+
+    body.user-desktop-shell #portfolioReport .report-start-btn {
+        min-height: 34px !important;
+        width: auto !important;
+        padding: 7px 12px !important;
+        border-radius: 9px !important;
+        font-size: 0.68rem !important;
+        font-weight: 900 !important;
     }
 </style>
 

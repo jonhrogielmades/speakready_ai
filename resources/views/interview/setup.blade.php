@@ -4165,9 +4165,14 @@
         }
 
         html body #sec-interview-setup#sec-interview-setup .setup-hero .setup-hero-title {
-            color: #fde047 !important;
-            -webkit-text-fill-color: #fde047 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
             text-transform: uppercase !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup .setup-hero .setup-hero-subtitle {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
     }
 
@@ -4232,6 +4237,505 @@
             animation: none !important;
         }
     }
+
+    @media (min-width: 992px) {
+        html body #sec-interview-setup {
+            --setup-desktop-radius: 12px;
+            --setup-desktop-gap: 12px;
+            --setup-desktop-border: rgba(148, 163, 184, 0.2);
+            --setup-desktop-card-shadow: 0 10px 28px rgba(2, 6, 23, 0.12);
+            --setup-gap: var(--setup-desktop-gap);
+            --setup-card-pad: 14px;
+            width: 100% !important;
+            max-width: 1480px !important;
+            margin: 0 auto !important;
+            padding: 0 0 24px !important;
+        }
+
+        html.lm body #sec-interview-setup {
+            --setup-desktop-border: rgba(15, 23, 42, 0.12);
+            --setup-desktop-card-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        }
+
+        html body #sec-interview-setup .setup-hero {
+            position: relative !important;
+            min-height: 116px !important;
+            max-height: none !important;
+            height: auto !important;
+            margin: 0 0 12px !important;
+            border-radius: var(--setup-desktop-radius) !important;
+            overflow: hidden !important;
+            box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-inner {
+            display: grid !important;
+            grid-template-columns: 44px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-height: 116px !important;
+            padding: 18px 178px 18px 20px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-icon {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
+            font-size: 1.05rem !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-icon svg {
+            width: 22px !important;
+            height: 22px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-title {
+            margin: 0 0 5px !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            text-transform: none !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-subtitle {
+            max-width: 640px !important;
+            margin: 0 !important;
+            color: var(--setup-hero-text-color) !important;
+            -webkit-text-fill-color: var(--setup-hero-text-color) !important;
+            font-size: 0.84rem !important;
+            line-height: 1.42 !important;
+            font-weight: 600 !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-art {
+            display: block !important;
+            position: absolute !important;
+            right: 12px !important;
+            bottom: -10px !important;
+            width: clamp(140px, 12vw, 174px) !important;
+            max-width: none !important;
+            opacity: 0.96 !important;
+        }
+
+        html body #sec-interview-setup #setupForm > .row,
+        html body #sec-interview-setup #setupForm > .row.g-4 {
+            --bs-gutter-x: var(--setup-desktop-gap) !important;
+            --bs-gutter-y: var(--setup-desktop-gap) !important;
+            align-items: flex-start !important;
+            margin-left: calc(var(--setup-desktop-gap) * -0.5) !important;
+            margin-right: calc(var(--setup-desktop-gap) * -0.5) !important;
+        }
+
+        html body #sec-interview-setup #setupForm > .row > .col-lg-8,
+        html body #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8 {
+            width: 68% !important;
+        }
+
+        html body #sec-interview-setup #setupForm > .row > .col-lg-4,
+        html body #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
+            width: 32% !important;
+        }
+
+        html body #sec-interview-setup #setup-left-col {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: var(--setup-desktop-gap) !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper,
+        html body #sec-interview-setup .setup-panel,
+        html body #sec-interview-setup #panel-summary {
+            margin: 0 !important;
+            border-radius: var(--setup-desktop-radius) !important;
+            border-color: var(--setup-desktop-border) !important;
+            box-shadow: var(--setup-desktop-card-shadow) !important;
+        }
+
+        html body #sec-interview-setup .setup-panel,
+        html body #sec-interview-setup #panel-summary {
+            padding: var(--setup-card-pad) !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-track {
+            display: grid !important;
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-label {
+            margin-top: 5px !important;
+            font-size: 0.58rem !important;
+            line-height: 1.12 !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-actions {
+            display: flex !important;
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-setup .setup-step-btn {
+            min-height: 32px !important;
+            padding: 6px 10px !important;
+            border-radius: 8px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #sec-interview-setup .setup-panel h5,
+        html body #sec-interview-setup :is(.setup-details-card-title, .setup-structure-title, .setup-inclusive-title, .assistance-title, .response-title),
+        html body #sec-interview-setup #panel-summary h5 {
+            margin-bottom: 10px !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.98rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-details-icon, .setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .response-head-icon, #panel-summary h5 i) {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            font-size: 0.84rem !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-details-card-head, .setup-structure-head, .setup-inclusive-head, .assistance-head, .response-head) {
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+            min-height: 0 !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-details-card-subtitle, .setup-inclusive-copy, .desc-text, .structure-info-note, .inclusive-note) {
+            font-size: 0.7rem !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #sec-interview-setup :is(.oinp, select.oinp, input.oinp, textarea.oinp) {
+            min-height: 40px !important;
+            padding: 8px 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.76rem !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-card-fields, .structure-select-grid, .structure-config-grid, .assistance-stack) {
+            gap: 10px !important;
+        }
+
+        html body #sec-interview-setup :is(.custom-radio, .custom-cbx, .structure-difficulty-card, .assistance-question-card, .response-mode-card, .inclusive-option) {
+            min-height: 48px !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+        }
+
+        html body #sec-interview-setup :is(.structure-difficulty-list, .assistance-question-list, .response-mode-list, .inclusive-option-list) {
+            gap: 8px !important;
+        }
+
+        html body #sec-interview-setup #panel-summary {
+            position: sticky !important;
+            top: 12px !important;
+        }
+
+        html body #sec-interview-setup #panel-summary .summary-row {
+            grid-template-columns: 26px minmax(82px, 0.72fr) minmax(0, 1.28fr) !important;
+            min-height: 38px !important;
+            gap: 8px !important;
+            padding: 6px 0 !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #sec-interview-setup #btn-start-interview {
+            min-height: 40px !important;
+            border-radius: 10px !important;
+            font-size: 0.78rem !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        html body #sec-interview-setup #setupForm > .row > .col-lg-8,
+        html body #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8 {
+            width: 66% !important;
+        }
+
+        html body #sec-interview-setup #setupForm > .row > .col-lg-4,
+        html body #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
+            width: 34% !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-card-fields, .structure-difficulty-list, .response-mode-list, .inclusive-option-list) {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        html body #sec-interview-setup .assistance-question-list {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (min-width: 992px) {
+        html body #sec-interview-setup {
+            --setup-desktop-gap: 8px !important;
+            --setup-card-pad: 10px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero {
+            min-height: 98px !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-inner {
+            min-height: 98px !important;
+            padding: 14px 164px 14px 16px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-icon {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 10px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-title {
+            font-size: clamp(1rem, 0.98vw, 1.28rem) !important;
+            margin-bottom: 3px !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-subtitle {
+            font-size: 0.76rem !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #sec-interview-setup .setup-hero-art {
+            width: clamp(120px, 10vw, 150px) !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper,
+        html body #sec-interview-setup .setup-panel,
+        html body #sec-interview-setup #panel-summary {
+            border-radius: 10px !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper {
+            padding: 8px !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-track {
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-setup .setup-stepper-label {
+            margin-top: 3px !important;
+            font-size: 0.52rem !important;
+        }
+
+        html body #sec-interview-setup .setup-step-btn {
+            min-height: 28px !important;
+            padding: 5px 8px !important;
+            border-radius: 7px !important;
+            font-size: 0.64rem !important;
+        }
+
+        html body #sec-interview-setup .setup-panel,
+        html body #sec-interview-setup #panel-summary {
+            padding: 10px !important;
+        }
+
+        html body #sec-interview-setup .setup-panel h5,
+        html body #sec-interview-setup :is(.setup-details-card-title, .setup-structure-title, .setup-inclusive-title, .assistance-title, .response-title),
+        html body #sec-interview-setup #panel-summary h5 {
+            margin-bottom: 7px !important;
+            font-size: 0.86rem !important;
+            line-height: 1.15 !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-details-icon, .setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .response-head-icon, #panel-summary h5 i) {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.72rem !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-details-card-head, .setup-structure-head, .setup-inclusive-head, .assistance-head, .response-head) {
+            gap: 7px !important;
+            margin-bottom: 7px !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-details-card-subtitle, .setup-inclusive-copy, .desc-text, .structure-info-note, .inclusive-note) {
+            font-size: 0.64rem !important;
+            line-height: 1.28 !important;
+        }
+
+        html body #sec-interview-setup :is(.setup-card-fields, .structure-select-grid, .structure-config-grid, .assistance-stack) {
+            gap: 7px !important;
+        }
+
+        html body #sec-interview-setup :is(.oinp, select.oinp, input.oinp, textarea.oinp) {
+            min-height: 34px !important;
+            padding: 6px 9px !important;
+            border-radius: 8px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #sec-interview-setup .olbl,
+        html body #sec-interview-setup .setup-card-label {
+            margin-bottom: 5px !important;
+            font-size: 0.62rem !important;
+            line-height: 1.15 !important;
+        }
+
+        html body #sec-interview-setup :is(.custom-radio, .custom-cbx, .structure-difficulty-card, .assistance-question-card, .response-mode-card, .inclusive-option) {
+            min-height: 40px !important;
+            padding: 8px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #sec-interview-setup :is(.structure-difficulty-list, .assistance-question-list, .response-mode-list, .inclusive-option-list) {
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-setup :is(.r-title, .structure-difficulty-title, .response-mode-title, .assistance-question-text) {
+            font-size: 0.68rem !important;
+            line-height: 1.16 !important;
+        }
+
+        html body #sec-interview-setup :is(.r-desc, .structure-difficulty-desc, .response-mode-desc) {
+            font-size: 0.58rem !important;
+            line-height: 1.2 !important;
+        }
+
+        html body #sec-interview-setup :is(.structure-difficulty-icon, .assistance-question-icon) {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 7px !important;
+            font-size: 0.62rem !important;
+        }
+
+        html body #sec-interview-setup .setup-calibrated-simple,
+        html body #sec-interview-setup .assistance-context-panel,
+        html body #sec-interview-setup .structure-info-note,
+        html body #sec-interview-setup .inclusive-note {
+            padding: 8px !important;
+            border-radius: 8px !important;
+            gap: 7px !important;
+        }
+
+        html body #sec-interview-setup #panel-summary .summary-row {
+            grid-template-columns: 22px minmax(72px, 0.68fr) minmax(0, 1.32fr) !important;
+            min-height: 32px !important;
+            gap: 6px !important;
+            padding: 4px 0 !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body #sec-interview-setup .summary-icon {
+            width: 22px !important;
+            height: 22px !important;
+            border-radius: 7px !important;
+            font-size: 0.58rem !important;
+        }
+
+        html body #sec-interview-setup .summary-label {
+            font-size: 0.58rem !important;
+        }
+
+        html body #sec-interview-setup .summary-val {
+            font-size: 0.66rem !important;
+        }
+
+        html body #sec-interview-setup #btn-start-interview {
+            min-height: 34px !important;
+            border-radius: 8px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body #sec-interview-setup #panel-basic.setup-details-card {
+            display: grid !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-details-card-head {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 !important;
+            padding: 0 0 8px !important;
+            border-bottom: 1px solid rgba(147, 197, 253, 0.26) !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-details-card-title {
+            margin: 0 0 2px !important;
+            font-size: 0.9rem !important;
+            line-height: 1.14 !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-details-card-subtitle {
+            margin: 0 !important;
+            font-size: 0.66rem !important;
+            line-height: 1.25 !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-card-fields {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-calibrated-simple {
+            grid-column: 1 / -1 !important;
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            align-items: center !important;
+            min-height: 64px !important;
+            margin: 0 !important;
+            padding: 9px 10px !important;
+            border-radius: 9px !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-calibrated-icon {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 10px !important;
+            font-size: 0.82rem !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-calibrated-simple h6 {
+            margin: 0 0 3px !important;
+            font-size: 0.92rem !important;
+            line-height: 1.14 !important;
+        }
+
+        html body #sec-interview-setup #panel-basic .setup-calibrated-simple p {
+            margin: 0 !important;
+            font-size: 0.68rem !important;
+            line-height: 1.25 !important;
+        }
+    }
+
+    @media (max-width: 991px) {
+        html body #sec-interview-setup#sec-interview-setup .setup-hero .setup-hero-title {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            text-transform: uppercase !important;
+        }
+
+        html body #sec-interview-setup#sec-interview-setup .setup-hero .setup-hero-subtitle {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+    }
 </style>
 
 <div class="db-section active setup-step-mode" id="sec-interview-setup">
@@ -4239,15 +4743,10 @@
         <div class="setup-hero-inner">
             <span class="setup-hero-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" role="img">
-                    <path d="M4 7h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M17 7h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <circle cx="15" cy="7" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                    <path d="M4 12h3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M11 12h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <circle cx="9" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                    <path d="M4 17h7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M15 17h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <circle cx="13" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <rect x="5" y="3.5" width="14" height="17" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M9 8l1.4 1.4L13.5 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 13l1.4 1.4 3.1-2.9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M15 8h1.5M15 13h1.5M8 18h8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 </svg>
             </span>
             <div class="setup-hero-copy">
@@ -4269,15 +4768,14 @@
                 </linearGradient>
             </defs>
             <rect class="setup-art-panel" x="32" y="20" width="156" height="108" rx="18" fill="url(#setupArtPanel)" stroke="#BFDBFE" stroke-width="3"/>
-            <rect class="setup-art-line" x="51" y="42" width="70" height="8" rx="4" fill="#93C5FD"/>
-            <rect class="setup-art-line" x="51" y="59" width="118" height="7" rx="3.5" fill="#C7D2FE"/>
-            <rect class="setup-art-line" x="51" y="75" width="96" height="7" rx="3.5" fill="#BAE6FD"/>
-            <path class="setup-art-line" d="M58 103h46" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
-            <path class="setup-art-line" d="M126 103h31" stroke="#06B6D4" stroke-width="8" stroke-linecap="round"/>
-            <circle class="setup-art-check" cx="164" cy="50" r="22" fill="url(#setupArtBlue)"/>
-            <path d="M155 50l6 6 13-15" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="61" cy="31" r="5" fill="#60A5FA"/>
-            <circle cx="77" cy="31" r="5" fill="#67E8F9"/>
+            <rect x="51" y="36" width="52" height="8" rx="4" fill="#60A5FA"/>
+            <rect x="51" y="54" width="118" height="12" rx="6" fill="#DBEAFE" stroke="#BFDBFE" stroke-width="2"/>
+            <rect x="51" y="75" width="92" height="12" rx="6" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="2"/>
+            <rect x="51" y="96" width="68" height="12" rx="6" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="2"/>
+            <circle class="setup-art-check" cx="164" cy="46" r="22" fill="url(#setupArtBlue)"/>
+            <path d="M155 46l6 6 13-15" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M130 102h33" stroke="#06B6D4" stroke-width="8" stroke-linecap="round"/>
+            <path d="M122 102l5 5 11-14" fill="none" stroke="#2563EB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
             <path class="setup-art-spark" d="M190 30l9-9m-1 28l13-2" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>
             <path class="setup-art-spark" d="M24 58l-11-7m19 55l-14 3" stroke="#38BDF8" stroke-width="5" stroke-linecap="round" opacity=".55"/>

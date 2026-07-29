@@ -55,8 +55,8 @@
         color: #0f172a;
     }
     html body #sec-interview-session .interview-session-title {
-        color: #fde047 !important;
-        -webkit-text-fill-color: #fde047 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
         text-transform: uppercase !important;
     }
     .interview-session-header .interview-meta-line span {
@@ -2075,6 +2075,315 @@
         html body #sec-interview-session .finish-loading-circle,
         html body #sec-interview-session .finish-loading-wrapper img {
             animation: none !important;
+        }
+    }
+
+    @media (min-width: 992px) {
+        html body #sec-interview-session {
+            --session-desktop-radius: 12px;
+            --session-desktop-gap: 12px;
+            --session-desktop-border: rgba(148, 163, 184, 0.2);
+            --session-desktop-card-shadow: 0 10px 28px rgba(2, 6, 23, 0.12);
+            --session-gap: var(--session-desktop-gap);
+            width: 100% !important;
+            max-width: 1480px !important;
+            margin: 0 auto !important;
+            padding: 0 0 24px !important;
+        }
+
+        html.lm body #sec-interview-session {
+            --session-desktop-border: rgba(15, 23, 42, 0.12);
+            --session-desktop-card-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        }
+
+        html body #sec-interview-session .interview-session-header {
+            margin: 0 0 12px !important;
+        }
+
+        html body #sec-interview-session .interview-session-title {
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-session .interview-meta-line {
+            gap: 8px !important;
+            margin: 8px 0 0 !important;
+        }
+
+        html body #sec-interview-session .interview-meta-line span,
+        html body #sec-interview-session .session-chip {
+            min-height: 28px !important;
+            padding: 5px 9px !important;
+            border-radius: 999px !important;
+            font-size: 0.66rem !important;
+            line-height: 1 !important;
+        }
+
+        html body #sec-interview-session #workspaceWrapper {
+            width: 100% !important;
+        }
+
+        html body #sec-interview-session #workspaceRow {
+            --bs-gutter-x: 0 !important;
+            --bs-gutter-y: 0 !important;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: var(--session-desktop-gap) !important;
+            align-items: start !important;
+            margin: 0 !important;
+        }
+
+        html body #sec-interview-session #workspaceRow:has(> .col-lg-4) {
+            grid-template-columns: minmax(0, 1fr) clamp(330px, 34%, 470px) !important;
+        }
+
+        html body #sec-interview-session #workspaceRow > [class*="col-"] {
+            width: auto !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-interview-session #workspaceRow > .col-lg-8 {
+            grid-column: 1 / 2 !important;
+        }
+
+        html body #sec-interview-session #workspaceRow > .col-lg-12 {
+            grid-column: 1 / -1 !important;
+        }
+
+        html body #sec-interview-session #workspaceRow > .col-lg-4 {
+            grid-column: 2 / 3 !important;
+        }
+
+        html body #sec-interview-session :is(.panel, .ai-avatar-panel, #interviewControls, .ai-question-card, .response-panel, .question-source-panel) {
+            border-radius: var(--session-desktop-radius) !important;
+            border-color: var(--session-desktop-border) !important;
+            box-shadow: var(--session-desktop-card-shadow) !important;
+        }
+
+        html body #sec-interview-session .ai-avatar-panel {
+            height: 260px !important;
+            margin: 0 0 var(--session-desktop-gap) !important;
+            border-radius: var(--session-desktop-radius) !important;
+        }
+
+        html body #sec-interview-session #aiAvatarHead.avatar-wrapper {
+            width: 96px !important;
+            height: 96px !important;
+        }
+
+        html body #sec-interview-session .circular-spectrum {
+            transform: scale(0.82) !important;
+        }
+
+        html body #sec-interview-session #qCounter {
+            min-height: 28px !important;
+            padding: 5px 9px !important;
+            border-radius: 999px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body #sec-interview-session .interviewer-panel-badge {
+            top: 14px !important;
+            padding: 5px 9px !important;
+            border-radius: 999px !important;
+            font-size: 0.62rem !important;
+        }
+
+        html body #sec-interview-session .question-caption-overlay {
+            inset: auto 14px 14px 14px !important;
+        }
+
+        html body #sec-interview-session .question-caption-line {
+            min-height: 34px !important;
+            padding: 8px 10px !important;
+            border-radius: 10px !important;
+            font-size: 0.76rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body #sec-interview-session .ai-question-card {
+            margin: 0 0 var(--session-desktop-gap) !important;
+            padding: 12px 14px !important;
+            border-radius: var(--session-desktop-radius) !important;
+        }
+
+        html body #sec-interview-session #aiQuestionText {
+            font-size: clamp(1rem, 1.12vw, 1.28rem) !important;
+            line-height: 1.3 !important;
+        }
+
+        html body #sec-interview-session #interviewControls {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 var(--session-desktop-gap) !important;
+            padding: 8px !important;
+            border-radius: var(--session-desktop-radius) !important;
+        }
+
+        html body #sec-interview-session #interviewControls > div {
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn {
+            min-height: 32px !important;
+            padding: 6px 10px !important;
+            border-radius: 8px !important;
+            font-size: 0.68rem !important;
+            font-weight: 850 !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session #recordingTimer {
+            min-width: 58px !important;
+            margin-right: 4px !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body #sec-interview-session #voiceControls .btn {
+            width: 32px !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-interview-session #voiceControls .btn i {
+            margin: 0 !important;
+        }
+
+        html body #sec-interview-session .response-panel {
+            margin: 0 !important;
+            padding: 14px !important;
+            border-radius: var(--session-desktop-radius) !important;
+        }
+
+        html body #sec-interview-session .response-panel .panel-title {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.9rem !important;
+            line-height: 1.15 !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-session .panel-title > i {
+            width: 30px !important;
+            height: 30px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body #sec-interview-session .response-title-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+        }
+
+        html body #sec-interview-session .response-send-answer-btn {
+            min-height: 32px !important;
+            padding: 6px 10px !important;
+            border-radius: 8px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body #sec-interview-session .response-fullscreen-toggle {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #sec-interview-session #answerTextarea {
+            min-height: 148px !important;
+            margin-bottom: 8px !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+            font-size: 0.78rem !important;
+            line-height: 1.42 !important;
+        }
+
+        html body #sec-interview-session .response-count-bar {
+            min-height: 30px !important;
+            padding: 7px 9px !important;
+            border-radius: 9px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body #sec-interview-session .question-source-panel {
+            margin-top: 8px !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session .question-source-panel .source-card-line {
+            min-height: 34px !important;
+            padding: 8px 9px !important;
+            border-radius: 9px !important;
+            font-size: 0.66rem !important;
+            line-height: 1.28 !important;
+        }
+
+        html body #sec-interview-session #cameraPanel {
+            position: sticky !important;
+            top: 12px !important;
+            padding: 14px !important;
+            border-radius: var(--session-desktop-radius) !important;
+        }
+
+        html body #sec-interview-session #cameraPanel .panel-title {
+            margin: 0 0 10px !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.88rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+        }
+
+        html body #sec-interview-session #cameraPanel > div[style*="height:180px"] {
+            height: 150px !important;
+            margin-bottom: 10px !important;
+            border-radius: 10px !important;
+        }
+
+        html body #sec-interview-session #cameraPanel .stat-row {
+            min-height: 30px !important;
+            padding: 7px 0 !important;
+            font-size: 0.68rem !important;
+        }
+
+        html body #sec-interview-session #cameraPanel .small {
+            font-size: 0.64rem !important;
+            line-height: 1.32 !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        html body #sec-interview-session #workspaceRow:has(> .col-lg-4) {
+            grid-template-columns: minmax(0, 1fr) clamp(300px, 31%, 380px) !important;
+        }
+
+        html body #sec-interview-session .ai-avatar-panel {
+            height: 238px !important;
+        }
+
+        html body #sec-interview-session #answerTextarea {
+            min-height: 132px !important;
         }
     }
 </style>

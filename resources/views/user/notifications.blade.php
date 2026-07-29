@@ -1231,6 +1231,427 @@
             font-size: 0.62rem !important;
         }
     }
+
+    body.user-desktop-shell #notifications-page {
+        --notif-shell-gap: 10px;
+        --notif-shell-radius: 12px;
+        --notif-shell-border: rgba(15, 23, 42, 0.12);
+        --notif-shell-card: rgba(255, 255, 255, 0.98);
+        --notif-shell-field: rgba(248, 250, 252, 0.92);
+        --notif-shell-title: #0f172a;
+        --notif-shell-text: #334155;
+        --notif-shell-muted: #64748b;
+        --notif-shell-accent: #2563eb;
+        --notif-shell-accent-2: #0891b2;
+        --notif-shell-danger: #dc2626;
+        --notif-shell-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 24px !important;
+        color: var(--notif-shell-title) !important;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        overflow-x: hidden !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page,
+    :root:not(.lm) body.user-desktop-shell #notifications-page,
+    body.user-desktop-shell.dm #notifications-page,
+    body.user-desktop-shell .dm #notifications-page {
+        --notif-shell-border: rgba(148, 163, 184, 0.24);
+        --notif-shell-card: rgba(15, 23, 42, 0.96);
+        --notif-shell-field: rgba(30, 41, 59, 0.92);
+        --notif-shell-title: #f8fafc;
+        --notif-shell-text: #e2e8f0;
+        --notif-shell-muted: #cbd5e1;
+        --notif-shell-accent: #93c5fd;
+        --notif-shell-accent-2: #67e8f9;
+        --notif-shell-danger: #fca5a5;
+        --notif-shell-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    body.user-desktop-shell #notifications-page > :is(.notif-hero, .notif-bulk-actions, .notifications-list-panel, .notifications-pagination) {
+        margin-top: 0 !important;
+        margin-bottom: var(--notif-shell-gap) !important;
+    }
+
+    body.user-desktop-shell #notifications-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 180px !important;
+        align-items: center !important;
+        min-height: 116px !important;
+        height: auto !important;
+        gap: 14px !important;
+        padding: 18px 178px 18px 20px !important;
+        border: 1px solid rgba(191, 219, 254, 0.86) !important;
+        border-radius: var(--notif-shell-radius) !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+        overflow: hidden !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page .notif-hero,
+    :root:not(.lm) body.user-desktop-shell #notifications-page .notif-hero,
+    body.user-desktop-shell.dm #notifications-page .notif-hero,
+    body.user-desktop-shell .dm #notifications-page .notif-hero {
+        border-color: rgba(147, 197, 253, 0.28) !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.28), transparent 35%),
+            linear-gradient(142deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 24, 39, 0.98) 58%, rgba(30, 41, 59, 0.96) 100%) !important;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero::before,
+    body.user-desktop-shell #notifications-page .notif-hero::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero-copy {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        max-width: 780px !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border: 1px solid rgba(147, 197, 253, 0.42) !important;
+        border-radius: 12px !important;
+        background: rgba(239, 246, 255, 0.92) !important;
+        color: #1d4ed8 !important;
+        font-size: 1.05rem !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page .notif-hero-icon,
+    :root:not(.lm) body.user-desktop-shell #notifications-page .notif-hero-icon,
+    body.user-desktop-shell.dm #notifications-page .notif-hero-icon,
+    body.user-desktop-shell .dm #notifications-page .notif-hero-icon {
+        border-color: rgba(147, 197, 253, 0.32) !important;
+        background: rgba(59, 130, 246, 0.2) !important;
+        color: var(--notif-shell-accent) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero .notif-hero-title {
+        margin: 0 0 5px !important;
+        color: var(--notif-shell-title) !important;
+        -webkit-text-fill-color: var(--notif-shell-title) !important;
+        background: none !important;
+        font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        opacity: 1 !important;
+        text-shadow: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero-subtitle {
+        max-width: 640px !important;
+        margin: 0 !important;
+        color: var(--notif-shell-text) !important;
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+        font-weight: 600 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-hero-art {
+        display: block !important;
+        position: absolute !important;
+        right: 12px !important;
+        bottom: -10px !important;
+        width: clamp(140px, 12vw, 174px) !important;
+        max-width: none !important;
+        opacity: 0.96 !important;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+        animation: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-bulk-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 8px 0 var(--notif-shell-gap) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notif-bulk-btn,
+    body.user-desktop-shell #notifications-page .notification-action-btn {
+        min-height: 34px !important;
+        padding: 7px 11px !important;
+        border: 1px solid rgba(37, 99, 235, 0.22) !important;
+        border-radius: 9px !important;
+        background: rgba(239, 246, 255, 0.94) !important;
+        color: var(--notif-shell-accent) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page :is(.notif-bulk-btn, .notification-action-btn) i {
+        color: inherit !important;
+    }
+
+    body.user-desktop-shell #notifications-page :is(.notif-bulk-btn.danger, .notification-action-btn.delete) {
+        border-color: rgba(220, 38, 38, 0.22) !important;
+        background: rgba(254, 242, 242, 0.96) !important;
+        color: var(--notif-shell-danger) !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page .notif-bulk-btn,
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page .notification-action-btn,
+    :root:not(.lm) body.user-desktop-shell #notifications-page .notif-bulk-btn,
+    :root:not(.lm) body.user-desktop-shell #notifications-page .notification-action-btn,
+    body.user-desktop-shell.dm #notifications-page .notif-bulk-btn,
+    body.user-desktop-shell.dm #notifications-page .notification-action-btn,
+    body.user-desktop-shell .dm #notifications-page .notif-bulk-btn,
+    body.user-desktop-shell .dm #notifications-page .notification-action-btn {
+        border-color: rgba(147, 197, 253, 0.24) !important;
+        background: rgba(30, 41, 59, 0.88) !important;
+        color: var(--notif-shell-accent) !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page :is(.notif-bulk-btn.danger, .notification-action-btn.delete),
+    :root:not(.lm) body.user-desktop-shell #notifications-page :is(.notif-bulk-btn.danger, .notification-action-btn.delete),
+    body.user-desktop-shell.dm #notifications-page :is(.notif-bulk-btn.danger, .notification-action-btn.delete),
+    body.user-desktop-shell .dm #notifications-page :is(.notif-bulk-btn.danger, .notification-action-btn.delete) {
+        border-color: rgba(248, 113, 113, 0.28) !important;
+        background: rgba(127, 29, 29, 0.24) !important;
+        color: var(--notif-shell-danger) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .premium-panel,
+    body.user-desktop-shell #notifications-page .notifications-list-panel {
+        display: grid !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin: 0 0 var(--notif-shell-gap) !important;
+        padding: 14px !important;
+        border: 1px solid var(--notif-shell-border) !important;
+        border-radius: var(--notif-shell-radius) !important;
+        background: var(--notif-shell-card) !important;
+        box-shadow: var(--notif-shell-shadow) !important;
+        transform: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-row {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+        padding: 10px !important;
+        border: 1px solid var(--notif-shell-border) !important;
+        border-radius: 10px !important;
+        background: var(--notif-shell-field) !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-row.is-unread {
+        border-color: rgba(37, 99, 235, 0.28) !important;
+        background:
+            linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.96)) !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page .notification-row.is-unread,
+    :root:not(.lm) body.user-desktop-shell #notifications-page .notification-row.is-unread,
+    body.user-desktop-shell.dm #notifications-page .notification-row.is-unread,
+    body.user-desktop-shell .dm #notifications-page .notification-row.is-unread {
+        border-color: rgba(96, 165, 250, 0.38) !important;
+        background:
+            radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.16), transparent 36%),
+            var(--notif-shell-field) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-row:hover {
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-icon-box {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--notif-shell-border) !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-content {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-areas:
+            "head actions"
+            "message message" !important;
+        column-gap: 12px !important;
+        row-gap: 6px !important;
+        align-items: start !important;
+        min-width: 0 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-head {
+        grid-area: head !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+        min-width: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-title {
+        margin: 0 !important;
+        color: var(--notif-shell-title) !important;
+        -webkit-text-fill-color: var(--notif-shell-title) !important;
+        font-size: 0.78rem !important;
+        line-height: 1.18 !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+        opacity: 1 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-status-badge,
+    body.user-desktop-shell #notifications-page .notification-meta {
+        min-height: 22px !important;
+        padding: 4px 7px !important;
+        border-radius: 999px !important;
+        font-size: 0.56rem !important;
+        line-height: 1 !important;
+        font-weight: 900 !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-status-badge {
+        border: 1px solid rgba(37, 99, 235, 0.2) !important;
+        background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-meta {
+        border: 1px solid var(--notif-shell-border) !important;
+        background: var(--notif-shell-card) !important;
+        color: var(--notif-shell-muted) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-meta i {
+        color: var(--notif-shell-accent) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-message {
+        grid-area: message !important;
+        margin: 0 0 8px !important;
+        color: var(--notif-shell-text) !important;
+        -webkit-text-fill-color: var(--notif-shell-text) !important;
+        font-size: 0.68rem !important;
+        line-height: 1.32 !important;
+        font-weight: 600 !important;
+        opacity: 1 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notification-actions {
+        grid-area: actions !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-self: start !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+        min-width: max-content !important;
+        margin: 0 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-empty-state {
+        width: 100% !important;
+        min-height: 120px !important;
+        margin: 0 !important;
+        padding: 18px !important;
+        border: 1px dashed var(--notif-shell-border) !important;
+        border-radius: var(--notif-shell-radius) !important;
+        background: var(--notif-shell-field) !important;
+        color: var(--notif-shell-muted) !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-empty-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        margin-bottom: 10px !important;
+        border: 1px solid rgba(37, 99, 235, 0.18) !important;
+        border-radius: 12px !important;
+        background: rgba(239, 246, 255, 0.94) !important;
+        color: var(--notif-shell-accent) !important;
+        box-shadow: none !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #notifications-page .notifications-empty-icon,
+    :root:not(.lm) body.user-desktop-shell #notifications-page .notifications-empty-icon,
+    body.user-desktop-shell.dm #notifications-page .notifications-empty-icon,
+    body.user-desktop-shell .dm #notifications-page .notifications-empty-icon {
+        border-color: rgba(147, 197, 253, 0.24) !important;
+        background: rgba(59, 130, 246, 0.16) !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-empty-state p {
+        color: var(--notif-shell-text) !important;
+        font-size: 0.72rem !important;
+        line-height: 1.32 !important;
+        font-weight: 800 !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-pagination {
+        justify-content: flex-end !important;
+        margin-top: 0 !important;
+        gap: 8px !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-pagination .page-link,
+    body.user-desktop-shell #notifications-page .notifications-pagination span.page-link {
+        min-width: 32px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 9px !important;
+        border: 1px solid var(--notif-shell-border) !important;
+        border-radius: 8px !important;
+        background: var(--notif-shell-field) !important;
+        color: var(--notif-shell-title) !important;
+        font-size: 0.7rem !important;
+        font-weight: 900 !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-pagination .page-item.active .page-link {
+        border-color: transparent !important;
+        background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    body.user-desktop-shell #notifications-page .notifications-pagination :is(p, .text-sm) {
+        color: var(--notif-shell-muted) !important;
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="notifications-page">

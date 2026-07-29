@@ -56,8 +56,8 @@
         --acct-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
     }
     #account-page {
-        max-width: 1120px;
-        margin: 0 auto;
+        max-width: none;
+        margin: 0;
     }
     :root:not(.lm) #account-page,
     :root:not(.lm) .profile-crop-modal,
@@ -365,6 +365,11 @@
         background: var(--acct-danger-bg) !important;
         border-color: var(--acct-danger-border) !important;
     }
+    #account-page .account-danger-section {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--acct-danger-border);
+    }
     #account-page .danger-title {
         display: flex;
         align-items: center;
@@ -410,6 +415,9 @@
         gap: 8px;
     }
     #account-page .danger-card form {
+        text-align: center;
+    }
+    #account-page .account-danger-section form {
         text-align: center;
     }
     #account-page .alert {
@@ -1669,6 +1677,357 @@
             justify-self: center !important;
         }
     }
+
+    body.user-desktop-shell #account-page {
+        --account-shell-gap: 10px;
+        --account-shell-radius: 12px;
+        --account-shell-border: rgba(15, 23, 42, 0.12);
+        --account-shell-card: rgba(255, 255, 255, 0.98);
+        --account-shell-field: rgba(248, 250, 252, 0.92);
+        --account-shell-title: #0f172a;
+        --account-shell-text: #334155;
+        --account-shell-muted: #64748b;
+        --account-shell-accent: #2563eb;
+        --account-shell-accent-2: #0891b2;
+        --account-shell-danger: #dc2626;
+        --account-shell-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 24px !important;
+        color: var(--account-shell-title) !important;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        overflow-x: hidden !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell #account-page,
+    :root:not(.lm) body.user-desktop-shell #account-page,
+    body.user-desktop-shell.dm #account-page,
+    body.user-desktop-shell .dm #account-page {
+        --account-shell-border: rgba(148, 163, 184, 0.24);
+        --account-shell-card: rgba(15, 23, 42, 0.96);
+        --account-shell-field: rgba(30, 41, 59, 0.92);
+        --account-shell-title: #f8fafc;
+        --account-shell-text: #e2e8f0;
+        --account-shell-muted: #cbd5e1;
+        --account-shell-accent: #93c5fd;
+        --account-shell-accent-2: #67e8f9;
+        --account-shell-danger: #fca5a5;
+        --account-shell-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    body.user-desktop-shell #account-page > :is(.sr-page-hero, .alert, .account-grid) {
+        margin-top: 0 !important;
+        margin-bottom: var(--account-shell-gap) !important;
+    }
+
+    body.user-desktop-shell #account-page > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 180px !important;
+        align-items: center !important;
+        min-height: 116px !important;
+        height: auto !important;
+        gap: 14px !important;
+        padding: 18px 178px 18px 20px !important;
+        border: 1px solid rgba(191, 219, 254, 0.86) !important;
+        border-radius: var(--account-shell-radius) !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+        overflow: hidden !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero::before,
+    body.user-desktop-shell #account-page .sr-page-hero::after {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero-inner,
+    body.user-desktop-shell #account-page .sr-page-hero-copy {
+        display: flex !important;
+        align-items: center !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero-copy {
+        gap: 12px !important;
+        max-width: 780px !important;
+    }
+
+    body.user-desktop-shell #account-page .account-hero-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(147, 197, 253, 0.42) !important;
+        background: rgba(239, 246, 255, 0.92) !important;
+        color: #1d4ed8 !important;
+        font-size: 1.05rem !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero-title {
+        margin: 0 0 5px !important;
+        color: var(--account-shell-title) !important;
+        -webkit-text-fill-color: var(--account-shell-title) !important;
+        background: none !important;
+        font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero-title svg {
+        display: none !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero-subtitle {
+        max-width: 640px !important;
+        margin: 0 !important;
+        color: var(--account-shell-text) !important;
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+        font-weight: 600 !important;
+    }
+
+    body.user-desktop-shell #account-page .sr-page-hero-art {
+        display: block !important;
+        position: absolute !important;
+        right: 12px !important;
+        bottom: -10px !important;
+        width: clamp(140px, 12vw, 174px) !important;
+        max-width: none !important;
+        opacity: 0.96 !important;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+        animation: none !important;
+    }
+
+    body.user-desktop-shell #account-page .row.account-grid {
+        --bs-gutter-x: var(--account-shell-gap) !important;
+        --bs-gutter-y: var(--account-shell-gap) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.9fr) !important;
+        align-items: stretch !important;
+        gap: var(--account-shell-gap) !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .row.account-grid > [class*="col-"] {
+        display: grid !important;
+        align-content: start !important;
+        gap: var(--account-shell-gap) !important;
+        width: auto !important;
+        max-width: none !important;
+        flex: initial !important;
+        min-width: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .row.account-grid > [class*="col-"]:first-child {
+        padding-left: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .row.account-grid > [class*="col-"]:last-child {
+        padding-right: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .premium-panel,
+    body.user-desktop-shell #account-page .account-card {
+        padding: 14px !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        border: 1px solid var(--account-shell-border) !important;
+        border-radius: var(--account-shell-radius) !important;
+        background: var(--account-shell-card) !important;
+        color: var(--account-shell-title) !important;
+        box-shadow: var(--account-shell-shadow) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #account-page .danger-card {
+        align-self: stretch !important;
+        margin: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .row.account-grid > [class*="col-"]:first-child .account-card {
+        height: 100% !important;
+    }
+
+    body.user-desktop-shell #account-page .account-danger-section {
+        margin-top: 12px !important;
+        padding: 12px 0 0 !important;
+        border-top: 1px solid rgba(220, 38, 38, 0.2) !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #account-page .account-danger-section form {
+        text-align: left !important;
+    }
+
+    body.user-desktop-shell #account-page .premium-panel:hover,
+    body.user-desktop-shell #account-page .account-card:hover {
+        transform: none !important;
+    }
+
+    body.user-desktop-shell #account-page .account-card-title,
+    body.user-desktop-shell #account-page .danger-title {
+        margin: 0 0 10px !important;
+        color: var(--account-shell-title) !important;
+        font-size: 0.94rem !important;
+        line-height: 1.18 !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell #account-page .account-title-icon,
+    body.user-desktop-shell #account-page .danger-icon,
+    body.user-desktop-shell #account-page .account-label-icon,
+    body.user-desktop-shell #account-page .password-prefix-icon {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        border-radius: 9px !important;
+        font-size: 0.8rem !important;
+    }
+
+    body.user-desktop-shell #account-page .account-photo-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) !important;
+        justify-items: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+        text-align: center !important;
+    }
+
+    body.user-desktop-shell #account-page .account-photo-avatar {
+        width: 54px !important;
+        height: 54px !important;
+        min-width: 54px !important;
+        flex: 0 0 54px !important;
+        justify-self: center !important;
+        margin: 0 auto !important;
+        border: 3px solid var(--account-shell-field) !important;
+        border-radius: 8px !important;
+        outline: 1px solid rgba(37, 99, 235, 0.24) !important;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18) !important;
+    }
+
+    body.user-desktop-shell #account-page .account-photo-avatar img {
+        border-radius: 6px !important;
+    }
+
+    body.user-desktop-shell #account-page .account-photo-actions {
+        display: grid !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 5px !important;
+        justify-items: center !important;
+        text-align: center !important;
+    }
+
+    body.user-desktop-shell #account-page .account-field,
+    body.user-desktop-shell #account-page .row.g-3.mb-3 {
+        margin-bottom: 9px !important;
+    }
+
+    body.user-desktop-shell #account-page .account-field-label,
+    body.user-desktop-shell #account-page .olbl {
+        margin-bottom: 5px !important;
+        color: var(--account-shell-text) !important;
+        font-size: 0.66rem !important;
+        font-weight: 850 !important;
+    }
+
+    body.user-desktop-shell #account-page .oinp {
+        min-height: 34px !important;
+        padding: 7px 10px !important;
+        border: 1px solid var(--account-shell-border) !important;
+        border-radius: 9px !important;
+        background: var(--account-shell-field) !important;
+        color: var(--account-shell-text) !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #account-page .password-field .oinp {
+        padding-left: 40px !important;
+        padding-right: 40px !important;
+    }
+
+    body.user-desktop-shell #account-page :is(.account-submit-btn, .upload-picture-btn, .delete-account-btn, .premium-panel form button[type="submit"]) {
+        min-height: 34px !important;
+        padding: 7px 11px !important;
+        border-radius: 9px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 7px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell #account-page .upload-picture-btn {
+        width: auto !important;
+        min-width: 156px !important;
+        max-width: 210px !important;
+        min-height: 30px !important;
+        padding: 6px 12px !important;
+        border: 1px solid rgba(37, 99, 235, 0.2) !important;
+        border-radius: 8px !important;
+        background: var(--account-shell-field) !important;
+        color: var(--account-shell-accent) !important;
+        font-size: 0.64rem !important;
+        line-height: 1.12 !important;
+        white-space: nowrap !important;
+    }
+
+    body.user-desktop-shell #account-page .upload-hint,
+    body.user-desktop-shell #account-page .danger-copy {
+        color: var(--account-shell-muted) !important;
+        font-size: 0.66rem !important;
+        line-height: 1.32 !important;
+    }
+
+    body.user-desktop-shell #account-page .upload-hint {
+        width: 100% !important;
+        margin: 0 !important;
+        font-size: 0.58rem !important;
+        font-weight: 700 !important;
+        line-height: 1.22 !important;
+        text-align: center !important;
+    }
+
+    body.user-desktop-shell #account-page .alert {
+        padding: 10px 12px !important;
+        border-radius: var(--account-shell-radius) !important;
+        font-size: 0.72rem !important;
+        box-shadow: var(--account-shell-shadow) !important;
+    }
 </style>
 
 <div class="db-section active animate-fade-up" id="account-page">
@@ -1798,15 +2157,15 @@
                     </div>
                     <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-solid fa-shield-halved"></i>Update Password</button>
                 </form>
-            </div>
-            
-            <div class="premium-panel account-card danger-card animate-fade-up" style="animation-delay: 0.3s;padding:24px;margin-top:24px">
-                <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>
-                <p class="danger-copy">Once you delete your account, there is no going back. Please be certain.</p>
-                <form action="{{ route('user.account.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
-                    @csrf
-                    <button type="submit" class="btn delete-account-btn"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
-                </form>
+
+                <div class="account-danger-section">
+                    <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>
+                    <p class="danger-copy">Once you delete your account, there is no going back. Please be certain.</p>
+                    <form action="{{ route('user.account.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+                        @csrf
+                        <button type="submit" class="btn delete-account-btn"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

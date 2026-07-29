@@ -2,6 +2,7 @@
 @section('title', 'Philippines Interview Modules')
 
 @section('content')
+@include('partials.page-hero-styles')
 <style>
     .module-card {
         background: var(--sf);
@@ -2445,18 +2446,494 @@
             width: 100% !important;
         }
     }
+
+    @media (min-width: 992px) {
+        html body #interview-modules-page {
+            --modules-desktop-radius: 12px;
+            --modules-desktop-gap: 12px;
+            --modules-desktop-border: rgba(148, 163, 184, 0.2);
+            --modules-desktop-card-shadow: 0 10px 28px rgba(2, 6, 23, 0.12);
+            width: 100% !important;
+            max-width: 1480px !important;
+            margin: 0 auto !important;
+            padding: 0 0 24px !important;
+        }
+
+        html.lm body #interview-modules-page {
+            --modules-desktop-border: rgba(15, 23, 42, 0.12);
+            --modules-desktop-card-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero {
+            position: relative !important;
+            display: grid !important;
+            grid-template-columns: 44px minmax(0, 1fr) !important;
+            align-items: center !important;
+            min-height: 98px !important;
+            max-height: none !important;
+            height: auto !important;
+            gap: 10px !important;
+            margin: 0 0 14px !important;
+            padding: 14px clamp(126px, 14vw, 148px) 14px 16px !important;
+            border: 1px solid rgba(96, 165, 250, 0.26) !important;
+            border-radius: 16px !important;
+            background:
+                radial-gradient(circle at 92% 35%, rgba(96, 165, 250, 0.2), transparent 25%),
+                linear-gradient(110deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.045)),
+                var(--sf) !important;
+            overflow: hidden !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+        }
+
+        html body #interview-modules-page .modules-hero-copy {
+            min-width: 0 !important;
+            max-width: 680px !important;
+        }
+
+        html body #interview-modules-page .modules-hero-icon {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
+            font-size: 1.05rem !important;
+        }
+
+        html body #interview-modules-page .modules-hero-icon svg {
+            width: 22px !important;
+            height: 22px !important;
+        }
+
+        html body #interview-modules-page .modules-hero-title {
+            margin: 0 0 5px !important;
+            max-width: 100% !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 1.45rem !important;
+            line-height: 1.15 !important;
+            font-weight: 800 !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            text-transform: uppercase !important;
+        }
+
+        html body #interview-modules-page .modules-hero-subtitle {
+            display: block !important;
+            max-width: 680px !important;
+            margin: 0 !important;
+            font-size: 0.88rem !important;
+            line-height: 1.45 !important;
+            font-weight: 600 !important;
+            overflow: visible !important;
+        }
+
+        html body #interview-modules-page .modules-hero-art {
+            display: block !important;
+            position: absolute !important;
+            right: 8px !important;
+            bottom: -2px !important;
+            width: clamp(122px, 13vw, 142px) !important;
+            max-width: none !important;
+            opacity: 0.96 !important;
+        }
+
+        #interview-modules-page .module-topic-select-wrap {
+            display: flex !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            margin: 0 0 12px !important;
+        }
+
+        #interview-modules-page .module-topic-select-shell {
+            width: clamp(150px, 14vw, 210px) !important;
+        }
+
+        #interview-modules-page .module-topic-select {
+            min-height: 32px !important;
+            padding: 6px 30px 6px 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.72rem !important;
+            font-weight: 850 !important;
+        }
+
+        #interview-modules-page .module-smart-row {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) clamp(330px, 34%, 470px) !important;
+            gap: var(--modules-desktop-gap) !important;
+            align-items: stretch !important;
+            margin: 0 0 var(--modules-desktop-gap) !important;
+        }
+
+        #interview-modules-page .module-smart-row .module-smart-panel {
+            min-height: 0 !important;
+            margin: 0 !important;
+        }
+
+        #interview-modules-page .module-smart-panel {
+            padding: 14px !important;
+            border-radius: var(--modules-desktop-radius) !important;
+            border-color: var(--modules-desktop-border) !important;
+            box-shadow: var(--modules-desktop-card-shadow) !important;
+        }
+
+        #interview-modules-page .module-smart-head,
+        #interview-modules-page .module-section-head {
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            margin: 0 0 10px !important;
+        }
+
+        #interview-modules-page .module-smart-title {
+            margin: 0 0 4px !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.94rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+        }
+
+        #interview-modules-page .module-smart-subtitle {
+            margin: 0 !important;
+            font-size: 0.7rem !important;
+            line-height: 1.34 !important;
+        }
+
+        #interview-modules-page .module-progress-link {
+            min-height: 28px !important;
+            padding: 6px 9px !important;
+            border-radius: 8px !important;
+            font-size: 0.68rem !important;
+            white-space: nowrap !important;
+        }
+
+        #interview-modules-page .module-rec-grid,
+        #interview-modules-page .module-path-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin: 0 !important;
+        }
+
+        #interview-modules-page .module-path-panel .module-path-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        #interview-modules-page .module-rec-item,
+        #interview-modules-page .module-path-item {
+            min-height: 72px !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+            gap: 8px !important;
+            box-shadow: none !important;
+        }
+
+        #interview-modules-page .module-rec-icon,
+        #interview-modules-page .module-section-icon,
+        #interview-modules-page .module-path-panel .module-rec-icon {
+            width: 32px !important;
+            height: 32px !important;
+            flex: 0 0 32px !important;
+            border-radius: 9px !important;
+            font-size: 0.78rem !important;
+        }
+
+        #interview-modules-page .module-rec-copy strong,
+        #interview-modules-page .module-path-copy strong {
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.74rem !important;
+            line-height: 1.22 !important;
+        }
+
+        #interview-modules-page .module-rec-copy span,
+        #interview-modules-page .module-path-copy span {
+            font-size: 0.66rem !important;
+            line-height: 1.3 !important;
+        }
+
+        #interview-modules-page .modules-card-grid {
+            --bs-gutter-x: var(--modules-desktop-gap) !important;
+            --bs-gutter-y: var(--modules-desktop-gap) !important;
+            margin-bottom: var(--modules-desktop-gap) !important;
+        }
+
+        #interview-modules-page .modules-card-grid > [class*="col-"] {
+            flex: 0 0 auto !important;
+            width: 25% !important;
+        }
+
+        #interview-modules-page .module-card {
+            min-height: 286px !important;
+            border-radius: var(--modules-desktop-radius) !important;
+            border-color: var(--modules-desktop-border) !important;
+            box-shadow: var(--modules-desktop-card-shadow) !important;
+        }
+
+        #interview-modules-page .module-card:hover {
+            transform: translateY(-1px) !important;
+        }
+
+        #interview-modules-page .module-card-media {
+            height: 104px !important;
+        }
+
+        #interview-modules-page .module-card-badges {
+            top: 9px !important;
+            left: 9px !important;
+            right: 9px !important;
+            gap: 5px !important;
+        }
+
+        #interview-modules-page .module-card-badge {
+            min-height: 24px !important;
+            padding: 5px 8px !important;
+            font-size: 0.6rem !important;
+        }
+
+        #interview-modules-page .module-card-icon {
+            left: 16px !important;
+            bottom: 14px !important;
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 11px !important;
+            font-size: 0.94rem !important;
+        }
+
+        #interview-modules-page .module-card-body {
+            padding: 12px !important;
+        }
+
+        #interview-modules-page .module-card-title {
+            min-height: 2.25em !important;
+            margin: 0 0 7px !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.86rem !important;
+            line-height: 1.18 !important;
+        }
+
+        #interview-modules-page .module-card-desc {
+            min-height: 4em !important;
+            margin: 0 0 10px !important;
+            font-size: 0.72rem !important;
+            line-height: 1.34 !important;
+        }
+
+        #interview-modules-page .module-card-footer {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            align-items: center !important;
+            padding-top: 9px !important;
+            gap: 7px !important;
+        }
+
+        #interview-modules-page .module-card-views {
+            font-size: 0.68rem !important;
+        }
+
+        #interview-modules-page .module-card-link {
+            justify-self: end !important;
+            width: auto !important;
+            min-width: 104px !important;
+            min-height: 26px !important;
+            padding: 4px 9px !important;
+            border-radius: 8px !important;
+            font-size: 0.62rem !important;
+            line-height: 1 !important;
+        }
+
+        #interview-modules-page .pagination {
+            margin-top: 12px !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        #interview-modules-page .module-smart-row {
+            grid-template-columns: minmax(0, 1fr) clamp(300px, 31%, 380px) !important;
+        }
+
+        #interview-modules-page .modules-card-grid > [class*="col-"] {
+            width: 33.333333% !important;
+        }
+
+        #interview-modules-page .module-rec-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+
+    @media (min-width: 992px) {
+        body.user-desktop-shell #interview-modules-page .sr-page-hero.modules-page-hero {
+            --modules-page-hero-title: #0f172a;
+            --modules-page-hero-text: #334155;
+            --modules-page-hero-icon: #2563eb;
+            --modules-page-hero-icon-bg: rgba(239, 246, 255, 0.92);
+            --modules-page-hero-icon-border: rgba(147, 197, 253, 0.42);
+            display: grid !important;
+            grid-template-columns: 44px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-height: 104px !important;
+            margin: 0 0 14px !important;
+            padding: 14px 126px 14px 14px !important;
+            border: 1px solid rgba(191, 219, 254, 0.86) !important;
+            border-radius: 16px !important;
+            background:
+                radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+                linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08) !important;
+            overflow: hidden !important;
+        }
+
+        html[data-theme="dark"] body.user-desktop-shell #interview-modules-page .sr-page-hero.modules-page-hero,
+        :root:not(.lm) body.user-desktop-shell #interview-modules-page .sr-page-hero.modules-page-hero,
+        body.dm.user-desktop-shell #interview-modules-page .sr-page-hero.modules-page-hero,
+        .dm body.user-desktop-shell #interview-modules-page .sr-page-hero.modules-page-hero {
+            --modules-page-hero-title: #f8fafc;
+            --modules-page-hero-text: #cbd5e1;
+            --modules-page-hero-icon: #93c5fd;
+            --modules-page-hero-icon-bg: rgba(59, 130, 246, 0.2);
+            --modules-page-hero-icon-border: rgba(147, 197, 253, 0.32);
+            border-color: rgba(147, 197, 253, 0.28) !important;
+            background:
+                radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+                linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22) !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .sr-page-hero.modules-page-hero::after {
+            width: min(34%, 320px) !important;
+            background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.055)) !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-inner,
+        body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-copy {
+            display: contents !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero-icon {
+            box-sizing: border-box;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 34px !important;
+            height: 34px !important;
+            padding: 0 !important;
+            border: 1px solid var(--modules-page-hero-icon-border) !important;
+            border-radius: 10px !important;
+            background: var(--modules-page-hero-icon-bg) !important;
+            color: var(--modules-page-hero-icon) !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero-icon svg {
+            width: 18px !important;
+            height: 18px !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-title {
+            display: block !important;
+            margin: 0 0 4px !important;
+            color: var(--modules-page-hero-title) !important;
+            -webkit-text-fill-color: var(--modules-page-hero-title) !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            font-size: 1.02rem !important;
+            line-height: 1.08 !important;
+            font-weight: 950 !important;
+            text-transform: none !important;
+            text-shadow: none !important;
+            overflow-wrap: normal !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-title svg {
+            display: none !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-subtitle {
+            max-width: 48rem !important;
+            margin: 0 !important;
+            color: var(--modules-page-hero-text) !important;
+            -webkit-text-fill-color: var(--modules-page-hero-text) !important;
+            font-size: 0.78rem !important;
+            line-height: 1.32 !important;
+            font-weight: 600 !important;
+        }
+
+        body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-art {
+            display: block !important;
+            right: 8px !important;
+            bottom: 4px !important;
+            width: 94px !important;
+            max-width: none !important;
+            opacity: 0.92 !important;
+            filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+        }
+
+        html[data-theme="dark"] body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-art,
+        :root:not(.lm) body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-art,
+        body.dm.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-art,
+        .dm body.user-desktop-shell #interview-modules-page .modules-page-hero .sr-page-hero-art {
+            opacity: 0.88 !important;
+            filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.28)) !important;
+        }
+    }
+
+    @media (max-width: 991px) {
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-title {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html body #interview-modules-page .modules-hero.modules-hero .modules-hero-subtitle {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+    }
 </style>
 
 <div class="db-section active" id="interview-modules-page">
+    @if($isMobile ?? false)
     <div class="modules-hero" aria-labelledby="modules-hero-title">
         <span class="modules-hero-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="8" cy="6" r="2" fill="#eff6ff" stroke="currentColor" stroke-width="2"/><circle cx="15" cy="12" r="2" fill="#eff6ff" stroke="currentColor" stroke-width="2"/><circle cx="11" cy="18" r="2" fill="#eff6ff" stroke="currentColor" stroke-width="2"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M6 4.5h9.5A2.5 2.5 0 0 1 18 7v12.5H7.5A2.5 2.5 0 0 1 5 17V6.5A2 2 0 0 1 7 4.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 8h7M8 11.5h7M8 15h4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M7.5 19.5A2.5 2.5 0 0 1 10 17h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </span>
         <div class="modules-hero-copy">
             <h1 id="modules-hero-title" class="modules-hero-title">Philippines Interview Modules</h1>
             <p class="modules-hero-subtitle">Study lessons tied to Philippines interview scenarios, answer evidence, and practical communication skills.</p>
         </div>
         <svg class="modules-hero-art" viewBox="0 0 300 240" aria-hidden="true">
+            <defs><linearGradient id="modulePanelMobile" x1="58" y1="34" x2="244" y2="196"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF4FF"/></linearGradient><linearGradient id="moduleBlueMobile" x1="78" y1="128" x2="238" y2="128"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#1D9BF0"/></linearGradient><linearGradient id="moduleGreenMobile" x1="218" y1="150" x2="270" y2="190"><stop stop-color="#18D7B5"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
+            <g class="modules-art-card">
+                <rect x="42" y="36" width="226" height="168" rx="30" fill="url(#modulePanelMobile)" stroke="#DBEAFE" stroke-width="4"/>
+                <circle cx="82" cy="70" r="9" fill="#2563EB"/><circle cx="116" cy="70" r="9" fill="#14B8A6"/><circle cx="150" cy="70" r="9" fill="#8B5CF6"/>
+                <rect class="modules-art-line" x="72" y="104" width="126" height="16" rx="8" fill="#CFE0F8"/><rect class="modules-art-line" x="72" y="140" width="144" height="16" rx="8" fill="#CFE0F8"/><rect class="modules-art-line" x="72" y="176" width="100" height="16" rx="8" fill="#CFE0F8"/>
+                <rect x="72" y="204" width="86" height="16" rx="8" fill="url(#moduleBlueMobile)"/><rect x="172" y="204" width="70" height="16" rx="8" fill="#CFE0F8"/><rect x="254" y="204" width="0" height="16" rx="8" fill="url(#moduleGreenMobile)"/>
+            </g>
+            <g class="modules-art-check">
+                <circle cx="222" cy="118" r="50" fill="url(#moduleBlueMobile)"/><path d="M198 118l17 17 34-40" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <path d="M14 154l24 24M20 184l30 10" fill="none" stroke="#60A5FA" stroke-width="8" stroke-linecap="round" opacity=".8"/>
+        </svg>
+    </div>
+    @else
+    <div class="sr-page-hero modules-page-hero" aria-labelledby="modules-hero-title">
+        <div class="sr-page-hero-inner">
+            <div class="sr-page-hero-copy">
+                <div class="modules-page-hero-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><circle cx="8" cy="6" r="2" fill="#eff6ff" stroke="currentColor" stroke-width="2"/><circle cx="15" cy="12" r="2" fill="#eff6ff" stroke="currentColor" stroke-width="2"/><circle cx="11" cy="18" r="2" fill="#eff6ff" stroke="currentColor" stroke-width="2"/></svg>
+                </div>
+                <div>
+                    <h4 id="modules-hero-title" class="sr-page-hero-title text-gradient-primary">
+                        Philippines Interview Modules
+                    </h4>
+                    <p class="sr-page-hero-subtitle">Study lessons tied to Philippines interview scenarios, answer evidence, and practical communication skills.</p>
+                </div>
+            </div>
+        </div>
+        <svg class="sr-page-hero-art" viewBox="0 0 300 240" aria-hidden="true">
             <defs><linearGradient id="modulePanel" x1="58" y1="34" x2="244" y2="196"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF4FF"/></linearGradient><linearGradient id="moduleBlue" x1="78" y1="128" x2="238" y2="128"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#1D9BF0"/></linearGradient><linearGradient id="moduleGreen" x1="218" y1="150" x2="270" y2="190"><stop stop-color="#18D7B5"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
             <g class="modules-art-card">
                 <rect x="42" y="36" width="226" height="168" rx="30" fill="url(#modulePanel)" stroke="#DBEAFE" stroke-width="4"/>
@@ -2470,6 +2947,7 @@
             <path d="M14 154l24 24M20 184l30 10" fill="none" stroke="#60A5FA" stroke-width="8" stroke-linecap="round" opacity=".8"/>
         </svg>
     </div>
+    @endif
     <!-- Sub-Navigation -->
     <div class="module-topic-select-wrap">
         <div class="module-topic-select-shell">

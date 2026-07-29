@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=24') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=25') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -137,14 +137,14 @@
           }
       </style>
    </head>
-   <body class="admin-shell">
+   <body class="admin-shell desktop-shell" data-layout-shell="desktop" data-app-surface="admin">
       <div id="dashboard">
          <!-- Sidebar -->
-         <div class="db-sidebar" id="dbSidebar" style="border-right: 2px solid rgba(248,113,113,0.1);">
+         <div class="db-sidebar" id="dbSidebar">
              <div class="db-logo d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
+                <div class="db-brand d-flex align-items-center gap-2">
                    <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
-                   <span class="admin-brand">SpeakReady AI Admin</span>
+                   <span class="admin-brand db-brand-text">SpeakReady AI Admin</span>
                 </div>
                 <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                    <i class="fa-solid fa-xmark"></i>
@@ -152,29 +152,29 @@
              </div>
             <div class="db-nav">
                <div class="db-nav-section">Interview Modules</div>
-               <a href="{{ route('admin.dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><i class="fa-solid fa-gauge-high"></i> Interview Dashboard</a>
-               <a href="{{ route('admin.users.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><i class="fa-solid fa-users"></i> User Management</a>
-               <a href="{{ route('admin.categories') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> Interview Categories</a>
-               <a href="{{ route('admin.questions') }}" class="db-nl db-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}"><i class="fa-solid fa-circle-question"></i> Question Bank</a>
-               <a href="{{ route('admin.modules') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}"><i class="fa-solid fa-book-open"></i> Interview Lessons</a>
-               <a href="{{ route('admin.game') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}"><i class="fa-solid fa-gamepad"></i> Interview Games</a>
+               <a href="{{ route('admin.dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" title="Interview Dashboard"><i class="fa-solid fa-gauge-high"></i><span class="db-nav-label">Interview Dashboard</span></a>
+               <a href="{{ route('admin.users.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" title="User Management"><i class="fa-solid fa-users"></i><span class="db-nav-label">User Management</span></a>
+               <a href="{{ route('admin.categories') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.categories') ? 'active' : '' }}" title="Interview Categories"><i class="fa-solid fa-list"></i><span class="db-nav-label">Interview Categories</span></a>
+               <a href="{{ route('admin.questions') }}" class="db-nl db-nav-amber {{ request()->routeIs('admin.questions') ? 'active' : '' }}" title="Question Bank"><i class="fa-solid fa-circle-question"></i><span class="db-nav-label">Question Bank</span></a>
+               <a href="{{ route('admin.modules') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.modules') || request()->routeIs('admin.modules.*') ? 'active' : '' }}" title="Interview Lessons"><i class="fa-solid fa-book-open"></i><span class="db-nav-label">Interview Lessons</span></a>
+               <a href="{{ route('admin.game') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.game') || request()->routeIs('admin.game.*') ? 'active' : '' }}" title="Interview Games"><i class="fa-solid fa-gamepad"></i><span class="db-nav-label">Interview Games</span></a>
                
                <div class="db-nav-section">Interview Monitoring</div>
-               <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"><i class="fa-solid fa-video"></i> Session Monitoring</a>
-               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i> Feedback Audit</a>
-               <a href="{{ route('admin.feedback.complaints') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i> User Complaints</a>
-               <a href="{{ route('admin.contacts.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i> Contact Messages</a>
+               <a href="{{ route('admin.sessions.index') }}" class="db-nl db-nav-indigo {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}" title="Session Monitoring"><i class="fa-solid fa-video"></i><span class="db-nav-label">Session Monitoring</span></a>
+               <a href="{{ route('admin.feedback.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('admin.feedback.*') && !request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}" title="Feedback Audit"><i class="fa-solid fa-clipboard-check"></i><span class="db-nav-label">Feedback Audit</span></a>
+               <a href="{{ route('admin.feedback.complaints') }}" class="db-nl db-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}" title="User Complaints"><i class="fa-solid fa-clipboard-list"></i><span class="db-nav-label">User Complaints</span></a>
+               <a href="{{ route('admin.contacts.index') }}" class="db-nl db-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}" title="Contact Messages"><i class="fa-solid fa-envelope"></i><span class="db-nav-label">Contact Messages</span></a>
                
                <div class="db-nav-section">System</div>
                
-               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}"><i class="fa-solid fa-microchip"></i> AI Providers</a>
+               <a href="{{ route('admin.ai.providers') }}" class="db-nl db-nav-purple {{ request()->routeIs('admin.ai.*') ? 'active' : '' }}" title="AI Providers"><i class="fa-solid fa-microchip"></i><span class="db-nav-label">AI Providers</span></a>
                
-               <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i> System Settings</a>
+               <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="System Settings"><i class="fa-solid fa-gear"></i><span class="db-nav-label">System Settings</span></a>
             </div>
             <div class="db-bottom">
                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                   @csrf
-                  <button type="submit" class="db-nl db-nav-danger" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i> Log Out</button>
+                  <button type="submit" class="db-nl db-nav-danger" title="Log Out" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
                </form>
             </div>
          </div>
@@ -194,14 +194,14 @@
                   <i class="fa-solid fa-magnifying-glass"></i>
                   <input type="text" aria-label="Search PH interview admin portal" placeholder="Search PH interview admin">
                </div>
-               <div class="ms-auto d-flex align-items-center gap-3 flex-shrink-0">
+               <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <div class="dropdown">
-                      <a href="#" class="boc d-flex align-items-center justify-content-center position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Live Activity" style="width:38px;height:38px;padding:0;border-radius:12px;text-decoration:none;color:var(--tx);" onclick="resetAdminActivityBadge('desktop')">
+                      <button class="boc d-flex align-items-center justify-content-center position-relative db-activity-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open live activity" title="Live Activity" style="width:38px;height:38px;padding:0;border-radius:12px;text-decoration:none;color:var(--tx);" onclick="resetAdminActivityBadge('desktop')">
                           <i class="fa-regular fa-bell"></i>
                           <span id="admin-activity-badge-desktop" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display:none; width: 10px; height: 10px;">
                               <span class="visually-hidden">New alerts</span>
                           </span>
-                      </a>
+                      </button>
                       <div class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 320px; border-radius: 12px; border: 1px solid var(--bd); background: var(--bg3); padding: 0; overflow: hidden; margin-top: 10px;">
                           <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--bd) !important; background: var(--sf);">
                               <div>
@@ -229,7 +229,7 @@
                           </div>
                       </div>
                   </div>
-                  <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleTheme()">
+                  <button class="boc d-flex align-items-center justify-content-center" id="dbThBtn" type="button" aria-label="Toggle color theme" title="Toggle color theme" style="width:38px;height:38px;padding:0;border-radius:12px" onclick="toggleTheme()">
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
                   </button>
@@ -297,6 +297,7 @@
             const isDesktopCollapsed = window.innerWidth >= 992 && document.body.classList.contains('collapsed-sidebar');
             if (toggle) {
                toggle.setAttribute('aria-expanded', isDesktopCollapsed ? 'false' : 'true');
+               toggle.setAttribute('aria-label', isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation');
                toggle.title = isDesktopCollapsed ? 'Expand navigation' : 'Collapse navigation';
             }
          }

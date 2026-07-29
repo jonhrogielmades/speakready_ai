@@ -4,8 +4,8 @@
 @section('content')
 <style>
     .feedback-shell {
-        max-width: 1120px;
-        margin: 0 auto;
+        max-width: none;
+        margin: 0;
     }
     .feedback-shell .feedback-hero {
         min-height: 236px;
@@ -704,7 +704,7 @@
 
     /* Match the compact Modules banner layout and theme behavior. */
     .feedback-shell .feedback-hero {
-        --feedback-hero-title-color: #fde047;
+        --feedback-hero-title-color: #ffffff;
         --feedback-hero-text-color: #334155;
         --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
@@ -724,7 +724,7 @@
     }
     html[data-theme="dark"] .feedback-shell .feedback-hero,
     :root:not(.lm) .feedback-shell .feedback-hero {
-        --feedback-hero-title-color: #fde047;
+        --feedback-hero-title-color: #ffffff;
         --feedback-hero-text-color: #e2e8f0;
         --feedback-hero-icon-bg: rgba(59, 130, 246, 0.2);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.32);
@@ -823,7 +823,7 @@
     }
 
     #feedbackModulesLikeHero.feedback-hero {
-        --feedback-hero-title-color: #fde047;
+        --feedback-hero-title-color: #ffffff;
         --feedback-hero-text-color: #334155;
         --feedback-hero-icon-bg: rgba(239, 246, 255, 0.92);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.42);
@@ -845,7 +845,7 @@
     }
     :root:not(.lm) #feedbackModulesLikeHero.feedback-hero,
     .dm #feedbackModulesLikeHero.feedback-hero {
-        --feedback-hero-title-color: #fde047;
+        --feedback-hero-title-color: #ffffff;
         --feedback-hero-text-color: #e2e8f0;
         --feedback-hero-icon-bg: rgba(59, 130, 246, 0.2);
         --feedback-hero-icon-border: rgba(147, 197, 253, 0.32);
@@ -1245,8 +1245,8 @@
 
         #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-title {
             margin: 0 0 3px !important;
-            color: #fde047 !important;
-            -webkit-text-fill-color: #fde047 !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
             font-size: 0.72rem !important;
             line-height: 1.15 !important;
             letter-spacing: 0 !important;
@@ -1719,6 +1719,325 @@
         50% {
             transform: translateY(-5px) rotate(1.5deg);
         }
+    }
+
+    body.user-desktop-shell .feedback-shell {
+        --feedback-shell-gap: 10px;
+        --feedback-shell-radius: 12px;
+        --feedback-shell-border: rgba(15, 23, 42, 0.12);
+        --feedback-shell-card: rgba(255, 255, 255, 0.98);
+        --feedback-shell-field: rgba(248, 250, 252, 0.92);
+        --feedback-shell-title: #0f172a;
+        --feedback-shell-text: #334155;
+        --feedback-shell-muted: #64748b;
+        --feedback-shell-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0 24px !important;
+        color: var(--feedback-shell-title) !important;
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+        overflow-x: hidden !important;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell .feedback-shell,
+    :root:not(.lm) body.user-desktop-shell .feedback-shell,
+    body.user-desktop-shell.dm .feedback-shell,
+    body.user-desktop-shell .dm .feedback-shell {
+        --feedback-shell-border: rgba(148, 163, 184, 0.24);
+        --feedback-shell-card: rgba(15, 23, 42, 0.96);
+        --feedback-shell-field: rgba(30, 41, 59, 0.92);
+        --feedback-shell-title: #f8fafc;
+        --feedback-shell-text: #e2e8f0;
+        --feedback-shell-muted: #cbd5e1;
+        --feedback-shell-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+    }
+
+    body.user-desktop-shell .feedback-shell > :is(.feedback-hero, .premium-panel) {
+        margin: 0 0 var(--feedback-shell-gap) !important;
+    }
+
+    body.user-desktop-shell .feedback-shell > :last-child {
+        margin-bottom: 0 !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero.feedback-hero {
+        position: relative !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 180px !important;
+        align-items: center !important;
+        min-height: 116px !important;
+        height: auto !important;
+        gap: 14px !important;
+        padding: 18px 178px 18px 20px !important;
+        border: 1px solid rgba(191, 219, 254, 0.86) !important;
+        border-radius: var(--feedback-shell-radius) !important;
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 26px rgba(37, 99, 235, 0.12) !important;
+        overflow: hidden !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero.feedback-hero::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero .feedback-hero-copy {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero .feedback-chat-mark {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        padding: 9px !important;
+        border: 1px solid rgba(147, 197, 253, 0.42) !important;
+        border-radius: 12px !important;
+        background: rgba(239, 246, 255, 0.92) !important;
+        color: #1d4ed8 !important;
+        box-shadow: none !important;
+        filter: none !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero .feedback-title {
+        margin: 0 0 5px !important;
+        color: var(--feedback-shell-title) !important;
+        -webkit-text-fill-color: var(--feedback-shell-title) !important;
+        background: none !important;
+        font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
+        line-height: 1.12 !important;
+        font-weight: 900 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero .feedback-subtitle {
+        max-width: 640px !important;
+        margin: 0 !important;
+        color: var(--feedback-shell-text) !important;
+        font-size: 0.84rem !important;
+        line-height: 1.42 !important;
+        font-weight: 600 !important;
+    }
+
+    body.user-desktop-shell #feedbackModulesLikeHero .feedback-hero-art {
+        display: block !important;
+        position: absolute !important;
+        right: 12px !important;
+        bottom: -10px !important;
+        width: clamp(140px, 12vw, 174px) !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        opacity: 0.96 !important;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+        animation: none !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .premium-panel {
+        padding: 14px !important;
+        border: 1px solid var(--feedback-shell-border) !important;
+        border-radius: var(--feedback-shell-radius) !important;
+        background: var(--feedback-shell-card) !important;
+        color: var(--feedback-shell-title) !important;
+        box-shadow: var(--feedback-shell-shadow) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .feedback-history-head {
+        display: grid !important;
+        grid-template-columns: minmax(0, 180px) minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: start !important;
+        margin-bottom: 10px !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .feedback-history-title {
+        margin: 0 !important;
+        color: var(--feedback-shell-title) !important;
+        font-size: 0.94rem !important;
+        line-height: 1.18 !important;
+        font-weight: 900 !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters {
+        display: grid !important;
+        grid-template-columns: minmax(160px, 1fr) 116px minmax(220px, 1.5fr) auto !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-clear-form,
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        grid-column: auto !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        order: 3 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-clear-form {
+        order: 4 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        min-height: 34px !important;
+        height: 34px !important;
+        padding: 6px 9px !important;
+        border: 1px solid var(--feedback-shell-border) !important;
+        border-radius: 9px !important;
+        background: var(--feedback-shell-field) !important;
+        color: var(--feedback-shell-text) !important;
+        box-shadow: none !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        display: flex !important;
+        align-items: center !important;
+        overflow: hidden !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text {
+        padding: 0 7px 0 2px !important;
+        color: var(--feedback-shell-muted) !important;
+        font-size: 0.72rem !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 0 !important;
+        color: var(--feedback-shell-text) !important;
+        font-size: 0.68rem !important;
+        font-weight: 800 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .feedback-empty-state {
+        width: 100% !important;
+        min-height: 96px !important;
+        margin: 0 !important;
+        justify-content: center !important;
+        border: 1px dashed var(--feedback-shell-border) !important;
+        border-radius: 10px !important;
+        background: var(--feedback-shell-field) !important;
+        color: var(--feedback-shell-muted) !important;
+        font-size: 0.72rem !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .feedback-table-wrap {
+        margin: 0 !important;
+        overflow-x: auto !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable {
+        margin: 0 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 6px !important;
+        color: var(--feedback-shell-text) !important;
+        font-size: 0.72rem !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable thead {
+        display: table-header-group !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable thead th {
+        padding: 7px 9px !important;
+        border: 0 !important;
+        color: var(--feedback-shell-muted) !important;
+        font-size: 0.58rem !important;
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable tbody tr {
+        display: table-row !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable tbody td {
+        display: table-cell !important;
+        padding: 9px !important;
+        border-top: 1px solid var(--feedback-shell-border) !important;
+        border-bottom: 1px solid var(--feedback-shell-border) !important;
+        background: var(--feedback-shell-field) !important;
+        color: var(--feedback-shell-text) !important;
+        vertical-align: middle !important;
+        font-size: 0.72rem !important;
+        line-height: 1.2 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable tbody td:first-child {
+        border-left: 1px solid var(--feedback-shell-border) !important;
+        border-radius: 10px 0 0 10px !important;
+        white-space: nowrap !important;
+        color: var(--feedback-shell-muted) !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable tbody td:last-child {
+        border-right: 1px solid var(--feedback-shell-border) !important;
+        border-radius: 0 10px 10px 0 !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable tbody td::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackTable .badge {
+        padding: 5px 8px !important;
+        border-radius: 999px !important;
+        font-size: 0.58rem !important;
+        line-height: 1 !important;
+        font-weight: 900 !important;
+        white-space: nowrap !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .feedback-history-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    body.user-desktop-shell .feedback-shell .feedback-history-actions .btn {
+        min-height: 30px !important;
+        padding: 6px 9px !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        font-size: 0.62rem !important;
+        font-weight: 900 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.user-desktop-shell .feedback-shell #feedbackPagination {
+        margin-top: 10px !important;
+        justify-content: flex-end !important;
     }
 </style>
 

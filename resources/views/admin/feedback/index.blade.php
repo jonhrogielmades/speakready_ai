@@ -6,8 +6,8 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: var(--sr-page-title-accent, #fde047) !important;
-        -webkit-text-fill-color: var(--sr-page-title-accent, #fde047) !important;
+        color: var(--sr-page-title-accent, #ffffff) !important;
+        -webkit-text-fill-color: var(--sr-page-title-accent, #ffffff) !important;
         text-transform: uppercase;
         text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18);
     }
@@ -19,7 +19,7 @@
         align-items: center;
         justify-content: center;
         background: rgba(255, 255, 255, 0.14);
-        color: var(--sr-page-title-accent, #fde047);
+        color: var(--sr-page-title-accent, #ffffff);
         flex: 0 0 auto;
     }
     .feedback-export-btn,
