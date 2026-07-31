@@ -69,32 +69,35 @@ fi
 
 chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
 
-# Run skipped composer scripts
-php artisan package:discover --ansi || true
-
-# Clear and cache configurations
-php artisan config:clear || true
-php artisan cache:clear || true
-php artisan view:clear || true
-php artisan route:clear || true
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
-
-# Repair existing partial voice session schemas before accepting web traffic.
-php artisan app:ensure-ai-provider-schema --force --create-missing || true
-php artisan app:ensure-voice-schema --force || true
-php artisan app:ensure-question-schema --force || true
-
-# Create storage symlink for public uploads
-php artisan storage:link --force || true
+# Do not block Render's port scanner on slow database/cache maintenance.
+# Remove stale cache files directly, then bind the web port as early as possible.
+rm -f bootstrap/cache/config.php bootstrap/cache/routes-*.php bootstrap/cache/views.php
 
 # Start PHP-FPM in the background
 php-fpm -D
 
-# Run database maintenance after the web server can bind to Render's required
-# port, so slow database connections do not cause a port scan deploy failure.
+# Run Laravel maintenance after PHP-FPM starts. Nginx binds to Render's required
+# port immediately below while these slower tasks continue in the background.
 (
+    echo "Running Render startup maintenance." >&2
+
+    # Run skipped composer scripts
+    php artisan package:discover --ansi || true
+
+    # Clear stale framework state before schema work.
+    php artisan config:clear || true
+    php artisan cache:clear || true
+    php artisan view:clear || true
+    php artisan route:clear || true
+
+    # Repair schemas that can be missing in partially migrated Render databases.
+    php artisan app:ensure-ai-provider-schema --force --create-missing || true
+    php artisan app:ensure-voice-schema --force --create-missing || true
+    php artisan app:ensure-question-schema --force --create-missing || true
+
+    # Create storage symlink for public uploads.
+    php artisan storage:link --force || true
+
     php artisan migrate --force || true
     php artisan app:ensure-ai-provider-schema --force --create-missing || true
     php artisan app:ensure-voice-schema --force --create-missing || true
@@ -110,6 +113,13 @@ php-fpm -D
 
     # Seed the database automatically (uses firstOrCreate so it's safe to run multiple times)
     php artisan db:seed --force || true
+
+    # Rebuild optimized caches after schema and environment repairs complete.
+    php artisan config:cache || true
+    php artisan route:cache || true
+    php artisan view:cache || true
+
+    echo "Render startup maintenance complete." >&2
 ) &
 
 # Start Nginx in the foreground (this keeps the container running)
