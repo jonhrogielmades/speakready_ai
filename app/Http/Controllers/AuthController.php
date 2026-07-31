@@ -49,10 +49,17 @@ class AuthController extends Controller
             false
         );
 
+        $registrationMessage = 'Registration successful. Welcome to SpeakReady AI!';
+
         if ($user->is_admin) {
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('admin.dashboard')
+                ->with('success', $registrationMessage)
+                ->with('registration_success', true);
         }
-        return redirect()->route('dashboard');
+
+        return redirect()->route('dashboard')
+            ->with('success', $registrationMessage)
+            ->with('registration_success', true);
     }
 
     public function login(Request $request)

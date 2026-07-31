@@ -11,6 +11,8 @@ class InterviewSession extends Model
     protected $fillable = [
         'user_id',
         'game_level_id',
+        'job_application_id',
+        'interview_pack_id',
         'category_id',
         'difficulty',
         'target_position',
@@ -26,6 +28,7 @@ class InterviewSession extends Model
         'question_types',
         'ai_assistance_level',
         'live_feedback_mode',
+        'pressure_mode',
         'assessment_mode',
         'interview_format',
         'accommodation_profile',
@@ -59,6 +62,7 @@ class InterviewSession extends Model
         'share_expires_at' => 'datetime',
         'share_permissions' => 'array',
         'share_hide_sensitive' => 'boolean',
+        'pressure_mode' => 'boolean',
     ];
 
     public static function hasColumn(string $column): bool
@@ -131,6 +135,16 @@ class InterviewSession extends Model
     public function gameLevel()
     {
         return $this->belongsTo(GameLevel::class);
+    }
+
+    public function jobApplication()
+    {
+        return $this->belongsTo(JobApplication::class);
+    }
+
+    public function interviewPack()
+    {
+        return $this->belongsTo(InterviewPack::class);
     }
 
     public function answers()

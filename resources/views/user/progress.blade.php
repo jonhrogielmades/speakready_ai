@@ -4875,8 +4875,8 @@
 
         #progress-stats {
             display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 5px !important;
             margin-bottom: var(--progress-mobile-gap) !important;
         }
 
@@ -4890,14 +4890,14 @@
             position: relative;
             align-items: stretch;
             justify-items: stretch;
-            min-height: 100px !important;
-            padding: 11px !important;
+            min-height: 84px !important;
+            padding: 7px 4px !important;
             overflow: hidden;
             border-radius: var(--progress-mobile-radius) !important;
             background: var(--progress-mobile-card) !important;
             border: 1px solid var(--progress-mobile-border) !important;
             box-shadow: var(--progress-mobile-shadow) !important;
-            text-align: left;
+            text-align: center;
         }
 
         #sec-progress-tracking .progress-stat-card::after {
@@ -4911,29 +4911,30 @@
         }
 
         #sec-progress-tracking .progress-stat-icon {
-            width: 28px !important;
-            height: 28px !important;
-            margin: 0 0 13px !important;
+            width: 24px !important;
+            height: 24px !important;
+            margin: 0 auto 9px !important;
             border-radius: 8px !important;
             color: var(--stat-accent, #2563eb);
             background: color-mix(in srgb, var(--stat-accent, #2563eb) 12%, transparent);
-            font-size: 0.76rem !important;
+            font-size: 0.68rem !important;
         }
 
         #sec-progress-tracking .progress-stat-value {
             color: var(--progress-mobile-title);
-            font-size: clamp(1rem, 5vw, 1.18rem) !important;
+            font-size: clamp(0.74rem, 2.8vw, 0.9rem) !important;
             line-height: 1.04 !important;
             overflow-wrap: anywhere;
         }
 
         #sec-progress-tracking .progress-stat-label {
-            margin-top: 5px !important;
+            margin-top: 4px !important;
             color: var(--progress-mobile-muted);
-            font-size: 0.58rem !important;
+            font-size: clamp(0.38rem, 1.65vw, 0.46rem) !important;
             line-height: 1.14;
             font-weight: 850;
             text-transform: uppercase;
+            overflow-wrap: anywhere;
         }
 
         #sec-progress-tracking :is(
@@ -5018,6 +5019,15 @@
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) !important;
             gap: 10px !important;
+        }
+
+        #sec-progress-tracking #history-table .history-top {
+            gap: 0 !important;
+            margin-bottom: 7px !important;
+        }
+
+        #sec-progress-tracking #history-table .history-heading {
+            margin-bottom: 0 !important;
         }
 
         #sec-progress-tracking :is(
@@ -5321,6 +5331,17 @@
             text-align: center;
         }
 
+        #sec-progress-tracking #history-table .skill-empty-state {
+            min-height: 74px !important;
+            padding: 10px 8px !important;
+        }
+
+        #sec-progress-tracking #history-table .skill-empty-text {
+            max-width: 30ch !important;
+            font-size: 0.66rem !important;
+            line-height: 1.18 !important;
+        }
+
         #sec-progress-tracking :is(.voice-empty-icon, .skill-empty-icon) {
             width: 46px !important;
             height: 46px !important;
@@ -5372,35 +5393,36 @@
         }
 
         #sec-progress-tracking .badge-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 8px !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 5px !important;
         }
 
         #sec-progress-tracking .badge-item {
-            min-height: 94px;
-            padding: 10px 8px !important;
+            min-height: 76px;
+            padding: 7px 3px !important;
         }
 
         #sec-progress-tracking .badge-medal {
-            width: 38px !important;
-            height: 38px !important;
-            margin-bottom: 6px !important;
-            border-radius: var(--progress-mobile-radius) !important;
-            font-size: 0.95rem !important;
+            width: 28px !important;
+            height: 28px !important;
+            margin-bottom: 5px !important;
+            border-radius: 7px !important;
+            font-size: 0.76rem !important;
             box-shadow: none !important;
         }
 
         #sec-progress-tracking .badge-title {
             color: var(--progress-mobile-title);
-            font-size: 0.64rem !important;
-            line-height: 1.14 !important;
+            font-size: 0.5rem !important;
+            line-height: 1.08 !important;
         }
 
         #sec-progress-tracking .badge-desc {
             display: block;
             color: var(--progress-mobile-muted);
-            font-size: 0.54rem !important;
-            line-height: 1.15 !important;
+            margin-top: 3px !important;
+            font-size: 0.44rem !important;
+            line-height: 1.1 !important;
         }
     }
 
@@ -5425,12 +5447,12 @@
         }
 
         #progress-stats {
-            gap: 7px !important;
+            gap: 4px !important;
         }
 
         #sec-progress-tracking .progress-stat-card {
-            min-height: 96px !important;
-            padding: 10px !important;
+            min-height: 78px !important;
+            padding: 6px 3px !important;
         }
     }
 
@@ -5454,9 +5476,13 @@
             font-size: 0.56rem !important;
         }
 
-        #sec-progress-tracking .progress-actions,
-        #progress-stats {
+        #sec-progress-tracking .progress-actions {
             grid-template-columns: 1fr !important;
+        }
+
+        #progress-stats {
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 4px !important;
         }
 
         #voice-progress .row.text-center {
@@ -6481,15 +6507,15 @@
         <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.3s;">
             <div class="premium-panel progress-stat-card" style="--stat-accent:#16a34a">
                 <div class="progress-stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                <div class="progress-stat-value">{{ $totalPracticeDays }}</div>
-                <div class="progress-stat-label">Total Practice Days</div>
+                <div class="progress-stat-value">{{ $totalPracticeDays }} {{ $totalPracticeDays == 1 ? 'Day' : 'Days' }}</div>
+                <div class="progress-stat-label">Total Practice</div>
             </div>
         </div>
         <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.4s;">
             <div class="premium-panel progress-stat-card" style="--stat-accent:#2563eb">
                 <div class="progress-stat-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
                 <div class="progress-stat-value">{{ $readinessMovement?->label ?? 'N/A' }}</div>
-                <div class="progress-stat-label">Readiness vs Last</div>
+                <div class="progress-stat-label">VS Last</div>
             </div>
         </div>
     </div>
@@ -6712,17 +6738,17 @@
                         <div class="history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
                         <h5 class="history-title">Interview Performance History</h5>
                     </div>
+                    @if($sessions->count() > 0)
                     <div class="history-actions">
-                        @if($sessions->count() > 0)
-                            <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger history-clear-btn">
-                                    <i class="fa-solid fa-trash-can me-1"></i> Clear All
-                                </button>
-                            </form>
-                        @endif
+                        <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-outline-danger history-clear-btn">
+                                <i class="fa-solid fa-trash-can me-1"></i> Clear All
+                            </button>
+                        </form>
                     </div>
+                    @endif
                 </div>
                 <label class="history-search" for="historySearch">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -7090,7 +7116,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ asset('js/chart.umd.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
@@ -7239,8 +7265,8 @@
             if(searchInput) {
                 searchInput.addEventListener('keyup', function() {
                     const filter = searchInput.value.toLowerCase();
-                    const rows = document.querySelectorAll('table tbody tr');
-                    const cards = document.querySelectorAll('[data-history-record]');
+                    const rows = document.querySelectorAll('#history-table table tbody tr');
+                    const cards = document.querySelectorAll('#history-table [data-history-record]');
                     rows.forEach(row => {
                         const text = row.textContent.toLowerCase();
                         if(text.includes(filter)) {
@@ -7256,15 +7282,92 @@
                 });
             }
 
+            const progressPage = document.querySelector('.db-section');
+            const temporaryExportHiding = (callback) => {
+                if (!progressPage) {
+                    callback();
+                    return;
+                }
+
+                const controls = progressPage.querySelectorAll('button, input');
+                const originalDisplays = [];
+                controls.forEach(control => {
+                    originalDisplays.push(control.style.display);
+                    control.style.display = 'none';
+                });
+
+                const restore = () => {
+                    controls.forEach((control, index) => {
+                        control.style.display = originalDisplays[index];
+                    });
+                };
+
+                try {
+                    callback(restore);
+                } catch (error) {
+                    restore();
+                    throw error;
+                }
+            };
+
+            const cloneHistoryTableWithoutActions = () => {
+                const table = document.querySelector('#history-table table');
+                if (!table) return null;
+
+                const clonedTable = table.cloneNode(true);
+                const headers = clonedTable.querySelectorAll('th');
+                if (headers.length > 0) headers[headers.length - 1].remove();
+
+                clonedTable.querySelectorAll('tbody tr').forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length > 0) cells[cells.length - 1].remove();
+                });
+
+                return clonedTable;
+            };
+
+            const csvEscape = (value) => {
+                const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+                return `"${text.replace(/"/g, '""')}"`;
+            };
+
+            const downloadCsvFromTable = (table) => {
+                const rows = Array.from(table.querySelectorAll('tr'))
+                    .map(row => Array.from(row.querySelectorAll('th,td')).map(cell => csvEscape(cell.textContent)).join(','))
+                    .join('\n');
+                const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'interview_history.csv';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+            };
+
             // Export PDF
             const exportPdfBtn = document.getElementById('exportPdfBtn');
             if (exportPdfBtn) {
                 exportPdfBtn.addEventListener('click', function() {
-                    const element = document.querySelector('.db-section');
-                    if (!element || typeof window.html2pdf !== 'function') {
-                        alert('PDF export is not available right now. Please use your browser print option instead.');
+                    const element = progressPage;
+                    if (!element) {
                         return;
                     }
+
+                    if (typeof window.html2pdf !== 'function') {
+                        temporaryExportHiding((restore) => {
+                            const afterPrint = () => {
+                                restore();
+                                window.removeEventListener('afterprint', afterPrint);
+                            };
+                            window.addEventListener('afterprint', afterPrint);
+                            window.print();
+                            setTimeout(afterPrint, 1200);
+                        });
+                        return;
+                    }
+
                     const opt = {
                         margin:       [0.5, 0.5, 0.5, 0.5],
                         filename:     'progress_report.pdf',
@@ -7272,31 +7375,12 @@
                         html2canvas:  { scale: 2, useCORS: true },
                         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                     };
-                    
-                    // Hide buttons during export
-                    const buttons = element.querySelectorAll('button');
-                    const originalDisplays = [];
-                    buttons.forEach(btn => {
-                        originalDisplays.push(btn.style.display);
-                        btn.style.display = 'none';
-                    });
 
-                    // Hide inputs like search during export
-                    const inputs = element.querySelectorAll('input');
-                    const originalInputDisplays = [];
-                    inputs.forEach(input => {
-                        originalInputDisplays.push(input.style.display);
-                        input.style.display = 'none';
-                    });
-                    
-                    html2pdf().set(opt).from(element).save().catch(() => {
-                        alert('PDF export failed. Please try again or use your browser print option.');
-                    }).finally(() => {
-                        buttons.forEach((btn, index) => {
-                            btn.style.display = originalDisplays[index];
-                        });
-                        inputs.forEach((input, index) => {
-                            input.style.display = originalInputDisplays[index];
+                    temporaryExportHiding((restore) => {
+                        html2pdf().set(opt).from(element).save().catch(() => {
+                            window.print();
+                        }).finally(() => {
+                            restore();
                         });
                     });
                 });
@@ -7306,25 +7390,15 @@
             const exportExcelBtn = document.getElementById('exportExcelBtn');
             if (exportExcelBtn) {
                 exportExcelBtn.addEventListener('click', function() {
-                    if (!window.XLSX) {
-                        alert('Excel export is not available right now.');
-                        return;
-                    }
-                    const table = document.querySelector('#history-table table');
+                    const table = cloneHistoryTableWithoutActions();
                     if (table) {
-                        const clonedTable = table.cloneNode(true);
-                        const ths = clonedTable.querySelectorAll('th');
-                        if (ths.length > 0) ths[ths.length - 1].remove();
-                        const trs = clonedTable.querySelectorAll('tbody tr');
-                        trs.forEach(tr => {
-                            const tds = tr.querySelectorAll('td');
-                            if (tds.length > 0) tds[tds.length - 1].remove();
-                        });
+                        if (!window.XLSX) {
+                            downloadCsvFromTable(table);
+                            return;
+                        }
 
-                        const wb = XLSX.utils.table_to_book(clonedTable, {sheet: "History"});
+                        const wb = XLSX.utils.table_to_book(table, {sheet: "History"});
                         XLSX.writeFile(wb, 'interview_history.xlsx');
-                    } else {
-                        alert("No history table found to export.");
                     }
                 });
             }

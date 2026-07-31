@@ -66,13 +66,72 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $response = $this->actingAs($user)->get(route('user.feedback'));
 
         $response->assertOk()
-            ->assertSee('Behavioral')
+            ->assertSee('General Job Interview')
             ->assertSee('Score pending')
             ->assertSee('Not scored')
             ->assertDontSee('Needs Improvement', false)
             ->assertViewHas('feedbackCategories', function ($categories) {
-                return $categories->all() === ['Behavioral'];
+                return $categories->all() === ['General Job Interview'];
             });
+    }
+
+    public function test_feedback_filters_search_and_sort_use_server_side_results(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $behavioral = $this->category('Behavioral');
+        $technical = $this->category('IT Interview');
+        $bpo = $this->category('Communication');
+
+        $this->completedSessionFor($user, $behavioral, 70, now()->subDays(3), [
+            'target_position' => 'Office Associate',
+        ]);
+        $itSession = $this->completedSessionFor($user, $technical, 88, now()->subDay(), [
+            'target_position' => 'Junior Software Developer',
+            'interview_focus' => 'software technical screening',
+        ]);
+        $this->completedSessionFor($user, $bpo, 92, now()->subDays(2), [
+            'target_position' => 'Customer Success Agent',
+            'interview_focus' => 'customer support contact center',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('user.feedback', [
+            'scenario' => 'IT / Programming Interview',
+            'search' => 'software',
+            'sort' => 'asc',
+        ]));
+
+        $response->assertOk()
+            ->assertSee('name="scenario"', false)
+            ->assertSee('value="IT / Programming Interview" selected', false)
+            ->assertSee('name="search"', false)
+            ->assertSee('value="software"', false)
+            ->assertSee('Oldest First')
+            ->assertSee('data-scenario="IT / Programming Interview"', false)
+            ->assertDontSee('data-scenario="General Job Interview"', false)
+            ->assertDontSee('data-scenario="BPO / Customer Support Interview"', false)
+            ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
+                && $sessions->getCollection()->first()?->id === $itSession->id)
+            ->assertViewHas('feedbackCategories', function ($categories) {
+                return $categories->all() === [
+                    'BPO / Customer Support Interview',
+                    'General Job Interview',
+                    'IT / Programming Interview',
+                ];
+            });
+    }
+
+    public function test_feedback_empty_state_distinguishes_filters_from_no_history(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Behavioral');
+
+        $this->completedSessionFor($user, $category, 70, now());
+
+        $this->actingAs($user)
+            ->get(route('user.feedback', ['search' => 'not-present']))
+            ->assertOk()
+            ->assertSee('No feedback records match your current filters.')
+            ->assertDontSee('Complete a practice interview to generate feedback.');
     }
 
     public function test_reports_do_not_render_placeholder_scores_for_unscored_sessions(): void
@@ -160,9 +219,13 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.progress'))
             ->assertOk()
+            ->assertSee(asset('js/chart.umd.min.js'), false)
+            ->assertDontSee('cdn.jsdelivr.net/npm/chart.js', false)
             ->assertSee('window.Chart && document.getElementById', false)
             ->assertSee('typeof window.html2pdf !== \'function\'', false)
-            ->assertSee('!window.XLSX', false);
+            ->assertSee('window.print()', false)
+            ->assertSee('!window.XLSX', false)
+            ->assertSee('downloadCsvFromTable(table)', false);
 
         $this->actingAs($user)
             ->get(route('user.reports'))
@@ -181,9 +244,9 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         ]);
     }
 
-    private function completedSessionFor(User $user, Category $category, ?int $score, $createdAt): InterviewSession
+    private function completedSessionFor(User $user, Category $category, ?int $score, $createdAt, array $overrides = []): InterviewSession
     {
-        $session = InterviewSession::create([
+        $session = InterviewSession::create(array_merge([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'difficulty' => 'medium',
@@ -192,7 +255,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             'coach_focus_mode' => 'balanced',
             'response_mode' => 'text',
             'status' => 'completed',
-        ]);
+        ], $overrides));
 
         $session->forceFill([
             'created_at' => $createdAt,

@@ -368,31 +368,82 @@ class UserController extends Controller
         ));
     }
 
-    public function feedback()
+    public function feedback(Request $request)
     {
         $baseQuery = InterviewSession::where('user_id', Auth::id())
             ->where('interview_sessions.status', 'completed');
 
+        $allCompletedSessions = (clone $baseQuery)
+            ->with('category')
+            ->get();
+
+        $feedbackCategories = $allCompletedSessions
+            ->map(fn ($session) => $this->practiceScenarioLabel($session))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $selectedScenario = trim((string) $request->query('scenario', ''));
+        $search = trim((string) $request->query('search', ''));
+        $sort = $request->query('sort') === 'asc' ? 'asc' : 'desc';
+
+        $matchingScenarioIds = collect();
+        if ($selectedScenario !== '') {
+            $matchingScenarioIds = $allCompletedSessions
+                ->filter(fn ($session) => $this->practiceScenarioLabel($session) === $selectedScenario)
+                ->pluck('id')
+                ->values();
+        }
+
+        $matchingSearchScenarioIds = collect();
+        if ($search !== '') {
+            $needle = Str::lower($search);
+            $matchingSearchScenarioIds = $allCompletedSessions
+                ->filter(fn ($session) => Str::contains(Str::lower($this->practiceScenarioLabel($session)), $needle))
+                ->pluck('id')
+                ->values();
+        }
+
         $sessions = (clone $baseQuery)
             ->with(['category', 'score', 'feedback'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->when($selectedScenario !== '', fn ($query) => $query->whereIn('id', $matchingScenarioIds))
+            ->when($search !== '', function ($query) use ($search, $matchingSearchScenarioIds) {
+                $like = '%'.$search.'%';
+
+                $query->where(function ($query) use ($like, $matchingSearchScenarioIds) {
+                    $query->where('target_position', 'like', $like)
+                        ->orWhere('interview_focus', 'like', $like)
+                        ->orWhere('difficulty', 'like', $like)
+                        ->orWhereHas('category', fn ($categoryQuery) => $categoryQuery->where('title', 'like', $like))
+                        ->orWhereHas('feedback', function ($feedbackQuery) use ($like) {
+                            $feedbackQuery->where('strengths', 'like', $like)
+                                ->orWhere('weaknesses', 'like', $like)
+                                ->orWhere('improvement_suggestions', 'like', $like);
+                        });
+
+                    if ($matchingSearchScenarioIds->isNotEmpty()) {
+                        $query->orWhereIn('id', $matchingSearchScenarioIds);
+                    }
+                });
+            })
+            ->orderBy('created_at', $sort)
+            ->paginate(10)
+            ->withQueryString();
         $sessions->getCollection()->transform(function ($session) {
             $session->practice_scenario = $this->practiceScenarioLabel($session);
 
             return $session;
         });
 
-        $feedbackCategories = (clone $baseQuery)
-            ->with('category')
-            ->get()
-            ->pluck('category.title')
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
+        $feedbackFilters = [
+            'scenario' => $selectedScenario,
+            'search' => $search,
+            'sort' => $sort,
+        ];
+        $hasFeedbackRecords = $allCompletedSessions->isNotEmpty();
 
-        return view('user.feedback', compact('sessions', 'feedbackCategories'));
+        return view('user.feedback', compact('sessions', 'feedbackCategories', 'feedbackFilters', 'hasFeedbackRecords'));
     }
 
     public function review($id)
@@ -2159,6 +2210,8 @@ PROMPT;
 
         Auth::logout();
         $user->delete(); // Soft delete as configured in User model
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Your account has been deleted.');
     }

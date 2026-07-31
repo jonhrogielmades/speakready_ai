@@ -24,6 +24,11 @@ class PageSmokeTest extends TestCase
     public function test_main_user_pages_render_successfully(): void
     {
         [$user, $category, $session, $module, $gameCategory] = $this->seedUserPageData();
+        $activeSession = $this->activeSession($user, $category);
+        $this->question($category, [
+            'interview_session_id' => $activeSession->id,
+            'question_text' => 'Walk me through a recent project.',
+        ]);
 
         $routes = [
             route('dashboard'),
@@ -36,6 +41,8 @@ class PageSmokeTest extends TestCase
             route('user.reports'),
             route('user.coach'),
             route('user.learning', ['category_id' => $gameCategory->id]),
+            route('user.applications.index'),
+            route('user.packs.index'),
             route('user.modules.index'),
             route('user.modules.show', $module),
             route('user.skills'),
@@ -49,7 +56,7 @@ class PageSmokeTest extends TestCase
         foreach ($routes as $url) {
             $request = $this->actingAs($user);
             if ($url === route('interview.session')) {
-                $request = $request->withSession(['active_interview_id' => $session->id]);
+                $request = $request->withSession(['active_interview_id' => $activeSession->id]);
             }
 
             $response = $request->get($url);
@@ -59,6 +66,28 @@ class PageSmokeTest extends TestCase
                 $response->getStatusCode(),
                 "Expected {$url} to render with 200. Redirected to: " . ($response->headers->get('Location') ?: 'n/a')
             );
+
+            $content = $response->getContent();
+            if (str_contains($content, 'data-app-surface="user"')) {
+                $this->assertStringContainsString('initSpeakReadyFallbackTour', $content, "Expected {$url} to include the user tutorial fallback.");
+                $this->assertStringContainsString('pageScope:', $content, "Expected {$url} to scope tutorial context to the current page.");
+                $this->assertStringContainsString('__speakReadyTourScope', $content, "Expected {$url} to guard tutorials against stale page reuse.");
+                $this->assertStringContainsString('isForCurrentPage', $content, "Expected {$url} to expose current-page tutorial validation.");
+                $this->assertStringContainsString('.sr-tour-highlighted', $content, "Expected {$url} to keep the selected tutorial target visually clear.");
+                $this->assertStringContainsString('background: transparent;', $content, "Expected {$url} tutorial overlay not to tint the selected target.");
+                $this->assertStringContainsString('0 0 0 9999px rgba(2, 6, 23, 0.62)', $content, "Expected {$url} tutorial dimming to sit outside the selected target.");
+                $this->assertStringNotContainsString('A tutorial is not available for this specific page.', $content, "Expected {$url} to have a functional tutorial.");
+                $this->assertStringNotContainsString('The tutorial is still loading. Please try again in a moment.', $content, "Expected {$url} to start the tutorial without the loading alert.");
+                $this->assertStringNotContainsString('cdn.jsdelivr.net/npm/driver.js', $content, "Expected {$url} to use the local tutorial renderer.");
+            }
+
+            if ($url === route('interview.setup')) {
+                $this->assertStringContainsString('setup-tutorial-mode', $content);
+                $this->assertStringContainsString('setInterviewSetupTutorialMode', $content);
+                $this->assertStringContainsString('activateInterviewSetupTourPanel', $content);
+                $this->assertStringContainsString('#panel-inclusive', $content);
+                $this->assertStringContainsString('initInterviewSetupTour', $content);
+            }
         }
 
         $conversation = ChatbotConversation::create(['user_id' => $user->id, 'title' => 'Interview preparation']);
@@ -239,6 +268,20 @@ class PageSmokeTest extends TestCase
         ]);
 
         return $session;
+    }
+
+    private function activeSession(User $user, Category $category): InterviewSession
+    {
+        return InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Developer',
+            'num_questions' => 1,
+            'coach_focus_mode' => 'balanced',
+            'response_mode' => 'text',
+            'status' => 'in_progress',
+        ]);
     }
 
     private function question(Category $category, array $overrides = []): Question

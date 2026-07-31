@@ -7834,3 +7834,308 @@ body .modal-title {
   -webkit-text-fill-color: var(--tx) !important;
   text-shadow: none !important;
 }
+
+/* ======================== DESKTOP RESPONSIVE HARDENING ======================== */
+@media (min-width: 992px) {
+  body.desktop-shell,
+  body.desktop-shell #dashboard,
+  body.desktop-shell .db-main,
+  body.desktop-shell .db-content,
+  body.desktop-shell .db-section.active {
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+
+  body.desktop-shell #dashboard {
+    width: 100%;
+    overflow-x: clip;
+  }
+
+  body.desktop-shell .db-main {
+    width: auto;
+    max-width: calc(100vw - var(--dsb));
+    overflow-x: clip;
+  }
+
+  body.desktop-shell .db-content {
+    width: 100% !important;
+    max-width: min(var(--desktop-content-max, 1480px), calc(100vw - var(--dsb))) !important;
+    padding-inline: clamp(18px, 2.1vw, 34px) !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --desktop-content-max: 1480px;
+  }
+
+  body.admin-shell #dashboard {
+    --desktop-content-max: 1640px;
+  }
+
+  body.desktop-shell #dashboard .db-top {
+    min-width: 0;
+    max-width: calc(100vw - var(--dsb));
+  }
+
+  body.desktop-shell #dashboard .db-top-actions,
+  body.desktop-shell #dashboard .db-user-pill,
+  body.desktop-shell #dashboard .db-dropdown,
+  body.desktop-shell #dashboard .dropdown-menu {
+    min-width: 0 !important;
+  }
+
+  body.desktop-shell #dashboard .db-dropdown,
+  body.desktop-shell #dashboard .dropdown-menu {
+    max-width: min(420px, calc(100vw - var(--dsb) - 32px)) !important;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(
+    .container,
+    .container-fluid,
+    .row,
+    .row > *,
+    .col,
+    [class*="col-"],
+    .d-flex,
+    .d-grid,
+    [class*="grid"],
+    [class*="layout"],
+    [class*="shell"],
+    form,
+    fieldset,
+    .tab-content,
+    .tab-pane,
+    .card,
+    .premium-card,
+    .premium-panel,
+    .setup-panel,
+    .panel,
+    .module-card,
+    .ll-module-card,
+    .level-card,
+    .sr-card,
+    .print-card,
+    .table-responsive
+  ) {
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(
+    p,
+    small,
+    span,
+    strong,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    label,
+    a:not(.btn):not(.db-nl),
+    td,
+    th
+  ) {
+    overflow-wrap: anywhere;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(
+    .db-section.active > .mb-4:first-child,
+    .db-section.active > form > .mb-4:first-child,
+    .card-header,
+    .card-footer,
+    .action-buttons,
+    .btn-toolbar,
+    #feedback-filters,
+    .progress-actions
+  ) {
+    flex-wrap: wrap !important;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(
+    .table-responsive,
+    [id$="TableWrapper"],
+    #mainTableWrapper,
+    #mainUsersTableWrapper,
+    #mainSessionsTableWrapper,
+    #mainArchiveTableWrapper,
+    #mainFeedbackTableWrapper,
+    #mainComplaintsTableWrapper,
+    #mainModulesTableWrapper,
+    #mainProvidersTableWrapper,
+    #mainCategoriesTableWrapper,
+    #mainAuditLogsTableWrapper,
+    #moduleUsageTableWrapper
+  ) {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(.table, .custom-table, .db-table) {
+    width: 100%;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(.table, .custom-table, .db-table) :where(th, td) {
+    max-width: min(34ch, 28vw);
+  }
+
+  body.desktop-shell #dashboard .db-content :where(
+    .chat-container,
+    .chat-main,
+    .chat-messages,
+    .chat-input-wrapper,
+    .chat-textarea
+  ) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(img, svg, video, canvas, iframe) {
+    max-width: 100% !important;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --dsb: 236px;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar {
+    width: var(--dsb) !important;
+    min-width: var(--dsb) !important;
+    max-width: var(--dsb) !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-logo {
+    min-height: 76px !important;
+    padding-inline: 14px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-logo .logo-i {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-brand-text {
+    font-size: 0.92rem !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-nav {
+    padding-inline: 10px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-nl {
+    gap: 8px !important;
+    padding-inline: 8px !important;
+    font-size: 0.78rem !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-nl i {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    flex-basis: 30px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top {
+    height: 72px !important;
+    left: var(--dsb) !important;
+    gap: 8px !important;
+    padding-inline: 14px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top .boc,
+  body.user-desktop-shell:not(.admin-shell) #dashboard #notifWrap,
+  body.user-desktop-shell:not(.admin-shell) #dashboard #bellBtn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    flex-basis: 40px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill {
+    min-height: 42px !important;
+    max-width: 210px !important;
+    padding: 4px 9px 4px 5px !important;
+    gap: 7px !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+  }
+
+  body.admin-shell .db-top {
+    gap: 8px !important;
+    padding-inline: 16px !important;
+  }
+
+  body.admin-shell .db-top-search {
+    flex: 1 1 220px !important;
+    min-width: 0 !important;
+    max-width: 300px !important;
+  }
+
+  body.admin-shell .db-user-pill {
+    max-width: 64px !important;
+    padding-inline: 7px !important;
+  }
+
+  body.admin-shell .db-user-pill .d-none.d-md-block {
+    display: none !important;
+  }
+
+  body.desktop-shell #dashboard .db-content {
+    padding-inline: 18px !important;
+  }
+
+  body.desktop-shell #dashboard .db-content :where(
+    .sr-dashboard-shell,
+    .sr-summary-grid,
+    .feedback-shell .feedback-hero,
+    .report-grid,
+    .reports-grid,
+    .progress-desktop-grid,
+    .learning-desktop-grid,
+    .mission-desktop-grid,
+    .mastery-desktop-grid,
+    .skills-desktop-grid
+  ) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  body.desktop-shell #dashboard .db-content .chat-sidebar {
+    width: clamp(220px, 26vw, 260px) !important;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --dsb: 252px;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-sidebar {
+    width: var(--dsb) !important;
+    min-width: var(--dsb) !important;
+    max-width: var(--dsb) !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top {
+    left: var(--dsb) !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard {
+    --desktop-content-max: 1560px;
+  }
+
+  body.admin-shell #dashboard {
+    --desktop-content-max: 1720px;
+  }
+}

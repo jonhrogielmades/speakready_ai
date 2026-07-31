@@ -61,4 +61,44 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertRedirect(route('dashboard'));
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
+
+    public function test_registration_logs_user_in_and_flashes_success_alert(): void
+    {
+        $response = $this->post(route('register'), [
+            'name' => 'New Interview User',
+            'email' => 'new-interview-user@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('dashboard'))
+            ->assertSessionHas('registration_success', true)
+            ->assertSessionHas('success', 'Registration successful. Welcome to SpeakReady AI!');
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'new-interview-user@example.com',
+        ]);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => User::where('email', 'new-interview-user@example.com')->value('id'),
+        ]);
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('id="srFlashModal"', false)
+            ->assertSee('data-sr-flash-modal', false)
+            ->assertSee('Registration successful. Welcome to SpeakReady AI!');
+    }
+
+    public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('id="loginForm"', false)
+            ->assertSee('id="signupForm"', false)
+            ->assertSee('id="loginTransitionOverlay"', false)
+            ->assertSee('id="authTransitionTitle"', false)
+            ->assertSee('Creating your account...', false)
+            ->assertSee("showLoginTransition('register')", false);
+    }
 }

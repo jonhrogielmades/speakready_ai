@@ -18,7 +18,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=14') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=15') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
@@ -2564,6 +2564,7 @@
       <!-- ======================== SCRIPTS ======================== -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      @include('partials.flash-modal')
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>

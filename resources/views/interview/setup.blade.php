@@ -4,6 +4,12 @@
 @php
     $sourcePacks = $sourcePacks ?? [];
     $interviewCategories = ($categories ?? collect())->values();
+    $selectedApplication = $selectedApplication ?? null;
+    $selectedPack = $selectedPack ?? null;
+    $packQuestionTypes = collect($selectedPack?->question_types ?? [])
+        ->filter(fn ($type) => in_array($type, ['Behavioral', 'Situational', 'Technical', 'Personal'], true))
+        ->values()
+        ->all();
 
     $scenarioLabelForCategory = function (?string $categoryTitle): string {
         $title = trim((string) $categoryTitle);
@@ -72,24 +78,63 @@
         })
         ->values();
     $firstScenario = $scenarioOptions->first();
-    $selectedCategoryId = (int) old('category_id', $firstScenario['category_id'] ?? 0);
+    $packText = strtolower(implode(' ', array_filter([
+        $selectedPack?->name,
+        $selectedPack?->company,
+        $selectedPack?->role_family,
+        $selectedPack?->interview_focus,
+        $selectedPack?->company_persona,
+    ])));
+    $packScenario = null;
+    if ($packText !== '') {
+        $packScenarioNeedles = match (true) {
+            str_contains($packText, 'technical') || str_contains($packText, 'software') || str_contains($packText, 'programming') => ['it / programming', 'programming', 'technical'],
+            str_contains($packText, 'customer') || str_contains($packText, 'bpo') || str_contains($packText, 'contact center') => ['bpo', 'customer'],
+            str_contains($packText, 'scholarship') => ['scholarship'],
+            str_contains($packText, 'college') || str_contains($packText, 'admission') => ['college', 'admission'],
+            default => ['general job', 'job interview'],
+        };
+
+        $packScenario = $scenarioOptions->first(function ($scenario) use ($packScenarioNeedles) {
+            $label = strtolower($scenario['label'].' '.$scenario['focus']);
+
+            foreach ($packScenarioNeedles as $needle) {
+                if (str_contains($label, $needle)) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+    }
+    $selectedCategoryId = (int) old('category_id', $packScenario['category_id'] ?? ($firstScenario['category_id'] ?? 0));
     $selectedSourcePackKey = old('source_pack_key');
     $selectedScenario = $scenarioOptions->first(fn ($scenario) => (int) $scenario['category_id'] === $selectedCategoryId)
         ?? $scenarioOptions->firstWhere('key', $selectedSourcePackKey)
         ?? $scenarioOptions->first();
+    $packDifficulty = in_array($selectedPack?->difficulty, ['easy', 'medium', 'hard'], true)
+        ? $selectedPack->difficulty
+        : 'medium';
+    $targetPositionDefault = old(
+        'target_position',
+        $selectedApplication?->job_title
+            ?? ($selectedPack?->role_family ? $selectedPack->role_family.' Role' : ($selectedPack?->name ?? ''))
+    );
+    $companyPersonaDefault = $selectedPack?->company_persona
+        ?? ($selectedApplication?->company_name ? $selectedApplication->company_name.' hiring context' : 'Philippines hiring context');
     $setupDefaults = [
-        'difficulty' => old('difficulty', 'medium'),
+        'difficulty' => old('difficulty', $selectedPack ? $packDifficulty : 'medium'),
         'num_questions' => (string) old('num_questions', 10),
-        'time_limit' => (string) old('time_limit', 0),
-        'interview_focus' => old('interview_focus', $selectedScenario['focus'] ?? 'Philippines Job Interview'),
+        'time_limit' => (string) old('time_limit', $selectedPack?->pressure_mode ? 2 : 0),
+        'interview_focus' => old('interview_focus', $selectedPack?->interview_focus ?? ($selectedScenario['focus'] ?? 'Philippines Job Interview')),
         'ai_assistance_level' => old('ai_assistance_level', 'standard'),
-        'interviewer_strictness' => old('interviewer_strictness', 'neutral'),
-        'live_feedback_mode' => old('live_feedback_mode', 'coaching'),
+        'interviewer_strictness' => old('interviewer_strictness', $selectedPack?->pressure_mode ? 'strict' : 'neutral'),
+        'live_feedback_mode' => old('live_feedback_mode', $selectedPack?->pressure_mode ? 'real_interview' : 'coaching'),
         'response_mode' => old('response_mode', 'voice'),
-        'company_persona' => old('company_persona', 'Philippines hiring context'),
+        'company_persona' => old('company_persona', $companyPersonaDefault),
         'interview_format' => old('interview_format', 'standard'),
     ];
-    $selectedQuestionTypes = old('question_types', ['Behavioral', 'Situational']);
+    $selectedQuestionTypes = old('question_types', $packQuestionTypes ?: ['Behavioral', 'Situational']);
 @endphp
 <style>
     .text-gradient-primary {
@@ -4736,6 +4781,18 @@
             -webkit-text-fill-color: #ffffff !important;
         }
     }
+
+    #sec-interview-setup.setup-step-mode.setup-tutorial-mode #setup-left-col > .setup-panel,
+    html body #sec-interview-setup.setup-step-mode.setup-tutorial-mode #setup-left-col > .setup-panel,
+    #sec-interview-setup.setup-step-mode.setup-tutorial-mode #panel-summary,
+    html body #sec-interview-setup.setup-step-mode.setup-tutorial-mode #panel-summary {
+        display: block !important;
+    }
+
+    #sec-interview-setup.setup-tutorial-mode .setup-stepper-actions {
+        opacity: 0.58;
+        pointer-events: none;
+    }
 </style>
 
 <div class="db-section active setup-step-mode" id="sec-interview-setup">
@@ -4790,6 +4847,14 @@
 
     <form action="{{ route('interview.start') }}" method="POST" id="setupForm">
         @csrf
+        @if($selectedApplication)
+            <input type="hidden" name="job_application_id" value="{{ $selectedApplication->id }}">
+            <textarea name="resume_text" hidden>{{ old('resume_text', $selectedApplication->resume_text) }}</textarea>
+            <textarea name="job_description" hidden>{{ old('job_description', $selectedApplication->job_description) }}</textarea>
+        @endif
+        @if($selectedPack)
+            <input type="hidden" name="interview_pack_id" value="{{ $selectedPack->id }}">
+        @endif
         <div class="row g-4">
             <!-- Left Column: Form Settings -->
             <div class="col-lg-8" id="setup-left-col">
@@ -4844,7 +4909,7 @@
                                 Target Position
                             </label>
                             <div class="setup-search-wrap">
-                                <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ old('target_position') }}" required>
+                                <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ $targetPositionDefault }}" required>
                             </div>
                         </div>
 
@@ -5332,6 +5397,48 @@
 
     }
 
+    let setupTutorialRestoreIndex = null;
+
+    function getSetupPanelForElement(element) {
+        if (!element || typeof element.closest !== 'function') return null;
+
+        if (element.id === 'btn-start-interview') {
+            return document.getElementById('panel-summary');
+        }
+
+        return element.closest('#panel-basic, #panel-structure, #panel-inclusive, #panel-content, #panel-response, #panel-summary');
+    }
+
+    function activateInterviewSetupTourPanel(element) {
+        const panel = getSetupPanelForElement(element);
+        if (!panel) return;
+
+        const stepIndex = getSetupSteps().findIndex(step => step.id === panel.id);
+        if (stepIndex >= 0) {
+            showSetupStep(stepIndex);
+        }
+    }
+
+    function setInterviewSetupTutorialMode(enabled) {
+        const section = document.getElementById('sec-interview-setup');
+        if (!section) return;
+
+        if (enabled) {
+            setupTutorialRestoreIndex = setupStepState.index;
+            section.classList.add('setup-tutorial-mode');
+            return;
+        }
+
+        section.classList.remove('setup-tutorial-mode');
+        showSetupStep(Number.isInteger(setupTutorialRestoreIndex) ? setupTutorialRestoreIndex : setupStepState.index);
+        setupTutorialRestoreIndex = null;
+    }
+
+    window.showInterviewSetupStep = showSetupStep;
+    window.getInterviewSetupStepIndex = () => setupStepState.index;
+    window.activateInterviewSetupTourPanel = activateInterviewSetupTourPanel;
+    window.setInterviewSetupTutorialMode = setInterviewSetupTutorialMode;
+
     document.getElementById('setupStepPrev')?.addEventListener('click', () => {
         showSetupStep(setupStepState.index - 1);
     });
@@ -5399,21 +5506,14 @@
 
 @push('scripts')
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    (function() {
+    function initInterviewSetupTour() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
-        const stepsMobile = [
+        const setupTourSteps = [
             { element: '#panel-basic', popover: { title: 'Philippines Interview', description: 'Choose an optional local category and enter the target position.', side: 'top', align: 'center' }},
             { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, and optional response timing before you start.', side: 'top', align: 'center' }},
-            { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick the Philippines scenario, assistance level, and question types.', side: 'top', align: 'center' }},
-            { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose typed, voice, or hybrid answers depending on how you want to practice.', side: 'top', align: 'center' }},
-            { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm your interview setup before generating the practice session.', side: 'top', align: 'center' }},
-            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate your customized Philippine interview when the setup looks right.', side: 'top', align: 'center' }}
-        ];
-
-        const stepsDesktop = [
-            { element: '#panel-basic', popover: { title: 'Philippines Interview', description: 'Choose an optional local category and enter the target position.', side: 'top', align: 'center' }},
-            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, and optional response timing before you start.', side: 'top', align: 'center' }},
+            { element: '#panel-inclusive', popover: { title: 'Inclusive Practice', description: 'Select practice conditions that make the interview setup match your needs.', side: 'top', align: 'center' }},
             { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick the Philippines scenario, assistance level, and question types.', side: 'top', align: 'center' }},
             { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose typed, voice, or hybrid answers depending on how you want to practice.', side: 'top', align: 'center' }},
             { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm your interview setup before generating the practice session.', side: 'top', align: 'center' }},
@@ -5423,20 +5523,34 @@
         window.createSpeakReadyTour({
             completionKey: 'onboarding_completed_interview_setup',
             serverDetectedMobile: @json($isMobile),
-            stepsMobile,
-            stepsDesktop,
-            autoStartDelay: 500,
+            stepsMobile: setupTourSteps,
+            stepsDesktop: setupTourSteps,
+            autoStartDelay: 700,
+            startDelay: 60,
             beforeStart: () => {
                 document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
+                window.setInterviewSetupTutorialMode?.(true);
+            },
+            onHighlightStarted: (element) => {
+                window.activateInterviewSetupTourPanel?.(element);
             },
             onBeforeDestroy: () => {
                 document.documentElement.style.removeProperty('scroll-behavior');
             },
             onDestroyed: () => {
                 document.documentElement.style.removeProperty('scroll-behavior');
+                window.setInterviewSetupTutorialMode?.(false);
             },
         });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initInterviewSetupTour, { once: true });
+        return;
+    }
+
+    initInterviewSetupTour();
+    })();
 </script>
 @endpush
 @endsection

@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=25') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=26') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -277,6 +277,7 @@
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      @include('partials.flash-modal')
       <!-- AOS -->
       <script src="{{ asset('js/aos.js') }}"></script>
       <!-- Swiper -->

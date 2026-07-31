@@ -7,7 +7,9 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
+use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\MentorReviewController;
+use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -55,11 +57,43 @@ Route::middleware(['auth', 'user'])->group(function () {
             ->orderBy('title')
             ->get();
         $sourcePacks = \App\Services\QuestionDatasetProvider::all();
+        $selectedApplication = null;
+        $selectedPack = null;
 
-        return view('interview.setup', compact('categories', 'sourcePacks'));
+        if (request()->filled('application')) {
+            $selectedApplication = \App\Models\JobApplication::where('user_id', Auth::id())
+                ->findOrFail(request()->integer('application'));
+        }
+
+        if (request()->filled('pack')) {
+            $selectedPack = \App\Models\InterviewPack::where('status', 'active')
+                ->findOrFail(request()->integer('pack'));
+        }
+
+        return view('interview.setup', compact('categories', 'sourcePacks', 'selectedApplication', 'selectedPack'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
+        $activeInterviewId = session('active_interview_id');
+
+        if (! $activeInterviewId) {
+            return redirect()
+                ->route('interview.setup')
+                ->with('message', 'Start an interview session first.');
+        }
+
+        $activeSession = \App\Models\InterviewSession::where('user_id', Auth::id())
+            ->where('status', 'in_progress')
+            ->find($activeInterviewId);
+
+        if (! $activeSession) {
+            session()->forget(['active_interview_id', 'active_interview_provider', 'active_interview_context']);
+
+            return redirect()
+                ->route('interview.setup')
+                ->with('message', 'Your interview session is no longer active.');
+        }
+
         return view('interview.session');
     })->name('interview.session');
 
@@ -98,6 +132,16 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/learning', [UserController::class, 'learning'])->name('user.learning');
     Route::get('/skills', [UserController::class, 'skills'])->name('user.skills');
     Route::post('/skills/unlock', [UserController::class, 'unlockPerk'])->name('user.skills.unlock');
+
+    Route::get('/applications', [UserApplicationController::class, 'index'])->name('user.applications.index');
+    Route::post('/applications', [UserApplicationController::class, 'store'])->name('user.applications.store');
+    Route::put('/applications/{application}', [UserApplicationController::class, 'update'])->name('user.applications.update');
+    Route::delete('/applications/{application}', [UserApplicationController::class, 'destroy'])->name('user.applications.destroy');
+    Route::get('/applications/{application}/practice', [UserApplicationController::class, 'practice'])->name('user.applications.practice');
+    Route::post('/practice-plan/{item}/toggle', [UserApplicationController::class, 'togglePlanItem'])->name('user.practice-plan.toggle');
+
+    Route::get('/packs', [InterviewPackController::class, 'index'])->name('user.packs.index');
+    Route::get('/packs/{pack}/practice', [InterviewPackController::class, 'practice'])->name('user.packs.practice');
 
     // User Learning Modules
     Route::get('/modules', [UserController::class, 'modules'])->name('user.modules.index');

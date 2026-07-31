@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=5') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
       <style>
          html, body {
             overflow-x: hidden;
@@ -2268,7 +2268,7 @@
             </div>
             <!-- Sign Up -->
             <div id="fSignup" class="auth-panel" style="display:none">
-               <form action="{{ route('register') }}" method="POST">
+               <form id="signupForm" action="{{ route('register') }}" method="POST">
                   @csrf
                   @if($errors->any() && old('name'))
                      <div class="err-msg" style="display:block;"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first() }}</span></div>
@@ -2316,6 +2316,7 @@
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      @include('partials.flash-modal', ['includeValidationErrors' => false])
       <!-- AOS -->
       <script src="{{ asset('js/aos.js') }}"></script>
       <!-- Swiper -->
@@ -2505,13 +2506,24 @@
               <div class="logo-loading-circle"></div>
               <img src="{{ asset('img/logo.png') }}" alt="Loading...">
           </div>
-          <h4 style="color:var(--tx); font-weight:600; font-size:1.2rem; letter-spacing:0.5px;">Authenticating...</h4>
-          <p style="color:var(--tx3); font-size:0.9rem;">Please wait while we log you in</p>
+          <h4 id="authTransitionTitle" style="color:var(--tx); font-weight:600; font-size:1.2rem; letter-spacing:0.5px;">Authenticating...</h4>
+          <p id="authTransitionCopy" style="color:var(--tx3); font-size:0.9rem;">Please wait while we log you in</p>
       </div>
 
       <script>
-          function showLoginTransition() {
+          function showLoginTransition(mode) {
               const overlay = document.getElementById('loginTransitionOverlay');
+              const title = document.getElementById('authTransitionTitle');
+              const copy = document.getElementById('authTransitionCopy');
+
+              if (mode === 'register') {
+                  if (title) title.textContent = 'Creating your account...';
+                  if (copy) copy.textContent = 'Please wait while we set up your dashboard';
+              } else {
+                  if (title) title.textContent = 'Authenticating...';
+                  if (copy) copy.textContent = 'Please wait while we log you in';
+              }
+
               if (overlay) overlay.classList.add('active');
           }
 
@@ -2521,6 +2533,15 @@
                   loginForm.addEventListener('submit', function(e) {
                       if (this.checkValidity()) {
                           showLoginTransition();
+                      }
+                  });
+              }
+
+              const signupForm = document.getElementById('signupForm');
+              if (signupForm) {
+                  signupForm.addEventListener('submit', function() {
+                      if (this.checkValidity()) {
+                          showLoginTransition('register');
                       }
                   });
               }

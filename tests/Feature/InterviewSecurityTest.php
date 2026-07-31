@@ -22,6 +22,51 @@ class InterviewSecurityTest extends TestCase
         $this->get('/setup-db')->assertNotFound();
     }
 
+    public function test_interview_session_requires_an_active_session_key(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->get(route('interview.session'))
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHas('message', 'Start an interview session first.');
+    }
+
+    public function test_interview_session_forgets_stale_or_completed_active_session(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $session->update(['status' => 'completed']);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+                'active_interview_context' => 'interview',
+            ])
+            ->get(route('interview.session'))
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHas('message', 'Your interview session is no longer active.')
+            ->assertSessionMissing('active_interview_id')
+            ->assertSessionMissing('active_interview_provider')
+            ->assertSessionMissing('active_interview_context');
+    }
+
+    public function test_interview_session_renders_for_current_in_progress_session(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->get(route('interview.session'))
+            ->assertOk()
+            ->assertSee('Describe a difficult project.');
+    }
+
     public function test_user_cannot_answer_an_active_session_owned_by_another_user(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

@@ -6,6 +6,7 @@
     $scoreVal = max(0, min(100, $scoreVal));
     $scoreClass = $scoreVal >= 80 ? 'score-high' : ($scoreVal >= 60 ? 'score-med' : 'score-low');
     $scoreText = $scoreVal >= 80 ? 'Interview Ready' : ($scoreVal >= 60 ? 'Building Momentum' : 'Practice Mode');
+    $mobileScoreText = $scoreVal >= 80 ? 'Interview Ready' : 'Building Momentum';
     $scoreIcon = $scoreVal >= 80 ? 'fa-circle-check' : ($scoreVal >= 60 ? 'fa-chart-line' : 'fa-arrow-trend-up');
     $fullName = trim(Auth::user()->name ?? '') ?: 'User';
     $nameParts = preg_split('/\s+/', $fullName);
@@ -15,6 +16,12 @@
     $goalPercent = isset($upcomingGoal) ? max(0, min(100, round($upcomingGoal->percent ?? 0))) : 0;
     $categoryCount = isset($categoryPerformance) ? count($categoryPerformance) : 0;
     $moduleCount = isset($learningLabProgress) ? count($learningLabProgress) : 0;
+    $sessionsMeter = max(0, min(100, (int) round((($totalSessions ?? 0) / 10) * 100)));
+    $ratingMeter = max(0, min(100, (int) round(($rating / 5) * 100)));
+    $xpValue = max(0, (int) ($experiencePoints ?? 0));
+    $playerLevel = max(1, (int) ($profile->player_level ?? (floor($xpValue / 1000) + 1)));
+    $xpMeter = max(0, min(100, (int) round((($xpValue % 1000) / 1000) * 100)));
+    $streakMeter = max(0, min(100, (int) round((($currentStreak ?? 0) / 7) * 100)));
     $trendScores = collect($scoreTrend ?? [])->pluck('score')->filter(fn ($score) => is_numeric($score))->map(fn ($score) => (int) round($score))->values();
     $trendAverage = $trendScores->isNotEmpty() ? (int) round($trendScores->avg()) : $scoreVal;
     $trendFirst = $trendScores->first();
@@ -91,6 +98,14 @@
     }
 
     .sr-summary-grid > .sr-card {
+        min-width: 0;
+    }
+
+    .sr-mobile-readiness-row {
+        min-width: 0;
+    }
+
+    .sr-mobile-readiness-row > .sr-score-panel {
         min-width: 0;
     }
 
@@ -383,7 +398,12 @@
             line-height: 1.22;
         }
 
-        .sr-summary-grid > .sr-score-panel {
+        .sr-mobile-readiness-row {
+            min-width: 0;
+            height: 100%;
+        }
+
+        .sr-mobile-readiness-row > .sr-score-panel {
             height: 100%;
             min-height: 100%;
             display: flex;
@@ -391,59 +411,59 @@
             justify-content: space-between;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-layout {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-layout {
             flex: 1 1 auto;
             align-content: center;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-layout {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-layout {
             grid-template-columns: 1fr;
             gap: 26px;
             align-items: center;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-meta {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-meta {
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 14px;
             width: 100%;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-readiness-ring {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-readiness-ring {
             --ring-size: clamp(160px, 14vw, 190px);
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-readiness-ring::before {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-readiness-ring::before {
             inset: 10px;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-value {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-value {
             font-size: clamp(2.85rem, 4vw, 3.45rem);
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-value span {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-value span {
             font-size: 1.05rem;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-ring-label {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-ring-label {
             font-size: 0.74rem;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-meta-item {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-meta-item {
             min-height: 106px;
             padding: 18px;
             border-radius: 16px;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-meta-label {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-meta-label {
             font-size: 0.86rem;
             line-height: 1.35;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-meta-value {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-meta-value {
             font-size: 1.55rem;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-icon {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-icon {
             width: 48px;
             height: 48px;
             flex-basis: 48px;
@@ -451,7 +471,7 @@
             font-size: 1.12rem;
         }
 
-        .sr-summary-grid > .sr-score-panel .sr-score-note {
+        .sr-mobile-readiness-row > .sr-score-panel .sr-score-note {
             margin-top: 18px;
         }
 
@@ -2997,6 +3017,10 @@
             order: 2;
         }
 
+        .sr-mobile-readiness-row {
+            order: 2;
+        }
+
         .sr-stats-desktop {
             order: 3;
         }
@@ -3164,6 +3188,20 @@
             border-radius: var(--dash-card-radius);
             box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
             min-height: 0 !important;
+        }
+
+        .sr-mobile-readiness-row {
+            display: grid;
+            grid-template-columns: minmax(0, 0.54fr) minmax(0, 0.46fr);
+            gap: 8px;
+            align-items: stretch;
+            min-width: 0;
+        }
+
+        .sr-mobile-readiness-row > .sr-score-panel,
+        .sr-mobile-readiness-row > .sr-mobile-stat-grid {
+            min-width: 0;
+            margin: 0 !important;
         }
 
         .sr-score-top {
@@ -5219,29 +5257,35 @@
         }
 
         .sr-achievement-showcase {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 5px;
         }
 
         .sr-achievement-tile {
-            min-height: 104px;
-            padding: 11px 8px;
+            min-height: 78px;
+            padding: 7px 4px;
             border-radius: 8px;
-            gap: 8px;
+            gap: 5px;
         }
 
         .sr-achievement-tile-icon {
-            min-height: 30px;
-            font-size: 1.5rem;
+            min-height: 22px;
+            font-size: clamp(1rem, 4.3vw, 1.25rem);
         }
 
         .sr-achievement-tile-title {
-            font-size: 0.68rem;
+            font-size: clamp(0.44rem, 1.8vw, 0.54rem);
+            line-height: 1.1;
+            overflow-wrap: anywhere;
         }
 
         .sr-achievement-status {
-            padding: 5px 7px;
-            font-size: 0.54rem;
+            max-width: 100%;
+            padding: 3px 4px;
+            font-size: clamp(0.38rem, 1.55vw, 0.45rem);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     }
 
@@ -5373,77 +5417,118 @@
             border-radius: 8px !important;
         }
 
+        #mob-content .sr-dashboard .sr-mobile-readiness-row {
+            display: grid !important;
+            grid-template-columns: minmax(104px, 0.4fr) minmax(0, 0.6fr) !important;
+            align-items: stretch !important;
+            gap: clamp(6px, 2vw, 8px) !important;
+            min-width: 0 !important;
+            margin-top: var(--dash-section-gap) !important;
+        }
+
+        #mob-content .sr-dashboard .sr-mobile-readiness-row > .sr-score-panel,
+        #mob-content .sr-dashboard .sr-mobile-readiness-row > .sr-mobile-stat-grid {
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+
+        #mob-content .sr-dashboard .sr-mobile-readiness-row > .sr-score-panel {
+            order: 0 !important;
+        }
+
+        #mob-content .sr-dashboard .sr-mobile-readiness-row > .sr-mobile-stat-grid {
+            order: 1 !important;
+        }
+
         #mob-content .sr-dashboard .sr-score-top {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 6px !important;
             margin-bottom: 8px !important;
             align-items: center !important;
         }
 
         #mob-content .sr-dashboard .sr-score-top .sr-status-pill,
         #mob-content .sr-dashboard .sr-score-top .sr-chip {
+            min-width: 0 !important;
+            max-width: 100% !important;
             min-height: 24px !important;
             padding: 5px 8px !important;
             font-size: 0.56rem !important;
             line-height: 1 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
 
         #mob-content .sr-dashboard .sr-score-layout {
-            grid-template-columns: 76px minmax(0, 1fr) !important;
-            gap: 8px !important;
-            justify-items: stretch !important;
+            grid-template-columns: 1fr !important;
+            gap: 7px !important;
+            justify-items: center !important;
         }
 
         #mob-content .sr-dashboard .sr-readiness-ring {
-            --ring-size: 76px !important;
+            --ring-size: clamp(64px, 21vw, 76px) !important;
         }
 
         #mob-content .sr-dashboard .sr-score-value {
-            font-size: 1.34rem !important;
+            font-size: clamp(1.05rem, 4.8vw, 1.34rem) !important;
             line-height: 1 !important;
         }
 
         #mob-content .sr-dashboard .sr-score-value span {
-            font-size: 0.72rem !important;
+            font-size: clamp(0.56rem, 2.6vw, 0.72rem) !important;
         }
 
         #mob-content .sr-dashboard .sr-ring-label {
-            font-size: 0.48rem !important;
+            font-size: clamp(0.4rem, 2vw, 0.48rem) !important;
             line-height: 1.1 !important;
         }
 
         #mob-content .sr-dashboard .sr-score-meta {
+            display: grid !important;
             gap: 6px !important;
             grid-template-columns: 1fr !important;
+            width: 100% !important;
         }
 
         #mob-content .sr-dashboard .sr-score-meta-item {
-            min-height: 48px !important;
-            padding: 7px 8px !important;
+            min-width: 0 !important;
+            min-height: 42px !important;
+            padding: 6px !important;
             border-radius: 7px !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 7px !important;
+            gap: 5px !important;
+        }
+
+        #mob-content .sr-dashboard .sr-score-meta-item > div:first-child {
+            min-width: 0 !important;
         }
 
         #mob-content .sr-dashboard .sr-meta-label {
-            font-size: 0.55rem !important;
+            margin-bottom: 2px !important;
+            font-size: clamp(0.46rem, 2.2vw, 0.52rem) !important;
             line-height: 1.1 !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
         }
 
         #mob-content .sr-dashboard .sr-meta-value {
-            font-size: 0.96rem !important;
+            font-size: clamp(0.74rem, 3.2vw, 0.92rem) !important;
             line-height: 1.05 !important;
         }
 
         #mob-content .sr-dashboard .sr-score-icon {
-            width: 26px !important;
-            height: 26px !important;
-            flex-basis: 26px !important;
+            width: 22px !important;
+            height: 22px !important;
+            flex-basis: 22px !important;
             order: 0 !important;
             border-radius: 7px !important;
-            font-size: 0.78rem !important;
+            font-size: 0.68rem !important;
         }
 
         #mob-content .sr-dashboard .sr-score-note {
+            display: none !important;
             min-height: 30px !important;
             margin-top: 8px !important;
             padding: 7px 9px !important;
@@ -5453,54 +5538,91 @@
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid {
-            gap: 8px !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            grid-auto-rows: minmax(82px, auto) !important;
+            align-items: stretch !important;
+            gap: clamp(6px, 2vw, 8px) !important;
             margin: 10px 0 !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-card {
-            min-height: 92px !important;
-            padding: 9px !important;
+            position: relative !important;
+            min-width: 0 !important;
+            min-height: 82px !important;
+            height: 100% !important;
+            padding: clamp(7px, 2vw, 9px) !important;
             border-radius: 8px !important;
+            justify-content: space-between !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-head {
-            margin-bottom: 10px !important;
+            min-width: 0 !important;
+            min-height: 22px !important;
+            gap: 5px !important;
+            margin-bottom: 7px !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-icon {
-            width: 26px !important;
-            height: 26px !important;
-            font-size: 0.72rem !important;
+            width: 22px !important;
+            height: 22px !important;
+            flex-basis: 22px !important;
+            font-size: 0.62rem !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-chip {
-            min-height: 18px !important;
-            padding: 3px 7px !important;
-            font-size: 0.52rem !important;
+            max-width: calc(100% - 27px) !important;
+            min-height: 16px !important;
+            padding: 2px 6px !important;
+            font-size: clamp(0.46rem, 2vw, 0.5rem) !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-value {
             margin-top: 0 !important;
-            font-size: 1rem !important;
+            font-size: clamp(0.84rem, 3.6vw, 0.96rem) !important;
             line-height: 1 !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-value span {
-            font-size: 0.66rem !important;
+            font-size: clamp(0.52rem, 2.4vw, 0.62rem) !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-label {
-            margin-top: 4px !important;
-            font-size: 0.55rem !important;
-            line-height: 1.15 !important;
+            margin-top: 3px !important;
+            font-size: clamp(0.48rem, 2.1vw, 0.52rem) !important;
+            line-height: 1.12 !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-body {
+            position: static !important;
+            margin-top: auto !important;
+            min-width: 0 !important;
+            padding-right: 0 !important;
         }
 
         #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-meter {
-            width: 25px !important;
-            height: 25px !important;
-            right: 8px !important;
-            bottom: 8px !important;
-            font-size: 0.62rem !important;
+            display: grid !important;
+            width: clamp(28px, 7.5vw, 34px) !important;
+            height: clamp(28px, 7.5vw, 34px) !important;
+            left: 50% !important;
+            top: 50% !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: translate(-50%, -50%) !important;
+            font-size: clamp(0.66rem, 2.2vw, 0.78rem) !important;
+        }
+
+        #mob-content .sr-dashboard .sr-mobile-stat-grid .sr-stat-meter > * {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            line-height: 1 !important;
         }
 
         #mob-content .sr-dashboard .sr-trend-actions.justify-content-between {
@@ -5602,7 +5724,7 @@
             </section>
 
             <div class="stat-grid sr-stats-desktop" role="group" aria-label="Quick statistics">
-                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:72%;">
+                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
                         <span class="sr-chip">Practice</span>
@@ -5613,7 +5735,7 @@
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
                 </div>
-                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:65%;">
+                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
                         <span class="sr-chip">Quality</span>
@@ -5624,7 +5746,7 @@
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
                     </div>
                 </div>
-                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:78%;">
+                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
                         <span class="sr-chip">Growth</span>
@@ -5632,10 +5754,10 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
                         <div class="sr-stat-label">Experience points</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $profile->level ?? 1 }}</span></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
                 </div>
-                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:68%;">
+                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
                     <div class="sr-stat-head">
                         <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
                         <span class="sr-chip">Streak</span>
@@ -5649,82 +5771,86 @@
             </div>
         </div>
 
-        <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
-            <div class="sr-score-top">
-                <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $scoreText }}</span>
-                <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> PH Focus</span>
-            </div>
-            <div class="sr-score-layout">
-                <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
-                    <div class="sr-ring-content">
-                        <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
-                        <div class="sr-ring-label">Overall Readiness</div>
+        <div class="sr-mobile-readiness-row">
+            <section class="sr-card sr-score-panel {{ $scoreVal >= 80 ? 'score-high-panel' : ($scoreVal >= 60 ? 'score-med-panel' : 'score-low-panel') }}" aria-label="Readiness score">
+                <div class="sr-score-top">
+                    <span class="sr-status-pill {{ $scoreClass }}"><i class="fa-solid {{ $scoreIcon }}"></i> {{ $isMobile ? $mobileScoreText : $scoreText }}</span>
+                    @unless($isMobile)
+                        <span class="sr-chip ph-focus-chip"><i class="fa-solid fa-location-dot"></i> PH Focus</span>
+                    @endunless
+                </div>
+                <div class="sr-score-layout">
+                    <div class="sr-readiness-ring" style="--ring-value: {{ $scoreVal }}%;" aria-label="Overall readiness {{ $scoreVal }} percent">
+                        <div class="sr-ring-content">
+                            <div class="sr-score-value">{{ $scoreVal }}<span>%</span></div>
+                            <div class="sr-ring-label">Overall Readiness</div>
+                        </div>
+                    </div>
+                    <div class="sr-score-meta">
+                        <div class="sr-score-meta-item">
+                            <div>
+                                <div class="sr-meta-label">Average Rating</div>
+                                <div class="sr-meta-value">{{ $rating }}/5</div>
+                            </div>
+                            <div class="sr-score-icon"><i class="fa-regular fa-star"></i></div>
+                        </div>
+                        <div class="sr-score-meta-item">
+                            <div>
+                                <div class="sr-meta-label">Next Goal</div>
+                                <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
+                            </div>
+                            <div class="sr-score-icon"><i class="fa-solid fa-bullseye"></i></div>
+                        </div>
                     </div>
                 </div>
-                <div class="sr-score-meta">
-                    <div class="sr-score-meta-item">
-                        <div>
-                            <div class="sr-meta-label">Average Rating</div>
-                            <div class="sr-meta-value">{{ $rating }}/5</div>
-                        </div>
-                        <div class="sr-score-icon"><i class="fa-regular fa-star"></i></div>
-                    </div>
-                    <div class="sr-score-meta-item">
-                        <div>
-                            <div class="sr-meta-label">Next Goal</div>
-                            <div class="sr-meta-value">{{ isset($upcomingGoal) ? ($upcomingGoal->target ?? 100) : 100 }}%</div>
-                        </div>
-                        <div class="sr-score-icon"><i class="fa-solid fa-bullseye"></i></div>
-                    </div>
-                </div>
-            </div>
-            <div class="sr-score-note"><i class="fa-solid fa-star"></i> Keep practicing. You're on your way!</div>
-        </section>
-    </div>
+                <div class="sr-score-note"><i class="fa-solid fa-star"></i> Keep practicing. You're on your way!</div>
+            </section>
 
-    <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
-        <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:72%;">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
-                <span class="sr-chip">Practice</span>
-            </div>
-            <div class="sr-stat-body">
-                <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
-                <div class="sr-stat-label">Completed sessions</div>
-                <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
-            </div>
-        </div>
-        <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:65%;">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
-                <span class="sr-chip">Quality</span>
-            </div>
-            <div class="sr-stat-body">
-                <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
-                <div class="sr-stat-label">Average rating</div>
-                <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
-            </div>
-        </div>
-        <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:78%;">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
-                <span class="sr-chip">Growth</span>
-            </div>
-            <div class="sr-stat-body">
-                <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
-                <div class="sr-stat-label">Experience points</div>
-                <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $profile->level ?? 1 }}</span></div>
-            </div>
-        </div>
-        <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:68%;">
-            <div class="sr-stat-head">
-                <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
-                <span class="sr-chip">Streak</span>
-            </div>
-            <div class="sr-stat-body">
-                <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
-                <div class="sr-stat-label">Active practice days</div>
-                <div class="sr-stat-meter" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></div>
+            <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
+                <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon"><i class="fa-solid fa-microphone"></i></div>
+                        <span class="sr-chip">Practice</span>
+                    </div>
+                    <div class="sr-stat-body">
+                        <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
+                        <div class="sr-stat-label">Completed sessions</div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    </div>
+                </div>
+                <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon"><i class="fa-regular fa-star"></i></div>
+                        <span class="sr-chip">Quality</span>
+                    </div>
+                    <div class="sr-stat-body">
+                        <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
+                        <div class="sr-stat-label">Average rating</div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
+                    </div>
+                </div>
+                <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <span class="sr-chip">Growth</span>
+                    </div>
+                    <div class="sr-stat-body">
+                        <div class="sr-stat-value">{{ number_format($experiencePoints ?? 0) }}</div>
+                        <div class="sr-stat-label">Experience points</div>
+                        <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
+                    </div>
+                </div>
+                <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
+                    <div class="sr-stat-head">
+                        <div class="sr-stat-icon"><i class="fa-solid fa-fire"></i></div>
+                        <span class="sr-chip">Streak</span>
+                    </div>
+                    <div class="sr-stat-body">
+                        <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
+                        <div class="sr-stat-label">Active practice days</div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

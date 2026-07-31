@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>@yield('title', 'Private Interview Review') · SpeakReady AI</title>
+    <title>@yield('title', 'Private Interview Review') Â· SpeakReady AI</title>
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/all.min.css') }}" rel="stylesheet">
@@ -29,5 +29,6 @@
     </header>
     <main class="public-review-shell">@yield('content')</main>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+    @include('partials.flash-modal')
 </body>
 </html>

@@ -8,7 +8,9 @@ use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
 use App\Models\InterviewAnswer;
+use App\Models\InterviewPack;
 use App\Models\InterviewSession;
+use App\Models\JobApplication;
 use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
@@ -69,7 +71,22 @@ class InterviewController extends Controller
             'captions' => 'nullable|boolean',
             'reduced_distraction' => 'nullable|boolean',
             'simplified_questions' => 'nullable|boolean',
+            'job_application_id' => [
+                'nullable',
+                Rule::exists('job_applications', 'id')->where(fn ($query) => $query->where('user_id', Auth::id())),
+            ],
+            'interview_pack_id' => [
+                'nullable',
+                Rule::exists('interview_packs', 'id')->where(fn ($query) => $query->where('status', 'active')),
+            ],
         ]);
+
+        $application = ! empty($validated['job_application_id'])
+            ? JobApplication::where('user_id', Auth::id())->findOrFail($validated['job_application_id'])
+            : null;
+        $pack = ! empty($validated['interview_pack_id'])
+            ? InterviewPack::where('status', 'active')->findOrFail($validated['interview_pack_id'])
+            : null;
 
         $category = ! empty($validated['category_id'])
             ? Category::where('status', 'active')->where('type', 'core')->findOrFail($validated['category_id'])
@@ -98,9 +115,34 @@ class InterviewController extends Controller
             $position = $validated['custom_position'];
         }
 
+        if ($application) {
+            if (blank($validated['resume_text'] ?? null)) {
+                $validated['resume_text'] = $application->resume_text;
+            }
+
+            if (blank($validated['job_description'] ?? null)) {
+                $validated['job_description'] = $application->job_description;
+            }
+        }
+
         $questionTypes = $validated['question_types'] ?? [];
+        if (empty($questionTypes) && $pack) {
+            $questionTypes = collect($pack->question_types ?? [])
+                ->filter(fn ($type) => in_array($type, ['Behavioral', 'Situational', 'Technical', 'Personal'], true))
+                ->values()
+                ->all();
+        }
+
         $validated['interview_focus'] = $this->philippinesInterviewFocus($validated['interview_focus'] ?? null);
-        $validated['company_persona'] = 'Philippines hiring context';
+        $persona = $validated['company_persona'] ?? null;
+        if (blank($persona) && $pack?->company_persona) {
+            $persona = $pack->company_persona;
+        }
+        if (blank($persona) && $application?->company_name) {
+            $persona = $application->company_name.' hiring context';
+        }
+        $validated['company_persona'] = $this->philippinesCompanyPersona($persona);
+        $pressureMode = (bool) ($pack?->pressure_mode ?? false);
 
         // Provider choice is an administrator concern. Users receive the same versioned rubric
         // regardless of which healthy provider the configured fallback chain selects.
@@ -123,6 +165,8 @@ class InterviewController extends Controller
 
         $session = InterviewSession::create([
             'user_id' => Auth::id(),
+            'job_application_id' => $application?->id,
+            'interview_pack_id' => $pack?->id,
             'category_id' => $category->id,
             'difficulty' => $validated['difficulty'],
             'target_position' => $position,
@@ -138,6 +182,7 @@ class InterviewController extends Controller
             'question_types' => ! empty($questionTypes) ? json_encode($questionTypes) : null,
             'ai_assistance_level' => $validated['ai_assistance_level'] ?? 'standard',
             'live_feedback_mode' => $validated['live_feedback_mode'] ?? 'coaching',
+            'pressure_mode' => $pressureMode,
             'assessment_mode' => $assessmentMode,
             'interview_format' => $validated['interview_format'] ?? 'standard',
             'accommodation_profile' => $accommodationProfile,
@@ -2107,6 +2152,16 @@ class InterviewController extends Controller
         $context = Str::contains(Str::lower($focus), ['philipp', 'filipino'])
             ? $focus
             : "Philippines interview - {$focus}";
+
+        return Str::limit($context, 120, '');
+    }
+
+    private function philippinesCompanyPersona(?string $persona): string
+    {
+        $persona = trim((string) ($persona ?: 'Philippines hiring context'));
+        $context = Str::contains(Str::lower($persona), ['philipp', 'filipino'])
+            ? $persona
+            : "Philippines hiring context - {$persona}";
 
         return Str::limit($context, 120, '');
     }

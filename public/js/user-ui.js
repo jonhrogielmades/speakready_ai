@@ -1131,6 +1131,16 @@
     }
 
     function cleanupUserPageRuntime() {
+        if (typeof window.resetSpeakReadyOnboardingForNavigation === 'function') {
+            window.resetSpeakReadyOnboardingForNavigation();
+        } else {
+            try {
+                delete window.startOnboardingTour;
+            } catch (error) {
+                window.startOnboardingTour = undefined;
+            }
+        }
+
         removeRuntimePageScripts();
         restorePageFunctionExports();
 

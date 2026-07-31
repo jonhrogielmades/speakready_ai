@@ -19,8 +19,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=15') }}" />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=16') }}" />
       @include('partials.onboarding-styles')
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
@@ -2813,11 +2812,11 @@
       <!-- ======================== SCRIPTS ======================== -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      @include('partials.flash-modal')
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <script src="{{ asset('js/main.js?v=6') }}"></script>
-      <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
       <script src="{{ asset('js/user-ui.js') }}?v=10" defer></script>
@@ -2836,7 +2835,7 @@
          // PWA Service Worker
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=10').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=11').then(function(registration) {
                   console.log('ServiceWorker registration successful');
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
@@ -2844,12 +2843,29 @@
             });
          }
          
-         function triggerMobTutorial() {
-             if (typeof window.startOnboardingTour === 'function') {
-                 window.startOnboardingTour();
-             } else {
-                 alert('A tutorial is not available for this specific page.');
-             }
+         function triggerMobTutorial(attempt = 0) {
+            if (typeof window.startOnboardingTour === 'function') {
+               const started = window.startOnboardingTour();
+               if (started !== false) return;
+            }
+
+            if (typeof window.startOnboardingTour !== 'function' && typeof window.initSpeakReadyFallbackTour === 'function') {
+               window.initSpeakReadyFallbackTour(window.SpeakReadyTourContext || {});
+            }
+
+            if (typeof window.startOnboardingTour === 'function') {
+               const started = window.startOnboardingTour();
+               if (started !== false) return;
+            }
+
+            if (attempt < 20) {
+               window.setTimeout(function() {
+                  triggerMobTutorial(attempt + 1);
+               }, 100);
+               return;
+            }
+
+            console.warn('Tutorial could not initialize on this page.');
          }
 
          // PWA Install Prompt Logic
@@ -3739,6 +3755,7 @@
 
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')
+      @include('partials.onboarding-fallback-init')
       <!-- USER_PAGE_SCRIPTS_END -->
       @include('layouts.logout-transition')
    </body>

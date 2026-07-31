@@ -10,6 +10,59 @@
         box-sizing: border-box;
     }
 
+    .sr-native-tour-overlay,
+    .sr-native-tour-stage,
+    .sr-native-tour-popover {
+        position: fixed;
+        box-sizing: border-box;
+    }
+
+    .sr-native-tour-overlay {
+        inset: 0;
+        z-index: 12040;
+        background: transparent;
+        pointer-events: none;
+    }
+
+    .sr-native-tour-stage {
+        z-index: 12050;
+        background: transparent;
+        border: 2px solid rgba(96, 165, 250, 0.92);
+        box-shadow:
+            0 0 0 9999px rgba(2, 6, 23, 0.62),
+            0 18px 48px rgba(15, 23, 42, 0.28),
+            0 0 0 6px rgba(96, 165, 250, 0.18);
+        pointer-events: none;
+        transition: top 0.16s ease, left 0.16s ease, width 0.16s ease, height 0.16s ease;
+    }
+
+    .sr-tour-highlighted {
+        filter: none !important;
+    }
+
+    .sr-native-tour-popover {
+        z-index: 12070;
+    }
+
+    .sr-native-tour-popover .sr-native-tour-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+
+    .sr-native-tour-popover .driver-popover-description:empty {
+        display: none;
+    }
+
+    .sr-native-tour-popover .driver-popover-prev-btn:disabled {
+        opacity: 0.48;
+        cursor: not-allowed;
+    }
+
+    body.sr-native-tour-active {
+        overflow-x: hidden;
+    }
+
     .driver-popover.sr-driver-popover.driverjs-theme-dark {
         background: var(--bg3, #111827);
         border: 1px solid var(--bd, rgba(255, 255, 255, 0.12));

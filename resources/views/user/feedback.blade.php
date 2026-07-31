@@ -2072,14 +2072,27 @@
     <div class="premium-panel">
         <div class="feedback-history-head">
             <h5 class="feedback-history-title">Feedback History</h5>
+            <form id="feedbackFilterForm" action="{{ route('user.feedback') }}" method="GET" class="d-none"></form>
+            <input form="feedbackFilterForm" type="hidden" name="sort" value="{{ $feedbackFilters['sort'] ?? 'desc' }}">
             <div id="feedback-filters">
-                <select id="scenarioFilter" class="form-select db-filter-input">
+                <select id="scenarioFilter" name="scenario" form="feedbackFilterForm" class="form-select db-filter-input">
                     <option value="">All Scenarios</option>
                     @foreach($feedbackCategories as $category)
-                        <option value="{{ $category }}">{{ $category }}</option>
+                        <option value="{{ $category }}" @selected(($feedbackFilters['scenario'] ?? '') === $category)>{{ $category }}</option>
                     @endforeach
                 </select>
-                <button class="btn btn-outline-secondary" id="sortDateBtn"><i class="fa-regular fa-calendar me-2"></i> All Time</button>
+                @php
+                    $nextFeedbackSort = ($feedbackFilters['sort'] ?? 'desc') === 'desc' ? 'asc' : 'desc';
+                    $feedbackSortQuery = array_filter([
+                        'scenario' => $feedbackFilters['scenario'] ?? '',
+                        'search' => $feedbackFilters['search'] ?? '',
+                        'sort' => $nextFeedbackSort,
+                    ], fn ($value) => filled($value));
+                @endphp
+                <a class="btn btn-outline-secondary" id="sortDateBtn" href="{{ route('user.feedback', $feedbackSortQuery) }}">
+                    <i class="fa-solid {{ ($feedbackFilters['sort'] ?? 'desc') === 'desc' ? 'fa-arrow-down-short-wide' : 'fa-arrow-up-wide-short' }} me-2"></i>
+                    {{ ($feedbackFilters['sort'] ?? 'desc') === 'desc' ? 'Newest First' : 'Oldest First' }}
+                </a>
                 @if($sessions->total() > 0)
                     <form class="feedback-clear-form" action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
                         @csrf
@@ -2091,7 +2104,7 @@
                 @endif
                 <div class="input-group db-filter-input feedback-search-wrap">
                     <span class="input-group-text border-0"><i class="fa-solid fa-search"></i></span>
-                    <input type="text" id="feedbackSearch" class="form-control border-0" placeholder="Search feedback...">
+                    <input type="text" id="feedbackSearch" name="search" form="feedbackFilterForm" class="form-control border-0" placeholder="Search feedback..." value="{{ $feedbackFilters['search'] ?? '' }}">
                 </div>
             </div>
         </div>
@@ -2099,7 +2112,7 @@
         @if($sessions->count() == 0)
             <div class="feedback-empty-state">
                 <i class="fa-solid fa-message" aria-hidden="true"></i>
-                Complete a practice interview to generate feedback.
+                {{ $hasFeedbackRecords ? 'No feedback records match your current filters.' : 'Complete a practice interview to generate feedback.' }}
             </div>
         @else
         <div class="table-responsive feedback-table-wrap">
@@ -2164,47 +2177,22 @@
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('feedbackSearch');
         const scenarioFilter = document.getElementById('scenarioFilter');
-        const sortBtn = document.getElementById('sortDateBtn');
-        const tbody = document.querySelector('#feedbackTable tbody');
-        let sortDesc = true;
+        const filterForm = document.getElementById('feedbackFilterForm');
+        let searchTimer = null;
 
-        function filterTable() {
-            if (!tbody) return;
-            const search = searchInput.value.toLowerCase();
-            const scenario = scenarioFilter.value.toLowerCase();
-            const rows = tbody.querySelectorAll('tr');
-
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                const rowScenario = (row.getAttribute('data-scenario') || '').toLowerCase();
-                
-                const matchesSearch = text.includes(search);
-                const matchesScenario = scenario === "" || rowScenario.includes(scenario);
-
-                if (matchesSearch && matchesScenario) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
+        function submitFilters() {
+            if (!filterForm) return;
+            filterForm.submit();
         }
 
-        if(searchInput) searchInput.addEventListener('keyup', filterTable);
-        if(scenarioFilter) scenarioFilter.addEventListener('change', filterTable);
+        if (scenarioFilter) {
+            scenarioFilter.addEventListener('change', submitFilters);
+        }
 
-        if(sortBtn && tbody) {
-            sortBtn.addEventListener('click', function() {
-                sortDesc = !sortDesc;
-                sortBtn.innerHTML = sortDesc ? '<i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort by Date' : '<i class="fa-solid fa-arrow-up-wide-short me-1"></i> Sort by Date';
-                
-                const rows = Array.from(tbody.querySelectorAll('tr'));
-                rows.sort((a, b) => {
-                    const d1 = parseInt(a.getAttribute('data-date') || 0);
-                    const d2 = parseInt(b.getAttribute('data-date') || 0);
-                    return sortDesc ? d2 - d1 : d1 - d2;
-                });
-                
-                rows.forEach(row => tbody.appendChild(row));
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(submitFilters, 450);
             });
         }
     });

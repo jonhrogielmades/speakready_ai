@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=25') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=26') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -72,8 +72,6 @@
               }
           }
       </style>
-      <!-- Driver.js -->
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
       @include('partials.onboarding-styles')
    </head>
    <body class="user-desktop-shell desktop-shell" data-layout-shell="desktop" data-app-surface="user">
@@ -225,6 +223,7 @@
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+      @include('partials.flash-modal')
       <!-- AOS -->
       <script src="{{ asset('js/aos.js') }}"></script>
       <!-- Swiper -->
@@ -306,7 +305,7 @@
 
          if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=10').then(function(registration) {
+               navigator.serviceWorker.register('/sw.js?v=11').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
@@ -314,12 +313,29 @@
             });
          }
          
-         function triggerMobTutorial() {
-             if (typeof window.startOnboardingTour === 'function') {
-                 window.startOnboardingTour();
-             } else {
-                 alert('A tutorial is not available for this specific page.');
-             }
+         function triggerMobTutorial(attempt = 0) {
+            if (typeof window.startOnboardingTour === 'function') {
+               const started = window.startOnboardingTour();
+               if (started !== false) return;
+            }
+
+            if (typeof window.startOnboardingTour !== 'function' && typeof window.initSpeakReadyFallbackTour === 'function') {
+               window.initSpeakReadyFallbackTour(window.SpeakReadyTourContext || {});
+            }
+
+            if (typeof window.startOnboardingTour === 'function') {
+               const started = window.startOnboardingTour();
+               if (started !== false) return;
+            }
+
+            if (attempt < 20) {
+               window.setTimeout(function() {
+                  triggerMobTutorial(attempt + 1);
+               }, 100);
+               return;
+            }
+
+            console.warn('Tutorial could not initialize on this page.');
          }
          
          function toggleNotif(e) {
@@ -479,8 +495,6 @@
             setInterval(fetchNotifications, 60000);
          });
       </script>
-      <!-- Driver.js -->
-      <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
       <style>
          @media (min-width: 992px) {
             body.user-desktop-shell .db-section :is(
@@ -874,6 +888,7 @@
       @include('partials.onboarding-script')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')
+      @include('partials.onboarding-fallback-init')
       <!-- USER_PAGE_SCRIPTS_END -->
       @include('layouts.logout-transition')
    </body>
