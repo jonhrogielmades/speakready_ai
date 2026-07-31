@@ -501,7 +501,7 @@ class AdminController extends Controller
             return false;
         }
 
-        if ($provider === 'openai' && AiProvider::where('name', 'like', '%OpenAI%')->where('status', 'active')->whereNotNull('api_key')->exists()) {
+        if ($provider === 'openai' && AiProvider::safeActiveOpenAiConfigured()) {
             return true;
         }
 
@@ -510,8 +510,7 @@ class AdminController extends Controller
 
     private function defaultQuestionProvider(): string
     {
-        $primary = AiProvider::where('is_primary', true)->where('status', 'active')->first();
-        $provider = $primary?->name ?: env('AI_PROVIDER', 'gemini');
+        $provider = AiProvider::safeActiveProviderName() ?: env('AI_PROVIDER', 'gemini');
 
         return $this->normalizeQuestionProvider($provider);
     }

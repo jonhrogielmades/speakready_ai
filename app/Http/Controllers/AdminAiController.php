@@ -7,12 +7,15 @@ use App\Models\AiProvider;
 use App\Models\AiPrompt;
 use App\Models\AiSetting;
 use App\Models\AiProviderLog;
+use App\Support\AiProviderSchema;
 use Illuminate\Support\Facades\Crypt;
 
 class AdminAiController extends Controller
 {
     public function providers()
     {
+        AiProviderSchema::ensure(force: true, createIfMissing: true);
+
         $activeProvider = AiProvider::where('is_primary', true)->first();
         $totalRequests = AiProviderLog::whereDate('created_at', today())->count();
         $successfulRequests = AiProviderLog::whereDate('created_at', today())->where('status', 'success')->count();

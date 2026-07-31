@@ -82,6 +82,7 @@ php artisan route:cache || true
 php artisan view:cache || true
 
 # Repair existing partial voice session schemas before accepting web traffic.
+php artisan app:ensure-ai-provider-schema --force --create-missing || true
 php artisan app:ensure-voice-schema --force || true
 php artisan app:ensure-question-schema --force || true
 
@@ -95,6 +96,7 @@ php-fpm -D
 # port, so slow database connections do not cause a port scan deploy failure.
 (
     php artisan migrate --force || true
+    php artisan app:ensure-ai-provider-schema --force --create-missing || true
     php artisan app:ensure-voice-schema --force --create-missing || true
     php artisan app:ensure-question-schema --force --create-missing || true
 

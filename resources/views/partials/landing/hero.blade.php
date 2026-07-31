@@ -29,7 +29,7 @@
                         <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
                         <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
                         @php
-                            $primaryAi = \App\Models\AiProvider::where('is_primary', true)->first() ?? \App\Models\AiProvider::where('status', 'active')->first();
+                            $primaryAi = \App\Models\AiProvider::safePrimaryOrActive();
                             $slug = 'openai';
                             $title = 'OpenAI';
                             $link = 'https://openai.com';
@@ -121,4 +121,3 @@
                </div>
             </div>
          </section>
-
