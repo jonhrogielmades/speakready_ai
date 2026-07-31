@@ -5,8 +5,8 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#f7fbff",
+  "theme_color": "#f7fbff",
   "icons": [
     {
       "src": "/img/app-icon-192.png",
@@ -23,12 +23,6 @@
     {
       "src": "/img/app-icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/img/app-icon-source.png",
-      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
     },
