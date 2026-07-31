@@ -2618,6 +2618,19 @@
          .pwa-btn-no { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid #444; background: transparent; color: #fff; font-weight: 600; cursor: pointer; }
          .lm .pwa-btn-no { border-color: #ccc; color: #333; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: #60a5fa; color: #fff; font-weight: 600; cursor: pointer; }
+
+         .mob-logo-ring {
+            background: #ffffff !important;
+            border-color: rgba(96, 165, 250, 0.34) !important;
+            box-shadow:
+               0 0 0 2px rgba(255, 255, 255, 0.7),
+               0 8px 18px rgba(37, 99, 235, 0.2) !important;
+         }
+         .mob-header-logo img {
+            background: transparent !important;
+            object-fit: contain !important;
+            filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.88));
+         }
       </style>
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">

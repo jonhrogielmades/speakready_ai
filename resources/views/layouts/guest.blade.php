@@ -441,11 +441,12 @@
                display: grid;
                place-items: center;
                margin-bottom: 26px;
-               background: rgba(255, 255, 255, 0.92);
-               border: 1px solid rgba(59, 130, 246, 0.16);
+               background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
+               border: 1px solid rgba(96, 165, 250, 0.28);
                box-shadow:
-                  0 22px 48px rgba(15, 23, 42, 0.10),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.92);
+                  0 22px 48px rgba(15, 23, 42, 0.14),
+                  0 0 0 4px rgba(255, 255, 255, 0.62),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.96);
             }
 
             .sr-launch-mark::after {
@@ -458,10 +459,13 @@
             }
 
             .sr-launch-mark img {
-               width: 76%;
-               height: 76%;
+               width: 82%;
+               height: 82%;
                object-fit: contain;
-               filter: drop-shadow(0 10px 16px rgba(37, 99, 235, 0.16));
+               border-radius: 24px;
+               filter:
+                  drop-shadow(0 0 1px rgba(255, 255, 255, 0.88))
+                  drop-shadow(0 12px 18px rgba(37, 99, 235, 0.24));
             }
 
             .sr-launch-kicker {
@@ -580,7 +584,11 @@
                border-radius: 12px;
                background: #fff !important;
                border: 1px solid rgba(59, 130, 246, 0.18);
-               box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+               box-shadow:
+                  0 0 0 2px rgba(255, 255, 255, 0.72),
+                  0 8px 18px rgba(37, 99, 235, 0.18);
+               object-fit: contain;
+               filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.78));
             }
 
             .guest-brand-name {
@@ -2464,6 +2472,12 @@
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 30px;
+          background: linear-gradient(180deg, #ffffff, #eff6ff);
+          border: 1px solid rgba(96, 165, 250, 0.26);
+          box-shadow:
+              0 0 0 4px rgba(255, 255, 255, 0.62),
+              0 18px 36px rgba(37, 99, 235, 0.16);
       }
       .logo-loading-circle {
           position: absolute;
@@ -2475,9 +2489,11 @@
           animation: spin 1s linear infinite;
       }
       .logo-loading-wrapper img {
-          width: 70px;
-          height: 70px;
+          width: 84px;
+          height: 84px;
           object-fit: contain;
+          border-radius: 22px;
+          filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
           animation: pulse 1.5s ease-in-out infinite;
       }
       @keyframes spin {

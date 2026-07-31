@@ -397,6 +397,12 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 30px;
+        background: linear-gradient(180deg, #ffffff, #eff6ff);
+        border: 1px solid rgba(96, 165, 250, 0.26);
+        box-shadow:
+            0 0 0 4px rgba(255, 255, 255, 0.62),
+            0 18px 36px rgba(37, 99, 235, 0.16);
     }
     .finish-loading-circle {
         position: absolute;
@@ -408,9 +414,11 @@
         animation: finishSpin 1s linear infinite;
     }
     .finish-loading-wrapper img {
-        width: 70px;
-        height: 70px;
+        width: 84px;
+        height: 84px;
         object-fit: contain;
+        border-radius: 22px;
+        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
         animation: finishPulse 1.5s ease-in-out infinite;
     }
     .finish-transition-overlay h4 {

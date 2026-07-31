@@ -233,6 +233,10 @@ a {
   color: #fff;
   font-size: 0.95rem;
   flex-shrink: 0;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.78))
+    drop-shadow(0 8px 16px rgba(37, 99, 235, 0.16));
 }
 
 .nav-link {
