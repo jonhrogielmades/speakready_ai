@@ -2309,6 +2309,257 @@
          </div>
       </div>
 
+      <style>
+         /* Guest contrast guard: keeps landing, auth, splash, and mobile UI readable in both themes. */
+         #landing,
+         #landing :where(section, footer, .gc, .ui-device, .ui-sidebar, .ui-panel, .accordion-item),
+         #lofc .modal-content,
+         #pwa-install-prompt,
+         #loginTransitionOverlay {
+            color: var(--tx);
+         }
+
+         #landing :where(h1, h2, h3, h4, h5, h6, .stitle, .ui-main-title, .ui-panel-title, .footer-heading),
+         #lofc :where(.modal-title, .olbl, .tab-sw-btn, label),
+         #loginTransitionOverlay h4 {
+            color: var(--tx) !important;
+            -webkit-text-fill-color: var(--tx) !important;
+         }
+
+         #landing :where(p, .ssub, .ui-main-subtitle, .ui-stat-label, .ui-stat-note, .plbl, .footer-links a),
+         #landing :where([style*="color:var(--tx2)"], [style*="color: var(--tx2)"]),
+         #lofc :where(p, .odiv, .form-check-label),
+         #loginTransitionOverlay p {
+            color: var(--tx2) !important;
+            -webkit-text-fill-color: var(--tx2) !important;
+         }
+
+         #landing :where(.guest-header-clock, [style*="color:var(--tx3)"], [style*="color: var(--tx3)"]),
+         #lofc :where(.odiv) {
+            color: var(--tx3) !important;
+            -webkit-text-fill-color: var(--tx3) !important;
+         }
+
+         #landing .gt,
+         #landing .slbl,
+         #landing .slbl *,
+         #landing .hbadge,
+         #landing .pnum,
+         #landing .ui-stat-value,
+         #landing :where(.ftico, .ftico i, .tech-icons a:hover),
+         #lofc :where(a, .password-toggle:hover i) {
+            -webkit-text-fill-color: initial !important;
+         }
+
+         #landing .gt {
+            background: linear-gradient(135deg, #2563eb, #06b6d4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent !important;
+         }
+
+         #landing :where(.gc, .feature-card, .accordion-item),
+         #lofc .modal-content {
+            background: var(--sf) !important;
+            border-color: var(--bd) !important;
+            box-shadow: 0 14px 34px rgba(2, 6, 23, 0.12);
+         }
+
+         html:not(.lm) #landing :where(.gc, .feature-card, .accordion-item),
+         html:not(.lm) #lofc .modal-content {
+            background: rgba(18, 18, 31, 0.96) !important;
+            border-color: rgba(148, 163, 184, 0.18) !important;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+         }
+
+         html.lm #landing :where(.gc, .feature-card, .accordion-item),
+         html.lm #lofc .modal-content {
+            background: #ffffff !important;
+            border-color: rgba(37, 99, 235, 0.14) !important;
+         }
+
+         #landing .ftag,
+         #landing .hnum,
+         #landing .ftico,
+         #landing .footer-social-link,
+         #landing .ui-device-title,
+         #landing .ui-side-item,
+         #landing .mobile-saas-metric,
+         #landing .contact-card,
+         #lofc :where(.tab-switch, .oauth, .password-toggle) {
+            background: var(--bg3) !important;
+            border-color: var(--bd) !important;
+            color: var(--tx) !important;
+         }
+
+         html:not(.lm) #landing :where(.ftag, .hnum, .ftico, .footer-social-link, .ui-device-title, .ui-side-item, .mobile-saas-metric),
+         html:not(.lm) #lofc :where(.tab-switch, .oauth, .password-toggle) {
+            background: rgba(30, 41, 59, 0.74) !important;
+            border-color: rgba(148, 163, 184, 0.18) !important;
+         }
+
+         html.lm #landing :where(.ftag, .hnum, .ftico, .footer-social-link, .ui-device-title, .ui-side-item, .mobile-saas-metric),
+         html.lm #lofc :where(.tab-switch, .oauth, .password-toggle) {
+            background: #f8fafc !important;
+            border-color: #dbeafe !important;
+         }
+
+         #landing :where(.boc, #thbtn, #mbtog, .nav-link),
+         #pwa-install-prompt .pwa-btn-no {
+            color: var(--tx) !important;
+            border-color: var(--bd2) !important;
+         }
+
+         #landing :where(.boc, #thbtn, #mbtog):hover,
+         #landing .nav-link:hover,
+         #pwa-install-prompt .pwa-btn-no:hover {
+            background: rgba(59, 130, 246, 0.12) !important;
+            color: var(--tx) !important;
+            border-color: rgba(59, 130, 246, 0.38) !important;
+         }
+
+         #landing :where(.bgrd, .footer-newsletter-btn),
+         #lofc :where(.bgrd, .btn-warning),
+         #pwa-install-prompt .pwa-btn-yes {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         #landing :where(.form-control, .form-select, textarea),
+         #lofc :where(.oinp, .form-control) {
+            background: var(--bg) !important;
+            border-color: var(--bd) !important;
+            color: var(--tx) !important;
+            caret-color: var(--pur);
+         }
+
+         html.lm #landing :where(.form-control, .form-select, textarea),
+         html.lm #lofc :where(.oinp, .form-control) {
+            background: #ffffff !important;
+            border-color: #cbd5e1 !important;
+         }
+
+         #landing :where(.form-control, .form-select, textarea)::placeholder,
+         #lofc :where(.oinp, .form-control)::placeholder {
+            color: var(--tx3) !important;
+            opacity: 1;
+         }
+
+         #landing :where(.form-control, .form-select, textarea):focus,
+         #lofc :where(.oinp, .form-control):focus {
+            border-color: var(--pur) !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+         }
+
+         #landing .acco .accordion-button {
+            background: var(--sf) !important;
+            color: var(--tx) !important;
+            -webkit-text-fill-color: var(--tx) !important;
+            border-color: var(--bd) !important;
+            box-shadow: none !important;
+         }
+
+         #landing .acco .accordion-button:not(.collapsed) {
+            background: rgba(59, 130, 246, 0.14) !important;
+            color: var(--tx) !important;
+         }
+
+         #landing .acco .accordion-body {
+            background: var(--bg3) !important;
+            color: var(--tx2) !important;
+            -webkit-text-fill-color: var(--tx2) !important;
+            border-top: 1px solid var(--bd);
+         }
+
+         html.lm #landing .acco .accordion-body {
+            background: #f8fafc !important;
+         }
+
+         #landing .accordion-button::after {
+            filter: none;
+         }
+
+         html:not(.lm) #landing .accordion-button::after {
+            filter: invert(1) grayscale(1) brightness(1.7);
+         }
+
+         #landing .tech-icons a,
+         #landing .footer-social-link {
+            color: var(--tx2) !important;
+            -webkit-text-fill-color: var(--tx2) !important;
+         }
+
+         #landing .footer-social-link:hover,
+         #landing .footer-social-link:hover i {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+         }
+
+         #landing .ui-device {
+            background: var(--sf) !important;
+            border-color: var(--bd2) !important;
+         }
+
+         #landing :where(.ui-dashboard, .ui-main, .ui-panel, .ui-stat, .ui-mini-card, .ui-chart-card) {
+            color: var(--tx) !important;
+         }
+
+         #landing .ui-side-item.active,
+         #landing .ui-main-chip {
+            color: #bfdbfe !important;
+            background: rgba(59, 130, 246, 0.18) !important;
+         }
+
+         html.lm #landing .ui-side-item.active,
+         html.lm #landing .ui-main-chip {
+            color: #1d4ed8 !important;
+            background: #dbeafe !important;
+         }
+
+         html:not(.lm) #hero .mic-3d-anim {
+            mix-blend-mode: normal !important;
+            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.34));
+         }
+
+         #lofc .tab-sw-btn {
+            color: var(--tx2) !important;
+         }
+
+         #lofc .tab-sw-btn.on {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: var(--grad) !important;
+         }
+
+         #lofc .password-toggle i {
+            color: var(--tx2) !important;
+         }
+
+         #lofc .oauth {
+            color: var(--tx) !important;
+            -webkit-text-fill-color: var(--tx) !important;
+         }
+
+         #lofc .oauth i {
+            -webkit-text-fill-color: #ea4335 !important;
+         }
+
+         #loginTransitionOverlay {
+            background: var(--bg) !important;
+         }
+
+         #pwa-install-prompt {
+            background: color-mix(in srgb, var(--sf) 94%, transparent) !important;
+            border-color: var(--bd) !important;
+         }
+
+         @supports not (background: color-mix(in srgb, #fff 50%, transparent)) {
+            #pwa-install-prompt {
+               background: var(--sf) !important;
+            }
+         }
+      </style>
+
 <!-- ======================== SCRIPTS ======================== -->
       <!-- jQuery -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
