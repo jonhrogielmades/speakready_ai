@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('ai_prompts')) {
+            return;
+        }
+
         Schema::create('ai_prompts', function (Blueprint $table) {
             $table->id();
             $table->string('name');
