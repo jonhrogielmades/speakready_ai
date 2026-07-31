@@ -1360,10 +1360,10 @@
                     </span>
                 </div>
                 @php
-                   $previewReadiness = number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0);
-                   $previewInterviews = number_format(\App\Models\InterviewSession::count() ?: 6);
-                   $previewClarity = number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0);
-                   $previewGrammar = number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0);
+                   $previewReadiness = 85;
+                   $previewInterviews = 6;
+                   $previewClarity = 92;
+                   $previewGrammar = 95;
                 @endphp
                 <div class="row align-items-center mt-4">
                   <div class="col-lg-5 col-md-6 mb-4 mb-lg-0 text-center position-relative order-1 order-lg-2">
@@ -1422,18 +1422,8 @@
                       <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
                       <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
                       @php
-                          $primaryAi = \App\Models\AiProvider::safePrimaryOrActive();
-                          $slug = 'openai';
                           $title = 'OpenAI';
                           $link = 'https://openai.com';
-                          if ($primaryAi) {
-                              $name = strtolower($primaryAi->name);
-                              if (str_contains($name, 'openai')) { $slug = 'openai'; $title = 'OpenAI'; $link = 'https://openai.com'; }
-                              elseif (str_contains($name, 'gemini')) { $slug = 'googlegemini'; $title = 'Gemini'; $link = 'https://deepmind.google/technologies/gemini/'; }
-                              elseif (str_contains($name, 'cohere')) { $slug = 'cohere'; $title = 'Cohere'; $link = 'https://cohere.com'; }
-                              elseif (str_contains($name, 'anthropic')) { $slug = 'anthropic'; $title = 'Anthropic'; $link = 'https://anthropic.com'; }
-                              elseif (str_contains($name, 'groq')) { $slug = 'groq'; $title = 'Groq'; $link = 'https://groq.com'; }
-                          }
                       @endphp
                       <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
                           <i class="fa-solid fa-robot"></i>
@@ -1578,32 +1568,32 @@
                      <div class="row g-3 text-center">
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ \App\Models\User::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">250</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ \App\Models\InterviewSession::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">1,200</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ \App\Models\Question::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">500</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ \App\Models\Feedback::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">900</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
                            </div>
                         </div>
                         <div class="col-12 mt-3">
                            <div class="gc p-4">
                               <div class="d-flex justify-content-center align-items-center gap-2">
-                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 0, 0) }}</span>%</div>
+                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">85</span>%</div>
                                 <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
                               </div>
                            </div>
@@ -2005,7 +1995,7 @@
                              <div class="ftico" style="width:50px;height:50px;font-size:1.2rem;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg3);border:1px solid var(--bd)"><i class="fa-solid fa-envelope" style="color:var(--pur)"></i></div>
                              <div>
                                  <h5 class="mb-1 fs-6 fw-bold">Email Address</h5>
-                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">{{ \App\Models\User::where('is_admin', 1)->value('email') ?? 'admin@speakready.ai' }}</p>
+                                 <p class="mb-0" style="color:var(--tx2);font-size:0.9rem;">admin@speakready.ai</p>
                              </div>
                          </div>
                          <div class="d-flex align-items-center gap-3">

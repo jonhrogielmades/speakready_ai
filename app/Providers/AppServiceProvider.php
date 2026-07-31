@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Models\Setting;
-use App\Support\AiProviderSchema;
 use App\Support\DatabaseIdSequences;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\DB;
@@ -31,12 +30,6 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
-        try {
-            AiProviderSchema::ensure();
-        } catch (\Throwable) {
-            // Let migrations or the admin repair path handle unavailable databases.
-        }
-
         $this->resetEmptyIdSequencesAfterDeletes();
 
         View::composer('*', function ($view) {
@@ -46,16 +39,18 @@ class AppServiceProvider extends ServiceProvider
                 $languageConfig = Setting::SUPPORTED_LANGUAGES['en'];
                 $languageCode = null;
 
-                try {
-                    if (Schema::hasTable('settings')) {
-                        $languageCode = (string) Setting::getVal('sys_language', 'en');
-                    }
-                } catch (\Throwable $e) {
-                    $languageCode = 'en';
-                }
+                if (auth()->check()) {
+                    try {
+                        if (Schema::hasTable('settings')) {
+                            $languageCode = (string) Setting::getVal('sys_language', 'en');
+                        }
 
-                if (auth()->check() && Setting::preferredLanguageFor(auth()->user())) {
-                    $languageCode = Setting::preferredLanguageFor(auth()->user());
+                        if (Setting::preferredLanguageFor(auth()->user())) {
+                            $languageCode = Setting::preferredLanguageFor(auth()->user());
+                        }
+                    } catch (\Throwable $e) {
+                        $languageCode = 'en';
+                    }
                 }
 
                 $languageConfig = Setting::languageConfig($languageCode);

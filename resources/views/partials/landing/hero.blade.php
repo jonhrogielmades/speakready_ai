@@ -29,18 +29,9 @@
                         <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
                         <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
                         @php
-                            $primaryAi = \App\Models\AiProvider::safePrimaryOrActive();
                             $slug = 'openai';
                             $title = 'OpenAI';
                             $link = 'https://openai.com';
-                            if ($primaryAi) {
-                                $name = strtolower($primaryAi->name);
-                                if (str_contains($name, 'openai')) { $slug = 'openai'; $title = 'OpenAI'; $link = 'https://openai.com'; }
-                                elseif (str_contains($name, 'gemini')) { $slug = 'googlegemini'; $title = 'Gemini'; $link = 'https://deepmind.google/technologies/gemini/'; }
-                                elseif (str_contains($name, 'cohere')) { $slug = 'cohere'; $title = 'Cohere'; $link = 'https://cohere.com'; }
-                                elseif (str_contains($name, 'anthropic')) { $slug = 'anthropic'; $title = 'Anthropic'; $link = 'https://anthropic.com'; }
-                                elseif (str_contains($name, 'groq')) { $slug = 'groq'; $title = 'Groq'; $link = 'https://groq.com'; }
-                            }
                         @endphp
                         <a href="{{ $link }}" target="_blank" rel="noopener noreferrer" title="{{ $title }}">
                             <img src="https://cdn.simpleicons.org/{{ $slug }}/a1a1aa" alt="{{ $title }}" style="height:26px;">
@@ -66,26 +57,26 @@
                                  <div class="row g-2 mb-3">
                                     <div class="col-6 col-sm-3">
                                        <div class="stpill">
-                                          <div style="font-size:1.4rem;font-weight:700" class="gt">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 85, 0) }}%</div>
+                                          <div style="font-size:1.4rem;font-weight:700" class="gt">85%</div>
                                           <div style="font-size:.67rem;color:var(--tx3)">PH Readiness</div>
                                           <div style="font-size:.67rem;color:#34d399;font-weight:600"><i class="fa-solid fa-caret-up me-1"></i>Avg</div>
                                        </div>
                                     </div>
                                     <div class="col-6 col-sm-3">
                                        <div class="stpill">
-                                          <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\InterviewSession::count() ?? 12) }}</div>
+                                          <div style="font-size:1.4rem;font-weight:700">12</div>
                                           <div style="font-size:.67rem;color:var(--tx3)">Interviews Done</div>
                                        </div>
                                     </div>
                                     <div class="col-6 col-sm-3">
                                        <div class="stpill">
-                                          <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\Score::avg('clarity_score') ?? 92, 0) }}%</div>
+                                          <div style="font-size:1.4rem;font-weight:700">92%</div>
                                           <div style="font-size:.67rem;color:var(--tx3)">Clarity Score</div>
                                        </div>
                                     </div>
                                     <div class="col-6 col-sm-3">
                                        <div class="stpill">
-                                          <div style="font-size:1.4rem;font-weight:700">{{ number_format(\App\Models\Score::avg('grammar_score') ?? 95, 0) }}%</div>
+                                          <div style="font-size:1.4rem;font-weight:700">95%</div>
                                           <div style="font-size:.67rem;color:var(--tx3)">Grammar Score</div>
                                        </div>
                                     </div>

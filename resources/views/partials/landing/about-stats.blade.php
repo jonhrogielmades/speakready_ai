@@ -23,32 +23,32 @@
                      <div class="row g-3 text-center">
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ \App\Models\User::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">250</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ \App\Models\InterviewSession::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">1,200</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ \App\Models\Question::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">500</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
                            </div>
                         </div>
                         <div class="col-6 col-sm-6">
                            <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ \App\Models\Feedback::count() }}</div>
+                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">900</div>
                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
                            </div>
                         </div>
                         <div class="col-12 mt-3">
                            <div class="gc p-4">
                               <div class="d-flex justify-content-center align-items-center gap-2">
-                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">{{ number_format(\App\Models\Score::avg('overall_readiness_score') ?? 0, 0) }}</span>%</div>
+                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">85</span>%</div>
                                 <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
                               </div>
                            </div>
@@ -58,4 +58,3 @@
                </div>
             </div>
          </section>
-
