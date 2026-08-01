@@ -107,9 +107,13 @@ php-fpm -D
     # while production schema drifted or missed the table creation.
     php artisan app:ensure-game-schema --force || true
 
-    # Backfill report-only coaching data for older completed interviews. This uses
-    # saved answers only and does not call external AI providers.
-    php artisan app:repair-feedback-coaching --limit=1000 || true
+    # Optional backfill for older completed interviews. Keep it off during normal
+    # Render starts so first user requests are not competing with maintenance work.
+    if [ "${RENDER_REPAIR_FEEDBACK_ON_START:-false}" = "true" ]; then
+        php artisan app:repair-feedback-coaching --limit="${RENDER_REPAIR_FEEDBACK_LIMIT:-250}" || true
+    else
+        echo "Skipping optional feedback coaching repair on startup." >&2
+    fi
 
     # Seed the database automatically (uses firstOrCreate so it's safe to run multiple times)
     php artisan db:seed --force || true

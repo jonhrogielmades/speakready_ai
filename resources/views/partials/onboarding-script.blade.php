@@ -86,6 +86,42 @@
             currentTourHighlightedElement = null;
         }
 
+        function makeRegistrationKey(scope, completionKey, isFallbackTour) {
+            return [
+                normalizePageScope(scope) || getCurrentPageScope(),
+                completionKey || 'automatic',
+                isFallbackTour ? 'fallback' : 'page',
+            ].join('::');
+        }
+
+        function getRegisteredTour() {
+            const registeredTour = window.__speakReadyRegisteredTour;
+
+            if (!registeredTour || typeof registeredTour !== 'object') return null;
+            if (!registeredTour.controller || !isCurrentTourScope(registeredTour.scope)) return null;
+
+            return registeredTour;
+        }
+
+        function bumpTourRegistrationVersion() {
+            window.__speakReadyTourRegistrationVersion = (window.__speakReadyTourRegistrationVersion || 0) + 1;
+
+            return window.__speakReadyTourRegistrationVersion;
+        }
+
+        function destroyTourDriver(driverObj) {
+            if (!driverObj || typeof driverObj.destroy !== 'function') return;
+
+            try {
+                window.__speakReadyForceDestroy = true;
+                driverObj.destroy();
+            } catch (error) {
+                console.warn('Unable to destroy duplicate tutorial:', error);
+            } finally {
+                window.__speakReadyForceDestroy = false;
+            }
+        }
+
         function getPopoverClass() {
             const themeClass = document.documentElement.classList.contains('lm') ?
                 'driverjs-theme-light' :
@@ -722,22 +758,17 @@
 
         window.resetSpeakReadyOnboardingForNavigation = function() {
             window.__speakReadyTourResetVersion = (window.__speakReadyTourResetVersion || 0) + 1;
+            bumpTourRegistrationVersion();
             clearTourHighlightedElement();
 
             if (window.__speakReadyActiveDriver && typeof window.__speakReadyActiveDriver.destroy === 'function') {
-                try {
-                    window.__speakReadyForceDestroy = true;
-                    window.__speakReadyActiveDriver.destroy();
-                } catch (error) {
-                    console.warn('Unable to reset active tutorial:', error);
-                } finally {
-                    window.__speakReadyForceDestroy = false;
-                }
+                destroyTourDriver(window.__speakReadyActiveDriver);
             }
 
             window.__speakReadyActiveDriver = null;
             window.__speakReadyTourController = null;
             window.__speakReadyTourScope = null;
+            window.__speakReadyRegisteredTour = null;
             window.__speakReadyPageTourRegistered = false;
             window.__speakReadyFallbackTourRegistered = false;
             window.__speakReadyFallbackTour = null;
@@ -755,6 +786,9 @@
             clearTourHighlightedElement();
             window.__speakReadyTourController = null;
             window.__speakReadyTourScope = null;
+            if (window.__speakReadyRegisteredTour && window.__speakReadyRegisteredTour.controller === controller) {
+                window.__speakReadyRegisteredTour = null;
+            }
             window.__speakReadyPageTourRegistered = false;
             window.__speakReadyFallbackTourRegistered = false;
             window.__speakReadyFallbackTour = null;
@@ -781,6 +815,31 @@
                 getNativeTourFactory();
             const completionKey = config.completionKey;
             const registrationScope = normalizePageScope(config.pageScope) || getCurrentPageScope();
+            const registrationKey = makeRegistrationKey(registrationScope, completionKey, isFallbackTour);
+            const existingRegistration = getRegisteredTour();
+
+            if (existingRegistration && existingRegistration.key === registrationKey) {
+                if (config.exposeGlobal !== false) {
+                    window.startOnboardingTour = existingRegistration.controller.start;
+                    window.__speakReadyTourController = existingRegistration.controller;
+                    window.__speakReadyTourScope = existingRegistration.scope;
+                }
+
+                if (isFallbackTour) {
+                    window.__speakReadyFallbackTourRegistered = true;
+                    window.__speakReadyFallbackTour = existingRegistration.controller;
+                } else {
+                    window.__speakReadyPageTourRegistered = true;
+                }
+
+                return existingRegistration.controller;
+            }
+
+            if (isFallbackTour && existingRegistration && !existingRegistration.isFallback) {
+                return existingRegistration.controller;
+            }
+
+            const registrationVersion = bumpTourRegistrationVersion();
             let activeTour = null;
             let isStarting = false;
 
@@ -870,6 +929,10 @@
                         return false;
                     }
 
+                    if (window.__speakReadyRegisteredTour && window.__speakReadyRegisteredTour.controller !== controller) {
+                        return false;
+                    }
+
                     if (activeTour || isStarting) return true;
 
                     isStarting = true;
@@ -886,10 +949,25 @@
                             return;
                         }
 
+                        if ((window.__speakReadyTourRegistrationVersion || 0) !== registrationVersion) {
+                            isStarting = false;
+                            return;
+                        }
+
                         if (!isCurrentTourScope(registrationScope)) {
                             isStarting = false;
                             clearRegisteredTour(controller);
                             return;
+                        }
+
+                        if (window.__speakReadyRegisteredTour && window.__speakReadyRegisteredTour.controller !== controller) {
+                            isStarting = false;
+                            return;
+                        }
+
+                        if (window.__speakReadyActiveDriver && window.__speakReadyActiveDriver !== activeTour) {
+                            destroyTourDriver(window.__speakReadyActiveDriver);
+                            window.__speakReadyActiveDriver = null;
                         }
 
                         activeTour = createTour();
@@ -931,12 +1009,47 @@
                 isForCurrentPage() {
                     return isCurrentTourScope(registrationScope);
                 },
+
+                destroy() {
+                    isStarting = false;
+                    const ownsGlobalRegistration = !window.__speakReadyRegisteredTour ||
+                        window.__speakReadyRegisteredTour.controller === controller;
+
+                    if (activeTour) {
+                        const tourToDestroy = activeTour;
+                        activeTour = null;
+                        destroyTourDriver(tourToDestroy);
+                    }
+
+                    if (ownsGlobalRegistration && window.__speakReadyActiveDriver) {
+                        destroyTourDriver(window.__speakReadyActiveDriver);
+                        window.__speakReadyActiveDriver = null;
+                    }
+
+                    clearRegisteredTour(controller);
+                },
             };
+
+            if (existingRegistration && existingRegistration.controller && existingRegistration.controller !== controller) {
+                if (typeof existingRegistration.controller.destroy === 'function') {
+                    existingRegistration.controller.destroy();
+                } else if (window.__speakReadyActiveDriver) {
+                    destroyTourDriver(window.__speakReadyActiveDriver);
+                    window.__speakReadyActiveDriver = null;
+                }
+            }
 
             if (config.exposeGlobal !== false) {
                 window.startOnboardingTour = controller.start;
                 window.__speakReadyTourController = controller;
                 window.__speakReadyTourScope = registrationScope;
+                window.__speakReadyRegisteredTour = {
+                    key: registrationKey,
+                    scope: registrationScope,
+                    controller,
+                    isFallback: isFallbackTour,
+                    completionKey: completionKey || null,
+                };
             }
 
             if (config.autoStart !== false) {
@@ -950,9 +1063,10 @@
             const suppliedContext = config || {};
             const context = isCurrentTourScope(suppliedContext.pageScope) ? suppliedContext : {};
             context.pageScope = getCurrentPageScope();
+            const registeredTour = getRegisteredTour();
 
             if ((window.__speakReadyPageTourRegistered || window.__speakReadyFallbackTourRegistered) && hasCurrentRegisteredTour()) {
-                return window.__speakReadyFallbackTour || null;
+                return registeredTour?.controller || window.__speakReadyTourController || window.__speakReadyFallbackTour || null;
             }
 
             if (typeof window.startOnboardingTour === 'function' && !hasCurrentRegisteredTour()) {

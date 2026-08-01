@@ -10,6 +10,8 @@
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
       <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://accounts.google.com">
+      <link rel="dns-prefetch" href="//accounts.google.com">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
@@ -2262,7 +2264,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or continue with</div>
-               <a href="{{ route('auth.google') }}" class="oauth" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
+               <a href="{{ route('auth.google') }}" class="oauth" data-auth-transition="google" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
             </div>
             <!-- Sign Up -->
             <div id="fSignup" class="auth-panel" style="display:none">
@@ -2292,7 +2294,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or sign up with</div>
-               <a href="{{ route('auth.google') }}" class="oauth" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
+               <a href="{{ route('auth.google') }}" class="oauth" data-auth-transition="google" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
             </div>
                </div>
             </div>
@@ -2726,26 +2728,44 @@
           border-radius: 30px;
           background: linear-gradient(180deg, #ffffff, #eff6ff);
           border: 1px solid rgba(96, 165, 250, 0.26);
+          isolation: isolate;
+          overflow: hidden;
           box-shadow:
               0 0 0 4px rgba(255, 255, 255, 0.62),
               0 18px 36px rgba(37, 99, 235, 0.16);
       }
       .logo-loading-circle {
           position: absolute;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
+          inset: 0;
+          border-radius: 30px;
           border: 4px solid var(--bd, #e2e8f0);
           border-top: 4px solid var(--pur, #7c3aed);
+          border-right-color: rgba(14, 165, 233, 0.78);
           animation: spin 1s linear infinite;
       }
       .logo-loading-wrapper img {
-          width: 84px;
-          height: 84px;
+          width: 78px;
+          height: 78px;
           object-fit: contain;
           border-radius: 22px;
           filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
           animation: pulse 1.5s ease-in-out infinite;
+      }
+      @media (max-width: 575px) {
+          .logo-loading-wrapper {
+              width: 104px;
+              height: 104px;
+              border-radius: 26px;
+          }
+          .logo-loading-circle {
+              border-width: 3px;
+              border-radius: 26px;
+          }
+          .logo-loading-wrapper img {
+              width: 66px;
+              height: 66px;
+              border-radius: 18px;
+          }
       }
       @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -2776,6 +2796,9 @@
               if (mode === 'register') {
                   if (title) title.textContent = 'Creating your account...';
                   if (copy) copy.textContent = 'Please wait while we set up your dashboard';
+              } else if (mode === 'google') {
+                  if (title) title.textContent = 'Connecting to Google...';
+                  if (copy) copy.textContent = 'Opening secure Google sign-in';
               } else {
                   if (title) title.textContent = 'Authenticating...';
                   if (copy) copy.textContent = 'Please wait while we log you in';
@@ -2802,6 +2825,48 @@
                       }
                   });
               }
+
+              const googleAuthLinks = document.querySelectorAll('a[data-auth-transition="google"]');
+              const resetGoogleAuthLinks = function() {
+                  googleAuthLinks.forEach(function(link) {
+                      link.style.pointerEvents = '';
+                      link.removeAttribute('aria-disabled');
+                      const icon = link.querySelector('i');
+                      if (icon) {
+                          icon.className = 'fa-brands fa-google me-2';
+                          icon.style.color = '#EA4335';
+                      }
+                  });
+              };
+
+              googleAuthLinks.forEach(function(link) {
+                  link.addEventListener('click', function(event) {
+                      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+                          return;
+                      }
+
+                      event.preventDefault();
+                      showLoginTransition('google');
+                      link.setAttribute('aria-disabled', 'true');
+                      link.style.pointerEvents = 'none';
+
+                      const icon = link.querySelector('i');
+                      if (icon) {
+                          icon.className = 'fa-solid fa-spinner fa-spin me-2';
+                          icon.style.color = '';
+                      }
+
+                      window.setTimeout(function() {
+                          window.location.href = link.href;
+                      }, 80);
+                  });
+              });
+
+              window.addEventListener('pageshow', function() {
+                  const overlay = document.getElementById('loginTransitionOverlay');
+                  if (overlay) overlay.classList.remove('active');
+                  resetGoogleAuthLinks();
+              });
           });
 
           function togglePasswordVisibility(inputId, btn) {
@@ -2821,5 +2886,6 @@
              }
           }
       </script>
+      @include('partials.page-transition')
    </body>
 </html>

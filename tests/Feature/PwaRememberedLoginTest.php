@@ -92,13 +92,19 @@ class PwaRememberedLoginTest extends TestCase
 
     public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
     {
-        $this->get('/')
-            ->assertOk()
+        $response = $this->get('/');
+
+        $response->assertOk()
             ->assertSee('id="loginForm"', false)
             ->assertSee('id="signupForm"', false)
             ->assertSee('id="loginTransitionOverlay"', false)
             ->assertSee('id="authTransitionTitle"', false)
             ->assertSee('Creating your account...', false)
-            ->assertSee("showLoginTransition('register')", false);
+            ->assertSee("showLoginTransition('register')", false)
+            ->assertSee('id="pageTransitionOverlay"', false)
+            ->assertSee('window.SpeakReadyPageTransition', false)
+            ->assertSee('data-auth-transition="google"', false)
+            ->assertSee('Connecting to Google...', false)
+            ->assertSee('border-right-color: rgba(14, 165, 233, 0.78);', false);
     }
 }

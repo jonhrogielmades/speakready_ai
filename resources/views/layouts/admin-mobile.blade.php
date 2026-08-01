@@ -2854,6 +2854,7 @@
 
       @stack('late-styles')
       @stack('scripts')
+      @include('partials.page-transition')
       @include('layouts.logout-transition')
    </body>
 </html>

@@ -446,22 +446,24 @@
         border-radius: 30px;
         background: linear-gradient(180deg, #ffffff, #eff6ff);
         border: 1px solid rgba(96, 165, 250, 0.26);
+        isolation: isolate;
+        overflow: hidden;
         box-shadow:
             0 0 0 4px rgba(255, 255, 255, 0.62),
             0 18px 36px rgba(37, 99, 235, 0.16);
     }
     .finish-loading-circle {
         position: absolute;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
+        inset: 0;
+        border-radius: 30px;
         border: 4px solid var(--bd, #e2e8f0);
         border-top: 4px solid var(--pur, #7c3aed);
+        border-right-color: rgba(14, 165, 233, 0.78);
         animation: finishSpin 1s linear infinite;
     }
     .finish-loading-wrapper img {
-        width: 84px;
-        height: 84px;
+        width: 78px;
+        height: 78px;
         object-fit: contain;
         border-radius: 22px;
         filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
@@ -2035,13 +2037,16 @@
             height: 96px;
             flex-basis: 96px;
             margin-bottom: 16px;
+            border-radius: 26px;
         }
         .finish-loading-circle {
             border-width: 3px;
+            border-radius: 26px;
         }
         .finish-loading-wrapper img {
-            width: 56px;
-            height: 56px;
+            width: 62px;
+            height: 62px;
+            border-radius: 18px;
         }
         .finish-transition-overlay h4 {
             max-width: 300px;

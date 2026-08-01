@@ -68,10 +68,15 @@ class PageSmokeTest extends TestCase
             );
 
             $content = $response->getContent();
+            $this->assertStringContainsString('id="pageTransitionOverlay"', $content, "Expected {$url} to include the global page transition overlay.");
+            $this->assertStringContainsString('window.SpeakReadyPageTransition', $content, "Expected {$url} to include the global page transition script.");
+
             if (str_contains($content, 'data-app-surface="user"')) {
                 $this->assertStringContainsString('initSpeakReadyFallbackTour', $content, "Expected {$url} to include the user tutorial fallback.");
                 $this->assertStringContainsString('pageScope:', $content, "Expected {$url} to scope tutorial context to the current page.");
                 $this->assertStringContainsString('__speakReadyTourScope', $content, "Expected {$url} to guard tutorials against stale page reuse.");
+                $this->assertStringContainsString('__speakReadyRegisteredTour', $content, "Expected {$url} to prevent duplicate tutorial registrations.");
+                $this->assertStringContainsString('__speakReadyTourRegistrationVersion', $content, "Expected {$url} to cancel stale tutorial auto-starts.");
                 $this->assertStringContainsString('isForCurrentPage', $content, "Expected {$url} to expose current-page tutorial validation.");
                 $this->assertStringContainsString('.sr-tour-highlighted', $content, "Expected {$url} to keep the selected tutorial target visually clear.");
                 $this->assertStringContainsString('background: transparent;', $content, "Expected {$url} tutorial overlay not to tint the selected target.");
@@ -154,9 +159,16 @@ class PageSmokeTest extends TestCase
         ];
 
         foreach ($routes as $url) {
-            $this->actingAs($admin)
-                ->get($url)
-                ->assertStatus(200);
+            $response = $this->actingAs($admin)
+                ->get($url);
+
+            $response->assertStatus(200);
+
+            $content = $response->getContent();
+            if (str_contains((string) $response->headers->get('Content-Type'), 'text/html')) {
+                $this->assertStringContainsString('id="pageTransitionOverlay"', $content, "Expected {$url} to include the global page transition overlay.");
+                $this->assertStringContainsString('window.SpeakReadyPageTransition', $content, "Expected {$url} to include the global page transition script.");
+            }
         }
 
         $contact = Contact::create([

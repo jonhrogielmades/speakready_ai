@@ -30,5 +30,6 @@
     <main class="public-review-shell">@yield('content')</main>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     @include('partials.flash-modal')
+    @include('partials.page-transition')
 </body>
 </html>

@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
 use App\Models\Setting;
+use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Profile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Laravel\Socialite\Facades\Socialite;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -148,37 +152,30 @@ class AuthController extends Controller
 
     public function redirectToGoogle()
     {
-        return \Laravel\Socialite\Facades\Socialite::driver('google')->stateless()->redirect();
+        return Socialite::driver('google')->stateless()->redirect();
     }
 
-    public function handleGoogleCallback()
+    public function handleGoogleCallback(Request $request)
     {
         try {
-            $driver = \Laravel\Socialite\Facades\Socialite::driver('google')->stateless();
-            
-            // Fix for Render 504 Gateway Timeout: Force IPv4 and add connection timeouts
-            $guzzleOptions = [
-                'timeout' => 15,
-                'connect_timeout' => 5,
-                'curl' => [
-                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
-                ]
-            ];
-            
-            // Disable SSL verification for local development (Laragon)
-            if (app()->environment('local')) {
-                $guzzleOptions['verify'] = false;
-            }
-            
-            $driver->setHttpClient(new \GuzzleHttp\Client($guzzleOptions));
-            
+            $driver = $this->googleDriver();
             $googleUser = $driver->user();
-            
+
+            if (blank($googleUser->email)) {
+                return redirect('/')->withErrors([
+                    'email' => 'Google did not return an email address. Please try another Google account.',
+                ]);
+            }
+
             $user = User::withTrashed()
-                ->where(function ($query) use ($googleUser) {
-                    $query->where('google_id', $googleUser->id)
-                          ->orWhere('email', $googleUser->email);
-                })->first();
+                ->where('google_id', $googleUser->id)
+                ->first();
+
+            if (! $user) {
+                $user = User::withTrashed()
+                    ->where('email', $googleUser->email)
+                    ->first();
+            }
 
             if ($user && $user->trashed()) {
                 // Automatically restore the user's account if they log back in with Google
@@ -196,13 +193,13 @@ class AuthController extends Controller
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
-                    'password' => null, // No password for Google login
+                    'password' => null,
                     'profile_photo_path' => $googleUser->avatar,
                 ]);
 
-                // Create profile for SpeakReady AI features
-                Profile::create([
+                Profile::firstOrCreate([
                     'user_id' => $user->id,
+                ], [
                     'readiness_score' => 0,
                     'total_sessions' => 0,
                 ]);
@@ -219,33 +216,58 @@ class AuthController extends Controller
                 }
             }
 
-            Auth::login($user, true);
-
-            // Send an email notification for the Google login
-            // Temporarily disabled to prevent 504 Gateway Timeout if SMTP is not configured or blocked on Render
-            // $user->notify(new \App\Notifications\GoogleLoginAlert());
-
             if (in_array($user->status, ['inactive', 'suspended'])) {
-                Auth::logout();
-                request()->session()->invalidate();
-                request()->session()->regenerateToken();
-
                 return redirect('/')->withErrors([
                     'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
                 ])->withInput(['email' => $user->email]);
             }
 
-            $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in with Google', request()->ip());
+            Auth::login($user, true);
+
+            $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in with Google', $request->ip());
 
             if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
             }
             return redirect()->route('dashboard');
 
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Google login failed: ' . $e->getMessage(), ['exception' => $e]);
-            return redirect('/')->withErrors(['email' => 'Failed to login with Google: ' . $e->getMessage()]);
+        } catch (Throwable $e) {
+            Log::error('Google login failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            return redirect('/')->withErrors([
+                'email' => 'Google login took too long or could not be completed. Please try again.',
+            ]);
         }
+    }
+
+    private function googleDriver()
+    {
+        $driver = Socialite::driver('google')->stateless();
+
+        $guzzleOptions = [
+            'connect_timeout' => (float) config('services.google.connect_timeout', 3),
+            'timeout' => (float) config('services.google.timeout', 8),
+            'read_timeout' => (float) config('services.google.timeout', 8),
+        ];
+
+        $curlOptions = [];
+        if (defined('CURLOPT_IPRESOLVE') && defined('CURL_IPRESOLVE_V4')) {
+            $curlOptions[CURLOPT_IPRESOLVE] = CURL_IPRESOLVE_V4;
+        }
+        if (defined('CURLOPT_NOSIGNAL')) {
+            $curlOptions[CURLOPT_NOSIGNAL] = 1;
+        }
+        if (! empty($curlOptions)) {
+            $guzzleOptions['curl'] = $curlOptions;
+        }
+
+        if (app()->environment('local')) {
+            $guzzleOptions['verify'] = false;
+        }
+
+        $driver->setHttpClient(new GuzzleClient($guzzleOptions));
+
+        return $driver;
     }
 
     private function logAuthenticationActivity(User $user, string $action, string $activity, ?string $ipAddress): void

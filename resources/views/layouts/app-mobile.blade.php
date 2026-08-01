@@ -3770,6 +3770,7 @@
       @stack('scripts')
       @include('partials.onboarding-fallback-init')
       <!-- USER_PAGE_SCRIPTS_END -->
+      @include('partials.page-transition')
       @include('layouts.logout-transition')
    </body>
 </html>

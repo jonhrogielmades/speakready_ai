@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     ca-certificates \
+    libcurl4-openssl-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -22,7 +23,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip curl opcache
 
 # Allow long-running admin generation requests without PHP-FPM ending the worker first.
 RUN { \
@@ -30,6 +31,15 @@ RUN { \
         echo "max_input_time=3600"; \
         echo "memory_limit=512M"; \
     } > /usr/local/etc/php/conf.d/99-render-timeouts.ini \
+    && { \
+        echo "opcache.enable=1"; \
+        echo "opcache.enable_cli=1"; \
+        echo "opcache.memory_consumption=128"; \
+        echo "opcache.interned_strings_buffer=16"; \
+        echo "opcache.max_accelerated_files=20000"; \
+        echo "opcache.validate_timestamps=0"; \
+        echo "opcache.save_comments=1"; \
+    } > /usr/local/etc/php/conf.d/10-opcache.ini \
     && { \
         echo "[www]"; \
         echo "request_terminate_timeout = 3600s"; \
