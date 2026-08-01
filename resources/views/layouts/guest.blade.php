@@ -66,6 +66,81 @@
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
 
+         #developers .developers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+         }
+
+         #developers .developer-card-wrap,
+         #developers .developer-card {
+            min-width: 0;
+         }
+
+         #developers .developer-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+         }
+
+         #developers .developer-photo {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+         }
+
+         #developers .developer-card h6,
+         #developers .developer-card p {
+            max-width: 100%;
+            overflow-wrap: anywhere;
+         }
+
+         @media (max-width: 767.98px) {
+            #developers .developers-grid {
+               gap: 8px;
+            }
+
+            #developers .developer-card {
+               padding: 14px 8px !important;
+            }
+
+            #developers .developer-photo {
+               width: clamp(72px, 24vw, 96px);
+               height: clamp(72px, 24vw, 96px);
+               margin-bottom: 10px !important;
+               border-width: 3px !important;
+            }
+
+            #developers .developer-card h6 {
+               font-size: clamp(0.66rem, 2.4vw, 0.78rem);
+               line-height: 1.18;
+            }
+
+            #developers .developer-role {
+               font-size: clamp(0.6rem, 2.2vw, 0.72rem) !important;
+               line-height: 1.2;
+               margin-bottom: 8px !important;
+            }
+
+            #developers .developer-bio {
+               font-size: clamp(0.58rem, 2vw, 0.68rem) !important;
+               line-height: 1.35 !important;
+               margin-bottom: 0 !important;
+            }
+         }
+
+         @media (max-width: 380px) {
+            #developers .developers-grid {
+               gap: 6px;
+            }
+
+            #developers .developer-card {
+               padding: 10px 5px !important;
+            }
+         }
+
          .back-to-top-btn {
             position: fixed;
             right: max(18px, env(safe-area-inset-right));
@@ -1917,29 +1992,29 @@
                   <span class="slbl">Developers</span>
                   <h2 class="stitle">Meet Our <span class="gt">Team</span></h2>
                </div>
-               <div class="row g-3 justify-content-center">
-                  <div class="col-md-4 rv">
-                     <div class="gc p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
-                        <img src="{{ asset('img/dev1.png') }}" alt="Developer" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--pur);">
+               <div class="developers-grid">
+                  <div class="developer-card-wrap rv">
+                     <div class="gc p-4 h-100 developer-card">
+                        <img src="{{ asset('img/dev1.png') }}" alt="Developer" class="developer-photo img-fluid rounded-circle mb-3" style="border: 4px solid var(--pur);">
                         <h6 class="fw-bold mb-1">Jonh Rogiel M. Tumanda</h6>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Lead Programmer</p>
-                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Core Code, Databases, and APIs.</p>
+                        <p class="developer-role" style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Lead Programmer</p>
+                        <p class="developer-bio" style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Core Code, Databases, and APIs.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 rv" style="transition-delay:.1s">
-                     <div class="gc p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
-                        <img src="{{ asset('img/dev2.png') }}" alt="Developer" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #34d399;">
+                  <div class="developer-card-wrap rv" style="transition-delay:.1s">
+                     <div class="gc p-4 h-100 developer-card">
+                        <img src="{{ asset('img/dev2.png') }}" alt="Developer" class="developer-photo img-fluid rounded-circle mb-3" style="border: 4px solid #34d399;">
                         <h6 class="fw-bold mb-1">Karyl G. Gesto</h6>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Manuscript Editor</p>
-                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Technical Writing, Documentation, and Compliance.</p>
+                        <p class="developer-role" style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">Manuscript Editor</p>
+                        <p class="developer-bio" style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Technical Writing, Documentation, and Compliance.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 rv" style="transition-delay:.2s">
-                     <div class="gc p-4 h-100 text-center d-flex flex-column align-items-center justify-content-center">
-                        <img src="{{ asset('img/dev3.png') }}" alt="Developer" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #f59e0b;">
+                  <div class="developer-card-wrap rv" style="transition-delay:.2s">
+                     <div class="gc p-4 h-100 developer-card">
+                        <img src="{{ asset('img/dev3.png') }}" alt="Developer" class="developer-photo img-fluid rounded-circle mb-3" style="border: 4px solid #f59e0b;">
                         <h6 class="fw-bold mb-1">Eva Mae C. Cabilic</h6>
-                        <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">QA Tester</p>
-                        <p style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Bug Hunting, Test Cases, and UX Stability.</p>
+                        <p class="developer-role" style="color:var(--tx3);font-size:0.9rem;margin-bottom:15px">QA Tester</p>
+                        <p class="developer-bio" style="font-size:.875rem;color:var(--tx2);line-height:1.65;">Bug Hunting, Test Cases, and UX Stability.</p>
                      </div>
                   </div>
                </div>
