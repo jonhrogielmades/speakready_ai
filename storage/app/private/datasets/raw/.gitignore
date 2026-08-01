@@ -1,2 +1,5 @@
 *
 !.gitignore
+!question_sources/
+!question_sources/**/
+!question_sources/**/_source_index.json

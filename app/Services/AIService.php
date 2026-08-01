@@ -132,7 +132,7 @@ class AIService
         return [];
     }
 
-    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [])
+    public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [], $datasetContext = null)
     {
         $targetPosition = trim((string) ($session->target_position ?? 'General')) ?: 'General';
         $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '{$targetPosition}' role. ";
@@ -174,6 +174,15 @@ class AIService
 
         if (! empty($session->job_description)) {
             $prompt .= "The target job description is: '".substr(trim(preg_replace('/\s+/', ' ', $session->job_description)), 0, 1000)."'. Ensure questions assess these specific requirements. ";
+        }
+
+        if (! empty($datasetContext)) {
+            $contextText = is_array($datasetContext)
+                ? QuestionDatasetProvider::promptContext($datasetContext)
+                : (string) $datasetContext;
+
+            $prompt .= "\nUse this reliable source context when choosing follow-up question wording, local relevance, and skills coverage:\n{$contextText}\n";
+            $prompt .= 'Adapt source-backed question patterns to the live conversation without copying generic wording. Do not fabricate source claims, leaked questions, or protected exam items. ';
         }
 
         $conversation = array_map(static function (array $interaction): array {

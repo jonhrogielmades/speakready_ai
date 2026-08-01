@@ -1,0 +1,117 @@
+{
+    "dataset": "speakready_reliable_questions",
+    "retrieved_at_utc": "2026-08-01T19:39:34+00:00",
+    "raw_root": "raw/question_sources/2026-08-01",
+    "sources": [
+        {
+            "key": "ny_dol_p679_interviewing",
+            "name": "New York State Department of Labor - Find the Career You Love: Interviewing (P679)",
+            "url": "https://dol.ny.gov/system/files/documents/2024/07/p679-find-the-career-you-love-interviewing-7-24.pdf",
+            "file": "ny_dol_p679_interviewing.pdf",
+            "publisher": "New York State Department of Labor",
+            "source_type": "government_pdf",
+            "reliability": "official_government_source",
+            "bytes": 5830702,
+            "sha256": "412b206b7864f76261ce663acafd1ecc9537c407048037a2aac9b978d9910cc2"
+        },
+        {
+            "key": "ny_dol_interviewing",
+            "name": "New York State Department of Labor - Interviewing",
+            "url": "https://dol.ny.gov/interviewing",
+            "file": "ny_dol_interviewing.html",
+            "publisher": "New York State Department of Labor",
+            "source_type": "government_webpage",
+            "reliability": "official_government_source",
+            "bytes": 48582,
+            "sha256": "b6db470f5ded10df8a347c3702d0166a8841f966412a8760f7072e1b77c6cd04"
+        },
+        {
+            "key": "ny_civil_service_interviewing",
+            "name": "New York State Department of Civil Service - Employee Services: Interviewing",
+            "url": "https://careermobilityoffice.cs.ny.gov/cmo/employee-services/interviewing.cfm",
+            "file": "ny_civil_service_interviewing.html",
+            "publisher": "New York State Department of Civil Service",
+            "source_type": "government_webpage",
+            "reliability": "official_government_source",
+            "bytes": 22083,
+            "sha256": "ee5f02f8121bf9caa8ae9ae2e521255edbe680005b944e3958e75c70ce27fa87"
+        },
+        {
+            "key": "jobstreet_ph_common_interview",
+            "name": "JobStreet Philippines Career Advice - Job interview questions and answers",
+            "url": "https://ph.jobstreet.com/career-advice/article/job-interview-questions-answers",
+            "file": "jobstreet_ph_common_interview.html",
+            "publisher": "JobStreet Philippines",
+            "source_type": "career_platform_article",
+            "reliability": "established_career_platform",
+            "bytes": 246487,
+            "sha256": "1ddb8208edeae71c242b10fbbdb3b2aeee45b4c5062d6a596557711a9cb76f27"
+        },
+        {
+            "key": "michaelpage_ph_common_interview",
+            "name": "Michael Page Philippines - Common job interview questions",
+            "url": "https://www.michaelpage.com.ph/advice/career-advice/interview/common-job-interview-questions-philippines",
+            "file": "michaelpage_ph_common_interview.html",
+            "publisher": "Michael Page Philippines",
+            "source_type": "recruitment_firm_article",
+            "reliability": "established_recruitment_firm",
+            "bytes": 98812,
+            "sha256": "48284d98e377fc2ee02f471cfc6371b970b96c9447deae113754c9b268d56f97"
+        },
+        {
+            "key": "bossjob_ph_interview_questions",
+            "name": "Bossjob Philippines - Top Interview Questions in the Philippines",
+            "url": "https://bossjob.ph/blog/job-search-tips/5623/interview-questions-philippines/",
+            "file": "bossjob_ph_interview_questions.html",
+            "publisher": "Bossjob Philippines",
+            "source_type": "career_platform_article",
+            "reliability": "philippines_career_platform",
+            "bytes": 1040007,
+            "sha256": "e5bc3eb6de99accea1825f69b9c2a13d449f7b95e217da81fdf21be6c45803e2"
+        },
+        {
+            "key": "ched_sikap_faq",
+            "name": "CHED SIKAP Frequently Asked Questions",
+            "url": "https://sikap.ched.gov.ph/faqs",
+            "file": "ched_sikap_faq.html",
+            "publisher": "Commission on Higher Education",
+            "source_type": "official_faq",
+            "reliability": "official_government_source",
+            "bytes": 289792,
+            "sha256": "5b08d7e2feeb1b0279f2de929dfc728c4b427abb2445ab90f63cfaed4b656b54"
+        },
+        {
+            "key": "dost_sei_helpdesk",
+            "name": "DOST-SEI Scholarship Helpdesk",
+            "url": "https://helpdesk.sei.dost.gov.ph/",
+            "file": "dost_sei_helpdesk.html",
+            "publisher": "DOST-SEI",
+            "source_type": "official_helpdesk",
+            "reliability": "official_government_source",
+            "bytes": 95920,
+            "sha256": "e493fb59841bfe4b1ff39d3863347e6beaf217905d4bb1734887fcbf1dd6360a"
+        },
+        {
+            "key": "upcat_about_admissions",
+            "name": "UPCAT Official Admissions Bulletin",
+            "url": "https://upcat.up.edu.ph/htmls/aboutupcat.html",
+            "file": "upcat_about_admissions.html",
+            "publisher": "University of the Philippines Office of Admissions",
+            "source_type": "official_admissions_page",
+            "reliability": "official_university_source",
+            "bytes": 87859,
+            "sha256": "655a90da96075a9ee686703dbbb56d2de6bbaa7da17ffc38e246cc25f2f7f817"
+        },
+        {
+            "key": "tesda_assessment_faq",
+            "name": "TESDA Assessment and Certification FAQ",
+            "url": "https://www.tesda.gov.ph/About/Tesda/127",
+            "file": "tesda_assessment_faq.html",
+            "publisher": "Technical Education and Skills Development Authority",
+            "source_type": "official_faq",
+            "reliability": "official_government_source",
+            "bytes": 28457,
+            "sha256": "5f7f7ecf7a87df1ec5ecb20c826b28b5e77c8517ce8055370f16b40e5994c913"
+        }
+    ]
+}

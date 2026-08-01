@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -179,6 +180,45 @@ class ReliabilityHardeningTest extends TestCase
             ->assertJsonPath('question_text', 'For a Software Engineer role, describe a complex or high-pressure situation where you used Behavioral. What was your responsibility, what actions did you take, and what measurable result followed?');
     }
 
+    public function test_ai_question_generation_prompt_includes_storage_backed_reliable_question_bank(): void
+    {
+        $capturedPrompt = '';
+        Http::fake([
+            'api.openai.com/*' => function ($request) use (&$capturedPrompt) {
+                $capturedPrompt = data_get($request->data(), 'messages.1.content', '');
+
+                return Http::response([
+                    'choices' => [[
+                        'finish_reason' => 'stop',
+                        'message' => [
+                            'content' => json_encode(['questions' => [
+                                'For your target position of Developer, describe a technical issue you debugged.',
+                            ]]),
+                        ],
+                    ]],
+                ], 200);
+            },
+        ]);
+
+        $dataset = QuestionDatasetProvider::find('ph_it_programming');
+
+        $this->assertSame('2026-08-01', data_get($dataset, 'storage_question_bank.version'));
+
+        $questions = AIService::generateQuestions(
+            1,
+            'Developer',
+            'medium',
+            'Philippines IT interview',
+            'openai',
+            datasetContext: $dataset
+        );
+
+        $this->assertSame(['For your target position of Developer, describe a technical issue you debugged.'], $questions);
+        $this->assertStringContainsString('Reliable question-bank version: 2026-08-01', $capturedPrompt);
+        $this->assertStringContainsString('PH IT and Programming', $capturedPrompt);
+        $this->assertStringContainsString('Tell me about a web or software project where you balanced speed, quality, and maintainability.', $capturedPrompt);
+    }
+
     public function test_user_ai_generated_start_question_is_saved_to_admin_question_bank(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -276,6 +316,8 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertStringContainsString('RECENT INTERVIEW CHAT JSON', $capturedPrompt);
         $this->assertStringContainsString('deployment team', $capturedPrompt);
         $this->assertStringContainsString('LATEST CANDIDATE ANSWER TO RESPOND TO', $capturedPrompt);
+        $this->assertStringContainsString('Reliable question-bank version: 2026-08-01', $capturedPrompt);
+        $this->assertStringContainsString('PH IT and Programming', $capturedPrompt);
 
         $this->assertDatabaseHas('questions', [
             'interview_session_id' => $session->id,

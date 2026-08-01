@@ -3,12 +3,27 @@
 namespace App\Services;
 
 use App\Models\Category;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class QuestionDatasetProvider
 {
+    private const STORAGE_DATASET_MAP = [
+        'ph_job_interview' => 'ph_job_interview',
+        'general_interview_official' => 'ph_job_interview',
+        'candidate_questions' => 'ph_job_interview',
+        'ph_bpo_communication' => 'ph_bpo_communication',
+        'ph_it_programming' => 'ph_it_programming',
+        'ph_scholarship' => 'ph_scholarship',
+        'ph_college_admission' => 'ph_college_admission',
+    ];
+
+    private static ?array $storageQuestionBank = null;
+
     public static function all(): array
     {
-        return [
+        return self::mergeStorageQuestionBank([
             'ph_job_interview' => [
                 'key' => 'ph_job_interview',
                 'name' => 'PH Job Interview Questions',
@@ -352,7 +367,211 @@ class QuestionDatasetProvider
                     ],
                 ],
             ],
+        ]);
+    }
+
+    private static function mergeStorageQuestionBank(array $datasets): array
+    {
+        $bank = self::storageQuestionBank();
+        if ($bank === [] || empty($bank['questions'])) {
+            return $datasets;
+        }
+
+        $sourceKeysByDataset = [];
+        $recordsByDataset = [];
+        foreach ($bank['questions'] as $question) {
+            $targetKey = self::storageTargetDatasetKey((string) ($question['dataset_key'] ?? ''));
+            if (! $targetKey || ! isset($datasets[$targetKey])) {
+                continue;
+            }
+
+            $normalized = self::normalizeStorageQuestion($question, $bank['sources'] ?? []);
+            if (! $normalized) {
+                continue;
+            }
+
+            $datasets[$targetKey]['questions'][] = $normalized;
+            $recordsByDataset[$targetKey] = ($recordsByDataset[$targetKey] ?? 0) + 1;
+            foreach ($normalized['source_keys'] ?? [] as $sourceKey) {
+                $sourceKeysByDataset[$targetKey][$sourceKey] = true;
+            }
+        }
+
+        foreach ($datasets as $key => $dataset) {
+            if (($recordsByDataset[$key] ?? 0) <= 0) {
+                continue;
+            }
+
+            $datasets[$key]['questions'] = collect($dataset['questions'] ?? [])
+                ->filter(fn (array $question) => filled($question['question_text'] ?? null))
+                ->unique(fn (array $question) => mb_strtolower(trim((string) $question['question_text'])))
+                ->values()
+                ->all();
+
+            $datasets[$key]['sources'] = self::mergeDatasetSources(
+                $dataset['sources'] ?? [],
+                array_keys($sourceKeysByDataset[$key] ?? []),
+                $bank['sources'] ?? []
+            );
+
+            $datasets[$key]['storage_question_bank'] = [
+                'dataset' => $bank['manifest']['dataset'] ?? 'speakready_reliable_questions',
+                'version' => $bank['manifest']['version'] ?? null,
+                'records_used' => $recordsByDataset[$key],
+                'manifest_path' => $bank['manifest_path'] ?? null,
+                'normalized_path' => $bank['normalized_path'] ?? null,
+            ];
+        }
+
+        return $datasets;
+    }
+
+    private static function storageTargetDatasetKey(string $datasetKey): ?string
+    {
+        return self::STORAGE_DATASET_MAP[$datasetKey] ?? null;
+    }
+
+    private static function normalizeStorageQuestion(array $question, array $sources): ?array
+    {
+        $questionText = trim((string) ($question['question_text'] ?? ''));
+        if ($questionText === '') {
+            return null;
+        }
+
+        $sourceKeys = array_values(array_filter(array_map(
+            fn ($sourceKey) => trim((string) $sourceKey),
+            (array) ($question['source_keys'] ?? [])
+        )));
+        $primarySource = null;
+        foreach ($sourceKeys as $sourceKey) {
+            if (isset($sources[$sourceKey])) {
+                $primarySource = $sources[$sourceKey];
+                break;
+            }
+        }
+
+        $mappedSkills = $question['mapped_skills'] ?? [];
+        if (is_string($mappedSkills)) {
+            $mappedSkills = array_map('trim', explode(',', $mappedSkills));
+        }
+
+        return [
+            'question_text' => $questionText,
+            'type' => trim((string) ($question['type'] ?? 'Behavioral')) ?: 'Behavioral',
+            'difficulty' => ucfirst(strtolower(trim((string) ($question['difficulty'] ?? 'Medium')))),
+            'expected_guide' => trim((string) ($question['expected_guide'] ?? '')),
+            'mapped_skills' => array_values(array_filter((array) $mappedSkills)),
+            'source_name' => $primarySource['name'] ?? 'SpeakReady reliable question bank',
+            'source_url' => $primarySource['url'] ?? null,
+            'source_type' => 'speakready_reliable_question_bank',
+            'source_keys' => $sourceKeys,
+            'dataset_record_id' => $question['id'] ?? null,
+            'provenance' => $question['provenance'] ?? 'adapted_practice_prompt',
         ];
+    }
+
+    private static function mergeDatasetSources(array $existingSources, array $sourceKeys, array $indexedSources): array
+    {
+        $sources = $existingSources;
+        $seen = collect($sources)
+            ->map(fn (array $source) => mb_strtolower((string) ($source['url'] ?? $source['name'] ?? '')))
+            ->filter()
+            ->flip()
+            ->all();
+
+        foreach ($sourceKeys as $sourceKey) {
+            $source = $indexedSources[$sourceKey] ?? null;
+            if (! $source) {
+                continue;
+            }
+
+            $dedupeKey = mb_strtolower((string) ($source['url'] ?? $source['name'] ?? $sourceKey));
+            if ($dedupeKey !== '' && isset($seen[$dedupeKey])) {
+                continue;
+            }
+
+            $sources[] = [
+                'name' => $source['name'] ?? $sourceKey,
+                'url' => $source['url'] ?? null,
+                'note' => 'Reliable question source snapshot: '.($source['reliability'] ?? $source['source_type'] ?? 'source-backed'),
+            ];
+            $seen[$dedupeKey] = true;
+        }
+
+        return $sources;
+    }
+
+    private static function storageQuestionBank(): array
+    {
+        if (self::$storageQuestionBank !== null) {
+            return self::$storageQuestionBank;
+        }
+
+        try {
+            $disk = Storage::disk('datasets');
+            $manifestPath = self::latestQuestionBankManifestPath($disk);
+            if (! $manifestPath) {
+                return self::$storageQuestionBank = [];
+            }
+
+            $manifest = json_decode($disk->get($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+            $normalizedPath = data_get($manifest, 'normalized_files.0.path');
+            if (! is_string($normalizedPath) || ! $disk->exists($normalizedPath)) {
+                return self::$storageQuestionBank = [];
+            }
+
+            $sourceIndexPath = data_get($manifest, 'raw_source_index.path');
+            $sources = self::indexedQuestionSources($disk, is_string($sourceIndexPath) ? $sourceIndexPath : null);
+            $questions = self::readQuestionJsonl($disk->get($normalizedPath));
+
+            return self::$storageQuestionBank = [
+                'manifest' => $manifest,
+                'manifest_path' => $manifestPath,
+                'normalized_path' => $normalizedPath,
+                'sources' => $sources,
+                'questions' => $questions,
+            ];
+        } catch (Throwable $exception) {
+            Log::warning('Reliable question bank could not be loaded; using built-in question packs.', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return self::$storageQuestionBank = [];
+        }
+    }
+
+    private static function latestQuestionBankManifestPath($disk): ?string
+    {
+        return collect($disk->files('manifests'))
+            ->filter(fn (string $path) => preg_match('/^manifests\/speakready_reliable_questions_\d{4}-\d{2}-\d{2}\.json$/', $path))
+            ->sortDesc()
+            ->values()
+            ->first();
+    }
+
+    private static function indexedQuestionSources($disk, ?string $sourceIndexPath): array
+    {
+        if (! $sourceIndexPath || ! $disk->exists($sourceIndexPath)) {
+            return [];
+        }
+
+        $index = json_decode($disk->get($sourceIndexPath), true, 512, JSON_THROW_ON_ERROR);
+
+        return collect($index['sources'] ?? [])
+            ->filter(fn (array $source) => filled($source['key'] ?? null))
+            ->mapWithKeys(fn (array $source) => [(string) $source['key'] => $source])
+            ->all();
+    }
+
+    private static function readQuestionJsonl(string $contents): array
+    {
+        return collect(preg_split('/\R/u', $contents) ?: [])
+            ->map(fn (string $line) => trim($line))
+            ->filter()
+            ->map(fn (string $line) => json_decode($line, true, 512, JSON_THROW_ON_ERROR))
+            ->filter(fn ($row) => is_array($row) && filled($row['question_text'] ?? null))
+            ->values()
+            ->all();
     }
 
     public static function find(?string $key): ?array
@@ -392,16 +611,23 @@ class QuestionDatasetProvider
     public static function promptContext(array $dataset): string
     {
         $sources = collect($dataset['sources'] ?? [])
-            ->map(fn (array $source) => "- {$source['name']}: {$source['url']} ({$source['note']})")
+            ->map(fn (array $source) => "- {$source['name']}: ".($source['url'] ?? 'private source snapshot')." ({$source['note']})")
             ->implode("\n");
 
         $examples = collect($dataset['questions'] ?? [])
             ->take(8)
             ->map(fn (array $question) => "- {$question['question_text']} [{$question['type']}, {$question['difficulty']}]")
             ->implode("\n");
+        $questionBank = $dataset['storage_question_bank'] ?? null;
+        $questionBankSummary = is_array($questionBank)
+            ? "Reliable question-bank version: ".($questionBank['version'] ?? 'unknown')
+                ."; normalized records connected to this source pack: ".($questionBank['records_used'] ?? 0)
+                ."; manifest: ".($questionBank['manifest_path'] ?? 'private dataset manifest')."\n"
+            : '';
 
         return "Source pack: {$dataset['name']} ({$dataset['country']})\n"
             . "Description: {$dataset['description']}\n"
+            . $questionBankSummary
             . "Trusted public sources:\n{$sources}\n"
             . "Representative question patterns:\n{$examples}\n"
             . "Rules: Generate Philippines-relevant practice questions grounded in these sources. Do not claim the wording is a direct quote from a source unless it exactly is. Do not claim to reproduce confidential, leaked, or actual protected exam items. If the source is an official FAQ or competency standard, adapt the same topic or competency into an interview-practice question.";
@@ -433,7 +659,7 @@ class QuestionDatasetProvider
                 'mapped_skills' => $dataset['default_skills'] ?? ['Communication'],
             ];
 
-        return array_merge($question, self::sourceMetadata($dataset), [
+        return array_merge(self::sourceMetadata($dataset), $question, [
             'category' => $dataset['category'] ?? $category->title,
         ]);
     }
@@ -449,7 +675,7 @@ class QuestionDatasetProvider
         $metadata = self::sourceMetadata($dataset);
 
         return collect($dataset['questions'] ?? [])
-            ->map(fn (array $question) => array_merge($question, $metadata, [
+            ->map(fn (array $question) => array_merge($metadata, $question, [
                 'category' => $dataset['category'] ?? 'Community Datasets',
             ]))
             ->all();

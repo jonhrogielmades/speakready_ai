@@ -260,6 +260,9 @@ class InterviewController extends Controller
                         'question_type' => $questionRecord['type'] ?? null,
                         'expected_guide' => $questionRecord['expected_guide'] ?? null,
                         'mapped_skills' => $questionRecord['mapped_skills'] ?? [],
+                        'source_name' => $questionRecord['source_name'] ?? $sourceMetadata['source_name'] ?? null,
+                        'source_url' => $questionRecord['source_url'] ?? $sourceMetadata['source_url'] ?? null,
+                        'source_type' => $questionRecord['source_type'] ?? $sourceMetadata['source_type'] ?? null,
                     ])
                 );
             }
@@ -486,8 +489,9 @@ class InterviewController extends Controller
             $provider = 'local';
         }
 
+        $dataset = $this->datasetForSession($session);
         $followUpText = $followUpEnabled
-            ? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext)
+            ? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext, $dataset)
             : AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
 
         if (! $followUpText) {
@@ -2114,6 +2118,9 @@ class InterviewController extends Controller
             'type' => $question['type'] ?? null,
             'expected_guide' => $question['expected_guide'] ?? null,
             'mapped_skills' => $question['mapped_skills'] ?? [],
+            'source_name' => $question['source_name'] ?? null,
+            'source_url' => $question['source_url'] ?? null,
+            'source_type' => $question['source_type'] ?? null,
         ])->values()->all();
         $alignedTexts = $this->roleAlignedQuestionTexts(array_column($records, 'question_text'), $position);
 

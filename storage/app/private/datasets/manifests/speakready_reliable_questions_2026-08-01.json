@@ -1,0 +1,38 @@
+{
+    "dataset": "speakready_reliable_questions",
+    "version": "2026-08-01",
+    "description": "Question-only normalized practice dataset for SpeakReady AI, grounded in downloaded official and reputable career-advice question sources. Prompts are adapted for practice and should not be represented as verbatim quotes from sources.",
+    "created_at_utc": "2026-08-01T19:39:34+00:00",
+    "records": 60,
+    "dataset_keys": [
+        "ph_job_interview",
+        "general_interview_official",
+        "ph_bpo_communication",
+        "ph_it_programming",
+        "ph_scholarship",
+        "ph_college_admission",
+        "candidate_questions"
+    ],
+    "categories": [
+        "Job Interview",
+        "BPO / Customer Support",
+        "IT/Programming",
+        "Scholarship Interview",
+        "College Admission"
+    ],
+    "raw_source_index": {
+        "path": "raw/question_sources/2026-08-01/_source_index.json",
+        "sha256": "0d83fd53fc601f34cfb156fec1c3c6f6edac6f4c74429154165acdc5ccdb13f8",
+        "bytes": 5852
+    },
+    "normalized_files": [
+        {
+            "path": "normalized/questions/2026-08-01/speakready_reliable_questions.jsonl",
+            "format": "jsonl",
+            "sha256": "32ab7ac96a7a3c3401bb680ff9cb00df2de4689ba3426fc56126ee584192a6a5",
+            "bytes": 31243
+        }
+    ],
+    "source_count": 10,
+    "license_and_use_notes": "Raw snapshots are retained for private provenance. Review each publisher terms before redistribution. Normalized questions are short adapted practice prompts with source keys for traceability. Do not claim adapted prompts are exact source wording unless independently verified."
+}
