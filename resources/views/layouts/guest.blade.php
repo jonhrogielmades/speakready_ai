@@ -81,11 +81,14 @@
             border: 0;
             border-radius: 8px;
             box-shadow: 0 16px 34px rgba(37, 99, 235, 0.3);
+            cursor: grab;
             opacity: 0;
             visibility: hidden;
             transform: translateY(14px) scale(0.92);
             pointer-events: none;
+            touch-action: none;
             transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+            user-select: none;
          }
 
          .back-to-top-btn i {
@@ -111,6 +114,15 @@
 
          .back-to-top-btn:focus-visible {
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 20px 42px rgba(37, 99, 235, 0.38);
+         }
+
+         .back-to-top-btn.is-dragging,
+         .back-to-top-btn.is-dragging:hover,
+         .back-to-top-btn.is-dragging:focus-visible {
+            animation: none !important;
+            cursor: grabbing;
+            transform: translateY(0) scale(1);
+            box-shadow: 0 22px 48px rgba(37, 99, 235, 0.42);
          }
 
          @keyframes backToTopFloat {
@@ -2699,7 +2711,7 @@
          </div>
       </div>
 
-      <button type="button" id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top" title="Back to top">
+      <button type="button" id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top. Drag to move." title="Drag or tap to go back to top">
          <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
       </button>
 
@@ -3113,14 +3125,110 @@
             const backToTopBtn = document.getElementById('backToTopBtn');
             if (!backToTopBtn) return;
 
+            const edgePadding = 10;
+            let hasCustomPosition = false;
+            let suppressNextClick = false;
+            const drag = {
+               active: false,
+               moved: false,
+               pointerId: null,
+               startX: 0,
+               startY: 0,
+               offsetX: 0,
+               offsetY: 0
+            };
+
+            const clamp = function(value, min, max) {
+               return Math.min(Math.max(value, min), max);
+            };
+
+            const placeBackToTop = function(left, top) {
+               const width = backToTopBtn.offsetWidth || 48;
+               const height = backToTopBtn.offsetHeight || 48;
+               const maxLeft = Math.max(edgePadding, window.innerWidth - width - edgePadding);
+               const maxTop = Math.max(edgePadding, window.innerHeight - height - edgePadding);
+
+               backToTopBtn.style.left = clamp(left, edgePadding, maxLeft) + 'px';
+               backToTopBtn.style.top = clamp(top, edgePadding, maxTop) + 'px';
+               backToTopBtn.style.right = 'auto';
+               backToTopBtn.style.bottom = 'auto';
+               hasCustomPosition = true;
+            };
+
+            const keepBackToTopInView = function() {
+               if (!hasCustomPosition) return;
+
+               const rect = backToTopBtn.getBoundingClientRect();
+               placeBackToTop(rect.left, rect.top);
+            };
+
             const toggleBackToTop = function() {
                backToTopBtn.classList.toggle('is-visible', window.scrollY > 420);
             };
 
             toggleBackToTop();
             window.addEventListener('scroll', toggleBackToTop, { passive: true });
+            window.addEventListener('resize', keepBackToTopInView, { passive: true });
 
-            backToTopBtn.addEventListener('click', function() {
+            backToTopBtn.addEventListener('pointerdown', function(event) {
+               if (event.button !== undefined && event.button !== 0) return;
+
+               const rect = backToTopBtn.getBoundingClientRect();
+               drag.active = true;
+               drag.moved = false;
+               drag.pointerId = event.pointerId;
+               drag.startX = event.clientX;
+               drag.startY = event.clientY;
+               drag.offsetX = event.clientX - rect.left;
+               drag.offsetY = event.clientY - rect.top;
+
+               backToTopBtn.classList.add('is-dragging');
+               backToTopBtn.setPointerCapture?.(event.pointerId);
+            });
+
+            backToTopBtn.addEventListener('pointermove', function(event) {
+               if (!drag.active || event.pointerId !== drag.pointerId) return;
+
+               const movedX = Math.abs(event.clientX - drag.startX);
+               const movedY = Math.abs(event.clientY - drag.startY);
+
+               if (movedX + movedY > 4) {
+                  drag.moved = true;
+               }
+
+               if (!drag.moved) return;
+
+               event.preventDefault();
+               placeBackToTop(event.clientX - drag.offsetX, event.clientY - drag.offsetY);
+            });
+
+            const finishDrag = function(event) {
+               if (!drag.active || event.pointerId !== drag.pointerId) return;
+
+               if (drag.moved) {
+                  suppressNextClick = true;
+                  window.setTimeout(function() {
+                     suppressNextClick = false;
+                  }, 350);
+               }
+
+               drag.active = false;
+               drag.pointerId = null;
+               backToTopBtn.classList.remove('is-dragging');
+               backToTopBtn.releasePointerCapture?.(event.pointerId);
+            };
+
+            backToTopBtn.addEventListener('pointerup', finishDrag);
+            backToTopBtn.addEventListener('pointercancel', finishDrag);
+
+            backToTopBtn.addEventListener('click', function(event) {
+               if (suppressNextClick) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  suppressNextClick = false;
+                  return;
+               }
+
                window.scrollTo({
                   top: 0,
                   behavior: 'smooth'
