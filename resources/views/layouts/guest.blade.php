@@ -141,6 +141,107 @@
             }
          }
 
+         #landing #faq .acco {
+            display: grid;
+            gap: 10px;
+         }
+
+         #landing #faq .acco .accordion-item {
+            margin-bottom: 0;
+            overflow: hidden;
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 8px !important;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+         }
+
+         #landing #faq .acco .accordion-header {
+            margin: 0;
+         }
+
+         #landing #faq .acco .accordion-button {
+            min-height: 52px;
+            padding: 14px 16px;
+            gap: 12px;
+            color: var(--tx) !important;
+            background: var(--sf) !important;
+            border: 0;
+            border-radius: 8px !important;
+            font-size: 0.9rem;
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: 0;
+            box-shadow: none !important;
+         }
+
+         #landing #faq .acco .accordion-button:not(.collapsed) {
+            color: var(--tx) !important;
+            background: rgba(59, 130, 246, 0.12) !important;
+            border-bottom: 1px solid var(--bd);
+            border-radius: 8px 8px 0 0 !important;
+         }
+
+         #landing #faq .acco .accordion-button::after {
+            width: 0.9rem;
+            height: 0.9rem;
+            flex: 0 0 0.9rem;
+            margin-left: auto;
+            background-size: 0.9rem;
+         }
+
+         #landing #faq .acco .accordion-body {
+            padding: 12px 16px 16px;
+            color: var(--tx2) !important;
+            background: var(--sf) !important;
+            border-top: 0;
+            font-size: 0.86rem;
+            line-height: 1.58;
+            text-align: justify;
+            text-align-last: left;
+         }
+
+         html.lm #landing #faq .acco .accordion-item,
+         html.lm #landing #faq .acco .accordion-body,
+         html.lm #landing #faq .acco .accordion-button {
+            background: #ffffff !important;
+         }
+
+         html.lm #landing #faq .acco .accordion-button:not(.collapsed) {
+            background: #eaf2ff !important;
+         }
+
+         @media (max-width: 575.98px) {
+            #landing #faq .row {
+               --bs-gutter-x: 0;
+            }
+
+            #landing #faq .text-center.mb-5 {
+               margin-bottom: 18px !important;
+            }
+
+            #landing #faq .acco {
+               gap: 8px;
+            }
+
+            #landing #faq .acco .accordion-item {
+               border-radius: 8px !important;
+               box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+            }
+
+            #landing #faq .acco .accordion-button {
+               min-height: 46px;
+               padding: 12px 14px;
+               font-size: 0.78rem;
+               line-height: 1.2;
+            }
+
+            #landing #faq .acco .accordion-body {
+               padding: 10px 14px 14px;
+               font-size: 0.76rem;
+               line-height: 1.55;
+            }
+         }
+
          .back-to-top-btn {
             position: fixed;
             right: max(18px, env(safe-area-inset-right));
