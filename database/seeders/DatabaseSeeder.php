@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,16 +11,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Admin
-        \App\Models\User::firstOrCreate(
-            ['email' => 'admin@speakreadyai.com'],
-            [
-                'name' => 'System Admin',
-                'password' => bcrypt('password'),
-                'is_admin' => true,
-            ]
-        );
-
-        $this->call(CategorySeeder::class);
+        $this->call(AdminAccountSeeder::class);
     }
 }

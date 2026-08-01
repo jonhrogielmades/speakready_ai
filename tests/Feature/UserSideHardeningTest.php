@@ -859,6 +859,19 @@ class UserSideHardeningTest extends TestCase
             ->assertSee('id="challengeFinishModal"', false)
             ->assertSee('Scoring Challenge')
             ->assertDontSee('Finish Interview');
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->withSession([
+                'active_game_session_id' => $session->id,
+                'game_level_id' => $level->id,
+            ])
+            ->get(route('user.game.match'))
+            ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('body.user-mobile-shell #mob-content #sec-learning-game-session', false)
+            ->assertSee('id="gameSessionControls"', false)
+            ->assertSee('response-panel', false);
     }
 
     public function test_inactive_user_session_is_logged_out_by_user_middleware(): void
