@@ -2246,36 +2246,6 @@
                 line-height: 1.62;
             }
 
-            .footer-trust-grid {
-                display: grid;
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-                gap: 8px;
-                max-width: 360px;
-                margin-top: 14px;
-            }
-
-            .footer-trust {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 6px;
-                min-width: 0;
-                padding: 8px 9px;
-                color: var(--tx);
-                background: var(--bg3);
-                border: 1px solid var(--bd);
-                border-radius: 8px;
-                font-size: 0.7rem;
-                font-weight: 700;
-                line-height: 1;
-                white-space: nowrap;
-            }
-
-            .footer-trust i {
-                color: var(--pur);
-                font-size: 0.82rem;
-            }
-
             .footer-nav-grid {
                 display: grid;
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2454,8 +2424,7 @@
                     padding: 18px;
                 }
 
-                .footer-copy,
-                .footer-trust-grid {
+                .footer-copy {
                     max-width: none;
                 }
             }
@@ -2481,21 +2450,6 @@
                     text-align-last: center;
                     font-size: 0.8rem;
                     line-height: 1.5;
-                }
-
-                .footer-trust-grid {
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
-                    gap: 6px;
-                    margin-top: 10px;
-                }
-
-                .footer-trust {
-                    min-height: 48px;
-                    flex-direction: column;
-                    gap: 5px;
-                    padding: 7px 4px;
-                    font-size: 0.58rem;
-                    text-align: center;
                 }
 
                 .footer-nav-grid {
@@ -2551,11 +2505,6 @@
                         <span>SpeakReady AI</span>
                      </a>
                      <p class="footer-copy">Your personal Philippine interview coach for smarter practice, clearer feedback, and confident interview preparation.</p>
-                     <div class="footer-trust-grid" aria-label="Platform highlights">
-                         <span class="footer-trust"><i class="fa-solid fa-shield-halved"></i>Secure</span>
-                         <span class="footer-trust"><i class="fa-solid fa-bolt"></i>Fast</span>
-                         <span class="footer-trust"><i class="fa-solid fa-brain"></i>AI Ready</span>
-                     </div>
                   </div>
                   <nav class="footer-nav-grid" aria-label="Footer navigation">
                      <div>
