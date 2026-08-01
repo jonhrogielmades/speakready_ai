@@ -462,7 +462,7 @@
 
             .sr-launch-kicker {
                margin: 0 0 9px;
-               color: #2563eb;
+               color: var(--pur);
                font-size: clamp(0.7rem, 2.4vw, 0.78rem);
                font-weight: 700;
                letter-spacing: 0.15em;
@@ -680,11 +680,11 @@
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
                display: grid !important;
-               grid-template-columns: repeat(2, minmax(0, 1fr));
+               grid-template-columns: repeat(3, minmax(0, 1fr));
                align-items: stretch !important;
                justify-content: center !important;
-               gap: 9px !important;
-               width: min(100%, 360px);
+               gap: 6px !important;
+               width: min(100%, 390px);
                margin-left: auto;
                margin-right: auto;
                margin-bottom: 14px;
@@ -695,79 +695,26 @@
                width: 100% !important;
                max-width: none !important;
                min-width: 0;
-               min-height: 44px;
-               padding: 10px 9px !important;
+               min-height: 40px;
+               padding: 8px 5px !important;
                border-radius: 8px;
                display: inline-flex;
                align-items: center;
                justify-content: center;
-               gap: 4px;
-               font-size: 0.8rem !important;
+               gap: 3px;
+               font-size: 0.68rem !important;
                line-height: 1.1;
                white-space: nowrap;
             }
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn:first-child {
-               grid-column: 1 / -1;
+               grid-column: auto;
             }
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row i {
                margin-right: 0 !important;
-               font-size: 0.75rem;
+               font-size: 0.62rem;
                flex: 0 0 auto;
-            }
-
-            .mobile-saas-metrics {
-               display: grid !important;
-               grid-template-columns: repeat(3, minmax(0, 1fr));
-               width: min(100%, 360px);
-               margin: 0 auto 14px;
-               padding: 8px;
-               gap: 7px;
-               border-radius: 12px;
-               background: rgba(255, 255, 255, 0.72);
-               border: 1px solid rgba(148, 163, 184, 0.18);
-               box-shadow: 0 14px 30px rgba(15, 23, 42, 0.07);
-               backdrop-filter: blur(16px);
-               -webkit-backdrop-filter: blur(16px);
-            }
-
-            html:not(.lm) .mobile-saas-metrics {
-               background: rgba(15, 23, 42, 0.58);
-               border-color: rgba(148, 163, 184, 0.14);
-               box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
-            }
-
-            .mobile-saas-metric {
-               min-width: 0;
-               padding: 8px 6px;
-               border-radius: 8px;
-               background: rgba(248, 250, 252, 0.82);
-               border: 1px solid rgba(226, 232, 240, 0.72);
-               text-align: center;
-            }
-
-            html:not(.lm) .mobile-saas-metric {
-               background: rgba(30, 41, 59, 0.58);
-               border-color: rgba(148, 163, 184, 0.14);
-            }
-
-            .mobile-saas-metric strong {
-               display: block;
-               color: var(--tx);
-               font-size: 0.92rem;
-               font-weight: 800;
-               line-height: 1;
-            }
-
-            .mobile-saas-metric span {
-               display: block;
-               margin-top: 4px;
-               color: var(--tx3);
-               font-size: 0.56rem;
-               font-weight: 700;
-               line-height: 1.15;
-               text-transform: uppercase;
             }
 
             #hero .row.align-items-center.mt-4 {
@@ -785,8 +732,8 @@
                margin-bottom: 6px !important;
             }
 
-            #hero .mt-3.mb-3.afu.text-center {
-               width: min(100%, 360px);
+            #hero .hero-tech-card {
+               width: 100%;
                margin: 12px auto 10px !important;
                padding: 10px 12px;
                border-radius: 10px;
@@ -795,12 +742,13 @@
                box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
             }
 
-            html:not(.lm) #hero .mt-3.mb-3.afu.text-center {
+            html:not(.lm) #hero .hero-tech-card {
                background: rgba(15, 23, 42, 0.48);
                border-color: rgba(148, 163, 184, 0.12);
             }
 
-            #hero .mt-3.mb-3.afu.text-center p {
+            #hero .hero-tech-title {
+               color: var(--pur) !important;
                margin-bottom: 8px !important;
                font-size: 0.58rem !important;
                letter-spacing: 0.09em !important;
@@ -841,6 +789,104 @@
                margin-bottom: 10px;
             }
 
+            #about .landing-section-heading {
+               align-items: center;
+               text-align: center;
+            }
+
+            #about .landing-section-heading .slbl {
+               justify-content: center;
+            }
+
+            #about .landing-section-heading .stitle {
+               max-width: 340px;
+               margin-left: auto;
+               margin-right: auto;
+               text-align: center;
+            }
+
+            #how .landing-section-heading {
+               align-items: center;
+               text-align: center;
+            }
+
+            #how .landing-section-heading .slbl {
+               justify-content: center;
+            }
+
+            #how .landing-section-heading .stitle {
+               max-width: 340px;
+               margin-left: auto;
+               margin-right: auto;
+               text-align: center;
+            }
+
+            #benefits .landing-section-heading {
+               align-items: center;
+               text-align: center;
+            }
+
+            #benefits .landing-section-heading .slbl {
+               justify-content: center;
+            }
+
+            #benefits .landing-section-heading .stitle {
+               max-width: 340px;
+               margin-left: auto;
+               margin-right: auto;
+               text-align: center;
+            }
+
+            #contact .landing-section-heading {
+               align-items: center;
+               text-align: center;
+            }
+
+            #contact .landing-section-heading .slbl {
+               justify-content: center;
+            }
+
+            #contact .landing-section-heading .stitle {
+               max-width: 340px;
+               margin-left: auto;
+               margin-right: auto;
+               text-align: center;
+            }
+
+            #about .about-system-copy {
+               text-align: justify;
+               text-indent: 3.00rem;
+               text-align-last: left;
+               line-height: 1.62;
+            }
+
+            #about .target-users-grid {
+               display: grid !important;
+               grid-template-columns: repeat(3, minmax(0, 1fr));
+               gap: 8px !important;
+            }
+
+            #about .target-users-grid .ftag {
+               width: 100%;
+               min-width: 0;
+               margin-top: 0;
+               padding: 7px 5px !important;
+               display: inline-flex;
+               align-items: center;
+               justify-content: center;
+               gap: 4px;
+               font-size: 0.58rem;
+               line-height: 1.1;
+               text-align: center;
+               white-space: nowrap;
+            }
+
+            #about .target-users-grid .ftag i {
+               margin-right: 0 !important;
+               font-size: 0.58rem;
+               flex: 0 0 auto;
+            }
+
             .gc {
                border-radius: 10px;
                box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
@@ -849,10 +895,6 @@
             .gc.p-4 {
                padding: 17px !important;
             }
-         }
-
-         .mobile-saas-metrics {
-            display: none;
          }
 
          .ui-showcase {
@@ -1214,15 +1256,15 @@
 
          @media (max-width: 360px) {
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
-               gap: 7px !important;
-               grid-template-columns: 1fr;
+               gap: 5px !important;
+               grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn {
-               min-height: 40px;
-               padding-left: 8px !important;
-               padding-right: 8px !important;
-               font-size: 0.74rem !important;
+               min-height: 38px;
+               padding-left: 4px !important;
+               padding-right: 4px !important;
+               font-size: 0.62rem !important;
             }
          }
 
@@ -1391,31 +1433,16 @@
                         <button class="boc btn px-4 py-3 fs-6" id="heroInstallBtn"><i class="fa-solid fa-download me-2" style="color:var(--pur)"></i>Install App</button>
                         <a href="#features" class="boc btn px-4 py-3 fs-6">Learn More</a>
                      </div>
-                     <div class="mobile-saas-metrics afu" aria-label="SpeakReady AI platform highlights" style="animation-delay:.34s">
-                        <div class="mobile-saas-metric">
-                           <strong>{{ $previewReadiness }}%</strong>
-                           <span>Readiness</span>
-                        </div>
-                        <div class="mobile-saas-metric">
-                           <strong>{{ $previewInterviews }}</strong>
-                           <span>Sessions</span>
-                        </div>
-                        <div class="mobile-saas-metric">
-                           <strong>{{ $previewClarity }}%</strong>
-                           <span>Clarity</span>
-                        </div>
-                     </div>
+                    </div>
+                 </div>
 
-                   </div>
-                </div>
-
-                <div class="mt-3 mb-3 afu text-center" style="animation-delay:.4s">
-                   <p style="font-size:.71rem;color:var(--tx3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
+                <div class="hero-tech-card mt-3 mb-3 afu text-center" style="animation-delay:.4s">
+                   <p class="hero-tech-title" style="font-size:.71rem;color:var(--pur);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
                    <style>
-                       .tech-icons a { color: inherit; text-decoration: none; display: flex; align-items: center; transition: all 0.2s ease; }
-                       .tech-icons a:hover { transform: translateY(-3px) scale(1.1); color: var(--pur); }
+                        .tech-icons a { color: inherit; text-decoration: none; display: flex; align-items: center; transition: all 0.2s ease; }
+                        .tech-icons a:hover { transform: translateY(-3px) scale(1.1); color: var(--pur); }
                    </style>
-                   <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap tech-icons" style="color:var(--tx2); font-size:1.5rem;">
+                   <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap tech-icons" style="color:var(--pur); font-size:1.5rem;">
                       <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
                       <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
                       <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
@@ -1550,10 +1577,10 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
-                     <div class="d-flex flex-wrap gap-2 mb-4">
+                     <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-graduation-cap me-2"></i>Fresh Graduates</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-briefcase me-2"></i>Job Seekers</span>
@@ -1564,37 +1591,37 @@
                   <div class="col-lg-6 rv" style="transition-delay:.1s">
                      <!-- STATISTICS -->
                      <div class="row g-3 text-center">
-                        <div class="col-6 col-sm-6">
-                           <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">250</div>
-                              <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
-                           </div>
-                        </div>
-                        <div class="col-6 col-sm-6">
-                           <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">1,200</div>
-                              <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
-                           </div>
-                        </div>
-                        <div class="col-6 col-sm-6">
-                           <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">500</div>
-                              <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
-                           </div>
-                        </div>
-                        <div class="col-6 col-sm-6">
-                           <div class="gc p-4 h-100">
-                              <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">900</div>
-                              <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
-                           </div>
-                        </div>
-                        <div class="col-12 mt-3">
-                           <div class="gc p-4">
-                              <div class="d-flex justify-content-center align-items-center gap-2">
-                                <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">85</span>%</div>
-                                <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
-                              </div>
-                           </div>
+                         <div class="col-6 col-sm-6" data-landing-stat="registered-users">
+                            <div class="gc p-4 h-100">
+                               <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ data_get($landingStats ?? [], 'registered_users.display', '0') }}</div>
+                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
+                            </div>
+                         </div>
+                         <div class="col-6 col-sm-6" data-landing-stat="interview-sessions">
+                            <div class="gc p-4 h-100">
+                               <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ data_get($landingStats ?? [], 'interview_sessions.display', '0') }}</div>
+                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
+                            </div>
+                         </div>
+                         <div class="col-6 col-sm-6" data-landing-stat="questions-available">
+                            <div class="gc p-4 h-100">
+                               <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ data_get($landingStats ?? [], 'questions_available.display', '0') }}</div>
+                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
+                            </div>
+                         </div>
+                         <div class="col-6 col-sm-6" data-landing-stat="feedback-generated">
+                            <div class="gc p-4 h-100">
+                               <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ data_get($landingStats ?? [], 'feedback_generated.display', '0') }}</div>
+                               <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
+                            </div>
+                         </div>
+                         <div class="col-12 mt-3" data-landing-stat="success-rate">
+                            <div class="gc p-4">
+                               <div class="d-flex justify-content-center align-items-center gap-2">
+                                 <div class="pnum" style="font-size:3rem; color:var(--pur);"><span class="counter">{{ data_get($landingStats ?? [], 'success_rate.display', '0') }}</span>%</div>
+                                 <div class="text-start plbl text-uppercase" style="font-size:0.9rem; letter-spacing:1px;">Success<br>Rate</div>
+                               </div>
+                            </div>
                         </div>
                      </div>
                   </div>
@@ -1612,84 +1639,84 @@
                <div class="row g-4">
                   <div class="col-md-3 col-sm-6 rv">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:var(--pur)"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Monitor readiness scores, recent sessions, learning progress, and AI feedback summaries from one home base.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(52,211,153,.15);color:#34d399"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Philippine AI Mock Interviews</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-file-lines fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
                          <h3 class="fs-6 fw-bold mb-2">Job Evidence Mapping</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Compare your resume and role details to focus practice on the skills a job asks for.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.15s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(168,85,247,.15);color:#a855f7"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#8b5cf6;--feature-icon-bg:rgba(139,92,246,.14);--feature-icon-border:rgba(139,92,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal Studio</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Improve pacing, clarity, delivery stability, and filler-word control without treating speaking style as personality.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(239,68,68,.15);color:#ef4444"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Interview Modules</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Study structured modules with chapters, resources, quizzes, and practice activities tied to interview skills.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(236,72,153,.15);color:#ec4899"><i class="fa-solid fa-gamepad fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gamepad fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Learning Games</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Complete challenge paths with levels, energy, lives, target tones, banned words, and score goals.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(245,158,11,.15);color:#f59e0b"><i class="fa-solid fa-robot fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#06b6d4;--feature-icon-bg:rgba(6,182,212,.14);--feature-icon-border:rgba(6,182,212,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-robot fa-lg"></i></div>
                          <h3 class="fs-6 fw-bold mb-2">AI Practice Coach</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Get focused prep guidance, score explanations, and grounded advice without invented achievements.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(16,185,129,.15);color:#10b981"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">See evidence-linked rubrics, score confidence, fact-grounded revision templates, and targeted follow-ups.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(59,130,246,.15);color:#3b82f6"><i class="fa-solid fa-chart-line fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#3b82f6;--feature-icon-bg:rgba(59,130,246,.14);--feature-icon-border:rgba(59,130,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-chart-line fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and voice rehearsal growth.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.45s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(6,182,212,.15);color:#06b6d4"><i class="fa-solid fa-folder-open fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#0ea5e9;--feature-icon-bg:rgba(14,165,233,.14);--feature-icon-border:rgba(14,165,233,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-folder-open fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Print detailed reviews and create expiring, password-protected links with reviewer permissions.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(99,102,241,.15);color:#6366f1"><i class="fa-solid fa-network-wired fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-network-wired fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Skill Trees</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Earn leadership, communication, technical, and problem-solving XP, then unlock perks as you improve.</p>
                      </div>
                   </div>
                   <div class="col-md-3 col-sm-6 rv" style="transition-delay:.55s">
                      <div class="gc p-4 h-100 text-center feature-card">
-                        <div class="ftico mx-auto mb-3" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(234,179,8,.15);color:#eab308"><i class="fa-solid fa-trophy fa-lg"></i></div>
+                        <div class="ftico mx-auto mb-3" style="--feature-icon-color:#eab308;--feature-icon-bg:rgba(234,179,8,.14);--feature-icon-border:rgba(234,179,8,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
                          <h3 class="fs-6 fw-bold mb-2">Personal Mastery</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Compare only against your own assessment baseline, personal best, and competency growth.</p>
                      </div>
@@ -2059,137 +2086,437 @@
          <!-- FOOTER -->
          <style>
             #foot {
-                background: linear-gradient(to bottom, var(--bg2), var(--bg3));
+                background: linear-gradient(180deg, var(--bg2) 0%, var(--bg3) 100%);
                 position: relative;
                 overflow: hidden;
+                border-top: 1px solid var(--bd);
             }
+
             #foot::before {
                 content: '';
                 position: absolute;
-                top: 0; left: 0; right: 0;
-                height: 1px;
-                background: linear-gradient(90deg, transparent, var(--pur), transparent);
-                opacity: 0.3;
+                top: 0;
+                left: 50%;
+                width: min(620px, 82vw);
+                height: 2px;
+                transform: translateX(-50%);
+                background: linear-gradient(90deg, transparent, var(--pur), #06b6d4, transparent);
+                opacity: 0.55;
+            }
+
+            #foot .footer-shell {
+                padding: 30px 0 16px;
+            }
+
+            #foot .footer-panel {
+                display: grid;
+                grid-template-columns: minmax(240px, 1.15fr) minmax(280px, 1.45fr) minmax(260px, 0.95fr);
+                align-items: stretch;
+                gap: 18px;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.035);
+                border: 1px solid var(--bd);
+                border-radius: 8px;
+                box-shadow: 0 18px 48px rgba(2, 6, 23, 0.16);
+            }
+
+            html.lm #foot .footer-panel {
+                background: rgba(255, 255, 255, 0.9);
+                box-shadow: 0 18px 46px rgba(37, 99, 235, 0.08);
+            }
+
+            .footer-brand,
+            .footer-action {
+                min-width: 0;
+            }
+
+            .footer-brand-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 12px;
+                color: var(--tx);
+                text-decoration: none;
+            }
+
+            .footer-brand-link span {
+                font-size: 1.18rem;
+                font-weight: 800;
+                line-height: 1;
+                letter-spacing: 0;
+            }
+
+            .footer-logo {
+                width: 34px !important;
+                height: 34px !important;
+                background: #ffffff !important;
+                padding: 0 !important;
+            }
+
+            .footer-copy {
+                max-width: 330px;
+                margin: 0;
+                color: var(--tx2);
+                font-size: 0.88rem;
+                line-height: 1.62;
+            }
+
+            .footer-trust-grid {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                max-width: 360px;
+                margin-top: 14px;
+            }
+
+            .footer-trust {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                min-width: 0;
+                padding: 8px 9px;
+                color: var(--tx);
+                background: var(--bg3);
+                border: 1px solid var(--bd);
+                border-radius: 8px;
+                font-size: 0.7rem;
+                font-weight: 700;
+                line-height: 1;
+                white-space: nowrap;
+            }
+
+            .footer-trust i {
+                color: var(--pur);
+                font-size: 0.82rem;
+            }
+
+            .footer-nav-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 18px;
+                min-width: 0;
             }
             .footer-heading {
-                font-size: 0.95rem;
-                font-weight: 700;
+                font-size: 0.76rem;
+                font-weight: 800;
                 color: var(--tx);
-                margin-bottom: 1.25rem;
-                letter-spacing: 0.5px;
+                margin-bottom: 0.72rem;
+                letter-spacing: 0.08em;
                 text-transform: uppercase;
             }
+
             .footer-links {
                 margin: 0;
                 padding: 0;
             }
+
             .footer-links li {
-                margin-bottom: 0.75rem;
+                margin-bottom: 0.48rem;
             }
+
             .footer-links a {
                 color: var(--tx2);
                 text-decoration: none;
-                font-size: 0.9rem;
-                transition: all 0.2s ease;
+                font-size: 0.84rem;
+                line-height: 1.35;
+                transition: color 0.2s ease, transform 0.2s ease;
                 display: inline-block;
             }
+
             .footer-links a:hover {
                 color: var(--pur);
-                transform: translateX(4px);
+                transform: translateX(3px);
             }
+
+            .footer-action {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 14px;
+                padding: 14px;
+                background: var(--bg);
+                border: 1px solid var(--bd);
+                border-radius: 8px;
+            }
+
+            .footer-action p {
+                color: var(--tx2);
+                font-size: 0.84rem;
+                line-height: 1.55;
+                margin: 0;
+            }
+
+            .footer-newsletter {
+                display: grid !important;
+                grid-template-columns: minmax(0, 1fr) 42px;
+                gap: 8px !important;
+                margin: 0;
+            }
+
+            .footer-newsletter input {
+                min-width: 0;
+                height: 42px;
+                background: var(--sf) !important;
+                border: 1px solid var(--bd) !important;
+                color: var(--tx) !important;
+                padding: 0 12px !important;
+                border-radius: 8px !important;
+                font-size: 0.84rem !important;
+                box-shadow: none !important;
+            }
+
+            .footer-newsletter input:focus {
+                border-color: var(--pur) !important;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16) !important;
+            }
+
+            .footer-newsletter-btn {
+                width: 42px;
+                height: 42px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 !important;
+                background: linear-gradient(135deg, var(--pur), #06b6d4);
+                color: #fff;
+                border: none;
+                border-radius: 8px;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .footer-newsletter-btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 10px 24px rgba(59, 130, 246, 0.28);
+                color: #fff;
+            }
+
+            .footer-socials {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
             .footer-social-link {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 38px;
-                height: 38px;
-                background: var(--bg);
+                width: 36px;
+                height: 36px;
+                background: var(--bg3);
                 border: 1px solid var(--bd);
-                border-radius: 50%;
+                border-radius: 8px;
                 color: var(--tx2);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
                 text-decoration: none;
-                font-size: 1rem;
+                font-size: 0.9rem;
             }
+
             .footer-social-link:hover {
                 background: var(--pur);
                 color: #fff;
                 border-color: var(--pur);
-                transform: translateY(-4px);
-                box-shadow: 0 6px 15px rgba(124, 58, 237, 0.35);
+                transform: translateY(-2px);
+                box-shadow: 0 10px 22px rgba(59, 130, 246, 0.24);
             }
+
             .footer-bottom {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 12px;
                 border-top: 1px solid var(--bd);
-                padding-top: 1.5rem;
-                padding-bottom: 1.5rem;
-                margin-top: 2rem;
+                padding: 14px 2px 0;
+                margin-top: 14px;
             }
-            .footer-newsletter input:focus {
-                border-color: var(--pur) !important;
-                box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15) !important;
+
+            .footer-bottom p {
+                color: var(--tx3);
+                margin: 0;
+                font-size: 0.8rem;
             }
-            .footer-newsletter-btn {
-                background: linear-gradient(135deg, var(--pur), #9333ea);
-                color: #fff;
-                border: none;
-                border-radius: 10px;
-                transition: all 0.2s;
+
+            .footer-legal {
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 9px;
+                font-size: 0.8rem;
             }
-            .footer-newsletter-btn:hover {
-                transform: scale(1.05);
-                box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-                color: #fff;
+
+            .footer-legal-link {
+                color: var(--tx3);
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+
+            .footer-legal-link:hover {
+                color: var(--pur);
+            }
+
+            .footer-dot {
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                background: var(--bd2);
+            }
+
+            @media (max-width: 991.98px) {
+                #foot .footer-panel {
+                    grid-template-columns: 1fr;
+                    gap: 16px;
+                    padding: 18px;
+                }
+
+                .footer-copy,
+                .footer-trust-grid {
+                    max-width: none;
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                #foot .footer-shell {
+                    padding: 18px 0 12px;
+                }
+
+                #foot .footer-panel {
+                    gap: 13px;
+                    padding: 14px;
+                }
+
+                .footer-brand-link {
+                    width: 100%;
+                    justify-content: center;
+                    margin-bottom: 10px;
+                }
+
+                .footer-copy {
+                    text-align: justify;
+                    text-align-last: center;
+                    font-size: 0.8rem;
+                    line-height: 1.5;
+                }
+
+                .footer-trust-grid {
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 6px;
+                    margin-top: 10px;
+                }
+
+                .footer-trust {
+                    min-height: 48px;
+                    flex-direction: column;
+                    gap: 5px;
+                    padding: 7px 4px;
+                    font-size: 0.58rem;
+                    text-align: center;
+                }
+
+                .footer-nav-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 12px;
+                }
+
+                .footer-heading {
+                    margin-bottom: 0.55rem;
+                    font-size: 0.66rem;
+                }
+
+                .footer-links li {
+                    margin-bottom: 0.36rem;
+                }
+
+                .footer-links a {
+                    font-size: 0.72rem;
+                }
+
+                .footer-action {
+                    gap: 10px;
+                    padding: 12px;
+                }
+
+                .footer-action p {
+                    font-size: 0.76rem;
+                }
+
+                .footer-socials {
+                    justify-content: center;
+                }
+
+                .footer-bottom {
+                    justify-content: center;
+                    text-align: center;
+                    padding-top: 12px;
+                    margin-top: 12px;
+                }
+
+                .footer-legal {
+                    justify-content: center;
+                    gap: 8px;
+                }
             }
          </style>
          <footer id="foot">
-            <div class="container pt-5">
-               <div class="row g-5 mb-5">
-                  <div class="col-lg-4 pe-lg-5">
-                     <a class="d-flex align-items-center gap-2 mb-3 text-decoration-none" href="#">
-                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:32px; height:32px; background:#ffffff; padding:0;">
-                        <span style="font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;color:var(--tx)">SpeakReady AI</span>
+            <div class="container footer-shell">
+               <div class="footer-panel">
+                  <div class="footer-brand">
+                     <a class="footer-brand-link" href="#">
+                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i footer-logo">
+                        <span>SpeakReady AI</span>
                      </a>
-                     <p style="font-size:.95rem;color:var(--tx2);line-height:1.7;margin-bottom:1.75rem">Your personal Philippine interview coach. Practice smarter, interview better, and secure your dream opportunity with confidence.</p>
-                     <div class="d-flex gap-3">
+                     <p class="footer-copy">Your personal Philippine interview coach for smarter practice, clearer feedback, and confident interview preparation.</p>
+                     <div class="footer-trust-grid" aria-label="Platform highlights">
+                         <span class="footer-trust"><i class="fa-solid fa-shield-halved"></i>Secure</span>
+                         <span class="footer-trust"><i class="fa-solid fa-bolt"></i>Fast</span>
+                         <span class="footer-trust"><i class="fa-solid fa-brain"></i>AI Ready</span>
+                     </div>
+                  </div>
+                  <nav class="footer-nav-grid" aria-label="Footer navigation">
+                     <div>
+                        <h5 class="footer-heading">Company</h5>
+                        <ul class="list-unstyled footer-links">
+                           <li><a href="#features">Features</a></li>
+                           <li><a href="#about">About</a></li>
+                           <li><a href="#how">How It Works</a></li>
+                           <li><a href="#contact">Contact</a></li>
+                           <li><a href="#faq">FAQ</a></li>
+                        </ul>
+                     </div>
+                     <div>
+                        <h5 class="footer-heading">Platform</h5>
+                        <ul class="list-unstyled footer-links">
+                           <li><a href="#" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
+                           <li><a href="#" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
+                           <li><a href="#benefits">Benefits</a></li>
+                           <li><a href="#">Privacy Policy</a></li>
+                           <li><a href="#">Terms of Service</a></li>
+                        </ul>
+                     </div>
+                  </nav>
+                  <div class="footer-action">
+                     <div>
+                        <h5 class="footer-heading">Stay Updated</h5>
+                        <p>Get interview tips, feature updates, and practice reminders in one clean digest.</p>
+                     </div>
+                     <form class="footer-newsletter d-flex gap-2" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
+                         <input type="email" placeholder="Email address" class="form-control" required>
+                         <button type="submit" class="btn footer-newsletter-btn fw-semibold px-3"><i class="fa-solid fa-paper-plane"></i></button>
+                     </form>
+                     <div class="footer-socials" aria-label="Social links">
                          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
                          <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="Twitter"><i class="fa-brands fa-twitter"></i></a>
                          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
                          <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="footer-social-link" title="GitHub"><i class="fa-brands fa-github"></i></a>
                      </div>
                   </div>
-                  <div class="col-6 col-md-2 col-lg-2">
-                     <h5 class="footer-heading">Company</h5>
-                     <ul class="list-unstyled footer-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#how">How It Works</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li><a href="#faq">FAQ</a></li>
-                     </ul>
-                  </div>
-                  <div class="col-6 col-md-3 col-lg-2">
-                     <h5 class="footer-heading">Platform</h5>
-                     <ul class="list-unstyled footer-links">
-                        <li><a href="#" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('login')">Log In</a></li>
-                        <li><a href="#" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">Register</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                     </ul>
-                  </div>
-                  <div class="col-12 col-md-7 col-lg-4">
-                     <h5 class="footer-heading">Stay Updated</h5>
-                     <p style="font-size:.9rem;color:var(--tx2);line-height:1.6;margin-bottom:1.25rem">Get the latest interview tips and platform updates directly in your inbox.</p>
-                     <form class="footer-newsletter d-flex gap-2" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
-                         <input type="email" placeholder="Enter your email" class="form-control" style="background:var(--bg);border:1px solid var(--bd);color:var(--tx);padding:12px 15px;border-radius:10px;font-size:0.95rem;box-shadow:none;" required>
-                         <button type="submit" class="btn footer-newsletter-btn fw-semibold px-3"><i class="fa-solid fa-paper-plane"></i></button>
-                     </form>
-                  </div>
                </div>
-               <div class="footer-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
-                  <p style="font-size:.85rem;color:var(--tx3);margin:0">&copy; {{ date('Y') }} SpeakReady AI. All rights reserved.</p>
-                  <div class="d-flex gap-3" style="font-size:.85rem;">
-                      <a href="#" style="color:var(--tx3);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--pur)'" onmouseout="this.style.color='var(--tx3)'">Security</a>
-                      <span style="color:var(--bd)">|</span>
-                      <a href="#" style="color:var(--tx3);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--pur)'" onmouseout="this.style.color='var(--tx3)'">Cookie Preferences</a>
+               <div class="footer-bottom">
+                  <p>&copy; {{ date('Y') }} SpeakReady AI. All rights reserved.</p>
+                  <div class="footer-legal">
+                      <a href="#" class="footer-legal-link">Security</a>
+                      <span class="footer-dot" aria-hidden="true"></span>
+                      <a href="#" class="footer-legal-link">Cookie Preferences</a>
                   </div>
                </div>
             </div>
@@ -2341,6 +2668,11 @@
             -webkit-text-fill-color: initial !important;
          }
 
+         #landing .hbadge {
+            color: var(--pur) !important;
+            -webkit-text-fill-color: var(--pur) !important;
+         }
+
          #landing .gt {
             background: linear-gradient(135deg, #2563eb, #06b6d4);
             -webkit-background-clip: text;
@@ -2374,7 +2706,6 @@
          #landing .footer-social-link,
          #landing .ui-device-title,
          #landing .ui-side-item,
-         #landing .mobile-saas-metric,
          #landing .contact-card,
          #lofc :where(.tab-switch, .oauth, .password-toggle) {
             background: var(--bg3) !important;
@@ -2382,16 +2713,27 @@
             color: var(--tx) !important;
          }
 
-         html:not(.lm) #landing :where(.ftag, .hnum, .ftico, .footer-social-link, .ui-device-title, .ui-side-item, .mobile-saas-metric),
+         html:not(.lm) #landing :where(.ftag, .hnum, .ftico, .footer-social-link, .ui-device-title, .ui-side-item),
          html:not(.lm) #lofc :where(.tab-switch, .oauth, .password-toggle) {
             background: rgba(30, 41, 59, 0.74) !important;
             border-color: rgba(148, 163, 184, 0.18) !important;
          }
 
-         html.lm #landing :where(.ftag, .hnum, .ftico, .footer-social-link, .ui-device-title, .ui-side-item, .mobile-saas-metric),
+         html.lm #landing :where(.ftag, .hnum, .ftico, .footer-social-link, .ui-device-title, .ui-side-item),
          html.lm #lofc :where(.tab-switch, .oauth, .password-toggle) {
             background: #f8fafc !important;
             border-color: #dbeafe !important;
+         }
+
+         #landing .feature-card .ftico {
+            background: var(--feature-icon-bg) !important;
+            border-color: var(--feature-icon-border) !important;
+            color: var(--feature-icon-color) !important;
+         }
+
+         #landing .feature-card .ftico i {
+            color: var(--feature-icon-color) !important;
+            -webkit-text-fill-color: var(--feature-icon-color) !important;
          }
 
          #landing :where(.boc, #thbtn, #mbtog, .nav-link),
@@ -2477,6 +2819,12 @@
          #landing .footer-social-link {
             color: var(--tx2) !important;
             -webkit-text-fill-color: var(--tx2) !important;
+         }
+
+         #landing .hero-tech-title,
+         #landing .hero-tech-card .tech-icons a {
+            color: var(--pur) !important;
+            -webkit-text-fill-color: var(--pur) !important;
          }
 
          #landing .footer-social-link:hover,

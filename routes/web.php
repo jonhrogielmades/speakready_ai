@@ -11,10 +11,11 @@ use App\Http\Controllers\InterviewPackController;
 use App\Http\Controllers\MentorReviewController;
 use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
+use App\Services\LandingStatsService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+Route::get('/', function (LandingStatsService $landingStatsService) {
     if (Auth::check()) {
         if (Auth::user()->is_admin) {
             return redirect()->route('admin.dashboard');
@@ -23,7 +24,9 @@ Route::get('/', function () {
         return redirect()->route('dashboard');
     }
 
-    return view('welcome');
+    return view('welcome', [
+        'landingStats' => $landingStatsService->summary(),
+    ]);
 });
 
 // Auth Routes
