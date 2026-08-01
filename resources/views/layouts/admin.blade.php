@@ -143,7 +143,7 @@
          <div class="db-sidebar" id="dbSidebar">
              <div class="db-logo d-flex justify-content-between align-items-center">
                 <div class="db-brand d-flex align-items-center gap-2">
-                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
+                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0;">
                    <span class="admin-brand db-brand-text">SpeakReady AI Admin</span>
                 </div>
                 <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">

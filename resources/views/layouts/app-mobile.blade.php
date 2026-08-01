@@ -198,26 +198,27 @@
          .mob-logo-ring {
             width: 34px;
             height: 34px;
-            border-radius: 13px;
-            padding: 3px;
+            border-radius: 16%;
+            padding: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(96, 165, 250, 0.32);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.46), 0 8px 20px rgba(37, 99, 235, 0.12);
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            box-shadow: none;
+            overflow: hidden;
          }
          .lm .mob-logo-ring {
             background: #ffffff;
-            border-color: rgba(37, 99, 235, 0.22);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06), 0 8px 18px rgba(15, 23, 42, 0.08);
+            border-color: #ffffff;
+            box-shadow: none;
          }
          .mob-header-logo img {
             width: 100%;
             height: 100%;
-            border-radius: 10px;
-            background: #fff;
+            border-radius: 16%;
+            background: transparent;
             object-fit: contain;
          }
          .mob-header-logo span {
@@ -1812,13 +1813,15 @@
             .mob-logo-ring {
                width: 32px !important;
                height: 32px !important;
-               border-radius: 11px !important;
-               padding: 3px !important;
-               box-shadow: 0 8px 18px rgba(37, 99, 235, 0.14) !important;
+               border-radius: 16% !important;
+               padding: 0 !important;
+               background: #ffffff !important;
+               border: 2px solid #ffffff !important;
+               box-shadow: none !important;
             }
 
             .mob-header-logo img {
-               border-radius: 8px !important;
+               border-radius: 16% !important;
             }
 
             .mob-header-logo span:last-child {
@@ -2410,15 +2413,15 @@
             .mob-logo-ring {
                width: 32px !important;
                height: 32px !important;
-               border-radius: 9px !important;
-               padding: 3px !important;
-               border: 1px solid rgba(147, 197, 253, 0.34) !important;
+               border-radius: 16% !important;
+               padding: 0 !important;
+               border: 2px solid #ffffff !important;
                background: #ffffff !important;
                box-shadow: none !important;
             }
 
             .mob-header-logo img {
-               border-radius: 7px !important;
+               border-radius: 16% !important;
             }
 
             .mob-header-logo span:last-child {
@@ -2621,15 +2624,14 @@
 
          .mob-logo-ring {
             background: #ffffff !important;
-            border-color: rgba(96, 165, 250, 0.34) !important;
-            box-shadow:
-               0 0 0 2px rgba(255, 255, 255, 0.7),
-               0 8px 18px rgba(37, 99, 235, 0.2) !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: none !important;
+            padding: 0 !important;
          }
          .mob-header-logo img {
             background: transparent !important;
             object-fit: contain !important;
-            filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.88));
+            filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.18));
          }
       </style>
    </head>

@@ -2,7 +2,7 @@
       <div class="offcanvas offcanvas-end" tabindex="-1" id="lofc">
          <div class="offcanvas-header">
             <div class="d-flex align-items-center gap-2">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: transparent; padding: 0;">
+               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: #ffffff; padding: 0;">
                <h5 class="offcanvas-title mb-0">SpeakReady AI</h5>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" style="filter:invert(1)"></button>
@@ -31,7 +31,7 @@
       <div class="offcanvas offcanvas-end" tabindex="-1" id="lofc">
          <div class="offcanvas-header">
             <div class="d-flex align-items-center gap-2">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: transparent; padding: 0;">
+               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: #ffffff; padding: 0;">
                <h5 class="offcanvas-title mb-0">SpeakReady AI</h5>
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" style="filter:invert(1)"></button>
@@ -136,4 +136,3 @@
             }
          }
       </script>
-

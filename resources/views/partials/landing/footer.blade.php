@@ -4,7 +4,7 @@
                <div class="row g-5 mb-5">
                   <div class="col-lg-4">
                      <a class="d-flex align-items-center gap-2 mb-3" href="#" style="font-size:1.15rem;font-weight:700;color:var(--tx)">
-                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0;">
+                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0;">
                         SpeakReady AI
                      </a>
                      <p style="font-size:.875rem;color:var(--tx3);line-height:1.65;max-width:280px">Your personal Philippine interview coach. Practice smarter, interview better, and secure your dream opportunity.</p>
@@ -33,4 +33,3 @@
                </div>
             </div>
          </footer>
-

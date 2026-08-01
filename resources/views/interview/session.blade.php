@@ -398,13 +398,11 @@
         align-items: center;
         justify-content: center;
         border-radius: 30px;
-        background: linear-gradient(180deg, #ffffff, #eff6ff);
-        border: 1px solid rgba(96, 165, 250, 0.26);
+        background: transparent;
+        border: 0;
         isolation: isolate;
-        overflow: hidden;
-        box-shadow:
-            0 0 0 4px rgba(255, 255, 255, 0.62),
-            0 18px 36px rgba(37, 99, 235, 0.16);
+        overflow: visible;
+        box-shadow: none;
     }
     .finish-loading-circle {
         position: absolute;
@@ -416,11 +414,11 @@
         animation: finishSpin 1s linear infinite;
     }
     .finish-loading-wrapper img {
-        width: 78px;
-        height: 78px;
+        width: 96px;
+        height: 96px;
         object-fit: contain;
         border-radius: 22px;
-        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
+        filter: drop-shadow(0 12px 18px rgba(37, 99, 235, 0.2));
         animation: finishPulse 1.5s ease-in-out infinite;
     }
     .finish-transition-overlay h4 {

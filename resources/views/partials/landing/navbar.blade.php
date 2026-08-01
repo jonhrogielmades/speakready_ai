@@ -3,7 +3,7 @@
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
                   <a href="#" class="d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
-                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0; flex-shrink: 0;">
+                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
                      <span class="text-truncate">SpeakReady AI</span>
                   </a>
                   <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
@@ -47,4 +47,3 @@
                <button class="bgrd flex-fill py-2 btn" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">Register</button>
             </div>
          </div>
-

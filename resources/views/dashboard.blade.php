@@ -5688,6 +5688,162 @@
             line-height: 1 !important;
         }
     }
+
+    .sr-hero-card {
+        min-height: 174px;
+    }
+
+    .sr-hero-inner {
+        min-height: 174px;
+        padding: 24px clamp(238px, 32%, 332px) 24px 24px;
+    }
+
+    .sr-hero-card .sr-user-row {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+
+    .sr-hero-card .sr-welcome-art {
+        right: clamp(16px, 2.6vw, 32px);
+        bottom: 0;
+        width: clamp(186px, 16vw, 218px);
+        opacity: 1;
+    }
+
+    .sr-hero-card .sr-robot-hand-message {
+        top: -40px;
+        left: -304px;
+        width: 356px;
+        max-width: none;
+        transform-origin: 96% 58%;
+    }
+
+    .sr-hero-card .sr-robot-message-bubble,
+    .sr-hero-card .sr-robot-message-tail {
+        stroke-width: 2.2;
+    }
+
+    .sr-hero-card .sr-robot-message-text {
+        align-items: flex-start;
+        gap: 0;
+        justify-content: center;
+        overflow: visible;
+        color: #0f172a;
+        font-size: 16px;
+        font-weight: 850;
+        line-height: 1.17;
+        text-align: left;
+    }
+
+    .sr-hero-card .sr-robot-message-copy {
+        margin: 0;
+        max-width: 100%;
+        text-wrap: balance;
+    }
+
+    .sr-hero-card .sr-robot-message-copy .sr-subtitle-accent {
+        display: inline;
+        font-weight: 950;
+        color: #2563eb !important;
+        text-shadow: none;
+    }
+
+    .sr-hero-card .sr-robot-message-copy .sr-subtitle-accent.is-sky {
+        color: #0284c7 !important;
+    }
+
+    .sr-hero-card .sr-robot-message-copy .sr-subtitle-accent.is-mint {
+        color: #059669 !important;
+    }
+
+    @media (max-width: 991px) {
+        .sr-hero-card {
+            min-height: 158px;
+        }
+
+        .sr-hero-inner {
+            min-height: 158px;
+            padding: 14px 126px 14px 14px;
+        }
+
+        .sr-hero-card .sr-welcome-art {
+            right: -6px;
+            bottom: -2px;
+            width: clamp(124px, 35vw, 150px);
+        }
+
+        .sr-hero-card .sr-robot-hand-message {
+            top: -48px;
+            left: -236px;
+            width: 276px;
+        }
+
+        .sr-hero-card .sr-robot-message-text {
+            font-size: 15.5px;
+            line-height: 1.16;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .sr-hero-card {
+            min-height: 146px;
+        }
+
+        .sr-hero-inner {
+            min-height: 146px;
+            padding: 12px 94px 12px 12px;
+        }
+
+        .sr-hero-card .sr-welcome-art {
+            right: -14px;
+            bottom: -2px;
+            width: 112px;
+        }
+
+        .sr-hero-card .sr-robot-hand-message {
+            top: -42px;
+            left: -204px;
+            width: 238px;
+        }
+
+        .sr-hero-card .sr-robot-message-text {
+            font-size: 16px;
+            line-height: 1.15;
+        }
+    }
+
+    @media (max-width: 360px) {
+        .sr-hero-card {
+            min-height: 138px;
+        }
+
+        .sr-hero-inner {
+            min-height: 138px;
+            padding-right: 84px;
+        }
+
+        .sr-hero-card .sr-welcome-art {
+            right: -18px;
+            bottom: -2px;
+            width: 102px;
+        }
+
+        .sr-hero-card .sr-robot-hand-message {
+            top: -36px;
+            left: -184px;
+            width: 214px;
+        }
+
+        .sr-hero-card .sr-robot-message-text {
+            font-size: 16.5px;
+            line-height: 1.13;
+        }
+    }
 </style>
 
 <div class="db-section active sr-dashboard" id="sec-overview">
@@ -5697,24 +5853,21 @@
                 <div class="sr-hero-inner">
                     <div class="sr-user-row">
                         <div class="sr-welcome-copy">
-                            <p class="sr-subtitle">Track your <span class="sr-subtitle-accent">readiness</span>, monitor your <span class="sr-subtitle-accent is-sky">progress</span>, and get <span class="sr-subtitle-accent is-mint">coaching</span> for job, BPO, IT, scholarship, and admission interviews.</p>
+                            <p class="sr-subtitle visually-hidden">Track your readiness, monitor your progress, and get coaching for job, BPO, IT, scholarship, and admission interviews.</p>
                         </div>
                     </div>
                     <div class="sr-welcome-art" aria-hidden="true">
                         <img class="sr-welcome-robot-img" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="">
-                        <svg class="sr-robot-hand-message" viewBox="0 0 230 126" focusable="false">
-                            <path class="sr-robot-message-tail" d="M166 64 C181 65 199 59 216 50 C199 51 190 44 197 34 C184 41 173 52 166 64 Z"></path>
-                            <rect class="sr-robot-message-bubble" x="8" y="10" width="190" height="76" rx="28"></rect>
-                            <ellipse class="sr-robot-message-shine" cx="142" cy="29" rx="31" ry="10" transform="rotate(9 142 29)"></ellipse>
-                            <circle class="sr-robot-message-dot" cx="26" cy="24" r="5"></circle>
-                            <circle class="sr-robot-message-dot" cx="14" cy="36" r="4"></circle>
-                            <circle class="sr-robot-message-dot" cx="28" cy="50" r="3.5"></circle>
-                            <foreignObject x="24" y="19" width="164" height="58">
+                        <svg class="sr-robot-hand-message" viewBox="0 0 390 172" focusable="false">
+                            <path class="sr-robot-message-tail" d="M306 82 C335 84 363 91 384 102 C358 106 331 118 306 132 C319 115 319 97 306 82 Z"></path>
+                            <rect class="sr-robot-message-bubble" x="10" y="12" width="304" height="132" rx="34"></rect>
+                            <ellipse class="sr-robot-message-shine" cx="238" cy="36" rx="48" ry="13" transform="rotate(8 238 36)"></ellipse>
+                            <circle class="sr-robot-message-dot" cx="30" cy="31" r="5"></circle>
+                            <circle class="sr-robot-message-dot" cx="20" cy="47" r="4"></circle>
+                            <circle class="sr-robot-message-dot" cx="32" cy="64" r="3.5"></circle>
+                            <foreignObject x="42" y="31" width="252" height="102">
                                 <div xmlns="http://www.w3.org/1999/xhtml" class="sr-robot-message-text">
-                                    <div class="sr-robot-message-greeting">
-                                        <span>Hi!</span><strong>{{ $welcomeName }}</strong>
-                                    </div>
-                                    <span class="sr-robot-message-question">Are you Ready!</span>
+                                    <p class="sr-robot-message-copy">Track your <span class="sr-subtitle-accent">readiness</span>, monitor your <span class="sr-subtitle-accent is-sky">progress</span>, and get <span class="sr-subtitle-accent is-mint">coaching</span> for job, BPO, IT, scholarship, and admission interviews.</p>
                                 </div>
                             </foreignObject>
                         </svg>

@@ -184,22 +184,23 @@
          .mob-admin-logo-ring {
             width: 34px;
             height: 34px;
-            border-radius: 13px;
-            padding: 3px;
+            border-radius: 16%;
+            padding: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(248, 113, 113, 0.34);
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.42), 0 8px 20px rgba(248, 113, 113, 0.12);
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            box-shadow: none;
+            overflow: hidden;
          }
          .lm .mob-admin-logo-ring {
             background: #ffffff;
-            border-color: rgba(248, 113, 113, 0.24);
-            box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.07), 0 8px 18px rgba(15, 23, 42, 0.08);
+            border-color: #ffffff;
+            box-shadow: none;
          }
-         .mob-header-brand img { width: 100%; height: 100%; border-radius: 10px; background:#fff; object-fit:contain; }
+         .mob-header-brand img { width: 100%; height: 100%; border-radius: 16%; background:transparent; object-fit:contain; }
          .mob-header-brand .adm-badge {
             font-size: 0.58rem; font-weight: 700;
             background: var(--adm-bg); color: var(--adm);
@@ -1483,15 +1484,14 @@
 
          .mob-admin-logo-ring {
             background: #ffffff !important;
-            border-color: rgba(96, 165, 250, 0.34) !important;
-            box-shadow:
-               0 0 0 2px rgba(255, 255, 255, 0.7),
-               0 8px 18px rgba(37, 99, 235, 0.2) !important;
+            border: 2px solid #ffffff !important;
+            box-shadow: none !important;
+            padding: 0 !important;
          }
          .mob-header-brand img {
             background: transparent !important;
             object-fit: contain !important;
-            filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.88));
+            filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.18));
          }
       </style>
    </head>

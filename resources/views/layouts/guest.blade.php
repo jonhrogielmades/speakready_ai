@@ -443,31 +443,21 @@
                display: grid;
                place-items: center;
                margin-bottom: 26px;
-               background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
-               border: 1px solid rgba(96, 165, 250, 0.28);
-               box-shadow:
-                  0 22px 48px rgba(15, 23, 42, 0.14),
-                  0 0 0 4px rgba(255, 255, 255, 0.62),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.96);
+               background: transparent;
+               border: 0;
+               box-shadow: none;
             }
 
             .sr-launch-mark::after {
-               content: "";
-               position: absolute;
-               inset: 11px;
-               border-radius: 24px;
-               border: 1px solid rgba(20, 184, 166, 0.16);
-               pointer-events: none;
+               display: none;
             }
 
             .sr-launch-mark img {
-               width: 82%;
-               height: 82%;
+               width: 100%;
+               height: 100%;
                object-fit: contain;
                border-radius: 24px;
-               filter:
-                  drop-shadow(0 0 1px rgba(255, 255, 255, 0.88))
-                  drop-shadow(0 12px 18px rgba(37, 99, 235, 0.24));
+               filter: drop-shadow(0 12px 18px rgba(37, 99, 235, 0.24));
             }
 
             .sr-launch-kicker {
@@ -583,14 +573,12 @@
             .guest-brand .logo-i {
                width: 34px !important;
                height: 34px !important;
-               border-radius: 12px;
-               background: #fff !important;
-               border: 1px solid rgba(59, 130, 246, 0.18);
-               box-shadow:
-                  0 0 0 2px rgba(255, 255, 255, 0.72),
-                  0 8px 18px rgba(37, 99, 235, 0.18);
+               border-radius: 16%;
+               background: #ffffff !important;
+               border: 2px solid #ffffff;
+               box-shadow: none;
                object-fit: contain;
-               filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.78));
+               filter: drop-shadow(0 8px 14px rgba(37, 99, 235, 0.18));
             }
 
             .guest-brand-name {
@@ -1316,7 +1304,7 @@
             <div class="container">
                <div class="d-flex align-items-center justify-content-between w-100">
                   <a href="#" class="guest-brand d-flex align-items-center gap-2 text-truncate" style="font-size:1.2rem;font-weight:700;color:var(--tx); max-width: calc(100vw - 120px);">
-                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: transparent; padding: 0; flex-shrink: 0;">
+                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
                      <span class="guest-brand-copy">
                         <span class="guest-brand-name">SpeakReady AI</span>
                         @php
@@ -2158,7 +2146,7 @@
                <div class="row g-5 mb-5">
                   <div class="col-lg-4 pe-lg-5">
                      <a class="d-flex align-items-center gap-2 mb-3 text-decoration-none" href="#">
-                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:32px; height:32px; background:transparent; padding:0;">
+                        <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:32px; height:32px; background:#ffffff; padding:0;">
                         <span style="font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;color:var(--tx)">SpeakReady AI</span>
                      </a>
                      <p style="font-size:.95rem;color:var(--tx2);line-height:1.7;margin-bottom:1.75rem">Your personal Philippine interview coach. Practice smarter, interview better, and secure your dream opportunity with confidence.</p>
@@ -2217,7 +2205,7 @@
             <div class="modal-content" style="background:var(--sf);color:var(--tx);border:1px solid var(--bd);border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;">
                <div class="modal-header" style="border-bottom:1px solid var(--bd);">
                   <div class="d-flex align-items-center gap-2">
-                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: transparent; padding: 0;">
+                     <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: #ffffff; padding: 0;">
                      <h5 class="modal-title mb-0" id="authModalTitle">SpeakReady AI</h5>
                   </div>
                   <button type="button" class="btn-close auth-modal-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -2726,13 +2714,11 @@
           align-items: center;
           justify-content: center;
           border-radius: 30px;
-          background: linear-gradient(180deg, #ffffff, #eff6ff);
-          border: 1px solid rgba(96, 165, 250, 0.26);
+          background: transparent;
+          border: 0;
           isolation: isolate;
-          overflow: hidden;
-          box-shadow:
-              0 0 0 4px rgba(255, 255, 255, 0.62),
-              0 18px 36px rgba(37, 99, 235, 0.16);
+          overflow: visible;
+          box-shadow: none;
       }
       .logo-loading-circle {
           position: absolute;
@@ -2744,11 +2730,11 @@
           animation: spin 1s linear infinite;
       }
       .logo-loading-wrapper img {
-          width: 78px;
-          height: 78px;
+          width: 96px;
+          height: 96px;
           object-fit: contain;
           border-radius: 22px;
-          filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
+          filter: drop-shadow(0 12px 18px rgba(37, 99, 235, 0.2));
           animation: pulse 1.5s ease-in-out infinite;
       }
       @media (max-width: 575px) {
@@ -2762,8 +2748,8 @@
               border-radius: 26px;
           }
           .logo-loading-wrapper img {
-              width: 66px;
-              height: 66px;
+              width: 84px;
+              height: 84px;
               border-radius: 18px;
           }
       }

@@ -42,13 +42,11 @@
         align-items: center;
         justify-content: center;
         border-radius: 28px;
-        background: linear-gradient(180deg, #ffffff, #eff6ff);
-        border: 1px solid rgba(96, 165, 250, 0.26);
+        background: transparent;
+        border: 0;
         isolation: isolate;
-        overflow: hidden;
-        box-shadow:
-            0 0 0 4px rgba(255, 255, 255, 0.62),
-            0 18px 36px rgba(37, 99, 235, 0.16);
+        overflow: visible;
+        box-shadow: none;
     }
 
     .sr-page-loading-ring {
@@ -62,11 +60,11 @@
     }
 
     .sr-page-loading-wrapper img {
-        width: 74px;
-        height: 74px;
+        width: 90px;
+        height: 90px;
         object-fit: contain;
         border-radius: 20px;
-        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.9));
+        filter: drop-shadow(0 12px 18px rgba(37, 99, 235, 0.2));
         animation: srPageTransitionPulse 1.45s ease-in-out infinite;
     }
 
@@ -105,8 +103,8 @@
         }
 
         .sr-page-loading-wrapper img {
-            width: 63px;
-            height: 63px;
+            width: 78px;
+            height: 78px;
             border-radius: 18px;
         }
 
