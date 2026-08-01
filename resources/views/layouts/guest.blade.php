@@ -994,22 +994,24 @@
             }
 
             #hero .hero-tech-card {
+               --hero-tech-color: #000000;
                width: 100%;
                margin: 12px auto 10px !important;
-               padding: 10px 12px;
-               border-radius: 10px;
-               background: rgba(255, 255, 255, 0.62);
-               border: 1px solid rgba(148, 163, 184, 0.18);
-               box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+               padding: 10px 0;
+               border-radius: 0;
+               background: transparent;
+               border: 0;
+               box-shadow: none;
             }
 
             html:not(.lm) #hero .hero-tech-card {
-               background: rgba(15, 23, 42, 0.48);
-               border-color: rgba(148, 163, 184, 0.12);
+               --hero-tech-color: #ffffff;
+               background: transparent;
+               border-color: transparent;
             }
 
             #hero .hero-tech-title {
-               color: var(--pur) !important;
+               color: var(--hero-tech-color) !important;
                margin-bottom: 8px !important;
                font-size: 0.58rem !important;
                letter-spacing: 0.09em !important;
@@ -1156,11 +1158,40 @@
             .gc.p-4 {
                padding: 17px !important;
             }
+
+            .landing-stats-row {
+               --bs-gutter-x: 0.5rem;
+               --bs-gutter-y: 0.5rem;
+            }
+
+            .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .gc.p-4 {
+               padding: 10px 4px !important;
+            }
+
+            .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .pnum {
+               font-size: 1.55rem !important;
+            }
+
+            .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .plbl {
+               margin-top: 6px !important;
+               font-size: 0.52rem !important;
+               letter-spacing: 0.02em !important;
+               line-height: 1.2;
+            }
          }
 
          .ui-showcase {
             display: block;
             width: 100%;
+         }
+
+         .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) {
+            flex: 0 0 25%;
+            max-width: 25%;
+         }
+
+         .landing-stats-row > [data-landing-stat]:not([data-landing-stat="success-rate"]) .gc {
+            min-height: 100%;
          }
 
          .ui-device {
@@ -1171,6 +1202,8 @@
          }
 
          .ui-device-mobile {
+            --mobile-preview-surface: #eef4fb;
+            --mobile-preview-outline: rgba(37, 99, 235, 0.24);
             max-width: 318px;
             margin-inline: auto;
             border-radius: 14px;
@@ -1221,6 +1254,27 @@
          .ui-dashboard {
             padding: 10px;
             color: var(--tx);
+         }
+
+         .ui-device-mobile .ui-dashboard-preview {
+            position: relative;
+            padding: 0;
+            background: var(--mobile-preview-surface);
+            overflow: hidden;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 1px var(--mobile-preview-outline);
+         }
+
+         .ui-device-mobile .ui-preview-video {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: var(--mobile-preview-surface);
+            filter: none;
+            mix-blend-mode: normal;
+            opacity: 1;
+            pointer-events: none;
+            user-select: none;
          }
 
          .ui-dashboard-desktop {
@@ -1471,6 +1525,20 @@
             box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
          }
 
+         html.lm #landing .ui-device-mobile {
+            --mobile-preview-surface: #eef4fb;
+            --mobile-preview-outline: rgba(37, 99, 235, 0.2);
+            border-color: rgba(37, 99, 235, 0.18);
+            box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
+         }
+
+         html:not(.lm) #landing .ui-device-mobile {
+            --mobile-preview-surface: #f8fbff;
+            --mobile-preview-outline: rgba(255, 255, 255, 0.28);
+            border-color: rgba(226, 232, 240, 0.28);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(255, 255, 255, 0.08);
+         }
+
          .lm .ui-main-chip {
             color: #2563eb;
          }
@@ -1698,12 +1766,12 @@
                  </div>
 
                 <div class="hero-tech-card mt-3 mb-3 afu text-center" style="animation-delay:.4s">
-                   <p class="hero-tech-title" style="font-size:.71rem;color:var(--pur);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
-                   <style>
+                  <p class="hero-tech-title" style="font-size:.71rem;color:var(--hero-tech-color, #000000);text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Featured Technologies</p>
+                  <style>
                         .tech-icons a { color: inherit; text-decoration: none; display: flex; align-items: center; transition: all 0.2s ease; }
-                        .tech-icons a:hover { transform: translateY(-3px) scale(1.1); color: var(--pur); }
-                   </style>
-                   <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap tech-icons" style="color:var(--pur); font-size:1.5rem;">
+                        .tech-icons a:hover { transform: translateY(-3px) scale(1.1); color: var(--hero-tech-color, #000000); }
+                  </style>
+                  <div class="d-flex align-items-center justify-content-center gap-4 flex-wrap tech-icons" style="color:var(--hero-tech-color, #000000); font-size:1.5rem;">
                       <a href="https://laravel.com" target="_blank" rel="noopener noreferrer" title="Laravel"><i class="fa-brands fa-laravel"></i></a>
                       <a href="https://php.net" target="_blank" rel="noopener noreferrer" title="PHP"><i class="fa-brands fa-php"></i></a>
                       <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer" title="MySQL"><i class="fa-solid fa-database"></i></a>
@@ -1727,42 +1795,24 @@
                               <span class="ui-device-dot" style="background:#ffbd2e"></span>
                               <span class="ui-device-dot" style="background:#28c840"></span>
                            </div>
-                           <div class="ui-dashboard">
-                              <div class="ui-stat-grid">
-                                 <div class="ui-stat">
-                                    <div class="ui-stat-value accent">{{ $previewReadiness }}%</div>
-                                    <div class="ui-stat-label">PH Readiness</div>
-                                    <div class="ui-stat-note"><i class="fa-solid fa-caret-up"></i> Avg</div>
-                                 </div>
-                                 <div class="ui-stat">
-                                    <div class="ui-stat-value">{{ $previewInterviews }}</div>
-                                    <div class="ui-stat-label">Interviews Done</div>
-                                 </div>
-                                 <div class="ui-stat">
-                                    <div class="ui-stat-value">{{ $previewClarity }}%</div>
-                                    <div class="ui-stat-label">Clarity Score</div>
-                                 </div>
-                                 <div class="ui-stat">
-                                    <div class="ui-stat-value">{{ $previewGrammar }}%</div>
-                                    <div class="ui-stat-label">Grammar Score</div>
-                                 </div>
-                              </div>
-                              <div class="ui-panel-grid">
-                                 <div class="ui-panel">
-                                    <div class="ui-panel-title"><i class="fa-solid fa-chart-bar me-1"></i>Performance Trend</div>
-                                    <div class="ui-bars" aria-hidden="true">
-                                       <span style="height:45%"></span><span style="height:55%"></span><span style="height:60%"></span><span style="height:70%"></span><span style="height:75%"></span><span style="height:85%"></span><span style="height:92%"></span>
-                                    </div>
-                                    <div class="ui-axis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
-                                 </div>
-                                 <div class="ui-panel ui-chat">
-                                    <div class="ui-panel-title"><span class="ui-pulse"></span>AI Feedback</div>
-                                    <div class="ui-bubble user">Tell me about a challenge you faced.</div>
-                                    <div class="ui-bubble ai"><strong>Good STAR structure for a Philippine interview.</strong> Add the specific result or customer impact to make it stronger.</div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
+                            <div class="ui-dashboard ui-dashboard-preview">
+                               <video
+                                  class="ui-preview-video"
+                                  autoplay
+                                  muted
+                                  loop
+                                  playsinline
+                                  preload="metadata"
+                                  poster="{{ asset('img/landing-dashboard-mobile-preview.png') }}"
+                                  aria-label="SpeakReady AI mobile dashboard preview"
+                                  tabindex="-1"
+                                  disablepictureinpicture
+                                  controlslist="nodownload nofullscreen noremoteplayback"
+                               >
+                                  <source src="{{ asset('videos/landing-dashboard-mobile-preview.mp4') }}" type="video/mp4">
+                               </video>
+                            </div>
+                         </div>
 
                         <div class="ui-device ui-device-desktop" aria-label="Desktop UI preview">
                            <div class="ui-device-bar">
@@ -1851,26 +1901,26 @@
                   </div>
                   <div class="col-lg-6 rv" style="transition-delay:.1s">
                      <!-- STATISTICS -->
-                     <div class="row g-3 text-center">
-                         <div class="col-6 col-sm-6" data-landing-stat="registered-users">
+                      <div class="row g-3 text-center landing-stats-row">
+                         <div class="col-3" data-landing-stat="registered-users">
                             <div class="gc p-4 h-100">
                                <div class="pnum counter" style="font-size:2.5rem; color:var(--pur);">{{ data_get($landingStats ?? [], 'registered_users.display', '0') }}</div>
                                <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Registered Users</div>
                             </div>
                          </div>
-                         <div class="col-6 col-sm-6" data-landing-stat="interview-sessions">
+                         <div class="col-3" data-landing-stat="interview-sessions">
                             <div class="gc p-4 h-100">
                                <div class="pnum counter" style="font-size:2.5rem; color:#34d399;">{{ data_get($landingStats ?? [], 'interview_sessions.display', '0') }}</div>
                                <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Total Interview Sessions</div>
                             </div>
                          </div>
-                         <div class="col-6 col-sm-6" data-landing-stat="questions-available">
+                         <div class="col-3" data-landing-stat="questions-available">
                             <div class="gc p-4 h-100">
                                <div class="pnum counter" style="font-size:2.5rem; color:#f59e0b;">{{ data_get($landingStats ?? [], 'questions_available.display', '0') }}</div>
                                <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">Questions Available</div>
                             </div>
                          </div>
-                         <div class="col-6 col-sm-6" data-landing-stat="feedback-generated">
+                         <div class="col-3" data-landing-stat="feedback-generated">
                             <div class="gc p-4 h-100">
                                <div class="pnum counter" style="font-size:2.5rem; color:#3b82f6;">{{ data_get($landingStats ?? [], 'feedback_generated.display', '0') }}</div>
                                <div class="plbl text-uppercase" style="font-size:0.8rem; letter-spacing:1px; margin-top:10px;">AI Feedback Generated</div>
@@ -3037,8 +3087,8 @@
 
          #landing .hero-tech-title,
          #landing .hero-tech-card .tech-icons a {
-            color: var(--pur) !important;
-            -webkit-text-fill-color: var(--pur) !important;
+            color: var(--hero-tech-color, #000000) !important;
+            -webkit-text-fill-color: var(--hero-tech-color, #000000) !important;
          }
 
          #landing .footer-social-link:hover,
