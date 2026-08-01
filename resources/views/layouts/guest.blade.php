@@ -66,6 +66,79 @@
          html:not(.lm) .pwa-btn-no { border-color: #444; color: #fff; }
          .pwa-btn-yes { flex: 1; padding: 10px; border-radius: 10px; border: none; background: var(--pur, #8b5cf6); color: #fff; font-weight: 600; cursor: pointer; }
 
+         .back-to-top-btn {
+            position: fixed;
+            right: max(18px, env(safe-area-inset-right));
+            bottom: max(22px, env(safe-area-inset-bottom));
+            z-index: 1040;
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--pur), #06b6d4);
+            border: 0;
+            border-radius: 8px;
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(14px) scale(0.92);
+            pointer-events: none;
+            transition: opacity 0.22s ease, visibility 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+         }
+
+         .back-to-top-btn i {
+            font-size: 1rem;
+            line-height: 1;
+         }
+
+         .back-to-top-btn.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            animation: backToTopFloat 2.4s ease-in-out infinite;
+         }
+
+         .back-to-top-btn:hover,
+         .back-to-top-btn:focus-visible {
+            color: #ffffff;
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 20px 42px rgba(37, 99, 235, 0.38);
+            outline: 0;
+         }
+
+         .back-to-top-btn:focus-visible {
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22), 0 20px 42px rgba(37, 99, 235, 0.38);
+         }
+
+         @keyframes backToTopFloat {
+            0%, 100% {
+               translate: 0 0;
+            }
+            50% {
+               translate: 0 -6px;
+            }
+         }
+
+         @media (max-width: 575.98px) {
+            .back-to-top-btn {
+               right: max(14px, env(safe-area-inset-right));
+               bottom: max(78px, calc(env(safe-area-inset-bottom) + 70px));
+               width: 42px;
+               height: 42px;
+            }
+         }
+
+         @media (prefers-reduced-motion: reduce) {
+            .back-to-top-btn,
+            .back-to-top-btn.is-visible {
+               animation: none !important;
+               transition: opacity 0.01ms linear, visibility 0.01ms linear;
+            }
+         }
+
          .guest-brand,
          .guest-brand-copy {
             min-width: 0;
@@ -2626,6 +2699,10 @@
          </div>
       </div>
 
+      <button type="button" id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top" title="Back to top">
+         <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
+      </button>
+
       <style>
          /* Guest contrast guard: keeps landing, auth, splash, and mobile UI readable in both themes. */
          #landing,
@@ -3028,6 +3105,27 @@
          document.getElementById('pwa-btn-no')?.addEventListener('click', () => {
             document.getElementById('pwa-install-prompt').style.display = 'none';
             localStorage.setItem('pwa_prompt_dismissed', 'true');
+         });
+      </script>
+
+      <script>
+         document.addEventListener('DOMContentLoaded', function() {
+            const backToTopBtn = document.getElementById('backToTopBtn');
+            if (!backToTopBtn) return;
+
+            const toggleBackToTop = function() {
+               backToTopBtn.classList.toggle('is-visible', window.scrollY > 420);
+            };
+
+            toggleBackToTop();
+            window.addEventListener('scroll', toggleBackToTop, { passive: true });
+
+            backToTopBtn.addEventListener('click', function() {
+               window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+               });
+            });
          });
       </script>
 
