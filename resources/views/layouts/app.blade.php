@@ -6,7 +6,7 @@
       <meta name="theme-color" content="#ffffff">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
-      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
+      <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -67,8 +67,8 @@
                   .instant-feedback-title,
                   .intention-coach-title
               ) {
-                  color: #0f172a !important;
-                  -webkit-text-fill-color: #0f172a !important;
+                  color: var(--tx) !important;
+                  -webkit-text-fill-color: var(--tx) !important;
               }
           }
       </style>
@@ -518,8 +518,8 @@
                .notif-hero-title,
                .mastery-title
             ) {
-               color: #0f172a !important;
-               -webkit-text-fill-color: #0f172a !important;
+               color: var(--tx) !important;
+               -webkit-text-fill-color: var(--tx) !important;
             }
 
          }
@@ -885,6 +885,8 @@
          }
       </style>
       @endif
+      @include('partials.desktop-theme-contrast')
+      @include('partials.user-theme-contrast')
       @include('partials.onboarding-script')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')

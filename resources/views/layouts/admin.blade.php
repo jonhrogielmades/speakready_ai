@@ -5,7 +5,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="theme-color" content="#ffffff">
       <title>SpeakReady AI Interview Admin Portal</title>
-      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
+      <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -505,6 +505,7 @@
       </script>
 
       @stack('late-styles')
+      @include('partials.desktop-theme-contrast')
       @stack('scripts')
       @include('partials.page-transition')
       @include('layouts.logout-transition')

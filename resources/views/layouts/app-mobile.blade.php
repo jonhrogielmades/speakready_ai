@@ -8,7 +8,7 @@
       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>@yield('title', 'SpeakReady AI - AI-Based Interview Practice System')</title>
-      <script src="{{ asset('js/theme-boot.js?v=1') }}"></script>
+      <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
       <link rel="manifest" href="{{ asset('manifest.json') }}">
       <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
@@ -2629,21 +2629,117 @@
             padding: 0 !important;
          }
          .mob-header-logo img {
-            background: transparent !important;
-            object-fit: contain !important;
-            filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.18));
+             background: transparent !important;
+             object-fit: contain !important;
+             filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.18));
+          }
+
+         body.user-mobile-shell #mob-header {
+            justify-content: space-between !important;
          }
-      </style>
+
+         body.user-mobile-shell #mob-header .mob-header-brand-pill {
+            flex: 0 0 auto !important;
+            width: clamp(98px, calc(100vw - 222px), 154px) !important;
+            max-width: none !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            box-sizing: border-box !important;
+            padding: 4px 9px 4px 5px !important;
+            gap: 5px !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(191, 219, 254, 0.72) !important;
+            border-radius: 10px !important;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 62%, #06b6d4 100%) !important;
+            color: #ffffff !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+         }
+
+         body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
+            width: 24px !important;
+            height: 24px !important;
+            border: 1px solid rgba(255, 255, 255, 0.94) !important;
+            border-radius: 7px !important;
+            background: #ffffff !important;
+         }
+
+         body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+            display: inline-flex !important;
+            align-items: baseline !important;
+            flex: 1 1 auto !important;
+            gap: 2px !important;
+            margin: 0 !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: currentColor !important;
+            font-size: 0.84rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            letter-spacing: 0 !important;
+            text-transform: capitalize !important;
+            text-shadow: 0 1px 5px rgba(15, 23, 42, 0.16) !important;
+         }
+
+         body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text span {
+            display: inline !important;
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+            color: #67e8f9 !important;
+            -webkit-text-fill-color: #67e8f9 !important;
+            font-size: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+            letter-spacing: inherit !important;
+            text-transform: inherit !important;
+         }
+
+         @media (max-width: 380px) {
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               padding-right: 7px !important;
+               gap: 5px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               font-size: 0.74rem !important;
+            }
+         }
+
+         @media (max-width: 340px) {
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               padding-right: 6px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
+               width: 21px !important;
+               height: 21px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               font-size: 0.64rem !important;
+            }
+         }
+
+       </style>
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">
 
+      @php
+         $mobileHeaderPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
+      @endphp
+
       <!-- ===== MOBILE TOP HEADER ===== -->
       <header id="mob-header">
-         <a href="{{ route('dashboard') }}" class="mob-header-logo">
+         <a href="{{ route('dashboard') }}" class="mob-header-logo mob-header-brand-pill" aria-label="Go to dashboard">
             <span class="mob-logo-ring">
                <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">
             </span>
-            <span>SpeakReady AI</span>
+            <h6 class="mob-header-brand-text">SpeakReady <span>AI</span></h6>
          </a>
          <div class="mob-header-right">
             <button class="mob-icon-btn" id="mobTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
@@ -2764,7 +2860,7 @@
 
       <!-- ===== PAGE CONTENT ===== -->
       <div id="mob-content" data-layout-shell="mobile">
-         <div class="db-content" id="userAppContent" data-layout-shell="mobile" data-user-ajax-content data-page-title="{{ trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview') }}">
+         <div class="db-content" id="userAppContent" data-layout-shell="mobile" data-user-ajax-content data-page-title="{{ $mobileHeaderPageTitle }}">
             @yield('content')
          </div>
       </div>
@@ -3768,6 +3864,7 @@
          }
       </style>
 
+      @include('partials.user-theme-contrast')
       <!-- USER_PAGE_SCRIPTS_START -->
       @stack('scripts')
       @include('partials.onboarding-fallback-init')

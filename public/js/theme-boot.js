@@ -20,7 +20,7 @@
   }
 
   function normalizeTheme(theme) {
-    return theme === "light" ? "light" : "dark";
+    return theme === "dark" ? "dark" : "light";
   }
 
   function setThemeColor(theme) {
@@ -50,11 +50,15 @@
     var resolvedTheme = normalizeTheme(theme);
     var root = document.documentElement;
     root.classList.toggle("lm", resolvedTheme === "light");
+    root.classList.toggle("dm", resolvedTheme === "dark");
     root.dataset.theme = resolvedTheme;
     setThemeColor(resolvedTheme);
 
     if (persist) setStoredTheme(resolvedTheme);
-    if (document.body) document.body.classList.toggle("lm", resolvedTheme === "light");
+    if (document.body) {
+      document.body.classList.toggle("lm", resolvedTheme === "light");
+      document.body.classList.toggle("dm", resolvedTheme === "dark");
+    }
     syncThemeIcons(resolvedTheme);
 
     if (typeof window.updateChartColors === "function") {
