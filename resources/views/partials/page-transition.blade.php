@@ -225,7 +225,10 @@
 
             if (url.origin !== window.location.origin) return false;
             if (url.pathname === window.location.pathname && url.search === window.location.search) return false;
-            if (url.pathname === '/auth/google' || url.pathname === '/auth/google/callback') return false;
+            if (url.pathname === '/auth/google' ||
+                url.pathname === '/auth/google/login' ||
+                url.pathname === '/auth/google/register' ||
+                url.pathname === '/auth/google/callback') return false;
             if (isFileOrDownloadPath(url.pathname)) return false;
 
             return true;

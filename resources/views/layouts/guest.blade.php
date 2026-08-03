@@ -2839,7 +2839,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or continue with</div>
-               <a href="{{ route('auth.google') }}" class="oauth" data-auth-transition="google" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
+               <a href="{{ route('auth.google.login') }}" class="oauth" data-auth-transition="google-login" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Log in with Google</a>
             </div>
             <!-- Sign Up -->
             <div id="fSignup" class="auth-panel" style="display:none">
@@ -2869,7 +2869,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or sign up with</div>
-               <a href="{{ route('auth.google') }}" class="oauth" data-auth-transition="google" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Continue with Google</a>
+               <a href="{{ route('auth.google.register') }}" class="oauth" data-auth-transition="google-register" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Sign up with Google</a>
             </div>
                </div>
             </div>
@@ -3512,7 +3512,10 @@
               if (mode === 'register') {
                   if (title) title.textContent = 'Creating your account...';
                   if (copy) copy.textContent = 'Please wait while we set up your dashboard';
-              } else if (mode === 'google') {
+              } else if (mode === 'google-register') {
+                  if (title) title.textContent = 'Signing up with Google...';
+                  if (copy) copy.textContent = 'Opening secure Google registration';
+              } else if (mode === 'google' || mode === 'google-login') {
                   if (title) title.textContent = 'Connecting to Google...';
                   if (copy) copy.textContent = 'Opening secure Google sign-in';
               } else {
@@ -3542,7 +3545,7 @@
                   });
               }
 
-              const googleAuthLinks = document.querySelectorAll('a[data-auth-transition="google"]');
+              const googleAuthLinks = document.querySelectorAll('a[data-auth-transition^="google"]');
               const resetGoogleAuthLinks = function() {
                   googleAuthLinks.forEach(function(link) {
                       link.style.pointerEvents = '';
@@ -3562,7 +3565,7 @@
                       }
 
                       event.preventDefault();
-                      showLoginTransition('google');
+                      showLoginTransition(link.dataset.authTransition || 'google-login');
                       link.setAttribute('aria-disabled', 'true');
                       link.style.pointerEvents = 'none';
 

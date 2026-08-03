@@ -150,14 +150,21 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-    public function redirectToGoogle()
+    public function redirectToGoogle(Request $request)
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        return $this->redirectToGoogleWithIntent($request, 'login');
+    }
+
+    public function redirectToGoogleRegister(Request $request)
+    {
+        return $this->redirectToGoogleWithIntent($request, 'register');
     }
 
     public function handleGoogleCallback(Request $request)
     {
         try {
+            $intent = $request->session()->pull('google_auth_intent', 'login');
+            $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
             $driver = $this->googleDriver();
             $googleUser = $driver->user();
 
@@ -177,16 +184,33 @@ class AuthController extends Controller
                     ->first();
             }
 
-            if ($user && $user->trashed()) {
-                // Automatically restore the user's account if they log back in with Google
+            if ($user && $user->trashed() && $intent === 'login') {
                 $user->restore();
             }
 
-            if (!$user) {
+            if ($user && $intent === 'register') {
+                return redirect('/')->withErrors([
+                    'email' => 'This Google email is already registered. Please log in with Google instead.',
+                ])->withInput([
+                    'name' => $googleUser->name ?: 'Google User',
+                    'email' => $googleUser->email,
+                ]);
+            }
+
+            if (! $user && $intent === 'login') {
+                return redirect('/')->withErrors([
+                    'email' => 'No SpeakReady AI account was found for this Google email. Please register first.',
+                ])->withInput(['email' => $googleUser->email]);
+            }
+
+            if (! $user) {
                 if (! Setting::enabled('acc_registration')) {
                     return redirect('/')->withErrors([
                         'email' => 'New account registration is currently disabled by the administrator.',
-                    ])->withInput(['email' => $googleUser->email]);
+                    ])->withInput([
+                        'name' => $googleUser->name ?: 'Google User',
+                        'email' => $googleUser->email,
+                    ]);
                 }
 
                 $user = User::create([
@@ -203,6 +227,14 @@ class AuthController extends Controller
                     'readiness_score' => 0,
                     'total_sessions' => 0,
                 ]);
+
+                ActivityLogger::log(
+                    $user,
+                    'user_registered',
+                    "{$user->name} ({$user->email}) registered a new account with Google.",
+                    $request->ip(),
+                    false
+                );
             } else {
                 $updates = [];
                 if (!$user->google_id) {
@@ -229,15 +261,23 @@ class AuthController extends Controller
             if ($user->is_admin) {
                 return redirect()->route('admin.dashboard');
             }
+
             return redirect()->route('dashboard');
 
         } catch (Throwable $e) {
-            Log::error('Google login failed: ' . $e->getMessage(), ['exception' => $e]);
+            Log::error('Google authentication failed: ' . $e->getMessage(), ['exception' => $e]);
 
             return redirect('/')->withErrors([
-                'email' => 'Google login took too long or could not be completed. Please try again.',
+                'email' => 'Google authentication took too long or could not be completed. Please try again.',
             ]);
         }
+    }
+
+    private function redirectToGoogleWithIntent(Request $request, string $intent)
+    {
+        $request->session()->put('google_auth_intent', $intent);
+
+        return Socialite::driver('google')->stateless()->redirect();
     }
 
     private function googleDriver()

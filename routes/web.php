@@ -39,6 +39,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->name('request.reactivation');
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/login', [AuthController::class, 'redirectToGoogle'])->name('auth.google.login');
+Route::get('/auth/google/register', [AuthController::class, 'redirectToGoogleRegister'])->name('auth.google.register');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 // Public Shared Session Route

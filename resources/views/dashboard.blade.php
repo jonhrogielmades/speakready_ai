@@ -6154,6 +6154,12 @@
 
     .sr-image-speech {
         --sr-speech-bg: rgba(255, 255, 255, 0.97);
+        --sr-speech-border: rgba(219, 234, 254, 0.9);
+        --sr-speech-name: #075db8;
+        --sr-speech-text: #17213d;
+        --sr-speech-accent: #0369a1;
+        --sr-speech-success: #047857;
+        --sr-speech-shadow: 0 18px 34px rgba(5, 23, 66, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85);
         position: absolute;
         z-index: 5;
         top: 18px;
@@ -6164,16 +6170,36 @@
         width: 186px;
         min-height: 106px;
         padding: 17px 18px 16px;
-        border: 1px solid rgba(219, 234, 254, 0.84);
+        border: 1px solid var(--sr-speech-border);
         border-radius: 24px;
         background: var(--sr-speech-bg);
-        color: #17213d;
-        box-shadow: 0 18px 34px rgba(5, 23, 66, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+        color: var(--sr-speech-text);
+        box-shadow: var(--sr-speech-shadow);
         opacity: 1;
         transform: translate3d(0, 0, 0) scale(1);
         animation: srImageSpeechPop var(--sr-hero-sync-duration) cubic-bezier(0.22, 1, 0.36, 1) infinite;
         transform-origin: calc(100% + 16px) 72%;
         will-change: opacity, transform;
+    }
+
+    :root:not(.lm) .sr-image-speech {
+        --sr-speech-bg: rgba(15, 23, 42, 0.96);
+        --sr-speech-border: rgba(125, 211, 252, 0.36);
+        --sr-speech-name: #bae6fd;
+        --sr-speech-text: #f8fafc;
+        --sr-speech-accent: #67e8f9;
+        --sr-speech-success: #86efac;
+        --sr-speech-shadow: 0 18px 38px rgba(2, 6, 23, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .lm .sr-image-speech {
+        --sr-speech-bg: rgba(255, 255, 255, 0.98);
+        --sr-speech-border: rgba(37, 99, 235, 0.22);
+        --sr-speech-name: #075db8;
+        --sr-speech-text: #111827;
+        --sr-speech-accent: #0369a1;
+        --sr-speech-success: #047857;
+        --sr-speech-shadow: 0 18px 34px rgba(37, 99, 235, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.92);
     }
 
     .sr-image-speech::after {
@@ -6197,7 +6223,8 @@
     }
 
     .sr-image-speech > strong {
-        color: #0e55c8;
+        color: var(--sr-speech-name) !important;
+        -webkit-text-fill-color: var(--sr-speech-name) !important;
         font-size: 1.08rem;
         font-weight: 950;
         line-height: 1.04;
@@ -6208,19 +6235,22 @@
     }
 
     .sr-image-speech > span {
-        color: #1d2944;
+        color: var(--sr-speech-text) !important;
+        -webkit-text-fill-color: var(--sr-speech-text) !important;
         font-size: 0.78rem;
         font-weight: 850;
         line-height: 1.16;
     }
 
     .sr-image-speech-accent {
-        color: #0ea5e9;
+        color: var(--sr-speech-accent) !important;
+        -webkit-text-fill-color: var(--sr-speech-accent) !important;
         font-weight: 950;
     }
 
     .sr-image-speech-accent.is-success {
-        color: #10b981;
+        color: var(--sr-speech-success) !important;
+        -webkit-text-fill-color: var(--sr-speech-success) !important;
     }
 
     body.user-desktop-shell .sr-hero-image-panel .sr-image-speech,
