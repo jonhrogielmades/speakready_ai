@@ -174,6 +174,9 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::delete('/sessions/clear', [UserController::class, 'clearSessions'])->name('user.sessions.clear');
     Route::get('/reports', [UserController::class, 'reports'])->name('user.reports');
     Route::get('/personal-mastery', [UserController::class, 'personalMastery'])->name('user.leaderboard');
+    Route::post('/personal-mastery/stories', [UserController::class, 'storeMasteryStory'])->name('user.mastery.stories.store');
+    Route::delete('/personal-mastery/stories/{item}', [UserController::class, 'destroyMasteryStory'])->name('user.mastery.stories.destroy');
+    Route::post('/personal-mastery/checklist/{item}/toggle', [UserController::class, 'toggleMasteryChecklist'])->name('user.mastery.checklist.toggle');
     Route::redirect('/community/leaderboard', '/personal-mastery', 301);
 });
 

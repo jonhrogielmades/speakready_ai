@@ -487,25 +487,7 @@ class AdminController extends Controller
 
     private function providerCanGenerateQuestions(string $provider): bool
     {
-        $providerKeys = [
-            'openai' => 'OPENAI_API_KEY',
-            'gemini' => 'GEMINI_API_KEY',
-            'cohere' => 'COHERE_API_KEY',
-            'groq' => 'GROQ_API_KEY',
-            'openrouter' => 'OPENROUTER_API_KEY',
-            'claude' => 'ANTHROPIC_API_KEY',
-            'wisdomgate' => 'WISDOMGATE_API_KEY',
-        ];
-
-        if (!isset($providerKeys[$provider])) {
-            return false;
-        }
-
-        if ($provider === 'openai' && AiProvider::safeActiveOpenAiConfigured()) {
-            return true;
-        }
-
-        return filled(env($providerKeys[$provider]));
+        return AIService::providerIsConfigured($provider);
     }
 
     private function defaultQuestionProvider(): string
@@ -518,7 +500,7 @@ class AdminController extends Controller
     private function normalizeQuestionProvider(?string $provider): string
     {
         $provider = strtolower(trim((string) $provider));
-        $provider = str_replace([' ', '_'], '', $provider);
+        $provider = str_replace([' ', '_', '-'], '', $provider);
 
         return match ($provider) {
             'local' => 'local',
@@ -527,6 +509,7 @@ class AdminController extends Controller
             'anthropic', 'claude' => 'claude',
             'groq' => 'groq',
             'openrouter' => 'openrouter',
+            'hf', 'huggingface', 'huggingfacehub' => 'huggingface',
             'wisdomgate' => 'wisdomgate',
             'cohere' => 'cohere',
             default => 'gemini',
@@ -535,22 +518,14 @@ class AdminController extends Controller
 
     private function questionProviderOptions(): array
     {
-        $providers = [
-            'openai' => 'OpenAI',
-            'gemini' => 'Gemini',
-            'groq' => 'Groq',
-            'claude' => 'Claude',
-            'openrouter' => 'OpenRouter',
-            'wisdomgate' => 'WisdomGate',
-            'cohere' => 'Cohere',
-        ];
+        $defaultProvider = $this->defaultQuestionProvider();
 
-        return collect($providers)
-            ->map(fn (string $label, string $key) => [
-                'key' => $key,
-                'label' => $label,
-                'enabled' => $this->providerCanGenerateQuestions($key),
-                'is_default' => $key === $this->defaultQuestionProvider(),
+        return collect(AIService::supportedProviderOptions())
+            ->map(fn (array $provider) => [
+                'key' => $provider['key'],
+                'label' => $provider['label'],
+                'enabled' => $provider['enabled'],
+                'is_default' => $provider['key'] === $defaultProvider,
             ])
             ->values()
             ->all();
@@ -739,22 +714,24 @@ class AdminController extends Controller
         $categories = $this->learningCategoryNames()->implode(', ');
         $categoryInstruction = $categories ? "Choose exactly one of these categories: $categories" : "General";
 
-        $prompt = "Create a comprehensive Philippines-focused interview preparation learning module about: " . $request->prompt . ". 
-        Keep the lessons grounded in Philippine hiring and education interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
+        $prompt = "Create an action-focused Philippines interview preparation learning module about: " . $request->prompt . ".
+        Focus only on what the learner needs to do before and during the interview: what to prepare, what to write, what to rehearse, what to revise, and what to check before marking the module complete.
+        Keep every action grounded in Philippine hiring and education interview practice: local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, professional communication, salary expectations, and availability/work-setup questions when relevant.
+        Avoid broad lectures, history, trivia, generic motivation, feature promotion, or content that does not tell the user a concrete interview-preparation action.
         Return ONLY a JSON object with the following structure:
         {
             \"title\": \"Module Title\",
-            \"description\": \"Short summary of the module\",
+            \"description\": \"Short action-focused summary of what the learner will do in this module\",
             \"difficulty\": \"Beginner\",
             \"category\": \"$categoryInstruction\",
             \"chapters\": [
                 {
-                    \"title\": \"Chapter 1: Intro\",
-                    \"content\": \"Detailed reading material for chapter 1 (at least 3 paragraphs)\"
+                    \"title\": \"Chapter 1: Action Step\",
+                    \"content\": \"HTML content using h3, p, ul, and li. Include concrete tasks, a short answer pattern, and a completion check.\"
                 },
                 {
-                    \"title\": \"Chapter 2: Deep Dive\",
-                    \"content\": \"Detailed reading material for chapter 2...\"
+                    \"title\": \"Chapter 2: Practice Step\",
+                    \"content\": \"HTML content using h3, p, ul, and li. Include only what the learner must do, rehearse, revise, or verify.\"
                 }
             ]
         }";
@@ -821,20 +798,22 @@ class AdminController extends Controller
 
     public function autofillModule(LearningModule $module)
     {
-        $prompt = "Create comprehensive Philippines-focused interview preparation content for an educational learning module titled: '" . $module->title . "'. 
+        $prompt = "Create action-focused Philippines interview preparation content for an educational learning module titled: '" . $module->title . "'.
         The category is '" . $module->category . "' and difficulty is '" . $module->difficulty . "'.
-        Ground the examples in Philippine hiring and education interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
+        Focus only on what the learner needs to do before and during the interview: what to prepare, what to write, what to rehearse, what to revise, and what to check before marking the module complete.
+        Ground every task in Philippine hiring and education interview practice, including local HR screening, BPO/customer support, IT roles, fresh graduate applications, scholarship or college admission interviews, communication clarity, salary expectations, and availability/work-setup questions when relevant.
+        Avoid broad lectures, history, trivia, generic motivation, feature promotion, or content that does not tell the user a concrete interview-preparation action.
         Return ONLY a JSON object with the following structure:
         {
-            \"description\": \"A professional, detailed summary of the module (3-4 sentences)\",
+            \"description\": \"A professional action-focused summary of what the learner will do in the module (2-3 sentences)\",
             \"chapters\": [
                 {
-                    \"title\": \"Chapter 1: ...\",
-                    \"content\": \"Detailed reading material for this chapter (at least 3 paragraphs)\"
+                    \"title\": \"Chapter 1: Action Step\",
+                    \"content\": \"HTML content using h3, p, ul, and li. Include concrete tasks, a short answer pattern, and a completion check.\"
                 },
                 {
-                    \"title\": \"Chapter 2: ...\",
-                    \"content\": \"Detailed reading material for this chapter...\"
+                    \"title\": \"Chapter 2: Practice Step\",
+                    \"content\": \"HTML content using h3, p, ul, and li. Include only what the learner must do, rehearse, revise, or verify.\"
                 }
             ]
         }";
@@ -987,10 +966,12 @@ class AdminController extends Controller
         Module Title: {$module->title}
         Module Description: {$module->description}
         Existing Chapters: " . ($existingChapters ?: "None yet.") . "
-        Generate the next logical chapter using Philippine hiring or school-interview examples when relevant. Provide a JSON response with the following exact keys:
+        Generate the next logical chapter using Philippine hiring or school-interview examples when relevant.
+        Focus only on concrete user actions: what to prepare, write, rehearse, revise, or check. Avoid broad lectures, trivia, and generic motivation.
+        Provide a JSON response with the following exact keys:
         {
             \"title\": \"Chapter Title\",
-            \"content\": \"Comprehensive HTML formatted lesson content (use h3, p, ul, li). Be detailed.\"
+            \"content\": \"Action-focused HTML content (use h3, p, ul, li). Include concrete tasks and a completion check.\"
         }";
 
         try {
@@ -1299,15 +1280,15 @@ EOT;
             'title' => $this->cleanFallbackText($topic . ' Essentials', 'Philippines Interview Readiness Essentials'),
             'category' => 'General',
             'difficulty' => 'Beginner',
-            'description' => "A practical Philippines interview module for building confidence and structure around {$topic}.",
+            'description' => "A practical Philippines interview module that tells learners what to prepare, write, rehearse, revise, and check for {$topic}.",
             'chapters' => [
                 [
-                    'title' => 'Philippine Interview Foundations',
-                    'content' => "<h3>Philippine Interview Foundations</h3><p>Start by defining the skill, the local situation where it matters, and the outcome a strong candidate should produce for a Philippine HR, school, or hiring panel.</p><p>Focus on clear examples, concise wording, professionalism, and evidence that shows ownership.</p>",
+                    'title' => 'Prepare the Proof',
+                    'content' => "<h3>Prepare the Proof</h3><p>Write one target role, one Philippine interview situation where this topic matters, and one result a local HR, school, or hiring panel should hear.</p><ul><li>Pick a real school, internship, BPO, freelance, or workplace example.</li><li>Name your responsibility in one sentence.</li><li>List the evidence you can honestly explain, such as a result, lesson, metric, or customer impact.</li></ul>",
                 ],
                 [
-                    'title' => 'Local Practice Framework',
-                    'content' => "<h3>Local Practice Framework</h3><p>Prepare answers with a simple structure: context, action, result, and reflection.</p><ul><li>Use specific details from school, internship, BPO, freelance, or workplace experience.</li><li>Keep the answer role-relevant for Philippine employers or admissions panels.</li><li>Close with measurable impact, lessons learned, or readiness for the role when possible.</li></ul>",
+                    'title' => 'Rehearse and Check',
+                    'content' => "<h3>Rehearse and Check</h3><p>Draft a short answer using context, action, result, and reflection, then rehearse it aloud until it sounds natural.</p><ul><li>Keep the answer role-relevant for Philippine employers or admissions panels.</li><li>Revise vague phrases into specific actions you personally took.</li><li>Mark the module complete only after the answer includes a clear action, honest evidence, and a confident closing line.</li></ul>",
                 ],
             ],
         ];
@@ -1318,15 +1299,15 @@ EOT;
         $title = $this->cleanFallbackText($module->title, 'Philippines Interview Readiness');
 
         return [
-            'description' => "A focused Philippines interview module for practicing {$title} with structured lessons, local examples, and review checkpoints.",
+            'description' => "A focused Philippines interview module that turns {$title} into preparation tasks, practice answers, revision steps, and completion checks.",
             'chapters' => [
                 [
-                    'title' => 'Philippine Interview Expectations',
-                    'content' => "<h3>Philippine Interview Expectations</h3><p>Clarify the main ideas behind {$title} and connect them to local HR, school, BPO, IT, or fresh graduate interview expectations.</p><p>Use examples that show judgment, communication, professionalism, and measurable impact.</p>",
+                    'title' => 'Prepare Your Local Example',
+                    'content' => "<h3>Prepare Your Local Example</h3><p>Choose one honest example for {$title} that fits a Philippine HR, school, BPO, IT, or fresh graduate interview.</p><ul><li>Write the situation in one line.</li><li>Write what you personally did.</li><li>Write the result, lesson, or proof that shows readiness.</li></ul>",
                 ],
                 [
-                    'title' => 'Applied Local Practice',
-                    'content' => "<h3>Applied Local Practice</h3><p>Turn the concepts into repeatable Philippine interview prompts. Draft one answer, review it for clarity and local relevance, then revise it to include stronger evidence.</p>",
+                    'title' => 'Practice, Revise, Complete',
+                    'content' => "<h3>Practice, Revise, Complete</h3><p>Turn your example into a complete interview answer, then rehearse it aloud and revise it once for clarity and local relevance.</p><ul><li>Remove filler or generic claims.</li><li>Add one concrete detail that a local interviewer can verify.</li><li>Complete the module when the answer is concise, truthful, and role-relevant.</li></ul>",
                 ],
             ],
         ];

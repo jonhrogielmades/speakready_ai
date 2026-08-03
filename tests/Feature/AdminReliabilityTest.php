@@ -16,6 +16,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class AdminReliabilityTest extends TestCase
@@ -244,6 +245,88 @@ class AdminReliabilityTest extends TestCase
             ->assertSee('Upload')
             ->assertSee('AI Generate Quiz')
             ->assertSee('Confidence Sprint');
+    }
+
+    public function test_ai_module_generation_fallback_is_action_focused_when_providers_are_unavailable(): void
+    {
+        Http::fake();
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.modules.generate'), [
+                'prompt' => 'BPO salary expectations',
+            ])
+            ->assertRedirect();
+
+        $module = LearningModule::latest('id')->firstOrFail();
+        $module->load('chapters');
+        $moduleText = strtolower($module->description.' '.$module->chapters->pluck('title')->implode(' ').' '.$module->chapters->pluck('content')->implode(' '));
+
+        $this->assertSame('draft', $module->status);
+        $this->assertSame('article', $module->type);
+        $this->assertCount(2, $module->chapters);
+        $this->assertStringContainsString('prepare', $moduleText);
+        $this->assertStringContainsString('write', $moduleText);
+        $this->assertStringContainsString('rehearse', $moduleText);
+        $this->assertStringContainsString('revise', $moduleText);
+        $this->assertStringContainsString('check', $moduleText);
+        $this->assertStringContainsString('philippine interview', $moduleText);
+
+        $this->assertDatabaseHas('categories', [
+            'title' => 'General',
+            'type' => 'learning',
+        ]);
+    }
+
+    public function test_module_autofill_fallback_adds_practical_user_tasks(): void
+    {
+        Http::fake();
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $module = LearningModule::create([
+            'title' => 'Tell Me About Yourself',
+            'category' => 'Job Interview',
+            'difficulty' => 'Beginner',
+            'description' => '',
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.modules.autofill', $module))
+            ->assertRedirect();
+
+        $module->refresh()->load('chapters');
+        $moduleText = strtolower($module->description.' '.$module->chapters->pluck('title')->implode(' ').' '.$module->chapters->pluck('content')->implode(' '));
+
+        $this->assertStringContainsString('preparation tasks', strtolower($module->description));
+        $this->assertCount(2, $module->chapters);
+        $this->assertStringContainsString('choose one honest example', $moduleText);
+        $this->assertStringContainsString('practice, revise, complete', $moduleText);
+        $this->assertStringContainsString('complete interview answer', $moduleText);
+    }
+
+    public function test_generated_module_chapter_fallback_gives_clear_completion_actions(): void
+    {
+        Http::fake();
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $module = LearningModule::create([
+            'title' => 'Behavioral Answer Practice',
+            'category' => 'Job Interview',
+            'difficulty' => 'Beginner',
+            'description' => 'Practice direct behavioral answers.',
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.modules.chapters.generate', $module))
+            ->assertRedirect();
+
+        $chapter = $module->chapters()->latest('id')->firstOrFail();
+        $chapterText = strtolower($chapter->title.' '.$chapter->content);
+
+        $this->assertStringContainsString('practice checkpoint', $chapterText);
+        $this->assertStringContainsString('write a short answer', $chapterText);
+        $this->assertStringContainsString('use one concrete local example', $chapterText);
+        $this->assertStringContainsString('name your personal contribution', $chapterText);
     }
 
     public function test_admin_settings_can_persist_disabled_switches(): void

@@ -309,6 +309,7 @@
     }
     #account-page .oinp::placeholder {
         color: var(--acct-muted);
+        font-weight: 400 !important;
         opacity: 1;
     }
     #account-page .password-field {
@@ -1423,6 +1424,7 @@
 
         html body #account-page .oinp::placeholder {
             color: var(--account-pro-muted) !important;
+            font-weight: 400 !important;
             opacity: 1;
         }
 

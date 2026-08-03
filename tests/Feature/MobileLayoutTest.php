@@ -219,8 +219,6 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
             ->assertDontSee('<body class="mobile-interview-fullscreen"', false)
-            ->assertSee('id="responseFullscreenToggle"', false)
-            ->assertSee('aria-label="Enter fullscreen"', false)
-            ->assertSee('fa-solid fa-expand', false);
+            ->assertDontSee('id="responseFullscreenToggle"', false);
     }
 }

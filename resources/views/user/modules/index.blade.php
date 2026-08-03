@@ -415,7 +415,7 @@
         color: var(--tx);
         border-color: var(--bd);
     }
-    
+
     .db-top-search { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .db-top-search:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf) !important; }
     
@@ -663,8 +663,9 @@
 
     #interview-modules-page .db-top-search input::placeholder {
         color: #64748b;
+        font-weight: 400 !important;
     }
-    
+
     /* Animations */
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
@@ -2902,7 +2903,7 @@
         </span>
         <div class="modules-hero-copy">
             <h1 id="modules-hero-title" class="modules-hero-title">Philippines Interview Modules</h1>
-            <p class="modules-hero-subtitle">Study lessons tied to Philippines interview scenarios, answer evidence, and practical communication skills.</p>
+            <p class="modules-hero-subtitle">Open action modules that tell you what to prepare, write, rehearse, revise, and check before your Philippines interview.</p>
         </div>
         <svg class="modules-hero-art" viewBox="0 0 300 240" aria-hidden="true">
             <defs><linearGradient id="modulePanelMobile" x1="58" y1="34" x2="244" y2="196"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#EAF4FF"/></linearGradient><linearGradient id="moduleBlueMobile" x1="78" y1="128" x2="238" y2="128"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#1D9BF0"/></linearGradient><linearGradient id="moduleGreenMobile" x1="218" y1="150" x2="270" y2="190"><stop stop-color="#18D7B5"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
@@ -2929,7 +2930,7 @@
                     <h4 id="modules-hero-title" class="sr-page-hero-title text-gradient-primary">
                         Philippines Interview Modules
                     </h4>
-                    <p class="sr-page-hero-subtitle">Study lessons tied to Philippines interview scenarios, answer evidence, and practical communication skills.</p>
+                    <p class="sr-page-hero-subtitle">Open action modules that tell you what to prepare, write, rehearse, revise, and check before your Philippines interview.</p>
                 </div>
             </div>
         </div>
@@ -3039,7 +3040,7 @@
                                 <i class="fa-solid fa-eye me-1"></i> {{ number_format($module->views) }} views
                             </div>
                             <a href="{{ route('user.modules.show', $module->id) }}" class="module-card-link btn-shine">
-                                Open Module <i class="fa-solid fa-arrow-right ms-1"></i>
+                                Open Action Module <i class="fa-solid fa-arrow-right ms-1"></i>
                             </a>
                         </div>
                     </div>
@@ -3065,13 +3066,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const topicSelect = document.getElementById('moduleTopicSelect');
-        if (!topicSelect) return;
-
-        topicSelect.addEventListener('change', function () {
-            if (this.value) {
-                window.location.href = this.value;
-            }
-        });
+        if (topicSelect) {
+            topicSelect.addEventListener('change', function () {
+                if (this.value) {
+                    window.location.href = this.value;
+                }
+            });
+        }
     });
 </script>
 @endpush

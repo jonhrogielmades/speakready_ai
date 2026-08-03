@@ -25,7 +25,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=6') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=7') }}" />
       <style>
          html, body {
             overflow-x: hidden;
@@ -3038,6 +3038,7 @@
          #landing :where(.form-control, .form-select, textarea)::placeholder,
          #lofc :where(.oinp, .form-control)::placeholder {
             color: var(--tx3) !important;
+            font-weight: 400 !important;
             opacity: 1;
          }
 

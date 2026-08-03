@@ -2,6 +2,18 @@
 @section('title', 'Philippines Readiness Coach')
 
 @section('content')
+@php
+    $coachUser = Auth::user();
+    $coachUserInitial = $coachUser ? strtoupper(substr((string) $coachUser->name, 0, 1)) : 'U';
+    $coachUserPhotoUrl = null;
+
+    if ($coachUser?->profile_photo_path) {
+        $coachPhotoPath = $coachUser->profile_photo_path;
+        $coachUserPhotoUrl = Str::startsWith($coachPhotoPath, ['http://', 'https://', 'data:'])
+            ? $coachPhotoPath
+            : asset('storage/' . $coachPhotoPath);
+    }
+@endphp
 <style>
     /* Chat specific styles */
     .chat-container {
@@ -94,6 +106,7 @@
         height: 34px;
         background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
         border-radius: 10px;
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -101,11 +114,25 @@
         flex-shrink: 0;
         box-shadow: 0 8px 18px rgba(37,99,235,0.18);
     }
+    .coach-avatar::after {
+        content: "";
+        position: absolute;
+        right: -2px;
+        bottom: -2px;
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #22c55e;
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+        pointer-events: none;
+    }
     .coach-user-avatar {
         width: 34px;
         height: 34px;
         background: rgba(255,255,255,0.1);
         border-radius: 10px;
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -116,12 +143,138 @@
         overflow: hidden;
         border: 1px solid var(--bd);
     }
+    .coach-user-avatar::after {
+        content: "";
+        position: absolute;
+        right: -2px;
+        bottom: -2px;
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #22c55e;
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+        pointer-events: none;
+        z-index: 2;
+    }
+    .coach-user-avatar-img {
+        position: relative;
+        z-index: 1;
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: inherit;
+    }
     .chat-input-area { padding: 12px 14px 10px; border-top: 1px solid var(--bd); background: rgba(255,255,255,0.02); flex-shrink: 0; }
     .chat-input-wrapper { display: flex; align-items: center; background: var(--bg3); border: 1px solid var(--bd); border-radius: 15px; padding: 7px 8px 7px 13px; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .chat-input-wrapper:focus-within { border-color: var(--pur) !important; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: var(--sf); }
     .chat-textarea { flex-grow: 1; min-width: 0; background: transparent; border: none; color: var(--tx); resize: none; height: 22px; max-height: 88px; overflow: hidden; padding: 2px 0; outline: none; font-family: "Space Grotesk", sans-serif; font-size: 0.74rem; line-height: 1.28; }
     .chat-send-btn { background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); color: #fff; border: none; width: 34px; height: 34px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-left: 9px; margin-bottom: 0; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
     .chat-send-btn:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 6px 20px rgba(139,92,246,0.5); }
+    .chat-file-input { display: none; }
+    .chat-attachment-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid rgba(37, 99, 235, 0.45);
+        border-radius: 10px;
+        background: linear-gradient(135deg, #dbeafe, #7dd3fc);
+        color: #0f172a;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        margin-right: 7px;
+        box-shadow: 0 6px 14px rgba(37, 99, 235, 0.2);
+        transition: 0.2s;
+    }
+    .chat-attachment-btn:hover,
+    .chat-attachment-btn:focus-visible {
+        background: linear-gradient(135deg, #bfdbfe, #67e8f9);
+        color: #082f49;
+        outline: none;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+    }
+    .chat-attachment-btn i,
+    .chat-attachment-btn i::before,
+    .chat-attachment-btn i::after {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        opacity: 1 !important;
+    }
+    .chat-attachment-preview {
+        display: none;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-bottom: 8px;
+    }
+    .chat-attachment-preview.has-files { display: flex; }
+    .chat-attachment-chip {
+        max-width: min(100%, 260px);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 8px;
+        border-radius: 10px;
+        border: 1px solid rgba(96,165,250,0.26);
+        background: rgba(59,130,246,0.08);
+        color: var(--tx);
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .chat-attachment-chip span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .chat-attachment-chip small {
+        color: var(--tx3);
+        font-size: 0.64rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .chat-attachment-remove {
+        border: 0;
+        background: transparent;
+        color: var(--tx3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border-radius: 6px;
+        flex: 0 0 auto;
+    }
+    .chat-attachment-remove:hover {
+        background: rgba(239,68,68,0.12);
+        color: #ef4444;
+    }
+    .chat-attachment-bubble {
+        display: grid;
+        gap: 5px;
+        margin-top: 8px;
+    }
+    .chat-attachment-bubble-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        max-width: 100%;
+        padding: 6px 8px;
+        border-radius: 9px;
+        background: rgba(255,255,255,0.16);
+        color: inherit;
+        font-size: 0.72rem;
+        line-height: 1.2;
+    }
+    .chat-attachment-bubble-item span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .coach-disclaimer {
         display: flex;
         align-items: center;
@@ -324,6 +477,11 @@
             border-radius: 12px !important;
             margin-left: 8px !important;
             margin-bottom: 0 !important;
+        }
+        .chat-attachment-btn {
+            width: 34px;
+            height: 34px;
+            margin-right: 6px;
         }
         .coach-disclaimer {
             margin-top: 5px;
@@ -899,6 +1057,13 @@
             border-radius: 8px !important;
         }
 
+        html body #ai-coach-page .coach-user-avatar-img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            border-radius: inherit !important;
+        }
+
         html body #mob-content #ai-coach-page .chat-bubble,
         html body #ai-coach-page .chat-bubble {
             max-width: calc(100% - 36px) !important;
@@ -1009,6 +1174,7 @@
 
         html body #ai-coach-page .chat-textarea::placeholder {
             color: var(--coach-pro-muted) !important;
+            font-weight: 400 !important;
             opacity: 1;
         }
 
@@ -1896,12 +2062,14 @@
             box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18) !important;
         }
 
-        html body #ai-coach-page .coach-user-avatar {
-            border: 1px solid var(--coach-desktop-border) !important;
-            background: var(--coach-desktop-soft) !important;
-            color: var(--coach-desktop-title) !important;
-            font-weight: 900 !important;
-        }
+    html body #ai-coach-page .coach-user-avatar {
+        border: 1px solid var(--coach-desktop-border) !important;
+        background: var(--coach-desktop-soft) !important;
+        color: var(--coach-desktop-title) !important;
+        font-weight: 900 !important;
+        position: relative !important;
+        overflow: visible !important;
+    }
 
         html body #ai-coach-page .chat-bubble {
             max-width: min(76%, 620px) !important;
@@ -1983,6 +2151,7 @@
 
         html body #ai-coach-page .chat-textarea::placeholder {
             color: var(--coach-desktop-muted) !important;
+            font-weight: 400 !important;
             opacity: 1 !important;
         }
 
@@ -1998,6 +2167,38 @@
             background: linear-gradient(135deg, #2563eb, #06b6d4) !important;
             color: #ffffff !important;
             box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22) !important;
+        }
+
+        html body #ai-coach-page .chat-attachment-btn {
+            width: 32px !important;
+            height: 32px !important;
+            border: 1px solid rgba(96, 165, 250, 0.56) !important;
+            border-radius: 9px !important;
+            margin-right: 5px !important;
+            background: linear-gradient(135deg, #dbeafe, #7dd3fc) !important;
+            color: #0f172a !important;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24) !important;
+        }
+
+        html body #ai-coach-page .chat-attachment-btn:hover,
+        html body #ai-coach-page .chat-attachment-btn:focus-visible {
+            background: linear-gradient(135deg, #bfdbfe, #67e8f9) !important;
+            color: #082f49 !important;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.34) !important;
+        }
+
+        html body #ai-coach-page .chat-attachment-btn i,
+        html body #ai-coach-page .chat-attachment-btn i::before,
+        html body #ai-coach-page .chat-attachment-btn i::after {
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            opacity: 1 !important;
+        }
+
+        html body #ai-coach-page .chat-attachment-chip {
+            border-color: var(--coach-desktop-border) !important;
+            background: rgba(37, 99, 235, 0.07) !important;
+            color: var(--coach-desktop-title) !important;
         }
 
         html body #ai-coach-page .coach-disclaimer {
@@ -2034,6 +2235,73 @@
         border-radius: 8px !important;
         flex: 0 0 auto !important;
         font-size: 0.68rem !important;
+    }
+
+    /* Final bot avatar contrast guard for both day and night themes. */
+    html body #ai-coach-page .coach-avatar {
+        background: linear-gradient(135deg, #dbeafe, #7dd3fc) !important;
+        border: 1px solid rgba(96, 165, 250, 0.62) !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22) !important;
+        opacity: 1 !important;
+        position: relative !important;
+        overflow: visible !important;
+    }
+
+    html body #ai-coach-page .coach-avatar i,
+    html body #ai-coach-page .coach-avatar i::before,
+    html body #ai-coach-page .coach-avatar i::after {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        opacity: 1 !important;
+    }
+
+    html body #ai-coach-page .coach-avatar::after {
+        content: "" !important;
+        position: absolute !important;
+        right: -2px !important;
+        bottom: -2px !important;
+        width: 10px !important;
+        height: 10px !important;
+        border-radius: 999px !important;
+        background: #22c55e !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18) !important;
+        opacity: 1 !important;
+        pointer-events: none !important;
+    }
+
+    html body #ai-coach-page .coach-user-avatar {
+        position: relative !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    html body #ai-coach-page .coach-user-avatar::after {
+        content: "" !important;
+        position: absolute !important;
+        right: -2px !important;
+        bottom: -2px !important;
+        width: 10px !important;
+        height: 10px !important;
+        border-radius: 999px !important;
+        background: #22c55e !important;
+        border: 2px solid #ffffff !important;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18) !important;
+        opacity: 1 !important;
+        pointer-events: none !important;
+        z-index: 2 !important;
+    }
+
+    html body #ai-coach-page .coach-user-avatar-img {
+        position: relative !important;
+        z-index: 1 !important;
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: inherit !important;
     }
 </style>
 
@@ -2179,8 +2447,13 @@
 
             <!-- Input Area -->
             <div class="chat-input-area" id="coach-input-area">
+                <div class="chat-attachment-preview" id="chatAttachmentPreview" aria-live="polite"></div>
                 <div class="chat-input-wrapper">
-                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask your coach..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    <input class="chat-file-input" id="coachFiles" type="file" multiple accept=".pdf,.doc,.docx,.txt,.rtf,.csv,.png,.jpg,.jpeg,.webp">
+                    <button class="chat-attachment-btn" type="button" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about interviews, resumes, certificates..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
                     <button class="chat-send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
                 <div class="coach-disclaimer">
@@ -2194,6 +2467,14 @@
     <script>
         let coachChatHistory = [];
         let currentConversationId = null;
+        const initialCoachPrompt = @json((string) request('ask', ''));
+        let coachSelectedFiles = [];
+        let coachSending = false;
+        const coachAllowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'rtf', 'csv', 'png', 'jpg', 'jpeg', 'webp'];
+        const coachMaxFiles = 3;
+        const coachMaxFileBytes = 5 * 1024 * 1024;
+        const coachUserPhotoUrl = @json($coachUserPhotoUrl);
+        const coachUserInitial = @json($coachUserInitial);
 
         function toggleCoachActions(event) {
             event.stopPropagation();
@@ -2213,39 +2494,134 @@
             if (toggle) toggle.setAttribute('aria-expanded', 'false');
         }
 
+        function handleCoachFiles(input) {
+            const incomingFiles = Array.from(input.files || []);
+            const acceptedFiles = [];
+
+            incomingFiles.forEach(file => {
+                const extension = (file.name.split('.').pop() || '').toLowerCase();
+
+                if (!coachAllowedExtensions.includes(extension)) {
+                    alert(`${file.name} is not a supported interview file type.`);
+                    return;
+                }
+
+                if (file.size > coachMaxFileBytes) {
+                    alert(`${file.name} is larger than the 5MB upload limit.`);
+                    return;
+                }
+
+                acceptedFiles.push(file);
+            });
+
+            const availableSlots = Math.max(0, coachMaxFiles - coachSelectedFiles.length);
+            coachSelectedFiles = coachSelectedFiles.concat(acceptedFiles.slice(0, availableSlots));
+            if (acceptedFiles.length > availableSlots) {
+                alert('You can attach up to 3 files at a time.');
+            }
+
+            input.value = '';
+            renderCoachAttachments();
+        }
+
+        function renderCoachAttachments() {
+            const preview = document.getElementById('chatAttachmentPreview');
+            if (!preview) return;
+
+            if (!coachSelectedFiles.length) {
+                preview.classList.remove('has-files');
+                preview.innerHTML = '';
+                return;
+            }
+
+            preview.classList.add('has-files');
+            preview.innerHTML = coachSelectedFiles.map((file, index) => `
+                <div class="chat-attachment-chip">
+                    <i class="fa-solid ${coachFileIcon(file.name)}" aria-hidden="true"></i>
+                    <span title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+                    <small>${formatFileSize(file.size)}</small>
+                    <button class="chat-attachment-remove" type="button" aria-label="Remove ${escapeHtml(file.name)}" onclick="removeCoachAttachment(${index})">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeCoachAttachment(index) {
+            coachSelectedFiles.splice(index, 1);
+            renderCoachAttachments();
+        }
+
+        function clearCoachAttachments() {
+            coachSelectedFiles = [];
+            renderCoachAttachments();
+        }
+
+        function coachFileIcon(fileName) {
+            const extension = (fileName.split('.').pop() || '').toLowerCase();
+            if (extension === 'pdf') return 'fa-file-pdf';
+            if (['doc', 'docx', 'rtf', 'txt'].includes(extension)) return 'fa-file-lines';
+            if (extension === 'csv') return 'fa-file-csv';
+            if (['png', 'jpg', 'jpeg', 'webp'].includes(extension)) return 'fa-file-image';
+            return 'fa-file';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
+            return `${(bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
+        }
+
+        function renderBubbleAttachments(files) {
+            if (!files.length) return '';
+
+            return `
+                <div class="chat-attachment-bubble">
+                    ${files.map(file => `
+                        <div class="chat-attachment-bubble-item">
+                            <i class="fa-solid ${coachFileIcon(file.name)}" aria-hidden="true"></i>
+                            <span>${escapeHtml(file.name)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderCoachUserAvatar() {
+            if (coachUserPhotoUrl) {
+                return `<img class="coach-user-avatar-img" src="${escapeHtml(coachUserPhotoUrl)}" alt="Avatar">`;
+            }
+
+            return escapeHtml(coachUserInitial || 'U');
+        }
+
         async function sendMsg() {
             const ta = document.getElementById('chatMsg');
             const box = document.getElementById('chatBox');
             const text = ta.value.trim();
-            if(!text) return;
+            const files = coachSelectedFiles.slice();
+            const displayText = text || (files.length ? 'Please review the attached interview file(s).' : '');
+            if(!displayText || coachSending) return;
+            coachSending = true;
 
-            // Add user message
-            const initialHtml = `
-                @if(Auth::check() && Auth::user()->profile_photo_path)
-                    @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
-                        <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
-                    @else
-                        <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
-                    @endif
-                @else
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                @endif
-            `;
-            
             // Create user bubble
             const userMsgDiv = document.createElement('div');
             userMsgDiv.className = 'd-flex justify-content-end mt-3 dynamic-msg';
             userMsgDiv.style.gap = '12px';
             userMsgDiv.innerHTML = `
-                    <div class="chat-bubble bubble-user">${escapeHtml(text).replace(/\n/g, '<br>')}</div>
+                    <div class="chat-bubble bubble-user">
+                        ${escapeHtml(displayText).replace(/\n/g, '<br>')}
+                        ${renderBubbleAttachments(files)}
+                    </div>
                     <div class="coach-user-avatar">
-                        ${initialHtml}
+                        ${renderCoachUserAvatar()}
                     </div>
             `;
             box.insertBefore(userMsgDiv, document.getElementById('typingIndicator'));
             
             ta.value = '';
             ta.style.height = '';
+            clearCoachAttachments();
             box.scrollTop = box.scrollHeight;
             
             // Show typing
@@ -2255,22 +2631,26 @@
             box.scrollTop = box.scrollHeight;
 
             try {
+                const formData = new FormData();
+                formData.append('message', displayText);
+                formData.append('history', JSON.stringify(coachChatHistory));
+                if (currentConversationId) {
+                    formData.append('conversation_id', currentConversationId);
+                }
+                files.forEach(file => formData.append('coach_attachments[]', file));
+
                 // Call AI Backend
                 const response = await fetch('{{ route("user.coach.chat") }}', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        message: text,
-                        history: coachChatHistory,
-                        conversation_id: currentConversationId
-                    })
+                    body: formData
                 });
 
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    const errorPayload = await response.json().catch(() => null);
+                    throw new Error(errorPayload?.message || 'Network response was not ok');
                 }
 
                 const data = await response.json();
@@ -2300,7 +2680,10 @@
                 }
 
                 // Update History
-                coachChatHistory.push({ role: 'user', content: text });
+                const historyContent = files.length
+                    ? `${displayText}\n\nAttached interview file(s):\n${files.map(file => `- ${file.name}`).join('\n')}`
+                    : displayText;
+                coachChatHistory.push({ role: 'user', content: historyContent });
                 coachChatHistory.push({ role: 'ai', content: aiResponse });
 
                 // Remove typing indicator
@@ -2332,16 +2715,18 @@
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div class="chat-bubble bubble-ai" style="color:#ef4444; border-color:#ef4444">
-                            Sorry, I encountered an error communicating with the AI. Please try again later.
+                            ${escapeHtml(error.message || 'Sorry, I encountered an error communicating with the AI. Please try again later.')}
                         </div>
                 `;
                 box.insertBefore(errorMsgDiv, typing);
                 box.scrollTop = box.scrollHeight;
+            } finally {
+                coachSending = false;
             }
         }
         
         function escapeHtml(unsafe) {
-            return unsafe
+            return String(unsafe || '')
                  .replace(/&/g, "&amp;")
                  .replace(/</g, "&lt;")
                  .replace(/>/g, "&gt;")
@@ -2427,6 +2812,7 @@
 
             // Remove all dynamic messages
             document.querySelectorAll('.dynamic-msg').forEach(e => e.remove());
+            clearCoachAttachments();
             
             // Focus the input
             const ta = document.getElementById('chatMsg');
@@ -2473,15 +2859,7 @@
                         msgDiv.innerHTML = `
                                 <div class="chat-bubble bubble-user">${escapeHtml(msg.content).replace(/\n/g, '<br>')}</div>
                                 <div class="coach-user-avatar">
-                                    @if(Auth::check() && Auth::user()->profile_photo_path)
-                                        @if(Str::startsWith(Auth::user()->profile_photo_path, ['http://', 'https://', 'data:']))
-                                            <img src="{{ Auth::user()->profile_photo_path }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
-                                        @else
-                                            <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">
-                                        @endif
-                                    @else
-                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                    @endif
+                                    ${renderCoachUserAvatar()}
                                 </div>
                         `;
                     } else {
@@ -2592,6 +2970,10 @@
             }
         });
 
+        document.getElementById('coachFiles')?.addEventListener('change', function () {
+            handleCoachFiles(this);
+        });
+
         document.addEventListener('click', function (event) {
             const actions = document.getElementById('coachActions');
             if (actions && !actions.contains(event.target)) {
@@ -2603,6 +2985,20 @@
             if (event.key === 'Escape') {
                 closeCoachActions();
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const prompt = String(initialCoachPrompt || '').trim();
+            const input = document.getElementById('chatMsg');
+
+            if (!prompt || !input) {
+                return;
+            }
+
+            input.value = prompt;
+            input.style.height = '';
+            input.style.height = input.scrollHeight + 'px';
+            window.setTimeout(sendMsg, 250);
         });
     </script>
 </div>

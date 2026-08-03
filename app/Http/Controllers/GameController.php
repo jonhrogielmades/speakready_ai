@@ -413,6 +413,12 @@ class GameController extends Controller
                 'question' => $answer->question_text,
                 'answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
                 'is_skipped' => (bool) $answer->is_skipped,
+                'response_mode' => $answer->response_mode,
+                'elapsed_seconds' => (int) ($answer->elapsed_seconds ?? 0),
+                'wpm' => (int) ($answer->wpm ?? 0),
+                'voice_duration' => (int) ($answer->voice_duration ?? 0),
+                'filler_words_count' => (int) ($answer->filler_words_count ?? 0),
+                'pause_count' => (int) ($answer->pause_count ?? 0),
             ])
             ->values()
             ->all();
@@ -608,6 +614,7 @@ class GameController extends Controller
             'learning_objective' => $gameLevel->learning_objective,
             'success_criteria' => $gameLevel->guidance_checklist,
             'goal_breakdown' => $gameSession->goal_breakdown ?? [],
+            'ai_scorecard' => data_get($gameSession->goal_breakdown, 'ai_feedback_scorecard', []),
             'status' => $passed ? 'passed' : 'failed',
             'message' => $message,
             'score' => $score,

@@ -534,6 +534,7 @@
     #mission-mode-page input::placeholder,
     #mission-mode-page textarea::placeholder {
         color: var(--tx3);
+        font-weight: 400 !important;
         opacity: 1;
     }
     #mission-mode-page :is(.mission-panel, .mission-card, .mission-generator input, .mission-answer, .mission-prompt, .mission-btn, .mission-meta, .mission-pill, .mission-detail-icon, .mission-board-icon, .mission-recent-item, .mission-empty-state) {

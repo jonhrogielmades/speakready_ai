@@ -77,6 +77,7 @@
       body.desktop-shell #dashboard :where(input, textarea, .form-control, .oinp)::placeholder {
          color: var(--desktop-shell-muted) !important;
          -webkit-text-fill-color: var(--desktop-shell-muted) !important;
+         font-weight: 400 !important;
          opacity: 1;
       }
 

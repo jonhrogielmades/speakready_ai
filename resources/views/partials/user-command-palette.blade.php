@@ -97,7 +97,7 @@
 
                 <a id="ucp-destination-modules" class="ucp-result" href="{{ route('user.modules.index') }}" data-ucp-item>
                     <span class="ucp-result-icon ucp-emerald"><i class="fa-solid fa-book-open-reader" aria-hidden="true"></i></span>
-                    <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Build Philippines interview skills with structured lessons</small></span>
+                    <span class="ucp-result-copy"><strong>Interview Modules</strong><small>Open action modules for what to prepare, rehearse, revise, and check</small></span>
                     <span class="ucp-result-group">Training</span>
                     <i class="fa-solid fa-arrow-right ucp-result-arrow" aria-hidden="true"></i>
                 </a>

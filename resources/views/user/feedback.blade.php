@@ -207,6 +207,335 @@
         background: rgba(96, 165, 250, 0.18);
         color: #93c5fd;
     }
+    .feedback-shell {
+        --feedback-feature-panel: rgba(255, 255, 255, 0.94);
+        --feedback-feature-panel-soft: rgba(248, 250, 252, 0.76);
+        --feedback-feature-panel-inner: rgba(255, 255, 255, 0.78);
+        --feedback-feature-border: rgba(191, 219, 254, 0.72);
+        --feedback-feature-border-soft: rgba(203, 213, 225, 0.74);
+        --feedback-feature-title: #0f172a;
+        --feedback-feature-text: #334155;
+        --feedback-feature-muted: #64748b;
+        --feedback-feature-link: #2563eb;
+        --feedback-feature-glow: rgba(219, 234, 254, 0.54);
+        --feedback-feature-icon-bg: rgba(37, 99, 235, 0.1);
+        --feedback-feature-empty-bg: rgba(239, 246, 255, 0.58);
+        --feedback-feature-shadow: 0 14px 34px rgba(37, 99, 235, 0.08);
+    }
+    html[data-theme="dark"] .feedback-shell,
+    :root:not(.lm) .feedback-shell,
+    body.dm .feedback-shell,
+    .dm .feedback-shell {
+        --feedback-feature-panel: rgba(15, 23, 42, 0.94);
+        --feedback-feature-panel-soft: rgba(30, 41, 59, 0.86);
+        --feedback-feature-panel-inner: rgba(30, 41, 59, 0.82);
+        --feedback-feature-border: rgba(96, 165, 250, 0.28);
+        --feedback-feature-border-soft: rgba(148, 163, 184, 0.26);
+        --feedback-feature-title: #f8fafc;
+        --feedback-feature-text: #e2e8f0;
+        --feedback-feature-muted: #cbd5e1;
+        --feedback-feature-link: #93c5fd;
+        --feedback-feature-glow: rgba(37, 99, 235, 0.2);
+        --feedback-feature-icon-bg: rgba(96, 165, 250, 0.16);
+        --feedback-feature-empty-bg: rgba(30, 41, 59, 0.72);
+        --feedback-feature-shadow: 0 14px 34px rgba(0, 0, 0, 0.24);
+    }
+    .feedback-insight-panel,
+    .feedback-insight-panel *,
+    .feedback-recommend-item,
+    .feedback-recommend-item *,
+    .feedback-answer-item,
+    .feedback-answer-item * {
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+    .feedback-insight-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .feedback-insight-panel {
+        border: 1px solid var(--feedback-feature-border);
+        border-radius: 18px;
+        background:
+            radial-gradient(circle at 92% 8%, var(--feedback-feature-glow), transparent 34%),
+            var(--feedback-feature-panel);
+        box-shadow: var(--feedback-feature-shadow);
+        padding: clamp(16px, 2.6vw, 24px);
+    }
+    .feedback-insight-head {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+    .feedback-insight-icon {
+        width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--feedback-feature-icon-bg);
+        color: var(--feedback-feature-link);
+    }
+    .feedback-insight-title {
+        color: var(--feedback-feature-title);
+        font-size: clamp(1.05rem, 2vw, 1.32rem);
+        font-weight: 900;
+        line-height: 1.2;
+        margin: 0;
+    }
+    .feedback-insight-subtitle {
+        color: var(--feedback-feature-muted);
+        font-size: 0.86rem;
+        line-height: 1.45;
+        margin: 4px 0 0;
+    }
+    .feedback-summary-layout {
+        display: grid;
+        grid-template-columns: minmax(140px, 0.42fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: stretch;
+    }
+    .feedback-summary-score {
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 6px;
+        min-height: 180px;
+        border: 1px solid var(--feedback-feature-border);
+        border-radius: 16px;
+        background: var(--feedback-feature-panel-soft);
+        text-align: center;
+    }
+    .feedback-summary-score strong {
+        color: var(--summary-color, #2563eb);
+        font-size: clamp(2.4rem, 5vw, 3.6rem);
+        font-weight: 950;
+        line-height: 0.95;
+    }
+    .feedback-summary-score span {
+        color: var(--summary-color, #2563eb);
+        font-size: 0.86rem;
+        font-weight: 900;
+    }
+    .feedback-summary-score small {
+        color: var(--feedback-feature-muted);
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+    .feedback-summary-copy {
+        display: grid;
+        gap: 10px;
+    }
+    .feedback-summary-headline {
+        color: var(--feedback-feature-title);
+        font-size: 0.96rem;
+        font-weight: 900;
+        line-height: 1.4;
+        margin: 0;
+    }
+    .feedback-summary-note-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .feedback-summary-note {
+        border: 1px solid var(--feedback-feature-border-soft);
+        border-radius: 14px;
+        background: var(--feedback-feature-panel-soft);
+        padding: 12px;
+    }
+    .feedback-summary-note b {
+        display: block;
+        color: var(--feedback-feature-title);
+        font-size: 0.74rem;
+        font-weight: 950;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    .feedback-summary-note p {
+        color: var(--feedback-feature-text);
+        font-size: 0.82rem;
+        line-height: 1.45;
+        margin: 0;
+    }
+    .feedback-metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .feedback-metric-chip {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        border: 1px solid var(--feedback-feature-border-soft);
+        border-radius: 12px;
+        background: var(--feedback-feature-panel-inner);
+        padding: 8px 10px;
+    }
+    .feedback-metric-chip i {
+        color: var(--metric-color, #2563eb);
+    }
+    .feedback-metric-chip span {
+        color: var(--feedback-feature-text);
+        font-size: 0.74rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+    .feedback-metric-chip strong {
+        color: var(--metric-color, #2563eb);
+        font-size: 0.82rem;
+        font-weight: 950;
+    }
+    .feedback-recommend-list {
+        display: grid;
+        gap: 10px;
+    }
+    .feedback-recommend-item {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        min-width: 0;
+        border: 1px solid var(--feedback-feature-border-soft);
+        border-radius: 14px;
+        background: var(--feedback-feature-panel-inner);
+        color: inherit;
+        text-decoration: none;
+        padding: 12px;
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .feedback-recommend-item:hover {
+        color: inherit;
+        transform: translateY(-2px);
+        border-color: color-mix(in srgb, var(--recommend-color, #2563eb) 42%, rgba(203, 213, 225, 0.74));
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-recommend-icon {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: color-mix(in srgb, var(--recommend-color, #2563eb) 13%, white);
+        color: var(--recommend-color, #2563eb);
+    }
+    .feedback-recommend-copy strong {
+        display: block;
+        color: var(--feedback-feature-title);
+        font-size: 0.92rem;
+        font-weight: 900;
+        line-height: 1.25;
+    }
+    .feedback-recommend-copy span {
+        display: block;
+        color: var(--feedback-feature-muted);
+        font-size: 0.78rem;
+        line-height: 1.4;
+        margin-top: 3px;
+    }
+    .feedback-recommend-cta {
+        color: var(--recommend-color, #2563eb);
+        font-size: 0.76rem;
+        font-weight: 950;
+        white-space: nowrap;
+    }
+    .feedback-answer-panel {
+        margin-bottom: 18px;
+    }
+    .feedback-answer-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    .feedback-answer-item {
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+        border: 1px solid var(--feedback-feature-border-soft);
+        border-radius: 14px;
+        background: var(--feedback-feature-panel-inner);
+        padding: 14px;
+    }
+    .feedback-answer-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    .feedback-answer-top strong {
+        color: var(--feedback-feature-title);
+        font-size: 0.92rem;
+        line-height: 1.35;
+        font-weight: 900;
+    }
+    .feedback-answer-score {
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+        font-size: 0.72rem;
+        font-weight: 950;
+        white-space: nowrap;
+    }
+    .feedback-answer-item p {
+        color: var(--feedback-feature-text);
+        font-size: 0.82rem;
+        line-height: 1.46;
+        margin: 0;
+    }
+    .feedback-answer-user {
+        border: 1px solid var(--feedback-feature-border-soft);
+        border-radius: 12px;
+        background: var(--feedback-feature-panel-soft);
+        padding: 10px;
+    }
+    .feedback-answer-user b {
+        display: block;
+        color: var(--feedback-feature-title);
+        font-size: 0.68rem;
+        font-weight: 950;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .feedback-answer-focus {
+        border-left: 3px solid #10b981;
+        padding-left: 10px;
+    }
+    .feedback-answer-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        color: var(--feedback-feature-link);
+        font-size: 0.8rem;
+        font-weight: 950;
+        text-decoration: none;
+    }
+    .feedback-answer-action:hover {
+        color: var(--feedback-feature-link);
+    }
+    .feedback-feature-empty {
+        border: 1px dashed var(--feedback-feature-border);
+        border-radius: 14px;
+        background: var(--feedback-feature-empty-bg);
+        color: var(--feedback-feature-text);
+        font-size: 0.88rem;
+        font-weight: 700;
+        line-height: 1.45;
+        padding: 14px;
+    }
     #feedbackTable tbody tr.feedback-empty-row {
         background: transparent !important;
         border: 0 !important;
@@ -1378,6 +1707,7 @@
 
         #mob-content .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
             color: var(--feedback-mobile-muted) !important;
+            font-weight: 400 !important;
             opacity: 0.8;
         }
 
@@ -1708,6 +2038,129 @@
     @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
         #mob-content .feedback-shell #feedbackModulesLikeHero .feedback-hero-art {
             animation: none !important;
+        }
+    }
+
+    @media (max-width: 1100px) {
+        .feedback-insight-grid,
+        .feedback-summary-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .feedback-summary-note-grid,
+        .feedback-metric-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767px) {
+        .feedback-insight-grid,
+        .feedback-answer-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 10px;
+        }
+
+        .feedback-insight-panel {
+            padding: 12px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+        }
+
+        .feedback-insight-head {
+            grid-template-columns: 36px minmax(0, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .feedback-insight-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .feedback-insight-title {
+            font-size: 0.96rem;
+        }
+
+        .feedback-insight-subtitle {
+            font-size: 0.7rem;
+            line-height: 1.35;
+        }
+
+        .feedback-summary-score {
+            min-height: 120px;
+            border-radius: 12px;
+        }
+
+        .feedback-summary-score strong {
+            font-size: 2.2rem;
+        }
+
+        .feedback-summary-note-grid,
+        .feedback-metric-grid {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 8px;
+        }
+
+        .feedback-summary-headline {
+            font-size: 0.82rem;
+        }
+
+        .feedback-summary-note,
+        .feedback-answer-item,
+        .feedback-recommend-item,
+        .feedback-feature-empty {
+            border-radius: 11px;
+            padding: 10px;
+        }
+
+        .feedback-summary-note b,
+        .feedback-metric-chip span,
+        .feedback-recommend-cta {
+            font-size: 0.62rem;
+        }
+
+        .feedback-summary-note p,
+        .feedback-answer-item p,
+        .feedback-recommend-copy span {
+            font-size: 0.7rem;
+            line-height: 1.34;
+        }
+
+        .feedback-answer-user {
+            border-radius: 10px;
+            padding: 8px;
+        }
+
+        .feedback-metric-chip {
+            min-height: 36px;
+            border-radius: 10px;
+            padding: 7px 9px;
+        }
+
+        .feedback-recommend-item {
+            grid-template-columns: 34px minmax(0, 1fr);
+        }
+
+        .feedback-recommend-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+        }
+
+        .feedback-recommend-cta {
+            grid-column: 2;
+        }
+
+        .feedback-recommend-copy strong,
+        .feedback-answer-top strong {
+            font-size: 0.78rem;
+        }
+
+        .feedback-answer-score {
+            min-height: 24px;
+            padding: 4px 7px;
+            font-size: 0.6rem;
         }
     }
 
@@ -2069,6 +2522,126 @@
         </svg>
     </div>
 
+    <div class="feedback-insight-grid" aria-label="Feedback Center priority insights">
+        <section class="feedback-insight-panel" id="feedbackAiSummary" aria-labelledby="feedback-ai-summary-title">
+            <div class="feedback-insight-head">
+                <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                <div>
+                    <h5 class="feedback-insight-title" id="feedback-ai-summary-title">AI Feedback Summary</h5>
+                    <p class="feedback-insight-subtitle">Latest score, strengths, and next focus.</p>
+                </div>
+            </div>
+            @if($feedbackSummary)
+                @php
+                    $summaryOverall = $feedbackSummary->overall;
+                    $summaryColor = $summaryOverall === null
+                        ? '#64748b'
+                        : ($summaryOverall >= 80 ? '#10b981' : ($summaryOverall >= 60 ? '#2563eb' : ($summaryOverall >= 45 ? '#f59e0b' : '#ef4444')));
+                @endphp
+                <div class="feedback-summary-layout">
+                    <div class="feedback-summary-score" style="--summary-color: {{ $summaryColor }};">
+                        @if($summaryOverall === null)
+                            <strong style="font-size:1.25rem;">Pending</strong>
+                        @else
+                            <strong>{{ $summaryOverall }}%</strong>
+                        @endif
+                        <span>{{ $feedbackSummary->rating }}</span>
+                        <small>{{ $feedbackSummary->scenario }} - {{ $feedbackSummary->date }}</small>
+                    </div>
+                    <div class="feedback-summary-copy">
+                        <p class="feedback-summary-headline">{{ $feedbackSummary->headline }}</p>
+                        @if($feedbackSummary->metrics->count() > 0)
+                            <div class="feedback-metric-grid" aria-label="Latest score metrics">
+                                @foreach($feedbackSummary->metrics->take(6) as $metric)
+                                    <div class="feedback-metric-chip" style="--metric-color: {{ $metric->color }};">
+                                        <i class="fa-solid {{ $metric->icon }}" aria-hidden="true"></i>
+                                        <span>{{ $metric->label }}</span>
+                                        <strong>{{ $metric->value }}%</strong>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                        <div class="feedback-summary-note-grid">
+                            <div class="feedback-summary-note">
+                                <b>Strengths</b>
+                                <p>{{ $feedbackSummary->strengths }}</p>
+                            </div>
+                            <div class="feedback-summary-note">
+                                <b>Improve</b>
+                                <p>{{ $feedbackSummary->weaknesses }}</p>
+                            </div>
+                            <div class="feedback-summary-note">
+                                <b>Next Focus</b>
+                                <p>{{ $feedbackSummary->suggestions }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="feedback-feature-empty">
+                    Complete a mock interview to unlock your summary.
+                </div>
+            @endif
+        </section>
+
+        <section class="feedback-insight-panel" id="feedbackPracticeRecommendations" aria-labelledby="feedback-practice-recommendations-title">
+            <div class="feedback-insight-head">
+                <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-route"></i></span>
+                <div>
+                    <h5 class="feedback-insight-title" id="feedback-practice-recommendations-title">Priority Practice Recommendations</h5>
+                    <p class="feedback-insight-subtitle">Your best next steps.</p>
+                </div>
+            </div>
+            <div class="feedback-recommend-list">
+                @forelse($practiceRecommendations as $recommendation)
+                    <a href="{{ $recommendation->url }}" class="feedback-recommend-item" style="--recommend-color: {{ $recommendation->color }};">
+                        <span class="feedback-recommend-icon" aria-hidden="true"><i class="fa-solid {{ $recommendation->icon }}"></i></span>
+                        <span class="feedback-recommend-copy">
+                            <strong>{{ $recommendation->title }}</strong>
+                            <span>{{ $recommendation->description }}</span>
+                        </span>
+                        <span class="feedback-recommend-cta">{{ $recommendation->cta }}</span>
+                    </a>
+                @empty
+                    <div class="feedback-feature-empty">No recommendations yet.</div>
+                @endforelse
+            </div>
+        </section>
+    </div>
+
+    <section class="feedback-insight-panel feedback-answer-panel" id="feedbackAnswerCoaching" aria-labelledby="feedback-answer-coaching-title">
+        <div class="feedback-insight-head">
+            <span class="feedback-insight-icon" aria-hidden="true"><i class="fa-solid fa-comments"></i></span>
+            <div>
+                <h5 class="feedback-insight-title" id="feedback-answer-coaching-title">Answer-by-Answer Coaching</h5>
+                <p class="feedback-insight-subtitle">Quick feedback for each latest answer.</p>
+            </div>
+        </div>
+        <div class="feedback-answer-grid">
+            @forelse($answerCoachingHighlights as $answerCoaching)
+                <article class="feedback-answer-item">
+                    <div class="feedback-answer-top">
+                        <strong>Q{{ $answerCoaching->number }}: {{ $answerCoaching->question }}</strong>
+                        <span class="feedback-answer-score">{{ $answerCoaching->score === null ? 'Pending' : $answerCoaching->score.'%' }}</span>
+                    </div>
+                    <div class="feedback-answer-user">
+                        <b>Your answer</b>
+                        <p>{{ $answerCoaching->answer }}</p>
+                    </div>
+                    <p>{{ $answerCoaching->feedback }}</p>
+                    <p class="feedback-answer-focus"><strong>Next:</strong> {{ $answerCoaching->improvement }}</p>
+                    <a href="{{ $answerCoaching->review_url }}" class="feedback-answer-action">
+                        View details <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </article>
+            @empty
+                <div class="feedback-feature-empty">
+                    Answer coaching appears after a completed interview.
+                </div>
+            @endforelse
+        </div>
+    </section>
+
     <div class="premium-panel">
         <div class="feedback-history-head">
             <h5 class="feedback-history-title">Feedback History</h5>
@@ -2204,12 +2777,18 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
+            { element: '#feedbackAiSummary', popover: { title: 'AI Summary', description: 'See your latest score and focus.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Coaching', description: 'Review each latest answer.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose what to practice next.', side: 'bottom', align: 'start' }},
             { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
             { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past Philippines practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
+            { element: '#feedbackAiSummary', popover: { title: 'AI Summary', description: 'See your latest score and focus.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Coaching', description: 'Review each latest answer.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose what to practice next.', side: 'bottom', align: 'end' }},
             { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
             { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past Philippines practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}

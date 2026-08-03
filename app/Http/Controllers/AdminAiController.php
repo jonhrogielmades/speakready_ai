@@ -7,6 +7,7 @@ use App\Models\AiProvider;
 use App\Models\AiPrompt;
 use App\Models\AiSetting;
 use App\Models\AiProviderLog;
+use App\Services\AIService;
 use App\Support\AiProviderSchema;
 use Illuminate\Support\Facades\Crypt;
 
@@ -31,12 +32,15 @@ class AdminAiController extends Controller
             ->groupBy('module')
             ->get();
 
-        $defaultProviders = ['OpenAI', 'Anthropic', 'Gemini', 'Groq', 'Cohere', 'Llama'];
+        $providers = AiProvider::all(); // For the table below
+        $defaultProviders = collect(AIService::supportedProviderOptions());
         
-        $providerStats = collect($defaultProviders)->map(function($name) {
-            $dbProvider = AiProvider::where('name', 'like', "%{$name}%")->first();
+        $providerStats = $defaultProviders->map(function(array $providerOption) use ($providers) {
+            $dbProvider = $providers->first(
+                fn (AiProvider $provider): bool => AIService::normalizeProviderKey($provider->name) === $providerOption['key']
+            );
             $stats = new \stdClass();
-            $stats->name = $name;
+            $stats->name = $providerOption['label'];
             
             if ($dbProvider) {
                 $stats->is_configured = true;
@@ -49,8 +53,8 @@ class AdminAiController extends Controller
                 $stats->success_rate = $stats->requests_today > 0 ? round(($stats->successful_requests / $stats->requests_today) * 100, 2) : 100;
                 $stats->monthly_cost = AiProviderLog::where('provider_id', $dbProvider->id)->whereMonth('created_at', now()->month)->sum('cost') ?? 0;
             } else {
-                $stats->is_configured = false;
-                $stats->status = 'unconfigured';
+                $stats->is_configured = $providerOption['enabled'];
+                $stats->status = $providerOption['enabled'] ? 'active' : 'unconfigured';
                 $stats->is_primary = false;
                 $stats->is_fallback = false;
                 $stats->requests_today = 0;
@@ -62,7 +66,6 @@ class AdminAiController extends Controller
             return $stats;
         });
 
-        $providers = AiProvider::all(); // For the table below
         $primary = AiProvider::where('is_primary', true)->first();
         $fallback = AiProvider::where('is_fallback', true)->first();
         

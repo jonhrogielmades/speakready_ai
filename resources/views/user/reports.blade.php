@@ -237,6 +237,116 @@
         font-size: clamp(0.98rem, 3.6vw, 1.15rem);
         box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
     }
+    #portfolioReport .report-section-kicker {
+        color: var(--tx3);
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+    #portfolioReport .report-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+    #portfolioReport .report-summary-item,
+    #portfolioReport .report-question-card,
+    #portfolioReport .report-improvement-card,
+    #portfolioReport .report-export-choice {
+        background: rgba(248, 250, 252, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+    }
+    :root:not(.lm) #portfolioReport .report-summary-item,
+    :root:not(.lm) #portfolioReport .report-question-card,
+    :root:not(.lm) #portfolioReport .report-improvement-card,
+    :root:not(.lm) #portfolioReport .report-export-choice,
+    .dm #portfolioReport .report-summary-item,
+    .dm #portfolioReport .report-question-card,
+    .dm #portfolioReport .report-improvement-card,
+    .dm #portfolioReport .report-export-choice {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(148, 163, 184, 0.2);
+    }
+    #portfolioReport .report-summary-item {
+        padding: 13px 14px;
+        min-height: 74px;
+    }
+    #portfolioReport .report-summary-label {
+        display: block;
+        color: var(--tx3);
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    #portfolioReport .report-summary-value {
+        color: var(--tx);
+        font-size: 0.95rem;
+        font-weight: 800;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+    #portfolioReport .report-score-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+    #portfolioReport .report-score-row {
+        min-width: 0;
+    }
+    #portfolioReport .report-score-row .progress {
+        height: 8px;
+        background: var(--bd);
+        border-radius: 999px;
+    }
+    #portfolioReport .report-score-row .progress-bar {
+        border-radius: 999px;
+    }
+    #portfolioReport .report-question-card {
+        padding: 18px;
+    }
+    #portfolioReport .report-question-answer {
+        min-height: 96px;
+        color: var(--tx);
+        background: rgba(59, 130, 246, 0.05);
+        border: 1px solid rgba(59, 130, 246, 0.16);
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+    }
+    #portfolioReport .report-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.74rem;
+        font-weight: 800;
+        white-space: normal;
+        text-align: left;
+        line-height: 1.25;
+    }
+    #portfolioReport .report-improvement-card {
+        padding: 16px;
+        height: 100%;
+    }
+    #portfolioReport .report-export-choice {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px;
+        height: 100%;
+    }
+    #portfolioReport .report-export-choice .btn {
+        flex: 0 0 auto;
+        border-radius: 10px !important;
+        font-weight: 800;
+    }
 
     @media (max-width: 767px) {
         #portfolioReport {
@@ -301,6 +411,28 @@
         #portfolioReport .report-start-btn {
             min-height: 54px;
             border-radius: 16px !important;
+        }
+        #portfolioReport .report-summary-grid,
+        #portfolioReport .report-score-list {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        #portfolioReport .report-summary-item,
+        #portfolioReport .report-question-card,
+        #portfolioReport .report-improvement-card,
+        #portfolioReport .report-export-choice {
+            border-radius: 10px;
+        }
+        #portfolioReport .report-summary-item {
+            min-height: 0;
+            padding: 10px 11px;
+        }
+        #portfolioReport .report-export-choice {
+            align-items: stretch;
+            flex-direction: column;
+        }
+        #portfolioReport .report-export-choice .btn {
+            width: 100%;
         }
     }
 
@@ -1589,8 +1721,8 @@
         </svg>
     </div>
     <div class="sr-page-actions report-export-actions btn-no-print">
-        <button class="btn btn-primary btn-shine" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
-        <button class="btn btn-success btn-shine" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
+        <button class="btn btn-primary btn-shine js-export-pdf" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
+        <button class="btn btn-success btn-shine js-export-excel" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
         @if($sessions->count() > 0)
             <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
                 @csrf
@@ -1614,20 +1746,29 @@
     </div>
 
     @if($hasScoreData)
-    <!-- Feature 6: Readiness Assessment Report -->
+    <!-- Feature 1: Report Summary -->
     <div id="report-readiness" class="print-card mb-4" style="border-radius:24px; padding:32px;">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-4">
+            <div>
+                <div class="report-section-kicker">Latest report</div>
+                <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 0;"><i class="fa-solid fa-file-invoice text-primary me-2"></i>Report Summary</h5>
+            </div>
+            <span class="report-chip align-self-start" style="color:#3b82f6;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.22);">
+                <i class="fa-regular fa-calendar"></i> Generated {{ now()->format('M d, Y') }}
+            </span>
+        </div>
         <div class="row align-items-center text-center text-md-start">
             <div class="col-md-3 border-end" style="border-color:rgba(59, 130, 246, 0.2) !important;">
-                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Readiness Score</h6>
+                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Final Score</h6>
                 <div style="font-size:3.5rem;font-weight:900;line-height:1;color:{{ $readinessSummary->color }};">{{ $readinessSummary->current }}<span style="font-size:1.5rem">%</span></div>
                 <div class="badge mt-2 fs-6" style="background-color:{{ $readinessSummary->color }};color:#fff;">{{ $readinessSummary->rating }}</div>
             </div>
             <div class="col-md-3 border-end mt-4 mt-md-0" style="border-color:rgba(59, 130, 246, 0.2) !important;">
-                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Previous Score</h6>
+                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Previous Score</h6>
                 <div style="font-size:2rem;font-weight:700;line-height:1;color:var(--tx);">{{ $readinessSummary->previous === null ? 'N/A' : $readinessSummary->previous . '%' }}</div>
             </div>
             <div class="col-md-6 mt-4 mt-md-0 ps-md-4">
-                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:1px;margin-bottom:8px;">Readiness Change</h6>
+                <h6 style="color:var(--tx3);text-transform:uppercase;font-weight:700;letter-spacing:0;margin-bottom:8px;">Readiness Change</h6>
                 <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
                     <i class="fa-solid {{ $readinessSummary->delta === null ? 'fa-minus' : ($readinessSummary->delta >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down') }} fs-1" style="color:{{ $readinessSummary->delta_color }};"></i>
                     <div style="font-size:2.5rem;font-weight:800;color:{{ $readinessSummary->delta_color }};">{{ $readinessSummary->delta_label }}</div>
@@ -1635,13 +1776,40 @@
                 <p style="color:var(--tx);margin-top:8px;font-size:0.95rem;">{{ $readinessSummary->message }}</p>
             </div>
         </div>
+        <div class="report-summary-grid mt-4">
+            <div class="report-summary-item">
+                <span class="report-summary-label">Interview Type</span>
+                <div class="report-summary-value">{{ $reportSummary->interview_type }}</div>
+            </div>
+            <div class="report-summary-item">
+                <span class="report-summary-label">Date</span>
+                <div class="report-summary-value">{{ $reportSummary->date }}</div>
+            </div>
+            <div class="report-summary-item">
+                <span class="report-summary-label">Duration</span>
+                <div class="report-summary-value">{{ $reportSummary->duration }}</div>
+            </div>
+            <div class="report-summary-item">
+                <span class="report-summary-label">Result Level</span>
+                <div class="report-summary-value">{{ $reportSummary->result_level }}</div>
+            </div>
+            <div class="report-summary-item">
+                <span class="report-summary-label">Target Role</span>
+                <div class="report-summary-value">{{ $reportSummary->target_role }}</div>
+            </div>
+            <div class="report-summary-item">
+                <span class="report-summary-label">Questions</span>
+                <div class="report-summary-value">{{ $reportSummary->questions }}</div>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4 mb-4">
-        <!-- Feature 1: Interview Performance Report -->
+        <!-- Feature 2: Detailed Score Breakdown -->
         <div class="col-lg-7">
             <div class="print-card" style="padding:32px;height:100%;">
-                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-clipboard-check text-primary me-2"></i>Latest Interview Performance</h5>
+                <div class="report-section-kicker">Score details</div>
+                <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-chart-simple text-primary me-2"></i>Detailed Score Breakdown</h5>
 
                 <div class="row mb-4 bg-light bg-opacity-10 rounded p-3" style="background:var(--bg);">
                     <div class="col-6 col-md-3 mb-3 mb-md-0">
@@ -1654,22 +1822,24 @@
                     </div>
                     <div class="col-6 col-md-3">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Difficulty</small>
-                        <div style="color:var(--tx);font-weight:bold;text-transform:capitalize;">{{ $latestSession->difficulty ?? 'Not recorded' }}</div>
+                        <div style="color:var(--tx);font-weight:bold;text-transform:capitalize;">{{ $reportSummary->difficulty }}</div>
                     </div>
                     <div class="col-6 col-md-3">
                         <small style="color:var(--tx3);font-weight:600;text-transform:uppercase;">Questions</small>
-                        <div style="color:var(--tx);font-weight:bold;">{{ $latestSession->num_questions ?? 'N/A' }}</div>
+                        <div style="color:var(--tx);font-weight:bold;">{{ $reportSummary->questions }}</div>
                     </div>
                 </div>
 
-                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">Performance Breakdown</h6>
-                <div class="row g-3 text-center">
+                <div class="report-score-list">
                     @foreach($latestPerformanceMetrics as $metric)
-                    <div class="col">
-                        <div style="width:60px;height:60px;border-radius:50%;background:rgba(59,130,246,0.1);border:2px solid #3b82f6;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;color:var(--tx);font-weight:bold;font-size:1.1rem;">
-                            {{ $metric['score'] }}
+                    <div class="report-score-row">
+                        <div class="d-flex justify-content-between gap-3 mb-2">
+                            <span style="color:var(--tx);font-weight:800;">{{ $metric['name'] }}</span>
+                            <span style="color:var(--tx3);font-weight:800;">{{ $metric['score'] }}%</span>
                         </div>
-                        <div style="font-size:0.8rem;color:var(--tx3);font-weight:600;">{{ $metric['name'] }}</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $metric['bar'] }}%;"></div>
+                        </div>
                     </div>
                     @endforeach
                 </div>
@@ -1766,6 +1936,159 @@
                     <p>Complete an interview to see your AI feedback summary.</p>
                 </div>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 3: Question-by-Question Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div id="report-question-review" class="print-card" style="padding:32px;">
+                <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+                    <div>
+                        <div class="report-section-kicker">Answer review</div>
+                        <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 0;"><i class="fa-solid fa-list-check text-primary me-2"></i>Question-by-Question Analysis</h5>
+                    </div>
+                    @if($latestSession)
+                        <a href="{{ route('user.review', $latestSession->id) }}" class="btn btn-outline-primary btn-sm btn-no-print" style="border-radius:10px;font-weight:800;align-self:start;">
+                            <i class="fa-solid fa-up-right-from-square me-1"></i>Open Full Report
+                        </a>
+                    @endif
+                </div>
+
+                @if($questionReviews->isNotEmpty())
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($questionReviews as $review)
+                            <div class="report-question-card">
+                                <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+                                    <div style="min-width:0;">
+                                        <div class="report-section-kicker">Question {{ $review->number }}</div>
+                                        <h6 style="color:var(--tx);font-weight:800;margin:5px 0 0;line-height:1.4;overflow-wrap:anywhere;">{{ $review->question }}</h6>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 align-items-start">
+                                        <span class="report-chip" style="color:{{ $review->score_color }};background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.18);">
+                                            <i class="fa-solid fa-gauge-high"></i>{{ $review->score_label }}
+                                        </span>
+                                        <span class="report-chip" style="color:#3b82f6;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.22);">
+                                            <i class="fa-solid fa-clipboard-check"></i>{{ $review->status_label }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-lg-5">
+                                        <div class="report-section-kicker mb-2">User Answer</div>
+                                        <div class="report-question-answer">{{ $review->answer }}</div>
+                                    </div>
+                                    <div class="col-lg-7">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div style="height:100%;padding:12px;border-radius:10px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);">
+                                                    <div style="color:#10b981;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-check-circle me-1"></i>Strength</div>
+                                                    <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->strength }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div style="height:100%;padding:12px;border-radius:10px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);">
+                                                    <div style="color:#f59e0b;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-screwdriver-wrench me-1"></i>Improve</div>
+                                                    <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->improvement }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3" style="padding:12px;border-radius:10px;background:rgba(59,130,246,.055);border:1px solid rgba(59,130,246,.16);">
+                                            <div style="color:#3b82f6;font-size:.74rem;font-weight:800;text-transform:uppercase;margin-bottom:7px;"><i class="fa-solid fa-comment-dots me-1"></i>AI Feedback</div>
+                                            <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;">{{ $review->feedback }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4" style="color:var(--tx3);">
+                        <p>No question-level answers were recorded for this scored interview yet.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 4: Mistakes & Improvement Areas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div id="report-improvements" class="print-card" style="padding:32px;">
+                <div class="report-section-kicker">Priority fixes</div>
+                <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Mistakes &amp; Improvement Areas</h5>
+
+                @if($improvementAreas->isNotEmpty())
+                    <div class="row g-3">
+                        @foreach($improvementAreas as $area)
+                            <div class="col-md-6">
+                                <div class="report-improvement-card">
+                                    <div class="d-flex gap-3">
+                                        <div style="width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.18);display:flex;align-items:center;justify-content:center;color:{{ $area->color }};">
+                                            <i class="fa-solid fa-arrow-trend-up"></i>
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <h6 style="color:var(--tx);font-weight:800;margin:0 0 7px;overflow-wrap:anywhere;">{{ $area->issue }}</h6>
+                                            <p style="color:var(--tx3);font-size:.86rem;line-height:1.55;margin:0 0 8px;"><strong style="color:var(--tx);">Evidence:</strong> {{ $area->evidence }}</p>
+                                            <p style="color:var(--tx);font-size:.9rem;line-height:1.55;margin:0;"><strong style="color:{{ $area->color }};">Next fix:</strong> {{ $area->fix }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-4" style="color:var(--tx3);">
+                        <p>No repeated mistakes were detected in the latest scored interview report.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature 5: Download / Export Report -->
+    <div class="row mb-4 btn-no-print">
+        <div class="col-12">
+            <div id="report-export" class="print-card" style="padding:32px;">
+                <div class="report-section-kicker">Export options</div>
+                <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 20px;"><i class="fa-solid fa-download text-success me-2"></i>Download / Export Report</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="report-export-choice">
+                            <div>
+                                <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">PDF Report</h6>
+                                <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Save the full interview report view.</p>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm js-export-pdf"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="report-export-choice">
+                            <div>
+                                <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">Score Sheet</h6>
+                                <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Export comparison rows to Excel.</p>
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm js-export-excel"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="report-export-choice">
+                            <div>
+                                <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">Question CSV</h6>
+                                <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Download answers and feedback rows.</p>
+                            </div>
+                            @if($latestSession)
+                                <a href="{{ route('user.sessions.export', $latestSession) }}" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-table me-1"></i>CSV</a>
+                            @else
+                                <button type="button" class="btn btn-outline-secondary btn-sm" disabled><i class="fa-solid fa-table me-1"></i>CSV</button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-3 js-print-report btn-no-print" style="border-radius:10px;font-weight:800;">
+                    <i class="fa-solid fa-print me-1"></i>Print Report
+                </button>
             </div>
         </div>
     </div>
@@ -1892,12 +2215,12 @@
             <path d="M67 78c3-14 13-23 27-23h83" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".88"/>
             <path d="M31 94h7M35 90v8M183 44h8M187 40v8M42 132h4M172 127h5" stroke="#60A5FA" stroke-width="5" stroke-linecap="round"/>
         </svg>
-        <h4 class="report-empty-title" style="color:var(--tx);font-weight:800;">No Scored Portfolio Data Available</h4>
+        <h4 class="report-empty-title" style="color:var(--tx);font-weight:800;">No Scored Interview Report Available</h4>
         <p class="report-empty-copy" style="color:var(--tx3); margin-bottom: 24px; max-width: 560px; margin-left: auto; margin-right: auto;">
             @if($sessions->count() > 0)
-                You have completed interview records, but none of them have score data yet. Once a scored Philippines interview is available, this report will show analytics, comparisons, and feedback summaries.
+                You have completed interview records, but none of them have score data yet. Once a scored Philippines interview is available, this page will show your report summary, score breakdown, question analysis, improvement areas, and export options.
             @else
-                Your report is generated automatically from scored Philippines interview performance. Complete your first practice interview to unlock analytics, comparisons, and personalized feedback.
+                Your report is generated automatically from scored Philippines interview performance. Complete your first practice interview to unlock your report summary, score breakdown, question analysis, improvement areas, and export options.
             @endif
         </p>
         <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine report-start-btn" style="font-weight:700;"><i class="fa-solid fa-play"></i>Start Philippine Interview</a>
@@ -1973,58 +2296,136 @@
         }
         @endif
 
+        const latestScoreRows = @json($latestPerformanceMetrics ?? []);
+        const reportFinalScore = @json($reportSummary->final_score_label ?? 'N/A');
+        const withReportActionsHidden = function(callback) {
+            const element = document.getElementById('portfolioReport');
+            const hiddenActions = element ? Array.from(element.querySelectorAll('.btn-no-print')) : [];
+            const originalDisplays = hiddenActions.map((action) => action.style.display);
+            const restore = function() {
+                hiddenActions.forEach((action, index) => {
+                    action.style.display = originalDisplays[index];
+                });
+            };
+
+            hiddenActions.forEach((action) => {
+                action.style.display = 'none';
+            });
+
+            callback(restore);
+        };
+        const csvEscape = function(value) {
+            const text = String(value ?? '').replace(/\s+/g, ' ').trim();
+            return `"${text.replace(/"/g, '""')}"`;
+        };
+        const downloadCsvFromTable = function(table, filename) {
+            const rows = Array.from(table.querySelectorAll('tr'))
+                .map((row) => Array.from(row.querySelectorAll('th,td')).map((cell) => csvEscape(cell.textContent)).join(','))
+                .join('\n');
+            const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        };
+        const buildLatestScoreTable = function() {
+            if (!Array.isArray(latestScoreRows) || latestScoreRows.length === 0) {
+                return null;
+            }
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const header = document.createElement('tr');
+            ['Metric', 'Latest Score'].forEach((label) => {
+                const th = document.createElement('th');
+                th.textContent = label;
+                header.appendChild(th);
+            });
+            thead.appendChild(header);
+
+            const tbody = document.createElement('tbody');
+            [['Final Score', reportFinalScore], ...latestScoreRows.map((row) => [row.name, `${row.score}%`])].forEach((row) => {
+                const tr = document.createElement('tr');
+                row.forEach((value) => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            return table;
+        };
+
         // Export PDF
-        const exportPdfBtn = document.getElementById('exportPdfBtn');
-        if (exportPdfBtn) {
-            exportPdfBtn.addEventListener('click', function() {
-                const element = document.getElementById('portfolioReport');
-                if (!element || typeof window.html2pdf !== 'function') {
-                    alert('PDF export is not available right now. Please try again later.');
-                    return;
-                }
-                const opt = {
-                    margin:       [0.5, 0.5, 0.5, 0.5],
-                    filename:     'portfolio_report.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true },
-                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-                };
+        const exportPdf = function() {
+            const element = document.getElementById('portfolioReport');
+            if (!element) {
+                return;
+            }
 
-                // Hide header actions during export
-                const headerActions = element.querySelector('.btn-no-print');
-                let originalDisplay = '';
-                if (headerActions) {
-                    originalDisplay = headerActions.style.display;
-                    headerActions.style.display = 'none';
-                }
+            if (typeof window.html2pdf !== 'function') {
+                withReportActionsHidden((restore) => {
+                    const afterPrint = function() {
+                        restore();
+                        window.removeEventListener('afterprint', afterPrint);
+                    };
+                    window.addEventListener('afterprint', afterPrint);
+                    window.print();
+                    setTimeout(afterPrint, 1200);
+                });
+                return;
+            }
 
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5],
+                filename:     'interview_report.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            withReportActionsHidden((restore) => {
                 html2pdf().set(opt).from(element).save().catch(() => {
-                    alert('PDF export failed. Please try again.');
+                    window.print();
                 }).finally(() => {
-                    if (headerActions) {
-                        headerActions.style.display = originalDisplay;
-                    }
+                    restore();
                 });
             });
-        }
+        };
+        document.querySelectorAll('.js-export-pdf').forEach((button) => {
+            button.addEventListener('click', exportPdf);
+        });
 
         // Export Excel
-        const exportExcelBtn = document.getElementById('exportExcelBtn');
-        if (exportExcelBtn) {
-            exportExcelBtn.addEventListener('click', function() {
+        const exportExcel = function() {
+            const table = document.querySelector('#report-comparison table') || buildLatestScoreTable();
+            if (table) {
                 if (!window.XLSX) {
-                    alert('Excel export is not available right now.');
+                    downloadCsvFromTable(table, 'interview_report_scores.csv');
                     return;
                 }
-                const table = document.querySelector('#report-comparison table');
-                if (table) {
-                    const wb = XLSX.utils.table_to_book(table, {sheet: "Comparison"});
-                    XLSX.writeFile(wb, 'performance_comparison.xlsx');
-                } else {
-                    alert("No data available to export.");
-                }
+                const wb = XLSX.utils.table_to_book(table, {sheet: "Comparison"});
+                XLSX.writeFile(wb, 'interview_report_scores.xlsx');
+            } else {
+                alert('No score data is available to export.');
+            }
+        };
+        document.querySelectorAll('.js-export-excel').forEach((button) => {
+            button.addEventListener('click', exportExcel);
+        });
+
+        document.querySelectorAll('.js-print-report').forEach((button) => {
+            button.addEventListener('click', function() {
+                window.print();
             });
-        }
+        });
     });
 </script>
 
@@ -2034,17 +2435,17 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your latest readiness score and improvement since your first interview.', side: 'bottom', align: 'start' }},
-            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest Philippines interviews.', side: 'bottom', align: 'start' }},
-            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and recommended practice.', side: 'top', align: 'start' }},
-            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track completion across learning modules and voice rehearsal work.', side: 'top', align: 'start' }}
+            { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, result level, interview type, date, duration, and question count.', side: 'bottom', align: 'start' }},
+            { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
+            { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes and the next fix for each one.', side: 'top', align: 'start' }},
+            { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '#report-readiness', popover: { title: 'Overall Readiness', description: 'See your latest readiness score and improvement since your first interview.', side: 'bottom', align: 'start' }},
-            { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare key metrics between your first and latest Philippines interviews.', side: 'bottom', align: 'start' }},
-            { element: '#report-feedback', popover: { title: 'Feedback Summary', description: 'Review strengths, improvement areas, and recommended practice.', side: 'top', align: 'start' }},
-            { element: '#report-learning', popover: { title: 'Learning Progress', description: 'Track completion across learning modules and voice rehearsal work.', side: 'top', align: 'end' }}
+            { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, result level, interview type, date, duration, and question count.', side: 'bottom', align: 'start' }},
+            { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
+            { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes and the next fix for each one.', side: 'top', align: 'start' }},
+            { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'end' }}
         ];
 
         window.createSpeakReadyTour({

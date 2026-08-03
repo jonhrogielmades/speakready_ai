@@ -1205,6 +1205,392 @@
             max-width: none !important;
         }
     }
+
+    #personal-mastery-page .mastery-next-action,
+    #personal-mastery-page .mastery-panel {
+        border: 1px solid var(--mastery-shell-border, var(--mastery-line));
+        border-radius: 12px;
+        background: var(--mastery-shell-card, var(--sf));
+        box-shadow: var(--mastery-shell-shadow, 0 12px 28px rgba(38, 83, 156, 0.08));
+        color: var(--mastery-shell-title, var(--tx));
+    }
+
+    #personal-mastery-page .mastery-next-action {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+        padding: 14px;
+        background:
+            linear-gradient(135deg, rgba(37, 99, 235, 0.09), rgba(20, 184, 166, 0.05)),
+            var(--mastery-shell-card, var(--sf));
+    }
+
+    #personal-mastery-page .mastery-next-icon,
+    #personal-mastery-page .mastery-row-icon,
+    #personal-mastery-page .mastery-track-icon,
+    #personal-mastery-page .mastery-badge-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        border-radius: 10px;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--mastery-shell-accent, var(--mastery-blue));
+    }
+
+    #personal-mastery-page .mastery-next-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1rem;
+    }
+
+    #personal-mastery-page .mastery-kicker {
+        margin: 0 0 4px;
+        color: var(--mastery-shell-accent, var(--mastery-blue));
+        font-size: 0.58rem;
+        font-weight: 950;
+        line-height: 1.1;
+        text-transform: uppercase;
+    }
+
+    #personal-mastery-page .mastery-panel h6,
+    #personal-mastery-page .mastery-next-action h6 {
+        margin: 0;
+        color: var(--mastery-shell-title, var(--tx));
+        font-size: 0.9rem;
+        font-weight: 950;
+        line-height: 1.18;
+    }
+
+    #personal-mastery-page .mastery-next-action p,
+    #personal-mastery-page .mastery-panel p,
+    #personal-mastery-page .mastery-small {
+        margin: 0;
+        color: var(--mastery-shell-muted, var(--tx2));
+        font-size: 0.68rem;
+        font-weight: 650;
+        line-height: 1.35;
+    }
+
+    #personal-mastery-page .mastery-pill-link,
+    #personal-mastery-page .mastery-mini-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 7px 11px;
+        border: 0;
+        border-radius: 9px;
+        background: linear-gradient(135deg, var(--mastery-shell-accent, #2563eb), var(--mastery-shell-accent-2, #0891b2));
+        color: #fff;
+        font-size: 0.66rem;
+        font-weight: 900;
+        line-height: 1.1;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    #personal-mastery-page .mastery-mini-link {
+        min-height: 30px;
+        padding: 6px 9px;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--mastery-shell-accent, var(--mastery-blue));
+    }
+
+    #personal-mastery-page .mastery-section-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    #personal-mastery-page .mastery-stack {
+        display: grid;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    #personal-mastery-page .mastery-panel {
+        min-width: 0;
+        padding: 14px;
+    }
+
+    #personal-mastery-page .mastery-panel-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    #personal-mastery-page .mastery-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    #personal-mastery-page .mastery-list-row,
+    #personal-mastery-page .mastery-track-row,
+    #personal-mastery-page .mastery-story-row,
+    #personal-mastery-page .mastery-check-row {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        padding: 9px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--mastery-shell-field, var(--bg3)) 88%, transparent);
+    }
+
+    #personal-mastery-page .mastery-row-icon,
+    #personal-mastery-page .mastery-track-icon,
+    #personal-mastery-page .mastery-badge-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 0.82rem;
+    }
+
+    #personal-mastery-page .mastery-row-title,
+    #personal-mastery-page .mastery-track-title {
+        display: block;
+        margin-bottom: 3px;
+        color: var(--mastery-shell-title, var(--tx));
+        font-size: 0.76rem;
+        font-weight: 900;
+        line-height: 1.18;
+    }
+
+    #personal-mastery-page .mastery-track-meta,
+    #personal-mastery-page .mastery-story-meta {
+        color: var(--mastery-shell-muted, var(--tx2));
+        font-size: 0.58rem;
+        font-weight: 850;
+        text-transform: uppercase;
+    }
+
+    #personal-mastery-page .mastery-track-progress {
+        height: 7px;
+        margin-top: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.18);
+    }
+
+    #personal-mastery-page .mastery-track-fill {
+        display: block;
+        width: var(--track-progress, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #2563eb, #14b8a6);
+    }
+
+    #personal-mastery-page .mastery-score-chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 28px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        font-size: 0.68rem;
+        font-weight: 950;
+    }
+
+    #personal-mastery-page .mastery-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 9px;
+    }
+
+    #personal-mastery-page .mastery-field {
+        display: grid;
+        gap: 5px;
+        min-width: 0;
+    }
+
+    #personal-mastery-page .mastery-field.full {
+        grid-column: 1 / -1;
+    }
+
+    #personal-mastery-page .mastery-field span {
+        color: var(--mastery-shell-muted, var(--tx2));
+        font-size: 0.58rem;
+        font-weight: 950;
+        text-transform: uppercase;
+    }
+
+    #personal-mastery-page .mastery-input,
+    #personal-mastery-page .mastery-textarea,
+    #personal-mastery-page .mastery-select {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 9px;
+        background: var(--mastery-shell-field, var(--bg3));
+        color: var(--mastery-shell-title, var(--tx));
+        font-size: 0.7rem;
+        font-weight: 650;
+        line-height: 1.3;
+        outline: none;
+    }
+
+    #personal-mastery-page .mastery-input,
+    #personal-mastery-page .mastery-select {
+        min-height: 36px;
+        padding: 8px 10px;
+    }
+
+    #personal-mastery-page .mastery-textarea {
+        min-height: 70px;
+        padding: 9px 10px;
+        resize: vertical;
+    }
+
+    #personal-mastery-page .mastery-story-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+    }
+
+    #personal-mastery-page .mastery-story-row strong {
+        display: block;
+        color: var(--mastery-shell-title, var(--tx));
+        font-size: 0.76rem;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+
+    #personal-mastery-page .mastery-icon-button {
+        width: 32px;
+        height: 32px;
+        border: 1px solid rgba(239, 68, 68, 0.22);
+        border-radius: 9px;
+        background: rgba(239, 68, 68, 0.08);
+        color: #ef4444;
+    }
+
+    #personal-mastery-page .mastery-review-grid,
+    #personal-mastery-page .mastery-badge-grid,
+    #personal-mastery-page .mastery-shortcut-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #personal-mastery-page .mastery-review-stat,
+    #personal-mastery-page .mastery-shortcut,
+    #personal-mastery-page .mastery-badge-item {
+        min-width: 0;
+        padding: 9px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 10px;
+        background: color-mix(in srgb, var(--mastery-shell-field, var(--bg3)) 88%, transparent);
+    }
+
+    #personal-mastery-page .mastery-review-value {
+        display: block;
+        color: var(--mastery-shell-title, var(--tx));
+        font-size: 1rem;
+        font-weight: 950;
+        line-height: 1;
+    }
+
+    #personal-mastery-page .mastery-shortcut {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--mastery-shell-title, var(--tx));
+        text-decoration: none;
+        font-size: 0.68rem;
+        font-weight: 900;
+        line-height: 1.16;
+    }
+
+    #personal-mastery-page .mastery-check-row {
+        grid-template-columns: 34px minmax(0, 1fr);
+        width: 100%;
+        border-color: rgba(148, 163, 184, 0.18);
+        text-align: left;
+    }
+
+    #personal-mastery-page .mastery-check-row.done {
+        border-color: rgba(16, 185, 129, 0.26);
+        background: rgba(16, 185, 129, 0.08);
+    }
+
+    #personal-mastery-page .mastery-check-button {
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--mastery-shell-accent, var(--mastery-blue));
+    }
+
+    #personal-mastery-page .mastery-check-row.done .mastery-check-button {
+        background: rgba(16, 185, 129, 0.16);
+        color: #059669;
+    }
+
+    #personal-mastery-page .mastery-badge-item {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        opacity: 0.62;
+    }
+
+    #personal-mastery-page .mastery-badge-item.earned {
+        border-color: rgba(245, 158, 11, 0.32);
+        background: rgba(245, 158, 11, 0.09);
+        opacity: 1;
+    }
+
+    #personal-mastery-page .mastery-badge-item.earned .mastery-badge-icon {
+        background: rgba(245, 158, 11, 0.16);
+        color: #d97706;
+    }
+
+    @media (max-width: 991.98px) {
+        #personal-mastery-page .mastery-section-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #personal-mastery-page .mastery-next-action {
+            grid-template-columns: 38px minmax(0, 1fr);
+        }
+
+        #personal-mastery-page .mastery-next-action .mastery-pill-link {
+            grid-column: 1 / -1;
+            width: 100%;
+        }
+
+        #personal-mastery-page .mastery-form-grid,
+        #personal-mastery-page .mastery-review-grid,
+        #personal-mastery-page .mastery-badge-grid,
+        #personal-mastery-page .mastery-shortcut-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #personal-mastery-page .mastery-list-row,
+        #personal-mastery-page .mastery-track-row {
+            grid-template-columns: 32px minmax(0, 1fr);
+        }
+
+        #personal-mastery-page .mastery-list-row .mastery-mini-link,
+        #personal-mastery-page .mastery-track-row .mastery-score-chip {
+            grid-column: 1 / -1;
+            justify-self: stretch;
+        }
+    }
 </style>
 
 <div class="db-section active" id="personal-mastery-page">
@@ -1275,6 +1661,254 @@
             </div>
         @endforeach
     </div>
+
+    <section class="mastery-next-action" id="mastery-next-action">
+        <span class="mastery-next-icon" aria-hidden="true">
+            <i class="fa-solid {{ $nextBestAction['icon'] }}"></i>
+        </span>
+        <div>
+            <p class="mastery-kicker">{{ $nextBestAction['eyebrow'] }}</p>
+            <h6>{{ $nextBestAction['title'] }}</h6>
+            <p>{{ $nextBestAction['body'] }}</p>
+        </div>
+        <a class="mastery-pill-link" href="{{ $nextBestAction['href'] }}">
+            <span>{{ $nextBestAction['cta'] }}</span>
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </section>
+
+    <div class="mastery-section-grid">
+        <section class="mastery-panel" id="mastery-drills">
+            <div class="mastery-panel-head">
+                <div>
+                    <p class="mastery-kicker">Weakness to drill</p>
+                    <h6>Recommended practice</h6>
+                </div>
+                <a class="mastery-mini-link" href="{{ route('user.drills.voice') }}">
+                    <i class="fa-solid fa-ear-listen"></i>
+                    <span>Voice</span>
+                </a>
+            </div>
+            <div class="mastery-list">
+                @foreach($weaknessDrills as $drill)
+                    <div class="mastery-list-row">
+                        <span class="mastery-row-icon" aria-hidden="true">
+                            <i class="fa-solid {{ $drill['icon'] }}"></i>
+                        </span>
+                        <div>
+                            <strong class="mastery-row-title">{{ $drill['title'] }}</strong>
+                            <p>{{ $drill['reason'] ?? $drill['body'] }}</p>
+                        </div>
+                        <a class="mastery-mini-link" href="{{ $drill['href'] }}">{{ $drill['cta'] }}</a>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+
+        <section class="mastery-panel" id="mastery-tracks">
+            <div class="mastery-panel-head">
+                <div>
+                    <p class="mastery-kicker">Philippines tracks</p>
+                    <h6>Career track mastery</h6>
+                </div>
+                <span class="mastery-score-chip">{{ count($careerTracks) }}</span>
+            </div>
+            <div class="mastery-list">
+                @foreach($careerTracks as $track)
+                    <a class="mastery-track-row" href="{{ $track['href'] }}" style="--track-progress: {{ min(100, max(0, $track['best'])) }}%; text-decoration:none;color:inherit;">
+                        <span class="mastery-track-icon" aria-hidden="true">
+                            <i class="fa-solid {{ $track['icon'] }}"></i>
+                        </span>
+                        <div>
+                            <strong class="mastery-track-title">{{ $track['label'] }}</strong>
+                            <span class="mastery-track-meta">{{ $track['status'] }} - {{ $track['attempts'] }} scored</span>
+                            <span class="mastery-track-progress" aria-hidden="true"><span class="mastery-track-fill"></span></span>
+                        </div>
+                        <span class="mastery-score-chip">{{ $track['best'] }}%</span>
+                    </a>
+                @endforeach
+            </div>
+        </section>
+    </div>
+
+    <div class="mastery-section-grid">
+        <section class="mastery-panel" id="mastery-story-bank">
+            <div class="mastery-panel-head">
+                <div>
+                    <p class="mastery-kicker">STAR answer bank</p>
+                    <h6>Save truthful proof stories</h6>
+                </div>
+                <span class="mastery-score-chip">{{ $storyCount }}</span>
+            </div>
+
+            @if($errors->has('star_story'))
+                <p class="text-danger mb-2" style="font-size:0.72rem;font-weight:800;">{{ $errors->first('star_story') }}</p>
+            @endif
+
+            <form method="POST" action="{{ route('user.mastery.stories.store') }}" class="mb-3">
+                @csrf
+                <div class="mastery-form-grid">
+                    <label class="mastery-field">
+                        <span>Track</span>
+                        <select class="mastery-select" name="track">
+                            @foreach($careerTracks as $track)
+                                <option value="{{ $track['key'] }}" @selected(old('track') === $track['key'])>{{ $track['label'] }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="mastery-field">
+                        <span>Question</span>
+                        <input class="mastery-input" name="question" value="{{ old('question') }}" maxlength="220" placeholder="Example: Tell me about a challenge">
+                    </label>
+                    <label class="mastery-field">
+                        <span>Situation</span>
+                        <textarea class="mastery-textarea" name="situation" maxlength="1500" placeholder="Where and when did it happen?">{{ old('situation') }}</textarea>
+                    </label>
+                    <label class="mastery-field">
+                        <span>Task</span>
+                        <textarea class="mastery-textarea" name="story_task" maxlength="1500" placeholder="What responsibility did you have?">{{ old('story_task') }}</textarea>
+                    </label>
+                    <label class="mastery-field">
+                        <span>Action</span>
+                        <textarea class="mastery-textarea" name="action" maxlength="1500" placeholder="What did you personally do?">{{ old('action') }}</textarea>
+                    </label>
+                    <label class="mastery-field">
+                        <span>Result</span>
+                        <textarea class="mastery-textarea" name="result" maxlength="1500" placeholder="What changed, improved, or what did you learn?">{{ old('result') }}</textarea>
+                    </label>
+                </div>
+                <button class="mastery-pill-link" type="submit">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span>Save STAR story</span>
+                </button>
+            </form>
+
+            <div class="mastery-list">
+                @forelse($storyBank as $story)
+                    @php($storyMeta = $story->metadata ?? [])
+                    <div class="mastery-story-row">
+                        <div>
+                            <strong>{{ $story->title }}</strong>
+                            <span class="mastery-story-meta">{{ ucwords(str_replace('_', ' ', data_get($storyMeta, 'track', 'general'))) }}</span>
+                            <p class="mt-1">
+                                {{ \Illuminate\Support\Str::limit(data_get($storyMeta, 'result') ?: data_get($storyMeta, 'action') ?: $story->task, 150) }}
+                            </p>
+                        </div>
+                        <form method="POST" action="{{ route('user.mastery.stories.destroy', $story) }}" onsubmit="return confirm('Remove this STAR story?');">
+                            @csrf
+                            @method('DELETE')
+                            <button class="mastery-icon-button" type="submit" aria-label="Delete story">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </div>
+                @empty
+                    <div class="mastery-story-row">
+                        <div>
+                            <strong>No saved stories yet</strong>
+                            <p class="mt-1">Start with one real school, OJT, work, freelance, family business, or volunteer experience.</p>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
+        <div class="mastery-stack">
+            <section class="mastery-panel" id="mastery-weekly-review">
+                <div class="mastery-panel-head">
+                    <div>
+                        <p class="mastery-kicker">Weekly review</p>
+                        <h6>{{ $weeklyReview['label'] }}</h6>
+                    </div>
+                    <a class="mastery-mini-link" href="{{ $weeklyReview['focus_href'] }}">Focus</a>
+                </div>
+                <div class="mastery-review-grid">
+                    @foreach([
+                        ['Assessments', $weeklyReview['assessments']],
+                        ['Voice drills', $weeklyReview['voice_drills']],
+                        ['Stories saved', $weeklyReview['stories']],
+                        ['Prep done', $weeklyReview['completed_prep']],
+                    ] as [$label, $value])
+                        <div class="mastery-review-stat">
+                            <span class="mastery-review-value">{{ $value }}</span>
+                            <p>{{ $label }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                <p class="mt-2">Next focus: <strong style="color:var(--mastery-shell-title,var(--tx));">{{ $weeklyReview['focus'] }}</strong></p>
+            </section>
+
+            <section class="mastery-panel" id="mastery-coach-shortcuts">
+                <div class="mastery-panel-head">
+                    <div>
+                        <p class="mastery-kicker">Taglish coach</p>
+                        <h6>Quick coach shortcuts</h6>
+                    </div>
+                    <a class="mastery-mini-link" href="{{ route('user.coach') }}">Open</a>
+                </div>
+                <div class="mastery-shortcut-grid">
+                    @foreach($coachShortcuts as $shortcut)
+                        <a class="mastery-shortcut" href="{{ route('user.coach', ['ask' => $shortcut['prompt']]) }}">
+                            <span class="mastery-row-icon" aria-hidden="true">
+                                <i class="fa-solid {{ $shortcut['icon'] }}"></i>
+                            </span>
+                            <span>{{ $shortcut['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="mastery-section-grid">
+        <section class="mastery-panel" id="mastery-checklist">
+            <div class="mastery-panel-head">
+                <div>
+                    <p class="mastery-kicker">Interview readiness</p>
+                    <h6>Philippines prep checklist</h6>
+                </div>
+                <span class="mastery-score-chip">{{ $checklistItems->whereNotNull('completed_at')->count() }}/{{ $checklistItems->count() }}</span>
+            </div>
+            <div class="mastery-list">
+                @foreach($checklistItems as $item)
+                    <form method="POST" action="{{ route('user.mastery.checklist.toggle', $item) }}" class="mastery-check-row {{ $item->completed_at ? 'done' : '' }}">
+                        @csrf
+                        <button class="mastery-check-button" type="submit" aria-label="Toggle {{ $item->title }}">
+                            <i class="{{ $item->completed_at ? 'fa-solid fa-check' : 'fa-regular fa-circle' }}"></i>
+                        </button>
+                        <div>
+                            <strong class="mastery-row-title">{{ $item->title }}</strong>
+                            <p>{{ $item->task }}</p>
+                        </div>
+                    </form>
+                @endforeach
+            </div>
+        </section>
+
+        <section class="mastery-panel" id="mastery-badges">
+            <div class="mastery-panel-head">
+                <div>
+                    <p class="mastery-kicker">Personal best badges</p>
+                    <h6>Private milestones</h6>
+                </div>
+                <span class="mastery-score-chip">{{ collect($masteryBadges)->where('earned', true)->count() }}/{{ count($masteryBadges) }}</span>
+            </div>
+            <div class="mastery-badge-grid">
+                @foreach($masteryBadges as $badge)
+                    <div class="mastery-badge-item {{ $badge['earned'] ? 'earned' : '' }}">
+                        <span class="mastery-badge-icon" aria-hidden="true">
+                            <i class="fa-solid {{ $badge['icon'] }}"></i>
+                        </span>
+                        <div>
+                            <strong class="mastery-row-title">{{ $badge['label'] }}</strong>
+                            <p>{{ $badge['earned'] ? 'Unlocked' : 'Keep practicing' }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </section>
+    </div>
+
     <div class="mastery-info-card">
         <div>
             <div class="mastery-info-heading">

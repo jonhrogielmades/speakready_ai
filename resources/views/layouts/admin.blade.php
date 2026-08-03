@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=26') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=27') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -84,6 +84,7 @@
           .admin-shell .modal textarea::placeholder,
           .admin-shell .modal input::placeholder {
              color: var(--tx3) !important;
+             font-weight: 400 !important;
           }
           .admin-shell .modal .btn-close {
              opacity: .85;

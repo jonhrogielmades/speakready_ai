@@ -15,6 +15,7 @@
         .public-review-header { background:var(--sf);border-bottom:1px solid var(--bd); }
         .public-review-shell { width:min(1180px,calc(100% - 28px));margin:0 auto;padding:28px 0 56px; }
         .db-section { display:block; }
+        input::placeholder, textarea::placeholder, .form-control::placeholder { font-weight:400 !important; }
         .accordion-button:not(.collapsed) { background:rgba(59,130,246,.08);color:var(--tx); }
         .accordion-button::after { filter:none; }
         @media (prefers-color-scheme: dark) { .accordion-button::after { filter:invert(1); } }

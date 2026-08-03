@@ -2316,8 +2316,11 @@ a {
   border-color: var(--pur) !important;
   box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25) !important;
 }
+input::placeholder,
+textarea::placeholder,
 .form-control::placeholder {
   color: var(--tx3) !important;
+  font-weight: 400 !important;
 }
 
 /* ======================== SPEAKREADY PROFESSIONAL UI POLISH ======================== */
@@ -2519,10 +2522,15 @@ textarea:focus-visible,
   background: var(--sf) !important;
 }
 
+input::placeholder,
+textarea::placeholder,
 .oinp::placeholder,
 .form-control::placeholder,
+.form-select::placeholder,
+.tracker-field::placeholder,
 .chat-textarea::placeholder {
   color: var(--tx3) !important;
+  font-weight: 400 !important;
 }
 
 .db-main {

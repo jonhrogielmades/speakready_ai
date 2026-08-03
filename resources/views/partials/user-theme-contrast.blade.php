@@ -173,6 +173,7 @@
    body.user-mobile-shell #mob-content #userAppContent :is(input, textarea, .form-control, .oinp, .tracker-field)::placeholder {
       color: var(--sr-user-readable-muted) !important;
       -webkit-text-fill-color: var(--sr-user-readable-muted) !important;
+      font-weight: 400 !important;
       opacity: 1 !important;
    }
 

@@ -931,6 +931,7 @@
     }
     #panel-basic.setup-details-card .oinp::placeholder {
         color: #64748b;
+        font-weight: 400 !important;
     }
     #panel-basic.setup-details-card .desc-text {
         color: #64748b;
@@ -1359,6 +1360,7 @@
     }
     #sec-interview-setup .oinp::placeholder {
         color: var(--setup-text-soft) !important;
+        font-weight: 400 !important;
         opacity: 1;
         -webkit-text-fill-color: var(--setup-text-soft);
     }
@@ -2767,8 +2769,8 @@
         }
 
         #sec-interview-setup.setup-step-mode .col-lg-4 > div[style*="sticky"] {
-            position: sticky !important;
-            top: 92px !important;
+            position: static !important;
+            top: auto !important;
         }
 
         .setup-stepper {
@@ -4137,6 +4139,7 @@
 
         html body #sec-interview-setup#sec-interview-setup :is(.oinp, input.oinp, textarea.oinp)::placeholder {
             color: var(--setup-pro-muted) !important;
+            font-weight: 400 !important;
             -webkit-text-fill-color: var(--setup-pro-muted) !important;
             opacity: 0.86 !important;
         }
@@ -4500,8 +4503,8 @@
         }
 
         html body #sec-interview-setup #panel-summary {
-            position: sticky !important;
-            top: 12px !important;
+            position: static !important;
+            top: auto !important;
         }
 
         html body #sec-interview-setup #panel-summary .summary-row {
@@ -4780,6 +4783,77 @@
         }
     }
 
+    /* Final icon contrast guard for day and night themes. */
+    html body #sec-interview-setup#sec-interview-setup :is(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon,
+        #panel-summary h5 i
+    ) {
+        background: linear-gradient(135deg, #dbeafe, #7dd3fc) !important;
+        border: 1px solid rgba(96, 165, 250, 0.62) !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22) !important;
+        opacity: 1 !important;
+    }
+
+    html body #sec-interview-setup#sec-interview-setup :is(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon,
+        #panel-summary h5 i
+    ) :is(i, svg),
+    html body #sec-interview-setup#sec-interview-setup :is(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon,
+        #panel-summary h5 i
+    ) :is(i, svg)::before,
+    html body #sec-interview-setup#sec-interview-setup :is(
+        .setup-details-icon,
+        .setup-card-label-icon,
+        .setup-calibrated-icon,
+        .setup-structure-head-icon,
+        .setup-inclusive-head-icon,
+        .assistance-head-icon,
+        .response-head-icon,
+        .structure-difficulty-icon,
+        .assistance-question-icon,
+        .assistance-context-icon,
+        .summary-icon,
+        #panel-summary h5 i
+    ) :is(i, svg)::after {
+        color: #0f172a !important;
+        fill: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        opacity: 1 !important;
+    }
+
     @media (max-width: 991px) {
         html body #sec-interview-setup#sec-interview-setup .setup-hero .setup-hero-title {
             color: #ffffff !important;
@@ -4803,6 +4877,45 @@
     #sec-interview-setup.setup-tutorial-mode .setup-stepper-actions {
         opacity: 0.58;
         pointer-events: none;
+    }
+
+    /* Keep Interview Setup on a single page scroll path. */
+    body.user-desktop-shell #userAppContent:has(#sec-interview-setup),
+    body.user-mobile-shell #mob-content:has(#sec-interview-setup),
+    body.user-mobile-shell #userAppContent:has(#sec-interview-setup),
+    #sec-interview-setup,
+    #sec-interview-setup #setupForm,
+    #sec-interview-setup #setup-left-col,
+    #sec-interview-setup .col-lg-4,
+    #sec-interview-setup .setup-panel,
+    #sec-interview-setup #panel-summary {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overflow-y: visible !important;
+    }
+
+    body.user-mobile-shell #mob-content:has(#sec-interview-setup) {
+        box-sizing: border-box !important;
+        min-height: 100dvh !important;
+    }
+
+    #sec-interview-setup {
+        overflow-x: clip !important;
+    }
+
+    html body #dashboard #userAppContent #sec-interview-setup .setup-summary-wrap,
+    html body #dashboard #userAppContent #sec-interview-setup #panel-summary,
+    html body #mob-content #userAppContent #sec-interview-setup .setup-summary-wrap,
+    html body #mob-content #userAppContent #sec-interview-setup #panel-summary,
+    html body #sec-interview-setup .setup-summary-wrap,
+    html body #sec-interview-setup #panel-summary {
+        position: static !important;
+        top: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overflow-y: visible !important;
     }
 </style>
 
@@ -5159,7 +5272,7 @@
 
             <!-- Right Column: Live Summary -->
             <div class="col-lg-4 animate-fade-up delay-200">
-                <div style="position:sticky;top:20px;">
+                <div class="setup-summary-wrap">
                     <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%); border:1px solid rgba(59,130,246,0.25); box-shadow: 0 15px 35px rgba(59,130,246,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
                         <h5 style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
                         
@@ -5516,8 +5629,137 @@
 </script>
 
 @push('scripts')
+<style id="interview-setup-scroll-fix">
+    html.interview-setup-page-root,
+    body.interview-setup-page {
+        overflow-x: hidden !important;
+    }
+
+    body.interview-setup-page #mob-content {
+        box-sizing: border-box !important;
+        min-height: 100dvh !important;
+    }
+
+    body.interview-setup-page #userAppContent,
+    body.interview-setup-page #mob-content,
+    body.interview-setup-page #mob-content > #userAppContent,
+    body.interview-setup-page #sec-interview-setup,
+    body.interview-setup-page #sec-interview-setup #setupForm,
+    body.interview-setup-page #sec-interview-setup #setup-left-col,
+    body.interview-setup-page #sec-interview-setup .col-lg-4,
+    body.interview-setup-page #sec-interview-setup .setup-summary-wrap,
+    body.interview-setup-page #sec-interview-setup .setup-panel,
+    body.interview-setup-page #sec-interview-setup #panel-summary {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overflow-y: visible !important;
+        overscroll-behavior: auto !important;
+    }
+
+    body.interview-setup-page #sec-interview-setup {
+        overflow-x: clip !important;
+    }
+
+    body.interview-setup-page #sec-interview-setup .setup-summary-wrap,
+    body.interview-setup-page #sec-interview-setup #panel-summary,
+    body.interview-setup-page #sec-interview-setup .col-lg-4 > div {
+        position: static !important;
+        top: auto !important;
+    }
+
+    body.interview-setup-page #dashboard .db-nav,
+    html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+
+    body.interview-setup-page #dashboard .db-nav::-webkit-scrollbar,
+    html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none !important;
+    }
+</style>
 <script>
     (function() {
+    function installInterviewSetupScrollFix() {
+        const css = `
+            html.interview-setup-page-root,
+            body.interview-setup-page {
+                overflow-x: hidden !important;
+            }
+
+            body.interview-setup-page #mob-content {
+                box-sizing: border-box !important;
+                min-height: 100dvh !important;
+            }
+
+            body.interview-setup-page #userAppContent,
+            body.interview-setup-page #mob-content,
+            body.interview-setup-page #mob-content > #userAppContent,
+            body.interview-setup-page #sec-interview-setup,
+            body.interview-setup-page #sec-interview-setup #setupForm,
+            body.interview-setup-page #sec-interview-setup #setup-left-col,
+            body.interview-setup-page #sec-interview-setup .col-lg-4,
+            body.interview-setup-page #sec-interview-setup .setup-summary-wrap,
+            body.interview-setup-page #sec-interview-setup .setup-panel,
+            body.interview-setup-page #sec-interview-setup #panel-summary {
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                overflow-y: visible !important;
+                overscroll-behavior: auto !important;
+            }
+
+            body.interview-setup-page #sec-interview-setup {
+                overflow-x: clip !important;
+            }
+
+            body.interview-setup-page #sec-interview-setup .setup-summary-wrap,
+            body.interview-setup-page #sec-interview-setup #panel-summary,
+            body.interview-setup-page #sec-interview-setup .col-lg-4 > div {
+                position: static !important;
+                top: auto !important;
+            }
+
+            body.interview-setup-page #dashboard .db-nav,
+            html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+            }
+
+            body.interview-setup-page #dashboard .db-nav::-webkit-scrollbar,
+            html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav::-webkit-scrollbar {
+                width: 0 !important;
+                height: 0 !important;
+                display: none !important;
+            }
+        `;
+
+        let style = document.getElementById('interview-setup-scroll-fix');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'interview-setup-scroll-fix';
+        }
+        if (style.parentNode !== document.head) document.head.appendChild(style);
+        style.textContent = css;
+
+        const syncPageClass = () => {
+            const active = Boolean(document.getElementById('sec-interview-setup'));
+            document.documentElement.classList.toggle('interview-setup-page-root', active);
+            document.body.classList.toggle('interview-setup-page', active);
+        };
+
+        syncPageClass();
+        window.__interviewSetupScrollObserver?.disconnect?.();
+        const target = document.querySelector('[data-user-ajax-content]') || document.body;
+        window.__interviewSetupScrollObserver = new MutationObserver(syncPageClass);
+        window.__interviewSetupScrollObserver.observe(target, { childList: true, subtree: true });
+    }
+
+    installInterviewSetupScrollFix();
+
     function initInterviewSetupTour() {
         if (typeof window.createSpeakReadyTour !== 'function') return;
 

@@ -118,7 +118,7 @@ class QuestionDatasetProvider
             'ph_bpo_communication' => [
                 'key' => 'ph_bpo_communication',
                 'name' => 'PH BPO and Communication',
-                'category' => 'Communication',
+                'category' => 'BPO / Customer Support',
                 'country' => 'Philippines',
                 'source_type' => 'philippines_competency_source',
                 'description' => 'Communication and customer-contact prompts grounded in Philippine BPO interview guidance and TESDA competency standards.',

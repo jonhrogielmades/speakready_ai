@@ -843,6 +843,8 @@
         var readyListeners = [];
         var stackTemplate = document.createElement('template');
         stackTemplate.innerHTML = extractPageScriptHtml(html);
+        appendRuntimePageStyles(Array.from(stackTemplate.content.querySelectorAll('style, link[rel="stylesheet"]')));
+
         var scripts = []
             .concat(contentScripts || [])
             .concat(Array.from(stackTemplate.content.querySelectorAll('script')));
@@ -860,6 +862,14 @@
         }
 
         runDeferredReadyListeners(readyListeners);
+    }
+
+    function appendRuntimePageStyles(styles) {
+        styles.forEach(function (style) {
+            var replacement = style.cloneNode(true);
+            replacement.dataset.userPageStyleRuntime = 'true';
+            document.head.appendChild(replacement);
+        });
     }
 
     function appendRuntimePageScript(script) {
@@ -1184,8 +1194,8 @@
     }
 
     function removeRuntimePageScripts() {
-        document.querySelectorAll('script[data-user-page-script-runtime]').forEach(function (script) {
-            script.remove();
+        document.querySelectorAll('script[data-user-page-script-runtime], style[data-user-page-style-runtime], link[data-user-page-style-runtime]').forEach(function (element) {
+            element.remove();
         });
     }
 

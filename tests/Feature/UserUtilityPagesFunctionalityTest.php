@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
+use App\Models\InterviewSession;
 use App\Models\LearningModule;
+use App\Models\PracticePlanItem;
+use App\Models\Score;
 use App\Models\User;
+use App\Models\VoiceSession;
 use App\Notifications\UserActivityNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -158,5 +163,150 @@ class UserUtilityPagesFunctionalityTest extends TestCase
             ->assertSee('category=Interview%20Skills', false)
             ->assertSee('search=STAR', false)
             ->assertViewHas('modules', fn ($modules) => $modules->total() === 13);
+    }
+
+    public function test_personal_mastery_story_bank_and_checklist_actions_work_for_current_user(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->get(route('user.leaderboard'))
+            ->assertOk()
+            ->assertSee('STAR answer bank')
+            ->assertSee('Philippines prep checklist');
+
+        $checkItem = PracticePlanItem::where('user_id', $user->id)
+            ->where('type', 'mastery_checklist')
+            ->where('title', 'Resume is ready')
+            ->firstOrFail();
+
+        $this->actingAs($user)
+            ->post(route('user.mastery.checklist.toggle', $checkItem))
+            ->assertRedirect(route('user.leaderboard').'#mastery-checklist');
+
+        $this->assertNotNull($checkItem->fresh()->completed_at);
+
+        $this->actingAs($user)
+            ->post(route('user.mastery.stories.store'), [
+                'track' => 'bpo',
+                'question' => 'Tell me about a difficult customer.',
+                'situation' => 'A customer was upset about a delayed update.',
+                'story_task' => 'I needed to explain the delay clearly.',
+                'action' => 'I acknowledged the concern and gave a concrete next step.',
+                'result' => 'The customer agreed to wait and the issue was resolved.',
+            ])
+            ->assertRedirect(route('user.leaderboard').'#mastery-story-bank');
+
+        $story = PracticePlanItem::where('user_id', $user->id)
+            ->where('type', 'star_story')
+            ->firstOrFail();
+
+        $this->assertSame('bpo', $story->metadata['track']);
+        $this->assertStringContainsString('Action:', $story->task);
+
+        $otherStory = PracticePlanItem::create([
+            'user_id' => $otherUser->id,
+            'type' => 'star_story',
+            'title' => 'Other candidate story',
+            'task' => 'Private story',
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('user.mastery.stories.destroy', $otherStory))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->delete(route('user.mastery.stories.destroy', $story))
+            ->assertRedirect(route('user.leaderboard').'#mastery-story-bank');
+
+        $this->assertDatabaseMissing('practice_plan_items', ['id' => $story->id]);
+        $this->assertDatabaseHas('practice_plan_items', ['id' => $otherStory->id]);
+    }
+
+    public function test_personal_mastery_tracks_and_weekly_review_use_complete_current_user_data(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = Category::create([
+            'title' => 'Customer Service',
+            'description' => 'BPO support interview practice',
+            'status' => 'active',
+            'type' => 'core',
+        ]);
+
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'BPO Customer Service Representative',
+            'num_questions' => 1,
+            'coach_focus_mode' => 'balanced',
+            'response_mode' => 'text',
+            'status' => 'completed',
+            'assessment_mode' => 'assessment',
+            'score_eligible' => true,
+        ]);
+
+        Score::create([
+            'interview_session_id' => $session->id,
+            'score_version' => 2,
+            'assessment_mode' => 'assessment',
+            'readiness_band' => 'Ready for Simulation',
+            'overall_readiness_score' => 88,
+            'clarity_score' => 84,
+            'relevance_score' => 86,
+            'grammar_score' => 82,
+            'professionalism_score' => 90,
+            'confidence_score' => 81,
+            'delivery_stability_score' => 83,
+            'star_method_score' => 79,
+            'job_evidence_match_score' => 78,
+            'body_language_included' => false,
+        ]);
+
+        for ($index = 0; $index < 13; $index++) {
+            VoiceSession::create([
+                'user_id' => $user->id,
+                'category' => 'Customer Service',
+                'prompt' => 'Handle a frustrated customer.',
+                'transcript' => 'I would acknowledge the concern and explain the next action.',
+                'speaking_pace' => 130,
+                'clarity_score' => 82,
+                'confidence_score' => 80,
+                'filler_words' => 1,
+                'duration_seconds' => 30,
+                'wpm' => 130,
+            ]);
+        }
+
+        for ($index = 0; $index < 9; $index++) {
+            PracticePlanItem::create([
+                'user_id' => $user->id,
+                'type' => 'star_story',
+                'title' => "STAR Story {$index}",
+                'task' => 'Action: handled the concern.',
+                'metadata' => ['track' => 'bpo', 'action' => 'handled the concern'],
+            ]);
+        }
+
+        PracticePlanItem::create([
+            'user_id' => $otherUser->id,
+            'type' => 'star_story',
+            'title' => 'Other user story',
+            'task' => 'Private evidence',
+        ]);
+
+        $content = $this->actingAs($user)
+            ->get(route('user.leaderboard'))
+            ->assertOk()
+            ->assertSee('BPO / Customer Service')
+            ->assertSee('88%')
+            ->assertDontSee('Other user story')
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('/<span class="mastery-review-value">13<\/span>\s*<p>Voice drills<\/p>/', $content);
+        $this->assertMatchesRegularExpression('/<span class="mastery-review-value">9<\/span>\s*<p>Stories saved<\/p>/', $content);
+        $this->assertStringContainsString('<span class="mastery-score-chip">9</span>', $content);
     }
 }

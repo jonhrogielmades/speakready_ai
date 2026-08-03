@@ -645,6 +645,7 @@
     html body #sec-learning-game-session #sessionNotes::placeholder {
         color: var(--game-pro-muted) !important;
         -webkit-text-fill-color: var(--game-pro-muted) !important;
+        font-weight: 400 !important;
         opacity: 0.78 !important;
     }
 

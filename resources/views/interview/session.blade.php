@@ -26,7 +26,25 @@
         border-color: rgba(96, 165, 250, 0.34);
         box-shadow: var(--shadow-card, 0 18px 45px rgba(0, 0, 0, 0.18));
     }
-    #sec-interview-session { --session-gap: 20px; }
+    #sec-interview-session {
+        --session-gap: 20px;
+        --question-caption-bg: transparent;
+        --question-caption-border: transparent;
+        --question-caption-color: #ffffff;
+        --question-caption-shadow: none;
+        --question-caption-text-shadow: 0 2px 6px rgba(0, 0, 0, 0.92);
+        --question-caption-active-color: #fde047;
+    }
+    html[data-theme="dark"] #sec-interview-session,
+    :root:not(.lm) #sec-interview-session,
+    .dm #sec-interview-session {
+        --question-caption-bg: transparent;
+        --question-caption-border: transparent;
+        --question-caption-color: #ffffff;
+        --question-caption-shadow: none;
+        --question-caption-text-shadow: 0 2px 6px rgba(0, 0, 0, 0.92);
+        --question-caption-active-color: #fde047;
+    }
     #workspaceRow {
         --bs-gutter-x: var(--session-gap);
         --bs-gutter-y: var(--session-gap);
@@ -85,14 +103,21 @@
     #chatTranscriptContainer:empty {
         display: none !important;
     }
+    #chatTranscriptContainer > div {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
     .interview-meta-line { flex-wrap: wrap; }
     .panel-title { font-weight:800;margin-bottom:16px;display:flex;align-items:center;font-size:1rem;color:var(--tx); letter-spacing: 0; }
     .response-title-actions {
         margin-left: auto;
         display: inline-flex;
         align-items: center;
+        justify-content: flex-end;
         gap: 8px;
         flex: 0 0 auto;
+        justify-self: end;
     }
     .response-fullscreen-toggle {
         width: 34px;
@@ -277,34 +302,50 @@
         pointer-events: none;
     }
     .question-caption-line {
-        min-height: 2.45em;
+        min-height: 0;
         max-width: min(88%, 640px);
-        padding: 6px 12px;
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.72);
-        color: #fff;
+        padding: 0 2px;
+        border: 0;
+        border-radius: 0;
+        background: var(--question-caption-bg);
+        color: var(--question-caption-color);
         font-size: clamp(0.72rem, 1.2vw, 0.88rem);
         font-weight: 800;
         line-height: 1.35;
         text-align: center;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.75);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+        text-shadow: var(--question-caption-text-shadow);
+        box-shadow: var(--question-caption-shadow);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow-wrap: anywhere;
         opacity: 0;
+        visibility: hidden;
         transform: translateY(8px);
-        transition: opacity 160ms ease, transform 160ms ease;
+        transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
     }
-    .question-caption-line.has-caption {
+    .question-caption-line.has-caption.is-speaking {
         opacity: 1;
+        visibility: visible;
         transform: translateY(0);
     }
     .question-caption-word {
         display: inline-block;
         margin: 0 0.08em;
-        opacity: 0.72;
+        color: #ffffff;
+        -webkit-text-fill-color: #ffffff;
+        opacity: 1;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.9);
+        transition: background-color 120ms ease, color 120ms ease, opacity 120ms ease, transform 120ms ease;
     }
     .question-caption-word.active {
-        color: #fde68a;
+        color: var(--question-caption-active-color);
+        font-weight: 950;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 3px;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 12px rgba(255, 255, 255, 0.5);
         opacity: 1;
+        transform: translateY(-1px);
     }
     .ai-question-card {
         margin-top: calc(var(--session-gap) * -0.45);
@@ -325,7 +366,7 @@
     }
     .interviewer-panel-badge {
         position: absolute;
-        top: calc(50% - 88px);
+        top: 15px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 55;
@@ -642,7 +683,9 @@
             line-height: 1.32;
         }
         .interviewer-panel-badge {
-            top: calc(50% - 86px);
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
             max-width: calc(100% - 28px);
             font-size: 0.66rem;
         }
@@ -754,7 +797,8 @@
         }
         .response-title-actions {
             gap: 6px;
-            margin-left: 8px;
+            margin-left: auto;
+            justify-self: end;
         }
         .response-fullscreen-toggle {
             width: 32px;
@@ -1281,8 +1325,9 @@
         }
         #sec-interview-session .interviewer-panel-badge {
             top: 10px !important;
-            left: 52px !important;
-            max-width: calc(100% - 128px);
+            left: 50% !important;
+            max-width: calc(100% - 144px);
+            transform: translateX(-50%) !important;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -1394,6 +1439,8 @@
         }
         #sec-interview-session .response-title-actions {
             gap: 6px !important;
+            justify-self: end !important;
+            margin-left: auto !important;
         }
         #sec-interview-session .response-send-answer-btn {
             min-height: 34px !important;
@@ -1581,9 +1628,9 @@
 
         html body #sec-interview-session .interviewer-panel-badge {
             top: 12px !important;
-            left: 54px !important;
+            left: 50% !important;
             max-width: calc(100% - 132px) !important;
-            transform: none !important;
+            transform: translateX(-50%) !important;
             padding: 5px 8px !important;
             border: 1px solid rgba(255, 255, 255, 0.22) !important;
             border-radius: 999px !important;
@@ -1609,20 +1656,21 @@
             max-width: 100% !important;
             min-height: 32px !important;
             padding: 7px 9px !important;
-            border: 1px solid rgba(255, 255, 255, 0.16) !important;
+            border: 1px solid var(--question-caption-border) !important;
             border-radius: var(--session-pro-radius) !important;
-            background: rgba(15, 23, 42, 0.78) !important;
-            color: #f8fafc !important;
+            background: var(--question-caption-bg) !important;
+            color: var(--question-caption-color) !important;
             font-size: 0.68rem !important;
             line-height: 1.3 !important;
             font-weight: 750 !important;
-            box-shadow: none !important;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--question-caption-shadow) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
 
         html body #sec-interview-session .question-caption-word.active {
-            color: #fde68a !important;
+            color: var(--question-caption-active-color) !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 12px rgba(255, 255, 255, 0.5) !important;
         }
 
         html body #sec-interview-session .ai-question-card {
@@ -1809,11 +1857,12 @@
         }
 
         html body #sec-interview-session .response-title-actions {
-            display: inline-grid !important;
-            grid-template-columns: minmax(88px, auto) 34px !important;
+            display: inline-flex !important;
             align-items: center !important;
+            justify-content: flex-end !important;
+            justify-self: end !important;
             gap: 6px !important;
-            margin-left: 0 !important;
+            margin-left: auto !important;
         }
 
         html body #sec-interview-session .response-send-answer-btn {
@@ -1848,7 +1897,9 @@
         }
 
         html body #sec-interview-session #chatTranscriptContainer > div {
-            max-width: 94% !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
             padding: 8px 10px !important;
             border-radius: var(--session-pro-radius) !important;
             color: var(--session-pro-title) !important;
@@ -1887,6 +1938,7 @@
         html body #sec-interview-session #answerTextarea::placeholder {
             color: var(--session-pro-muted) !important;
             -webkit-text-fill-color: var(--session-pro-muted) !important;
+            font-weight: 400 !important;
             opacity: 0.78 !important;
         }
 
@@ -2031,8 +2083,9 @@
         }
 
         html body #sec-interview-session .interviewer-panel-badge {
-            left: 50px !important;
-            max-width: calc(100% - 116px) !important;
+            left: 50% !important;
+            max-width: calc(100% - 124px) !important;
+            transform: translateX(-50%) !important;
             font-size: 0.52rem !important;
         }
 
@@ -2042,8 +2095,11 @@
         }
 
         html body #sec-interview-session .response-title-actions {
-            grid-template-columns: minmax(80px, auto) 32px !important;
+            display: inline-flex !important;
+            justify-content: flex-end !important;
+            justify-self: end !important;
             gap: 5px !important;
+            margin-left: auto !important;
         }
 
         html body #sec-interview-session .response-send-answer-btn {
@@ -2080,6 +2136,117 @@
         html body #sec-interview-session .response-send-answer-btn i {
             display: none !important;
         }
+    }
+
+    @media (max-width: 767px) {
+        html body #sec-interview-session #interviewControls {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
+            padding: 6px !important;
+            overflow: hidden !important;
+        }
+
+        html body #sec-interview-session #interviewControls > div:first-child,
+        html body #sec-interview-session #interviewControls > div:nth-child(2) {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            width: auto !important;
+            min-width: 0 !important;
+            gap: 4px !important;
+        }
+
+        html body #sec-interview-session #interviewControls > div:first-child {
+            flex: 1 1 auto !important;
+        }
+
+        html body #sec-interview-session #interviewControls > div:nth-child(2) {
+            flex: 0 0 auto !important;
+            justify-content: flex-end !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn {
+            min-width: 0 !important;
+            min-height: 30px !important;
+            height: 30px !important;
+            padding: 5px 7px !important;
+            font-size: 0.56rem !important;
+            line-height: 1 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #sec-interview-session #interviewControls .btn i {
+            margin-right: 3px !important;
+            font-size: 0.58rem !important;
+        }
+
+        html body #sec-interview-session #interviewControls > div:first-child .btn {
+            flex: 1 1 0 !important;
+            width: auto !important;
+        }
+
+        html body #sec-interview-session #recordingTimer {
+            flex: 0 0 auto !important;
+            min-width: 40px !important;
+            min-height: 30px !important;
+            padding: 0 5px !important;
+            font-size: 0.56rem !important;
+        }
+
+        html body #sec-interview-session #voiceControls {
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }
+
+        html body #sec-interview-session #voiceControls .d-flex.gap-2 {
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: 4px !important;
+            justify-content: flex-end !important;
+        }
+
+        html body #sec-interview-session #voiceControls .btn {
+            flex: 0 0 30px !important;
+            width: 30px !important;
+            min-width: 30px !important;
+            height: 30px !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-interview-session #voiceControls .btn i {
+            margin: 0 !important;
+        }
+
+        html body #sec-interview-session #holdToTalkBtn {
+            width: auto !important;
+            min-width: 44px !important;
+            padding: 0 8px !important;
+        }
+
+        html body #sec-interview-session #transcriptionStatus:not(:empty) {
+            display: none !important;
+        }
+    }
+
+    html body #sec-interview-session .question-caption-line {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body #sec-interview-session .question-caption-word:not(.active) {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    html body #sec-interview-session .question-caption-word.active {
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(255, 255, 255, 0.42) !important;
     }
 
     @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
@@ -2304,7 +2471,10 @@
         html body #sec-interview-session .response-title-actions {
             display: flex !important;
             align-items: center !important;
+            justify-content: flex-end !important;
+            justify-self: end !important;
             gap: 6px !important;
+            margin-left: auto !important;
         }
 
         html body #sec-interview-session .response-send-answer-btn {
@@ -2398,6 +2568,42 @@
         html body #sec-interview-session #answerTextarea {
             min-height: 132px !important;
         }
+    }
+
+    html body #sec-interview-session .question-caption-line.has-caption.is-speaking,
+    html body #sec-interview-session .question-caption-line.has-caption.is-speaking *:not(.active),
+    html body #sec-interview-session .question-caption-word:not(.active) {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.98), 0 0 4px rgba(0, 0, 0, 0.95) !important;
+        filter: none !important;
+        mix-blend-mode: normal !important;
+    }
+
+    html body #sec-interview-session .question-caption-word.active {
+        color: #fde047 !important;
+        -webkit-text-fill-color: #fde047 !important;
+        opacity: 1 !important;
+        filter: none !important;
+        mix-blend-mode: normal !important;
+    }
+
+    html body #sec-interview-session .question-caption-line.has-caption.is-speaking {
+        min-height: 0 !important;
+        padding: 0 2px !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    html body #sec-interview-session .question-caption-line:not(.is-speaking) {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        background: transparent !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
+        transform: translateY(8px) !important;
     }
 </style>
 @include('partials.page-hero-styles')
@@ -2565,9 +2771,6 @@
                             @endif
                             <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()">
                                 Send Answer <i class="fa-solid fa-paper-plane"></i>
-                            </button>
-                            <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Enter fullscreen" title="Enter fullscreen">
-                                <i class="fa-solid fa-expand"></i>
                             </button>
                         </div>
                     </div>
@@ -3821,24 +4024,48 @@
                 if (!caption) return;
 
                 if (!words.length || activeIndex < 0) {
-                    caption.classList.remove('has-caption');
+                    caption.classList.remove('has-caption', 'is-speaking', 'is-static');
                     caption.innerHTML = '';
                     return;
                 }
 
                 const safeIndex = Math.min(activeIndex, words.length - 1);
                 const windowSize = 7;
-                const start = Math.max(0, Math.min(safeIndex - Math.floor(windowSize / 2), Math.max(0, words.length - windowSize)));
+                const start = Math.max(0, Math.min(
+                    safeIndex - Math.floor(windowSize / 2),
+                    Math.max(0, words.length - windowSize)
+                ));
                 const visibleWords = words.slice(start, start + windowSize);
 
                 caption.innerHTML = '';
                 visibleWords.forEach((word, offset) => {
                     const span = document.createElement('span');
-                    span.className = 'question-caption-word' + (start + offset === safeIndex ? ' active' : '');
+                    const index = start + offset;
+                    const isActiveWord = index === safeIndex;
+                    span.className = 'question-caption-word' + (isActiveWord ? ' active' : '');
+                    span.style.setProperty('opacity', '1', 'important');
+                    if (isActiveWord) {
+                        span.setAttribute('aria-current', 'true');
+                        span.style.setProperty('color', '#fde047', 'important');
+                        span.style.setProperty('-webkit-text-fill-color', '#fde047', 'important');
+                    } else {
+                        span.style.setProperty('color', '#ffffff', 'important');
+                        span.style.setProperty('-webkit-text-fill-color', '#ffffff', 'important');
+                        span.style.setProperty('text-shadow', '0 2px 6px rgba(0, 0, 0, 0.98), 0 0 4px rgba(0, 0, 0, 0.95)', 'important');
+                    }
                     span.textContent = word.text;
                     caption.appendChild(span);
                 });
-                caption.classList.add('has-caption');
+                caption.classList.remove('is-static');
+                caption.classList.add('has-caption', 'is-speaking');
+            }
+
+            function clearQuestionCaption() {
+                const caption = document.getElementById('questionCaptionText');
+                if (!caption) return;
+
+                caption.classList.remove('has-caption', 'is-speaking', 'is-static');
+                caption.innerHTML = '';
             }
 
             function wordIndexFromChar(words, charIndex) {
@@ -3883,7 +4110,7 @@
                 document.getElementById('aiQuestionText').innerText = text;
 
                 const words = captionWordsFor(text);
-                let currentWordIdx = -1;
+                let currentWordIdx = words.length ? 0 : -1;
                 let boundaryFired = false;
                 renderQuestionCaption(words, currentWordIdx);
 
@@ -3929,7 +4156,7 @@
                 if (visualizerInterval) clearInterval(visualizerInterval);
                 visualizerInterval = null;
                 clearCaptionInterval();
-                renderQuestionCaption([], -1);
+                clearQuestionCaption();
                 document.getElementById('aiQuestionText').innerText = text;
                 if (startTimerAfterSpeech) {
                     startQuestionTimer();
@@ -4062,7 +4289,7 @@
                     let speechUi = null;
 
                     utterance.onboundary = function(e) {
-                        if(e.name === 'word') {
+                        if(e.name === 'word' || (typeof e.charIndex === 'number' && e.charIndex >= 0)) {
                             if (speechUi) speechUi.markBoundary(e.charIndex);
 
                             currentAmplitude = 1.0;
@@ -4089,6 +4316,7 @@
                     }
                 } else {
                     document.getElementById('aiQuestionText').innerText = text;
+                    clearQuestionCaption();
                     if (startTimerAfterSpeech) startQuestionTimer();
                     if (startTimerAfterSpeech) scheduleAutoTranscriptionStart(token);
                     resolveSpeechCompletion(token);
@@ -5154,7 +5382,9 @@
                 const bubble = document.createElement('div');
                 bubble.style.padding = '8px 10px';
                 bubble.style.borderRadius = '12px';
-                bubble.style.maxWidth = '96%';
+                bubble.style.width = '100%';
+                bubble.style.maxWidth = '100%';
+                bubble.style.boxSizing = 'border-box';
                 bubble.style.lineHeight = '1.35';
                 bubble.style.fontSize = '0.76rem';
                 

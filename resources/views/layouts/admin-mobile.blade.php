@@ -18,7 +18,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=15') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=16') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
@@ -141,6 +141,7 @@
          body.admin-mobile-shell .modal textarea::placeholder,
          body.admin-mobile-shell .modal input::placeholder {
             color: var(--tx3) !important;
+            font-weight: 400 !important;
          }
          body.admin-mobile-shell .modal .btn-close {
             opacity: .85;
@@ -2062,6 +2063,7 @@
             #mob-content #sec-admin-settings .modal-content :is(.form-control, .form-select, .oinp, input, select, textarea)::placeholder {
                color: var(--tx3) !important;
                -webkit-text-fill-color: var(--tx3) !important;
+               font-weight: 400 !important;
                opacity: 1;
             }
 
@@ -2253,6 +2255,7 @@
             body.admin-mobile-shell .modal :is(.form-control, .form-select, .oinp, input, select, textarea)::placeholder {
                color: var(--tx3) !important;
                -webkit-text-fill-color: var(--tx3) !important;
+               font-weight: 400 !important;
             }
 
             body.admin-mobile-shell .modal option {

@@ -63,7 +63,7 @@
         <div>
             <a href="{{ route('admin.modules') }}" class="btn btn-sm btn-outline-secondary mb-2"><i class="fa-solid fa-arrow-left me-1"></i> Back to PH Modules</a>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Edit PH Interview Module: {{ $module->title }}</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage Philippines interview lessons, resources, and assessments.</p>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage Philippines interview action steps, resources, and assessments.</p>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-primary px-3 py-2" style="font-size:0.9rem">Status: {{ ucfirst($module->status) }}</span>
@@ -588,4 +588,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
-

@@ -74,6 +74,35 @@ class LearningModuleRecommendationTest extends TestCase
             ->assertSee('Clarity score', false);
     }
 
+    public function test_modules_page_focuses_on_action_modules_only(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category('Job Interview');
+        $this->category('BPO / Customer Support');
+        $this->category('IT/Programming');
+        LearningModule::create([
+            'title' => 'BPO Answer Basics',
+            'description' => 'Practice call center and customer support interview answers.',
+            'category' => 'BPO / Customer Support',
+            'difficulty' => 'beginner',
+            'type' => 'article',
+            'status' => 'published',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.modules.index'))
+            ->assertOk()
+            ->assertSee('Philippines Interview Modules')
+            ->assertSee('Open action modules that tell you what to prepare, write, rehearse, revise, and check before your Philippines interview.')
+            ->assertSee('BPO Answer Basics')
+            ->assertSee('Open Action Module')
+            ->assertDontSee('AI Mock Interview')
+            ->assertDontSee('PH Question Bank')
+            ->assertDontSee('Industry-Based Modules')
+            ->assertDontSee('BPO / Customer Support Mock')
+            ->assertDontSee('action="'.route('interview.start').'"', false);
+    }
+
     public function test_user_can_record_module_completion_progress(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

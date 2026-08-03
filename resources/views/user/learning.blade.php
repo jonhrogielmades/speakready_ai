@@ -381,6 +381,143 @@
         min-height: 62px;
         overflow-wrap: anywhere;
     }
+    .ai-scorecard-panel {
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        padding: 14px;
+        background: var(--bg3);
+    }
+    .ai-scorecard-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
+    }
+    .ai-scorecard-kicker {
+        font-size: 0.72rem;
+        color: var(--tx3);
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0;
+    }
+    .ai-scorecard-title {
+        font-size: 1.05rem;
+        color: var(--tx);
+        font-weight: 950;
+        line-height: 1.2;
+    }
+    .ai-scorecard-reliability {
+        min-width: 112px;
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        padding: 9px 10px;
+        background: var(--sf);
+        text-align: right;
+    }
+    .ai-scorecard-reliability span,
+    .ai-scorecard-level {
+        display: block;
+        color: var(--tx3);
+        font-size: 0.68rem;
+        font-weight: 850;
+        text-transform: uppercase;
+    }
+    .ai-scorecard-reliability strong {
+        display: block;
+        color: var(--tx);
+        font-size: 1.05rem;
+        line-height: 1.05;
+    }
+    .ai-scorecard-summary {
+        color: var(--tx2);
+        font-size: 0.9rem;
+        line-height: 1.48;
+        margin-bottom: 12px;
+    }
+    .ai-scorecard-metric {
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        padding: 11px;
+        background: var(--sf);
+        min-height: 142px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+    .ai-scorecard-metric-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .ai-scorecard-metric-name {
+        min-width: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--tx);
+        font-size: 0.8rem;
+        font-weight: 900;
+        line-height: 1.2;
+    }
+    .ai-scorecard-metric-score {
+        flex: 0 0 auto;
+        color: var(--tx);
+        font-size: 1rem;
+        font-weight: 950;
+    }
+    .ai-scorecard-meter {
+        width: 100%;
+        height: 7px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--bd);
+    }
+    .ai-scorecard-meter-fill {
+        height: 100%;
+        border-radius: inherit;
+    }
+    .ai-scorecard-note {
+        color: var(--tx2);
+        font-size: 0.76rem;
+        line-height: 1.36;
+    }
+    .ai-scorecard-actions-list {
+        display: grid;
+        gap: 7px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .ai-scorecard-actions-list li,
+    .ai-scorecard-question {
+        border: 1px solid var(--bd);
+        border-radius: 9px;
+        padding: 9px 10px;
+        background: var(--sf);
+        color: var(--tx2);
+        font-size: 0.8rem;
+        line-height: 1.38;
+    }
+    .ai-scorecard-question {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 9px;
+    }
+    .ai-scorecard-question strong,
+    .ai-scorecard-question-score {
+        color: var(--tx);
+        font-weight: 900;
+        white-space: nowrap;
+    }
+    .ai-scorecard-transparency {
+        margin-top: 12px;
+        color: var(--tx3);
+        font-size: 0.76rem;
+        line-height: 1.42;
+    }
     @media (max-width: 576px) {
         .game-result-modal .modal-dialog {
             margin: 12px;
@@ -425,6 +562,30 @@
         .game-result-breakdown-card {
             min-height: 58px;
             padding: 9px;
+        }
+        .ai-scorecard-heading {
+            display: grid;
+            gap: 9px;
+        }
+        .ai-scorecard-reliability {
+            width: 100%;
+            min-width: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            text-align: left;
+        }
+        .ai-scorecard-reliability small {
+            grid-column: 1 / -1;
+        }
+        .ai-scorecard-metric {
+            min-height: 122px;
+        }
+        .ai-scorecard-question {
+            grid-template-columns: auto minmax(0, 1fr);
+        }
+        .ai-scorecard-question-score {
+            grid-column: 2;
         }
         .game-result-actions,
         .game-result-actions .btn,
@@ -990,6 +1151,7 @@
     :root:not(.lm) #learning-games-page #tour-search input::placeholder,
     .dm #learning-games-page #tour-search input::placeholder {
         color: #94a3b8 !important;
+        font-weight: 400 !important;
     }
     :root:not(.lm) #learning-games-page .ll-nav-pill,
     .dm #learning-games-page .ll-nav-pill,
@@ -1581,6 +1743,7 @@
 
         html body #learning-games-page #tour-search input::placeholder {
             color: var(--challenge-pro-muted) !important;
+            font-weight: 400 !important;
             opacity: 1;
         }
 
@@ -3280,6 +3443,42 @@
         $scoreColor = $resultPassed ? '#34d399' : '#f59e0b';
         $nextLevel = $gameResult['next_level'] ?? null;
         $certificate = $gameResult['certificate'] ?? null;
+        $scorecard = $gameResult['ai_scorecard'] ?? data_get($gameResult, 'goal_breakdown.ai_feedback_scorecard', []);
+        $scorecardMetrics = $scorecard['metrics'] ?? [];
+        if (empty($scorecardMetrics) && ! empty($gameResult['goal_breakdown']['averages'])) {
+            foreach ($gameResult['goal_breakdown']['averages'] as $label => $value) {
+                $metricScore = max(0, min(100, (int) $value));
+                $scorecardMetrics[$label] = [
+                    'label' => \Illuminate\Support\Str::headline(str_replace('_', ' ', $label)),
+                    'score' => $metricScore,
+                    'level' => $metricScore >= 85 ? 'Strong' : ($metricScore >= 70 ? 'Competent' : ($metricScore >= 50 ? 'Needs Work' : 'Limited')),
+                    'feedback' => '',
+                ];
+            }
+        }
+        $metricOrder = ['clarity', 'relevance', 'confidence', 'grammar', 'professionalism', 'goal_coverage', 'star_method'];
+        $orderedScorecardMetrics = [];
+        foreach ($metricOrder as $metricKey) {
+            if (array_key_exists($metricKey, $scorecardMetrics)) {
+                $orderedScorecardMetrics[$metricKey] = $scorecardMetrics[$metricKey];
+            }
+        }
+        foreach ($scorecardMetrics as $metricKey => $metricData) {
+            if (! array_key_exists($metricKey, $orderedScorecardMetrics)) {
+                $orderedScorecardMetrics[$metricKey] = $metricData;
+            }
+        }
+        $metricIcons = [
+            'clarity' => 'fa-lines-leaning',
+            'relevance' => 'fa-bullseye',
+            'confidence' => 'fa-microphone-lines',
+            'grammar' => 'fa-spell-check',
+            'professionalism' => 'fa-handshake-angle',
+            'goal_coverage' => 'fa-list-check',
+            'star_method' => 'fa-star',
+        ];
+        $scorecardReliability = isset($scorecard['reliability_score']) ? max(0, min(100, (int) $scorecard['reliability_score'])) : null;
+        $questionFeedback = array_slice($scorecard['question_feedback'] ?? [], 0, 4);
     @endphp
     <div class="modal fade game-result-modal" id="gameResultModal" tabindex="-1" aria-labelledby="gameResultModalTitle" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -3372,18 +3571,83 @@
                         </div>
                     @endif
 
-                    @if(!empty($gameResult['goal_breakdown']['averages']))
-                        <div class="mb-4" style="border:1px solid var(--bd);border-radius:12px;padding:14px;background:var(--bg3);">
-                            <div style="font-weight:900;color:var(--tx);margin-bottom:10px;">Goal Score Breakdown</div>
+                    @if(!empty($orderedScorecardMetrics))
+                        <div class="mb-4 ai-scorecard-panel">
+                            <div class="ai-scorecard-heading">
+                                <div>
+                                    <div class="ai-scorecard-kicker">Goal Score Breakdown</div>
+                                    <div class="ai-scorecard-title"><i class="fa-solid fa-clipboard-check me-1 text-info"></i> AI Feedback Scorecard</div>
+                                </div>
+                                @if($scorecardReliability !== null)
+                                    <div class="ai-scorecard-reliability">
+                                        <span>Reliability</span>
+                                        <strong>{{ $scorecardReliability }}%</strong>
+                                        <small style="color:var(--tx3);font-weight:800;">{{ $scorecard['reliability_band'] ?? 'Measured' }}</small>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if(!empty($scorecard['summary']))
+                                <div class="ai-scorecard-summary">{{ $scorecard['summary'] }}</div>
+                            @endif
+
                             <div class="row g-2 game-result-breakdown-grid">
-                                @foreach($gameResult['goal_breakdown']['averages'] as $label => $value)
-                                    <div class="col-6 col-md-4">
-                                        <div class="game-result-breakdown-card">
-                                            <div style="font-size:0.72rem;color:var(--tx3);font-weight:800;text-transform:uppercase;">{{ str_replace('_', ' ', $label) }}</div>
-                                            <div style="font-size:1.05rem;color:var(--tx);font-weight:900;">{{ (int) $value }}%</div>
+                                @foreach($orderedScorecardMetrics as $metricKey => $metric)
+                                    @php
+                                        $metricScore = max(0, min(100, (int) ($metric['score'] ?? 0)));
+                                        $metricColor = $metricScore >= 85 ? '#10b981' : ($metricScore >= 70 ? '#3b82f6' : ($metricScore >= 50 ? '#f59e0b' : '#ef4444'));
+                                        $metricLabel = $metric['label'] ?? \Illuminate\Support\Str::headline(str_replace('_', ' ', $metricKey));
+                                        $metricIcon = $metricIcons[$metricKey] ?? 'fa-chart-simple';
+                                    @endphp
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="ai-scorecard-metric">
+                                            <div class="ai-scorecard-metric-top">
+                                                <div class="ai-scorecard-metric-name"><i class="fa-solid {{ $metricIcon }}" style="color:{{ $metricColor }}"></i><span>{{ $metricLabel }}</span></div>
+                                                <div class="ai-scorecard-metric-score">{{ $metricScore }}%</div>
+                                            </div>
+                                            <div class="ai-scorecard-meter" aria-hidden="true">
+                                                <div class="ai-scorecard-meter-fill" style="width:{{ $metricScore }}%;background:{{ $metricColor }};"></div>
+                                            </div>
+                                            <div class="ai-scorecard-level">{{ $metric['level'] ?? 'Measured' }}</div>
+                                            @if(!empty($metric['feedback']))
+                                                <div class="ai-scorecard-note">{{ $metric['feedback'] }}</div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
+                            </div>
+
+                            @if(!empty($scorecard['priority_actions']))
+                                <div class="mt-3">
+                                    <div style="font-weight:900;color:var(--tx);margin-bottom:8px;">Next Best Actions</div>
+                                    <ul class="ai-scorecard-actions-list">
+                                        @foreach($scorecard['priority_actions'] as $action)
+                                            <li><i class="fa-solid fa-arrow-right text-info me-1"></i>{{ $action }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            @if(!empty($questionFeedback))
+                                <div class="mt-3">
+                                    <div style="font-weight:900;color:var(--tx);margin-bottom:8px;">Question Feedback</div>
+                                    <div class="d-grid gap-2">
+                                        @foreach($questionFeedback as $item)
+                                            <div class="ai-scorecard-question">
+                                                <strong>Q{{ ((int) ($item['question_index'] ?? 0)) + 1 }}</strong>
+                                                <span>{{ $item['feedback'] ?? 'Review this answer before retrying.' }}</span>
+                                                <span class="ai-scorecard-question-score">{{ (int) ($item['score'] ?? 0) }}%</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="ai-scorecard-transparency">
+                                <i class="fa-solid fa-shield-halved me-1"></i>{{ $scorecard['evidence_policy'] ?? 'Scores are based on saved challenge answers and level goals.' }}
+                                @if(!empty($scorecard['guidance_note']))
+                                    <span>{{ $scorecard['guidance_note'] }}</span>
+                                @endif
                             </div>
                         </div>
                     @endif

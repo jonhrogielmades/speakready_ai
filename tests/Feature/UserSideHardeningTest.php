@@ -818,6 +818,40 @@ class UserSideHardeningTest extends TestCase
                         'averages' => [
                             'goal_coverage' => 60,
                             'clarity' => 70,
+                            'confidence' => 62,
+                        ],
+                        'ai_feedback_scorecard' => [
+                            'title' => 'AI Feedback Scorecard',
+                            'summary' => 'Scored 65%. Focus first on goal coverage, then retry with a clearer result.',
+                            'metrics' => [
+                                'clarity' => [
+                                    'label' => 'Clarity',
+                                    'score' => 70,
+                                    'level' => 'Competent',
+                                    'feedback' => 'Usable signal. Add one sharper proof point to lift it.',
+                                ],
+                                'confidence' => [
+                                    'label' => 'Confidence',
+                                    'score' => 62,
+                                    'level' => 'Needs Work',
+                                    'feedback' => 'Use first-person ownership and name the action or decision you took.',
+                                ],
+                            ],
+                            'priority_actions' => [
+                                'Add a measurable result before retrying.',
+                            ],
+                            'question_feedback' => [
+                                [
+                                    'question_index' => 0,
+                                    'score' => 65,
+                                    'feedback' => 'Tie the answer to a result the interviewer can verify.',
+                                ],
+                            ],
+                            'reliability_score' => 82,
+                            'reliability_band' => 'Moderate',
+                            'evidence_policy' => 'Based only on submitted challenge answers; camera estimates are excluded.',
+                            'guidance_note' => 'Use this as coaching guidance, not a guarantee of real hiring performance.',
+                            'body_language_included' => false,
                         ],
                     ],
                 ],
@@ -829,6 +863,11 @@ class UserSideHardeningTest extends TestCase
             ->assertSee('15 more points needed')
             ->assertSee('Retry Level')
             ->assertSee('Goal Score Breakdown')
+            ->assertSee('AI Feedback Scorecard')
+            ->assertSee('Reliability')
+            ->assertSee('Confidence')
+            ->assertSee('Based only on submitted challenge answers')
+            ->assertSee('Tie the answer to a result the interviewer can verify.')
             ->assertDontSee('View Feedback')
             ->assertSee('Add a stronger measurable result.');
     }

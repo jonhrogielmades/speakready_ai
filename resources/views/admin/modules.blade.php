@@ -306,7 +306,7 @@
     <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Philippines Interview Learning Modules</h4>
-            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage lessons for Philippine HR, BPO, IT, fresh graduate, scholarship, and admission interviews.</p>
+            <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage action modules for what learners need to prepare, rehearse, revise, and check before Philippine interviews.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <button class="btn px-3 py-2" style="font-size:.85rem; background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.3);" data-bs-toggle="modal" data-bs-target="#aiGenerateModuleModal">
@@ -454,7 +454,7 @@
                     </select>
 
                     <label class="olbl">Description</label>
-                    <textarea class="oinp mb-3" name="description" rows="3" placeholder="Short Philippine interview module summary"></textarea>
+                    <textarea class="oinp mb-3" name="description" rows="3" placeholder="What users will do in this Philippine interview module"></textarea>
 
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="is_featured" value="1" id="featureSwitch">
@@ -482,14 +482,14 @@
                 </div>
                 <div class="modal-body">
                     <p style="color:var(--tx3); font-size:0.9rem; margin-bottom:20px;">
-                        Enter a Philippine interview topic or prompt, and the AI will generate a complete module with chapters, category, and description.
+                        Enter a Philippine interview topic or prompt, and the AI will generate an action-focused module about what users need to prepare, rehearse, revise, and check.
                     </p>
                     <label class="olbl">Philippines Interview Topic Prompt</label>
                     <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. BPO customer service interview answers for fresh graduates." required></textarea>
                     
                     <div id="aiLoadingIndicator" style="display:none; text-align:center; padding:15px; border-radius:10px; background:rgba(59,130,246,0.1);">
                         <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size:1.5rem; margin-bottom:10px;"></i>
-                        <h6 style="color:var(--tx); margin:0;">Generating PH Interview Content...</h6>
+                        <h6 style="color:var(--tx); margin:0;">Generating PH Interview Actions...</h6>
                         <p style="color:var(--tx3); font-size:0.8rem; margin:0;">This may take up to 30 seconds.</p>
                     </div>
                 </div>
