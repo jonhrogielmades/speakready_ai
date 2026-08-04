@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\BrevoTransactionalMail;
+use Illuminate\Auth\Notifications\ResetPassword;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -59,5 +61,18 @@ class User extends Authenticatable
     public function profile()
     {
         return $this->hasOne(Profile::class);
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $brevoMailer = app(BrevoTransactionalMail::class);
+
+        if ($brevoMailer->isConfigured()) {
+            $brevoMailer->sendPasswordReset($this, $token);
+
+            return;
+        }
+
+        $this->notify(new ResetPassword($token));
     }
 }

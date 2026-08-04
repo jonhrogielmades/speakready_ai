@@ -1216,6 +1216,7 @@
          }
 
          .ui-device-bar {
+            position: relative;
             height: 33px;
             display: flex;
             align-items: center;
@@ -1243,6 +1244,25 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+         }
+
+         .ui-device-mobile .ui-device-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(238px, calc(100% - 72px));
+            max-width: calc(100% - 72px);
+            height: auto;
+            margin: 0;
+            padding: 0;
+            justify-content: center;
+            text-align: center;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            font-size: 0.62rem;
+            font-weight: 800;
+            line-height: 1.1;
          }
 
          .ui-device-dot {
@@ -1275,6 +1295,1515 @@
             opacity: 1;
             pointer-events: none;
             user-select: none;
+         }
+
+         .ui-mobile-wire {
+            --wire-bg: #f8fafc;
+            --wire-panel: #ffffff;
+            --wire-panel-soft: #f1f5f9;
+            --wire-line: #cbd5e1;
+            --wire-line-strong: #94a3b8;
+            --wire-fill: #e2e8f0;
+            --wire-text: #64748b;
+            --wire-ink: #334155;
+            --wire-chip-bg: rgba(255, 255, 255, 0.72);
+            --wire-speech-bg: rgba(255, 255, 255, 0.86);
+            --wire-grid-opacity: 0.24;
+            --wire-robot-opacity: 0.22;
+            padding: 0;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            font-size: 0.7rem;
+            line-height: 1.2;
+         }
+
+         html.lm #landing .ui-mobile-wire {
+            --wire-bg: #f8fafc;
+            --wire-panel: #ffffff;
+            --wire-panel-soft: #f1f5f9;
+            --wire-line: #cbd5e1;
+            --wire-line-strong: #94a3b8;
+            --wire-fill: #e2e8f0;
+            --wire-text: #64748b;
+            --wire-ink: #334155;
+            --wire-chip-bg: rgba(255, 255, 255, 0.72);
+            --wire-speech-bg: rgba(255, 255, 255, 0.86);
+            --wire-grid-opacity: 0.24;
+            --wire-robot-opacity: 0.22;
+         }
+
+         html:not(.lm) #landing .ui-mobile-wire {
+            --wire-bg: #101827;
+            --wire-panel: #111827;
+            --wire-panel-soft: #172033;
+            --wire-line: #334155;
+            --wire-line-strong: #7c8da6;
+            --wire-fill: #253247;
+            --wire-text: #a7b4c8;
+            --wire-ink: #e5edf7;
+            --wire-chip-bg: rgba(15, 23, 42, 0.72);
+            --wire-speech-bg: rgba(23, 32, 51, 0.92);
+            --wire-grid-opacity: 0.34;
+            --wire-robot-opacity: 0.32;
+         }
+
+         .ui-mobile-wire *,
+         .ui-mobile-wire *::before,
+         .ui-mobile-wire *::after {
+            box-sizing: border-box;
+         }
+
+         .ui-mobile-wire-topbar {
+            height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 7px;
+            background: var(--wire-panel);
+            border-bottom: 1px solid var(--wire-line);
+         }
+
+         .ui-mobile-wire-brand {
+            min-width: 0;
+            flex: 1 1 auto;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px 4px 4px;
+            border: 1px solid var(--wire-line);
+            border-radius: 9px;
+            color: var(--wire-ink);
+            font-weight: 800;
+            overflow: hidden;
+            white-space: nowrap;
+         }
+
+         .ui-mobile-wire-logo,
+         .ui-mobile-wire-dot {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            background: var(--wire-fill);
+            border: 1px solid var(--wire-line);
+         }
+
+         .ui-mobile-wire-logo {
+            width: 20px;
+            height: 20px;
+         }
+
+         .ui-mobile-wire-actions {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+         }
+
+         .ui-mobile-wire-action,
+         .ui-mobile-wire-avatar,
+         .ui-mobile-wire-icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-panel);
+            color: var(--wire-text);
+            font-size: 0.7rem;
+         }
+
+         .ui-mobile-wire-avatar {
+            font-weight: 800;
+         }
+
+         .ui-mobile-wire-body {
+            padding: 6px;
+         }
+
+         .ui-mobile-wire-hero {
+            position: relative;
+            min-height: 88px;
+            padding: 9px 78px 8px 10px;
+            overflow: hidden;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-panel);
+         }
+
+         .ui-mobile-wire-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+               linear-gradient(var(--wire-line) 1px, transparent 1px) 0 0 / 100% 28px,
+               linear-gradient(90deg, var(--wire-line) 1px, transparent 1px) 0 0 / 34px 100%;
+            opacity: var(--wire-grid-opacity);
+            pointer-events: none;
+         }
+
+         .ui-mobile-wire-hero-title {
+            position: relative;
+            z-index: 2;
+            margin: 0 0 5px;
+            padding-left: 8px;
+            color: var(--wire-ink);
+            font-size: 0.62rem;
+            font-weight: 900;
+            line-height: 1.08;
+            text-transform: uppercase;
+         }
+
+         .ui-mobile-wire-hero-title::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--wire-fill);
+         }
+
+         .ui-mobile-wire-hero-title span {
+            display: block;
+            color: var(--wire-line-strong);
+         }
+
+         .ui-mobile-wire-keywords {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 3px 7px;
+            width: 104px;
+            margin: 0 0 6px;
+            padding: 0;
+            list-style: none;
+         }
+
+         .ui-mobile-wire-keywords li {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+         }
+
+         .ui-mobile-wire-keywords li::before {
+            content: "";
+            width: 4px;
+            height: 4px;
+            flex: 0 0 4px;
+            border-radius: 999px;
+            background: var(--wire-line-strong);
+         }
+
+         .ui-mobile-wire-line {
+            display: block;
+            height: 4px;
+            min-width: 0;
+            border-radius: 999px;
+            background: var(--wire-fill);
+         }
+
+         .ui-mobile-wire-chips {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+         }
+
+         .ui-mobile-wire-chip {
+            min-height: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border: 1px solid var(--wire-line);
+            border-radius: 6px;
+            background: var(--wire-chip-bg);
+            color: var(--wire-text);
+            font-size: 0.48rem;
+            font-weight: 700;
+            white-space: nowrap;
+         }
+
+         .ui-mobile-wire-dot {
+            width: 7px;
+            height: 7px;
+         }
+
+         .ui-mobile-wire-speech {
+            position: absolute;
+            z-index: 3;
+            top: 23px;
+            right: 54px;
+            width: 66px;
+            min-height: 34px;
+            padding: 7px;
+            border: 1px solid var(--wire-line);
+            border-radius: 12px;
+            background: var(--wire-speech-bg);
+         }
+
+         .ui-mobile-wire-speech::after {
+            content: "";
+            position: absolute;
+            right: -10px;
+            top: 18px;
+            width: 10px;
+            height: 12px;
+            background: inherit;
+            border-top: 1px solid var(--wire-line);
+            border-right: 1px solid var(--wire-line);
+            transform: skewX(35deg);
+         }
+
+         .ui-mobile-wire-speech .ui-mobile-wire-line + .ui-mobile-wire-line {
+            margin-top: 5px;
+         }
+
+         .ui-mobile-wire-robot {
+            position: absolute;
+            z-index: 2;
+            right: -5px;
+            bottom: -2px;
+            width: 68px;
+            max-width: 34%;
+            opacity: var(--wire-robot-opacity);
+            filter: grayscale(1) saturate(0);
+         }
+
+         .ui-mobile-wire-progress {
+            height: 5px;
+            margin: 6px 10px;
+            border-radius: 999px;
+            background: var(--wire-fill);
+            overflow: hidden;
+         }
+
+         .ui-mobile-wire-progress span {
+            display: block;
+            width: 48%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--wire-line-strong);
+         }
+
+         .ui-mobile-wire-summary {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.88fr) minmax(0, 0.88fr);
+            gap: 5px;
+         }
+
+         .ui-mobile-wire-card {
+            min-width: 0;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-panel);
+         }
+
+         .ui-mobile-wire-score {
+            grid-row: span 2;
+            min-height: 168px;
+            padding: 8px 7px;
+         }
+
+         .ui-mobile-wire-card-title,
+         .ui-mobile-wire-stat-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--wire-ink);
+            font-weight: 800;
+         }
+
+         .ui-mobile-wire-card-title {
+            margin-bottom: 7px;
+            font-size: 0.52rem;
+         }
+
+         .ui-mobile-wire-card-title i {
+            color: var(--wire-line-strong);
+         }
+
+         .ui-mobile-wire-ring {
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid var(--wire-fill);
+            border-radius: 999px;
+            color: var(--wire-ink);
+            text-align: center;
+         }
+
+         .ui-mobile-wire-ring strong {
+            display: block;
+            font-size: 1.05rem;
+            line-height: 1;
+         }
+
+         .ui-mobile-wire-ring span {
+            display: block;
+            margin-top: 3px;
+            font-size: 0.42rem;
+            font-weight: 700;
+            color: var(--wire-text);
+         }
+
+         .ui-mobile-wire-mini-list {
+            display: grid;
+            gap: 5px;
+         }
+
+         .ui-mobile-wire-mini {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px;
+            border: 1px solid var(--wire-line);
+            border-radius: 7px;
+            background: var(--wire-bg);
+         }
+
+         .ui-mobile-wire-mini span {
+            display: block;
+            color: var(--wire-text);
+            font-size: 0.47rem;
+            font-weight: 700;
+         }
+
+         .ui-mobile-wire-mini strong {
+            display: block;
+            color: var(--wire-ink);
+            font-size: 0.78rem;
+            line-height: 1.05;
+         }
+
+         .ui-mobile-wire-mini i {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: var(--wire-fill);
+            color: var(--wire-text);
+         }
+
+         .ui-mobile-wire-stat {
+            min-height: 82px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 7px;
+            overflow: hidden;
+         }
+
+         .ui-mobile-wire-stat-head {
+            justify-content: space-between;
+            gap: 5px;
+            font-size: 0.47rem;
+         }
+
+         .ui-mobile-wire-stat .ui-mobile-wire-icon {
+            width: 21px;
+            height: 21px;
+            background: var(--wire-fill);
+         }
+
+         .ui-mobile-wire-pill {
+            min-width: 0;
+            padding: 2px 6px;
+            border: 1px solid var(--wire-line);
+            border-radius: 999px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
+
+         .ui-mobile-wire-stat-mark {
+            width: 28px;
+            height: 28px;
+            margin: 5px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--wire-line);
+            border-radius: 999px;
+            color: var(--wire-text);
+            font-weight: 800;
+         }
+
+         .ui-mobile-wire-stat-value {
+            color: var(--wire-ink);
+            font-size: 0.84rem;
+            font-weight: 900;
+            line-height: 1.05;
+         }
+
+         .ui-mobile-wire-stat-label {
+            margin-top: 2px;
+            color: var(--wire-text);
+            font-size: 0.46rem;
+            font-weight: 700;
+            line-height: 1.12;
+         }
+
+         .ui-mobile-wire-underbar {
+            height: 3px;
+            margin: 5px -7px -7px;
+            border-radius: 999px;
+            background: var(--wire-line-strong);
+         }
+
+         .ui-mobile-wire-trend {
+            margin-top: 6px;
+            padding: 8px;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-panel);
+         }
+
+         .ui-mobile-wire-trend-head {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 6px;
+         }
+
+         .ui-mobile-wire-trend-head .ui-mobile-wire-icon {
+            width: 26px;
+            height: 26px;
+            background: var(--wire-bg);
+         }
+
+         .ui-mobile-wire-trend-title {
+            margin: 0;
+            color: var(--wire-ink);
+            font-size: 0.72rem;
+            font-weight: 900;
+         }
+
+         .ui-mobile-wire-trend-copy {
+            margin: 0 0 7px;
+            color: var(--wire-text);
+            font-size: 0.53rem;
+            font-weight: 600;
+            line-height: 1.35;
+         }
+
+         .ui-mobile-wire-trend-actions,
+         .ui-mobile-wire-trend-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px;
+         }
+
+         .ui-mobile-wire-trend-metrics {
+            display: none;
+         }
+
+         .ui-mobile-wire-button,
+         .ui-mobile-wire-metric {
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            border: 1px solid var(--wire-line);
+            border-radius: 7px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            font-weight: 800;
+         }
+
+         .ui-mobile-wire-metric {
+            justify-content: flex-start;
+            display: none;
+            margin-top: 0;
+            padding: 0;
+            font-size: 0.5rem;
+            line-height: 1.15;
+         }
+
+         .ui-mobile-wire-metric i {
+            width: 26px;
+            height: 26px;
+            flex: 0 0 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: var(--wire-fill);
+         }
+
+         .ui-mobile-wire-metric strong {
+            display: block;
+            color: var(--wire-ink);
+            font-size: 0.74rem;
+         }
+
+         .ui-mobile-wire-chart {
+            display: none;
+            height: 42px;
+            margin-top: 7px;
+            padding-left: 24px;
+            align-items: stretch;
+            gap: 10px;
+            background:
+               linear-gradient(var(--wire-line) 1px, transparent 1px) left top / 100% 18px,
+               linear-gradient(90deg, var(--wire-line) 1px, transparent 1px) 0 0 / 24px 100%;
+            opacity: 0.88;
+         }
+
+         .ui-mobile-wire-nav {
+            height: 46px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 2px;
+            padding: 4px 6px;
+            border-top: 1px solid var(--wire-line);
+            background: var(--wire-panel);
+         }
+
+         .ui-mobile-wire-nav-item {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            border-radius: 8px;
+            color: var(--wire-text);
+            font-size: 0.44rem;
+            font-weight: 700;
+         }
+
+         .ui-mobile-wire-nav-item.active {
+            border: 1px solid var(--wire-line);
+            background: var(--wire-bg);
+         }
+
+         .ui-mobile-wire-nav-item i {
+            font-size: 0.78rem;
+         }
+
+         .ui-device-desktop.ui-desktop-shell {
+            --desktop-preview-surface: #f8fafc;
+            --desktop-preview-outline: rgba(37, 99, 235, 0.18);
+            background: var(--desktop-preview-surface);
+         }
+
+         .ui-desktop-wire {
+            --wire-bg: #f8fafc;
+            --wire-panel: #ffffff;
+            --wire-panel-soft: #f1f5f9;
+            --wire-line: #cbd5e1;
+            --wire-line-strong: #94a3b8;
+            --wire-fill: #e2e8f0;
+            --wire-text: #64748b;
+            --wire-ink: #334155;
+            --wire-chip-bg: rgba(255, 255, 255, 0.76);
+            --wire-speech-bg: rgba(255, 255, 255, 0.88);
+            --wire-grid-opacity: 0.26;
+            --wire-robot-opacity: 0.18;
+            display: grid;
+            grid-template-columns: 224px minmax(0, 1fr);
+            min-height: 606px;
+            padding: 0;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            pointer-events: none;
+         }
+
+         html.lm #landing .ui-desktop-wire {
+            --wire-bg: #f8fafc;
+            --wire-panel: #ffffff;
+            --wire-panel-soft: #f1f5f9;
+            --wire-line: #cbd5e1;
+            --wire-line-strong: #94a3b8;
+            --wire-fill: #e2e8f0;
+            --wire-text: #64748b;
+            --wire-ink: #334155;
+            --wire-chip-bg: rgba(255, 255, 255, 0.76);
+            --wire-speech-bg: rgba(255, 255, 255, 0.88);
+            --wire-grid-opacity: 0.26;
+            --wire-robot-opacity: 0.18;
+         }
+
+         html:not(.lm) #landing .ui-device-desktop.ui-desktop-shell {
+            --desktop-preview-surface: #101827;
+            --desktop-preview-outline: rgba(148, 163, 184, 0.28);
+            border-color: rgba(148, 163, 184, 0.24);
+         }
+
+         html:not(.lm) #landing .ui-desktop-wire {
+            --wire-bg: #101827;
+            --wire-panel: #111827;
+            --wire-panel-soft: #172033;
+            --wire-line: #334155;
+            --wire-line-strong: #7c8da6;
+            --wire-fill: #253247;
+            --wire-text: #a7b4c8;
+            --wire-ink: #e5edf7;
+            --wire-chip-bg: rgba(15, 23, 42, 0.72);
+            --wire-speech-bg: rgba(23, 32, 51, 0.92);
+            --wire-grid-opacity: 0.34;
+            --wire-robot-opacity: 0.28;
+         }
+
+         .ui-desktop-wire *,
+         .ui-desktop-wire *::before,
+         .ui-desktop-wire *::after {
+            box-sizing: border-box;
+         }
+
+         .ui-desktop-wire-sidebar {
+            min-width: 0;
+            padding: 18px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: var(--wire-panel);
+            border-right: 1px solid var(--wire-line);
+         }
+
+         .ui-desktop-wire-brand {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--wire-line);
+         }
+
+         .ui-desktop-wire-mark,
+         .ui-desktop-wire-avatar,
+         .ui-desktop-wire-icon {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--wire-line);
+            background: var(--wire-fill);
+            color: var(--wire-text);
+         }
+
+         .ui-desktop-wire-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+         }
+
+         .ui-desktop-wire-brand strong,
+         .ui-desktop-wire-title,
+         .ui-desktop-wire-card-title,
+         .ui-desktop-wire-stat-value,
+         .ui-desktop-wire-session strong,
+         .ui-desktop-wire-feedback strong {
+            color: var(--wire-ink);
+         }
+
+         .ui-desktop-wire-brand span {
+            display: block;
+            color: var(--wire-text);
+            font-size: 0.72rem;
+            font-weight: 700;
+         }
+
+         .ui-desktop-wire-nav {
+            display: grid;
+            gap: 8px;
+         }
+
+         .ui-desktop-wire-nav-section {
+            margin: 8px 2px 2px;
+            color: var(--wire-line-strong);
+            font-size: 0.58rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+         }
+
+         .ui-desktop-wire-nav-item {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--wire-text);
+            font-size: 0.78rem;
+            font-weight: 800;
+         }
+
+         .ui-desktop-wire-nav-item.active {
+            background: var(--wire-bg);
+            border-color: var(--wire-line);
+            color: var(--wire-ink);
+            box-shadow: inset 3px 0 0 var(--wire-line-strong);
+         }
+
+         .ui-desktop-wire-nav-item i {
+            width: 16px;
+            text-align: center;
+         }
+
+         .ui-desktop-wire-sidebar-card {
+            margin-top: auto;
+            padding: 13px;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-bg);
+         }
+
+         .ui-desktop-wire-avatar {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 10px;
+            border-radius: 999px;
+         }
+
+         .ui-desktop-wire-line {
+            display: block;
+            height: 7px;
+            border-radius: 999px;
+            background: var(--wire-fill);
+         }
+
+         .ui-desktop-wire-line + .ui-desktop-wire-line {
+            margin-top: 7px;
+         }
+
+         .ui-desktop-wire-main {
+            min-width: 0;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background:
+               linear-gradient(var(--wire-line) 1px, transparent 1px) 0 0 / 100% 42px,
+               linear-gradient(90deg, var(--wire-line) 1px, transparent 1px) 0 0 / 48px 100%,
+               var(--wire-bg);
+         }
+
+         .ui-desktop-wire-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+         }
+
+         .ui-desktop-wire-kicker {
+            margin-bottom: 4px;
+            color: var(--wire-line-strong);
+            font-size: 0.62rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+         }
+
+         .ui-desktop-wire-title {
+            margin: 0;
+            font-size: 1.28rem;
+            font-weight: 900;
+            line-height: 1.1;
+         }
+
+         .ui-desktop-wire-subtitle {
+            margin: 5px 0 0;
+            color: var(--wire-text);
+            font-size: 0.78rem;
+            font-weight: 650;
+         }
+
+         .ui-desktop-wire-tools {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+         }
+
+         .ui-desktop-wire-search {
+            width: 210px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 11px;
+            border: 1px solid var(--wire-line);
+            border-radius: 999px;
+            background: var(--wire-panel);
+            color: var(--wire-text);
+            font-size: 0.72rem;
+            font-weight: 700;
+         }
+
+         .ui-desktop-wire-tool {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--wire-line);
+            border-radius: 9px;
+            background: var(--wire-panel);
+            color: var(--wire-text);
+         }
+
+         .ui-desktop-wire-user-pill {
+            min-width: 132px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 0 10px 0 6px;
+            border: 1px solid var(--wire-line);
+            border-radius: 999px;
+            background: var(--wire-panel);
+            color: var(--wire-text);
+            font-size: 0.7rem;
+            font-weight: 800;
+         }
+
+         .ui-desktop-wire-user-pill .ui-desktop-wire-avatar {
+            width: 26px;
+            height: 26px;
+            margin: 0;
+         }
+
+         .ui-desktop-wire-content {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 322px;
+            gap: 14px;
+            min-width: 0;
+         }
+
+         .ui-desktop-wire-primary,
+         .ui-desktop-wire-rail {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+         }
+
+         .ui-desktop-wire-panel {
+            min-width: 0;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-panel);
+            overflow: hidden;
+         }
+
+         .ui-desktop-wire-welcome {
+            position: relative;
+            min-height: 188px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 270px;
+            gap: 18px;
+            padding: 22px;
+         }
+
+         .ui-desktop-wire-welcome::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+               linear-gradient(var(--wire-line) 1px, transparent 1px) 0 0 / 100% 34px,
+               linear-gradient(90deg, var(--wire-line) 1px, transparent 1px) 0 0 / 42px 100%;
+            opacity: var(--wire-grid-opacity);
+            pointer-events: none;
+         }
+
+         .ui-desktop-wire-welcome-copy,
+         .ui-desktop-wire-welcome-visual {
+            position: relative;
+            z-index: 2;
+         }
+
+         .ui-desktop-wire-welcome-title {
+            margin: 0 0 12px;
+            padding-left: 14px;
+            border-left: 5px solid var(--wire-fill);
+            color: var(--wire-ink);
+            font-size: 1.18rem;
+            font-weight: 900;
+            line-height: 1.08;
+            text-transform: uppercase;
+         }
+
+         .ui-desktop-wire-welcome-title span {
+            display: block;
+            color: var(--wire-line-strong);
+         }
+
+         .ui-desktop-wire-bullets {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 140px));
+            gap: 8px 14px;
+            margin: 0 0 14px;
+            padding: 0;
+            list-style: none;
+         }
+
+         .ui-desktop-wire-bullets li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+         }
+
+         .ui-desktop-wire-bullets li::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            flex: 0 0 6px;
+            border-radius: 999px;
+            background: var(--wire-line-strong);
+         }
+
+         .ui-desktop-wire-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+         }
+
+         .ui-desktop-wire-chip {
+            min-height: 26px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 10px;
+            border: 1px solid var(--wire-line);
+            border-radius: 7px;
+            background: var(--wire-chip-bg);
+            color: var(--wire-text);
+            font-size: 0.68rem;
+            font-weight: 800;
+         }
+
+         .ui-desktop-wire-chip::before {
+            content: "";
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: var(--wire-fill);
+            border: 1px solid var(--wire-line);
+         }
+
+         .ui-desktop-wire-speech {
+            width: 190px;
+            min-height: 76px;
+            margin: 16px 0 0 auto;
+            padding: 17px 16px;
+            border: 1px solid var(--wire-line);
+            border-radius: 15px;
+            background: var(--wire-speech-bg);
+         }
+
+         .ui-desktop-wire-speech .ui-desktop-wire-line {
+            height: 8px;
+         }
+
+         .ui-desktop-wire-robot {
+            position: absolute;
+            right: 6px;
+            bottom: -8px;
+            width: 132px;
+            opacity: var(--wire-robot-opacity);
+            filter: grayscale(1) saturate(0);
+         }
+
+         .ui-desktop-wire-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+         }
+
+         .ui-desktop-wire-stat {
+            min-height: 118px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+         }
+
+         .ui-desktop-wire-stat-head,
+         .ui-desktop-wire-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+         }
+
+         .ui-desktop-wire-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+         }
+
+         .ui-desktop-wire-pill {
+            min-width: 0;
+            padding: 4px 10px;
+            border: 1px solid var(--wire-line);
+            border-radius: 999px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            font-size: 0.68rem;
+            font-weight: 800;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+         }
+
+         .ui-desktop-wire-stat-mark {
+            width: 52px;
+            height: 52px;
+            margin: 12px auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--wire-line);
+            border-radius: 999px;
+            color: var(--wire-text);
+            font-weight: 900;
+         }
+
+         .ui-desktop-wire-stat-value {
+            font-size: 1.36rem;
+            font-weight: 900;
+            line-height: 1.05;
+         }
+
+         .ui-desktop-wire-stat-label {
+            margin-top: 3px;
+            color: var(--wire-text);
+            font-size: 0.72rem;
+            font-weight: 750;
+            line-height: 1.15;
+         }
+
+         .ui-desktop-wire-underbar {
+            height: 4px;
+            margin: 11px -14px -14px;
+            border-radius: 999px;
+            background: var(--wire-line-strong);
+         }
+
+         .ui-desktop-wire-chart-panel,
+         .ui-desktop-wire-feedback {
+            padding: 16px;
+         }
+
+         .ui-desktop-wire-card-title {
+            margin: 0;
+            font-size: 0.88rem;
+            font-weight: 900;
+         }
+
+         .ui-desktop-wire-card-subtitle {
+            margin: 5px 0 0;
+            color: var(--wire-text);
+            font-size: 0.7rem;
+            font-weight: 650;
+         }
+
+         .ui-desktop-wire-chart {
+            height: 150px;
+            margin-top: 16px;
+            display: flex;
+            align-items: end;
+            gap: 12px;
+            padding: 16px 14px 0 40px;
+            background:
+               linear-gradient(var(--wire-line) 1px, transparent 1px) left top / 100% 30px,
+               linear-gradient(90deg, var(--wire-line) 1px, transparent 1px) 0 0 / 40px 100%;
+         }
+
+         .ui-desktop-wire-chart span {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid var(--wire-line);
+            border-bottom: 0;
+            border-radius: 6px 6px 0 0;
+            background: var(--wire-fill);
+         }
+
+         .ui-desktop-wire-rail-card {
+            padding: 15px;
+         }
+
+         .ui-desktop-wire-readiness {
+            display: grid;
+            grid-template-columns: 98px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+         }
+
+         .ui-desktop-wire-ring {
+            width: 92px;
+            height: 92px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 11px solid var(--wire-fill);
+            border-radius: 999px;
+            color: var(--wire-ink);
+            text-align: center;
+         }
+
+         .ui-desktop-wire-ring strong {
+            display: block;
+            font-size: 1.22rem;
+            line-height: 1;
+         }
+
+         .ui-desktop-wire-ring span {
+            display: block;
+            margin-top: 2px;
+            color: var(--wire-text);
+            font-size: 0.55rem;
+            font-weight: 750;
+         }
+
+         .ui-desktop-wire-goals {
+            display: grid;
+            gap: 8px;
+         }
+
+         .ui-desktop-wire-goal {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 10px;
+            border: 1px solid var(--wire-line);
+            border-radius: 7px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            font-size: 0.7rem;
+            font-weight: 800;
+         }
+
+         .ui-desktop-wire-goal strong {
+            color: var(--wire-ink);
+         }
+
+         .ui-desktop-wire-sessions {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+         }
+
+         .ui-desktop-wire-session {
+            min-height: 46px;
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border: 1px solid var(--wire-line);
+            border-radius: 7px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+         }
+
+         .ui-desktop-wire-session span {
+            display: block;
+            font-size: 0.66rem;
+            font-weight: 700;
+         }
+
+         .ui-desktop-wire-score {
+            color: var(--wire-ink);
+            font-weight: 900;
+         }
+
+         .ui-desktop-wire-feedback {
+            display: grid;
+            gap: 10px;
+         }
+
+         .ui-desktop-wire-bubble {
+            padding: 11px 12px;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            font-size: 0.72rem;
+            font-weight: 650;
+            line-height: 1.35;
+         }
+
+         .ui-desktop-wire-bubble.user {
+            margin-left: 34px;
+         }
+
+         .ui-desktop-wire-bubble.ai {
+            margin-right: 20px;
+            background: var(--wire-panel-soft);
+         }
+
+         .ui-desktop-wire-dashboard-preview {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+         }
+
+         .ui-desktop-wire-summary-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 322px;
+            gap: 14px;
+         }
+
+         .ui-desktop-wire-welcome-stack,
+         .ui-desktop-wire-main-stack,
+         .ui-desktop-wire-side-stack {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+         }
+
+         .ui-desktop-wire-score-panel {
+            min-height: 320px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+         }
+
+         .ui-desktop-wire-score-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+         }
+
+         .ui-desktop-wire-status {
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 10px;
+            border: 1px solid var(--wire-line);
+            border-radius: 999px;
+            background: var(--wire-bg);
+            color: var(--wire-ink);
+            font-size: 0.72rem;
+            font-weight: 900;
+         }
+
+         .ui-desktop-wire-score-layout {
+            display: grid;
+            grid-template-columns: 116px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            margin: 18px 0 14px;
+         }
+
+         .ui-desktop-wire-score-layout .ui-desktop-wire-ring {
+            width: 112px;
+            height: 112px;
+         }
+
+         .ui-desktop-wire-score-meta {
+            display: grid;
+            gap: 10px;
+         }
+
+         .ui-desktop-wire-note {
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 10px;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+            font-size: 0.72rem;
+            font-weight: 750;
+         }
+
+         .ui-desktop-wire-dashboard-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 322px;
+            gap: 14px;
+         }
+
+         .ui-desktop-wire-plan,
+         .ui-desktop-wire-polished,
+         .ui-desktop-wire-recommendations,
+         .ui-desktop-wire-table-panel {
+            padding: 16px;
+         }
+
+         .ui-desktop-wire-plan-head,
+         .ui-desktop-wire-polished-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+         }
+
+         .ui-desktop-wire-plan-list,
+         .ui-desktop-wire-progress-list,
+         .ui-desktop-wire-rec-list,
+         .ui-desktop-wire-table-list {
+            display: grid;
+            gap: 9px;
+         }
+
+         .ui-desktop-wire-plan-row,
+         .ui-desktop-wire-progress-row,
+         .ui-desktop-wire-rec-row,
+         .ui-desktop-wire-table-row {
+            min-height: 46px;
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border: 1px solid var(--wire-line);
+            border-radius: 8px;
+            background: var(--wire-bg);
+            color: var(--wire-text);
+         }
+
+         .ui-desktop-wire-progress-row {
+            grid-template-columns: minmax(0, 1fr) 52px;
+         }
+
+         .ui-desktop-wire-progress-track {
+            grid-column: 1 / -1;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--wire-fill);
+            overflow: hidden;
+         }
+
+         .ui-desktop-wire-progress-track span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--wire-line-strong);
+         }
+
+         .ui-desktop-wire-two-col {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+         }
+
+         @media (min-width: 992px) and (max-width: 1199.98px) {
+            .ui-desktop-wire {
+               grid-template-columns: 190px minmax(0, 1fr);
+               min-height: 570px;
+            }
+
+            .ui-desktop-wire-sidebar {
+               padding: 14px 12px;
+            }
+
+            .ui-desktop-wire-main {
+               padding: 14px;
+               gap: 12px;
+            }
+
+            .ui-desktop-wire-title {
+               font-size: 1.1rem;
+            }
+
+            .ui-desktop-wire-subtitle {
+               max-width: 440px;
+            }
+
+            .ui-desktop-wire-search {
+               width: 160px;
+            }
+
+            .ui-desktop-wire-content {
+               gap: 12px;
+            }
+
+            .ui-desktop-wire-summary-grid,
+            .ui-desktop-wire-dashboard-shell {
+               grid-template-columns: minmax(0, 1fr) 276px;
+               gap: 12px;
+            }
+
+            .ui-desktop-wire-welcome {
+               grid-template-columns: minmax(0, 1fr) 210px;
+               min-height: 176px;
+               padding: 18px;
+            }
+
+            .ui-desktop-wire-welcome-title {
+               font-size: 1.02rem;
+            }
+
+            .ui-desktop-wire-speech {
+               width: 160px;
+            }
+
+            .ui-desktop-wire-robot {
+               width: 112px;
+            }
+
+            .ui-desktop-wire-stats {
+               gap: 9px;
+            }
+
+            .ui-desktop-wire-stat {
+               min-height: 110px;
+               padding: 11px;
+            }
+
+            .ui-desktop-wire-stat-value {
+               font-size: 1.1rem;
+            }
+
+            .ui-desktop-wire-underbar {
+               margin: 9px -11px -11px;
+            }
+
+            .ui-desktop-wire-chart {
+               height: 128px;
+               gap: 8px;
+            }
+
+            .ui-desktop-wire-score-panel {
+               min-height: 292px;
+               padding: 13px;
+            }
+
+            .ui-desktop-wire-score-layout {
+               grid-template-columns: 92px minmax(0, 1fr);
+               gap: 11px;
+            }
+
+            .ui-desktop-wire-score-layout .ui-desktop-wire-ring {
+               width: 88px;
+               height: 88px;
+            }
+
+            .ui-desktop-wire-two-col {
+               grid-template-columns: 1fr;
+               gap: 12px;
+            }
          }
 
          .ui-dashboard-desktop {
@@ -1533,9 +3062,9 @@
          }
 
          html:not(.lm) #landing .ui-device-mobile {
-            --mobile-preview-surface: #f8fbff;
-            --mobile-preview-outline: rgba(255, 255, 255, 0.28);
-            border-color: rgba(226, 232, 240, 0.28);
+            --mobile-preview-surface: #101827;
+            --mobile-preview-outline: rgba(148, 163, 184, 0.34);
+            border-color: rgba(148, 163, 184, 0.28);
             box-shadow: 0 18px 48px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(255, 255, 255, 0.08);
          }
 
@@ -1794,83 +3323,458 @@
                               <span class="ui-device-dot" style="background:#ff5f57"></span>
                               <span class="ui-device-dot" style="background:#ffbd2e"></span>
                               <span class="ui-device-dot" style="background:#28c840"></span>
+                              <span class="ui-device-title">SpeakReady AI Mobile Dashboard</span>
                            </div>
-                            <div class="ui-dashboard ui-dashboard-preview">
-                               <video
-                                  class="ui-preview-video"
-                                  autoplay
-                                  muted
-                                  loop
-                                  playsinline
-                                  preload="metadata"
-                                  poster="{{ asset('img/landing-dashboard-mobile-preview.png') }}"
-                                  aria-label="SpeakReady AI mobile dashboard preview"
-                                  tabindex="-1"
-                                  disablepictureinpicture
-                                  controlslist="nodownload nofullscreen noremoteplayback"
-                               >
-                                  <source src="{{ asset('videos/landing-dashboard-mobile-preview.mp4') }}" type="video/mp4">
-                               </video>
+                            <div class="ui-dashboard ui-dashboard-preview ui-mobile-wire" aria-label="SpeakReady AI mobile dashboard wireframe preview">
+                               <div class="ui-mobile-wire-topbar">
+                                  <div class="ui-mobile-wire-brand">
+                                     <span class="ui-mobile-wire-logo" aria-hidden="true"></span>
+                                     <span>SpeakReady AI</span>
+                                  </div>
+                                  <div class="ui-mobile-wire-actions" aria-hidden="true">
+                                     <span class="ui-mobile-wire-action"><i class="fa-solid fa-play"></i></span>
+                                     <span class="ui-mobile-wire-action"><i class="fa-solid fa-expand"></i></span>
+                                     <span class="ui-mobile-wire-action"><i class="fa-solid fa-gear"></i></span>
+                                     <span class="ui-mobile-wire-action"><i class="fa-regular fa-bell"></i></span>
+                                     <span class="ui-mobile-wire-avatar">U</span>
+                                  </div>
+                               </div>
+
+                               <div class="ui-mobile-wire-body">
+                                  <section class="ui-mobile-wire-hero">
+                                     <h3 class="ui-mobile-wire-hero-title">Practice Smarter.<span>Interview Better.</span></h3>
+                                     <ul class="ui-mobile-wire-keywords" aria-hidden="true">
+                                        <li><span class="ui-mobile-wire-line" style="width:36px"></span></li>
+                                        <li><span class="ui-mobile-wire-line" style="width:34px"></span></li>
+                                        <li><span class="ui-mobile-wire-line" style="width:42px"></span></li>
+                                        <li><span class="ui-mobile-wire-line" style="width:28px"></span></li>
+                                        <li><span class="ui-mobile-wire-line" style="width:38px"></span></li>
+                                        <li><span class="ui-mobile-wire-line" style="width:44px"></span></li>
+                                     </ul>
+                                     <div class="ui-mobile-wire-chips" aria-hidden="true">
+                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Job</span>
+                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>OJT</span>
+                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Scholarship</span>
+                                     </div>
+                                     <div class="ui-mobile-wire-speech" aria-hidden="true">
+                                        <span class="ui-mobile-wire-line" style="width:44px"></span>
+                                        <span class="ui-mobile-wire-line" style="width:58px"></span>
+                                        <span class="ui-mobile-wire-line" style="width:50px"></span>
+                                     </div>
+                                     <img class="ui-mobile-wire-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="" aria-hidden="true">
+                                  </section>
+
+                                  <div class="ui-mobile-wire-progress" aria-hidden="true"><span></span></div>
+
+                                  <div class="ui-mobile-wire-summary">
+                                     <section class="ui-mobile-wire-card ui-mobile-wire-score">
+                                        <div class="ui-mobile-wire-card-title"><i class="fa-solid fa-arrow-trend-up"></i> Building Momentum</div>
+                                        <div class="ui-mobile-wire-ring">
+                                           <div>
+                                              <strong>0%</strong>
+                                              <span>Overall Readiness</span>
+                                           </div>
+                                        </div>
+                                        <div class="ui-mobile-wire-mini-list">
+                                           <div class="ui-mobile-wire-mini">
+                                              <div>
+                                                 <span>Average Rating</span>
+                                                 <strong>0/5</strong>
+                                              </div>
+                                              <i class="fa-regular fa-star"></i>
+                                           </div>
+                                           <div class="ui-mobile-wire-mini">
+                                              <div>
+                                                 <span>Next Goal</span>
+                                                 <strong>50%</strong>
+                                              </div>
+                                              <i class="fa-solid fa-bullseye"></i>
+                                           </div>
+                                        </div>
+                                     </section>
+
+                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
+                                        <div class="ui-mobile-wire-stat-head">
+                                           <span class="ui-mobile-wire-icon"><i class="fa-solid fa-microphone"></i></span>
+                                           <span class="ui-mobile-wire-pill">Practice</span>
+                                        </div>
+                                        <div class="ui-mobile-wire-stat-mark"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                                        <div>
+                                           <div class="ui-mobile-wire-stat-value">0</div>
+                                           <div class="ui-mobile-wire-stat-label">Completed sessions</div>
+                                        </div>
+                                        <div class="ui-mobile-wire-underbar"></div>
+                                     </section>
+
+                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
+                                        <div class="ui-mobile-wire-stat-head">
+                                           <span class="ui-mobile-wire-icon"><i class="fa-regular fa-star"></i></span>
+                                           <span class="ui-mobile-wire-pill">Quality</span>
+                                        </div>
+                                        <div class="ui-mobile-wire-stat-mark">0</div>
+                                        <div>
+                                           <div class="ui-mobile-wire-stat-value">0/5</div>
+                                           <div class="ui-mobile-wire-stat-label">Average rating</div>
+                                        </div>
+                                        <div class="ui-mobile-wire-underbar"></div>
+                                     </section>
+
+                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
+                                        <div class="ui-mobile-wire-stat-head">
+                                           <span class="ui-mobile-wire-icon"><i class="fa-solid fa-bolt"></i></span>
+                                           <span class="ui-mobile-wire-pill">Growth</span>
+                                        </div>
+                                        <div class="ui-mobile-wire-stat-mark">Lv. 1</div>
+                                        <div>
+                                           <div class="ui-mobile-wire-stat-value">0</div>
+                                           <div class="ui-mobile-wire-stat-label">Experience points</div>
+                                        </div>
+                                        <div class="ui-mobile-wire-underbar"></div>
+                                     </section>
+
+                                     <section class="ui-mobile-wire-card ui-mobile-wire-stat">
+                                        <div class="ui-mobile-wire-stat-head">
+                                           <span class="ui-mobile-wire-icon"><i class="fa-solid fa-fire"></i></span>
+                                           <span class="ui-mobile-wire-pill">Streak</span>
+                                        </div>
+                                        <div class="ui-mobile-wire-stat-mark"><i class="fa-regular fa-calendar-days"></i></div>
+                                        <div>
+                                           <div class="ui-mobile-wire-stat-value">0</div>
+                                           <div class="ui-mobile-wire-stat-label">Active practice days</div>
+                                        </div>
+                                        <div class="ui-mobile-wire-underbar"></div>
+                                     </section>
+                                  </div>
+
+                                  <section class="ui-mobile-wire-trend">
+                                     <div class="ui-mobile-wire-trend-head">
+                                        <span class="ui-mobile-wire-icon"><i class="fa-solid fa-chart-line"></i></span>
+                                        <h3 class="ui-mobile-wire-trend-title">Readiness Trend</h3>
+                                     </div>
+                                     <p class="ui-mobile-wire-trend-copy">Recent completed Philippine interview sessions, scored from 0 to 100.</p>
+                                     <div class="ui-mobile-wire-trend-actions">
+                                        <span class="ui-mobile-wire-button">View Details <i class="fa-solid fa-chevron-right"></i></span>
+                                        <span class="ui-mobile-wire-button">Recent 5 Sessions</span>
+                                     </div>
+                                     <div class="ui-mobile-wire-trend-metrics">
+                                        <div class="ui-mobile-wire-metric">
+                                           <i class="fa-solid fa-award"></i>
+                                           <div>Average Score<strong>0/100</strong></div>
+                                        </div>
+                                        <div class="ui-mobile-wire-metric">
+                                           <i class="fa-solid fa-arrow-up"></i>
+                                           <div>Improvement<strong>+0%</strong></div>
+                                        </div>
+                                     </div>
+                                     <div class="ui-mobile-wire-chart" aria-hidden="true"></div>
+                                  </section>
+                               </div>
+
+                               <div class="ui-mobile-wire-nav" aria-hidden="true">
+                                  <span class="ui-mobile-wire-nav-item active"><i class="fa-solid fa-house"></i>Home</span>
+                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-chart-line"></i>Progress</span>
+                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-microphone"></i>Interview</span>
+                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-clipboard-check"></i>Feedback</span>
+                                  <span class="ui-mobile-wire-nav-item"><i class="fa-solid fa-table-cells-large"></i>More</span>
+                               </div>
                             </div>
                          </div>
 
-                        <div class="ui-device ui-device-desktop" aria-label="Desktop UI preview">
+                        <div class="ui-device ui-device-desktop ui-desktop-shell" aria-label="Desktop UI preview">
                            <div class="ui-device-bar">
                               <span class="ui-device-dot" style="background:#ff5f57"></span>
                               <span class="ui-device-dot" style="background:#ffbd2e"></span>
                               <span class="ui-device-dot" style="background:#28c840"></span>
-                              <span class="ui-device-title">speakready.ai/dashboard</span>
+                              <span class="ui-device-title">SpeakReady AI Desktop Dashboard</span>
                            </div>
-                           <div class="ui-dashboard ui-dashboard-desktop">
-                              <div class="ui-sidebar">
-                                 <div class="ui-side-title">Interview Hub</div>
-                                 <button class="ui-side-item active" type="button"><i class="fa-solid fa-chart-pie"></i> Analytics</button>
-                                 <button class="ui-side-item" type="button"><i class="fa-solid fa-video"></i> Sessions</button>
-                                 <button class="ui-side-item" type="button"><i class="fa-solid fa-comment-medical"></i> Feedback</button>
-                                 <button class="ui-side-item" type="button"><i class="fa-solid fa-graduation-cap"></i> Learning</button>
-                              </div>
-                              <div class="ui-main">
-                                 <div class="ui-main-head">
+                           <div class="ui-dashboard ui-desktop-wire" aria-label="SpeakReady AI desktop dashboard wireframe preview">
+                              <aside class="ui-desktop-wire-sidebar" aria-hidden="true">
+                                 <div class="ui-desktop-wire-brand">
+                                    <span class="ui-desktop-wire-mark"><i class="fa-solid fa-microphone-lines"></i></span>
                                     <div>
-                                       <h3 class="ui-main-title">Readiness Dashboard</h3>
-                                       <p class="ui-main-subtitle">Live interview analytics, progress, and AI coaching feedback.</p>
-                                    </div>
-                                    <span class="ui-main-chip">Desktop UI</span>
-                                 </div>
-                                 <div class="ui-stat-grid">
-                                    <div class="ui-stat">
-                                       <div class="ui-stat-value accent">{{ $previewReadiness }}%</div>
-                                       <div class="ui-stat-label">PH Readiness</div>
-                                       <div class="ui-stat-note"><i class="fa-solid fa-caret-up"></i> Avg</div>
-                                    </div>
-                                    <div class="ui-stat">
-                                       <div class="ui-stat-value">{{ $previewInterviews }}</div>
-                                       <div class="ui-stat-label">Interviews Done</div>
-                                    </div>
-                                    <div class="ui-stat">
-                                       <div class="ui-stat-value">{{ $previewClarity }}%</div>
-                                       <div class="ui-stat-label">Clarity Score</div>
-                                    </div>
-                                    <div class="ui-stat">
-                                       <div class="ui-stat-value">{{ $previewGrammar }}%</div>
-                                       <div class="ui-stat-label">Grammar Score</div>
+                                       <strong>SpeakReady AI</strong>
+                                       <span>Interview Hub</span>
                                     </div>
                                  </div>
-                                 <div class="ui-panel-grid">
-                                    <div class="ui-panel">
-                                       <div class="ui-panel-title"><i class="fa-solid fa-chart-bar me-1"></i>Performance Trend</div>
-                                       <div class="ui-bars" aria-hidden="true">
-                                          <span style="height:45%"></span><span style="height:55%"></span><span style="height:60%"></span><span style="height:70%"></span><span style="height:75%"></span><span style="height:85%"></span><span style="height:92%"></span>
+
+                                 <nav class="ui-desktop-wire-nav">
+                                    <span class="ui-desktop-wire-nav-section">Dashboard</span>
+                                    <span class="ui-desktop-wire-nav-item active"><i class="fa-solid fa-gauge-high"></i>Overview</span>
+                                    <span class="ui-desktop-wire-nav-section">Interview Practice</span>
+                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-microphone-lines"></i>Mock Interview</span>
+                                    <span class="ui-desktop-wire-nav-section">Specialized Training</span>
+                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-book-open-reader"></i>Modules</span>
+                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-ear-listen"></i>Voice Rehearsal</span>
+                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-route"></i>Missions</span>
+                                    <span class="ui-desktop-wire-nav-section">Performance</span>
+                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-chart-line"></i>Progress</span>
+                                    <span class="ui-desktop-wire-nav-item"><i class="fa-solid fa-clipboard-check"></i>Feedback</span>
+                                 </nav>
+
+                                 <div class="ui-desktop-wire-sidebar-card">
+                                    <span class="ui-desktop-wire-avatar"><i class="fa-regular fa-user"></i></span>
+                                    <span class="ui-desktop-wire-line" style="width:72%"></span>
+                                    <span class="ui-desktop-wire-line" style="width:92%"></span>
+                                    <span class="ui-desktop-wire-line" style="width:56%"></span>
+                                 </div>
+                              </aside>
+
+                              <main class="ui-desktop-wire-main">
+                                 <div class="ui-desktop-wire-top" aria-hidden="true">
+                                    <span class="ui-desktop-wire-tool"><i class="fa-solid fa-bars"></i></span>
+                                    <div class="ui-desktop-wire-tools" aria-hidden="true">
+                                       <span class="ui-desktop-wire-tool"><i class="fa-solid fa-expand"></i></span>
+                                       <span class="ui-desktop-wire-tool"><i class="fa-solid fa-circle-play"></i></span>
+                                       <span class="ui-desktop-wire-tool"><i class="fa-solid fa-sun"></i></span>
+                                       <span class="ui-desktop-wire-tool"><i class="fa-regular fa-bell"></i></span>
+                                       <span class="ui-desktop-wire-user-pill">
+                                          <span class="ui-desktop-wire-avatar">U</span>
+                                          <span>User</span>
+                                          <i class="fa-solid fa-chevron-down fa-xs"></i>
+                                       </span>
+                                    </div>
+                                 </div>
+
+                                 <div class="ui-desktop-wire-dashboard-preview">
+                                    <section class="ui-desktop-wire-summary-grid">
+                                       <div class="ui-desktop-wire-welcome-stack">
+                                          <section class="ui-desktop-wire-panel ui-desktop-wire-welcome">
+                                             <div class="ui-desktop-wire-welcome-copy">
+                                                <h3 class="ui-desktop-wire-welcome-title">Practice Smarter.<span>Interview Better.</span></h3>
+                                                <ul class="ui-desktop-wire-bullets" aria-hidden="true">
+                                                   <li><span class="ui-desktop-wire-line" style="width:92px"></span></li>
+                                                   <li><span class="ui-desktop-wire-line" style="width:84px"></span></li>
+                                                   <li><span class="ui-desktop-wire-line" style="width:104px"></span></li>
+                                                   <li><span class="ui-desktop-wire-line" style="width:74px"></span></li>
+                                                   <li><span class="ui-desktop-wire-line" style="width:88px"></span></li>
+                                                   <li><span class="ui-desktop-wire-line" style="width:108px"></span></li>
+                                                </ul>
+                                                <div class="ui-desktop-wire-chips">
+                                                   <span class="ui-desktop-wire-chip">Job</span>
+                                                   <span class="ui-desktop-wire-chip">BPO</span>
+                                                   <span class="ui-desktop-wire-chip">IT</span>
+                                                   <span class="ui-desktop-wire-chip">Scholarship</span>
+                                                   <span class="ui-desktop-wire-chip">Admission</span>
+                                                </div>
+                                             </div>
+                                             <div class="ui-desktop-wire-welcome-visual" aria-hidden="true">
+                                                <div class="ui-desktop-wire-speech">
+                                                   <span class="ui-desktop-wire-line" style="width:62%"></span>
+                                                   <span class="ui-desktop-wire-line" style="width:86%"></span>
+                                                   <span class="ui-desktop-wire-line" style="width:72%"></span>
+                                                </div>
+                                                <img class="ui-desktop-wire-robot" src="{{ asset('img/dashboard-welcome-robot-transparent.png') }}" alt="">
+                                             </div>
+                                          </section>
+
+                                          <div class="ui-desktop-wire-stats">
+                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
+                                                <div class="ui-desktop-wire-stat-head">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-microphone"></i></span>
+                                                   <span class="ui-desktop-wire-pill">Practice</span>
+                                                </div>
+                                                <div class="ui-desktop-wire-stat-mark"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                                                <div>
+                                                   <div class="ui-desktop-wire-stat-value">{{ $previewInterviews }}</div>
+                                                   <div class="ui-desktop-wire-stat-label">Completed sessions</div>
+                                                </div>
+                                                <div class="ui-desktop-wire-underbar"></div>
+                                             </section>
+
+                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
+                                                <div class="ui-desktop-wire-stat-head">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-regular fa-star"></i></span>
+                                                   <span class="ui-desktop-wire-pill">Quality</span>
+                                                </div>
+                                                <div class="ui-desktop-wire-stat-mark"><i class="fa-solid fa-award"></i></div>
+                                                <div>
+                                                   <div class="ui-desktop-wire-stat-value">4<span style="font-size:.72rem">/5</span></div>
+                                                   <div class="ui-desktop-wire-stat-label">Average rating</div>
+                                                </div>
+                                                <div class="ui-desktop-wire-underbar"></div>
+                                             </section>
+
+                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
+                                                <div class="ui-desktop-wire-stat-head">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-bolt"></i></span>
+                                                   <span class="ui-desktop-wire-pill">Growth</span>
+                                                </div>
+                                                <div class="ui-desktop-wire-stat-mark">Lv. 1</div>
+                                                <div>
+                                                   <div class="ui-desktop-wire-stat-value">320</div>
+                                                   <div class="ui-desktop-wire-stat-label">Experience points</div>
+                                                </div>
+                                                <div class="ui-desktop-wire-underbar"></div>
+                                             </section>
+
+                                             <section class="ui-desktop-wire-panel ui-desktop-wire-stat">
+                                                <div class="ui-desktop-wire-stat-head">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-fire"></i></span>
+                                                   <span class="ui-desktop-wire-pill">Streak</span>
+                                                </div>
+                                                <div class="ui-desktop-wire-stat-mark"><i class="fa-regular fa-calendar-days"></i></div>
+                                                <div>
+                                                   <div class="ui-desktop-wire-stat-value">5</div>
+                                                   <div class="ui-desktop-wire-stat-label">Active practice days</div>
+                                                </div>
+                                                <div class="ui-desktop-wire-underbar"></div>
+                                             </section>
+                                          </div>
                                        </div>
-                                       <div class="ui-axis"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span></div>
-                                    </div>
-                                    <div class="ui-panel ui-chat">
-                                       <div class="ui-panel-title"><span class="ui-pulse"></span>AI Feedback</div>
-                                       <div class="ui-bubble user">Tell me about a challenge you faced.</div>
-                                       <div class="ui-bubble ai"><strong>Good STAR structure for a Philippine interview.</strong> Add the specific result or customer impact to make it stronger.</div>
-                                    </div>
+
+                                       <section class="ui-desktop-wire-panel ui-desktop-wire-score-panel">
+                                          <div class="ui-desktop-wire-score-top">
+                                             <span class="ui-desktop-wire-status"><i class="fa-solid fa-circle-check"></i> Interview Ready</span>
+                                             <span class="ui-desktop-wire-pill"><i class="fa-solid fa-location-dot"></i> PH Focus</span>
+                                          </div>
+                                          <div class="ui-desktop-wire-score-layout">
+                                             <div class="ui-desktop-wire-ring">
+                                                <div>
+                                                   <strong>{{ $previewReadiness }}%</strong>
+                                                   <span>Overall Readiness</span>
+                                                </div>
+                                             </div>
+                                             <div class="ui-desktop-wire-score-meta">
+                                                <div class="ui-desktop-wire-goal"><span>Average Rating</span><strong>4/5</strong></div>
+                                                <div class="ui-desktop-wire-goal"><span>Next Goal</span><strong>90%</strong></div>
+                                             </div>
+                                          </div>
+                                          <div class="ui-desktop-wire-note"><i class="fa-regular fa-star"></i> Keep practicing. You're on your way!</div>
+                                       </section>
+                                    </section>
+
+                                    <section class="ui-desktop-wire-dashboard-shell">
+                                       <div class="ui-desktop-wire-main-stack">
+                                          <section class="ui-desktop-wire-panel ui-desktop-wire-chart-panel">
+                                             <div class="ui-desktop-wire-card-head">
+                                                <div>
+                                                   <div class="ui-desktop-wire-card-head">
+                                                      <span class="ui-desktop-wire-icon"><i class="fa-solid fa-chart-line"></i></span>
+                                                      <h3 class="ui-desktop-wire-card-title">Readiness Trend</h3>
+                                                   </div>
+                                                   <p class="ui-desktop-wire-card-subtitle">Recent completed Philippine interview sessions, scored from 0 to 100.</p>
+                                                </div>
+                                                <span class="ui-desktop-wire-pill">Recent 10 Sessions</span>
+                                             </div>
+                                             <div class="ui-desktop-wire-goals" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px;">
+                                                <div class="ui-desktop-wire-goal"><span>Average Score</span><strong>{{ $previewReadiness }}/100</strong></div>
+                                                <div class="ui-desktop-wire-goal"><span>Improvement</span><strong>+18%</strong></div>
+                                             </div>
+                                             <div class="ui-desktop-wire-chart" aria-hidden="true">
+                                                <span style="height:44%"></span>
+                                                <span style="height:52%"></span>
+                                                <span style="height:58%"></span>
+                                                <span style="height:68%"></span>
+                                                <span style="height:72%"></span>
+                                                <span style="height:84%"></span>
+                                                <span style="height:92%"></span>
+                                             </div>
+                                          </section>
+
+                                          <section class="ui-desktop-wire-panel ui-desktop-wire-plan">
+                                             <div class="ui-desktop-wire-plan-head">
+                                                <span class="ui-desktop-wire-icon"><i class="fa-solid fa-calendar-check"></i></span>
+                                                <div>
+                                                   <h3 class="ui-desktop-wire-card-title">Personalized Practice Plan</h3>
+                                                   <p class="ui-desktop-wire-card-subtitle">A plan built from latest scores, voice work, and learning progress.</p>
+                                                </div>
+                                             </div>
+                                             <div class="ui-desktop-wire-plan-list">
+                                                <div class="ui-desktop-wire-plan-row">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-microphone"></i></span>
+                                                   <div><strong>Day 1</strong><span>Practice STAR answer structure</span></div>
+                                                   <span class="ui-desktop-wire-pill">12 min</span>
+                                                </div>
+                                                <div class="ui-desktop-wire-plan-row">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-ear-listen"></i></span>
+                                                   <div><strong>Day 2</strong><span>Voice rehearsal and pacing</span></div>
+                                                   <span class="ui-desktop-wire-pill">8 min</span>
+                                                </div>
+                                             </div>
+                                          </section>
+
+                                          <div class="ui-desktop-wire-two-col">
+                                             <section class="ui-desktop-wire-panel ui-desktop-wire-polished">
+                                                <div class="ui-desktop-wire-polished-head">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-layer-group"></i></span>
+                                                   <div>
+                                                      <h3 class="ui-desktop-wire-card-title">Category Performance</h3>
+                                                      <p class="ui-desktop-wire-card-subtitle">Where interview scores are strongest.</p>
+                                                   </div>
+                                                </div>
+                                                <div class="ui-desktop-wire-progress-list">
+                                                   <div class="ui-desktop-wire-progress-row"><span>Job Interview</span><strong>88%</strong><div class="ui-desktop-wire-progress-track"><span style="width:88%"></span></div></div>
+                                                   <div class="ui-desktop-wire-progress-row"><span>BPO Interview</span><strong>82%</strong><div class="ui-desktop-wire-progress-track"><span style="width:82%"></span></div></div>
+                                                </div>
+                                             </section>
+
+                                             <section class="ui-desktop-wire-panel ui-desktop-wire-polished">
+                                                <div class="ui-desktop-wire-polished-head">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-book-open-reader"></i></span>
+                                                   <div>
+                                                      <h3 class="ui-desktop-wire-card-title">Learning Progress</h3>
+                                                      <p class="ui-desktop-wire-card-subtitle">Latest modules in progress.</p>
+                                                   </div>
+                                                </div>
+                                                <div class="ui-desktop-wire-progress-list">
+                                                   <div class="ui-desktop-wire-progress-row"><span>Interview Basics</span><strong>72%</strong><div class="ui-desktop-wire-progress-track"><span style="width:72%"></span></div></div>
+                                                   <div class="ui-desktop-wire-progress-row"><span>Professional Tone</span><strong>64%</strong><div class="ui-desktop-wire-progress-track"><span style="width:64%"></span></div></div>
+                                                </div>
+                                             </section>
+                                          </div>
+                                       </div>
+
+                                       <aside class="ui-desktop-wire-side-stack">
+                                          <section class="ui-desktop-wire-panel ui-desktop-wire-feedback">
+                                             <div class="ui-desktop-wire-card-head">
+                                                <h3 class="ui-desktop-wire-card-title">AI Feedback Summary</h3>
+                                                <span class="ui-desktop-wire-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                                             </div>
+                                             <div class="ui-desktop-wire-bubble ai"><strong>Top Strengths</strong><br>Clear examples, good structure, and calm delivery.</div>
+                                             <div class="ui-desktop-wire-bubble"><strong>Improve Next</strong><br>Add measurable results and tighter closing lines.</div>
+                                          </section>
+
+                                          <section class="ui-desktop-wire-panel ui-desktop-wire-recommendations">
+                                             <div class="ui-desktop-wire-card-head">
+                                                <h3 class="ui-desktop-wire-card-title">AI Recommendations</h3>
+                                                <span class="ui-desktop-wire-pill">Personalized</span>
+                                             </div>
+                                             <div class="ui-desktop-wire-rec-list" style="margin-top:12px;">
+                                                <div class="ui-desktop-wire-rec-row">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                                                   <div><strong>Practice evidence mapping</strong><span>Use job details in answers.</span></div>
+                                                   <i class="fa-solid fa-chevron-right"></i>
+                                                </div>
+                                                <div class="ui-desktop-wire-rec-row">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-robot"></i></span>
+                                                   <div><strong>Ask Readiness Coach</strong><span>Refine one weak answer.</span></div>
+                                                   <i class="fa-solid fa-chevron-right"></i>
+                                                </div>
+                                             </div>
+                                          </section>
+
+                                          <section class="ui-desktop-wire-panel ui-desktop-wire-table-panel">
+                                             <div class="ui-desktop-wire-card-head">
+                                                <h3 class="ui-desktop-wire-card-title">Recent Sessions</h3>
+                                                <span class="ui-desktop-wire-pill">View Reports</span>
+                                             </div>
+                                             <div class="ui-desktop-wire-table-list" style="margin-top:12px;">
+                                                <div class="ui-desktop-wire-table-row">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-briefcase"></i></span>
+                                                   <div><strong>Job Interview</strong><span>Behavioral practice</span></div>
+                                                   <span class="ui-desktop-wire-score">92</span>
+                                                </div>
+                                                <div class="ui-desktop-wire-table-row">
+                                                   <span class="ui-desktop-wire-icon"><i class="fa-solid fa-headset"></i></span>
+                                                   <div><strong>BPO Interview</strong><span>Customer scenario</span></div>
+                                                   <span class="ui-desktop-wire-score">84</span>
+                                                </div>
+                                             </div>
+                                          </section>
+                                       </aside>
+                                    </section>
                                  </div>
-                              </div>
+                              </main>
                            </div>
                         </div>
                      </div>
@@ -2839,7 +4743,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or continue with</div>
-               <a href="{{ route('auth.google.login') }}" class="oauth" data-auth-transition="google-login" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Log in with Google</a>
+               <a href="{{ route('auth.google.login') }}" class="oauth" data-auth-transition="google" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Log in with Google</a>
             </div>
             <!-- Sign Up -->
             <div id="fSignup" class="auth-panel" style="display:none">
@@ -3105,6 +5009,139 @@
 
          #landing :where(.ui-dashboard, .ui-main, .ui-panel, .ui-stat, .ui-mini-card, .ui-chart-card) {
             color: var(--tx) !important;
+         }
+
+         #landing .ui-device-mobile {
+            background: var(--mobile-preview-surface) !important;
+            border-color: var(--mobile-preview-outline) !important;
+         }
+
+         #landing .ui-device-mobile .ui-device-title {
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+         }
+
+         #landing .ui-device-mobile .ui-dashboard-preview {
+            background: var(--mobile-preview-surface) !important;
+            box-shadow: inset 0 0 0 1px var(--mobile-preview-outline) !important;
+         }
+
+         #landing .ui-mobile-wire {
+            background: var(--wire-bg) !important;
+            color: var(--wire-text) !important;
+            -webkit-text-fill-color: var(--wire-text) !important;
+         }
+
+         #landing .ui-mobile-wire :where(.ui-mobile-wire-topbar, .ui-mobile-wire-card, .ui-mobile-wire-trend, .ui-mobile-wire-nav, .ui-mobile-wire-action, .ui-mobile-wire-avatar) {
+            background: var(--wire-panel) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-mobile-wire :where(.ui-mobile-wire-mini, .ui-mobile-wire-pill, .ui-mobile-wire-button, .ui-mobile-wire-metric, .ui-mobile-wire-trend-head .ui-mobile-wire-icon, .ui-mobile-wire-nav-item.active) {
+            background: var(--wire-bg) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-mobile-wire :where(.ui-mobile-wire-logo, .ui-mobile-wire-dot, .ui-mobile-wire-line, .ui-mobile-wire-mini i, .ui-mobile-wire-stat .ui-mobile-wire-icon) {
+            background: var(--wire-fill) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-mobile-wire :where(.ui-mobile-wire-brand, .ui-mobile-wire-hero-title, .ui-mobile-wire-card-title, .ui-mobile-wire-stat-head, .ui-mobile-wire-ring, .ui-mobile-wire-mini strong, .ui-mobile-wire-stat-value, .ui-mobile-wire-trend-title, .ui-mobile-wire-metric strong) {
+            color: var(--wire-ink) !important;
+            -webkit-text-fill-color: var(--wire-ink) !important;
+         }
+
+         #landing .ui-mobile-wire :where(.ui-mobile-wire-hero-title span, .ui-mobile-wire-card-title i) {
+            color: var(--wire-line-strong) !important;
+            -webkit-text-fill-color: var(--wire-line-strong) !important;
+         }
+
+         #landing .ui-mobile-wire :where(.ui-mobile-wire-action, .ui-mobile-wire-avatar, .ui-mobile-wire-icon, .ui-mobile-wire-chip, .ui-mobile-wire-mini span, .ui-mobile-wire-ring span, .ui-mobile-wire-stat-mark, .ui-mobile-wire-stat-label, .ui-mobile-wire-trend-copy, .ui-mobile-wire-button, .ui-mobile-wire-metric, .ui-mobile-wire-nav-item) {
+            color: var(--wire-text) !important;
+            -webkit-text-fill-color: var(--wire-text) !important;
+         }
+
+         #landing .ui-mobile-wire .ui-mobile-wire-chip {
+            background: var(--wire-chip-bg) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-mobile-wire .ui-mobile-wire-speech {
+            background: var(--wire-speech-bg) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-device-desktop.ui-desktop-shell {
+            background: var(--desktop-preview-surface) !important;
+            border-color: var(--desktop-preview-outline) !important;
+         }
+
+         #landing .ui-desktop-wire {
+            background: var(--wire-bg) !important;
+            color: var(--wire-text) !important;
+            -webkit-text-fill-color: var(--wire-text) !important;
+         }
+
+         #landing .ui-desktop-wire .ui-desktop-wire-main {
+            background:
+               linear-gradient(var(--wire-line) 1px, transparent 1px) 0 0 / 100% 42px,
+               linear-gradient(90deg, var(--wire-line) 1px, transparent 1px) 0 0 / 48px 100%,
+               var(--wire-bg) !important;
+         }
+
+         #landing .ui-desktop-wire :where(.ui-desktop-wire-sidebar, .ui-desktop-wire-panel, .ui-desktop-wire-search, .ui-desktop-wire-tool, .ui-desktop-wire-user-pill) {
+            background: var(--wire-panel) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-desktop-wire :where(.ui-desktop-wire-sidebar-card, .ui-desktop-wire-nav-item.active, .ui-desktop-wire-pill, .ui-desktop-wire-goal, .ui-desktop-wire-session, .ui-desktop-wire-bubble, .ui-desktop-wire-status, .ui-desktop-wire-note, .ui-desktop-wire-plan-row, .ui-desktop-wire-progress-row, .ui-desktop-wire-rec-row, .ui-desktop-wire-table-row, .ui-desktop-wire-progress-track) {
+            background: var(--wire-bg) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-desktop-wire :where(.ui-desktop-wire-mark, .ui-desktop-wire-avatar, .ui-desktop-wire-icon, .ui-desktop-wire-line, .ui-desktop-wire-chart span) {
+            background: var(--wire-fill) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-desktop-wire .ui-desktop-wire-chip {
+            background: var(--wire-chip-bg) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-desktop-wire .ui-desktop-wire-chip::before {
+            background: var(--wire-fill) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-desktop-wire .ui-desktop-wire-progress-track span {
+            background: var(--wire-line-strong) !important;
+         }
+
+         #landing .ui-desktop-wire .ui-desktop-wire-speech {
+            background: var(--wire-speech-bg) !important;
+            border-color: var(--wire-line) !important;
+         }
+
+         #landing .ui-desktop-wire .ui-desktop-wire-bubble.ai {
+            background: var(--wire-panel-soft) !important;
+         }
+
+         #landing .ui-desktop-wire :where(.ui-desktop-wire-brand strong, .ui-desktop-wire-title, .ui-desktop-wire-welcome-title, .ui-desktop-wire-card-title, .ui-desktop-wire-stat-value, .ui-desktop-wire-ring, .ui-desktop-wire-goal strong, .ui-desktop-wire-session strong, .ui-desktop-wire-score, .ui-desktop-wire-feedback strong, .ui-desktop-wire-status, .ui-desktop-wire-plan-row strong, .ui-desktop-wire-progress-row strong, .ui-desktop-wire-rec-row strong, .ui-desktop-wire-table-row strong) {
+            color: var(--wire-ink) !important;
+            -webkit-text-fill-color: var(--wire-ink) !important;
+         }
+
+         #landing .ui-desktop-wire :where(.ui-desktop-wire-kicker, .ui-desktop-wire-welcome-title span, .ui-desktop-wire-nav-section, .ui-desktop-wire-nav-item.active, .ui-desktop-wire-stat-mark) {
+            color: var(--wire-line-strong) !important;
+            -webkit-text-fill-color: var(--wire-line-strong) !important;
+         }
+
+         #landing .ui-desktop-wire :where(.ui-desktop-wire-brand span, .ui-desktop-wire-subtitle, .ui-desktop-wire-search, .ui-desktop-wire-tool, .ui-desktop-wire-user-pill, .ui-desktop-wire-nav-item, .ui-desktop-wire-chip, .ui-desktop-wire-pill, .ui-desktop-wire-stat-label, .ui-desktop-wire-card-subtitle, .ui-desktop-wire-ring span, .ui-desktop-wire-goal, .ui-desktop-wire-session, .ui-desktop-wire-bubble, .ui-desktop-wire-note, .ui-desktop-wire-plan-row, .ui-desktop-wire-progress-row, .ui-desktop-wire-rec-row, .ui-desktop-wire-table-row) {
+            color: var(--wire-text) !important;
+            -webkit-text-fill-color: var(--wire-text) !important;
          }
 
          #landing .ui-side-item.active,

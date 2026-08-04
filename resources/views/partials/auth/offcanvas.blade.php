@@ -69,11 +69,11 @@
                         <i class="fa-solid fa-eye-slash"></i>
                      </button>
                   </div>
-                  <div class="text-end mb-3" style="margin-top:-8px"><a href="#" style="font-size:.8rem;color:var(--pur)">Forgot password?</a></div>
+                  <div class="text-end mb-3" style="margin-top:-8px"><a href="{{ route('password.request') }}" style="font-size:.8rem;color:var(--pur)">Forgot password?</a></div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="loginBtn">Log In <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or continue with</div>
-               <a href="{{ route('auth.google.login') }}" class="oauth" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Log in with Google</a>
+               <a href="{{ route('auth.google.login') }}" class="oauth" data-auth-transition="google" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Log in with Google</a>
 
                <p class="text-center mt-4" style="font-size:.82rem;color:var(--tx3)">Don't have an account? <a href="#" style="color:var(--pur)" onclick="swTab('signup');return false">Register for free</a></p>
             </div>
@@ -105,7 +105,7 @@
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
                <div class="odiv">or sign up with</div>
-               <a href="{{ route('auth.google.register') }}" class="oauth" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Sign up with Google</a>
+               <a href="{{ route('auth.google.register') }}" class="oauth" data-auth-transition="google-register" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fa-brands fa-google me-2" style="color:#EA4335;"></i>Sign up with Google</a>
 
                <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">By signing up, you agree to our <a href="#" style="color:var(--pur)">Terms</a> &amp; <a href="#" style="color:var(--pur)">Privacy Policy</a></p>
             </div>

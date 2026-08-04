@@ -37,6 +37,10 @@ Route::get('/login', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/request-reactivation', [AuthController::class, 'requestReactivation'])->name('request.reactivation');
+Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->middleware('guest')->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('guest')->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->middleware('guest')->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('guest')->name('password.update');
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/login', [AuthController::class, 'redirectToGoogle'])->name('auth.google.login');

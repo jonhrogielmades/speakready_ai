@@ -25,6 +25,12 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    'brevo' => [
+        'api_key' => env('BREVO_API_KEY'),
+        'endpoint' => env('BREVO_API_URL', 'https://api.brevo.com/v3/smtp/email'),
+        'timeout' => env('BREVO_API_TIMEOUT', 15),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

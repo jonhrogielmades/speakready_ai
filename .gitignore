@@ -23,3 +23,4 @@ yarn-error.log
 *.log
 _static_backup/
 .codex_tmp_git_push_*/
+.codex_tmp_chrome_*/

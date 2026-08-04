@@ -8,6 +8,19 @@ export PORT="${PORT:-10000}"
 export LOG_CHANNEL=stderr
 export LOG_EMERGENCY_PATH=php://stderr
 
+if [ -n "${RENDER_EXTERNAL_URL:-}" ]; then
+    case "${APP_URL:-}" in
+        ''|http://localhost|http://localhost:*|https://localhost|https://localhost:*)
+            export APP_URL="$RENDER_EXTERNAL_URL"
+            echo "Using Render external URL for APP_URL: $APP_URL" >&2
+            ;;
+    esac
+fi
+
+if [ "${MAIL_MAILER:-}" = "smtp" ] && [ "${MAIL_HOST:-}" = "smtp.gmail.com" ]; then
+    echo "Gmail SMTP is configured. Render Free web services block outbound SMTP ports 25, 465, and 587; use a paid Render instance or an HTTPS/API mail provider if reset emails do not send." >&2
+fi
+
 # Render's dashboard sometimes shows a short internal Postgres host such as
 # dpg-...-a. That only resolves on Render's private network. If the service is
 # not on that network, expand it to the public hostname before Laravel caches

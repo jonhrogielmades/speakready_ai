@@ -57,6 +57,19 @@ DB_PASSWORD=                # Your database password (leave blank if none)
 ```
 
 **Render Production Database:**
+Set these core production variables in the Render service dashboard:
+```env
+APP_NAME="SpeakReady AI"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-service.onrender.com
+SESSION_SECURE_COOKIE=true
+```
+
+If `APP_URL` is missing or accidentally left as `http://localhost`, the Render
+start script and app config fall back to Render's `RENDER_EXTERNAL_URL`. For a
+custom domain, set `APP_URL` to that exact HTTPS domain.
+
 For Render Postgres, prefer the full connection URL instead of splitting the
 credentials into separate `DB_*` values:
 ```env
@@ -80,13 +93,29 @@ database was created in a different Render region.
 ```env
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.gmail.com
-MAIL_PORT=465
+MAIL_PORT=587
 MAIL_USERNAME=capstonespeakreadyai@gmail.com
 MAIL_PASSWORD=your_app_password   # Generate a 16-character App Password in Google Account settings
-MAIL_ENCRYPTION=ssl
+MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="capstonespeakreadyai@gmail.com"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
+
+Render Free web services cannot send through SMTP ports `25`, `465`, or `587`.
+For Gmail SMTP on Render, use a paid Render instance. On a Free Render instance,
+use an HTTPS/API mail provider instead of SMTP.
+
+**Render Free Password Reset Email:**
+For a free Render web service, use Brevo's HTTPS API instead of SMTP:
+```env
+BREVO_API_KEY=your_brevo_api_key
+MAIL_FROM_ADDRESS=your_verified_brevo_sender@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Create a free Brevo account, verify the sender email/domain, and generate an API
+key from Brevo's SMTP & API settings. The app will automatically use Brevo for
+password reset emails when `BREVO_API_KEY` is present.
 
 ### 4. Generate Application Key
 Generate a new cryptographic key for the application. This will automatically update your `.env` file securely:
