@@ -371,7 +371,19 @@ class InterviewController extends Controller
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
 
-        $this->persistInterviewAnswer($session, $question, $validated);
+        try {
+            $this->persistInterviewAnswer($session, $question, $validated);
+        } catch (\Throwable $error) {
+            Log::error('Interview answer save failed.', [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'error_type' => $error::class,
+            ]);
+
+            return response()->json([
+                'error' => 'We could not save your answer. Please try again.',
+            ], 500);
+        }
 
         if (array_key_exists('notes', $validated)) {
             $session->update(['notes' => $validated['notes']]);
@@ -449,7 +461,19 @@ class InterviewController extends Controller
         );
 
         // 1. Save User's Answer
-        $answer = $this->persistInterviewAnswer($session, $question, $validated, $answerText);
+        try {
+            $answer = $this->persistInterviewAnswer($session, $question, $validated, $answerText);
+        } catch (\Throwable $error) {
+            Log::error('Interview chat answer save failed.', [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'error_type' => $error::class,
+            ]);
+
+            return response()->json([
+                'error' => 'We could not save your answer. Please try again.',
+            ], 500);
+        }
 
         $questionSequence = $this->orderedQuestionsForSession($session);
         $currentQuestionIndex = $this->questionIndexInSequence($questionSequence, $question);
@@ -491,9 +515,20 @@ class InterviewController extends Controller
         }
 
         $dataset = $this->datasetForSession($session);
-        $followUpText = $followUpEnabled
-            ? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext, $dataset)
-            : AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+        try {
+            $followUpText = $followUpEnabled
+                ? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), $conversationContext, $dataset)
+                : AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+        } catch (\Throwable $error) {
+            Log::warning('Interview follow-up generation failed; using local fallback.', [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'provider' => $provider,
+                'error_type' => $error::class,
+            ]);
+            $provider = 'local';
+            $followUpText = AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+        }
 
         if (! $followUpText) {
             $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
@@ -504,64 +539,78 @@ class InterviewController extends Controller
             $this->candidateAskedInterviewerNameQuestion($interviewerInputText)
         );
 
-        return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount) {
-            $lockedSession = InterviewSession::with('category')
-                ->where('user_id', Auth::id())
-                ->where('status', 'in_progress')
-                ->lockForUpdate()
-                ->find($session->id);
+        try {
+            return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount) {
+                $lockedSession = InterviewSession::with('category')
+                    ->where('user_id', Auth::id())
+                    ->where('status', 'in_progress')
+                    ->lockForUpdate()
+                    ->find($session->id);
 
-            if (! $lockedSession) {
-                return response()->json(['error' => 'Interview session is no longer active.'], 409);
-            }
+                if (! $lockedSession) {
+                    return response()->json(['error' => 'Interview session is no longer active.'], 409);
+                }
 
-            $questionSequence = $this->orderedQuestionsForSession($lockedSession);
-            $currentQuestionIndex = $this->questionIndexInSequence($questionSequence, $question);
+                $questionSequence = $this->orderedQuestionsForSession($lockedSession);
+                $currentQuestionIndex = $this->questionIndexInSequence($questionSequence, $question);
 
-            if ($currentQuestionIndex === null) {
-                return response()->json(['error' => 'This question is not in the active interview sequence.'], 409);
-            }
+                if ($currentQuestionIndex === null) {
+                    return response()->json(['error' => 'This question is not in the active interview sequence.'], 409);
+                }
 
-            if ($currentQuestionIndex >= $targetQuestionCount - 1) {
+                if ($currentQuestionIndex >= $targetQuestionCount - 1) {
+                    $lockedSession->update([
+                        'current_question_index' => $currentQuestionIndex,
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'interview_completed' => true,
+                    ]);
+                }
+
+                // 4. Save new AI Question
+                $dataset = $this->datasetForSession($lockedSession);
+                $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
+                $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
+                $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts);
+                $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
+                $this->deleteUnansweredFutureQuestions($lockedSession, $question);
+
+                $newQuestion = $this->createInterviewQuestion(
+                    $lockedSession,
+                    $lockedSession->category,
+                    $safeFollowUpText,
+                    $lockedSession->difficulty,
+                    $this->decodeQuestionTypes($lockedSession->question_types),
+                    $nextQuestionIndex,
+                    $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
+                    $provider !== 'local'
+                );
+
+                if (! $newQuestion) {
+                    return response()->json(['error' => 'Unable to prepare the next interview question.'], 500);
+                }
+
                 $lockedSession->update([
-                    'current_question_index' => $currentQuestionIndex,
+                    'current_question_index' => $nextQuestionIndex,
                 ]);
 
-                return response()->json([
-                    'success' => true,
-                    'interview_completed' => true,
-                ]);
-            }
-
-            // 4. Save new AI Question
-            $dataset = $this->datasetForSession($lockedSession);
-            $sourceMetadata = $dataset ? QuestionDatasetProvider::sourceMetadata($dataset) : [];
-            $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
-            $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts);
-            $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
-            $this->deleteUnansweredFutureQuestions($lockedSession, $question);
-
-            $newQuestion = $this->createInterviewQuestion(
-                $lockedSession,
-                $lockedSession->category,
-                $safeFollowUpText,
-                $lockedSession->difficulty,
-                $this->decodeQuestionTypes($lockedSession->question_types),
-                $nextQuestionIndex,
-                $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
-                $provider !== 'local'
-            );
-
-            if (! $newQuestion) {
-                return response()->json(['error' => 'Unable to prepare the next interview question.'], 500);
-            }
-
-            $lockedSession->update([
-                'current_question_index' => $nextQuestionIndex,
+                return $this->nextQuestionResponse($newQuestion);
+            });
+        } catch (\Throwable $error) {
+            Log::error('Interview next question preparation failed after answer save.', [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'error_type' => $error::class,
             ]);
 
-            return $this->nextQuestionResponse($newQuestion);
-        });
+            return response()->json([
+                'success' => false,
+                'answer_saved' => true,
+                'error' => 'Your answer was saved, but the next question could not be prepared. Please refresh the interview and continue.',
+            ], 503);
+        }
     }
 
     public function speech(Request $request)
@@ -1158,23 +1207,7 @@ class InterviewController extends Controller
         ]);
 
         $answerText = $this->cleanTranscribedAnswer($validated['answer_text']);
-        $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $deliveryTranscript);
-        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
-        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
-        $coaching = app(EvidenceBasedCoachingService::class);
-        $observationData = $coaching->normalizeObservationData(
-            $this->jsonPayloadFrom($validated['observation_data'] ?? null),
-            $deliveryTranscript,
-            array_merge($deliveryMetrics, ['response_mode' => $validated['response_mode'] ?? 'text']),
-            (bool) data_get($session->accommodation_profile, 'camera_coaching', false)
-        );
-        $initialCoaching = $coaching->forAnswer(
-            $answerText,
-            $answer->question,
-            array_merge($deliveryMetrics, ['response_mode' => $validated['response_mode'] ?? 'text']),
-            $observationData
-        );
+        $answerPayload = $this->answerPersistencePayload($session, $answer->question, $validated, $answerText);
         $nextAttempt = ((int) InterviewAnswer::where('retry_of_answer_id', $answer->id)->max('attempt_number')) + 1;
         $nextAttempt = max(2, $nextAttempt);
 
@@ -1183,79 +1216,94 @@ class InterviewController extends Controller
             'retry_of_answer_id' => $answer->id,
             'attempt_number' => $nextAttempt,
             'question_id' => $answer->question_id,
-            'answer_text' => $answerText,
-            'delivery_transcript' => $deliveryTranscript !== '' ? $deliveryTranscript : null,
-            'transcript_timeline' => $transcriptTimeline,
-            'paste_event_count' => $integrity['paste_event_count'],
-            'pasted_character_count' => $integrity['pasted_character_count'],
-            'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
-            'answer_integrity_flags' => $integrity['answer_integrity_flags'],
-            'observation_data' => $observationData,
-            'coaching_feedback' => $initialCoaching,
-            'response_mode' => $validated['response_mode'] ?? 'text',
-            'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
-            'wpm' => $deliveryMetrics['wpm'],
-            'voice_duration' => $deliveryMetrics['voice_duration'],
-            'filler_words_count' => $deliveryMetrics['filler_words_count'],
-            'pause_count' => $deliveryMetrics['pause_count'],
-            'confidence_score' => $deliveryMetrics['confidence_score'],
-            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
-            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
-            'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
-            'posture_score' => $deliveryMetrics['posture_score'],
-        ], $this->integrityAuditFields($integrity)));
+        ], $answerPayload));
 
         $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
-        $feedback = AIService::generateFeedback([
-            'target_position' => $session->target_position,
-            'difficulty' => $session->difficulty,
-            'target_language' => $this->currentLanguageConfig(),
-        ], [[
-            'id' => $retry->id,
-            'question' => $answer->question->question_text ?? '',
-            'question_type' => $answer->question->type ?? null,
-            'answer' => $retry->answer_text,
-            'is_skipped' => false,
-            'expected_guide' => $answer->question->expected_guide ?? null,
-            'mapped_skills' => $answer->question->mapped_skills ?? [],
-        ]], $provider);
+        try {
+            $feedback = AIService::generateFeedback([
+                'target_position' => $session->target_position,
+                'difficulty' => $session->difficulty,
+                'target_language' => $this->currentLanguageConfig(),
+            ], [[
+                'id' => $retry->id,
+                'question' => $answer->question->question_text ?? '',
+                'question_type' => $answer->question->type ?? null,
+                'answer' => $retry->answer_text,
+                'is_skipped' => false,
+                'expected_guide' => $answer->question->expected_guide ?? null,
+                'mapped_skills' => $answer->question->mapped_skills ?? [],
+            ]], $provider);
+        } catch (\Throwable $error) {
+            Log::warning('Retry answer feedback generation failed after answer save.', [
+                'answer_id' => $retry->id,
+                'session_id' => $session->id,
+                'provider' => $provider,
+                'error_type' => $error::class,
+            ]);
+            $feedback = ['per_question_feedback' => []];
+        }
 
         $qFeedback = $feedback['per_question_feedback'][0] ?? null;
         if ($qFeedback) {
-            $assessment = app(TrustworthyAssessmentService::class);
             $retryScore = $this->scoreValue($qFeedback['score'] ?? 0);
-            $evidence = $assessment->answerEvidence(
-                $retry->answer_text ?? '',
-                $qFeedback['ai_feedback'] ?? null,
-                $answer->question
-            );
-            $rubric = $assessment->rubricLevel($retryScore);
-            $coachingFeedback = $coaching->forAnswer(
-                (string) ($retry->answer_text ?? ''),
+            try {
+                $assessment = app(TrustworthyAssessmentService::class);
+                $evidence = $assessment->answerEvidence(
+                    $retry->answer_text ?? '',
+                    $qFeedback['ai_feedback'] ?? null,
+                    $answer->question
+                );
+                $rubric = $assessment->rubricLevel($retryScore);
+                $betterAnswer = $assessment->groundedRevisionTemplate($retry->answer_text ?? '', $evidence);
+            } catch (\Throwable $error) {
+                Log::warning('Retry answer evidence assessment failed after answer save.', [
+                    'answer_id' => $retry->id,
+                    'session_id' => $session->id,
+                    'error_type' => $error::class,
+                ]);
+                $evidence = $this->fallbackAnswerEvidence((string) ($retry->answer_text ?? ''), $answer->question);
+                $rubric = [
+                    'level' => 'Not scored',
+                    'next_level' => 'Retry the evaluation when feedback services are available.',
+                ];
+                $betterAnswer = '';
+            }
+            $coachingFeedback = $this->safeCoachingFeedback(
+                $session,
                 $answer->question,
+                (string) ($retry->answer_text ?? ''),
                 $this->coachingMetricsFromAnswer(
                     $retry,
                     $this->scoreValue($qFeedback['scoring_confidence'] ?? 0),
                     $session,
                     $this->coachingEvaluationMetrics($qFeedback)
                 ),
-                is_array($retry->observation_data) ? $retry->observation_data : []
+                is_array($retry->observation_data) ? $retry->observation_data : [],
+                'retry_feedback'
             );
-            $retry->update([
-                'ai_feedback' => $qFeedback['ai_feedback'] ?? '',
-                'better_sample_answer' => $assessment->groundedRevisionTemplate($retry->answer_text ?? '', $evidence),
-                'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
-                'clarity_score' => $this->scoreValue($qFeedback['clarity_score'] ?? 0),
-                'relevance_score' => $this->scoreValue($qFeedback['relevance_score'] ?? 0),
-                'grammar_score' => $this->scoreValue($qFeedback['grammar_score'] ?? 0),
-                'score' => $retryScore,
-                'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? 0),
-                'evidence_map' => $evidence,
-                'rubric_level' => $rubric['level'],
-                'recommendation_text' => $rubric['next_level'],
-                'improved_answer_source' => 'candidate_facts',
-                'coaching_feedback' => $coachingFeedback,
-            ]);
+            try {
+                $retry->update([
+                    'ai_feedback' => $qFeedback['ai_feedback'] ?? '',
+                    'better_sample_answer' => $betterAnswer,
+                    'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
+                    'clarity_score' => $this->scoreValue($qFeedback['clarity_score'] ?? 0),
+                    'relevance_score' => $this->scoreValue($qFeedback['relevance_score'] ?? 0),
+                    'grammar_score' => $this->scoreValue($qFeedback['grammar_score'] ?? 0),
+                    'score' => $retryScore,
+                    'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? 0),
+                    'evidence_map' => $evidence,
+                    'rubric_level' => $rubric['level'],
+                    'recommendation_text' => $rubric['next_level'],
+                    'improved_answer_source' => 'candidate_facts',
+                    'coaching_feedback' => $coachingFeedback,
+                ]);
+            } catch (\Throwable $error) {
+                Log::warning('Retry answer optional feedback update failed after answer save.', [
+                    'answer_id' => $retry->id,
+                    'session_id' => $session->id,
+                    'error_type' => $error::class,
+                ]);
+            }
         }
 
         $retry->refresh();
@@ -1496,59 +1544,388 @@ class InterviewController extends Controller
 
     private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): InterviewAnswer
     {
-        $answerText ??= $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
-        $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
-        $deliveryMetrics = $this->deliveryMetricsFrom($validated, $deliveryTranscript);
-        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
-        $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
-        $coaching = app(EvidenceBasedCoachingService::class);
-        $observationData = $coaching->normalizeObservationData(
-            $this->jsonPayloadFrom($validated['observation_data'] ?? null),
-            $deliveryTranscript,
-            array_merge($deliveryMetrics, ['response_mode' => $validated['response_mode'] ?? 'text']),
-            (bool) data_get($session->accommodation_profile, 'camera_coaching', false)
-        );
-        $coachingFeedback = $coaching->forAnswer(
-            $answerText,
-            $question,
-            array_merge($deliveryMetrics, [
-                'response_mode' => $validated['response_mode'] ?? 'text',
-                'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            ]),
-            $observationData
-        );
-
         return InterviewAnswer::updateOrCreate(
             [
                 'interview_session_id' => $session->id,
                 'question_id' => $question->id,
                 'retry_of_answer_id' => null,
             ],
-            array_merge([
-                'answer_text' => $answerText,
-                'delivery_transcript' => $deliveryTranscript !== '' ? $deliveryTranscript : null,
-                'transcript_timeline' => $transcriptTimeline,
-                'paste_event_count' => $integrity['paste_event_count'],
-                'pasted_character_count' => $integrity['pasted_character_count'],
-                'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
-                'answer_integrity_flags' => $integrity['answer_integrity_flags'],
-                'observation_data' => $observationData,
-                'coaching_feedback' => $coachingFeedback,
-                'response_mode' => $validated['response_mode'] ?? 'text',
-                'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
-                'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
-                'wpm' => $deliveryMetrics['wpm'],
-                'voice_duration' => $deliveryMetrics['voice_duration'],
-                'filler_words_count' => $deliveryMetrics['filler_words_count'],
-                'pause_count' => $deliveryMetrics['pause_count'],
-                'confidence_score' => $deliveryMetrics['confidence_score'],
-                'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
-                'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
-                'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
-                'posture_score' => $deliveryMetrics['posture_score'],
-            ], $this->integrityAuditFields($integrity))
+            $this->answerPersistencePayload($session, $question, $validated, $answerText)
         );
+    }
+
+    private function answerPersistencePayload(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): array
+    {
+        $answerText ??= $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
+        $deliveryTranscript = $this->deliveryTranscriptFrom($validated, $answerText);
+        $transcriptTimeline = $this->jsonPayloadFrom($validated['transcript_timeline'] ?? null);
+        try {
+            $deliveryMetrics = $this->deliveryMetricsFrom($validated, $deliveryTranscript);
+        } catch (\Throwable $error) {
+            $this->logAnswerAnalysisFallback('delivery_metrics', $error, $session, $question);
+            $deliveryMetrics = $this->fallbackDeliveryMetrics($validated);
+        }
+
+        try {
+            $integrity = $this->answerIntegrityFrom($validated, $answerText, $transcriptTimeline);
+        } catch (\Throwable $error) {
+            $this->logAnswerAnalysisFallback('answer_integrity', $error, $session, $question);
+            $integrity = $this->fallbackAnswerIntegrity($validated);
+        }
+
+        $metrics = array_merge($deliveryMetrics, [
+            'response_mode' => $validated['response_mode'] ?? 'text',
+            'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        ]);
+        $observationData = $this->safeObservationData(
+            $session,
+            $question,
+            $this->jsonPayloadFrom($validated['observation_data'] ?? null),
+            $deliveryTranscript,
+            $metrics
+        );
+        $coachingFeedback = $this->safeCoachingFeedback(
+            $session,
+            $question,
+            $answerText,
+            $metrics,
+            $observationData,
+            'answer_coaching'
+        );
+
+        return array_merge([
+            'answer_text' => $answerText,
+            'delivery_transcript' => $deliveryTranscript !== '' ? $deliveryTranscript : null,
+            'transcript_timeline' => $transcriptTimeline,
+            'paste_event_count' => $integrity['paste_event_count'],
+            'pasted_character_count' => $integrity['pasted_character_count'],
+            'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
+            'answer_integrity_flags' => $integrity['answer_integrity_flags'],
+            'observation_data' => $observationData,
+            'coaching_feedback' => $coachingFeedback,
+            'response_mode' => $validated['response_mode'] ?? 'text',
+            'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'timed_out' => filter_var($validated['timed_out'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds'] ?? 0, 0, 7200),
+            'wpm' => $deliveryMetrics['wpm'],
+            'voice_duration' => $deliveryMetrics['voice_duration'],
+            'filler_words_count' => $deliveryMetrics['filler_words_count'],
+            'pause_count' => $deliveryMetrics['pause_count'],
+            'confidence_score' => $deliveryMetrics['confidence_score'],
+            'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
+            'self_reported_confidence' => $validated['self_reported_confidence'] ?? null,
+            'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
+            'posture_score' => $deliveryMetrics['posture_score'],
+        ], $this->integrityAuditFields($integrity));
+    }
+
+    private function safeObservationData(
+        InterviewSession $session,
+        Question $question,
+        ?array $clientData,
+        string $deliveryTranscript,
+        array $metrics
+    ): array {
+        try {
+            return app(EvidenceBasedCoachingService::class)->normalizeObservationData(
+                $clientData,
+                $deliveryTranscript,
+                $metrics,
+                (bool) data_get($session->accommodation_profile, 'camera_coaching', false)
+            );
+        } catch (\Throwable $error) {
+            $this->logAnswerAnalysisFallback('observation_data', $error, $session, $question);
+
+            return $this->fallbackObservationData($deliveryTranscript, $metrics, (bool) data_get($session->accommodation_profile, 'camera_coaching', false));
+        }
+    }
+
+    private function safeCoachingFeedback(
+        InterviewSession $session,
+        Question $question,
+        string $answerText,
+        array $metrics,
+        array $observationData,
+        string $stage
+    ): array {
+        try {
+            return app(EvidenceBasedCoachingService::class)->forAnswer(
+                $answerText,
+                $question,
+                $metrics,
+                $observationData
+            );
+        } catch (\Throwable $error) {
+            $this->logAnswerAnalysisFallback($stage, $error, $session, $question);
+
+            return $this->fallbackAnswerCoaching($answerText, $question, $metrics, $observationData);
+        }
+    }
+
+    private function fallbackDeliveryMetrics(array $input): array
+    {
+        $responseMode = strtolower(trim((string) ($input['response_mode'] ?? 'text')));
+        $isVoiceMode = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true);
+
+        return [
+            'wpm' => $isVoiceMode ? $this->clampInt($input['wpm'] ?? 0, 0, 400) : 0,
+            'voice_duration' => $isVoiceMode ? $this->clampInt($input['voice_duration'] ?? 0, 0, 7200) : 0,
+            'filler_words_count' => $isVoiceMode ? $this->clampInt($input['filler_words_count'] ?? 0, 0, 500) : 0,
+            'pause_count' => $isVoiceMode ? $this->clampInt($input['pause_count'] ?? 0, 0, 500) : 0,
+            'confidence_score' => 0,
+            'delivery_stability_score' => null,
+            'eye_contact_score' => 0,
+            'posture_score' => 0,
+        ];
+    }
+
+    private function fallbackAnswerIntegrity(array $input): array
+    {
+        $pasteEventCount = $this->clampInt($input['paste_event_count'] ?? 0, 0, 500);
+        $pastedCharacterCount = $this->clampInt($input['pasted_character_count'] ?? 0, 0, 20000);
+        $largePasteDetected = $pasteEventCount > 0 && $pastedCharacterCount >= 80;
+
+        return [
+            'paste_event_count' => $pasteEventCount,
+            'pasted_character_count' => $pastedCharacterCount,
+            'ai_generated_likelihood' => 0,
+            'answer_integrity_flags' => [
+                'copy_paste_detected' => $pasteEventCount > 0,
+                'large_paste_detected' => $largePasteDetected,
+                'rapid_long_answer' => false,
+                'possible_ai_generated_answer' => false,
+                'ai_template_likelihood' => 0,
+                'signals' => $pasteEventCount > 0 ? ['paste_event_recorded'] : [],
+            ],
+        ];
+    }
+
+    private function fallbackObservationData(string $deliveryTranscript, array $metrics, bool $cameraEnabled): array
+    {
+        $duration = $this->clampInt($metrics['voice_duration'] ?? 0, 0, 7200);
+        $wordCount = TranscriptService::wordCount($deliveryTranscript);
+        $responseMode = strtolower(trim((string) ($metrics['response_mode'] ?? 'text')));
+        $deliveryMeasured = in_array($responseMode, ['voice', 'hybrid', 'voice_and_text'], true)
+            && $duration > 0
+            && $wordCount > 0;
+        $fillerWords = $deliveryMeasured ? $this->clampInt($metrics['filler_words_count'] ?? 0, 0, 500) : 0;
+
+        return [
+            'version' => EvidenceBasedCoachingService::VERSION,
+            'delivery' => [
+                'status' => $deliveryMeasured ? 'measured' : 'not_measured',
+                'source' => $deliveryMeasured ? 'transcript_detected' : null,
+                'word_count' => $deliveryMeasured ? $wordCount : null,
+                'duration_seconds' => $deliveryMeasured ? $duration : null,
+                'wpm' => $deliveryMeasured ? $this->clampInt($metrics['wpm'] ?? 0, 0, 400) : null,
+                'pause_count' => $deliveryMeasured ? $this->clampInt($metrics['pause_count'] ?? 0, 0, 500) : null,
+                'filler_total' => $deliveryMeasured ? $fillerWords : null,
+                'high_confidence_filler_total' => null,
+                'context_sensitive_filler_total' => null,
+                'actionable_filler_total' => $deliveryMeasured ? $fillerWords : null,
+                'filler_breakdown' => [],
+                'filler_rate_per_100' => $deliveryMeasured ? round(($fillerWords / max(1, $wordCount)) * 100, 1) : null,
+                'filler_events' => [],
+                'caveat' => 'Automatic delivery coaching was limited. The answer was saved, but detailed transcript analysis could not complete for this request.',
+            ],
+            'camera' => $this->fallbackCameraObservation($cameraEnabled),
+        ];
+    }
+
+    private function fallbackCameraObservation(bool $cameraEnabled): array
+    {
+        return [
+            'status' => 'not_measured',
+            'sample_count' => 0,
+            'detection_count' => 0,
+            'camera_facing_count' => 0,
+            'centered_count' => 0,
+            'pose_detected_count' => 0,
+            'hands_visible_count' => 0,
+            'gesture_active_count' => 0,
+            'shoulders_visible_count' => 0,
+            'shoulders_level_count' => 0,
+            'shoulders_level_measured_count' => 0,
+            'upright_posture_count' => 0,
+            'upright_posture_measured_count' => 0,
+            'movement_measured_count' => 0,
+            'high_movement_count' => 0,
+            'face_visibility_percent' => null,
+            'camera_facing_percent' => null,
+            'hands_visible_percent' => null,
+            'gesture_activity_percent' => null,
+            'shoulders_level_percent' => null,
+            'upright_posture_percent' => null,
+            'average_movement_score' => null,
+            'high_movement_percent' => null,
+            'samples' => [],
+            'source' => null,
+            'unavailable_reason' => $cameraEnabled ? 'analysis_unavailable' : null,
+            'caveat' => 'Optional camera coaching was not measured. It is never used to infer confidence, honesty, personality, employability, or intent.',
+        ];
+    }
+
+    private function fallbackAnswerCoaching(string $answerText, Question $question, array $metrics, array $observationData): array
+    {
+        $wordCount = TranscriptService::wordCount($answerText);
+        $isSkipped = (bool) ($metrics['is_skipped'] ?? false) || $wordCount === 0;
+        $alignmentStatus = $isSkipped
+            ? 'skipped'
+            : ($wordCount < 10 ? 'insufficient_evidence' : 'not_evaluated');
+        $contentStatus = $wordCount === 0
+            ? 'unscored'
+            : ($wordCount < 10 ? 'limited_evidence' : 'limited_evidence');
+        $questionText = trim((string) $question->question_text);
+        $answerExcerpt = trim((string) preg_replace('/\s+/u', ' ', mb_substr($answerText, 0, 220)));
+        $deliveryStatus = (string) data_get($observationData, 'delivery.status', 'not_measured');
+        $cameraStatus = (string) data_get($observationData, 'camera.status', 'not_measured');
+        $questionTip = $this->fallbackQuestionTip($question);
+        $deliveryFeedback = [
+            'status' => $deliveryStatus === 'measured' ? 'measured' : 'not_measured',
+            'observation' => $deliveryStatus === 'measured'
+                ? 'Voice delivery evidence was saved, but detailed delivery coaching could not complete for this request.'
+                : 'Delivery was not measured for this answer; no filler, pace, or pause conclusion was made.',
+            'tip' => 'Record a voice answer again if you want transcript-based delivery coaching.',
+            'tips' => ['Record a voice answer again if you want transcript-based delivery coaching.'],
+            'evidence' => $deliveryStatus === 'measured' ? [
+                'duration_seconds' => data_get($observationData, 'delivery.duration_seconds'),
+                'wpm' => data_get($observationData, 'delivery.wpm'),
+                'pause_count' => data_get($observationData, 'delivery.pause_count'),
+                'word_count' => data_get($observationData, 'delivery.word_count'),
+                'filler_total' => data_get($observationData, 'delivery.filler_total'),
+                'filler_rate_per_100' => data_get($observationData, 'delivery.filler_rate_per_100'),
+                'filler_breakdown' => [],
+                'filler_events' => [],
+            ] : [],
+            'limitation' => 'Automatic delivery coaching was unavailable, so the saved evidence is shown without a detailed interpretation.',
+        ];
+        $cameraFeedback = [
+            'status' => $cameraStatus === 'insufficient_data' ? 'insufficient_data' : 'not_measured',
+            'observation' => 'Optional camera coaching was not measured for this answer.',
+            'tip' => 'Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.',
+            'tips' => ['Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.'],
+            'evidence' => [],
+            'limitation' => 'Camera coaching was unavailable or not usable for this request.',
+        ];
+        $contentAlignment = [
+            'answer_id' => $metrics['answer_id'] ?? null,
+            'question_id' => $question->id,
+            'question' => $questionText,
+            'status' => $alignmentStatus,
+            'evidence_quotes' => $answerExcerpt !== '' ? [$answerExcerpt] : [],
+            'missing_points' => $isSkipped
+                ? ['No response was submitted, so required coverage is still missing.']
+                : ['A dependable automatic relevance evaluation was unavailable for this saved answer.'],
+            'what_worked' => $answerExcerpt !== ''
+                ? 'Your answer was saved and can still be reviewed from the submitted text.'
+                : 'The response was saved as submitted.',
+            'improvement_focus' => 'Re-read the question and make the first sentence answer it directly.',
+            'action' => 'Add one truthful, specific detail that supports your main answer.',
+            'next_attempt_steps' => [
+                'Start with a direct answer to the exact question.',
+                'Add one specific example, action, or result you can verify.',
+            ],
+            'success_check' => 'A reviewer can point to the exact sentence that answers the question and the detail that supports it.',
+            'evaluation_source' => 'local_fallback',
+        ];
+
+        return [
+            'version' => EvidenceBasedCoachingService::VERSION,
+            'analysis_status' => [
+                'content' => $contentStatus,
+                'alignment' => $alignmentStatus,
+                'delivery' => $deliveryFeedback['status'],
+                'camera' => $cameraFeedback['status'],
+            ],
+            'delivery_feedback' => $deliveryFeedback,
+            'camera_feedback' => $cameraFeedback,
+            'question_tip' => $questionTip,
+            'content_alignment' => $contentAlignment,
+            'feedback_quality' => [
+                'status' => 'limited',
+                'checks_passed' => 0,
+                'checks_total' => 4,
+                'completeness_percent' => 0,
+                'scope' => 'Fallback feedback used because automatic coaching analysis was unavailable.',
+                'limitation' => 'This confirms the answer was saved but does not provide a full automated assessment.',
+            ],
+            'delivery' => $deliveryFeedback,
+            'camera' => $cameraFeedback,
+            'question' => [
+                'intent' => $questionTip['framework'],
+                'title' => $questionTip['title'],
+                'what_it_tests' => $questionTip['what_it_tests'],
+                'framework' => $questionTip['steps'],
+                'tip' => $questionTip['guidance'],
+                'expected_guide' => $questionTip['expected_guide'],
+                'mapped_skills' => $questionTip['mapped_skills'],
+            ],
+            'priority_actions' => [[
+                'issue_code' => 'fallback_relevance_review',
+                'area' => 'Answer-to-question relevance',
+                'severity' => 50,
+                'affected_count' => 1,
+                'eligible_count' => 1,
+                'observation' => 'The answer was saved, but automatic coaching analysis was unavailable.',
+                'action' => 'Check that the first sentence directly answers the question and add one specific supporting detail.',
+                'success_check' => 'The next attempt clearly answers the question and includes truthful evidence.',
+                'questions' => [$questionText],
+                'question_ids' => [$question->id],
+                'evidence_quotes' => $answerExcerpt !== '' ? [$answerExcerpt] : [],
+                'missing_points' => $contentAlignment['missing_points'],
+                'rank' => 1,
+            ]],
+            'transparency_note' => 'The answer was saved with fallback coaching because automated analysis was unavailable. Treat this as a limited review, not a full score.',
+        ];
+    }
+
+    private function fallbackQuestionTip(Question $question): array
+    {
+        return [
+            'framework' => 'direct_evidence',
+            'title' => 'Direct-answer strategy',
+            'what_it_tests' => 'Relevance, clarity, and support for the main claim.',
+            'steps' => [
+                'Answer the exact question in the first sentence.',
+                'Add one relevant, truthful example or reason.',
+                'Explain your personal contribution or judgment.',
+                'Close with a verified result, implication, or lesson when relevant.',
+            ],
+            'guidance' => 'Answer directly, support the claim with truthful evidence, and avoid details that do not help answer the question.',
+            'expected_guide' => filled($question->expected_guide ?? null)
+                ? mb_substr((string) $question->expected_guide, 0, 800)
+                : null,
+            'mapped_skills' => is_array($question->mapped_skills ?? null) ? $question->mapped_skills : [],
+        ];
+    }
+
+    private function fallbackAnswerEvidence(string $answerText, ?Question $question): array
+    {
+        $excerpt = trim((string) preg_replace('/\s+/u', ' ', mb_substr($answerText, 0, 220)));
+
+        return [
+            'supporting_excerpts' => $excerpt !== '' ? [$excerpt] : [],
+            'missing_evidence' => ['A dependable automatic evidence assessment was unavailable for this retry.'],
+            'feedback_basis' => null,
+            'question_text' => $question?->question_text,
+            'question_intent' => 'direct_evidence',
+            'star_applicable' => false,
+            'result_required' => true,
+            'personal_action_required' => true,
+            'has_result' => false,
+            'has_personal_action' => false,
+        ];
+    }
+
+    private function logAnswerAnalysisFallback(string $stage, \Throwable $error, InterviewSession $session, Question $question): void
+    {
+        Log::warning('Interview answer optional analysis failed; using fallback.', [
+            'stage' => $stage,
+            'session_id' => $session->id,
+            'question_id' => $question->id,
+            'error_type' => $error::class,
+            'message' => Str::limit($error->getMessage(), 300),
+        ]);
     }
 
     private function currentLanguageConfig(): array

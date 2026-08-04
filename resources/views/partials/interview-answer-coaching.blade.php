@@ -294,6 +294,10 @@
     $feedbackQualityPercent = is_numeric($feedbackQuality['completeness_percent'] ?? null)
         ? max(0, min(100, (int) round($feedbackQuality['completeness_percent'])))
         : null;
+    $feedbackReliabilityPercent = is_numeric($feedbackQuality['reliability_percent'] ?? null)
+        ? max(0, min(100, (int) round($feedbackQuality['reliability_percent'])))
+        : null;
+    $feedbackReliabilityBand = trim((string) ($feedbackQuality['reliability_band'] ?? ''));
     $feedbackQualityPassed = max(0, (int) ($feedbackQuality['checks_passed'] ?? 0));
     $feedbackQualityTotal = max(0, (int) ($feedbackQuality['checks_total'] ?? 0));
     $feedbackQualityLimitation = trim((string) ($feedbackQuality['limitation'] ?? ''));
@@ -320,7 +324,7 @@
                 <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;"><i class="fa-solid fa-magnifying-glass-chart me-2" style="color:#0ea5e9;"></i>Evidence-Based Coaching</h6>
                 <div style="color:var(--tx3);font-size:.84rem;">Observation <i class="fa-solid fa-arrow-right mx-1" aria-hidden="true"></i> Evidence <i class="fa-solid fa-arrow-right mx-1" aria-hidden="true"></i> Action</div>
             </div>
-            @if(!empty($statusItems) || ($scoringConfidence !== null && $scoringConfidence > 0) || $feedbackQualityPercent !== null)
+            @if(!empty($statusItems) || ($scoringConfidence !== null && $scoringConfidence > 0) || $feedbackQualityPercent !== null || $feedbackReliabilityPercent !== null)
                 <div class="d-flex flex-wrap gap-2 align-items-start" aria-label="Analysis availability">
                     @foreach($statusItems as $statusItem)
                         @php $statusColors = $statusPresentation($statusItem['status']); @endphp
@@ -334,6 +338,16 @@
                     @if($feedbackQualityPercent !== null)
                         <span class="badge" title="{{ $feedbackQualityLimitation }}" style="color:{{ $feedbackQualityPercent === 100 ? '#10b981' : '#f59e0b' }};background:{{ $feedbackQualityPercent === 100 ? 'rgba(16,185,129,.10)' : 'rgba(245,158,11,.10)' }};border:1px solid {{ $feedbackQualityPercent === 100 ? 'rgba(16,185,129,.25)' : 'rgba(245,158,11,.25)' }};padding:7px 10px;">
                             Feedback checks: {{ $feedbackQualityPercent }}%{{ $feedbackQualityTotal > 0 ? ' ('.$feedbackQualityPassed.'/'.$feedbackQualityTotal.')' : '' }}
+                        </span>
+                    @endif
+                    @if($feedbackReliabilityPercent !== null)
+                        @php
+                            $reliabilityColor = $feedbackReliabilityPercent >= 95 ? '#10b981' : ($feedbackReliabilityPercent >= 85 ? '#3b82f6' : '#f59e0b');
+                            $reliabilityBg = $feedbackReliabilityPercent >= 95 ? 'rgba(16,185,129,.10)' : ($feedbackReliabilityPercent >= 85 ? 'rgba(59,130,246,.10)' : 'rgba(245,158,11,.10)');
+                            $reliabilityBorder = $feedbackReliabilityPercent >= 95 ? 'rgba(16,185,129,.25)' : ($feedbackReliabilityPercent >= 85 ? 'rgba(59,130,246,.25)' : 'rgba(245,158,11,.25)');
+                        @endphp
+                        <span class="badge" title="{{ $feedbackQualityLimitation }}" style="color:{{ $reliabilityColor }};background:{{ $reliabilityBg }};border:1px solid {{ $reliabilityBorder }};padding:7px 10px;">
+                            Reliability: {{ $feedbackReliabilityPercent }}%{{ $feedbackReliabilityBand !== '' ? ' '.$feedbackReliabilityBand : '' }}
                         </span>
                     @endif
                 </div>

@@ -558,6 +558,51 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringNotContainsString('personal action', strtolower($session['weaknesses']));
     }
 
+    public function test_it_rejects_high_provider_relevance_when_answer_does_not_match_question(): void
+    {
+        $answer = [
+            'id' => 701,
+            'question_type' => 'Personal',
+            'question' => 'What salary range are you expecting for this role?',
+            'expected_guide' => 'State a realistic salary range, basis, and flexibility.',
+            'answer' => 'I organized release checklists and coordinated handoffs for software deployments with the engineering team.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 95, 'directly_addressed');
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$feedback],
+        ], [$answer]]));
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('local_evidence', $normalized['evaluation_source']);
+        $this->assertLessThan(50, $normalized['relevance_score']);
+        $this->assertSame('not_addressed', $normalized['answer_alignment']);
+        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
+        $this->assertSame('Limited', $normalized['feedback_quality']['reliability_band']);
+    }
+
+    public function test_well_calibrated_provider_feedback_receives_high_reliability_percent(): void
+    {
+        $answer = [
+            'id' => 702,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare row estimates with actual rows, check indexes and locks, run the query with timing enabled, and verify any change against the same workload before deploying it.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertSame(92, $normalized['scoring_confidence']);
+        $this->assertSame('provider_with_deterministic_cross_check', $normalized['score_calibration']['source']);
+        $this->assertTrue($normalized['score_calibration']['checked']);
+        $this->assertFalse($normalized['score_calibration']['adjustment_applied']);
+        $this->assertGreaterThanOrEqual(95, $normalized['feedback_quality']['reliability_percent']);
+        $this->assertSame('High', $normalized['feedback_quality']['reliability_band']);
+    }
+
     private function feedbackItem(
         int $id,
         int $score,

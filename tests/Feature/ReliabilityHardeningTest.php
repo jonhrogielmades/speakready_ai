@@ -368,6 +368,53 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
     }
 
+    public function test_interview_answer_saves_when_optional_coaching_analysis_fails(): void
+    {
+        $this->app->instance(EvidenceBasedCoachingService::class, new class
+        {
+            public function normalizeObservationData(?array $clientData, string $answerText, array $metrics, bool $cameraEnabled): array
+            {
+                throw new \RuntimeException('Coaching normalization unavailable.');
+            }
+
+            public function forAnswer(string $answerText, Question|array|null $question, array $metrics, array $observationData = []): array
+            {
+                throw new \RuntimeException('Coaching feedback unavailable.');
+            }
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a release you owned.',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.answer'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I owned the release checklist, coordinated QA, and documented the final result before launch.',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)
+            ->where('question_id', $question->id)
+            ->firstOrFail();
+
+        $this->assertSame(
+            EvidenceBasedCoachingService::VERSION,
+            data_get($savedAnswer->coaching_feedback, 'version')
+        );
+        $this->assertSame('local_fallback', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+        $this->assertSame('not_measured', data_get($savedAnswer->observation_data, 'delivery.status'));
+        $this->assertSame('I owned the release checklist, coordinated QA, and documented the final result before launch.', $savedAnswer->answer_text);
+    }
+
     public function test_interview_answers_brief_candidate_question_then_continues_interview(): void
     {
         Setting::setVal('int_follow_up', false, 'interview', 'boolean');

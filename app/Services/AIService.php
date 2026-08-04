@@ -2358,6 +2358,9 @@ PROMPT;
             }
 
             $starApplicable = self::questionUsesStar($answer);
+            $answerText = self::candidateAnswerText($answer);
+            $questionText = trim((string) ($answer['question'] ?? $answer['question_text'] ?? ''));
+            $evidenceProfile = self::answerEvidenceProfile($answerText, $questionText, $starApplicable, $answer);
             $starScore = $item['star_method_score'] ?? null;
             if (! self::isValidScoreValue($starScore)) {
                 $errors[] = "Feedback ID {$id} has an invalid star_method_score.";
@@ -2419,6 +2422,9 @@ PROMPT;
                 || (! $isSkipped && ! $isTooShort && $relevanceScore < 50 && $alignment !== 'not_addressed')) {
                 $errors[] = "Feedback ID {$id} has answer_alignment inconsistent with the submitted answer.";
             }
+            if (! self::providerRelevanceIsPlausible($item, $answer, $evidenceProfile)) {
+                $errors[] = "Feedback ID {$id} has a high relevance score without enough deterministic support.";
+            }
             if (! self::missingCriteriaAreValid($item, $answer)) {
                 $errors[] = "Feedback ID {$id} contains missing criteria outside its own question or guide.";
             }
@@ -2429,7 +2435,7 @@ PROMPT;
             }
             if (! $isSkipped && $aiFeedback !== '' && self::feedbackHasUnsupportedNumbers(
                 $aiFeedback,
-                self::candidateAnswerText($answer)
+                $answerText
             )) {
                 $errors[] = "Feedback ID {$id} contains unsupported commentary.";
             }
@@ -2512,6 +2518,8 @@ PROMPT;
         $providerAlignment = is_string($feedback['answer_alignment'] ?? null)
             ? $feedback['answer_alignment']
             : null;
+        $evidenceProfile = self::answerEvidenceProfile($answerText, $questionText, $starApplicable, $answer);
+        $localScores = self::localEvidenceScores($answerText, $questionText, $starApplicable, $evidenceProfile);
         $validAlignments = [
             'directly_addressed', 'partially_addressed', 'not_addressed',
             'insufficient_evidence', 'skipped',
@@ -2531,15 +2539,15 @@ PROMPT;
             && $questionFocus !== null
             && str_contains($providerFeedback, $questionFocus)
             && $alignmentIsValid
+            && self::providerRelevanceIsPlausible($feedback, $answer, $evidenceProfile)
             && self::missingCriteriaAreValid($feedback, $answer)
             && ! self::isGenericFeedback($providerFeedback)
             && ! self::feedbackInfersForbiddenTrait($providerFeedback)
             && ($isSkipped || ! self::feedbackHasUnsupportedNumbers($providerFeedback, $answerText));
-        $evidenceProfile = self::answerEvidenceProfile($answerText, $questionText, $starApplicable, $answer);
 
         $scores = $hasProviderScores
             ? []
-            : self::localEvidenceScores($answerText, $questionText, $starApplicable, $evidenceProfile);
+            : $localScores;
         foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
             if ($hasProviderScores) {
                 $scores[$field] = self::normalizeScore($feedback[$field] ?? null);
@@ -2572,6 +2580,21 @@ PROMPT;
                 $starApplicable,
                 $hasProviderScores
             );
+        }
+
+        if ($hasProviderScores) {
+            [$scores, $starMethodScore, $scoreCalibration] = self::applyProviderScoreCalibration(
+                $scores,
+                $starMethodScore,
+                $localScores,
+                $evidenceProfile,
+                $starApplicable,
+                $answerText,
+                $questionText,
+                $providerMissingCriteria
+            );
+        } else {
+            $scoreCalibration = self::localScoreCalibration($localScores, $starMethodScore, $starApplicable);
         }
 
         if ($hasProviderScores) {
@@ -2640,7 +2663,8 @@ PROMPT;
             $aiFeedback,
             $answerText,
             $evidenceProfile,
-            $feedbackContext
+            $feedbackContext,
+            $scoreCalibration
         );
 
         $normalizedFeedback = array_merge([
@@ -2654,6 +2678,7 @@ PROMPT;
             'follow_up_question' => $followUpQuestion,
             'evidence_quotes' => $evidenceQuotes,
             'question_focus' => $questionFocus ?? self::excerpt($questionText, 160),
+            'score_calibration' => $scoreCalibration,
             'answer_alignment' => $hasProviderScores
                 ? $providerAlignment
                 : match (true) {
@@ -2722,6 +2747,8 @@ PROMPT;
             'question_linked' => trim($questionText) !== '' && trim((string) ($feedback['question_focus'] ?? '')) !== '',
             'answer_evidence_linked' => $evidenceLinked,
             'scores_bounded_and_recomputed' => $scoresGuarded,
+            'score_calibration_recorded' => is_array($feedback['score_calibration'] ?? null)
+                && trim((string) data_get($feedback, 'score_calibration.source', '')) !== '',
             'alignment_cross_checked' => $alignmentChecked,
             'uncertainty_reported' => in_array((string) ($feedback['evaluation_source'] ?? ''), ['ai_evidence_validated', 'local_evidence'], true),
             'next_attempt_actionable' => trim((string) ($feedback['ai_feedback'] ?? '')) !== ''
@@ -2732,12 +2759,15 @@ PROMPT;
         $passed = count(array_filter($checks));
         $total = count($checks);
         $percent = $total > 0 ? (int) round(($passed / $total) * 100) : 0;
+        $reliabilityPercent = self::feedbackReliabilityPercent($percent, self::normalizeScore($feedback['scoring_confidence'] ?? 0));
 
         return [
             'status' => $percent === 100 ? 'verified' : 'limited',
             'checks_passed' => $passed,
             'checks_total' => $total,
             'completeness_percent' => $percent,
+            'reliability_percent' => $reliabilityPercent,
+            'reliability_band' => self::feedbackReliabilityBand($reliabilityPercent),
             'checks' => $checks,
             'scope' => 'Required feedback safeguards and coaching fields.',
             'limitation' => 'A 100% result means every required feedback safeguard passed. It is not a guarantee that the assessment is perfectly accurate.',
@@ -2748,6 +2778,7 @@ PROMPT;
     {
         $passed = 0;
         $total = 0;
+        $reliabilityScores = [];
         foreach ($feedbackItems as $item) {
             if (! is_array($item)) {
                 continue;
@@ -2756,18 +2787,41 @@ PROMPT;
             $quality = is_array($item['feedback_quality'] ?? null) ? $item['feedback_quality'] : [];
             $passed += max(0, (int) ($quality['checks_passed'] ?? 0));
             $total += max(0, (int) ($quality['checks_total'] ?? 0));
+            if (is_numeric($quality['reliability_percent'] ?? null)) {
+                $reliabilityScores[] = self::normalizeScore($quality['reliability_percent']);
+            }
         }
 
         $percent = $total > 0 ? (int) round(($passed / $total) * 100) : 0;
+        $reliabilityPercent = $reliabilityScores !== []
+            ? self::normalizeScore(array_sum($reliabilityScores) / count($reliabilityScores))
+            : 0;
 
         return [
             'status' => $total === 0 ? 'not_available' : ($percent === 100 ? 'verified' : 'limited'),
             'checks_passed' => $passed,
             'checks_total' => $total,
             'completeness_percent' => $percent,
+            'reliability_percent' => $reliabilityPercent,
+            'reliability_band' => self::feedbackReliabilityBand($reliabilityPercent),
             'scope' => 'Required feedback safeguards across all normalized answers.',
             'limitation' => 'A 100% result means every required feedback safeguard passed. It is not a guarantee that the assessment is perfectly accurate.',
         ];
+    }
+
+    private static function feedbackReliabilityPercent(int $safeguardPercent, int $scoringConfidence): int
+    {
+        return self::normalizeScore(($safeguardPercent * 0.70) + ($scoringConfidence * 0.30));
+    }
+
+    private static function feedbackReliabilityBand(int $percent): string
+    {
+        return match (true) {
+            $percent >= 95 => 'High',
+            $percent >= 85 => 'Moderate',
+            $percent > 0 => 'Limited',
+            default => 'Not available',
+        };
     }
 
     private static function hasUsableQuestionScores(array $feedback): bool
@@ -3057,6 +3111,187 @@ PROMPT;
         return $cap;
     }
 
+    private static function providerRelevanceIsPlausible(array $feedback, array $answer, array $profile): bool
+    {
+        if (self::isSkippedAnswer($answer) || self::isTooShortAnswer(self::candidateAnswerText($answer))) {
+            return true;
+        }
+
+        $alignment = is_string($feedback['answer_alignment'] ?? null) ? $feedback['answer_alignment'] : '';
+        $relevanceScore = self::normalizeScore($feedback['relevance_score'] ?? 0);
+        if ($relevanceScore < 75 && $alignment !== 'directly_addressed') {
+            return true;
+        }
+
+        $answerText = self::candidateAnswerText($answer);
+        $questionText = trim((string) ($answer['question'] ?? $answer['question_text'] ?? ''));
+        if (! self::englishCalibrationEligible($answerText, $questionText)) {
+            return true;
+        }
+
+        if (($profile['relevance_overlap'] ?? 0) >= 8 || ($profile['intent_alignment'] ?? 0) >= 10) {
+            return true;
+        }
+
+        return count(array_intersect(
+            (array) ($profile['question_keywords'] ?? []),
+            (array) ($profile['answer_keywords'] ?? [])
+        )) > 0;
+    }
+
+    private static function applyProviderScoreCalibration(
+        array $scores,
+        int $starMethodScore,
+        array $localScores,
+        array $profile,
+        bool $starApplicable,
+        string $answerText,
+        string $questionText,
+        array $providerMissingCriteria
+    ): array {
+        $localStarScore = $starApplicable ? self::normalizeScore($localScores['star_method_score'] ?? 0) : 0;
+        $providerReadiness = self::calculateWeightedReadinessScore(
+            $scores['clarity_score'] ?? 0,
+            $scores['relevance_score'] ?? 0,
+            $scores['grammar_score'] ?? 0,
+            $scores['professionalism_score'] ?? 0,
+            $starMethodScore,
+            $starApplicable
+        );
+        $localReadiness = self::calculateWeightedReadinessScore(
+            $localScores['clarity_score'] ?? 0,
+            $localScores['relevance_score'] ?? 0,
+            $localScores['grammar_score'] ?? 0,
+            $localScores['professionalism_score'] ?? 0,
+            $localStarScore,
+            $starApplicable
+        );
+        $checked = self::englishCalibrationEligible($answerText, $questionText);
+        $adjustmentApplied = false;
+        $riskFlags = [];
+        $coverageFlags = [];
+
+        if ($providerMissingCriteria !== []) {
+            $coverageFlags[] = 'provider_reported_missing_required_coverage';
+        }
+
+        if ($checked) {
+            $semanticMismatch = ($profile['relevance_overlap'] ?? 0) < 8
+                && ($profile['intent_alignment'] ?? 0) < 10
+                && count(array_intersect(
+                    (array) ($profile['question_keywords'] ?? []),
+                    (array) ($profile['answer_keywords'] ?? [])
+                )) === 0;
+
+            if ($semanticMismatch && self::normalizeScore($scores['relevance_score'] ?? 0) >= 75) {
+                $scores['relevance_score'] = min(self::normalizeScore($scores['relevance_score'] ?? 0), 55);
+                $riskFlags[] = 'semantic_relevance_cross_check_failed';
+                $adjustmentApplied = true;
+            }
+
+            $delta = $providerReadiness - $localReadiness;
+            if ($delta >= 35 && self::normalizeScore($scores['relevance_score'] ?? 0) >= 75) {
+                foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
+                    $local = self::normalizeScore($localScores[$field] ?? 0);
+                    $before = self::normalizeScore($scores[$field] ?? 0);
+                    $scores[$field] = min($before, max(55, min(100, $local + 25)));
+                    $adjustmentApplied = $adjustmentApplied || $scores[$field] !== $before;
+                }
+
+                $riskFlags[] = 'provider_score_exceeded_local_evidence_band';
+            }
+
+            if ($starApplicable && $starMethodScore > $localStarScore + 25 && $localStarScore < 75) {
+                $before = $starMethodScore;
+                $starMethodScore = min($starMethodScore, $localStarScore + 25);
+                $adjustmentApplied = $adjustmentApplied || $starMethodScore !== $before;
+                $riskFlags[] = 'star_score_exceeded_detected_structure';
+            }
+        }
+
+        if ($providerMissingCriteria !== []) {
+            $beforeRelevance = self::normalizeScore($scores['relevance_score'] ?? 0);
+            $beforeProfessionalism = self::normalizeScore($scores['professionalism_score'] ?? 0);
+            $scores['relevance_score'] = min($beforeRelevance, 88);
+            $scores['professionalism_score'] = min($beforeProfessionalism, 92);
+            $adjustmentApplied = $adjustmentApplied
+                || $scores['relevance_score'] !== $beforeRelevance
+                || $scores['professionalism_score'] !== $beforeProfessionalism;
+        }
+
+        $calibratedReadiness = self::calculateWeightedReadinessScore(
+            $scores['clarity_score'] ?? 0,
+            $scores['relevance_score'] ?? 0,
+            $scores['grammar_score'] ?? 0,
+            $scores['professionalism_score'] ?? 0,
+            $starMethodScore,
+            $starApplicable
+        );
+
+        return [$scores, $starMethodScore, [
+            'source' => $checked ? 'provider_with_deterministic_cross_check' : 'provider_evidence_validated',
+            'checked' => $checked,
+            'provider_readiness_score' => $providerReadiness,
+            'local_reference_score' => $localReadiness,
+            'calibrated_readiness_score' => $calibratedReadiness,
+            'provider_delta' => $providerReadiness - $localReadiness,
+            'adjustment_applied' => $adjustmentApplied,
+            'risk_flags' => array_values(array_unique($riskFlags)),
+            'coverage_flags' => array_values(array_unique($coverageFlags)),
+            'limitation' => $checked
+                ? 'Provider scores were compared with deterministic evidence checks. This improves calibration but is not a human-reviewed benchmark.'
+                : 'Provider feedback was evidence-validated, but deterministic English calibration was not applied for this answer language.',
+        ]];
+    }
+
+    private static function localScoreCalibration(array $localScores, int $starMethodScore, bool $starApplicable): array
+    {
+        $localReadiness = self::calculateWeightedReadinessScore(
+            $localScores['clarity_score'] ?? 0,
+            $localScores['relevance_score'] ?? 0,
+            $localScores['grammar_score'] ?? 0,
+            $localScores['professionalism_score'] ?? 0,
+            $starApplicable ? $starMethodScore : 0,
+            $starApplicable
+        );
+
+        return [
+            'source' => 'local_evidence_heuristic',
+            'checked' => true,
+            'provider_readiness_score' => null,
+            'local_reference_score' => $localReadiness,
+            'calibrated_readiness_score' => $localReadiness,
+            'provider_delta' => null,
+            'adjustment_applied' => false,
+            'risk_flags' => [],
+            'coverage_flags' => ['provider_unavailable_or_rejected'],
+            'limitation' => 'Local fallback scoring is evidence-bounded and useful for recovery, but it is less nuanced than validated provider feedback.',
+        ];
+    }
+
+    private static function englishCalibrationEligible(string $answerText, string $questionText): bool
+    {
+        return self::englishSignalCount($answerText) >= 3
+            && self::englishSignalCount($questionText) >= 2;
+    }
+
+    private static function englishSignalCount(string $text): int
+    {
+        preg_match_all('/\b[a-z][a-z\']*\b/i', mb_strtolower($text), $matches);
+        $tokens = array_values(array_unique($matches[0] ?? []));
+        $signals = [
+            'a', 'an', 'and', 'answer', 'are', 'at', 'because', 'been', 'being', 'but', 'can',
+            'could', 'customer', 'describe', 'did', 'do', 'does', 'explain', 'experience', 'for',
+            'from', 'had', 'has', 'have', 'how', 'i', 'in', 'is', 'issue', 'my', 'of', 'on',
+            'or', 'our', 'problem', 'project', 'question', 'result', 'role', 'should', 'skill',
+            'so', 'strength', 'support', 'team', 'tell', 'that', 'the', 'then', 'to', 'was',
+            'weakness', 'we', 'were', 'what', 'when', 'where', 'why', 'will', 'with', 'work',
+            'would',
+        ];
+
+        return count(array_intersect($tokens, $signals));
+    }
+
     private static function feedbackIsGroundedInAnswer(string $feedback, string $answerText, string $questionContext = ''): bool
     {
         if (self::feedbackHasUnsupportedNumbers($feedback, $answerText)) {
@@ -3195,7 +3430,7 @@ PROMPT;
         };
     }
 
-    private static function questionScoringConfidence(bool $hasProviderScores, bool $isSkipped, bool $isTooShort, string $feedback, string $answerText, array $profile, string $questionText = ''): int
+    private static function questionScoringConfidence(bool $hasProviderScores, bool $isSkipped, bool $isTooShort, string $feedback, string $answerText, array $profile, string $questionText = '', array $scoreCalibration = []): int
     {
         if ($isSkipped) {
             return 95;
@@ -3204,7 +3439,28 @@ PROMPT;
             return 90;
         }
 
-        $confidence = $hasProviderScores ? 82 : 50;
+        if ($hasProviderScores) {
+            $checked = (bool) ($scoreCalibration['checked'] ?? false);
+            $adjusted = (bool) ($scoreCalibration['adjustment_applied'] ?? false);
+            $riskFlags = array_filter((array) ($scoreCalibration['risk_flags'] ?? []));
+            $coverageFlags = array_filter((array) ($scoreCalibration['coverage_flags'] ?? []));
+
+            if ($checked && $riskFlags === [] && ! $adjusted && $coverageFlags === []) {
+                return 92;
+            }
+
+            if ($checked && $riskFlags === [] && ! $adjusted) {
+                return 88;
+            }
+
+            if ($checked && $adjusted) {
+                return 84;
+            }
+
+            return 82;
+        }
+
+        $confidence = 50;
 
         if (! $hasProviderScores
             && ($profile['requires_personal_action'] ?? false)

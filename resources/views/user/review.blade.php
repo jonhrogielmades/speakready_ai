@@ -193,6 +193,10 @@
         $sessionFeedbackQualityPercent = is_numeric($sessionFeedbackQuality['completeness_percent'] ?? null)
             ? max(0, min(100, (int) round($sessionFeedbackQuality['completeness_percent'])))
             : null;
+        $sessionFeedbackReliabilityPercent = is_numeric($sessionFeedbackQuality['reliability_percent'] ?? null)
+            ? max(0, min(100, (int) round($sessionFeedbackQuality['reliability_percent'])))
+            : null;
+        $sessionFeedbackReliabilityBand = trim((string) ($sessionFeedbackQuality['reliability_band'] ?? ''));
     @endphp
     <!-- Feature 2 & 15: Header, Report Info, Export -->
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -225,6 +229,11 @@
                     @if($sessionFeedbackQualityPercent !== null)
                         <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackQualityPercent === 100 ? '#10b981' : '#f59e0b' }};margin-top:3px;">
                             <i class="fa-solid fa-shield-halved me-1"></i>Feedback checks {{ $sessionFeedbackQualityPercent }}%
+                        </div>
+                    @endif
+                    @if($sessionFeedbackReliabilityPercent !== null)
+                        <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackReliabilityPercent >= 95 ? '#10b981' : ($sessionFeedbackReliabilityPercent >= 85 ? '#3b82f6' : '#f59e0b') }};margin-top:3px;">
+                            <i class="fa-solid fa-gauge-high me-1"></i>Reliability {{ $sessionFeedbackReliabilityPercent }}%{{ $sessionFeedbackReliabilityBand !== '' ? ' '.$sessionFeedbackReliabilityBand : '' }}
                         </div>
                     @endif
                 </div>
@@ -975,5 +984,4 @@ function submitRetry(answerId) {
 }
 </script>
 @endsection
-
 
