@@ -406,13 +406,8 @@ class InterviewController extends Controller
 
     public function chatReply(Request $request)
     {
-        $session = $this->activeInterviewSession();
-        if (! $session) {
-            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
-        }
-        $followUpEnabled = Setting::enabled('int_follow_up');
-
         $validated = $request->validate([
+            'session_id' => 'nullable|exists:interview_sessions,id',
             'answer_text' => 'required|string|max:20000',
             'speech_transcript' => 'nullable|string|max:20000',
             'conversation_context' => 'nullable|string|max:50000',
@@ -435,6 +430,12 @@ class InterviewController extends Controller
             'posture_score' => 'nullable|integer|min:0|max:100',
             'is_final_question' => 'nullable',
         ]);
+
+        $session = $this->activeInterviewSession($validated['session_id'] ?? null, $validated['question_id']);
+        if (! $session) {
+            return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
+        }
+        $followUpEnabled = Setting::enabled('int_follow_up');
 
         $question = $this->questionForSession($validated['question_id'], $session);
         if (! $question) {
@@ -612,8 +613,8 @@ class InterviewController extends Controller
             'audio' => [
                 'required',
                 'file',
-                'max:10240',
-                'mimetypes:audio/webm,audio/mp4,audio/mpeg,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream',
+                'max:25600',
+                'mimetypes:audio/webm,audio/mp4,audio/mpeg,audio/mpga,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream',
             ],
         ]);
 

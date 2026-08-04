@@ -1909,6 +1909,7 @@
             --wire-bg: #f8fafc;
             --wire-panel: #ffffff;
             --wire-panel-soft: #f1f5f9;
+            --wire-bg-fade-start: rgba(248, 250, 252, 0);
             --wire-line: #cbd5e1;
             --wire-line-strong: #94a3b8;
             --wire-fill: #e2e8f0;
@@ -1920,10 +1921,25 @@
             --wire-robot-opacity: 0.18;
             display: grid;
             grid-template-columns: 224px minmax(0, 1fr);
-            min-height: 606px;
+            position: relative;
+            height: 500px;
+            min-height: 0;
+            overflow: hidden;
             padding: 0;
             background: var(--wire-bg);
             color: var(--wire-text);
+            pointer-events: none;
+         }
+
+         .ui-desktop-wire::after {
+            content: "";
+            position: absolute;
+            left: 224px;
+            right: 0;
+            bottom: 0;
+            z-index: 5;
+            height: 52px;
+            background: linear-gradient(180deg, var(--wire-bg-fade-start), var(--wire-bg) 78%);
             pointer-events: none;
          }
 
@@ -1931,6 +1947,7 @@
             --wire-bg: #f8fafc;
             --wire-panel: #ffffff;
             --wire-panel-soft: #f1f5f9;
+            --wire-bg-fade-start: rgba(248, 250, 252, 0);
             --wire-line: #cbd5e1;
             --wire-line-strong: #94a3b8;
             --wire-fill: #e2e8f0;
@@ -1952,6 +1969,7 @@
             --wire-bg: #101827;
             --wire-panel: #111827;
             --wire-panel-soft: #172033;
+            --wire-bg-fade-start: rgba(16, 24, 39, 0);
             --wire-line: #334155;
             --wire-line-strong: #7c8da6;
             --wire-fill: #253247;
@@ -2089,6 +2107,7 @@
 
          .ui-desktop-wire-main {
             min-width: 0;
+            overflow: hidden;
             padding: 18px;
             display: flex;
             flex-direction: column;
@@ -2209,11 +2228,11 @@
 
          .ui-desktop-wire-welcome {
             position: relative;
-            min-height: 188px;
+            min-height: 168px;
             display: grid;
             grid-template-columns: minmax(0, 1fr) 270px;
-            gap: 18px;
-            padding: 22px;
+            gap: 16px;
+            padding: 18px;
          }
 
          .ui-desktop-wire-welcome::before {
@@ -2332,8 +2351,8 @@
          }
 
          .ui-desktop-wire-stat {
-            min-height: 118px;
-            padding: 14px;
+            min-height: 104px;
+            padding: 11px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -2420,8 +2439,8 @@
          }
 
          .ui-desktop-wire-chart {
-            height: 150px;
-            margin-top: 16px;
+            height: 112px;
+            margin-top: 12px;
             display: flex;
             align-items: end;
             gap: 12px;
@@ -2578,8 +2597,8 @@
          }
 
          .ui-desktop-wire-score-panel {
-            min-height: 320px;
-            padding: 16px;
+            min-height: 286px;
+            padding: 13px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -2611,7 +2630,7 @@
             grid-template-columns: 116px minmax(0, 1fr);
             gap: 14px;
             align-items: center;
-            margin: 18px 0 14px;
+            margin: 12px 0 10px;
          }
 
          .ui-desktop-wire-score-layout .ui-desktop-wire-ring {
@@ -2648,7 +2667,7 @@
          .ui-desktop-wire-polished,
          .ui-desktop-wire-recommendations,
          .ui-desktop-wire-table-panel {
-            padding: 16px;
+            padding: 13px;
          }
 
          .ui-desktop-wire-plan-head,
@@ -2711,7 +2730,12 @@
          @media (min-width: 992px) and (max-width: 1199.98px) {
             .ui-desktop-wire {
                grid-template-columns: 190px minmax(0, 1fr);
-               min-height: 570px;
+               height: 470px;
+               min-height: 0;
+            }
+
+            .ui-desktop-wire::after {
+               left: 190px;
             }
 
             .ui-desktop-wire-sidebar {
@@ -2747,8 +2771,8 @@
 
             .ui-desktop-wire-welcome {
                grid-template-columns: minmax(0, 1fr) 210px;
-               min-height: 176px;
-               padding: 18px;
+               min-height: 150px;
+               padding: 15px;
             }
 
             .ui-desktop-wire-welcome-title {
@@ -2768,8 +2792,8 @@
             }
 
             .ui-desktop-wire-stat {
-               min-height: 110px;
-               padding: 11px;
+               min-height: 94px;
+               padding: 10px;
             }
 
             .ui-desktop-wire-stat-value {
@@ -2781,13 +2805,13 @@
             }
 
             .ui-desktop-wire-chart {
-               height: 128px;
+               height: 94px;
                gap: 8px;
             }
 
             .ui-desktop-wire-score-panel {
-               min-height: 292px;
-               padding: 13px;
+               min-height: 260px;
+               padding: 12px;
             }
 
             .ui-desktop-wire-score-layout {

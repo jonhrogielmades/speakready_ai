@@ -3004,7 +3004,7 @@
             const serverTranscriptionSupported = serverTranscriptionEnabled
                 && Boolean(window.MediaRecorder)
                 && Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-            let activeTranscriptionEngine = BrowserSpeechRecognition ? 'browser' : (serverTranscriptionSupported ? 'server' : null);
+            let activeTranscriptionEngine = serverTranscriptionSupported ? 'server' : (BrowserSpeechRecognition ? 'browser' : null);
             const duplicateSafeWordSet = new Set([
                 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
                 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
@@ -3234,9 +3234,8 @@
 
             function preferredTranscriptionEngine() {
                 if (microphoneRequiresSecureOrigin()) return null;
-                if (activeTranscriptionEngine === 'server' && canUseServerTranscription()) return 'server';
-                if (recognition) return 'browser';
                 if (canUseServerTranscription()) return 'server';
+                if (recognition) return 'browser';
                 return null;
             }
 
@@ -3359,7 +3358,7 @@
             }
 
             function queueServerTranscriptionChunk(blob) {
-                if (!blob || blob.size < 700 || !questions[currentQIdx]) return;
+                if (!blob || blob.size < 128 || !questions[currentQIdx]) return;
 
                 serverTranscriptionQueue.push({
                     blob,
@@ -3404,7 +3403,7 @@
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 });
-                const data = await response.json();
+                const data = await response.json().catch(() => ({}));
 
                 if (!response.ok) {
                     if (response.status === 503) {
@@ -3442,7 +3441,7 @@
                         console.warn('MediaRecorder transcription error:', event.error || event);
                         setTranscriptionStatus('Microphone recording failed. Try again.', '#f87171');
                     };
-                    serverTranscriptionRecorder.start(4200);
+                    serverTranscriptionRecorder.start(5200);
                     setTranscriptionStatus('Listening - server transcription');
                     return true;
                 } catch (error) {
@@ -5309,7 +5308,7 @@
                 return managedFetch('{{ route("interview.answer") }}', {
                     method: 'POST',
                     body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 }).then(response => {
                     if (!response.ok) {
                         throw new Error('Answer save failed with status ' + response.status);
@@ -5515,9 +5514,9 @@
                     const response = await managedFetch('{{ route("interview.chatReply") }}', {
                         method: 'POST',
                         body: formData,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                     });
-                    const data = await response.json();
+                    const data = await response.json().catch(() => ({}));
                     const tb = document.getElementById('thinkingBubble');
                     if(tb) tb.remove();
 

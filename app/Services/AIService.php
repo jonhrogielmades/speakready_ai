@@ -1448,14 +1448,32 @@ PROMPT;
             return null;
         }
 
+        $model = trim((string) config('services.openai.transcription_model', 'gpt-transcribe')) ?: 'gpt-transcribe';
         $payload = [
-            'model' => config('services.openai.transcription_model', 'whisper-1'),
+            'model' => $model,
             'response_format' => 'json',
         ];
 
-        $language = self::openAiTranscriptionLanguage($targetLanguage);
-        if ($language !== null) {
-            $payload['language'] = $language;
+        $prompt = self::openAiTranscriptionPrompt($targetLanguage);
+        if ($prompt !== null && ! str_contains($model, 'diarize')) {
+            $payload['prompt'] = $prompt;
+        }
+
+        if ($model === 'gpt-transcribe') {
+            $languages = self::openAiTranscriptionLanguages($targetLanguage);
+            if ($languages !== []) {
+                $payload['languages'] = $languages;
+            }
+
+            $keywords = self::openAiTranscriptionKeywords();
+            if ($keywords !== []) {
+                $payload['keywords'] = $keywords;
+            }
+        } else {
+            $language = self::openAiTranscriptionLanguage($targetLanguage);
+            if ($language !== null) {
+                $payload['language'] = $language;
+            }
         }
 
         $fileHandle = fopen($path, 'rb');
@@ -1491,7 +1509,10 @@ PROMPT;
             return null;
         }
 
-        $text = trim((string) data_get($response->json(), 'text', ''));
+        $decoded = $response->json();
+        $text = is_array($decoded)
+            ? trim((string) data_get($decoded, 'text', ''))
+            : trim((string) $response->body());
 
         return $text !== '' ? $text : null;
     }
@@ -1587,8 +1608,13 @@ PROMPT;
         $originalExtension = pathinfo($audioFile->getClientOriginalName(), PATHINFO_EXTENSION);
         $extension = $audioFile->guessExtension() ?: $originalExtension ?: 'webm';
         $extension = preg_replace('/[^a-z0-9]/i', '', strtolower($extension)) ?: 'webm';
+        $extension = match ($extension) {
+            'weba' => 'webm',
+            'oga' => 'ogg',
+            default => $extension,
+        };
 
-        return 'speech.'.($extension === 'oga' ? 'ogg' : $extension);
+        return 'speech.'.$extension;
     }
 
     private static function openAiTranscriptionLanguage(array|string|null $targetLanguage): ?string
@@ -1605,6 +1631,58 @@ PROMPT;
         }
 
         return preg_match('/^[a-z]{2}$/', $language) ? $language : null;
+    }
+
+    private static function openAiTranscriptionLanguages(array|string|null $targetLanguage): array
+    {
+        $language = self::openAiTranscriptionLanguage($targetLanguage);
+        if ($language === null) {
+            return [];
+        }
+
+        $languages = match ($language) {
+            'tl' => ['tl', 'en'],
+            'en' => ['en'],
+            default => [$language],
+        };
+
+        return array_values(array_unique(array_filter($languages, fn ($code) => preg_match('/^[a-z]{2}$/', $code))));
+    }
+
+    private static function openAiTranscriptionPrompt(array|string|null $targetLanguage): ?string
+    {
+        $label = is_array($targetLanguage)
+            ? (string) ($targetLanguage['ai_label'] ?? $targetLanguage['label'] ?? '')
+            : '';
+        $languageContext = trim($label) !== '' ? " The expected answer language is {$label}, with possible Philippine English code-switching." : '';
+
+        return trim(
+            'This is a Philippine job interview practice answer. Transcribe only the candidate speech exactly as spoken.'
+            .' Preserve filler words, names, acronyms, punctuation, and capitalization when clear.'
+            .$languageContext
+        );
+    }
+
+    private static function openAiTranscriptionKeywords(): array
+    {
+        return [
+            'STAR method',
+            'behavioral interview',
+            'situational interview',
+            'technical interview',
+            'BPO',
+            'customer support',
+            'call center',
+            'internship',
+            'OJT',
+            'capstone',
+            'KPI',
+            'SLA',
+            'QA',
+            'escalation',
+            'troubleshooting',
+            'Philippines',
+        ];
     }
 
     public static function chatMessage($message, $history = [], $provider = 'gemini', $systemPrompt = null)

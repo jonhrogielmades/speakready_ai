@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\AiProvider;
 use App\Models\InterviewSession;
 use App\Models\Question;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -277,9 +278,36 @@ class InterviewSecurityTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_chat_reply_accepts_posted_session_id_when_session_key_is_missing(): void
+    {
+        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I stabilized a migration and communicated risks clearly.',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true])
+            ->assertSessionHas('active_interview_id', $session->id);
+
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I stabilized a migration and communicated risks clearly.',
+        ]);
+    }
+
     public function test_user_can_transcribe_audio_for_their_active_question(): void
     {
-        config(['services.openai.transcription_model' => 'whisper-1']);
+        config(['services.openai.transcription_model' => 'gpt-transcribe']);
 
         Http::fake([
             'https://api.openai.com/v1/audio/transcriptions' => Http::response([
@@ -294,7 +322,7 @@ class InterviewSecurityTest extends TestCase
             'status' => 'active',
         ]);
 
-        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active', 'preferred_language' => 'fil']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category);
         $question = $this->sessionQuestion($session, $category);
@@ -309,7 +337,22 @@ class InterviewSecurityTest extends TestCase
             ->assertOk()
             ->assertJson(['transcript' => 'I delivered a stable migration.']);
 
-        Http::assertSent(fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/transcriptions');
+        Http::assertSent(function ($request): bool {
+            $parts = collect($request->data());
+            $fields = $parts
+                ->filter(fn ($part) => is_array($part) && isset($part['name']))
+                ->groupBy('name')
+                ->map(fn ($parts) => $parts->pluck('contents')->all());
+            $filePart = $parts->first(fn ($part) => is_array($part) && ($part['name'] ?? null) === 'file');
+
+            return $request->url() === 'https://api.openai.com/v1/audio/transcriptions'
+                && data_get($fields, 'model.0') === 'gpt-transcribe'
+                && data_get($fields, 'response_format.0') === 'json'
+                && in_array('tl', (array) data_get($fields, 'languages[]', []), true)
+                && in_array('STAR method', (array) data_get($fields, 'keywords[]', []), true)
+                && str_contains((string) data_get($fields, 'prompt.0'), 'Philippine job interview practice answer')
+                && ($filePart['filename'] ?? null) === 'speech.webm';
+        });
     }
 
     public function test_user_cannot_transcribe_audio_for_another_sessions_question(): void
@@ -352,9 +395,9 @@ class InterviewSecurityTest extends TestCase
         ]);
     }
 
-    private function sessionFor(User $user, Category $category): InterviewSession
+    private function sessionFor(User $user, Category $category, array $overrides = []): InterviewSession
     {
-        return InterviewSession::create([
+        return InterviewSession::create(array_merge([
             'user_id' => $user->id,
             'category_id' => $category->id,
             'difficulty' => 'medium',
@@ -363,7 +406,7 @@ class InterviewSecurityTest extends TestCase
             'coach_focus_mode' => 'balanced',
             'response_mode' => 'text',
             'status' => 'in_progress',
-        ]);
+        ], $overrides));
     }
 
     private function sessionQuestion(InterviewSession $session, Category $category): Question
