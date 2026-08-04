@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\InterviewController;
 use App\Models\ActivityLog;
 use App\Models\AiProvider;
 use App\Models\Category;
 use App\Models\Feedback;
+use App\Models\GameLevel;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Profile;
@@ -96,10 +98,10 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_learning_game_feedback_is_distinct_and_question_bound(): void
     {
-        $controller = app(\App\Http\Controllers\InterviewController::class);
+        $controller = app(InterviewController::class);
         $method = new \ReflectionMethod($controller, 'scoreLearningGameAnswer');
         $method->setAccessible(true);
-        $level = new \App\Models\GameLevel([
+        $level = new GameLevel([
             'skill_focus' => 'Direct Answering',
             'learning_objective' => 'Answer each prompt directly with truthful supporting evidence.',
             'success_criteria' => '1. Direct answer 2. Relevant evidence 3. Clear next point',
@@ -182,16 +184,32 @@ class ReliabilityHardeningTest extends TestCase
             ->assertJsonPath('question_text', 'For a Software Engineer role, describe a complex or high-pressure situation where you used Behavioral. What was your responsibility, what actions did you take, and what measurable result followed?');
     }
 
-    public function test_default_ai_provider_prefers_active_openai_for_accuracy(): void
+    public function test_default_ai_provider_prefers_hugging_face_when_no_primary_provider_is_set(): void
     {
-        $this->aiProvider('Hugging Face', [
-            'api_endpoint' => 'https://router.huggingface.co/v1',
-        ]);
-        $this->aiProvider('OpenAI', [
-            'api_endpoint' => 'https://api.openai.com/v1',
-        ]);
+        $previousPriority = getenv('AI_DEFAULT_PROVIDER_PRIORITY');
+        putenv('AI_DEFAULT_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere');
+        $_ENV['AI_DEFAULT_PROVIDER_PRIORITY'] = 'huggingface,gemini,groq,openrouter,cohere';
+        $_SERVER['AI_DEFAULT_PROVIDER_PRIORITY'] = 'huggingface,gemini,groq,openrouter,cohere';
 
-        $this->assertSame('openai', AIService::defaultProviderKey());
+        try {
+            $this->aiProvider('Hugging Face', [
+                'api_endpoint' => 'https://router.huggingface.co/v1',
+            ]);
+            $this->aiProvider('OpenAI', [
+                'api_endpoint' => 'https://api.openai.com/v1',
+            ]);
+
+            $this->assertSame('huggingface', AIService::defaultProviderKey());
+        } finally {
+            if ($previousPriority === false) {
+                putenv('AI_DEFAULT_PROVIDER_PRIORITY');
+                unset($_ENV['AI_DEFAULT_PROVIDER_PRIORITY'], $_SERVER['AI_DEFAULT_PROVIDER_PRIORITY']);
+            } else {
+                putenv("AI_DEFAULT_PROVIDER_PRIORITY={$previousPriority}");
+                $_ENV['AI_DEFAULT_PROVIDER_PRIORITY'] = $previousPriority;
+                $_SERVER['AI_DEFAULT_PROVIDER_PRIORITY'] = $previousPriority;
+            }
+        }
     }
 
     public function test_default_ai_provider_honors_active_primary_provider(): void
@@ -209,17 +227,33 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_default_ai_provider_skips_inactive_primary_provider(): void
     {
-        $this->aiProvider('Hugging Face', [
-            'api_endpoint' => 'https://router.huggingface.co/v1',
-            'status' => 'inactive',
-            'is_primary' => true,
-        ]);
-        $this->aiProvider('OpenAI', [
-            'api_endpoint' => 'https://api.openai.com/v1',
-        ]);
+        $previousPriority = getenv('AI_DEFAULT_PROVIDER_PRIORITY');
+        putenv('AI_DEFAULT_PROVIDER_PRIORITY=openai');
+        $_ENV['AI_DEFAULT_PROVIDER_PRIORITY'] = 'openai';
+        $_SERVER['AI_DEFAULT_PROVIDER_PRIORITY'] = 'openai';
 
-        $this->assertSame('openai', AIService::defaultProviderKey());
-        $this->assertSame('OpenAI', AiProvider::safeActiveProviderName());
+        try {
+            $this->aiProvider('Hugging Face', [
+                'api_endpoint' => 'https://router.huggingface.co/v1',
+                'status' => 'inactive',
+                'is_primary' => true,
+            ]);
+            $this->aiProvider('OpenAI', [
+                'api_endpoint' => 'https://api.openai.com/v1',
+            ]);
+
+            $this->assertSame('openai', AIService::defaultProviderKey());
+            $this->assertSame('OpenAI', AiProvider::safeActiveProviderName());
+        } finally {
+            if ($previousPriority === false) {
+                putenv('AI_DEFAULT_PROVIDER_PRIORITY');
+                unset($_ENV['AI_DEFAULT_PROVIDER_PRIORITY'], $_SERVER['AI_DEFAULT_PROVIDER_PRIORITY']);
+            } else {
+                putenv("AI_DEFAULT_PROVIDER_PRIORITY={$previousPriority}");
+                $_ENV['AI_DEFAULT_PROVIDER_PRIORITY'] = $previousPriority;
+                $_SERVER['AI_DEFAULT_PROVIDER_PRIORITY'] = $previousPriority;
+            }
+        }
     }
 
     public function test_ai_question_generation_prompt_includes_storage_backed_reliable_question_bank(): void
@@ -269,6 +303,7 @@ class ReliabilityHardeningTest extends TestCase
         $roleAlignedQuestionText = 'For your target position of Backend Developer, tell me about a production issue you diagnosed and resolved.';
         $this->aiProvider('OpenAI', [
             'api_endpoint' => 'https://api.openai.com/v1',
+            'is_primary' => true,
         ]);
 
         Http::fake([

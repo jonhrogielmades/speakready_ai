@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AiProvider;
 use App\Services\AIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
@@ -202,13 +203,42 @@ class HuggingFaceProviderSupportTest extends TestCase
         }
     }
 
+    public function test_render_five_provider_stack_uses_hugging_face_first_and_excludes_unkeyed_providers(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => '',
+            'ANTHROPIC_API_KEY' => '',
+            'WISDOMGATE_API_KEY' => '',
+            'HUGGINGFACE_API_KEY' => 'hf_test_token',
+            'GEMINI_API_KEY' => 'gemini_test_token',
+            'GROQ_API_KEY' => 'groq_test_token',
+            'OPENROUTER_API_KEY' => 'openrouter_test_token',
+            'COHERE_API_KEY' => 'cohere_test_token',
+            'INTERVIEW_CHATBOT_DEFAULT_PROVIDER' => 'huggingface',
+            'INTERVIEW_CHATBOT_PROVIDER_PRIORITY' => 'huggingface,gemini,groq,openrouter,cohere',
+            'AI_FEEDBACK_PROVIDER_PRIORITY' => 'huggingface,gemini,groq,openrouter,cohere',
+            'AI_DEFAULT_PROVIDER_PRIORITY' => 'huggingface,gemini,groq,openrouter,cohere',
+            'AI_FEEDBACK_MAX_PROVIDERS' => '5',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $providerMethod = new \ReflectionMethod(AIService::class, 'feedbackProviderPriority');
+        $providerMethod->setAccessible(true);
+
+        $expected = ['huggingface', 'gemini', 'groq', 'openrouter', 'cohere'];
+
+        $this->assertSame('huggingface', AIService::defaultProviderKey());
+        $this->assertSame($expected, $providerMethod->invoke(null, 'huggingface'));
+    }
+
     public function test_database_configured_non_openai_provider_is_used(): void
     {
         $this->setEnvValue('WISDOMGATE_API_KEY', '');
         $this->setEnvValue('WISDOMGATE_API_URL', 'https://unused.example/v1');
         $this->setEnvValue('WISDOMGATE_MODEL', 'gpt-5-nano');
 
-        \App\Models\AiProvider::create([
+        AiProvider::create([
             'name' => 'WisGate',
             'api_endpoint' => 'https://custom.wisgate.test/v1',
             'api_key' => Crypt::encryptString('db_wisgate_token'),

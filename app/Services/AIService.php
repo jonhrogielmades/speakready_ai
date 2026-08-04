@@ -41,7 +41,7 @@ class AIService
 
     private const INTERVIEWER_DISPLAY_NAME = 'Mia';
 
-    private const DEFAULT_PROVIDER_PRIORITY = 'openai,gemini,claude,groq,openrouter,wisdomgate,cohere,huggingface';
+    private const DEFAULT_PROVIDER_PRIORITY = 'huggingface,gemini,groq,openrouter,cohere,openai,claude,wisdomgate';
 
     private const PROVIDER_LABELS = [
         'openai' => 'OpenAI',
@@ -186,7 +186,7 @@ class AIService
                     return [];
                 }
 
-                Log::error('AI Generation Error (Attempt '.($attempt + 1).'): '.$e->getMessage());
+                Log::error('AI Generation Error (Attempt '.($attempt + 1).'): '.self::safeProviderErrorMessage($e));
             }
 
             $attempt++;
@@ -211,7 +211,7 @@ class AIService
         $prompt .= 'Do not reintroduce yourself as Mia during normal interview questions; the opening already introduced you. ';
         $prompt .= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
         $prompt .= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
-        $prompt .= "If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as interviewer ".self::INTERVIEWER_DISPLAY_NAME.", then smoothly continue with one interview question grounded in the candidate's latest answer. ";
+        $prompt .= 'If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as interviewer '.self::INTERVIEWER_DISPLAY_NAME.", then smoothly continue with one interview question grounded in the candidate's latest answer. ";
         $prompt .= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
         $prompt .= self::interviewStyleInstruction($session->ai_assistance_level ?? 'standard', $session->interviewer_strictness ?? 'neutral');
         $prompt .= self::interviewFormatInstruction($session->interview_format ?? 'standard');
@@ -309,7 +309,7 @@ class AIService
                     return $response;
                 }
             } catch (\Exception $e) {
-                Log::error('AI Chat Reply Error (Attempt '.($attempt + 1).'): '.$e->getMessage());
+                Log::error('AI Chat Reply Error (Attempt '.($attempt + 1).'): '.self::safeProviderErrorMessage($e));
             }
 
             $attempt++;
@@ -594,7 +594,7 @@ class AIService
 
             return self::parseJsonResponse($response->json('choices.0.message.content'));
         }
-        Log::error('OpenAI Error: '.$response->body());
+        Log::error('OpenAI Error: '.self::safeProviderResponseBody($response));
 
         return [];
     }
@@ -1154,7 +1154,7 @@ EOT;
                     }
                 }
             } catch (\Exception $e) {
-                Log::error("Learning Game Generation Error ($currentProvider): ".$e->getMessage());
+                Log::error("Learning Game Generation Error ($currentProvider): ".self::safeProviderErrorMessage($e));
             }
         }
 
@@ -1233,7 +1233,7 @@ EOT;
                     return ['levels' => $levels];
                 }
             } catch (\Throwable $e) {
-                Log::warning("Learning Game batch generation failed on {$currentProvider}: ".$e->getMessage());
+                Log::warning("Learning Game batch generation failed on {$currentProvider}: ".self::safeProviderErrorMessage($e));
             }
         }
 
@@ -1286,7 +1286,7 @@ EOT;
                     }
                 }
             } catch (\Exception $e) {
-                Log::error("Voice Rehearsal Analysis Error ($currentProvider): ".$e->getMessage());
+                Log::error("Voice Rehearsal Analysis Error ($currentProvider): ".self::safeProviderErrorMessage($e));
             }
         }
 
@@ -1358,7 +1358,7 @@ PROMPT;
                         ->all();
                 }
             } catch (\Exception $e) {
-                Log::error("AI Interface Translation Error ({$currentProvider}): ".$e->getMessage());
+                Log::error("AI Interface Translation Error ({$currentProvider}): ".self::safeProviderErrorMessage($e));
             }
         }
 
@@ -1411,13 +1411,13 @@ PROMPT;
                 ])
                 ->post($credentials['endpoint'], $payload);
         } catch (\Throwable $e) {
-            Log::warning('OpenAI Speech Error: '.$e->getMessage());
+            Log::warning('OpenAI Speech Error: '.self::safeProviderErrorMessage($e));
 
             return null;
         }
 
         if (! $response->successful()) {
-            Log::warning('OpenAI Speech Error: '.substr($response->body(), 0, 1000));
+            Log::warning('OpenAI Speech Error: '.self::safeProviderResponseBody($response));
 
             return null;
         }
@@ -1496,7 +1496,7 @@ PROMPT;
                 )
                 ->post($credentials['endpoint'], $payload);
         } catch (\Throwable $e) {
-            Log::warning('OpenAI Transcription Error: '.$e->getMessage());
+            Log::warning('OpenAI Transcription Error: '.self::safeProviderErrorMessage($e));
 
             return null;
         } finally {
@@ -1504,7 +1504,7 @@ PROMPT;
         }
 
         if (! $response->successful()) {
-            Log::warning('OpenAI Transcription Error: '.substr($response->body(), 0, 1000));
+            Log::warning('OpenAI Transcription Error: '.self::safeProviderResponseBody($response));
 
             return null;
         }
@@ -1724,7 +1724,7 @@ PROMPT;
                 return $response;
             } catch (\Exception $e) {
                 if (! self::externalAiDisabledForTests()) {
-                    Log::error("AI Chat Error ({$currentProvider}): ".$e->getMessage());
+                    Log::error("AI Chat Error ({$currentProvider}): ".self::safeProviderErrorMessage($e));
                 }
             }
         }
@@ -1833,7 +1833,7 @@ PROMPT;
             return (string) $response->json('candidates.0.content.parts.0.text', '');
         }
 
-        Log::warning('Gemini Attachment Extraction Error: '.$response->body());
+        Log::warning('Gemini Attachment Extraction Error: '.self::safeProviderResponseBody($response));
 
         return '';
     }
@@ -1879,7 +1879,7 @@ PROMPT;
             return (string) $response->json('choices.0.message.content', '');
         }
 
-        Log::warning('OpenAI Attachment Extraction Error: '.$response->body());
+        Log::warning('OpenAI Attachment Extraction Error: '.self::safeProviderResponseBody($response));
 
         return '';
     }
@@ -1989,7 +1989,7 @@ PROMPT;
 
         $providers = self::providerPriorityList($provider, $priorityString);
         $providers = array_values(array_filter($providers, fn (string $name) => self::providerHasCredentials($name)));
-        $maxProviders = max(1, min(3, (int) env('AI_FEEDBACK_MAX_PROVIDERS', 1)));
+        $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_FEEDBACK_MAX_PROVIDERS', 5)));
 
         return array_slice($providers, 0, $maxProviders);
     }
@@ -2025,7 +2025,7 @@ PROMPT;
         }
 
         $accuracyPriority = env('AI_DEFAULT_PROVIDER_PRIORITY', self::DEFAULT_PROVIDER_PRIORITY);
-        foreach (self::providerPriorityList('openai', $accuracyPriority) as $provider) {
+        foreach (self::providerPriorityList('', $accuracyPriority) as $provider) {
             if (self::providerHasCredentials($provider)) {
                 return $provider;
             }
@@ -2259,8 +2259,27 @@ PROMPT;
         $message = $error->getMessage();
         $message = preg_replace('/([?&](?:key|api_key|token)=)[^&\s]+/i', '$1[redacted]', $message) ?? $message;
         $message = preg_replace('/(Bearer\s+)[A-Za-z0-9._-]+/i', '$1[redacted]', $message) ?? $message;
+        $message = self::redactProviderSecrets($message);
 
         return mb_substr($message, 0, 1000);
+    }
+
+    private static function safeProviderResponseBody($response): string
+    {
+        return mb_substr(self::redactProviderSecrets((string) $response->body()), 0, 1000);
+    }
+
+    private static function redactProviderSecrets(string $message): string
+    {
+        $message = preg_replace('/([?&](?:key|api_key|token)=)[^&\s"]+/i', '$1[redacted]', $message) ?? $message;
+        $message = preg_replace('/(Bearer\s+)[A-Za-z0-9._-]+/i', '$1[redacted]', $message) ?? $message;
+        $message = preg_replace(
+            '/(["\']?(?:api[_-]?key|token|password|authorization)["\']?\s*[:=]\s*["\']?)[^"\'\s,}]+/i',
+            '$1[redacted]',
+            $message
+        ) ?? $message;
+
+        return $message;
     }
 
     private static function dbProviderFor(string $provider): ?AiProvider
@@ -2319,7 +2338,7 @@ PROMPT;
                 'error_message' => $error ? substr($error, 0, 2000) : null,
             ]);
         } catch (\Throwable $e) {
-            Log::warning('Unable to record AI provider log: '.$e->getMessage());
+            Log::warning('Unable to record AI provider log: '.self::safeProviderErrorMessage($e));
         }
     }
 
@@ -3032,8 +3051,7 @@ PROMPT;
         string $questionText,
         bool $starApplicable,
         array $answer = []
-    ): array
-    {
+    ): array {
         $wordCount = self::wordCount($answerText);
         $hasPersonalAction = (bool) preg_match('/\bI\s+(?:personally\s+)?(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answerText);
         $hasTeamAction = (bool) preg_match('/\bwe\s+(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answerText);
@@ -3106,8 +3124,7 @@ PROMPT;
         array $profile,
         bool $starApplicable,
         bool $hasProviderScores
-    ): array
-    {
+    ): array {
         if (($profile['word_count'] ?? 0) < 25) {
             $scores['clarity_score'] = min($scores['clarity_score'], 60);
             $scores['professionalism_score'] = min($scores['professionalism_score'], 60);
@@ -3463,8 +3480,7 @@ PROMPT;
         bool $starApplicable,
         string $questionText = '',
         array $missingCriteria = []
-    ): string
-    {
+    ): string {
         $question = self::excerpt($questionText !== '' ? $questionText : 'this question', 140);
         if ($missingCriteria !== []) {
             return 'What truthful detail can you add to address this expected coverage for "'.$question.'": "'.self::excerpt((string) $missingCriteria[0], 160).'"?';
@@ -3615,8 +3631,7 @@ PROMPT;
         string $questionText,
         bool $starApplicable,
         array $profile = []
-    ): array
-    {
+    ): array {
         $wordCount = self::wordCount($answerText);
         if ($wordCount === 0) {
             return [
@@ -4139,7 +4154,7 @@ PROMPT;
 
             return self::parseJsonResponse($content);
         }
-        Log::error('Gemini Error: '.$response->body());
+        Log::error('Gemini Error: '.self::safeProviderResponseBody($response));
 
         return [];
     }
@@ -4200,7 +4215,7 @@ PROMPT;
 
             return self::parseJsonResponse($content);
         }
-        Log::error('Cohere Error: '.$response->body());
+        Log::error('Cohere Error: '.self::safeProviderResponseBody($response));
 
         return [];
     }
@@ -4315,7 +4330,7 @@ PROMPT;
             return self::parseJsonResponse($response->json('choices.0.message.content'));
         }
 
-        Log::error(self::PROVIDER_LABELS[$provider].' Error: '.$response->body());
+        Log::error(self::PROVIDER_LABELS[$provider].' Error: '.self::safeProviderResponseBody($response));
 
         return [];
     }
@@ -4365,7 +4380,7 @@ PROMPT;
 
             return self::parseJsonResponse($content);
         }
-        Log::error('Claude Error: '.$response->body());
+        Log::error('Claude Error: '.self::safeProviderResponseBody($response));
 
         return [];
     }
@@ -4424,7 +4439,7 @@ PROMPT;
         if ($response->successful()) {
             return $response->json('candidates.0.content.parts.0.text');
         }
-        Log::error('Gemini Chat Error: '.$response->body());
+        Log::error('Gemini Chat Error: '.self::safeProviderResponseBody($response));
 
         return 'Sorry, I am having trouble connecting to my brain right now.';
     }
@@ -4464,7 +4479,7 @@ PROMPT;
         if ($response->successful()) {
             return $response->json('choices.0.message.content');
         }
-        Log::error('OpenAI Chat Error: '.$response->body());
+        Log::error('OpenAI Chat Error: '.self::safeProviderResponseBody($response));
 
         return 'Sorry, I am having trouble connecting to my brain right now.';
     }
@@ -4488,7 +4503,7 @@ PROMPT;
         if ($response->successful()) {
             return self::cohereTextFromResponse($response);
         }
-        Log::error('Cohere Chat Error: '.$response->body());
+        Log::error('Cohere Chat Error: '.self::safeProviderResponseBody($response));
 
         return 'Sorry, I am having trouble connecting to my brain right now.';
     }
@@ -4524,7 +4539,7 @@ PROMPT;
             return (string) $response->json('choices.0.message.content', '');
         }
 
-        Log::error(self::PROVIDER_LABELS[$provider].' Chat Error: '.$response->body());
+        Log::error(self::PROVIDER_LABELS[$provider].' Chat Error: '.self::safeProviderResponseBody($response));
 
         return 'Sorry, I am having trouble connecting to my brain right now.';
     }
@@ -4562,7 +4577,7 @@ PROMPT;
         if ($response->successful()) {
             return $response->json('content.0.text');
         }
-        Log::error('Claude Chat Error: '.$response->body());
+        Log::error('Claude Chat Error: '.self::safeProviderResponseBody($response));
 
         return 'Sorry, I am having trouble connecting to my brain right now.';
     }
@@ -4588,7 +4603,7 @@ PROMPT;
                     return json_encode($response);
                 }
             } catch (\Exception $e) {
-                Log::error("AI JSON Generation Error ($currentProvider): ".$e->getMessage());
+                Log::error("AI JSON Generation Error ($currentProvider): ".self::safeProviderErrorMessage($e));
             }
         }
 
