@@ -224,6 +224,75 @@ class AiCoachDeveloperCreditsTest extends TestCase
         });
     }
 
+    public function test_ai_coach_extracts_text_from_image_attachments_before_replying(): void
+    {
+        Http::fake(function ($request) {
+            $prompt = data_get($request->data(), 'contents.0.parts.0.text', '');
+
+            if (str_contains($prompt, 'Extract all readable text from this uploaded interview-support attachment')) {
+                return Http::response([
+                    'candidates' => [
+                        [
+                            'content' => [
+                                'parts' => [
+                                    ['text' => "Maria Santos\nTESDA Contact Center Services NC II\nCustomer support internship"],
+                                ],
+                            ],
+                        ],
+                    ],
+                ]);
+            }
+
+            return Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                ['text' => 'I can review the extracted resume screenshot for BPO readiness.'],
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+        });
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=');
+        $image = UploadedFile::fake()->createWithContent('resume-screenshot.png', $png);
+
+        $response = $this->actingAs($user)->post(route('user.coach.chat'), [
+            'message' => 'Review this screenshot for my Philippines BPO interview.',
+            'history' => json_encode([]),
+            'coach_attachments' => [$image],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response', 'I can review the extracted resume screenshot for BPO readiness.');
+
+        Http::assertSent(function ($request) {
+            $data = $request->data();
+
+            return str_contains(data_get($data, 'contents.0.parts.0.text', ''), 'Extract all readable text from this uploaded interview-support attachment')
+                && data_get($data, 'contents.0.parts.1.inline_data.mime_type') === 'image/png';
+        });
+
+        Http::assertSent(function ($request) {
+            $latestMessage = data_get($request->data(), 'contents.0.parts.0.text', '');
+
+            return str_contains($latestMessage, 'UPLOADED INTERVIEW-RELATED FILE CONTEXT JSON')
+                && str_contains($latestMessage, 'resume-screenshot.png')
+                && str_contains($latestMessage, 'Maria Santos')
+                && str_contains($latestMessage, 'TESDA Contact Center Services NC II')
+                && str_contains($latestMessage, 'do not say you cannot view');
+        });
+    }
+
     public function test_ai_coach_refuses_unrelated_requests_without_provider_call(): void
     {
         Http::fake();
