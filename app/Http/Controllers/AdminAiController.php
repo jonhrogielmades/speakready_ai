@@ -17,7 +17,7 @@ class AdminAiController extends Controller
     {
         AiProviderSchema::ensure(force: true, createIfMissing: true);
 
-        $activeProvider = AiProvider::where('is_primary', true)->first();
+        $activeProvider = AiProvider::safePrimaryOrActive();
         $totalRequests = AiProviderLog::whereDate('created_at', today())->count();
         $successfulRequests = AiProviderLog::whereDate('created_at', today())->where('status', 'success')->count();
         $failedRequests = AiProviderLog::whereDate('created_at', today())->where('status', '!=', 'success')->count();
@@ -66,7 +66,10 @@ class AdminAiController extends Controller
             return $stats;
         });
 
-        $primary = AiProvider::where('is_primary', true)->first();
+        $primary = AiProvider::where('is_primary', true)
+            ->where('status', 'active')
+            ->whereNotNull('api_key')
+            ->first();
         $fallback = AiProvider::where('is_fallback', true)->first();
         
         return view('admin.ai.providers', compact(
@@ -85,6 +88,12 @@ class AdminAiController extends Controller
             'status' => 'required|in:active,inactive'
         ]);
 
+        if (! AIService::providerIsSupported($request->name)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'This AI provider is not in the active provider pool. Use OpenAI, Gemini, Claude, Groq, OpenRouter, WisdomGate, Cohere, or Hugging Face.');
+        }
+
         $provider = AiProvider::create([
             'name' => $request->name,
             'api_endpoint' => $request->api_endpoint,
@@ -92,7 +101,7 @@ class AdminAiController extends Controller
             'status' => $request->status,
         ]);
 
-        if (AiProvider::count() == 1) {
+        if (AiProvider::count() == 1 && $provider->status === 'active') {
             $provider->update(['is_primary' => true]);
         }
 
@@ -106,6 +115,12 @@ class AdminAiController extends Controller
             'api_endpoint' => 'required|url',
             'status' => 'required|in:active,inactive'
         ]);
+
+        if (! AIService::providerIsSupported($request->name)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'This AI provider is not in the active provider pool. Use OpenAI, Gemini, Claude, Groq, OpenRouter, WisdomGate, Cohere, or Hugging Face.');
+        }
 
         $data = $request->only(['name', 'api_endpoint', 'status']);
         
@@ -135,6 +150,10 @@ class AdminAiController extends Controller
 
     public function setPrimaryProvider(AiProvider $provider)
     {
+        if (! AIService::providerIsConfigured($provider->name) || $provider->status !== 'active' || empty($provider->api_key)) {
+            return redirect()->back()->with('error', 'Only active providers with an API key can be set as primary.');
+        }
+
         AiProvider::where('id', '!=', 0)->update(['is_primary' => false]);
         $provider->update(['is_primary' => true]);
         return redirect()->back()->with('message', 'Primary provider updated.');
@@ -142,6 +161,10 @@ class AdminAiController extends Controller
 
     public function setFallbackProvider(AiProvider $provider)
     {
+        if (! AIService::providerIsConfigured($provider->name) || $provider->status !== 'active' || empty($provider->api_key)) {
+            return redirect()->back()->with('error', 'Only active providers with an API key can be set as fallback.');
+        }
+
         AiProvider::where('id', '!=', 0)->update(['is_fallback' => false]);
         $provider->update(['is_fallback' => true]);
         return redirect()->back()->with('message', 'Fallback provider updated.');

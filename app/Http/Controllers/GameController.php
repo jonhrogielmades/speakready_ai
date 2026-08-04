@@ -157,7 +157,7 @@ class GameController extends Controller
 
         $questions = $level->parsed_questions;
         if (($languageConfig['code'] ?? 'en') !== 'en' && !empty($questions)) {
-            $translations = AIService::translateInterfaceTexts($questions, $languageConfig, env('AI_PROVIDER', 'gemini'));
+            $translations = AIService::translateInterfaceTexts($questions, $languageConfig, AIService::defaultProviderKey());
             $questions = array_map(fn ($question) => $translations[$question] ?? $question, $questions);
         }
 

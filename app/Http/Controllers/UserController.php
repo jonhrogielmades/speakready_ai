@@ -1559,7 +1559,7 @@ class UserController extends Controller
             ],
         ]);
 
-        $provider = env('AI_PROVIDER', 'gemini');
+        $provider = AIService::defaultProviderKey();
         $attachmentContexts = $this->coachAttachmentContexts($request, $provider);
         $message = trim((string) ($validated['message'] ?? ''));
         if ($message === '' && ! empty($attachmentContexts)) {
@@ -2690,7 +2690,7 @@ Rules:
 PROMPT;
 
         try {
-            $decoded = json_decode(AIService::generateJson($prompt, env('AI_PROVIDER', 'gemini')), true);
+            $decoded = json_decode(AIService::generateJson($prompt, AIService::defaultProviderKey()), true);
         } catch (\Throwable $exception) {
             Log::warning('Mission generation fell back after AI error: '.$exception->getMessage());
             $decoded = [];
@@ -2940,7 +2940,7 @@ PROMPT;
         ]);
 
         $category = trim($validated['category']);
-        $provider = env('AI_PROVIDER', 'gemini');
+        $provider = AIService::defaultProviderKey();
         $targetLanguage = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
 
         $questions = AIService::generateQuestions(
@@ -2989,7 +2989,7 @@ PROMPT;
 
         $transcript = TranscriptService::clean($validated['transcript']);
 
-        $provider = env('AI_PROVIDER', 'gemini');
+        $provider = AIService::defaultProviderKey();
         $analysis = AIService::analyzeVoiceRehearsal(
             $validated['prompt'],
             $transcript,
@@ -3341,7 +3341,7 @@ PROMPT;
             $generated = AIService::translateInterfaceTexts(
                 $missing,
                 $languageConfig,
-                env('AI_PROVIDER', 'gemini')
+                AIService::defaultProviderKey()
             );
 
             foreach ($missing as $text) {

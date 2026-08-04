@@ -146,7 +146,7 @@ class InterviewController extends Controller
 
         // Provider choice is an administrator concern. Users receive the same versioned rubric
         // regardless of which healthy provider the configured fallback chain selects.
-        $provider = env('AI_PROVIDER', 'gemini');
+        $provider = AIService::defaultProviderKey();
         $profilePreferences = Profile::firstOrCreate(['user_id' => Auth::id()])->inclusive_preferences ?? [];
         $accommodationProfile = [
             'camera_coaching' => filter_var($validated['camera_coaching'] ?? data_get($profilePreferences, 'camera_coaching', false), FILTER_VALIDATE_BOOLEAN),
@@ -508,7 +508,7 @@ class InterviewController extends Controller
             })->toArray();
 
         // 3. Generate Follow-up via AI
-        $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+        $provider = session('active_interview_provider', AIService::defaultProviderKey());
         $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
         if (! $followUpEnabled) {
             $provider = 'local';
@@ -809,7 +809,7 @@ class InterviewController extends Controller
                 $aiFeedback = $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
             } else {
                 // Provider routing is controlled by the configured primary/fallback chain, not by users.
-                $feedbackProvider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+                $feedbackProvider = session('active_interview_provider', AIService::defaultProviderKey());
                 $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
             }
             $assessment = app(TrustworthyAssessmentService::class);
@@ -1218,7 +1218,7 @@ class InterviewController extends Controller
             'question_id' => $answer->question_id,
         ], $answerPayload));
 
-        $provider = session('active_interview_provider', env('AI_PROVIDER', 'gemini'));
+        $provider = session('active_interview_provider', AIService::defaultProviderKey());
         try {
             $feedback = AIService::generateFeedback([
                 'target_position' => $session->target_position,
@@ -1422,7 +1422,7 @@ class InterviewController extends Controller
 
         $aiFeedback = $gameLevel
             ? $this->learningGameFeedback($gameLevel, $sessionData, $answersData)
-            : AIService::generateFeedback($sessionData, $answersData, session('active_interview_provider', env('AI_PROVIDER', 'gemini')));
+            : AIService::generateFeedback($sessionData, $answersData, session('active_interview_provider', AIService::defaultProviderKey()));
 
         $assessment = app(TrustworthyAssessmentService::class);
         $coaching = app(EvidenceBasedCoachingService::class);

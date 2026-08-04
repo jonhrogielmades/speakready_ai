@@ -33,8 +33,13 @@ class AiProvider extends Model
         try {
             AiProviderSchema::ensure();
 
-            return self::where('is_primary', true)->first()
-                ?? self::where('status', 'active')->first();
+            return self::where('is_primary', true)
+                ->where('status', 'active')
+                ->whereNotNull('api_key')
+                ->first()
+                ?? self::where('status', 'active')
+                    ->whereNotNull('api_key')
+                    ->first();
         } catch (\Throwable) {
             return null;
         }

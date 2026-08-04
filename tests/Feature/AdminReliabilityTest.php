@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ActivityLog;
+use App\Models\AiProvider;
 use App\Models\Category;
 use App\Models\Feedback;
 use App\Models\GameLevel;
@@ -15,6 +16,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -54,6 +56,25 @@ class AdminReliabilityTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.sessions.index', ['sort' => 'not_a_column', 'direction' => 'sideways']))
             ->assertOk();
+    }
+
+    public function test_admin_cannot_set_inactive_ai_provider_as_primary(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $provider = AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('openai-test-key'),
+            'status' => 'inactive',
+            'is_primary' => false,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.ai.providers.primary', $provider))
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Only active providers with an API key can be set as primary.');
+
+        $this->assertFalse($provider->refresh()->is_primary);
     }
 
     public function test_admin_can_delete_an_interview_session_and_related_records(): void

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\ActivityLog;
+use App\Models\AiProvider;
 use App\Models\Category;
 use App\Models\Feedback;
 use App\Models\InterviewAnswer;
@@ -18,6 +19,7 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
@@ -180,6 +182,46 @@ class ReliabilityHardeningTest extends TestCase
             ->assertJsonPath('question_text', 'For a Software Engineer role, describe a complex or high-pressure situation where you used Behavioral. What was your responsibility, what actions did you take, and what measurable result followed?');
     }
 
+    public function test_default_ai_provider_prefers_active_openai_for_accuracy(): void
+    {
+        $this->aiProvider('Hugging Face', [
+            'api_endpoint' => 'https://router.huggingface.co/v1',
+        ]);
+        $this->aiProvider('OpenAI', [
+            'api_endpoint' => 'https://api.openai.com/v1',
+        ]);
+
+        $this->assertSame('openai', AIService::defaultProviderKey());
+    }
+
+    public function test_default_ai_provider_honors_active_primary_provider(): void
+    {
+        $this->aiProvider('OpenAI', [
+            'api_endpoint' => 'https://api.openai.com/v1',
+        ]);
+        $this->aiProvider('Gemini', [
+            'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
+            'is_primary' => true,
+        ]);
+
+        $this->assertSame('gemini', AIService::defaultProviderKey());
+    }
+
+    public function test_default_ai_provider_skips_inactive_primary_provider(): void
+    {
+        $this->aiProvider('Hugging Face', [
+            'api_endpoint' => 'https://router.huggingface.co/v1',
+            'status' => 'inactive',
+            'is_primary' => true,
+        ]);
+        $this->aiProvider('OpenAI', [
+            'api_endpoint' => 'https://api.openai.com/v1',
+        ]);
+
+        $this->assertSame('openai', AIService::defaultProviderKey());
+        $this->assertSame('OpenAI', AiProvider::safeActiveProviderName());
+    }
+
     public function test_ai_question_generation_prompt_includes_storage_backed_reliable_question_bank(): void
     {
         $capturedPrompt = '';
@@ -225,6 +267,9 @@ class ReliabilityHardeningTest extends TestCase
         $category = $this->category(['title' => 'Behavioral']);
         $questionText = 'Tell me about a production issue you diagnosed and resolved.';
         $roleAlignedQuestionText = 'For your target position of Backend Developer, tell me about a production issue you diagnosed and resolved.';
+        $this->aiProvider('OpenAI', [
+            'api_endpoint' => 'https://api.openai.com/v1',
+        ]);
 
         Http::fake([
             'api.openai.com/*' => Http::response([
@@ -1250,6 +1295,18 @@ class ReliabilityHardeningTest extends TestCase
             'coach_focus_mode' => 'balanced',
             'response_mode' => 'text',
             'status' => 'in_progress',
+        ], $overrides));
+    }
+
+    private function aiProvider(string $name, array $overrides = []): AiProvider
+    {
+        return AiProvider::create(array_merge([
+            'name' => $name,
+            'api_endpoint' => 'https://api.example.test/v1',
+            'api_key' => Crypt::encryptString(strtolower(str_replace(' ', '-', $name)).'-test-key'),
+            'status' => 'active',
+            'is_primary' => false,
+            'is_fallback' => false,
         ], $overrides));
     }
 }

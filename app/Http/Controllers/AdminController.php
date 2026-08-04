@@ -9,7 +9,6 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\LearningModule;
-use App\Models\AiProvider;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Services\QuestionDatasetProvider;
@@ -492,7 +491,7 @@ class AdminController extends Controller
 
     private function defaultQuestionProvider(): string
     {
-        $provider = AiProvider::safeActiveProviderName() ?: env('AI_PROVIDER', 'gemini');
+        $provider = AIService::defaultProviderKey();
 
         return $this->normalizeQuestionProvider($provider);
     }
@@ -512,7 +511,7 @@ class AdminController extends Controller
             'hf', 'huggingface', 'huggingfacehub' => 'huggingface',
             'wisdomgate' => 'wisdomgate',
             'cohere' => 'cohere',
-            default => 'gemini',
+            default => AIService::defaultProviderKey(),
         };
     }
 
