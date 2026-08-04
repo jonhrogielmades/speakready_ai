@@ -3935,11 +3935,116 @@
                 pendingFetchControllers.add(controller);
 
                 return fetch(url, {
+                    credentials: 'same-origin',
                     ...options,
                     signal: controller.signal
                 }).finally(() => {
                     pendingFetchControllers.delete(controller);
                 });
+            }
+
+            function waitForRequestRetry(delayMs) {
+                return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 750))));
+            }
+
+            async function parseResponsePayload(response) {
+                const clone = response.clone();
+                let data = {};
+                let text = '';
+
+                try {
+                    const parsed = await response.json();
+                    data = parsed && typeof parsed === 'object' ? parsed : {};
+                } catch (error) {
+                    try {
+                        text = await clone.text();
+                    } catch (textError) {
+                        text = '';
+                    }
+                }
+
+                return { data, text };
+            }
+
+            function validationErrorMessage(errors) {
+                if (!errors || typeof errors !== 'object') return '';
+                const first = Object.values(errors).flat().find(Boolean);
+                return first ? String(first) : '';
+            }
+
+            function responseErrorMessage(response, payload, fallbackMessage = 'The request could not be completed.') {
+                const data = payload?.data || {};
+                const explicitMessage = data.error || data.message || validationErrorMessage(data.errors);
+                if (explicitMessage) return String(explicitMessage);
+
+                if (response.status === 419) {
+                    return 'Your secure session expired. Please refresh the page, then submit the answer again.';
+                }
+                if (response.status === 422) {
+                    return 'Some answer details were rejected. Please check your answer and try again.';
+                }
+                if (response.status === 403) {
+                    return 'This interview session is no longer active for your account.';
+                }
+                if (response.status === 409) {
+                    return 'The interview question changed while submitting. Please refresh the session and continue.';
+                }
+                if (response.status === 429) {
+                    return 'The service is busy right now. Your answer is still on screen; please try again in a moment.';
+                }
+                if (response.status >= 500) {
+                    return 'The server had a temporary problem while sending your answer. Please try again.';
+                }
+
+                const plainText = String(payload?.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                return plainText ? plainText.slice(0, 220) : fallbackMessage;
+            }
+
+            function isRetryableRequestError(error) {
+                if (!error) return false;
+                if (error.name === 'AbortError') return false;
+                if (!navigator.onLine) return true;
+                return !error.status || [408, 425, 429, 500, 502, 503, 504].includes(Number(error.status));
+            }
+
+            async function postFormJson(url, formData, fallbackMessage = 'The request could not be completed.') {
+                const response = await managedFetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                });
+                const payload = await parseResponsePayload(response);
+
+                if (!response.ok) {
+                    const error = new Error(responseErrorMessage(response, payload, fallbackMessage));
+                    error.status = response.status;
+                    error.payload = payload.data;
+                    throw error;
+                }
+
+                return payload.data || {};
+            }
+
+            async function postFormJsonWithRetry(url, formData, options = {}) {
+                const attempts = Math.max(1, Number(options.attempts || 1));
+                const fallbackMessage = options.fallbackMessage || 'The request could not be completed.';
+                let lastError = null;
+
+                for (let attempt = 1; attempt <= attempts; attempt++) {
+                    try {
+                        return await postFormJson(url, formData, fallbackMessage);
+                    } catch (error) {
+                        lastError = error;
+                        if (attempt >= attempts || !isRetryableRequestError(error)) {
+                            throw error;
+                        }
+
+                        setTranscriptionStatus('Connection hiccup - retrying answer submit', '#fbbf24');
+                        await waitForRequestRetry(650 * attempt);
+                    }
+                }
+
+                throw lastError || new Error(fallbackMessage);
             }
 
             function abortManagedFetches() {
@@ -5305,16 +5410,9 @@
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
                 formData.append('notes', '');
 
-                return managedFetch('{{ route("interview.answer") }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-                }).then(response => {
-                    if (!response.ok) {
-                        throw new Error('Answer save failed with status ' + response.status);
-                    }
-
-                    return response.json();
+                return postFormJsonWithRetry('{{ route("interview.answer") }}', formData, {
+                    attempts: 3,
+                    fallbackMessage: 'We could not save your answer. Please try again.'
                 });
             }
 
@@ -5511,16 +5609,14 @@
                 formData.append('is_final_question', (!answeredOpeningQuestion && isPenultimateScoredQuestion(currentQIdx)));
 
                 try {
-                    const response = await managedFetch('{{ route("interview.chatReply") }}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    const data = await postFormJsonWithRetry('{{ route("interview.chatReply") }}', formData, {
+                        attempts: 2,
+                        fallbackMessage: 'We could not send your answer. Please try again.'
                     });
-                    const data = await response.json().catch(() => ({}));
                     const tb = document.getElementById('thinkingBubble');
                     if(tb) tb.remove();
 
-                    if (!response.ok || !data.success) {
+                    if (!data.success) {
                         throw new Error(data.error || 'An error occurred.');
                     }
 
