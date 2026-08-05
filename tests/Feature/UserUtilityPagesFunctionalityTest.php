@@ -12,6 +12,7 @@ use App\Models\VoiceSession;
 use App\Notifications\UserActivityNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class UserUtilityPagesFunctionalityTest extends TestCase
@@ -222,6 +223,27 @@ class UserUtilityPagesFunctionalityTest extends TestCase
 
         $this->assertDatabaseMissing('practice_plan_items', ['id' => $story->id]);
         $this->assertDatabaseHas('practice_plan_items', ['id' => $otherStory->id]);
+    }
+
+    public function test_personal_mastery_repairs_missing_practice_plan_items_table(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        Schema::dropIfExists('practice_plan_items');
+
+        $this->actingAs($user)
+            ->get(route('user.leaderboard'))
+            ->assertOk()
+            ->assertSee('Personal Mastery')
+            ->assertSee('Philippines prep checklist');
+
+        $this->assertTrue(Schema::hasTable('practice_plan_items'));
+        $this->assertTrue(Schema::hasColumn('practice_plan_items', 'metadata'));
+        $this->assertDatabaseHas('practice_plan_items', [
+            'user_id' => $user->id,
+            'type' => 'mastery_checklist',
+            'title' => 'Resume is ready',
+        ]);
     }
 
     public function test_personal_mastery_tracks_and_weekly_review_use_complete_current_user_data(): void

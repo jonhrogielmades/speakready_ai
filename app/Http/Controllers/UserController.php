@@ -25,6 +25,8 @@ use App\Services\LearningRecommendationService;
 use App\Services\PersonalizedPracticePlanService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
+use App\Support\CareerPlanningSchema;
+use App\Support\VoiceSessionSchema;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -3717,6 +3719,10 @@ PROMPT;
     public function personalMastery()
     {
         $userId = (int) Auth::id();
+
+        CareerPlanningSchema::ensure();
+        VoiceSessionSchema::ensure();
+
         $profile = Profile::firstOrCreate(['user_id' => $userId]);
         $eligibleScores = Score::with('session.category')
             ->whereHas('session', fn ($query) => $query->where('user_id', $userId))
@@ -3784,6 +3790,8 @@ PROMPT;
 
     public function storeMasteryStory(Request $request)
     {
+        CareerPlanningSchema::ensure();
+
         $validated = $request->validate([
             'track' => 'nullable|string|max:80',
             'question' => 'nullable|string|max:220',
