@@ -495,6 +495,49 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame('I owned the release checklist, coordinated QA, and documented the final result before launch.', $savedAnswer->answer_text);
     }
 
+    public function test_interview_answer_repairs_missing_answer_columns_before_saving(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'Software Engineering']);
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a release you owned.',
+        ]);
+
+        Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('interview_answers');
+        Schema::create('interview_answers', function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('interview_session_id')->constrained('interview_sessions')->cascadeOnDelete();
+            $table->foreignId('question_id')->nullable()->constrained('questions')->nullOnDelete();
+            $table->text('answer_text')->nullable();
+            $table->string('response_mode')->default('text');
+            $table->timestamps();
+        });
+        Schema::enableForeignKeyConstraints();
+
+        $this->assertFalse(Schema::hasColumn('interview_answers', 'retry_of_answer_id'));
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.answer'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I owned the release checklist, coordinated QA, and documented the final result before launch.',
+                'response_mode' => 'text',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertTrue(Schema::hasColumn('interview_answers', 'retry_of_answer_id'));
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the release checklist, coordinated QA, and documented the final result before launch.',
+        ]);
+    }
+
     public function test_interview_answers_brief_candidate_question_then_continues_interview(): void
     {
         Setting::setVal('int_follow_up', false, 'interview', 'boolean');

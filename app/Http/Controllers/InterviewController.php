@@ -23,6 +23,7 @@ use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\FeedbackCoachingRepair;
+use App\Support\InterviewAnswerSchema;
 use App\Support\QuestionSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -378,6 +379,7 @@ class InterviewController extends Controller
                 'session_id' => $session->id,
                 'question_id' => $question->id,
                 'error_type' => $error::class,
+                'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
             ]);
 
             return response()->json([
@@ -468,6 +470,7 @@ class InterviewController extends Controller
                 'session_id' => $session->id,
                 'question_id' => $question->id,
                 'error_type' => $error::class,
+                'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
             ]);
 
             return response()->json([
@@ -1544,6 +1547,8 @@ class InterviewController extends Controller
 
     private function persistInterviewAnswer(InterviewSession $session, Question $question, array $validated, ?string $answerText = null): InterviewAnswer
     {
+        InterviewAnswerSchema::ensure();
+
         return InterviewAnswer::updateOrCreate(
             [
                 'interview_session_id' => $session->id,
@@ -1926,6 +1931,14 @@ class InterviewController extends Controller
             'error_type' => $error::class,
             'message' => Str::limit($error->getMessage(), 300),
         ]);
+    }
+
+    private function safeDatabaseErrorMessage(\Throwable $error): string
+    {
+        $message = $error->getPrevious()?->getMessage() ?: $error->getMessage();
+        $message = preg_replace('/\s+/', ' ', $message) ?: '';
+
+        return trim($message);
     }
 
     private function currentLanguageConfig(): array
