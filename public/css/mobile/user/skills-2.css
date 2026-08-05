@@ -1,0 +1,851 @@
+/* Page styles extracted from resources/views/user/skills.blade.php (block 2 of 2). */
+#skill-trees-page {
+        --skill-blue: #2563eb;
+        --skill-ink: #071936;
+        --skill-muted: #52617a;
+        --skill-border: #d6e4f8;
+    }
+    #skill-trees-page .sr-page-hero.skill-tree-hero {
+        --skill-hero-title-color: #1d4ed8;
+        --skill-hero-text-color: #334155;
+        --skill-hero-icon-bg: rgba(239, 246, 255, 0.92);
+        --skill-hero-icon-border: rgba(147, 197, 253, 0.42);
+        display: grid !important;
+        grid-template-columns: 44px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 10px !important;
+        min-height: 78px;
+        margin-bottom: 14px;
+        padding: 8px 76px 8px 14px !important;
+        border-radius: 16px;
+        border-color: rgba(191, 219, 254, 0.86);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.12), transparent 35%),
+            linear-gradient(142deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.96) 62%, rgba(239,246,255,0.92) 100%) !important;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+    }
+    :root:not(.lm) #skill-trees-page .sr-page-hero.skill-tree-hero,
+    .dm #skill-trees-page .sr-page-hero.skill-tree-hero {
+        --skill-hero-title-color: #93c5fd;
+        --skill-hero-text-color: #e2e8f0;
+        --skill-hero-icon-bg: rgba(59, 130, 246, 0.2);
+        --skill-hero-icon-border: rgba(147, 197, 253, 0.32);
+        background:
+            radial-gradient(circle at 86% 18%, rgba(37, 99, 235, 0.26), transparent 35%),
+            linear-gradient(142deg, #0f172a 0%, #111827 58%, #1e293b 100%) !important;
+        border-color: rgba(147, 197, 253, 0.28);
+    }
+    #skill-trees-page .skill-tree-hero .sr-page-hero-inner,
+    #skill-trees-page .skill-tree-hero .sr-page-hero-copy {
+        display: contents !important;
+    }
+    #skill-trees-page .skill-hero-icon {
+        box-sizing: border-box;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        border: 1px solid var(--skill-hero-icon-border) !important;
+        border-radius: 10px !important;
+        background: var(--skill-hero-icon-bg) !important;
+        color: var(--skill-hero-title-color) !important;
+        font-size: 0.9rem !important;
+    }
+    #skill-trees-page .skill-tree-hero .sr-page-hero-title {
+        display: block !important;
+        color: var(--skill-hero-title-color) !important;
+        background: none !important;
+        -webkit-text-fill-color: var(--skill-hero-title-color) !important;
+        font-size: 1.02rem !important;
+        line-height: 1.08 !important;
+        margin: 0 0 4px !important;
+        font-weight: 950 !important;
+        text-transform: uppercase;
+    }
+    #skill-trees-page .skill-tree-hero .sr-page-hero-title svg {
+        display: none;
+    }
+    #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle {
+        color: var(--skill-hero-text-color) !important;
+        font-size: 0.66rem !important;
+        line-height: 1.32;
+        max-width: 13.5rem;
+        margin: 0;
+        font-weight: 500;
+    }
+    #skill-trees-page .skill-tree-hero .sr-page-hero-art {
+        width: 62px;
+        right: 8px;
+        bottom: 4px;
+        opacity: 0.92;
+        filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16));
+    }
+    #skill-trees-page .sr-page-actions.skill-tree-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+        justify-content: start;
+        margin: 8px 0 14px;
+    }
+    #skill-trees-page .skill-level-pill,
+    #skill-trees-page .skill-back-link {
+        min-height: 34px;
+        border-radius: 9px !important;
+        font-weight: 900 !important;
+        font-size: 0.72rem !important;
+        padding: 6px 10px !important;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05);
+        white-space: nowrap;
+    }
+    #skill-trees-page .skill-level-pill {
+        background: linear-gradient(135deg, #3b82f6, #075dec) !important;
+    }
+    #skill-trees-page .skill-back-link {
+        background: rgba(255, 255, 255, 0.84) !important;
+        border-color: var(--skill-border) !important;
+        color: var(--skill-ink) !important;
+    }
+    #skill-trees-page .skill-xp-overview {
+        --bs-gutter-x: 18px;
+        --bs-gutter-y: 18px;
+    }
+    #skill-trees-page .skill-xp-overview .stat-card {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr);
+        grid-template-areas:
+            "icon label"
+            "value value";
+        align-items: center;
+        align-content: start;
+        gap: 10px 12px;
+        min-height: 110px;
+        padding: 18px !important;
+        text-align: left !important;
+        border-radius: 16px !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1px solid rgba(214, 228, 248, 0.9) !important;
+    }
+    #skill-trees-page .skill-xp-overview .stat-card [style*="width:50px"] {
+        grid-area: icon;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 11px !important;
+        margin: 0 !important;
+        font-size: 0.95rem !important;
+    }
+    #skill-trees-page .skill-xp-overview h6 {
+        grid-area: label;
+        color: #5b6780 !important;
+        font-size: 0.66rem !important;
+        letter-spacing: 0 !important;
+        line-height: 1.15;
+        margin: 0 !important;
+        overflow-wrap: anywhere;
+    }
+    #skill-trees-page .skill-xp-overview h3 {
+        grid-area: value;
+        color: var(--skill-ink) !important;
+        font-size: 1.38rem;
+        line-height: 1.05;
+        margin-top: 6px !important;
+    }
+    #skill-trees-page .skill-xp-overview h3 span {
+        color: var(--skill-blue) !important;
+        display: block;
+        font-size: 0.62rem !important;
+        line-height: 1.1;
+        margin: 3px 0 0;
+    }
+    #skill-trees-page .perks-title {
+        color: var(--skill-ink);
+        font-size: 1.05rem;
+        font-weight: 900;
+        margin: 0 0 12px;
+    }
+    #skill-trees-page .perks-panel {
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(214, 228, 248, 0.9);
+        background: rgba(255, 255, 255, 0.76);
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+    #skill-trees-page .perk-list {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+    }
+    #skill-trees-page .perk-list > [class*="col-"] {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+    #skill-trees-page .perk-card {
+        min-height: 94px;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) minmax(98px, auto);
+        align-items: center;
+        gap: 12px;
+        padding: 12px !important;
+        border-radius: 14px !important;
+        background: rgba(255, 255, 255, 0.92) !important;
+        border-color: var(--skill-border) !important;
+    }
+    #skill-trees-page .perk-card > [style*="width:60px"] {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 13px !important;
+        margin: 0 !important;
+        font-size: 1.1rem !important;
+    }
+    #skill-trees-page .perk-icon {
+        background:
+            radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.72), transparent 34%),
+            color-mix(in srgb, var(--perk-color, #3b82f6) 16%, #ffffff) !important;
+        border: 1px solid color-mix(in srgb, var(--perk-color, #3b82f6) 26%, #dbeafe) !important;
+        color: var(--perk-color, #3b82f6) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 10px 20px rgba(15, 23, 42, 0.06);
+    }
+    #skill-trees-page .perk-card.is-unlocked .perk-icon {
+        background: linear-gradient(135deg, var(--perk-color, #3b82f6), color-mix(in srgb, var(--perk-color, #3b82f6) 72%, #0f172a)) !important;
+        border-color: color-mix(in srgb, var(--perk-color, #3b82f6) 78%, #ffffff) !important;
+        color: #ffffff !important;
+    }
+    #skill-trees-page .perk-content {
+        min-width: 0;
+    }
+    #skill-trees-page .perk-card h5 {
+        margin: 0 0 4px !important;
+        color: var(--skill-ink) !important;
+        font-size: 0.88rem;
+        font-weight: 900 !important;
+    }
+    #skill-trees-page .perk-card p {
+        min-height: 0 !important;
+        margin: 0 !important;
+        color: var(--skill-muted) !important;
+        font-size: 0.74rem !important;
+        line-height: 1.28;
+    }
+    #skill-trees-page .perk-purchase {
+        min-width: 0;
+        padding: 0 0 0 12px !important;
+        border-top: 0 !important;
+        border-left: 1px solid var(--skill-border);
+    }
+    #skill-trees-page .perk-card .btn {
+        min-width: 86px;
+        min-height: 34px;
+        border-radius: 11px !important;
+        font-size: 0.74rem;
+        font-weight: 900 !important;
+    }
+    #skill-trees-page .perk-purchase strong {
+        font-size: 0.84rem;
+    }
+    #skill-trees-page .perk-card .btn[disabled] {
+        opacity: 1;
+        background: #eef2f7 !important;
+        color: #667085 !important;
+        border: 0;
+    }
+    #skill-trees-page .perk-card .btn:not([disabled]) {
+        border: 0;
+        box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+    }
+    :root:not(.lm) #skill-trees-page,
+    .dm #skill-trees-page {
+        --skill-ink: #e5eefc;
+        --skill-muted: #b8c5d8;
+        --skill-border: rgba(148, 163, 184, 0.28);
+    }
+    :root:not(.lm) #skill-trees-page .skill-back-link,
+    .dm #skill-trees-page .skill-back-link,
+    :root:not(.lm) #skill-trees-page .skill-xp-overview .stat-card,
+    .dm #skill-trees-page .skill-xp-overview .stat-card,
+    :root:not(.lm) #skill-trees-page .perks-panel,
+    .dm #skill-trees-page .perks-panel,
+    :root:not(.lm) #skill-trees-page .perk-card,
+    .dm #skill-trees-page .perk-card {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.92)) !important;
+        border-color: var(--skill-border) !important;
+        color: #e2e8f0 !important;
+    }
+    :root:not(.lm) #skill-trees-page .perks-title,
+    .dm #skill-trees-page .perks-title,
+    :root:not(.lm) #skill-trees-page .perk-card h5,
+    .dm #skill-trees-page .perk-card h5,
+    :root:not(.lm) #skill-trees-page .skill-xp-overview h3,
+    .dm #skill-trees-page .skill-xp-overview h3,
+    :root:not(.lm) #skill-trees-page [style*="color:var(--tx)"],
+    .dm #skill-trees-page [style*="color:var(--tx)"] {
+        color: #e5eefc !important;
+    }
+    :root:not(.lm) #skill-trees-page .perk-card p,
+    .dm #skill-trees-page .perk-card p,
+    :root:not(.lm) #skill-trees-page .skill-back-link,
+    .dm #skill-trees-page .skill-back-link,
+    :root:not(.lm) #skill-trees-page [style*="color:var(--tx2)"],
+    .dm #skill-trees-page [style*="color:var(--tx2)"] {
+        color: #cbd5e1 !important;
+    }
+    :root:not(.lm) #skill-trees-page .skill-xp-overview h6,
+    .dm #skill-trees-page .skill-xp-overview h6,
+    :root:not(.lm) #skill-trees-page [style*="color:var(--tx3)"],
+    .dm #skill-trees-page [style*="color:var(--tx3)"] {
+        color: #94a3b8 !important;
+    }
+    :root:not(.lm) #skill-trees-page .perk-purchase,
+    .dm #skill-trees-page .perk-purchase {
+        border-color: var(--skill-border) !important;
+    }
+    :root:not(.lm) #skill-trees-page .perk-card > [style*="var(--bg1)"],
+    .dm #skill-trees-page .perk-card > [style*="var(--bg1)"],
+    :root:not(.lm) #skill-trees-page .perk-card .btn[disabled],
+    .dm #skill-trees-page .perk-card .btn[disabled],
+    :root:not(.lm) #skill-trees-page .btn-unlock[disabled],
+    .dm #skill-trees-page .btn-unlock[disabled] {
+        background: rgba(30, 41, 59, 0.9) !important;
+        color: #94a3b8 !important;
+        border: 1px solid rgba(148, 163, 184, 0.24) !important;
+    }
+    :root:not(.lm) #skill-trees-page .perk-icon,
+    .dm #skill-trees-page .perk-icon {
+        background:
+            radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.14), transparent 34%),
+            color-mix(in srgb, var(--perk-color, #60a5fa) 24%, #0f172a) !important;
+        border-color: color-mix(in srgb, var(--perk-color, #60a5fa) 44%, rgba(148, 163, 184, 0.28)) !important;
+        color: color-mix(in srgb, var(--perk-color, #60a5fa) 82%, #ffffff) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    :root:not(.lm) #skill-trees-page .perk-card.is-unlocked .perk-icon,
+    .dm #skill-trees-page .perk-card.is-unlocked .perk-icon {
+        color: #ffffff !important;
+    }
+    :root:not(.lm) #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(59,130,246,0.1)"],
+    .dm #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(59,130,246,0.1)"],
+    :root:not(.lm) #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(16,185,129,0.1)"],
+    .dm #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(16,185,129,0.1)"],
+    :root:not(.lm) #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(139,92,246,0.1)"],
+    .dm #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(139,92,246,0.1)"],
+    :root:not(.lm) #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(245,158,11,0.1)"],
+    .dm #skill-trees-page .skill-xp-overview .stat-card [style*="rgba(245,158,11,0.1)"] {
+        background: rgba(30, 41, 59, 0.84) !important;
+    }
+    #skill-trees-page .sr-page-hero,
+    #skill-trees-page .sr-page-actions,
+    #skill-trees-page .skill-xp-overview,
+    #skill-trees-page .perks-panel,
+    #skill-trees-page .perk-list,
+    #skill-trees-page .perk-card {
+        max-width: 100%;
+    }
+    #skill-trees-page .skill-back-link,
+    #skill-trees-page .skill-level-pill,
+    #skill-trees-page .skill-xp-overview h6,
+    #skill-trees-page .skill-xp-overview h3,
+    #skill-trees-page .perk-card,
+    #skill-trees-page .perk-card h5,
+    #skill-trees-page .perk-card p,
+    #skill-trees-page .perk-purchase,
+    #skill-trees-page .perk-card .btn {
+        overflow-wrap: anywhere;
+    }
+    #skill-trees-page .perk-card .btn {
+        white-space: normal;
+    }
+    @media (max-width: 767px) {
+        #skill-trees-page .sr-page-hero.skill-tree-hero {
+            min-height: 74px !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 9px !important;
+            border-radius: 16px;
+            padding: 8px 64px 8px 12px !important;
+            margin-bottom: 12px;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-inner {
+            display: contents !important;
+            padding-right: 0;
+        }
+        #skill-trees-page .skill-hero-icon {
+            width: 32px !important;
+            height: 32px !important;
+            font-size: 0.82rem !important;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-title {
+            font-size: 0.9rem !important;
+            line-height: 1.08;
+            margin-bottom: 4px !important;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-title svg {
+            display: none;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle {
+            font-size: 0.67rem !important;
+            line-height: 1.32;
+            max-width: 12.5rem;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-art {
+            display: block;
+            width: 56px;
+            right: -4px;
+            bottom: 5px;
+        }
+        #skill-trees-page .sr-page-actions.skill-tree-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 6px !important;
+            margin: 8px 0 12px !important;
+        }
+        #skill-trees-page .skill-level-pill,
+        #skill-trees-page .skill-back-link {
+            min-height: 32px;
+            border-radius: 9px !important;
+            font-size: 0.68rem !important;
+            padding: 5px 8px !important;
+        }
+        #skill-trees-page .skill-xp-overview {
+            gap: 10px;
+            margin-bottom: 18px !important;
+        }
+        #skill-trees-page .skill-xp-overview .stat-card {
+            grid-template-columns: 34px minmax(0, 1fr);
+            gap: 8px 9px;
+            min-height: 86px;
+            padding: 12px !important;
+            border-radius: 14px !important;
+        }
+        #skill-trees-page .skill-xp-overview .stat-card [style*="width:50px"] {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 11px !important;
+            font-size: 0.95rem !important;
+        }
+        #skill-trees-page .skill-xp-overview h6 {
+            font-size: 0.58rem !important;
+            margin-bottom: 4px !important;
+        }
+        #skill-trees-page .skill-xp-overview h3 {
+            font-size: 1.08rem !important;
+            margin-top: 2px !important;
+        }
+        #skill-trees-page .skill-xp-overview h3 span {
+            font-size: 0.62rem !important;
+        }
+        #skill-trees-page .perks-title {
+            font-size: 0.95rem;
+            margin: 0 0 10px;
+        }
+        #skill-trees-page .perks-panel {
+            padding: 10px;
+            border-radius: 15px;
+        }
+        #skill-trees-page .perk-list {
+            gap: 8px;
+        }
+        #skill-trees-page .perk-card {
+            min-height: 88px;
+            grid-template-columns: 44px minmax(0, 1fr);
+            gap: 10px;
+            padding: 10px !important;
+            border-radius: 13px !important;
+        }
+        #skill-trees-page .perk-card > [style*="width:60px"] {
+            width: 42px !important;
+            height: 42px !important;
+            border-radius: 12px !important;
+            font-size: 1.05rem !important;
+        }
+        #skill-trees-page .perk-card h5 {
+            font-size: 0.86rem;
+            margin-bottom: 4px !important;
+        }
+        #skill-trees-page .perk-card p {
+            font-size: 0.72rem !important;
+            line-height: 1.32;
+        }
+        #skill-trees-page .perk-purchase strong {
+            font-size: 0.82rem;
+        }
+        #skill-trees-page .perk-purchase {
+            grid-column: 1 / -1;
+            min-width: 0;
+            padding: 8px 0 0 !important;
+            border-left: 0;
+            border-top: 1px solid var(--skill-border) !important;
+        }
+        #skill-trees-page .perk-purchase .d-flex {
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 10px;
+        }
+        #skill-trees-page .perk-card .btn {
+            min-width: 104px;
+            min-height: 38px;
+            font-size: 0.78rem;
+        }
+    }
+    @media (max-width: 380px) {
+        #skill-trees-page .sr-page-hero.skill-tree-hero {
+            min-height: 74px !important;
+            padding: 8px 58px 8px 12px !important;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-title {
+            font-size: 0.84rem !important;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle {
+            font-size: 0.6rem !important;
+            max-width: 10.5rem;
+        }
+        #skill-trees-page .skill-tree-hero .sr-page-hero-art {
+            width: 48px;
+            right: -4px;
+        }
+        #skill-trees-page .perk-card .btn {
+            min-width: 92px;
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    }
+
+    /* Final SaaSPro mobile pass for Skill Trees. */
+    @media (max-width: 767px) {
+        html body #skill-trees-page {
+            --skill-pro-card: rgba(255, 255, 255, 0.98);
+            --skill-pro-field: rgba(255, 255, 255, 0.96);
+            --skill-pro-soft: #f8fafc;
+            --skill-pro-border: rgba(15, 23, 42, 0.1);
+            --skill-pro-title: #0f172a;
+            --skill-pro-text: #334155;
+            --skill-pro-muted: #64748b;
+            --skill-pro-accent: #2563eb;
+            --skill-pro-accent-2: #0891b2;
+            --skill-pro-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 28px rgba(15, 23, 42, 0.07);
+            display: grid !important;
+            gap: 10px !important;
+            max-width: 520px !important;
+            margin: 0 auto !important;
+            padding: 0 0 16px !important;
+            color: var(--skill-pro-title) !important;
+        }
+
+        html[data-theme="dark"] body #skill-trees-page,
+        :root:not(.lm) body #skill-trees-page,
+        body.dm #skill-trees-page,
+        .dm #skill-trees-page {
+            --skill-pro-card: rgba(15, 23, 42, 0.94);
+            --skill-pro-field: rgba(30, 41, 59, 0.9);
+            --skill-pro-soft: rgba(51, 65, 85, 0.78);
+            --skill-pro-border: rgba(148, 163, 184, 0.24);
+            --skill-pro-title: #f8fafc;
+            --skill-pro-text: #e2e8f0;
+            --skill-pro-muted: #cbd5e1;
+            --skill-pro-accent: #93c5fd;
+            --skill-pro-accent-2: #67e8f9;
+            --skill-pro-shadow: 0 1px 0 rgba(148, 163, 184, 0.08), 0 18px 36px rgba(0, 0, 0, 0.26);
+        }
+
+        html body #skill-trees-page .sr-page-hero.skill-tree-hero {
+            width: 100% !important;
+            height: 69px !important;
+            min-height: 69px !important;
+            max-height: 69px !important;
+            margin: 0 !important;
+            padding: 8px 72px 8px 10px !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+
+        html body #skill-trees-page .skill-hero-icon {
+            width: 28px !important;
+            height: 28px !important;
+            min-width: 28px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid rgba(255, 255, 255, 0.34) !important;
+            border-radius: 8px !important;
+            background: rgba(15, 23, 42, 0.24) !important;
+            font-size: 0.76rem !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(15, 23, 42, 0.32);
+        }
+
+        html body #skill-trees-page .skill-hero-icon i {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            opacity: 1 !important;
+        }
+
+        html body #skill-trees-page .skill-tree-hero .sr-page-hero-title {
+            margin: 0 0 3px !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            font-size: 0.72rem !important;
+            font-weight: 900 !important;
+            line-height: 1.08 !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        html body #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle {
+            display: -webkit-box !important;
+            max-width: 12.2rem !important;
+            margin: 0 !important;
+            color: rgba(255, 255, 255, 0.9) !important;
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+            font-size: 0.49rem !important;
+            font-weight: 700 !important;
+            line-height: 1.25 !important;
+            overflow: hidden !important;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        html body #skill-trees-page .skill-tree-hero .sr-page-hero-art {
+            width: 72px !important;
+            right: -5px !important;
+            bottom: -2px !important;
+            opacity: 0.98 !important;
+            filter: drop-shadow(0 10px 16px rgba(15, 23, 42, 0.22));
+        }
+
+        html body #skill-trees-page .sr-page-actions.skill-tree-actions {
+            display: grid !important;
+            grid-template-columns: 0.72fr 1fr !important;
+            gap: 7px !important;
+            margin: 0 !important;
+        }
+
+        html body #skill-trees-page .skill-level-pill,
+        html body #skill-trees-page .skill-back-link {
+            width: 100% !important;
+            min-height: 34px !important;
+            padding: 7px 8px !important;
+            border-radius: 8px !important;
+            font-size: 0.64rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            box-shadow: none !important;
+            white-space: normal !important;
+        }
+
+        html body #skill-trees-page .skill-level-pill {
+            border: 0 !important;
+            background: linear-gradient(135deg, var(--skill-pro-accent), var(--skill-pro-accent-2)) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html body #skill-trees-page .skill-back-link {
+            border: 1px solid var(--skill-pro-border) !important;
+            background: var(--skill-pro-field) !important;
+            color: var(--skill-pro-accent) !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            margin: 0 !important;
+            --bs-gutter-x: 0;
+            --bs-gutter-y: 0;
+        }
+
+        html body #skill-trees-page .skill-xp-overview > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview .stat-card {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            grid-template-areas:
+                "icon label"
+                "value value" !important;
+            gap: 7px 8px !important;
+            min-height: 82px !important;
+            padding: 10px !important;
+            border: 1px solid var(--skill-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--skill-pro-card) !important;
+            box-shadow: var(--skill-pro-shadow) !important;
+            color: var(--skill-pro-title) !important;
+            text-align: left !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview .stat-card [style*="width:50px"] {
+            grid-area: icon;
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+            margin: 0 !important;
+            font-size: 0.84rem !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview h6 {
+            grid-area: label;
+            margin: 0 !important;
+            color: var(--skill-pro-muted) !important;
+            font-size: 0.55rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            line-height: 1.1 !important;
+            text-transform: none !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview h3 {
+            grid-area: value;
+            margin: 2px 0 0 !important;
+            color: var(--skill-pro-title) !important;
+            font-size: 1.04rem !important;
+            font-weight: 900 !important;
+            line-height: 1.05 !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview h3 span {
+            display: inline !important;
+            color: var(--skill-pro-accent) !important;
+            font-size: 0.58rem !important;
+            font-weight: 900 !important;
+        }
+
+        html body #skill-trees-page .perks-panel {
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        html body #skill-trees-page .perks-title {
+            margin: 0 0 8px !important;
+            color: var(--skill-pro-title) !important;
+            font-size: 0.8rem !important;
+            font-weight: 900 !important;
+            line-height: 1.18 !important;
+        }
+
+        html body #skill-trees-page .perk-list {
+            display: grid !important;
+            gap: 8px !important;
+        }
+
+        html body #skill-trees-page .perk-list > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        html body #skill-trees-page .perk-card {
+            display: grid !important;
+            grid-template-columns: 38px minmax(0, 1fr) !important;
+            align-items: start !important;
+            gap: 8px 10px !important;
+            min-height: 0 !important;
+            padding: 10px !important;
+            border: 1px solid var(--skill-pro-border) !important;
+            border-radius: 8px !important;
+            background: var(--skill-pro-card) !important;
+            box-shadow: var(--skill-pro-shadow) !important;
+            color: var(--skill-pro-title) !important;
+        }
+
+        html body #skill-trees-page .perk-card > .perk-icon {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 8px !important;
+            margin: 0 !important;
+            font-size: 0.96rem !important;
+        }
+
+        html body #skill-trees-page .perk-content {
+            min-width: 0 !important;
+        }
+
+        html body #skill-trees-page .perk-card h5 {
+            margin: 0 0 4px !important;
+            color: var(--skill-pro-title) !important;
+            font-size: 0.78rem !important;
+            font-weight: 900 !important;
+            line-height: 1.18 !important;
+        }
+
+        html body #skill-trees-page .perk-card p {
+            margin: 0 !important;
+            color: var(--skill-pro-muted) !important;
+            font-size: 0.66rem !important;
+            font-weight: 700 !important;
+            line-height: 1.28 !important;
+        }
+
+        html body #skill-trees-page .perk-purchase {
+            grid-column: 1 / -1 !important;
+            padding: 8px 0 0 !important;
+            border-top: 1px solid var(--skill-pro-border) !important;
+            border-left: 0 !important;
+        }
+
+        html body #skill-trees-page .perk-purchase .d-flex {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            align-items: center !important;
+        }
+
+        html body #skill-trees-page .perk-purchase span {
+            color: var(--skill-pro-muted) !important;
+            font-size: 0.52rem !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body #skill-trees-page .perk-purchase strong {
+            font-size: 0.76rem !important;
+            font-weight: 900 !important;
+            line-height: 1.1 !important;
+        }
+
+        html body #skill-trees-page .perk-card .btn {
+            min-width: 92px !important;
+            min-height: 34px !important;
+            padding: 6px 10px !important;
+            border-radius: 8px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            line-height: 1.12 !important;
+            white-space: nowrap !important;
+        }
+    }
+
+    @media (max-width: 390px) {
+        html body #skill-trees-page .sr-page-hero.skill-tree-hero {
+            padding: 8px 66px 8px 10px !important;
+        }
+
+        html body #skill-trees-page .skill-tree-hero .sr-page-hero-title {
+            font-size: 0.68rem !important;
+        }
+
+        html body #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle {
+            max-width: 10.8rem !important;
+            font-size: 0.46rem !important;
+        }
+
+        html body #skill-trees-page .skill-tree-hero .sr-page-hero-art {
+            width: 66px !important;
+            right: -6px !important;
+        }
+
+        html body #skill-trees-page .skill-xp-overview .stat-card {
+            padding: 9px !important;
+        }
+
+        html body #skill-trees-page .perk-card .btn {
+            min-width: 86px !important;
+            padding-inline: 8px !important;
+        }
+    }

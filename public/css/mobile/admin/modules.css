@@ -1,0 +1,367 @@
+/* Page styles extracted from resources/views/admin/modules.blade.php. */
+#sec-admin-modules .modules-stats-row > [class*="col-"] > div {
+        width: 100%;
+        min-height: 116px;
+    }
+    #sec-admin-modules .modules-panel {
+        background: var(--sf);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    #sec-admin-modules .modules-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--bd);
+    }
+    #sec-admin-modules .modules-filters {
+        display: grid;
+        grid-template-columns: minmax(180px, 260px) minmax(150px, 190px) minmax(130px, 170px);
+        gap: 10px;
+        align-items: center;
+    }
+    #sec-admin-modules .modules-filters .oinp {
+        width: 100%;
+        max-width: none !important;
+        min-width: 0;
+    }
+    #mainModulesTableWrapper {
+        border: 0 !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+        background: transparent !important;
+    }
+    #modulesTable {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 0;
+        font-size: 0.78rem;
+    }
+    #modulesTable th:nth-child(1),
+    #modulesTable td:nth-child(1) {
+        width: 36%;
+        white-space: normal !important;
+    }
+    #modulesTable th:nth-child(2),
+    #modulesTable td:nth-child(2) {
+        width: 18%;
+    }
+    #modulesTable th:nth-child(3),
+    #modulesTable td:nth-child(3) {
+        width: 12%;
+    }
+    #modulesTable th:nth-child(4),
+    #modulesTable td:nth-child(4) {
+        width: 13%;
+    }
+    #modulesTable th:nth-child(5),
+    #modulesTable td:nth-child(5) {
+        width: 6%;
+    }
+    #modulesTable th:nth-child(6),
+    #modulesTable td:nth-child(6) {
+        width: 16%;
+    }
+    #modulesTable th,
+    #modulesTable td {
+        padding: 10px 8px !important;
+    }
+    #sec-admin-modules .module-title-text {
+        display: block;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.25;
+        font-size: 0.86rem;
+        max-width: 100%;
+    }
+    #sec-admin-modules .module-category-text {
+        display: block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    #sec-admin-modules .module-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-start;
+    }
+    #sec-admin-modules .module-actions form {
+        display: inline-flex;
+        margin: 0;
+    }
+    #modulesTable .btn-sm {
+        min-height: 30px;
+        padding: 0.28rem 0.5rem;
+        font-size: 0.68rem !important;
+        line-height: 1.1;
+        white-space: nowrap;
+    }
+    #modulesTable .badge {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.66rem;
+        padding: 0.28rem 0.5rem;
+        line-height: 1.1;
+    }
+    #modulesTable .badge.bg-warning.ms-1 {
+        display: inline-flex;
+        width: fit-content;
+        margin-left: 0 !important;
+        margin-top: 4px;
+    }
+    #addModuleModal .form-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-left: 0 !important;
+    }
+    #addModuleModal .form-switch .form-check-input {
+        width: 20px !important;
+        min-width: 20px !important;
+        max-width: 20px !important;
+        height: 20px !important;
+        min-height: 20px !important;
+        margin: 0 !important;
+        float: none !important;
+        flex: 0 0 20px !important;
+        border-radius: 50% !important;
+        background-image: none !important;
+        cursor: pointer;
+    }
+    #addModuleModal .form-switch .form-check-input:checked {
+        background-color: #2563eb !important;
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18) !important;
+    }
+    #addModuleModal .form-switch .form-check-input:focus {
+        border-color: #60a5fa !important;
+        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16) !important;
+    }
+    #addModuleModal .form-switch .form-check-label {
+        margin: 0 !important;
+        line-height: 1.3;
+        min-width: 0;
+        word-break: normal;
+        overflow-wrap: normal;
+    }
+    @media (max-width: 1199.98px) {
+        #sec-admin-modules .modules-panel-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        #sec-admin-modules .modules-filters {
+            width: 100%;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        #modulesTable {
+            font-size: 0.72rem;
+        }
+        #modulesTable th,
+        #modulesTable td {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+            #modulesTable .btn-sm {
+            min-height: 28px;
+            padding: 0.26rem 0.42rem;
+            font-size: 0.62rem !important;
+        }
+        #modulesTable .badge {
+            font-size: 0.66rem;
+            padding-inline: 0.42rem;
+        }
+    }
+    /* Mobile Card-based Table Layout for Main Modules Table */
+    @media (max-width: 767px) {
+        #sec-admin-modules .modules-stats-row {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            overflow-x: visible;
+            padding-bottom: 0;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] > div {
+            min-height: 84px;
+            padding: 14px !important;
+            border-radius: 13px !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] > div > div:first-child {
+            font-size: .72rem !important;
+            line-height: 1.2;
+            margin-bottom: 6px !important;
+        }
+        #sec-admin-modules .modules-stats-row > [class*="col-"] > div > div:last-child {
+            font-size: 1.18rem !important;
+            line-height: 1.1;
+        }
+        #mainModulesTableWrapper {
+            overflow-x: hidden !important;
+            padding: 12px !important;
+            width: 100%;
+        }
+        #modulesTable {
+            width: 100% !important;
+            word-wrap: break-word;
+        }
+        #modulesTable thead {
+            display: none;
+        }
+        #modulesTable tbody tr {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background: var(--bg3, rgba(255,255,255,0.02));
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--bd, rgba(255,255,255,0.1));
+            padding: 12px;
+        }
+        #modulesTable tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-top: none !important;
+            text-align: right;
+            white-space: normal !important;
+            word-break: break-word;
+        }
+        #modulesTable tbody td:last-child {
+            border-bottom: none !important;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 12px !important;
+            flex-wrap: wrap;
+        }
+        #modulesTable tbody td::before {
+            font-size: 0.8rem;
+            color: var(--tx3, #888);
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        #modulesTable tbody td:nth-child(2)::before { content: "Category"; }
+        #modulesTable tbody td:nth-child(3)::before { content: "Difficulty"; }
+        #modulesTable tbody td:nth-child(4)::before { content: "Status"; }
+        #modulesTable tbody td:nth-child(5)::before { content: "Views"; }
+        
+        #modulesTable tbody td:nth-child(1) {
+            order: -1;
+            justify-content: flex-start;
+            border-bottom: 1px solid var(--bd, rgba(255,255,255,0.1)) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 4px;
+            text-align: left;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #modulesTable tbody td:nth-child(1)::before { content: none; }
+        #sec-admin-modules .modules-filters {
+            grid-template-columns: 1fr;
+        }
+        #modulesTable {
+            table-layout: auto;
+        }
+        #modulesTable th,
+        #modulesTable td {
+            width: auto !important;
+        }
+    }
+
+    /* Final Admin Modules shell hardening. */
+    #sec-admin-modules,
+    #sec-admin-modules * {
+        min-width: 0;
+    }
+
+    #sec-admin-modules {
+        overflow-x: clip;
+    }
+
+    #sec-admin-modules :is(.modules-panel-header, .modules-filters, .module-actions) {
+        min-width: 0;
+    }
+
+    #sec-admin-modules :is(h4, p, h6, .module-title-text, .module-category-text, .badge, .btn) {
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+    #sec-admin-modules .modules-panel {
+        max-width: 100%;
+    }
+
+    #mainModulesTableWrapper {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        max-width: 100%;
+    }
+
+    #modulesTable {
+        min-width: 760px;
+    }
+
+    #modulesTable th,
+    #modulesTable td {
+        vertical-align: middle;
+    }
+
+    #sec-admin-modules .module-actions {
+        flex-wrap: wrap;
+    }
+
+    #sec-admin-modules .module-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+    }
+
+    @media (min-width: 768px) and (max-width: 1199.98px) {
+        #sec-admin-modules .modules-filters {
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)) !important;
+        }
+
+        #modulesTable {
+            min-width: 720px;
+        }
+    }
+
+    @media (max-width: 767px) {
+        #mainModulesTableWrapper {
+            overflow-x: hidden !important;
+        }
+
+        #modulesTable {
+            min-width: 0;
+        }
+
+        #sec-admin-modules .module-actions {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+        #sec-admin-modules .module-actions form,
+        #sec-admin-modules .module-actions .btn {
+            flex: 1 1 120px;
+        }
+    }

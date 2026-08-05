@@ -1,0 +1,111 @@
+/* Page styles extracted from resources/views/user/skills.blade.php (block 1 of 2). */
+.text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .premium-panel {
+        background: var(--sf) !important;
+        border: 1px solid var(--bd);
+        border-radius: 24px !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .premium-panel:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+    @media (max-width: 767px) {
+        #skill-trees-page .sr-page-actions {
+            display: grid !important;
+            grid-template-columns: 82px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+        #skill-trees-page .sr-page-actions > * {
+            width: 100% !important;
+            min-height: 42px;
+        }
+        #skill-trees-page .stat-card {
+            min-height: 106px;
+            padding: 12px !important;
+            border-radius: 14px !important;
+        }
+        #skill-trees-page .skill-xp-overview {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-left: 0;
+            margin-right: 0;
+            overflow: hidden;
+        }
+        #skill-trees-page .skill-xp-overview > [class*="col-"] {
+            flex: none !important;
+            max-width: none !important;
+            width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        #skill-trees-page .stat-card [style*="width:50px"] {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 11px !important;
+            font-size: 0.95rem !important;
+            margin-bottom: 8px !important;
+        }
+        #skill-trees-page .stat-card h6 {
+            font-size: 0.62rem !important;
+            line-height: 1.15;
+            letter-spacing: 0 !important;
+            margin-bottom: 4px !important;
+            overflow-wrap: anywhere;
+        }
+        #skill-trees-page .stat-card h3 {
+            font-size: 1.05rem;
+            line-height: 1.12;
+        }
+        #skill-trees-page .stat-card h3 span {
+            display: inline;
+            font-size: 0.62rem !important;
+            line-height: 1.1;
+        }
+        #skill-trees-page h5 {
+            font-size: 0.98rem;
+            line-height: 1.25;
+        }
+        #skill-trees-page .perk-card {
+            padding: 14px !important;
+            border-radius: 14px !important;
+        }
+        #skill-trees-page .perk-card [style*="width:60px"] {
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 13px !important;
+            font-size: 1.15rem !important;
+            margin-bottom: 12px !important;
+        }
+        #skill-trees-page .perk-card p {
+            min-height: 0 !important;
+            font-size: 0.8rem !important;
+            line-height: 1.4;
+        }
+        #skill-trees-page .perk-card .mt-auto .d-flex {
+            display: grid !important;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            align-items: stretch !important;
+        }
+        #skill-trees-page .perk-card .btn {
+            width: 100%;
+            min-height: 40px;
+        }
+    }

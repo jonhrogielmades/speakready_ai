@@ -1,43 +1,7 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 @section('content')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<style>
-    #sec-admin-module-edit .form-switch {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-left: 0 !important;
-    }
-    #sec-admin-module-edit .form-switch .form-check-input {
-        width: 20px !important;
-        min-width: 20px !important;
-        max-width: 20px !important;
-        height: 20px !important;
-        min-height: 20px !important;
-        margin: 0 !important;
-        float: none !important;
-        flex: 0 0 20px !important;
-        border-radius: 50% !important;
-        background-image: none !important;
-        cursor: pointer;
-    }
-    #sec-admin-module-edit .form-switch .form-check-input:checked {
-        background-color: #2563eb !important;
-        border-color: #60a5fa !important;
-        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.18) !important;
-    }
-    #sec-admin-module-edit .form-switch .form-check-input:focus {
-        border-color: #60a5fa !important;
-        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16) !important;
-    }
-    #sec-admin-module-edit .form-switch .form-check-label {
-        margin: 0 !important;
-        line-height: 1.3;
-        min-width: 0;
-        word-break: normal;
-        overflow-wrap: normal;
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/module_edit.css?v=1') }}" data-page-style="admin-module_edit">
 
 <div class="db-section active" id="sec-admin-module-edit">
     @if(session('success'))
@@ -497,14 +461,7 @@
 
 <!-- Quill JS -->
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<style>
-    /* Responsive & Theme Fixes for Quill Editor */
-    .ql-toolbar { background: var(--bg3, #f1f1f1); border-color: var(--bd) !important; border-radius: 8px 8px 0 0; }
-    .ql-container { border-color: var(--bd) !important; }
-    body.dark-mode .ql-snow .ql-stroke { stroke: #e0e0e0; }
-    body.dark-mode .ql-snow .ql-fill { fill: #e0e0e0; }
-    body.dark-mode .ql-snow .ql-picker { color: #e0e0e0; }
-</style>
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/module_edit-2.css?v=1') }}" data-page-style="admin-module_edit-2">
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

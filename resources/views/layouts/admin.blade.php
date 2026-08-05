@@ -21,8 +21,8 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=27') }}" />
+      <!-- Shared app CSS -->
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=28') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -137,6 +137,7 @@
              max-width: 100%;
           }
       </style>
+      @stack('styles')
    </head>
    <body class="admin-shell desktop-shell" data-layout-shell="desktop" data-app-surface="admin">
       <div id="dashboard">

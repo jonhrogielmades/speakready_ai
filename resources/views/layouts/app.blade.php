@@ -22,8 +22,8 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=27') }}" />
+      <!-- Shared app CSS -->
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=28') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -73,6 +73,7 @@
           }
       </style>
       @include('partials.onboarding-styles')
+      @stack('styles')
    </head>
    <body class="user-desktop-shell desktop-shell" data-layout-shell="desktop" data-app-surface="user">
       <div id="dashboard">

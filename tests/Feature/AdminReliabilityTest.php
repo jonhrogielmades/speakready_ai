@@ -648,9 +648,16 @@ class AdminReliabilityTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.settings.index'))
             ->assertOk()
-            ->assertSee('#sec-admin-settings .custom-switch-container h6', false)
-            ->assertSee('color: var(--tx) !important', false)
-            ->assertSee('color: var(--tx3) !important', false);
+            ->assertSee('css/desktop/admin/settings.css?v=1', false)
+            ->assertSee('data-page-style="admin-settings"', false);
+
+        foreach (['desktop', 'mobile'] as $device) {
+            $css = File::get(public_path("css/{$device}/admin/settings.css"));
+
+            $this->assertStringContainsString('#sec-admin-settings .custom-switch-container h6', $css);
+            $this->assertStringContainsString('color: var(--tx) !important', $css);
+            $this->assertStringContainsString('color: var(--tx3) !important', $css);
+        }
     }
 
     public function test_feedback_audit_forms_accept_their_page_payloads(): void

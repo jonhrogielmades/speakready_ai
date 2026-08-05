@@ -19,7 +19,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=17') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=28') }}" />
       @include('partials.onboarding-styles')
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
@@ -2726,6 +2726,7 @@
          }
 
        </style>
+      @stack('styles')
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user">
 

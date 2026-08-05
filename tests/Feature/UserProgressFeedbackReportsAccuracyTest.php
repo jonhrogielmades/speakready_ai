@@ -14,6 +14,7 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class UserProgressFeedbackReportsAccuracyTest extends TestCase
@@ -279,11 +280,18 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.feedback'))
             ->assertOk()
-            ->assertSee('--feedback-feature-title', false)
-            ->assertSee('--feedback-feature-text', false)
-            ->assertSee('html[data-theme="dark"] .feedback-shell', false)
-            ->assertSee('overflow-wrap: anywhere', false)
-            ->assertSee('word-break: normal', false);
+            ->assertSee('css/desktop/user/feedback.css?v=1', false)
+            ->assertSee('data-page-style="user-feedback"', false);
+
+        foreach (['desktop', 'mobile'] as $device) {
+            $css = File::get(public_path("css/{$device}/user/feedback.css"));
+
+            $this->assertStringContainsString('--feedback-feature-title', $css);
+            $this->assertStringContainsString('--feedback-feature-text', $css);
+            $this->assertStringContainsString('html[data-theme="dark"] .feedback-shell', $css);
+            $this->assertStringContainsString('overflow-wrap: anywhere', $css);
+            $this->assertStringContainsString('word-break: normal', $css);
+        }
     }
 
     public function test_reports_do_not_render_placeholder_scores_for_unscored_sessions(): void

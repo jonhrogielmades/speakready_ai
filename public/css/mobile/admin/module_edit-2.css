@@ -1,0 +1,52 @@
+/* Page styles extracted from resources/views/admin/module_edit.blade.php (block 2 of 2). */
+/* Responsive & Theme Fixes for Quill Editor */
+    .ql-toolbar { background: var(--bg3, #f1f1f1); border-color: var(--bd) !important; border-radius: 8px 8px 0 0; }
+    .ql-container { border-color: var(--bd) !important; }
+    body.dark-mode .ql-snow .ql-stroke { stroke: #e0e0e0; }
+    body.dark-mode .ql-snow .ql-fill { fill: #e0e0e0; }
+    body.dark-mode .ql-snow .ql-picker { color: #e0e0e0; }
+
+    #sec-admin-module-edit .ql-toolbar.ql-snow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        max-width: 100%;
+    }
+
+    #sec-admin-module-edit .ql-toolbar.ql-snow .ql-formats {
+        margin-right: 6px;
+        white-space: nowrap;
+    }
+
+    #sec-admin-module-edit .ql-container.ql-snow {
+        max-width: 100%;
+        min-height: 220px;
+        overflow: hidden;
+    }
+
+    #sec-admin-module-edit .ql-editor {
+        color: var(--tx);
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+
+    html[data-theme="dark"] #sec-admin-module-edit .ql-snow .ql-stroke,
+    :root:not(.lm) #sec-admin-module-edit .ql-snow .ql-stroke,
+    body.dm #sec-admin-module-edit .ql-snow .ql-stroke,
+    body.dark-mode #sec-admin-module-edit .ql-snow .ql-stroke {
+        stroke: #e2e8f0;
+    }
+
+    html[data-theme="dark"] #sec-admin-module-edit .ql-snow .ql-fill,
+    :root:not(.lm) #sec-admin-module-edit .ql-snow .ql-fill,
+    body.dm #sec-admin-module-edit .ql-snow .ql-fill,
+    body.dark-mode #sec-admin-module-edit .ql-snow .ql-fill {
+        fill: #e2e8f0;
+    }
+
+    html[data-theme="dark"] #sec-admin-module-edit .ql-snow .ql-picker,
+    :root:not(.lm) #sec-admin-module-edit .ql-snow .ql-picker,
+    body.dm #sec-admin-module-edit .ql-snow .ql-picker,
+    body.dark-mode #sec-admin-module-edit .ql-snow .ql-picker {
+        color: #e2e8f0;
+    }

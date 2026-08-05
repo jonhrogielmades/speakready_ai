@@ -908,7 +908,8 @@ class UserSideHardeningTest extends TestCase
             ->get(route('user.game.match'))
             ->assertOk()
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('body.user-mobile-shell #mob-content #sec-learning-game-session', false)
+            ->assertSee('css/mobile/user/game-session.css?v=1', false)
+            ->assertSee('data-page-style="user-game-session"', false)
             ->assertSee('id="gameSessionControls"', false)
             ->assertSee('response-panel', false);
     }

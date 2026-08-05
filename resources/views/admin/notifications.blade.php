@@ -1,62 +1,7 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @section('content')
-<style>
-    /* Admin Premium Styles */
-    .premium-card {
-        background: var(--sf, #1e1e2d);
-        border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .premium-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-    .stat-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 0.8rem;
-    }
-    .stat-badge.success { background: rgba(52, 211, 153, 0.15); color: #34d399; }
-    .stat-badge.warning { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-    .stat-badge.danger { background: rgba(248, 113, 113, 0.15); color: #f87171; }
-    .stat-badge.info { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
-    
-    .form-control, .form-select {
-        background: var(--bg3, #2b2b40);
-        border: 1px solid var(--bd, rgba(255, 255, 255, 0.1));
-        color: var(--tx, #e0e0e0);
-        border-radius: 12px;
-        padding: 12px 16px;
-    }
-    .form-control:focus, .form-select:focus {
-        background: var(--bg3, #2b2b40);
-        border-color: #3b82f6;
-        color: var(--tx, #e0e0e0);
-        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
-    }
-    .btn-premium {
-        background: #3b82f6;
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        padding: 10px 20px;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    .btn-premium:hover {
-        background: #2563eb;
-        transform: translateY(-2px);
-    }
-    
-    /* Mobile Responsive Tables */
-    @media (max-width: 767.98px) {
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/notifications.css?v=1') }}" data-page-style="admin-notifications">
 
 <div class="db-section active" id="sec-admin-notifications">
     @if(session('success'))

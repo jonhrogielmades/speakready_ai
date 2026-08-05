@@ -18,7 +18,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/style.css?v=16') }}" />
+      <link rel="stylesheet" href="{{ asset('css/style.css?v=28') }}" />
       <style>
          /* ===== ADMIN MOBILE LAYOUT SHELL ===== */
          html, body {
@@ -1495,6 +1495,7 @@
             filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.18));
          }
       </style>
+      @stack('styles')
    </head>
    <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin">
 

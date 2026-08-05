@@ -1,0 +1,84 @@
+/* Page styles extracted from resources/views/user/reports.blade.php (block 1 of 2). */
+@media print {
+        body { background: #fff !important; }
+        .sidebar, .navbar, .btn-no-print { display: none !important; }
+        .db-section { padding: 0 !important; margin: 0 !important; }
+        .print-card {
+            background: #fff !important;
+            border: 1px solid #ccc !important;
+            break-inside: avoid;
+            box-shadow: none !important;
+            margin-bottom: 20px !important;
+        }
+        .text-white { color: #000 !important; }
+        canvas { max-width: 100% !important; height: auto !important; }
+        h4, h5, h6 { color: #000 !important; }
+    }
+
+    @media screen {
+        .report-print-identity {
+            display: none !important;
+        }
+        .print-card {
+            background: var(--sf) !important;
+            border: 1px solid var(--bd) !important;
+            border-radius: 24px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .print-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
+        }
+        #report-readiness {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1)) !important;
+            border: 1px solid rgba(59, 130, 246, 0.2) !important;
+        }
+    }
+
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+    @keyframes shineEffect { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+    .btn-shine { position: relative; overflow: hidden; }
+    .btn-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); transform: skewX(-20deg); animation: shineEffect 4s infinite; }
+
+    @media (max-width: 767px) {
+        #portfolioReport .report-export-actions {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 7px !important;
+            width: 100% !important;
+            align-items: stretch !important;
+        }
+        #portfolioReport .report-export-actions > button {
+            width: 100% !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 6px 5px !important;
+            font-size: 0.62rem !important;
+            line-height: 1.15 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 5px !important;
+            white-space: normal !important;
+            text-align: center !important;
+        }
+        #portfolioReport .report-export-actions > button i {
+            margin: 0 !important;
+            font-size: 0.78rem !important;
+        }
+        #portfolioReport .report-export-actions > form {
+            grid-column: auto !important;
+            width: 100% !important;
+        }
+    }
