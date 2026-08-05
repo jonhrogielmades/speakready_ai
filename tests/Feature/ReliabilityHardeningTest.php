@@ -23,6 +23,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -950,6 +951,64 @@ class ReliabilityHardeningTest extends TestCase
             EvidenceBasedCoachingService::VERSION,
             data_get(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary, 'version')
         );
+    }
+
+    public function test_user_review_renders_saved_report_when_feedback_refresh_fails(): void
+    {
+        Log::spy();
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, [
+            'status' => 'completed',
+            'action_plan' => [
+                'headline' => ['malformed'],
+                'target_score' => ['bad'],
+                'priorities' => [
+                    ['skill' => 'Clarity', 'score' => 62, 'task' => 'Add a specific result.'],
+                    'bad priority row',
+                ],
+                'recommended_paths' => [
+                    ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
+                    'bad path row',
+                ],
+                'next_session' => 'bad next session',
+            ],
+        ]);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Describe a time you improved a process.',
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I reviewed the process, coordinated the update, and confirmed the handoff improved.',
+            'response_mode' => 'text',
+            'ai_feedback' => 'Saved feedback remains visible.',
+            'score' => 62,
+        ]);
+
+        $this->app->instance(InterviewController::class, new class extends InterviewController
+        {
+            public function ensureCompletedSessionFeedbackIsCurrent(InterviewSession $session, $gameLevel = null): bool
+            {
+                throw new \RuntimeException('Simulated refresh failure.');
+            }
+        });
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Detailed Feedback Report')
+            ->assertSee('Saved feedback remains visible.')
+            ->assertSee('Targeted practice plan')
+            ->assertSee('Clarity');
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(fn (string $message, array $context): bool => $message === 'Detailed feedback refresh failed; rendering saved report data.'
+                && (int) ($context['session_id'] ?? 0) === (int) $session->id
+                && $context['error_type'] === \RuntimeException::class);
     }
 
     public function test_repair_feedback_coaching_command_backfills_missing_report_data(): void

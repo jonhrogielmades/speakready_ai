@@ -184,8 +184,23 @@
             : ($suggestions !== '' ? 'Review the recommended actions for your next practice step.' : 'AI feedback was unavailable for this session.');
         $comparisonRows = $comparisonRows ?? [];
         $actionPlan = is_array($sessionRecord->action_plan ?? null) ? $sessionRecord->action_plan : [];
-        $actionPriorities = $actionPlan['priorities'] ?? [];
-        $recommendedPaths = $actionPlan['recommended_paths'] ?? [];
+        $actionPlanHeadline = is_scalar($actionPlan['headline'] ?? null)
+            ? trim((string) $actionPlan['headline'])
+            : '';
+        $actionPlanTargetScore = is_numeric($actionPlan['target_score'] ?? null)
+            ? max(0, min(100, (int) round($actionPlan['target_score'])))
+            : 70;
+        $actionPlanNextSession = is_array($actionPlan['next_session'] ?? null)
+            ? $actionPlan['next_session']
+            : [];
+        $actionPriorities = collect($actionPlan['priorities'] ?? [])
+            ->filter(fn ($item) => is_array($item))
+            ->values()
+            ->all();
+        $recommendedPaths = collect($actionPlan['recommended_paths'] ?? [])
+            ->filter(fn ($item) => is_array($item))
+            ->values()
+            ->all();
         $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
         $sessionFeedbackQuality = is_array(data_get($feedback->coaching_summary ?? [], 'feedback_quality'))
             ? data_get($feedback->coaching_summary, 'feedback_quality')
@@ -291,11 +306,11 @@
                 <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
                     <div>
                         <h5 style="color:var(--tx);font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-route me-2" style="color:#10b981"></i>Post-Session Action Plan</h5>
-                        <p style="color:var(--tx3);margin:0;font-size:.92rem;">{{ $actionPlan['headline'] ?? 'Targeted practice plan' }}</p>
+                        <p style="color:var(--tx3);margin:0;font-size:.92rem;">{{ $actionPlanHeadline !== '' ? $actionPlanHeadline : 'Targeted practice plan' }}</p>
                     </div>
                     <div class="text-md-end action-plan-target">
                         <div style="font-size:.8rem;color:var(--tx3);font-weight:700;text-transform:uppercase;">Next Target</div>
-                        <div style="font-size:1.8rem;font-weight:800;color:#10b981;line-height:1;">{{ $actionPlan['target_score'] ?? 70 }}%</div>
+                        <div style="font-size:1.8rem;font-weight:800;color:#10b981;line-height:1;">{{ $actionPlanTargetScore }}%</div>
                     </div>
                 </div>
 
@@ -304,10 +319,10 @@
                         @foreach($actionPriorities as $priority)
                             <div class="action-plan-item">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <strong style="color:var(--tx);">{{ $priority['skill'] ?? 'Skill' }}</strong>
-                                    <span style="color:#f59e0b;font-weight:800;">{{ $priority['score'] ?? 0 }}%</span>
+                                    <strong style="color:var(--tx);">{{ is_scalar($priority['skill'] ?? null) ? $priority['skill'] : 'Skill' }}</strong>
+                                    <span style="color:#f59e0b;font-weight:800;">{{ is_numeric($priority['score'] ?? null) ? max(0, min(100, (int) round($priority['score']))) : 0 }}%</span>
                                 </div>
-                                <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:0;">{{ $priority['task'] ?? 'Retry this area with a more specific answer.' }}</p>
+                                <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:0;">{{ is_scalar($priority['task'] ?? null) ? $priority['task'] : 'Retry this area with a more specific answer.' }}</p>
                             </div>
                         @endforeach
                     </div>
@@ -316,15 +331,18 @@
                 <div class="action-plan-links">
                     @foreach($recommendedPaths as $path)
                         @php
-                            $pathLabel = preg_replace('/^PH\s+/i', '', $path['label'] ?? 'Practice');
+                            $pathLabel = preg_replace('/^PH\s+/i', '', is_scalar($path['label'] ?? null) ? (string) $path['label'] : 'Practice');
+                            $pathUrl = is_scalar($path['url'] ?? null) && trim((string) $path['url']) !== ''
+                                ? (string) $path['url']
+                                : route('interview.setup');
                         @endphp
-                        <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ $path['url'] ?? route('interview.setup') }}">
+                        <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ $pathUrl }}">
                             <i class="fa-solid fa-arrow-up-right-from-square me-1"></i>{{ $pathLabel }}
                         </a>
                     @endforeach
-                    @if(!empty($actionPlan['next_session']))
-                        <span class="retry-chip"><i class="fa-solid fa-sliders"></i>{{ ucfirst($actionPlan['next_session']['difficulty'] ?? 'medium') }} next</span>
-                        <span class="retry-chip"><i class="fa-solid fa-user-tie"></i>{{ ucfirst($actionPlan['next_session']['strictness'] ?? 'neutral') }}</span>
+                    @if(!empty($actionPlanNextSession))
+                        <span class="retry-chip"><i class="fa-solid fa-sliders"></i>{{ ucfirst(is_scalar($actionPlanNextSession['difficulty'] ?? null) ? (string) $actionPlanNextSession['difficulty'] : 'medium') }} next</span>
+                        <span class="retry-chip"><i class="fa-solid fa-user-tie"></i>{{ ucfirst(is_scalar($actionPlanNextSession['strictness'] ?? null) ? (string) $actionPlanNextSession['strictness'] : 'neutral') }}</span>
                     @endif
                 </div>
             </div>
@@ -984,4 +1002,3 @@ function submitRetry(answerId) {
 }
 </script>
 @endsection
-

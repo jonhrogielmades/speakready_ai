@@ -740,7 +740,21 @@ class UserController extends Controller
             ])
             ->firstOrFail();
 
-        if (app(InterviewController::class)->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel)) {
+        $feedbackRefreshed = false;
+
+        try {
+            $feedbackRefreshed = app(InterviewController::class)
+                ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
+        } catch (\Throwable $exception) {
+            Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
+                'session_id' => $sessionRecord->id,
+                'user_id' => Auth::id(),
+                'error_type' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+        }
+
+        if ($feedbackRefreshed) {
             $sessionRecord->refresh()->load([
                 'category',
                 'answers' => function ($query) {
