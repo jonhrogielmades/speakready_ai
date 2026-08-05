@@ -1,6 +1,9 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/modules.css?v=1') }}" data-page-style="admin-modules">
+@endpush
+
+@section('content')
 <div class="db-section active" id="sec-admin-modules">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px;">

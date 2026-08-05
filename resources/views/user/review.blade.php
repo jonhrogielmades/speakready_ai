@@ -1,8 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Detailed Feedback Report')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/review.css?v=1') }}" data-page-style="user-review">
+@endpush
+
+@section('content')
 
 <div class="db-section active animate-fade-up">
     @php

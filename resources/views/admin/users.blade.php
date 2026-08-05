@@ -1,7 +1,10 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/users.css?v=1') }}" data-page-style="admin-users">
+@endpush
+
+@section('content')
 
 @php
     $formatLastActiveShort = function ($lastActiveAt) {

@@ -1,10 +1,13 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Real-Life Mission Mode')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/missions.css?v=1') }}" data-page-style="user-missions">
-@include('partials.page-hero-styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/missions-2.css?v=1') }}" data-page-style="user-missions-2">
+@endpush
+
+@section('content')
+@include('partials.page-hero-styles')
 
 <div class="db-section active mission-page" id="mission-mode-page">
     <div class="sr-page-hero mission-progress-hero">

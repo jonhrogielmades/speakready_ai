@@ -1,7 +1,10 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/feedback/index.css?v=1') }}" data-page-style="admin-feedback-index">
+@endpush
+
+@section('content')
 <div class="container-fluid py-4 feedback-audit-page">
     <!-- Header -->
     <div class="feedback-header d-flex justify-content-between align-items-center mb-4">

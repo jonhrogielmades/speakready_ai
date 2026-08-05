@@ -1,8 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Global Leaderboard')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/leaderboard.css?v=1') }}" data-page-style="user-leaderboard">
+@endpush
+
+@section('content')
 @include('partials.page-hero-styles')
 
 <div class="db-section active animate-fade-up" id="leaderboard-page">

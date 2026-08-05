@@ -1,6 +1,9 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/categories.css?v=1') }}" data-page-style="admin-categories">
+@endpush
+
+@section('content')
 <div class="db-section active" id="sec-admin-categories">
     <div class="mb-4 d-flex justify-content-between align-items-center">
         <div>

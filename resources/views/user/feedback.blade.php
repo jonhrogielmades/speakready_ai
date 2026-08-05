@@ -1,8 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Feedback')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/feedback.css?v=1') }}" data-page-style="user-feedback">
+@endpush
+
+@section('content')
 
 <div class="db-section active animate-fade-up feedback-shell">
     <div class="feedback-hero" id="feedbackModulesLikeHero">

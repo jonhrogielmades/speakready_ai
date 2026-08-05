@@ -1,9 +1,12 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Modules')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/modules/index.css?v=1') }}" data-page-style="user-modules-index">
+@endpush
+
 @section('content')
 @include('partials.page-hero-styles')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/modules/index.css?v=1') }}" data-page-style="user-modules-index">
 
 <div class="db-section active" id="interview-modules-page">
     @if($isMobile ?? false)

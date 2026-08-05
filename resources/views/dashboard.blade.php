@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/dashboard.css?v=1') }}" data-page-style="dashboard">
 @endpush
 
-
 @section('content')
 @php
     $scoreVal = (int) round($profile->readiness_score ?? $avgScore ?? 0);

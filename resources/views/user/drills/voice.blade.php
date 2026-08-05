@@ -1,10 +1,13 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Voice Rehearsal')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/drills/voice.css?v=1') }}" data-page-style="user-drills-voice">
-@include('partials.page-hero-styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/drills/voice-2.css?v=3') }}" data-page-style="user-drills-voice-2">
+@endpush
+
+@section('content')
+@include('partials.page-hero-styles')
 
 <div class="db-section active" id="voice-rehearsal-page">
     <div class="vr-shell">

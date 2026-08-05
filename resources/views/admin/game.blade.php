@@ -1,4 +1,8 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/game.css?v=1') }}" data-page-style="admin-game">
+@endpush
+
 @section('content')
 <div class="db-section active" id="sec-admin-game">
     <div class="mb-4 d-flex justify-content-between align-items-center">
@@ -48,7 +52,6 @@
         $groupedLevels = $levels->groupBy('category_id');
     @endphp
 
-    <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/game.css?v=1') }}" data-page-style="admin-game">
 
     <div class="game-category-select-wrap">
         <select id="gameCategorySelect" aria-label="Select learning game category">

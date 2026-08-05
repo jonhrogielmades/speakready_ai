@@ -1,11 +1,14 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Reports')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/reports.css?v=1') }}" data-page-style="user-reports">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/reports-2.css?v=1') }}" data-page-style="user-reports-2">
+@endpush
+
 @section('content')
 <!-- Add print styles specifically for this Philippines interview report -->
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/reports.css?v=1') }}" data-page-style="user-reports">
 @include('partials.page-hero-styles')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/reports-2.css?v=1') }}" data-page-style="user-reports-2">
 
 <div class="db-section active animate-fade-up" id="portfolioReport">
     <!-- Feature 10: Interview Portfolio Report Header & Actions -->

@@ -1,8 +1,11 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Interview Packs')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/packs/index.css?v=1') }}" data-page-style="user-packs-index">
+@endpush
+
+@section('content')
 @include('partials.page-hero-styles')
 
 <div class="db-section active" id="interview-packs-page">

@@ -1,4 +1,8 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/questions.css?v=1') }}" data-page-style="admin-questions">
+@endpush
+
 @section('content')
 <div class="db-section active" id="sec-admin-questions">
     <div class="mb-4 d-flex justify-content-between align-items-center">
@@ -23,7 +27,6 @@
         <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/questions.css?v=1') }}" data-page-style="admin-questions">
 
     <!-- Category Filter -->
     <div class="category-filter-mobile mb-4">

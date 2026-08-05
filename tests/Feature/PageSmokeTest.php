@@ -21,6 +21,45 @@ class PageSmokeTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_page_stylesheets_are_declared_before_content_sections(): void
+    {
+        $views = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(resource_path('views'), \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($views as $view) {
+            if ($view->getExtension() !== 'php' || ! str_ends_with($view->getFilename(), '.blade.php')) {
+                continue;
+            }
+
+            $content = file_get_contents($view->getPathname());
+            if (! is_string($content)) {
+                continue;
+            }
+
+            if (str_contains($content, "@section('content')")) {
+                $bodySection = substr($content, strpos($content, "@section('content')"));
+                $hasBodyStylesheet = preg_match('/<link\b[^>]*(?:rel=["\']stylesheet["\']|stylesheet)[^>]*>/i', $bodySection) === 1;
+
+                $this->assertFalse(
+                    $hasBodyStylesheet,
+                    'Stylesheet links must be pushed to the head before @section(\'content\'): '.$view->getPathname()
+                );
+            }
+
+            $bodyPosition = stripos($content, '<body');
+            $pageStylePosition = strpos($content, 'data-page-style');
+
+            if ($bodyPosition !== false && $pageStylePosition !== false) {
+                $this->assertLessThan(
+                    $bodyPosition,
+                    $pageStylePosition,
+                    'Standalone page stylesheet links must stay before <body>: '.$view->getPathname()
+                );
+            }
+        }
+    }
+
     public function test_main_user_pages_render_successfully(): void
     {
         [$user, $category, $session, $module, $gameCategory] = $this->seedUserPageData();

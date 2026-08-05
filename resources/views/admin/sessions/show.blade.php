@@ -1,7 +1,10 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/sessions/show.css?v=1') }}" data-page-style="admin-sessions-show">
+@endpush
+
+@section('content')
 
 <div class="db-section active" id="sec-admin-session-show">
     <div class="session-show-header d-flex justify-content-between align-items-center mb-4">

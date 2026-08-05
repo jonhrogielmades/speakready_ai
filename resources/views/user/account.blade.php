@@ -1,10 +1,13 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Account Management')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/account.css?v=1') }}" data-page-style="user-account">
-@include('partials.page-hero-styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/account-2.css?v=1') }}" data-page-style="user-account-2">
+@endpush
+
+@section('content')
+@include('partials.page-hero-styles')
 
 <div class="db-section active animate-fade-up" id="account-page">
     <div class="sr-page-hero">

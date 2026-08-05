@@ -1,8 +1,11 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Module Details')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/modules/show.css?v=1') }}" data-page-style="user-modules-show">
+@endpush
+
+@section('content')
 
 <div class="db-section active" id="module-detail-page">
     <div class="mb-3">

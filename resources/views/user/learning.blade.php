@@ -1,10 +1,13 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Challenges')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/learning.css?v=1') }}" data-page-style="user-learning">
-@include('partials.page-hero-styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/learning-2.css?v=1') }}" data-page-style="user-learning-2">
+@endpush
+
+@section('content')
+@include('partials.page-hero-styles')
 @php
     $gameResult = session('game_result');
 @endphp

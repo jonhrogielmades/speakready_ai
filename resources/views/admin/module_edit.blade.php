@@ -1,8 +1,11 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
-@section('content')
+@push('styles')
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/module_edit.css?v=1') }}" data-page-style="admin-module_edit">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/module_edit-2.css?v=1') }}" data-page-style="admin-module_edit-2">
+@endpush
 
+@section('content')
 <div class="db-section active" id="sec-admin-module-edit">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border:1px solid rgba(16, 185, 129, 0.3); border-radius:12px;">
@@ -461,7 +464,6 @@
 
 <!-- Quill JS -->
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/module_edit-2.css?v=1') }}" data-page-style="admin-module_edit-2">
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

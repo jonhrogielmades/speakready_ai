@@ -1,7 +1,10 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/ai/providers.css?v=1') }}" data-page-style="admin-ai-providers">
+@endpush
+
+@section('content')
 
 <div class="db-section active" id="sec-admin-ai-providers">
     @if(session('message'))

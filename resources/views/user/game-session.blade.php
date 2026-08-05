@@ -1,7 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Challenge')
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/game-session.css?v=1') }}" data-page-style="user-game-session">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/game-session-2.css?v=1') }}" data-page-style="user-game-session-2">
+@endpush
+
+@section('content')
 
 <div class="db-section active" id="sec-learning-game-session">
     @if(session('active_game_session_id'))
@@ -25,7 +29,6 @@
         @endphp
 
         @if($sessionRecord && $questions->count() > 0)
-        <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/game-session-2.css?v=1') }}" data-page-style="user-game-session-2">
 
         <!-- Get Ready Overlay -->
         <div id="get-ready-overlay">

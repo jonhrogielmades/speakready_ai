@@ -1,5 +1,10 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Setup')
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/interview/setup.css?v=1') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
+@endpush
+
 @section('content')
 @php
     $sourcePacks = $sourcePacks ?? [];
@@ -136,7 +141,6 @@
     ];
     $selectedQuestionTypes = old('question_types', $packQuestionTypes ?: ['Behavioral', 'Situational']);
 @endphp
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/interview/setup.css?v=1') }}" data-page-style="interview-setup">
 
 <div class="db-section active setup-step-mode" id="sec-interview-setup">
     <div class="setup-hero">
@@ -852,7 +856,6 @@
 </script>
 
 @push('scripts')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
 <script>
     (function() {
     function installInterviewSetupScrollFix() {

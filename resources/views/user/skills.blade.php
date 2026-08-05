@@ -1,10 +1,13 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Skill Trees')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/skills.css?v=1') }}" data-page-style="user-skills">
-@include('partials.page-hero-styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/skills-2.css?v=1') }}" data-page-style="user-skills-2">
+@endpush
+
+@section('content')
+@include('partials.page-hero-styles')
 
 <div class="db-section active animate-fade-up" id="skill-trees-page">
     <div class="sr-page-hero skill-tree-hero">

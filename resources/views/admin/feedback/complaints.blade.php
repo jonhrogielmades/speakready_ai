@@ -1,7 +1,10 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/feedback/complaints.css?v=1') }}" data-page-style="admin-feedback-complaints">
+@endpush
+
+@section('content')
 <div class="db-section active" id="sec-admin-complaints">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">

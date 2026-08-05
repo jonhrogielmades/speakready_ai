@@ -1,6 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Readiness Coach')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/coach.css?v=1') }}" data-page-style="user-coach">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/coach-2.css?v=1') }}" data-page-style="user-coach-2">
+@endpush
+
 @section('content')
 @php
     $coachUser = Auth::user();
@@ -14,9 +19,7 @@
             : asset('storage/' . $coachPhotoPath);
     }
 @endphp
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/coach.css?v=1') }}" data-page-style="user-coach">
 @include('partials.page-hero-styles')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/coach-2.css?v=1') }}" data-page-style="user-coach-2">
 
 <div class="db-section active" id="ai-coach-page" style="height:100%">
     <div class="sr-page-hero coach-progress-hero">

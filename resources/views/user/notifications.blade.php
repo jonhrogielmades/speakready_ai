@@ -1,8 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Notifications')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/notifications.css?v=1') }}" data-page-style="user-notifications">
+@endpush
+
+@section('content')
 
 <div class="db-section active animate-fade-up" id="notifications-page">
     <div class="notif-hero">

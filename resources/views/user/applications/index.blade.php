@@ -1,8 +1,11 @@
 @extends(isset($isMobile) && $isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Job Application Tracker')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/applications/index.css?v=1') }}" data-page-style="user-applications-index">
+@endpush
+
+@section('content')
 @include('partials.page-hero-styles')
 
 <div class="db-section active" id="job-tracker-page">

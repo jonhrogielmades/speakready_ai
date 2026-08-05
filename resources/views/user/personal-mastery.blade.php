@@ -1,7 +1,10 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Personal Mastery')
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/personal-mastery.css?v=1') }}" data-page-style="user-personal-mastery">
+@endpush
+
+@section('content')
 
 <div class="db-section active" id="personal-mastery-page">
     <div class="mastery-hero-card">

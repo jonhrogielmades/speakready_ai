@@ -1,8 +1,11 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 @section('title', 'Philippines Interview Progress')
 
-@section('content')
+@push('styles')
 <link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/progress.css?v=1') }}" data-page-style="user-progress">
+@endpush
+
+@section('content')
 
 <div class="db-section active" id="sec-progress-tracking">
     <div class="progress-hero" id="progressModulesLikeHero">
