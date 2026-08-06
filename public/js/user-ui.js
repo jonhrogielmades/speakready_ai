@@ -651,6 +651,7 @@
         userApp.navigationInitialized = true;
         userApp.navigationController = null;
         userApp.navigationToken = 0;
+        markInitialPageStylesManaged();
 
         window.history.replaceState(makeHistoryState(window.location.href), document.title, window.location.href);
 
@@ -771,10 +772,18 @@
             }
 
             var contentScripts = Array.from(nextContent.querySelectorAll('script'));
-            cleanupUserPageRuntime();
+            var nextPageStyles = collectPageStyles(doc, html);
+            await appendRuntimePageStyles(nextPageStyles, token);
+            if (token !== userApp.navigationToken) {
+                discardRuntimePageStylesForToken(token);
+                return;
+            }
+
+            cleanupUserPageRuntime({ preserveStyles: true });
+            pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
             replaceUserContent(content, nextContent);
             updateDocumentMetadata(doc, nextContent, url, options);
-            await runPageScripts(html, contentScripts);
+            await runPageScripts(html, contentScripts, { skipStyles: true });
             refreshCommonEnhancements();
             window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
             hideSafeNavigationStatus();
@@ -837,13 +846,15 @@
         return html.slice(start, end);
     }
 
-    async function runPageScripts(html, contentScripts) {
+    async function runPageScripts(html, contentScripts, options) {
         removeRuntimePageScripts();
 
         var readyListeners = [];
         var stackTemplate = document.createElement('template');
         stackTemplate.innerHTML = extractPageScriptHtml(html);
-        appendRuntimePageStyles(Array.from(stackTemplate.content.querySelectorAll('style, link[rel="stylesheet"]')));
+        if (!options || options.skipStyles !== true) {
+            await appendRuntimePageStyles(Array.from(stackTemplate.content.querySelectorAll('style, link[rel="stylesheet"]')));
+        }
 
         var scripts = []
             .concat(contentScripts || [])
@@ -864,11 +875,102 @@
         runDeferredReadyListeners(readyListeners);
     }
 
-    function appendRuntimePageStyles(styles) {
-        styles.forEach(function (style) {
+    function markInitialPageStylesManaged() {
+        document.querySelectorAll('style[data-page-style], link[rel="stylesheet"][data-page-style]').forEach(function (style) {
+            style.dataset.userPageStyleRuntime = 'true';
+            style.dataset.userPageStyleKey = getPageStyleKey(style);
+        });
+    }
+
+    function collectPageStyles(doc, html) {
+        var styles = Array.from(doc.querySelectorAll('style[data-page-style], link[rel="stylesheet"][data-page-style]'));
+        var stackTemplate = document.createElement('template');
+        stackTemplate.innerHTML = extractPageScriptHtml(html);
+
+        Array.from(stackTemplate.content.querySelectorAll('style, link[rel="stylesheet"]')).forEach(function (style) {
+            if (!styles.some(function (existing) {
+                return getPageStyleKey(existing) === getPageStyleKey(style);
+            })) {
+                styles.push(style);
+            }
+        });
+
+        return styles;
+    }
+
+    function getPageStyleKey(style) {
+        if (!style) return '';
+        if (style.dataset && style.dataset.pageStyle) return 'page-style:' + style.dataset.pageStyle;
+        if (style.href) return 'href:' + new URL(style.href, window.location.href).href;
+        return 'inline:' + (style.textContent || '').trim();
+    }
+
+    function appendRuntimePageStyles(styles, navigationToken) {
+        var loadPromises = styles.map(function (style) {
+            var styleKey = getPageStyleKey(style);
+            var existing = styleKey ? document.head.querySelector('[data-user-page-style-key="' + cssEscape(styleKey) + '"]') : null;
+            if (existing) {
+                if (navigationToken) existing.dataset.userPageStyleToken = String(navigationToken);
+                return waitForStylesheet(existing);
+            }
+
             var replacement = style.cloneNode(true);
             replacement.dataset.userPageStyleRuntime = 'true';
+            replacement.dataset.userPageStyleKey = styleKey;
+            if (navigationToken) replacement.dataset.userPageStyleToken = String(navigationToken);
+
+            var loadPromise = waitForStylesheet(replacement);
             document.head.appendChild(replacement);
+
+            return loadPromise;
+        });
+
+        return Promise.all(loadPromises);
+    }
+
+    function cssEscape(value) {
+        if (window.CSS && typeof window.CSS.escape === 'function') {
+            return window.CSS.escape(value);
+        }
+
+        return String(value).replace(/["\\]/g, '\\$&');
+    }
+
+    function waitForStylesheet(style) {
+        if (!style || style.tagName !== 'LINK' || (style.rel || '').toLowerCase() !== 'stylesheet') {
+            return Promise.resolve();
+        }
+
+        try {
+            if (style.sheet) return Promise.resolve();
+        } catch (error) {
+            return Promise.resolve();
+        }
+
+        return new Promise(function (resolve) {
+            var settled = false;
+            var fallbackTimer = 0;
+
+            function finish() {
+                if (settled) return;
+                settled = true;
+                if (fallbackTimer) window.clearTimeout(fallbackTimer);
+                resolve();
+            }
+
+            style.addEventListener('load', finish, { once: true });
+            style.addEventListener('error', function () {
+                console.warn('User Side page stylesheet failed to load:', style.href || '[inline style]');
+                finish();
+            }, { once: true });
+
+            fallbackTimer = window.setTimeout(finish, 8000);
+        });
+    }
+
+    function discardRuntimePageStylesForToken(navigationToken) {
+        document.querySelectorAll('style[data-user-page-style-token="' + navigationToken + '"], link[data-user-page-style-token="' + navigationToken + '"]').forEach(function (element) {
+            element.remove();
         });
     }
 
@@ -1140,7 +1242,7 @@
         window[name] = fn;
     }
 
-    function cleanupUserPageRuntime() {
+    function cleanupUserPageRuntime(options) {
         if (typeof window.resetSpeakReadyOnboardingForNavigation === 'function') {
             window.resetSpeakReadyOnboardingForNavigation();
         } else {
@@ -1152,6 +1254,9 @@
         }
 
         removeRuntimePageScripts();
+        if (!options || options.preserveStyles !== true) {
+            removeRuntimePageStyles();
+        }
         restorePageFunctionExports();
 
         if (!Array.isArray(userApp.pageRuntimeCleanups)) {
@@ -1194,8 +1299,27 @@
     }
 
     function removeRuntimePageScripts() {
-        document.querySelectorAll('script[data-user-page-script-runtime], style[data-user-page-style-runtime], link[data-user-page-style-runtime]').forEach(function (element) {
+        document.querySelectorAll('script[data-user-page-script-runtime]').forEach(function (element) {
             element.remove();
+        });
+    }
+
+    function removeRuntimePageStyles() {
+        document.querySelectorAll('style[data-user-page-style-runtime], link[data-user-page-style-runtime]').forEach(function (element) {
+            element.remove();
+        });
+    }
+
+    function pruneRuntimePageStyles(activeKeys) {
+        var activeKeyMap = Object.create(null);
+
+        (activeKeys || []).forEach(function (key) {
+            if (key) activeKeyMap[key] = true;
+        });
+
+        document.querySelectorAll('style[data-user-page-style-runtime], link[data-user-page-style-runtime]').forEach(function (element) {
+            var key = element.dataset.userPageStyleKey || getPageStyleKey(element);
+            if (!key || !activeKeyMap[key]) element.remove();
         });
     }
 

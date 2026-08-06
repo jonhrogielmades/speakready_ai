@@ -2931,7 +2931,7 @@
       <script src="{{ asset('js/main.js?v=6') }}"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=10" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=11" defer></script>
 
       <script>
          // Close open header menus with Escape
