@@ -1,12 +1,12 @@
 @extends($isMobile ? 'layouts.admin-mobile' : 'layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/notifications.css?v=1') }}" data-page-style="admin-notifications">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/admin/notifications.css?v=2') }}" data-page-style="admin-notifications">
 @endpush
 
 @section('content')
 
-<div class="db-section active" id="sec-admin-notifications">
+<div class="db-section active" id="sec-admin-notifications" data-activities-url="{{ url('/admin/api/activities') }}">
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('success') }}
@@ -28,7 +28,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-bullhorn me-2" style="color:#3b82f6;"></i>Notifications</h4>
-            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Broadcast announcements and send alerts to users.</p>
+            <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Broadcast announcements, send alerts, and review every user activity.</p>
         </div>
         <div>
             <button type="button" class="btn-premium" data-bs-toggle="modal" data-bs-target="#sendNotificationModal">
@@ -39,31 +39,117 @@
 
     <!-- Stats Row -->
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <div class="premium-card text-center p-4 h-100">
                 <div style="font-size:1.5rem;color:#3b82f6;margin-bottom:8px;"><i class="fa-solid fa-tower-broadcast"></i></div>
-                <div style="font-size:2rem;font-weight:700;">{{ $announcements->where('target', 'all')->count() }}</div>
+                <div style="font-size:2rem;font-weight:700;">{{ number_format($globalBroadcastCount) }}</div>
                 <div style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Global Broadcasts</div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <div class="premium-card text-center p-4 h-100">
                 <div style="font-size:1.5rem;color:#34d399;margin-bottom:8px;"><i class="fa-solid fa-user-tag"></i></div>
-                <div style="font-size:2rem;font-weight:700;">{{ $announcements->where('target', 'specific')->count() }}</div>
+                <div style="font-size:2rem;font-weight:700;">{{ number_format($directAlertCount) }}</div>
                 <div style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Direct Alerts</div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <div class="premium-card text-center p-4 h-100">
                 <div style="font-size:1.5rem;color:#f472b6;margin-bottom:8px;"><i class="fa-solid fa-envelope-open-text"></i></div>
-                <div style="font-size:2rem;font-weight:700;">{{ $announcements->count() }}</div>
+                <div style="font-size:2rem;font-weight:700;">{{ number_format($announcementCount) }}</div>
                 <div style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Total Sent</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="premium-card text-center p-4 h-100">
+                <div style="font-size:1.5rem;color:#f59e0b;margin-bottom:8px;"><i class="fa-solid fa-list-check"></i></div>
+                <div style="font-size:2rem;font-weight:700;">{{ number_format($activityCount) }}</div>
+                <div style="font-size:0.85rem;color:var(--tx3);text-transform:uppercase;letter-spacing:0.5px;">Activity Logs</div>
+                <div style="font-size:0.78rem;color:var(--tx3);margin-top:4px;">{{ number_format($unreadActivityCount) }} unread</div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-12">
+            <div class="premium-card mb-4 activity-history-card">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+                    <div>
+                        <h6 class="fw-bold mb-1"><i class="fa-solid fa-list-check me-2" style="color:#f59e0b;"></i>All Activities</h6>
+                        <p class="mb-0" style="font-size:0.9rem;color:var(--tx2);">Full live activity history from the admin notification feed.</p>
+                    </div>
+                    @if($activityCount > 0)
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm" onclick="markAllActivitiesReadFromPage(event)" style="background:rgba(59,130,246,0.12);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);border-radius:10px;">
+                            <i class="fa-solid fa-check-double me-1"></i>Mark all read
+                        </button>
+                        <button type="button" class="btn btn-sm" onclick="clearAllActivitiesFromPage(event)" style="background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.22);border-radius:10px;">
+                            <i class="fa-solid fa-trash-can me-1"></i>Clear all
+                        </button>
+                    </div>
+                    @endif
+                </div>
+                <div class="table-responsive">
+                    <table class="table custom-table mb-0 w-100 activity-history-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Activity</th>
+                                <th>Status</th>
+                                <th>IP Address</th>
+                                <th>Date</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($activities as $activity)
+                            @php
+                                $isNew = is_null($activity->read_at);
+                                $activityTitle = ucwords(str_replace('_', ' ', $activity->action));
+                            @endphp
+                            <tr class="{{ $isNew ? 'activity-unread-row' : '' }}">
+                                <td data-label="User">
+                                    <span class="fw-bold">{{ $activity->user->name ?? 'System' }}</span>
+                                    <div style="font-size:0.78rem;color:var(--tx3);">{{ $activity->user->email ?? 'No email available' }}</div>
+                                </td>
+                                <td data-label="Activity">
+                                    <span class="fw-bold">{{ $activityTitle }}</span>
+                                    <div class="activity-log-description">{{ $activity->description ?: 'No details recorded.' }}</div>
+                                </td>
+                                <td data-label="Status">
+                                    @if($isNew)
+                                        <span class="stat-badge info">New</span>
+                                    @else
+                                        <span class="stat-badge success">Read</span>
+                                    @endif
+                                </td>
+                                <td data-label="IP Address" style="color:var(--tx2);">{{ $activity->ip_address ?: 'N/A' }}</td>
+                                <td data-label="Date" style="color:var(--tx2);">{{ $activity->created_at->format('M d, Y h:i A') }}</td>
+                                <td data-label="Actions" class="text-end">
+                                    <div class="d-flex justify-content-end gap-2 activity-log-actions">
+                                        @if($isNew)
+                                        <button type="button" class="btn btn-sm" onclick="markActivityReadFromPage('{{ $activity->id }}', event)" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(96,165,250,0.2);" title="Mark as read">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                        @endif
+                                        <button type="button" class="btn btn-sm" onclick="deleteActivityFromPage('{{ $activity->id }}', event)" style="background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.2);" title="Delete activity">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="6" class="text-center text-muted py-4">No activity logs have been recorded yet.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-4 d-flex justify-content-center">
+                    {{ $activities->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
+
             <div class="premium-card mb-4">
                 <h6 class="fw-bold mb-4">Broadcast History</h6>
                 <div class="table-responsive">
@@ -197,6 +283,54 @@ function toggleUserSelect() {
         userSelect.value = '';
     }
 }
+
+function adminActivityPageUrl(path) {
+    const baseUrl = document.getElementById('sec-admin-notifications')?.dataset.activitiesUrl || '/admin/api/activities';
+    return `${baseUrl}${path}`;
+}
+
+function reloadAdminNotificationsPage() {
+    window.location.reload();
+}
+
+function markActivityReadFromPage(id, event) {
+    event.preventDefault();
+    fetch(adminActivityPageUrl(`/${encodeURIComponent(id)}/mark-read`), {
+        method: 'POST',
+        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+    }).then(reloadAdminNotificationsPage);
+}
+
+function deleteActivityFromPage(id, event) {
+    event.preventDefault();
+    if (!confirm('Delete this activity log?')) {
+        return;
+    }
+
+    fetch(adminActivityPageUrl(`/${encodeURIComponent(id)}`), {
+        method: 'DELETE',
+        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+    }).then(reloadAdminNotificationsPage);
+}
+
+function markAllActivitiesReadFromPage(event) {
+    event.preventDefault();
+    fetch(adminActivityPageUrl('/mark-all-read'), {
+        method: 'POST',
+        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+    }).then(reloadAdminNotificationsPage);
+}
+
+function clearAllActivitiesFromPage(event) {
+    event.preventDefault();
+    if (!confirm('Are you sure you want to completely clear all activity logs? This cannot be undone.')) {
+        return;
+    }
+
+    fetch(adminActivityPageUrl('/clear-all'), {
+        method: 'DELETE',
+        headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}
+    }).then(reloadAdminNotificationsPage);
+}
 </script>
 @endsection
-

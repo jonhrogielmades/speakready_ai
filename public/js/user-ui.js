@@ -652,6 +652,7 @@
         userApp.navigationController = null;
         userApp.navigationToken = 0;
         markInitialPageStylesManaged();
+        updateActiveUserNavigation(new URL(window.location.href, window.location.href));
 
         window.history.replaceState(makeHistoryState(window.location.href), document.title, window.location.href);
 
@@ -823,6 +824,62 @@
         updateActiveUserNavigation(new URL(url, window.location.href));
     }
 
+    function normalizeUserNavigationPath(pathname) {
+        var path = pathname || '/';
+        if (path.length > 1) path = path.replace(/\/+$/, '');
+        return path || '/';
+    }
+
+    function isSameOrChildNavigationPath(currentPath, basePath) {
+        var current = normalizeUserNavigationPath(currentPath);
+        var base = normalizeUserNavigationPath(basePath);
+
+        return current === base || (
+            base !== '/' && current.startsWith(base + '/')
+        );
+    }
+
+    function isFeedbackNavigationPath(pathname) {
+        var path = normalizeUserNavigationPath(pathname);
+
+        return path === '/feedback' || /^\/session\/[^/]+\/review$/.test(path);
+    }
+
+    function isMoreNavigationPath(pathname) {
+        var path = normalizeUserNavigationPath(pathname);
+        var morePaths = [
+            '/account',
+            '/notifications',
+            '/modules',
+            '/drills/voice',
+            '/missions',
+            '/learning',
+            '/coach',
+            '/reports',
+            '/personal-mastery'
+        ];
+
+        return morePaths.some(function (basePath) {
+            return isSameOrChildNavigationPath(path, basePath);
+        });
+    }
+
+    function updateMobileBottomNavigation(url) {
+        var path = normalizeUserNavigationPath(url.pathname);
+        var states = {
+            'mobnav-home': path === '/dashboard',
+            'mobnav-progress': path === '/progress',
+            'mobnav-interview': isSameOrChildNavigationPath(path, '/interview'),
+            'mobnav-feedback': isFeedbackNavigationPath(path),
+            'mobnav-more': isMoreNavigationPath(path)
+        };
+
+        Object.keys(states).forEach(function (id) {
+            var item = document.getElementById(id);
+            if (item) item.classList.toggle('active', states[id]);
+        });
+    }
+
     function updateActiveUserNavigation(url) {
         document.querySelectorAll('.db-nav a[href], .profile-menu-item[href], .mob-nav-item[href], .mob-profile-link[href], .ucp-result[href]').forEach(function (anchor) {
             var anchorUrl;
@@ -832,11 +889,11 @@
                 return;
             }
 
-            var active = anchorUrl.pathname === url.pathname || (
-                anchorUrl.pathname !== '/' && url.pathname.startsWith(anchorUrl.pathname + '/')
-            );
+            var active = isSameOrChildNavigationPath(url.pathname, anchorUrl.pathname);
             anchor.classList.toggle('active', active);
         });
+
+        updateMobileBottomNavigation(url);
     }
 
     function extractPageScriptHtml(html) {

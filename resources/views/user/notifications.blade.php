@@ -2,12 +2,12 @@
 @section('title', 'Notifications')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/notifications.css?v=1') }}" data-page-style="user-notifications">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/user/notifications.css?v=2') }}" data-page-style="user-notifications">
 @endpush
 
 @section('content')
 
-<div class="db-section active animate-fade-up" id="notifications-page">
+<div class="db-section active animate-fade-up" id="notifications-page" data-notifications-url="{{ url('/notifications') }}">
     <div class="notif-hero">
         <div class="notif-hero-copy">
             <div class="notif-hero-icon"><i class="fa-regular fa-bell"></i></div>
@@ -32,8 +32,8 @@
     </div>
     @if(count($notifications) > 0)
     <div class="notif-bulk-actions">
-        <button class="notif-bulk-btn" type="button" onclick="markAllReadPage()"><i class="fa-solid fa-check"></i><span>Mark all as read</span></button>
-        <button class="notif-bulk-btn danger" type="button" onclick="clearAllNotificationsPage()"><i class="fa-solid fa-trash-can"></i><span>Clear all</span></button>
+        <button class="notif-bulk-btn" type="button" data-read-all-url="{{ route('user.notifications.readAll') }}" onclick="markAllReadPage()"><i class="fa-solid fa-check"></i><span>Mark all as read</span></button>
+        <button class="notif-bulk-btn danger" type="button" data-clear-all-url="{{ route('user.notifications.clearAll') }}" onclick="clearAllNotificationsPage()"><i class="fa-solid fa-trash-can"></i><span>Clear all</span></button>
     </div>
     @endif
 
@@ -69,9 +69,9 @@
                 <p class="notification-message">{{ $notification->data['message'] ?? '' }}</p>
                 <div class="notification-actions">
                     @if(!$isRead)
-                    <button class="notification-action-btn read" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
+                    <button class="notification-action-btn read" data-notification-id="{{ $notification->id }}" data-read-url="{{ route('user.notifications.read', $notification->id) }}" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
                     @endif
-                    <button class="notification-action-btn delete" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
+                    <button class="notification-action-btn delete" data-notification-id="{{ $notification->id }}" data-delete-url="{{ route('user.notifications.delete', $notification->id) }}" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
                 </div>
             </div>
         </div>
@@ -86,6 +86,47 @@
     <div class="notifications-pagination mt-4 d-flex justify-content-center">
         {{ $notifications->links('pagination::bootstrap-5') }}
     </div>
+
+    <div class="activity-history-section animate-fade-up" style="animation-delay: 0.28s;">
+        <div class="activity-history-header">
+            <div class="activity-history-heading">
+                <div class="activity-history-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div>
+                    <h5 class="activity-history-title">Activity history</h5>
+                    <p class="activity-history-subtitle">Every account activity recorded for you.</p>
+                </div>
+            </div>
+            <span class="activity-history-count">{{ number_format($activityCount) }} total</span>
+        </div>
+
+        <div class="premium-panel activity-history-list">
+            @forelse($activityLogs as $activity)
+            @php
+                $activityTitle = ucwords(str_replace('_', ' ', $activity->action));
+            @endphp
+            <div class="activity-history-row">
+                <div class="activity-history-row-icon"><i class="fa-solid fa-list-check"></i></div>
+                <div class="activity-history-row-content">
+                    <div class="activity-history-row-head">
+                        <h6 class="activity-history-row-title">{{ $activityTitle }}</h6>
+                        <span class="activity-history-time"><i class="fa-regular fa-clock"></i>{{ $activity->created_at->diffForHumans() }}</span>
+                    </div>
+                    <p class="activity-history-message">{{ $activity->description ?: 'Activity recorded.' }}</p>
+                    <span class="activity-history-date">{{ $activity->created_at->format('M d, Y h:i A') }}</span>
+                </div>
+            </div>
+            @empty
+            <div class="notifications-empty-state notifications-empty-state-wide">
+                <div class="notifications-empty-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <p class="mb-0">No account activity has been recorded yet.</p>
+            </div>
+            @endforelse
+        </div>
+
+        <div class="notifications-pagination mt-4 d-flex justify-content-center">
+            {{ $activityLogs->links('pagination::bootstrap-5') }}
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -94,8 +135,21 @@ function reloadNotificationsPage() {
     window.location.reload();
 }
 
+function notificationPageActionUrl(attribute, fallback) {
+    const button = document.querySelector(`[${attribute}]`);
+    return button?.getAttribute(attribute) || fallback;
+}
+
+function notificationRowActionUrl(id, attribute, suffix) {
+    const selector = `[data-notification-id="${String(id).replace(/"/g, '\\"')}"][${attribute}]`;
+    const button = document.querySelector(selector);
+    const baseUrl = document.getElementById('notifications-page')?.dataset.notificationsUrl || @json(url('/notifications'));
+
+    return button?.getAttribute(attribute) || `${baseUrl}/${encodeURIComponent(id)}${suffix}`;
+}
+
 function markAllReadPage() {
-    fetch('/notifications/read-all', {
+    fetch(notificationPageActionUrl('data-read-all-url', @json(route('user.notifications.readAll'))), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -112,7 +166,7 @@ function markAllReadPage() {
 
 function clearAllNotificationsPage() {
     if(confirm('Are you sure you want to clear all notifications?')) {
-        fetch('/notifications/clear-all', {
+        fetch(notificationPageActionUrl('data-clear-all-url', @json(route('user.notifications.clearAll'))), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -129,7 +183,7 @@ function clearAllNotificationsPage() {
 }
 
 function markRead(id) {
-    fetch('/notifications/' + id + '/read', {
+    fetch(notificationRowActionUrl(id, 'data-read-url', '/read'), {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -146,7 +200,7 @@ function markRead(id) {
 
 function deleteNotification(id) {
     if(confirm('Are you sure you want to delete this notification?')) {
-        fetch('/notifications/' + id, {
+        fetch(notificationRowActionUrl(id, 'data-delete-url', ''), {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -164,5 +218,3 @@ function deleteNotification(id) {
 </script>
 @endpush
 @endsection
-
-

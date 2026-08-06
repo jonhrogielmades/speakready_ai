@@ -177,7 +177,15 @@
                     </div>
                 </div>
                 <div class="progress-chart-frame">
-                    <canvas id="readinessChart"></canvas>
+                    @if($scoreTrend->isNotEmpty())
+                        <canvas id="readinessChart"></canvas>
+                    @else
+                        <div class="progress-chart-empty">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <h6>No readiness trend yet</h6>
+                            <p>Complete a scored Philippines practice interview to start charting your growth.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -192,7 +200,15 @@
                     </div>
                 </div>
                 <div class="progress-chart-frame scenario">
-                    <canvas id="categoryChart"></canvas>
+                    @if(count($categoryPerf) > 0)
+                        <canvas id="categoryChart"></canvas>
+                    @else
+                        <div class="progress-chart-empty">
+                            <i class="fa-solid fa-crosshairs"></i>
+                            <h6>No scenario performance yet</h6>
+                            <p>Your scored scenario averages appear here after completed practice sessions.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -280,14 +296,37 @@
                     <div class="star-icon"><i class="fa-solid fa-bullseye"></i></div>
                     <div>
                         <h5 class="star-title">STAR Method Progress</h5>
-                        <p class="star-text">Insufficient data to analyze your STAR Method usage. Keep practicing behavioral questions!</p>
+                        @if($starProgress->has_data)
+                            <p class="star-text">{{ $starProgress->message }}</p>
+                            <div class="star-progress-summary">
+                                <div class="star-progress-score">
+                                    <span>{{ $starProgress->overall_percent }}%</span>
+                                    <small>STAR coverage</small>
+                                </div>
+                                <div class="star-part-list">
+                                    @foreach($starProgress->parts as $part)
+                                        <div class="star-part-row">
+                                            <div class="star-part-top">
+                                                <span>{{ $part->label }}</span>
+                                                <span>{{ $part->percent === null ? 'N/A' : $part->percent . '%' }}</span>
+                                            </div>
+                                            <div class="star-part-track">
+                                                <div class="star-part-fill" style="--star-progress: {{ $part->percent ?? 0 }}%;"></div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            <p class="star-text">Insufficient data to analyze your STAR Method usage. Keep practicing behavioral questions!</p>
+                        @endif
                     </div>
                 </div>
                 <div class="star-note">
                     <div class="star-note-icon"><i class="fa-regular fa-lightbulb"></i></div>
                     <div>
-                        <h6 class="star-note-title">What is STAR Method?</h6>
-                        <p class="star-note-text">STAR stands for Situation, Task, Action, Result. It helps you structure strong and impactful answers.</p>
+                        <h6 class="star-note-title">{{ $starProgress->has_data ? 'Next STAR Step' : 'What is STAR Method?' }}</h6>
+                        <p class="star-note-text">{{ $starProgress->has_data ? $starProgress->suggestion : 'STAR stands for Situation, Task, Action, Result. It helps you structure strong and impactful answers.' }}</p>
                     </div>
                 </div>
             </div>
@@ -356,6 +395,12 @@
                             <p class="skill-empty-text">No interview records found. Start a Philippines practice interview to track your progress.</p>
                         </div>
                     @endif
+                </div>
+                <div class="skill-empty-state history-no-results" id="historyNoResults" hidden>
+                    <div>
+                        <div class="skill-empty-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <p class="skill-empty-text">No history records match your search.</p>
+                    </div>
                 </div>
                 <div class="table-responsive d-none">
                     <table class="table custom-table align-middle" style="color:var(--tx); background: transparent; --bs-table-bg: transparent;">
@@ -553,9 +598,48 @@
                     <div class="activity-heading-icon"><i class="fa-regular fa-calendar"></i></div>
                     <div>
                         <h5 class="activity-title">Practice Activity Calendar</h5>
-                        <p class="activity-subtitle">Track your daily practice and stay consistent.</p>
+                        <p class="activity-subtitle">Last 28 days across interviews and voice drills.</p>
                     </div>
                 </div>
+                @if($activityCalendar->range_active_days > 0)
+                    <div class="activity-summary-grid">
+                        <div class="activity-summary-item">
+                            <strong>{{ $activityCalendar->range_active_days }}</strong>
+                            <span>Active days</span>
+                        </div>
+                        <div class="activity-summary-item">
+                            <strong>{{ $activityCalendar->recent_active_days }}</strong>
+                            <span>This week</span>
+                        </div>
+                        <div class="activity-summary-item">
+                            <strong>{{ $activityCalendar->current_streak }}</strong>
+                            <span>Activity streak</span>
+                        </div>
+                        <div class="activity-summary-item">
+                            <strong>{{ $activityCalendar->last_activity_label }}</strong>
+                            <span>Latest practice</span>
+                        </div>
+                    </div>
+                    <div class="activity-grid" role="list" aria-label="Last 28 days practice activity">
+                        @foreach($activityCalendar->days as $day)
+                            <div class="activity-day {{ $day->total > 0 ? 'active' : '' }} {{ $day->is_today ? 'today' : '' }}"
+                                role="listitem"
+                                title="{{ $day->tooltip }}"
+                                aria-label="{{ $day->tooltip }}"
+                                style="--activity-intensity: {{ $day->intensity }}%;">
+                                <span class="activity-day-week">{{ $day->weekday }}</span>
+                                <span class="activity-day-number">{{ $day->day_number }}</span>
+                                @if($day->total > 0)
+                                    <span class="activity-day-dot">{{ $day->total }}</span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="activity-legend">
+                        <span><i></i>Practice recorded</span>
+                        <a href="{{ route('interview.setup') }}" class="btn btn-outline-primary activity-cta compact"><i class="fa-solid fa-play"></i> Practice Again</a>
+                    </div>
+                @else
                 <div class="activity-empty">
                     <svg class="activity-illustration" viewBox="0 0 520 260" aria-hidden="true" role="img">
                         <defs>
@@ -585,8 +669,9 @@
                     </svg>
                     <h6 class="activity-empty-title">Complete your first Philippines practice interview</h6>
                     <p class="activity-empty-text">to start tracking your daily practice activity.</p>
-                    <a href="{{ route('interview.setup') }}" class="btn btn-outline-primary activity-cta"><i class="fa-regular fa-calendar-days"></i> Go to Calendar</a>
+                    <a href="{{ route('interview.setup') }}" class="btn btn-outline-primary activity-cta"><i class="fa-solid fa-play"></i> Start Practice</a>
                 </div>
+                @endif
             </div>
         </div>
 
@@ -622,10 +707,10 @@
                     </div>
                 @endforelse
                 <div class="goal-note">
-                    <div class="goal-note-icon"><i class="fa-solid fa-star"></i></div>
+                    <div class="goal-note-icon"><i class="fa-solid {{ $goalNote->icon }}"></i></div>
                     <div>
-                        <div class="goal-note-title">You're just getting started!</div>
-                        <div class="goal-note-text">Keep practicing to hit your first milestone.</div>
+                        <div class="goal-note-title">{{ $goalNote->title }}</div>
+                        <div class="goal-note-text">{{ $goalNote->text }}</div>
                     </div>
                 </div>
             </div>
@@ -829,6 +914,8 @@
                     const filter = searchInput.value.toLowerCase();
                     const rows = document.querySelectorAll('#history-table table tbody tr');
                     const cards = document.querySelectorAll('#history-table [data-history-record]');
+                    const noResults = document.getElementById('historyNoResults');
+                    let visibleCards = 0;
                     rows.forEach(row => {
                         const text = row.textContent.toLowerCase();
                         if(text.includes(filter)) {
@@ -839,8 +926,15 @@
                     });
                     cards.forEach(card => {
                         const text = card.textContent.toLowerCase();
-                        card.style.display = text.includes(filter) ? '' : 'none';
+                        const isVisible = text.includes(filter);
+                        card.style.display = isVisible ? '' : 'none';
+                        if (isVisible) {
+                            visibleCards++;
+                        }
                     });
+                    if (noResults) {
+                        noResults.hidden = filter.length === 0 || cards.length === 0 || visibleCards > 0;
+                    }
                 });
             }
 

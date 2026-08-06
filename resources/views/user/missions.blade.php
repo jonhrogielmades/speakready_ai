@@ -48,7 +48,7 @@
 
             <div class="mission-generator">
                 <input type="text" id="missionGoalInput" maxlength="240" placeholder="Example: BPO final interview, scholarship panel, IT debugging question...">
-                <button type="button" class="mission-btn mission-btn-primary" id="generateMissionBtn" style="min-height:42px;"><i class="fa-solid fa-wand-magic-sparkles"></i>Generate Task</button>
+                <button type="button" class="mission-btn mission-btn-primary" id="generateMissionBtn" data-generate-url="{{ route('user.missions.generate') }}" style="min-height:42px;"><i class="fa-solid fa-wand-magic-sparkles"></i>Generate Task</button>
             </div>
             <div class="mission-generator-status" id="missionGeneratorStatus">Tasks can be personalized to your target role, school interview, panel, or workplace situation.</div>
             <div class="mission-grid" id="missionGrid">
@@ -163,7 +163,7 @@
 
 <script>
 let missionData = @json($missions->values());
-const missionGenerateUrl = @json(route('user.missions.generate'));
+const missionGenerateUrl = document.getElementById('generateMissionBtn')?.dataset.generateUrl || @json(route('user.missions.generate'));
 let activeMission = missionData[0] || null;
 let missionTimer = null;
 let remainingSeconds = activeMission ? Number(activeMission.duration) || 60 : 60;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
@@ -122,6 +123,35 @@ class UserUtilityPagesFunctionalityTest extends TestCase
 
         $this->assertDatabaseMissing('notifications', ['notifiable_id' => $user->id]);
         $this->assertDatabaseHas('notifications', ['id' => $otherNotification->id]);
+    }
+
+    public function test_notifications_page_shows_current_users_full_activity_history(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        for ($i = 1; $i <= 18; $i++) {
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'practice_activity_'.$i,
+                'description' => 'Candidate activity item '.$i,
+            ]);
+        }
+
+        ActivityLog::create([
+            'user_id' => $otherUser->id,
+            'action' => 'other_activity',
+            'description' => 'Other user activity should stay private.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.notifications'))
+            ->assertOk()
+            ->assertSee('Activity history')
+            ->assertSee('Candidate activity item 1')
+            ->assertSee('Candidate activity item 18')
+            ->assertSee('18 total')
+            ->assertDontSee('Other user activity should stay private.');
     }
 
     public function test_modules_filters_search_and_pagination_remain_functional(): void

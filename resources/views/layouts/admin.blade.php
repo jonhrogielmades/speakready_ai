@@ -226,7 +226,7 @@
                           </div>
                           <div class="p-2 border-top text-center" style="border-color: var(--bd) !important; background: var(--sf);">
                               <a href="{{ route('admin.notifications.index') }}" class="btn btn-sm w-100 fw-bold" style="background: rgba(59,130,246,0.15); color: #3b82f6; border-radius: 8px;">
-                                  <i class="fa-solid fa-bullhorn me-2"></i>Broadcast Announcement
+                                  <i class="fa-solid fa-list-check me-2"></i>View All Activities
                               </a>
                           </div>
                       </div>

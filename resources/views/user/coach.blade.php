@@ -21,7 +21,7 @@
 @endphp
 @include('partials.page-hero-styles')
 
-<div class="db-section active" id="ai-coach-page" style="height:100%">
+<div class="db-section active" id="ai-coach-page" data-chat-url="{{ route('user.coach.chat') }}" data-conversation-url="{{ url('/coach/conversation') }}" data-clear-url="{{ route('user.coach.clear') }}" style="height:100%">
     <div class="sr-page-hero coach-progress-hero">
         <div class="sr-page-hero-inner">
             <div class="sr-page-hero-copy">
@@ -311,6 +311,10 @@
             return escapeHtml(coachUserInitial || 'U');
         }
 
+        function coachEndpoint(datasetKey, fallback) {
+            return document.getElementById('ai-coach-page')?.dataset[datasetKey] || fallback;
+        }
+
         async function sendMsg() {
             const ta = document.getElementById('chatMsg');
             const box = document.getElementById('chatBox');
@@ -356,7 +360,7 @@
                 files.forEach(file => formData.append('coach_attachments[]', file));
 
                 // Call AI Backend
-                const response = await fetch('{{ route("user.coach.chat") }}', {
+                const response = await fetch(coachEndpoint('chatUrl', @json(route('user.coach.chat'))), {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -539,7 +543,7 @@
 
         async function loadConversation(id) {
             try {
-                const response = await fetch(`/coach/conversation/${id}`, {
+                const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
@@ -604,7 +608,7 @@
             if (!confirm('Are you sure you want to delete this conversation?')) return;
             
             try {
-                const response = await fetch(`/coach/conversation/${id}`, {
+                const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -643,7 +647,7 @@
             if (!confirm('Are you sure you want to clear all AI Coach conversation history?')) return;
 
             try {
-                const response = await fetch('{{ route("user.coach.clear") }}', {
+                const response = await fetch(coachEndpoint('clearUrl', @json(route('user.coach.clear'))), {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'

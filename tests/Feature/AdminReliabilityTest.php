@@ -724,6 +724,28 @@ class AdminReliabilityTest extends TestCase
         $this->assertSame('approved', $answer->audit_status);
     }
 
+    public function test_admin_notifications_page_shows_activity_history_beyond_live_dropdown_limit(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $user = User::factory()->create(['name' => 'Activity Candidate', 'is_admin' => false, 'status' => 'active']);
+
+        for ($i = 1; $i <= 18; $i++) {
+            ActivityLog::create([
+                'user_id' => $user->id,
+                'action' => 'activity_'.$i,
+                'description' => 'Activity history item '.$i,
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.notifications.index'))
+            ->assertOk()
+            ->assertSee('All Activities')
+            ->assertSee('Activity history item 1')
+            ->assertSee('Activity history item 18')
+            ->assertSee('18 unread');
+    }
+
     public function test_admin_activity_feed_escapes_user_names_and_descriptions(): void
     {
         $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);

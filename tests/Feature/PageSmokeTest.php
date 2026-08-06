@@ -169,6 +169,137 @@ class PageSmokeTest extends TestCase
             ->assertRedirect(route('user.learning'));
     }
 
+    public function test_named_user_pages_expose_functional_controls_and_routes(): void
+    {
+        [$user, $category, $session, $module, $gameCategory] = $this->seedUserPageData();
+        $activeSession = $this->activeSession($user, $category);
+        $activeQuestion = $this->question($category, [
+            'interview_session_id' => $activeSession->id,
+            'question_text' => 'Tell me about your strongest interview story.',
+        ]);
+        $conversation = ChatbotConversation::create(['user_id' => $user->id, 'title' => 'Readiness check']);
+        ChatbotMessage::create([
+            'chatbot_conversation_id' => $conversation->id,
+            'role' => 'user',
+            'content' => 'Help me prepare.',
+        ]);
+        $user->notify(new \App\Notifications\UserActivityNotification('Route Test', 'Verify notification actions.'));
+        $notification = $user->notifications()->firstOrFail();
+        $level = GameLevel::where('category_id', $gameCategory->id)->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('interview.setup'))
+            ->assertOk()
+            ->assertSee('action="'.route('interview.start').'"', false)
+            ->assertSee('name="category_id"', false)
+            ->assertSee('name="target_position"', false)
+            ->assertSee('name="question_types[]"', false)
+            ->assertSee('id="btn-start-interview"', false);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $activeSession->id])
+            ->get(route('interview.session'))
+            ->assertOk()
+            ->assertSee($activeQuestion->question_text)
+            ->assertSee(route('interview.answer'), false)
+            ->assertSee(route('interview.finish'), false)
+            ->assertSee(route('interview.abort'), false)
+            ->assertSee('onclick="submitAnswer()"', false);
+
+        $this->actingAs($user)
+            ->get(route('user.feedback'))
+            ->assertOk()
+            ->assertSee('action="'.route('user.feedback').'"', false)
+            ->assertSee(route('user.review', $session->id), false)
+            ->assertSee(route('user.sessions.destroy', $session->id), false)
+            ->assertSee(route('user.sessions.clear'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.modules.index'))
+            ->assertOk()
+            ->assertSee('id="moduleTopicSelect"', false)
+            ->assertSee(route('user.modules.show', $module->id), false)
+            ->assertSee(route('user.progress'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.modules.show', $module->id))
+            ->assertOk()
+            ->assertSee(route('user.modules.progress', $module->id), false)
+            ->assertSee('id="chapters-tab"', false)
+            ->assertSee(route('interview.setup'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.drills.voice'))
+            ->assertOk()
+            ->assertSee(route('user.drills.voice.prompt'), false)
+            ->assertSee(route('user.drills.voice.analyze'), false)
+            ->assertSee(route('user.drills.voice.save'), false)
+            ->assertSee('onclick="startRec()"', false)
+            ->assertSee('onclick="saveSession()"', false);
+
+        $this->actingAs($user)
+            ->get(route('user.missions'))
+            ->assertOk()
+            ->assertSee(route('user.missions.generate'), false)
+            ->assertSee('id="generateMissionBtn"', false)
+            ->assertSee('id="scoreMissionBtn"', false)
+            ->assertSee(route('user.drills.voice'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.learning', ['category_id' => $gameCategory->id]))
+            ->assertOk()
+            ->assertSee(route('user.skills'), false)
+            ->assertSee(route('user.game.start', $level->id), false)
+            ->assertSee('Start Challenge');
+
+        $this->actingAs($user)
+            ->get(route('user.skills'))
+            ->assertOk()
+            ->assertSee(route('user.skills.unlock'), false)
+            ->assertSee('class="btn btn-unlock btn-shine"', false)
+            ->assertSee(route('user.learning'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.coach'))
+            ->assertOk()
+            ->assertSee(route('user.coach.chat'), false)
+            ->assertSee(url('/coach/conversation'), false)
+            ->assertSee(route('user.coach.clear'), false)
+            ->assertSee('onclick="sendMsg()"', false);
+
+        $this->actingAs($user)
+            ->get(route('user.reports'))
+            ->assertOk()
+            ->assertSee('id="exportPdfBtn"', false)
+            ->assertSee('id="exportExcelBtn"', false)
+            ->assertSee(route('user.sessions.export', $session), false)
+            ->assertSee(route('interview.setup'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.leaderboard'))
+            ->assertOk()
+            ->assertSee(route('user.mastery.stories.store'), false)
+            ->assertSee('mastery-checklist', false)
+            ->assertSee(route('user.progress'), false);
+
+        $this->actingAs($user)
+            ->get(route('user.notifications'))
+            ->assertOk()
+            ->assertSee(route('user.notifications.readAll'), false)
+            ->assertSee(route('user.notifications.clearAll'), false)
+            ->assertSee(url('/notifications'), false)
+            ->assertSee("markRead('".$notification->id."')", false)
+            ->assertSee("deleteNotification('".$notification->id."')", false);
+
+        $this->actingAs($user)
+            ->get(route('user.account'))
+            ->assertOk()
+            ->assertSee(route('user.account.profile'), false)
+            ->assertSee(route('user.account.password'), false)
+            ->assertSee(route('user.account.delete'), false)
+            ->assertSee('onclick="applyProfileCrop()"', false);
+    }
+
     public function test_main_admin_pages_render_successfully(): void
     {
         [$admin, $user, $category, $session, $question, $answer, $module] = $this->seedAdminPageData();

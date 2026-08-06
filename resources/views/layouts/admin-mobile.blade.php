@@ -1533,7 +1533,7 @@
                     </div>
                     <div class="admin-mob-notif-footer">
                         <a href="{{ route('admin.notifications.index') }}" class="admin-mob-notif-view-all">
-                            <i class="fa-solid fa-bullhorn me-2"></i>Broadcast Announcement
+                            <i class="fa-solid fa-list-check me-2"></i>View All Activities
                         </a>
                     </div>
                 </div>
@@ -2531,7 +2531,7 @@
                   <a href="{{ route('admin.feedback.index') }}" class="mob-profile-link profile-nav-emerald {{ request()->routeIs('admin.feedback.index') || request()->routeIs('admin.feedback.show') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-check"></i><span>Feedback</span></a>
                   <a href="{{ route('admin.feedback.complaints') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('admin.feedback.complaints') ? 'active' : '' }}"><i class="fa-solid fa-clipboard-list"></i><span>Complaints</span></a>
                   <a href="{{ route('admin.contacts.index') }}" class="mob-profile-link profile-nav-cyan {{ request()->routeIs('admin.contacts.*') ? 'active' : '' }}"><i class="fa-solid fa-envelope"></i><span>Contacts</span></a>
-                  <a href="{{ route('admin.notifications.index') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bullhorn"></i><span>Announcements</span></a>
+                  <a href="{{ route('admin.notifications.index') }}" class="mob-profile-link profile-nav-amber {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"><i class="fa-solid fa-bell"></i><span>Notifications</span></a>
                </div>
 
                <div class="mob-profile-section-title">System</div>

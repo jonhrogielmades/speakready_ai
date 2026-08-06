@@ -13,6 +13,7 @@ use App\Models\Question;
 use App\Models\Score;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\VoiceSession;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
@@ -59,6 +60,101 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
                     && $movement->current === 90
                     && $movement->delta === 30;
             });
+    }
+
+    public function test_progress_page_renders_live_star_activity_goal_and_badge_data(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Behavioral');
+
+        Profile::create([
+            'user_id' => $user->id,
+            'current_streak' => 3,
+            'longest_streak' => 3,
+            'badges_earned' => [],
+        ]);
+
+        $this->completedSessionFor($user, $category, 72, now()->subDays(2));
+        $latest = $this->completedSessionFor($user, $category, 90, now()->subDay());
+        Score::where('interview_session_id', $latest->id)->update([
+            'clarity_score' => 84,
+            'professionalism_score' => 88,
+            'confidence_score' => 82,
+            'star_method_score' => 75,
+        ]);
+
+        $question = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Tell me about a challenge you handled.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+
+        InterviewAnswer::create([
+            'interview_session_id' => $latest->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I handled a scheduling problem and coordinated the team.',
+            'score' => 78,
+            'star_analysis' => [
+                'situation' => true,
+                'task' => true,
+                'action' => true,
+                'result' => false,
+                'suggestion' => 'Add a measurable result.',
+            ],
+        ]);
+
+        VoiceSession::create([
+            'user_id' => $user->id,
+            'category' => 'Behavioral',
+            'prompt' => 'Practice your STAR story.',
+            'transcript' => 'I coordinated the team and solved the issue.',
+            'speaking_pace' => 128,
+            'clarity_score' => 81,
+            'confidence_score' => 80,
+            'filler_words' => 1,
+            'duration_seconds' => 34,
+            'wpm' => 128,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('user.progress'));
+
+        $response->assertOk()
+            ->assertSee('STAR coverage')
+            ->assertSee('Add a measurable result.')
+            ->assertSee('Practice Again')
+            ->assertSee('3/3 day streak')
+            ->assertSee('3/3 communication skills at 80%+')
+            ->assertViewHas('starProgress', fn ($progress) => $progress
+                && $progress->has_data
+                && $progress->overall_percent === 75
+                && $progress->analyzed_answers === 1)
+            ->assertViewHas('activityCalendar', fn ($calendar) => $calendar
+                && $calendar->range_active_days === 3
+                && $calendar->current_streak === 3)
+            ->assertViewHas('badges', fn ($badges) => collect($badges)
+                ->where('title', 'First Interview')->first()?->unlocked === true
+                && collect($badges)->where('title', '3-Day Streak')->first()?->unlocked === true
+                && collect($badges)->where('title', 'Top Comm')->first()?->unlocked === true);
+    }
+
+    public function test_progress_page_has_functional_empty_states_for_new_users(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $response = $this->actingAs($user)->get(route('user.progress'));
+
+        $response->assertOk()
+            ->assertSee('No readiness trend yet')
+            ->assertSee('No scenario performance yet')
+            ->assertSee('First milestone waiting')
+            ->assertSee('Start Practice')
+            ->assertSee('id="historyNoResults"', false)
+            ->assertSee('No history records match your search.')
+            ->assertViewHas('starProgress', fn ($progress) => $progress && ! $progress->has_data)
+            ->assertViewHas('activityCalendar', fn ($calendar) => $calendar && $calendar->range_active_days === 0)
+            ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
     }
 
     public function test_feedback_marks_unscored_completed_sessions_as_pending(): void

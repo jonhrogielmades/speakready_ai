@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\ActivityLog;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Announcement;
@@ -15,11 +16,32 @@ class AdminNotificationController extends Controller
     {
         $announcements = Announcement::with('sender', 'user')
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'announcements_page')
+            ->withQueryString();
+
+        $activities = ActivityLog::with('user')
+            ->orderBy('id', 'desc')
+            ->paginate(25, ['*'], 'activities_page')
+            ->withQueryString();
+
+        $activityCount = ActivityLog::count();
+        $unreadActivityCount = ActivityLog::whereNull('read_at')->count();
+        $globalBroadcastCount = Announcement::where('target', 'all')->count();
+        $directAlertCount = Announcement::where('target', 'specific')->count();
+        $announcementCount = Announcement::count();
             
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
         
-        return view('admin.notifications', compact('announcements', 'users'));
+        return view('admin.notifications', compact(
+            'announcements',
+            'users',
+            'activities',
+            'activityCount',
+            'unreadActivityCount',
+            'globalBroadcastCount',
+            'directAlertCount',
+            'announcementCount'
+        ));
     }
 
     public function store(Request $request)

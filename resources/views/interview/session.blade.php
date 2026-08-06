@@ -299,7 +299,7 @@
             let questionStartedAt = null;
             let questionElapsedSeconds = 0;
             let lastTimelineCaptureAt = 0;
-            let chatHistory = Array.isArray(savedSessionState.chatHistory) ? savedSessionState.chatHistory : [];
+            let interviewChatHistory = Array.isArray(savedSessionState.chatHistory) ? savedSessionState.chatHistory : [];
             let stateSaveDebounce = null;
             let interviewEnding = false;
             let interviewTerminated = false;
@@ -308,7 +308,7 @@
             let isSubmittingAnswer = false;
             let finalAnswerSubmitted = false;
             let feedbackSubmissionInFlight = false;
-            let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(chatHistory) && chatHistory.some(item => {
+            let openingHasPlayed = Boolean(savedSessionState.openingHasPlayed || (Array.isArray(interviewChatHistory) && interviewChatHistory.some(item => {
                 const text = String(item?.text || '');
                 return item && item.role === 'interviewer' && (
                     text.includes('Let us start with the first question.')
@@ -1961,8 +1961,8 @@
             function restoreChatHistory() {
                 const chatContainer = document.getElementById('chatTranscriptContainer');
                 chatContainer.innerHTML = '';
-                if (!Array.isArray(chatHistory) || chatHistory.length === 0) return false;
-                chatHistory.forEach(item => appendChatMessage(item.role, item.text, false));
+                if (!Array.isArray(interviewChatHistory) || interviewChatHistory.length === 0) return false;
+                interviewChatHistory.forEach(item => appendChatMessage(item.role, item.text, false));
                 return true;
             }
 
@@ -2848,7 +2848,7 @@
                     openingHasPlayed,
                     questions: questionSnapshot(),
                     answersData: answersForAutosave,
-                    chatHistory,
+                    chatHistory: interviewChatHistory,
                     updated_at: new Date().toISOString()
                 }));
                 
@@ -2899,8 +2899,8 @@
                 chatContainer.appendChild(bubble);
 
                 if (record) {
-                    chatHistory.push({ role, text });
-                    if (chatHistory.length > 80) chatHistory = chatHistory.slice(chatHistory.length - 80);
+                    interviewChatHistory.push({ role, text });
+                    if (interviewChatHistory.length > 80) interviewChatHistory = interviewChatHistory.slice(interviewChatHistory.length - 80);
                     scheduleStateSave();
                 }
             }
@@ -2987,7 +2987,7 @@
                 formData.append('question_id', questions[currentQIdx].id);
                 formData.append('answer_text', answerText);
                 formData.append('speech_transcript', answersData[currentQIdx].speech_transcript || '');
-                formData.append('conversation_context', JSON.stringify(chatHistory.slice(-16)));
+                formData.append('conversation_context', JSON.stringify(interviewChatHistory.slice(-16)));
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
                 formData.append('observation_data', JSON.stringify(answersData[currentQIdx].observation_data || {}));
                 formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);

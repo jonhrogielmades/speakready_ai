@@ -6439,3 +6439,297 @@
     body.user-desktop-shell #sec-progress-tracking > :last-child {
         margin-bottom: 0 !important;
     }
+
+    #sec-progress-tracking .progress-chart-empty {
+        min-height: 100%;
+        border: 1px dashed rgba(37, 99, 235, 0.28);
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        text-align: center;
+        background: rgba(37, 99, 235, 0.04);
+    }
+
+    #sec-progress-tracking .progress-chart-empty i {
+        color: #2563eb;
+        font-size: 1.8rem;
+        margin-bottom: 10px;
+    }
+
+    #sec-progress-tracking .progress-chart-empty h6 {
+        color: var(--tx);
+        font-size: 0.95rem;
+        font-weight: 950;
+        margin: 0 0 6px;
+    }
+
+    #sec-progress-tracking .progress-chart-empty p {
+        color: #64748b;
+        font-size: 0.78rem;
+        line-height: 1.35;
+        margin: 0;
+        max-width: 280px;
+    }
+
+    :root:not(.lm) #sec-progress-tracking .progress-chart-empty p,
+    html[data-theme="dark"] #sec-progress-tracking .progress-chart-empty p {
+        color: #c2ccda;
+    }
+
+    #strengths-tracker .star-progress-summary {
+        display: grid;
+        grid-template-columns: minmax(82px, 110px) minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        margin-top: 12px;
+    }
+
+    #strengths-tracker .star-progress-score {
+        aspect-ratio: 1;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+        text-align: center;
+        background: radial-gradient(circle at center, rgba(255, 255, 255, 0.92) 0 54%, transparent 55%),
+            conic-gradient(#7c3aed, #10b981, #7c3aed);
+        border: 1px solid rgba(124, 58, 237, 0.24);
+    }
+
+    :root:not(.lm) #strengths-tracker .star-progress-score,
+    html[data-theme="dark"] #strengths-tracker .star-progress-score {
+        background: radial-gradient(circle at center, rgba(17, 24, 39, 0.94) 0 54%, transparent 55%),
+            conic-gradient(#a78bfa, #34d399, #a78bfa);
+    }
+
+    #strengths-tracker .star-progress-score span {
+        display: block;
+        color: var(--tx);
+        font-size: 1.18rem;
+        line-height: 1;
+        font-weight: 950;
+    }
+
+    #strengths-tracker .star-progress-score small {
+        display: block;
+        color: #64748b;
+        font-size: 0.58rem;
+        line-height: 1.15;
+        font-weight: 850;
+        margin-top: 4px;
+        text-transform: uppercase;
+    }
+
+    #strengths-tracker .star-part-list {
+        display: grid;
+        gap: 8px;
+    }
+
+    #strengths-tracker .star-part-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: var(--tx);
+        font-size: 0.72rem;
+        font-weight: 850;
+        margin-bottom: 4px;
+    }
+
+    #strengths-tracker .star-part-track {
+        height: 7px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(148, 163, 184, 0.18);
+    }
+
+    #strengths-tracker .star-part-fill {
+        width: var(--star-progress, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #7c3aed, #10b981);
+    }
+
+    #historyNoResults[hidden] {
+        display: none !important;
+    }
+
+    #history-table .history-no-results {
+        min-height: 128px;
+        margin-top: 14px;
+    }
+
+    #activity-calendar .activity-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    #activity-calendar .activity-summary-item {
+        min-width: 0;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(248, 250, 252, 0.72);
+    }
+
+    :root:not(.lm) #activity-calendar .activity-summary-item,
+    html[data-theme="dark"] #activity-calendar .activity-summary-item {
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    #activity-calendar .activity-summary-item strong {
+        display: block;
+        color: var(--tx);
+        font-size: 1rem;
+        line-height: 1.1;
+        font-weight: 950;
+        overflow-wrap: anywhere;
+    }
+
+    #activity-calendar .activity-summary-item span {
+        display: block;
+        color: #64748b;
+        font-size: 0.68rem;
+        line-height: 1.2;
+        font-weight: 800;
+        margin-top: 4px;
+    }
+
+    :root:not(.lm) #activity-calendar .activity-summary-item span,
+    html[data-theme="dark"] #activity-calendar .activity-summary-item span {
+        color: #c2ccda;
+    }
+
+    #activity-calendar .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    #activity-calendar .activity-day {
+        position: relative;
+        min-height: 62px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 12px;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 3px;
+        overflow: hidden;
+        color: var(--tx);
+        background: rgba(248, 250, 252, 0.7);
+    }
+
+    :root:not(.lm) #activity-calendar .activity-day,
+    html[data-theme="dark"] #activity-calendar .activity-day {
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    #activity-calendar .activity-day.active {
+        border-color: rgba(109, 93, 252, 0.36);
+    }
+
+    #activity-calendar .activity-day.active::before {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: var(--activity-intensity, 45%);
+        background: linear-gradient(180deg, rgba(109, 93, 252, 0.2), rgba(16, 185, 129, 0.28));
+        z-index: 0;
+    }
+
+    #activity-calendar .activity-day.today {
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.28);
+    }
+
+    #activity-calendar .activity-day-week,
+    #activity-calendar .activity-day-number,
+    #activity-calendar .activity-day-dot {
+        position: relative;
+        z-index: 1;
+    }
+
+    #activity-calendar .activity-day-week {
+        color: #64748b;
+        font-size: 0.58rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    #activity-calendar .activity-day-number {
+        font-size: 0.88rem;
+        font-weight: 950;
+    }
+
+    #activity-calendar .activity-day-dot {
+        min-width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        background: #2563eb;
+        font-size: 0.68rem;
+        font-weight: 950;
+    }
+
+    #activity-calendar .activity-legend {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        color: #64748b;
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+    #activity-calendar .activity-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    #activity-calendar .activity-legend i {
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, rgba(109, 93, 252, 0.8), rgba(16, 185, 129, 0.8));
+    }
+
+    #activity-calendar .activity-cta.compact {
+        width: auto;
+        min-height: 38px;
+        min-width: 0;
+        padding-inline: 14px;
+        font-size: 0.76rem;
+    }
+
+    @media (max-width: 640px) {
+        #strengths-tracker .star-progress-summary,
+        #activity-calendar .activity-summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #strengths-tracker .star-progress-score {
+            max-width: 112px;
+            margin: 0 auto;
+        }
+
+        #activity-calendar .activity-day {
+            min-height: 54px;
+            border-radius: 10px;
+        }
+
+        #activity-calendar .activity-legend {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        #activity-calendar .activity-cta.compact {
+            width: 100%;
+        }
+    }

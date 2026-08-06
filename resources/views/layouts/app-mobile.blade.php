@@ -2931,7 +2931,7 @@
       <script src="{{ asset('js/main.js?v=6') }}"></script>
       @include('partials.onboarding-script')
       @include('partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=11" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=12" defer></script>
 
       <script>
          // Close open header menus with Escape
@@ -2983,16 +2983,41 @@
          // PWA Install Prompt Logic
          let deferredPrompt;
          const suppressPwaInstallPrompt = @json(request()->routeIs('interview.session'));
+         let pwaPromptRetryTimer = null;
+
+         function isPwaInstallPromptBlocked() {
+            return Boolean(
+               document.body.classList.contains('sr-native-tour-active') ||
+               document.querySelector('.sr-native-tour-overlay, .sr-native-tour-popover, .driver-popover, .modal.show, .dropdown-menu.show, [aria-modal="true"]')
+            );
+         }
+
+         function schedulePwaInstallPrompt(attempt = 0) {
+            window.clearTimeout(pwaPromptRetryTimer);
+
+            pwaPromptRetryTimer = window.setTimeout(function() {
+               const prompt = document.getElementById('pwa-install-prompt');
+               if (!prompt || !deferredPrompt || suppressPwaInstallPrompt || localStorage.getItem('pwa_prompt_dismissed')) return;
+
+               if (isPwaInstallPromptBlocked()) {
+                  if (attempt < 24) {
+                     schedulePwaInstallPrompt(attempt + 1);
+                  }
+                  return;
+               }
+
+               prompt.style.display = 'block';
+            }, attempt === 0 ? 2600 : 1800);
+         }
+
          window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            if (suppressPwaInstallPrompt) return;
-            if (!localStorage.getItem('pwa_prompt_dismissed')) {
-               document.getElementById('pwa-install-prompt').style.display = 'block';
-            }
+            schedulePwaInstallPrompt();
          });
 
          document.getElementById('pwa-btn-yes')?.addEventListener('click', async () => {
+            window.clearTimeout(pwaPromptRetryTimer);
             document.getElementById('pwa-install-prompt').style.display = 'none';
             if (deferredPrompt) {
                deferredPrompt.prompt();
@@ -3003,6 +3028,7 @@
          });
 
          document.getElementById('pwa-btn-no')?.addEventListener('click', () => {
+            window.clearTimeout(pwaPromptRetryTimer);
             document.getElementById('pwa-install-prompt').style.display = 'none';
             localStorage.setItem('pwa_prompt_dismissed', 'true');
          });

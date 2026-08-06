@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotMessage;
@@ -277,7 +278,12 @@ class UserController extends Controller
 
         $sessions = InterviewSession::where('user_id', $userId)
             ->where('interview_sessions.status', 'completed')
-            ->with(['score', 'category', 'feedback'])
+            ->with([
+                'score',
+                'category',
+                'feedback',
+                'answers' => fn ($query) => $query->whereNull('retry_of_answer_id')->orderBy('id'),
+            ])
             ->orderBy('created_at', 'asc')
             ->get();
         $sessions->transform(function ($session) {
@@ -301,6 +307,8 @@ class UserController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
         $voiceSummary = $this->voiceSummaryFor($voiceSessions);
+        $activityCalendar = $this->practiceActivityCalendarFor($sessions, $voiceSessions);
+        $starProgress = $this->starProgressFor($sessions);
 
         $learningProgress = LearningProgress::with('learningModule')
             ->where('user_id', $userId)
@@ -319,12 +327,14 @@ class UserController extends Controller
             ->count();
 
         $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
-        $badges = [
-            (object) ['title' => 'First Interview', 'icon' => 'fa-medal', 'unlocked' => in_array('First Interview', $badgesEarned)],
-            (object) ['title' => '3-Day Streak', 'icon' => 'fa-fire', 'unlocked' => in_array('3-Day Streak', $badgesEarned)],
-            (object) ['title' => 'STAR Master', 'icon' => 'fa-star', 'unlocked' => in_array('STAR Master', $badgesEarned)],
-            (object) ['title' => 'Top Comm', 'icon' => 'fa-bullhorn', 'unlocked' => in_array('Top Comm', $badgesEarned)],
-        ];
+        $badges = $this->progressBadgesFor(
+            $badgesEarned,
+            $sessions,
+            $starProgress,
+            $latestSkillSummary,
+            $currentStreak,
+            $longestStreak
+        );
 
         $currentScore = $scoreTrend->isNotEmpty() ? (int) round($scoreTrend->avg('score')) : 0;
         if ($scoreTrend->isEmpty()) {
@@ -355,6 +365,7 @@ class UserController extends Controller
                 ],
             ];
         }
+        $goalNote = $this->progressGoalNoteFor($goals, $sessions->count());
 
         return view('user.progress', compact(
             'sessions',
@@ -366,6 +377,8 @@ class UserController extends Controller
             'latestSkillSummary',
             'voiceSessions',
             'voiceSummary',
+            'activityCalendar',
+            'starProgress',
             'learningProgress',
             'moduleRecommendations',
             'practicePlan',
@@ -373,6 +386,7 @@ class UserController extends Controller
             'longestStreak',
             'totalPracticeDays',
             'goals',
+            'goalNote',
             'badges'
         ));
     }
@@ -1420,6 +1434,365 @@ class UserController extends Controller
             'latest' => $latest,
             'previous' => $previous,
             'filler_reduction' => $reduction,
+        ];
+    }
+
+    private function practiceActivityCalendarFor($sessions, $voiceSessions): object
+    {
+        $today = Carbon::today();
+        $start = $today->copy()->subDays(27);
+        $sessionsByDate = $sessions
+            ->filter(fn ($session) => $session->created_at !== null)
+            ->groupBy(fn ($session) => $session->created_at->toDateString());
+        $voiceByDate = $voiceSessions
+            ->filter(fn ($session) => $session->created_at !== null)
+            ->groupBy(fn ($session) => $session->created_at->toDateString());
+
+        $days = collect(range(0, 27))->map(function (int $offset) use ($start, $today, $sessionsByDate, $voiceByDate) {
+            $date = $start->copy()->addDays($offset);
+            $key = $date->toDateString();
+            $daySessions = $sessionsByDate->get($key, collect());
+            $dayVoiceSessions = $voiceByDate->get($key, collect());
+            $scoredSessions = $daySessions
+                ->map(fn ($session) => $this->scoreValue($session->score, 'overall_readiness_score'))
+                ->filter(fn ($score) => $score !== null);
+            $interviewCount = $daySessions->count();
+            $voiceCount = $dayVoiceSessions->count();
+            $total = $interviewCount + $voiceCount;
+            $averageScore = $scoredSessions->isNotEmpty()
+                ? (int) round($scoredSessions->avg())
+                : null;
+            $details = [];
+
+            if ($interviewCount > 0) {
+                $details[] = $interviewCount.' interview'.($interviewCount === 1 ? '' : 's');
+            }
+            if ($voiceCount > 0) {
+                $details[] = $voiceCount.' voice drill'.($voiceCount === 1 ? '' : 's');
+            }
+            if ($averageScore !== null) {
+                $details[] = $averageScore.'% average readiness';
+            }
+
+            return (object) [
+                'date' => $key,
+                'label' => $date->format('M d'),
+                'weekday' => $date->format('D'),
+                'day_number' => $date->format('j'),
+                'is_today' => $date->isSameDay($today),
+                'interviews' => $interviewCount,
+                'voice_sessions' => $voiceCount,
+                'total' => $total,
+                'average_score' => $averageScore,
+                'intensity' => $total > 0 ? min(100, 28 + ($total * 24)) : 0,
+                'tooltip' => $date->format('M d, Y').' - '.($details ? implode(', ', $details) : 'No practice recorded'),
+            ];
+        });
+
+        $activityDates = $sessionsByDate->keys()
+            ->merge($voiceByDate->keys())
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+        $streaks = $this->practiceActivityStreaksFor($activityDates);
+        $recentWindowStart = $today->copy()->subDays(6)->toDateString();
+
+        return (object) [
+            'days' => $days,
+            'active_days' => $activityDates->count(),
+            'range_active_days' => $days->where('total', '>', 0)->count(),
+            'total_interviews' => $sessions->count(),
+            'total_voice_sessions' => $voiceSessions->count(),
+            'recent_active_days' => $days
+                ->filter(fn ($day) => $day->date >= $recentWindowStart && $day->total > 0)
+                ->count(),
+            'current_streak' => $streaks->current,
+            'longest_streak' => $streaks->longest,
+            'last_activity_label' => $activityDates->isNotEmpty()
+                ? Carbon::parse($activityDates->last())->format('M d, Y')
+                : 'No activity yet',
+        ];
+    }
+
+    private function practiceActivityStreaksFor($dateKeys): object
+    {
+        $dates = collect($dateKeys)
+            ->map(fn ($date) => Carbon::parse($date)->toDateString())
+            ->unique()
+            ->sort()
+            ->values();
+
+        if ($dates->isEmpty()) {
+            return (object) ['current' => 0, 'longest' => 0];
+        }
+
+        $longest = 0;
+        $run = 0;
+        $previous = null;
+
+        foreach ($dates as $dateString) {
+            $date = Carbon::parse($dateString);
+            $run = $previous && $previous->diffInDays($date) === 1 ? $run + 1 : 1;
+            $longest = max($longest, $run);
+            $previous = $date;
+        }
+
+        $dateSet = $dates->flip();
+        $cursor = Carbon::today();
+        if (! $dateSet->has($cursor->toDateString())) {
+            $cursor->subDay();
+        }
+
+        $current = 0;
+        while ($dateSet->has($cursor->toDateString())) {
+            $current++;
+            $cursor->subDay();
+        }
+
+        return (object) ['current' => $current, 'longest' => $longest];
+    }
+
+    private function starProgressFor($sessions): object
+    {
+        $partLabels = [
+            'situation' => 'Situation',
+            'task' => 'Task',
+            'action' => 'Action',
+            'result' => 'Result',
+        ];
+        $partStats = [];
+
+        foreach ($partLabels as $key => $label) {
+            $partStats[$key] = [
+                'key' => $key,
+                'label' => $label,
+                'complete' => 0,
+                'total' => 0,
+            ];
+        }
+
+        $answers = $sessions
+            ->flatMap(fn ($session) => $session->relationLoaded('answers') ? $session->answers : collect())
+            ->values();
+        $analyzedAnswers = 0;
+        $completeAnswers = 0;
+        $latestSuggestion = '';
+
+        foreach ($answers as $answer) {
+            $analysis = is_array($answer->star_analysis ?? null) ? $answer->star_analysis : [];
+            $hasPartData = false;
+            $answerComplete = true;
+
+            foreach (array_keys($partLabels) as $key) {
+                if (! array_key_exists($key, $analysis)) {
+                    $answerComplete = false;
+                    continue;
+                }
+
+                $hasPartData = true;
+                $partStats[$key]['total']++;
+
+                if ($this->starPartIsPresent($analysis[$key])) {
+                    $partStats[$key]['complete']++;
+                } else {
+                    $answerComplete = false;
+                }
+            }
+
+            if ($hasPartData) {
+                $analyzedAnswers++;
+                if ($answerComplete) {
+                    $completeAnswers++;
+                }
+            }
+
+            if (! empty($analysis['suggestion'])) {
+                $latestSuggestion = trim((string) $analysis['suggestion']);
+            }
+        }
+
+        $partProgress = collect($partStats)
+            ->map(function (array $part) {
+                return (object) [
+                    'key' => $part['key'],
+                    'label' => $part['label'],
+                    'complete' => $part['complete'],
+                    'total' => $part['total'],
+                    'percent' => $part['total'] > 0
+                        ? $this->barWidth((int) round(($part['complete'] / $part['total']) * 100))
+                        : null,
+                ];
+            })
+            ->values();
+        $coverageTotal = $partProgress->sum('total');
+        $coverageComplete = $partProgress->sum('complete');
+        $coveragePercent = $coverageTotal > 0
+            ? $this->barWidth((int) round(($coverageComplete / $coverageTotal) * 100))
+            : null;
+        $starScores = Score::hasColumn('star_method_score')
+            ? $sessions
+                ->map(fn ($session) => $this->scoreValue($session->score, 'star_method_score'))
+                ->filter(fn ($score) => $score !== null)
+            : collect();
+        $averageScore = $starScores->isNotEmpty()
+            ? $this->barWidth((int) round($starScores->avg()))
+            : null;
+        $overallPercent = $coveragePercent ?? $averageScore;
+
+        return (object) [
+            'has_data' => $overallPercent !== null,
+            'overall_percent' => $overallPercent ?? 0,
+            'average_score' => $averageScore,
+            'analyzed_answers' => $analyzedAnswers,
+            'complete_answers' => $completeAnswers,
+            'parts' => $partProgress,
+            'message' => $this->starProgressMessage($overallPercent, $analyzedAnswers),
+            'suggestion' => $latestSuggestion ?: $this->starProgressSuggestion($overallPercent),
+        ];
+    }
+
+    private function starPartIsPresent($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value > 0;
+        }
+
+        $text = Str::lower(trim((string) $value));
+
+        if ($text === '') {
+            return false;
+        }
+
+        return ! in_array($text, ['0', 'false', 'no', 'missing', 'absent', 'none', 'not present', 'needs work'], true);
+    }
+
+    private function starProgressMessage(?int $overallPercent, int $analyzedAnswers): string
+    {
+        if ($overallPercent === null) {
+            return 'Complete a behavioral or situational interview to start measuring STAR structure.';
+        }
+
+        $answerLabel = $analyzedAnswers > 0
+            ? ' across '.$analyzedAnswers.' analyzed answer'.($analyzedAnswers === 1 ? '' : 's')
+            : '';
+
+        if ($overallPercent >= 85) {
+            return 'Strong STAR coverage'.$answerLabel.'. Keep making results specific and measurable.';
+        }
+
+        if ($overallPercent >= 65) {
+            return 'STAR structure is developing'.$answerLabel.'. Tighten the weakest part before your next mock interview.';
+        }
+
+        return 'Build stronger STAR structure'.$answerLabel.' by naming the situation, task, action, and result clearly.';
+    }
+
+    private function starProgressSuggestion(?int $overallPercent): string
+    {
+        if ($overallPercent === null) {
+            return 'Use one real school, OJT, freelance, work, or volunteer story and outline it before answering.';
+        }
+
+        if ($overallPercent >= 85) {
+            return 'Keep the same structure and add one number, outcome, or lesson learned when the question allows it.';
+        }
+
+        return 'Rewrite one weak answer as four short lines: Situation, Task, Action, Result.';
+    }
+
+    private function progressBadgesFor(array $badgesEarned, $sessions, object $starProgress, object $latestSkillSummary, int $currentStreak, int $longestStreak): array
+    {
+        $earned = collect($badgesEarned)
+            ->map(fn ($badge) => Str::lower(trim((string) $badge)))
+            ->filter()
+            ->values();
+        $hasBadge = fn (string $title) => $earned->contains(Str::lower($title));
+        $completedSessions = $sessions->count();
+        $bestReadiness = $sessions
+            ->map(fn ($session) => $this->scoreValue($session->score, 'overall_readiness_score'))
+            ->filter(fn ($score) => $score !== null)
+            ->max();
+        $communicationMetrics = collect($latestSkillSummary->metrics ?? [])
+            ->filter(fn ($metric) => in_array($metric['name'] ?? '', ['Clarity', 'Professionalism', 'Confidence'], true));
+        $strongCommunicationMetrics = $communicationMetrics
+            ->filter(fn ($metric) => (int) ($metric['score'] ?? 0) >= 80)
+            ->count();
+
+        return [
+            (object) [
+                'title' => 'First Interview',
+                'icon' => 'fa-medal',
+                'unlocked' => $hasBadge('First Interview') || $completedSessions > 0,
+                'description' => $completedSessions > 0
+                    ? $completedSessions.' completed interview'.($completedSessions === 1 ? '' : 's')
+                    : 'Complete 1 interview',
+            ],
+            (object) [
+                'title' => '3-Day Streak',
+                'icon' => 'fa-fire',
+                'unlocked' => $hasBadge('3-Day Streak') || max($currentStreak, $longestStreak) >= 3,
+                'description' => max($currentStreak, $longestStreak).'/3 day streak',
+            ],
+            (object) [
+                'title' => 'STAR Master',
+                'icon' => 'fa-star',
+                'unlocked' => $hasBadge('STAR Master') || $starProgress->overall_percent >= 80,
+                'description' => $starProgress->has_data
+                    ? $starProgress->overall_percent.'% STAR coverage'
+                    : 'Use STAR effectively',
+            ],
+            (object) [
+                'title' => 'Top Comm',
+                'icon' => 'fa-bullhorn',
+                'unlocked' => $hasBadge('Top Comm')
+                    || $hasBadge('Comm. Expert')
+                    || $strongCommunicationMetrics >= 2
+                    || ($bestReadiness !== null && $bestReadiness >= 90),
+                'description' => $strongCommunicationMetrics > 0
+                    ? $strongCommunicationMetrics.'/3 communication skills at 80%+'
+                    : 'Top communicator',
+            ],
+        ];
+    }
+
+    private function progressGoalNoteFor(array $goals, int $completedSessions): object
+    {
+        $goal = collect($goals)->first();
+        $progress = $this->barWidth((int) ($goal->progress ?? 0));
+
+        if ($completedSessions === 0) {
+            return (object) [
+                'icon' => 'fa-flag',
+                'title' => 'First milestone waiting',
+                'text' => 'Complete one scored interview to unlock target tracking and richer progress insights.',
+            ];
+        }
+
+        if ($progress >= 100) {
+            return (object) [
+                'icon' => 'fa-circle-check',
+                'title' => 'Goal reached',
+                'text' => 'Your current readiness target is complete. A new target appears as your average changes.',
+            ];
+        }
+
+        if ($progress >= 75) {
+            return (object) [
+                'icon' => 'fa-arrow-trend-up',
+                'title' => 'Close to target',
+                'text' => 'You are within reach. Retake one weak answer after reviewing your latest feedback.',
+            ];
+        }
+
+        return (object) [
+            'icon' => 'fa-star',
+            'title' => 'Next milestone active',
+            'text' => 'Keep practicing in short rounds to lift your readiness average toward the next target.',
         ];
     }
 
@@ -3228,9 +3601,19 @@ PROMPT;
 
     public function notifications()
     {
-        $notifications = Auth::user()->notifications()->paginate(15);
+        $notifications = Auth::user()
+            ->notifications()
+            ->paginate(15, ['*'], 'notifications_page')
+            ->withQueryString();
 
-        return view('user.notifications', compact('notifications'));
+        $activityLogs = ActivityLog::where('user_id', Auth::id())
+            ->orderBy('id', 'desc')
+            ->paginate(20, ['*'], 'activities_page')
+            ->withQueryString();
+
+        $activityCount = ActivityLog::where('user_id', Auth::id())->count();
+
+        return view('user.notifications', compact('notifications', 'activityLogs', 'activityCount'));
     }
 
     public function fetchNotifications()

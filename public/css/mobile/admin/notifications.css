@@ -49,7 +49,40 @@
         background: #2563eb;
         transform: translateY(-2px);
     }
+
+    .activity-history-card .activity-history-table td {
+        vertical-align: middle;
+    }
+
+    .activity-unread-row {
+        background: rgba(59, 130, 246, 0.06);
+    }
+
+    .activity-log-description {
+        color: var(--tx2);
+        font-size: 0.82rem;
+        margin-top: 4px;
+        max-width: 560px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .activity-log-actions .btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
     
     /* Mobile Responsive Tables */
     @media (max-width: 767.98px) {
+        .activity-log-description {
+            max-width: none;
+        }
+
+        .activity-log-actions {
+            justify-content: flex-start !important;
+        }
     }
