@@ -141,7 +141,7 @@ class AuthController extends Controller
 
     public function showForgotPasswordForm()
     {
-        return view('auth.forgot-password');
+        return $this->mobileView('auth.forgot-password');
     }
 
     public function sendResetLink(Request $request)
@@ -170,9 +170,9 @@ class AuthController extends Controller
 
     public function showResetPasswordForm(Request $request, string $token)
     {
-        return view('auth.reset-password', [
+        return $this->mobileView('auth.reset-password', [
             'token' => $token,
-            'email' => $request->email,
+            'email' => $request->query('email', ''),
         ]);
     }
 

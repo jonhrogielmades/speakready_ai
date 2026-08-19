@@ -24,7 +24,7 @@ Route::get('/', function (LandingStatsService $landingStatsService) {
         return redirect()->route('dashboard');
     }
 
-    return view('welcome', [
+    return mobile_view('welcome', [
         'landingStats' => $landingStatsService->summary(),
     ]);
 });
@@ -79,7 +79,7 @@ Route::middleware(['auth', 'user'])->group(function () {
                 ->findOrFail(request()->integer('pack'));
         }
 
-        return view('interview.setup', compact('categories', 'sourcePacks', 'selectedApplication', 'selectedPack'));
+        return mobile_view('interview.setup', compact('categories', 'sourcePacks', 'selectedApplication', 'selectedPack'));
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
@@ -103,7 +103,7 @@ Route::middleware(['auth', 'user'])->group(function () {
                 ->with('message', 'Your interview session is no longer active.');
         }
 
-        return view('interview.session');
+        return mobile_view('interview.session');
     })->name('interview.session');
 
     Route::post('/interview/start', [InterviewController::class, 'start'])->name('interview.start');
@@ -205,7 +205,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     });
 
     Route::get('/admin/categories', function () {
-        return view('admin.categories', ['categories' => \App\Models\Category::all()]);
+        return mobile_view('admin.categories', ['categories' => \App\Models\Category::all()]);
     })->name('admin.categories');
 
     // Admin Routes - Categories

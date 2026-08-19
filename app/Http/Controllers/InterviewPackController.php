@@ -15,7 +15,7 @@ class InterviewPackController extends Controller
             ->get()
             ->groupBy(fn ($pack) => $pack->company ?: $pack->role_family ?: 'General');
 
-        return view('user.packs.index', compact('packs'));
+        return $this->mobileView('user.packs.index', compact('packs'));
     }
 
     public function practice(InterviewPack $pack)

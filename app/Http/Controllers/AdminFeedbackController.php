@@ -27,7 +27,7 @@ class AdminFeedbackController extends Controller
 
         $feedbacks = $query->latest()->paginate(15);
 
-        return view('admin.feedback.index', compact('feedbacks', 'stats'));
+        return $this->mobileView('admin.feedback.index', compact('feedbacks', 'stats'));
     }
 
     public function export(Request $request)
@@ -74,7 +74,7 @@ class AdminFeedbackController extends Controller
     {
         $answer->load(['question', 'auditLogs.admin', 'complaints.user']);
 
-        return view('admin.feedback.show', compact('answer'));
+        return $this->mobileView('admin.feedback.show', compact('answer'));
     }
 
     public function verify(Request $request, InterviewAnswer $answer)
@@ -174,7 +174,7 @@ class AdminFeedbackController extends Controller
     {
         $complaints = FeedbackComplaint::with(['user', 'interviewAnswer.question'])->latest()->paginate(15);
 
-        return view('admin.feedback.complaints', compact('complaints'));
+        return $this->mobileView('admin.feedback.complaints', compact('complaints'));
     }
 
     private function filteredFeedbackQuery(Request $request)

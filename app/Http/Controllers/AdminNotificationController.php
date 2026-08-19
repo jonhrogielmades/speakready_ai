@@ -32,7 +32,7 @@ class AdminNotificationController extends Controller
             
         $users = User::orderBy('name')->get(['id', 'name', 'email']);
         
-        return view('admin.notifications', compact(
+        return $this->mobileView('admin.notifications', compact(
             'announcements',
             'users',
             'activities',

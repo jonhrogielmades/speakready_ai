@@ -72,7 +72,7 @@ class AdminAiController extends Controller
             ->first();
         $fallback = AiProvider::where('is_fallback', true)->first();
         
-        return view('admin.ai.providers', compact(
+        return $this->mobileView('admin.ai.providers', compact(
             'providers', 'providerStats', 'primary', 'fallback',
             'activeProvider', 'totalRequests', 'successfulRequests', 'failedRequests', 
             'avgResponseTime', 'successRate', 'monthlyCost', 'moduleUsage'

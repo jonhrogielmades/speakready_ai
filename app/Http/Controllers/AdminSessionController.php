@@ -68,7 +68,7 @@ class AdminSessionController extends Controller
 
         $sessions = $query->paginate(10)->withQueryString();
 
-        return view('admin.sessions.index', compact(
+        return $this->mobileView('admin.sessions.index', compact(
             'totalSessions', 'activeSessionsToday', 'completedSessions', 'avgScore', 'avgDuration',
             'mostUsedCategory', 'sessionCompletionRate', 'dailySessionCount', 'readinessDistribution',
             'sessions'
@@ -113,7 +113,7 @@ class AdminSessionController extends Controller
             return $a['time'] <=> $b['time'];
         });
 
-        return view('admin.sessions.show', compact('session', 'questionsAnswered', 'questionsSkipped', 'performance', 'timeline'));
+        return $this->mobileView('admin.sessions.show', compact('session', 'questionsAnswered', 'questionsSkipped', 'performance', 'timeline'));
     }
 
     public function review(InterviewSession $session)
@@ -122,7 +122,7 @@ class AdminSessionController extends Controller
 
         // Feature 4: Question & Answer Review & Feature 12: AI Feedback Monitoring & Feature 11: Voice Monitoring
 
-        return view('admin.sessions.review', compact('session'));
+        return $this->mobileView('admin.sessions.review', compact('session'));
     }
 
     public function flag(Request $request, InterviewSession $session)
@@ -157,7 +157,7 @@ class AdminSessionController extends Controller
 
         $sessions = $query->orderBy('updated_at', 'desc')->paginate(15);
 
-        return view('admin.sessions.archive', compact('sessions'));
+        return $this->mobileView('admin.sessions.archive', compact('sessions'));
     }
 
     public function restore(InterviewSession $session)

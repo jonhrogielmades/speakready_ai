@@ -18,6 +18,6 @@ class BlockMobileAdmin
             abort(403, 'The admin area is temporarily available on desktop only.');
         }
 
-        return response()->view('admin.mobile-locked', [], 403);
+        return response(mobile_view('admin.mobile-locked'), 403);
     }
 }

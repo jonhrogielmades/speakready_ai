@@ -10,7 +10,7 @@ class AdminContactController extends Controller
     public function index()
     {
         $contacts = Contact::orderBy('created_at', 'desc')->paginate(20);
-        return view('admin.contacts.index', compact('contacts'));
+        return $this->mobileView('admin.contacts.index', compact('contacts'));
     }
 
     public function show(Contact $contact)
@@ -18,7 +18,7 @@ class AdminContactController extends Controller
         if ($contact->status === 'unread') {
             $contact->update(['status' => 'read']);
         }
-        return view('admin.contacts.show', compact('contact'));
+        return $this->mobileView('admin.contacts.show', compact('contact'));
     }
 
     public function destroy(Contact $contact)

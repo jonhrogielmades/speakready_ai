@@ -1310,7 +1310,7 @@ class InterviewController extends Controller
         }
 
         $retry->refresh();
-        $coachingHtml = view('partials.interview-answer-coaching', [
+        $coachingHtml = $this->mobileView('partials.interview-answer-coaching', [
             'answer' => $retry,
         ])->render();
 
@@ -3536,7 +3536,7 @@ class InterviewController extends Controller
 
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
-        return view('shared.review', compact('sessionRecord', 'comparisonRows'));
+        return $this->mobileView('shared.review', compact('sessionRecord', 'comparisonRows'));
     }
 
     public function toggleShare(Request $request, $id)
@@ -3614,7 +3614,7 @@ class InterviewController extends Controller
 
         abort_unless($sessionRecord->shareIsActive(), 410, 'This private review link has expired.');
         if ($sessionRecord->share_password_hash && ! $request->session()->get("shared_review.{$token}")) {
-            return view('shared.unlock', compact('sessionRecord'));
+            return $this->mobileView('shared.unlock', compact('sessionRecord'));
         }
 
         if ($this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel)) {
@@ -3634,7 +3634,7 @@ class InterviewController extends Controller
 
         $comparisonRows = [];
 
-        return view('shared.review', compact('sessionRecord', 'comparisonRows'));
+        return $this->mobileView('shared.review', compact('sessionRecord', 'comparisonRows'));
     }
 
     public function unlockSharedReview(Request $request, string $token)

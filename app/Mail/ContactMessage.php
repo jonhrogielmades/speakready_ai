@@ -42,7 +42,7 @@ class ContactMessage extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.contact',
+            view: 'desktop.emails.contact',
         );
     }
 

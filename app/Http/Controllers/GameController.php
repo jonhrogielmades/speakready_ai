@@ -248,7 +248,7 @@ class GameController extends Controller
             $isMobile = true;
         }
 
-        return view('user.game-session', compact('gameLevel', 'gameSession', 'isMobile'));
+        return $this->mobileView('user.game-session', compact('gameLevel', 'gameSession', 'isMobile'));
     }
 
     public function answer(Request $request)

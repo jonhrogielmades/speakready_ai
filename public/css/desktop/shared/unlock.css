@@ -1,0 +1,19 @@
+/* Unlock private review - Desktop */
+.unlock-shell {
+   min-height: 100vh;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   padding: 24px;
+   background: #0b1120;
+   color: #f8fafc;
+}
+.unlock-card {
+   width: 100%;
+   max-width: 480px;
+   padding: 36px;
+   border-radius: 20px;
+   border: 1px solid #1e293b;
+   background: #111827;
+   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+}

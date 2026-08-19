@@ -265,7 +265,7 @@ class UserController extends Controller
                 ];
             });
 
-        return view('dashboard', compact(
+        return $this->mobileView('dashboard', compact(
             'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
             'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
             'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations', 'practicePlan'
@@ -367,7 +367,7 @@ class UserController extends Controller
         }
         $goalNote = $this->progressGoalNoteFor($goals, $sessions->count());
 
-        return view('user.progress', compact(
+        return $this->mobileView('user.progress', compact(
             'sessions',
             'scoredSessions',
             'scoreTrend',
@@ -489,7 +489,7 @@ class UserController extends Controller
         ];
         $hasFeedbackRecords = $allCompletedSessions->isNotEmpty();
 
-        return view('user.feedback', compact(
+        return $this->mobileView('user.feedback', compact(
             'sessions',
             'feedbackCategories',
             'feedbackFilters',
@@ -786,7 +786,7 @@ class UserController extends Controller
 
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
-        return view('user.review', compact('sessionRecord', 'comparisonRows'));
+        return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows'));
     }
 
     public function exportSession(InterviewSession $session)
@@ -1919,7 +1919,7 @@ class UserController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('user.coach', compact('recentConversations', 'olderConversations'));
+        return $this->mobileView('user.coach', compact('recentConversations', 'olderConversations'));
     }
 
     public function coachChat(Request $request, CoachLanguageService $coachLanguages)
@@ -2994,7 +2994,7 @@ class UserController extends Controller
             ? $categories->firstWhere('id', (int) $request->category_id)
             : null;
 
-        return view('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories', 'selectedCategory'));
+        return $this->mobileView('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories', 'selectedCategory'));
     }
 
     private function refreshChallengeEnergyIfNeeded(Profile $profile): void
@@ -3034,7 +3034,7 @@ class UserController extends Controller
 
         $practiceSessionCount = VoiceSession::where('user_id', Auth::id())->count();
 
-        return view('user.missions', compact('missions', 'recentVoiceSessions', 'practiceSessionCount'));
+        return $this->mobileView('user.missions', compact('missions', 'recentVoiceSessions', 'practiceSessionCount'));
     }
 
     public function generateMissionTask(Request $request)
@@ -3315,7 +3315,7 @@ PROMPT;
             return $session;
         });
 
-        return view('user.drills.voice', compact('history'));
+        return $this->mobileView('user.drills.voice', compact('history'));
     }
 
     public function generateVoicePrompt(Request $request)
@@ -3575,7 +3575,7 @@ PROMPT;
         $scoreTrend = $this->scoreTrendFor($scoredSessions);
         $categoryPerf = $this->categoryPerformanceFor($scoredSessions);
 
-        return view('user.reports', compact(
+        return $this->mobileView('user.reports', compact(
             'user',
             'sessions',
             'scoredSessions',
@@ -3613,7 +3613,7 @@ PROMPT;
 
         $activityCount = ActivityLog::where('user_id', Auth::id())->count();
 
-        return view('user.notifications', compact('notifications', 'activityLogs', 'activityCount'));
+        return $this->mobileView('user.notifications', compact('notifications', 'activityLogs', 'activityCount'));
     }
 
     public function fetchNotifications()
@@ -3668,7 +3668,7 @@ PROMPT;
 
     public function account()
     {
-        return view('user.account');
+        return $this->mobileView('user.account');
     }
 
     public function updateLanguage(Request $request)
@@ -3852,7 +3852,7 @@ PROMPT;
 
         $perks = self::SKILL_PERKS;
 
-        return view('user.skills', compact('profile', 'perks'));
+        return $this->mobileView('user.skills', compact('profile', 'perks'));
     }
 
     public function unlockPerk(Request $request)
@@ -4150,7 +4150,7 @@ PROMPT;
         $masteryBadges = $this->masteryBadges($profile, $eligibleScores, $latestScore, $baselineScore, $voiceSessionCount, $storyCount, $careerTracks);
         $coachShortcuts = $this->masteryCoachShortcuts();
 
-        return view('user.personal-mastery', compact(
+        return $this->mobileView('user.personal-mastery', compact(
             'profile',
             'personalBest',
             'latest',
@@ -4765,7 +4765,7 @@ PROMPT;
         $moduleRecommendations = app(LearningRecommendationService::class)->forUser(Auth::id(), 3);
         $learningPaths = app(LearningRecommendationService::class)->learningPathsForUser(Auth::id());
 
-        return view('user.modules.index', compact(
+        return $this->mobileView('user.modules.index', compact(
             'modules',
             'categories',
             'moduleRecommendations',
@@ -4797,7 +4797,7 @@ PROMPT;
             ->take(3)
             ->values();
 
-        return view('user.modules.show', compact('module', 'moduleProgress', 'moduleRecommendations'));
+        return $this->mobileView('user.modules.show', compact('module', 'moduleProgress', 'moduleRecommendations'));
     }
 
     public function updateModuleProgress(Request $request, $id)

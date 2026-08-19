@@ -67,7 +67,7 @@ class AdminUserController extends Controller
             }
         }
 
-        return view('admin.users', compact('users', 'topUsers', 'needingImprovement', 'onlineUserIds', 'lastActiveByUserId'));
+        return $this->mobileView('admin.users', compact('users', 'topUsers', 'needingImprovement', 'onlineUserIds', 'lastActiveByUserId'));
     }
 
     public function export(Request $request)

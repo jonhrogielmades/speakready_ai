@@ -94,7 +94,7 @@ class AdminController extends Controller
                 ->count();
         }
 
-        return view('admin.dashboard', compact(
+        return $this->mobileView('admin.dashboard', compact(
             'registeredUsersCount',
             'onlineTodayCount',
             'mockInterviewsCount',
@@ -252,7 +252,7 @@ class AdminController extends Controller
             ->map(fn ($questions) => $questions->count())
             ->toArray();
 
-        return view('admin.category_details', compact(
+        return $this->mobileView('admin.category_details', compact(
             'category',
             'totalQuestions',
             'totalInterviews',
@@ -472,7 +472,7 @@ class AdminController extends Controller
         $datasetPacks = QuestionDatasetProvider::all();
         $aiProviderOptions = $this->questionProviderOptions();
 
-        return view('admin.questions', compact(
+        return $this->mobileView('admin.questions', compact(
             'questions',
             'categories',
             'totalQuestions',
@@ -880,7 +880,7 @@ class AdminController extends Controller
         
         $categories = $this->learningCategoryNames();
 
-        return view('admin.modules', compact('modules', 'totalModules', 'publishedModules', 'draftModules', 'totalResources', 'mostViewedModule', 'categories'));
+        return $this->mobileView('admin.modules', compact('modules', 'totalModules', 'publishedModules', 'draftModules', 'totalResources', 'mostViewedModule', 'categories'));
     }
 
     public function editModule(LearningModule $module)
@@ -888,7 +888,7 @@ class AdminController extends Controller
         $module->load(['chapters', 'resources', 'quizzes.questions', 'activities', 'gameLevels']);
         $allGameLevels = \App\Models\GameLevel::orderBy('level_number', 'asc')->get();
         $categories = $this->learningCategoryNames();
-        return view('admin.module_edit', compact('module', 'allGameLevels', 'categories'));
+        return $this->mobileView('admin.module_edit', compact('module', 'allGameLevels', 'categories'));
     }
 
     public function updateModule(Request $request, LearningModule $module)

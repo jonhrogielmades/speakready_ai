@@ -27,7 +27,7 @@ class UserApplicationController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('user.applications.index', compact('applications', 'packs'));
+        return $this->mobileView('user.applications.index', compact('applications', 'packs'));
     }
 
     public function store(Request $request, CareerPlanService $careerPlan)

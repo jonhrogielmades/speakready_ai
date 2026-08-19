@@ -33,7 +33,7 @@ class AdminGameController extends Controller
         $allLevels = GameLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
         $categories = Category::where('status', 'active')->where('type', 'game')->get(); // For category dropdown
 
-        return view('admin.game', compact('levels', 'allLevels', 'categories'));
+        return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories'));
     }
 
     public function store(Request $request)

@@ -24,7 +24,7 @@ class AdminSettingController extends Controller
             })
             ->toArray();
 
-        return view('admin.settings', compact('settings'));
+        return $this->mobileView('admin.settings', compact('settings'));
     }
 
     /**
