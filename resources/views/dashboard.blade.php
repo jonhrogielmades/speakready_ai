@@ -1,7 +1,7 @@
 @extends($isMobile ? 'layouts.app-mobile' : 'layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/dashboard.css?v=1') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/' . (($isMobile ?? false) ? 'mobile' : 'desktop') . '/dashboard.css?v=2') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -164,8 +164,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="sr-score-note"><i class="fa-solid fa-star"></i> Keep practicing. You're on your way!</div>
-            </section>
+                </section>
 
             <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
                 <div class="sr-stat-card" style="--accent:#3b82f6;--meter-value:{{ $sessionsMeter }}%;">
