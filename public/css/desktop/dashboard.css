@@ -5936,20 +5936,20 @@
     }
 
     .sr-image-head-icons {
-        --sr-head-orbit-radius: 40px;
+        --sr-head-orbit-radius: 36px;
         --sr-head-orbit-duration: 12s;
-        --sr-head-orbit-tilt: 64deg;
-        --sr-head-orbit-untilt: -64deg;
-        --sr-head-orbit-roll: -12deg;
+        --sr-head-orbit-tilt: 74deg;
+        --sr-head-orbit-untilt: -74deg;
+        --sr-head-orbit-roll: -4deg;
         position: absolute;
         z-index: 4;
-        top: 8px;
-        right: 48px;
-        width: 112px;
-        height: 112px;
+        top: -10px;
+        right: 46px;
+        width: 100px;
+        height: 60px;
         pointer-events: none;
         perspective: 420px;
-        perspective-origin: 50% 46%;
+        perspective-origin: 50% 50%;
         transform-style: preserve-3d;
     }
 
@@ -5965,17 +5965,17 @@
     }
 
     .sr-image-head-icons::before {
-        inset: 14px;
-        background: radial-gradient(circle at 50% 52%, rgba(56, 189, 248, 0.08), transparent 56%);
-        box-shadow: 0 0 18px rgba(56, 189, 248, 0.2), inset 0 0 16px rgba(125, 211, 252, 0.1);
+        inset: 4px;
+        background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.12), transparent 60%);
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.24), inset 0 0 14px rgba(125, 211, 252, 0.12);
         transform: rotateZ(var(--sr-head-orbit-roll)) rotateX(var(--sr-head-orbit-tilt));
     }
 
     .sr-image-head-icons::after {
-        inset: 18px;
-        border-color: rgba(167, 139, 250, 0.22);
-        box-shadow: 0 0 16px rgba(124, 58, 237, 0.12);
-        transform: rotateY(58deg) rotateX(68deg) rotateZ(22deg);
+        inset: 8px;
+        border-color: rgba(167, 139, 250, 0.26);
+        box-shadow: 0 0 14px rgba(124, 58, 237, 0.15);
+        transform: rotateY(56deg) rotateX(74deg) rotateZ(18deg);
     }
 
     .sr-image-head-icon {
@@ -6220,10 +6220,6 @@
         -webkit-text-fill-color: var(--sr-speech-success) !important;
     }
 
-    body.user-desktop-shell .sr-hero-image-panel .sr-image-speech,
-    body.user-desktop-shell .sr-hero-image-panel .sr-image-head-icons {
-        display: none !important;
-    }
 
     @keyframes srImageSpeechPop {
         0%, 62%, 100% {
@@ -6381,11 +6377,14 @@
         }
 
         .sr-image-head-icons {
-            --sr-head-orbit-radius: 40px;
-            right: 48px;
-            top: 8px;
-            width: 112px;
-            height: 112px;
+            --sr-head-orbit-radius: 36px;
+            --sr-head-orbit-tilt: 74deg;
+            --sr-head-orbit-untilt: -74deg;
+            --sr-head-orbit-roll: -4deg;
+            right: 46px;
+            top: -10px;
+            width: 100px;
+            height: 60px;
         }
 
     }
@@ -6443,7 +6442,7 @@
 
         body.user-desktop-shell .sr-image-speech {
             top: 22px;
-            right: clamp(150px, 18vw, 188px);
+            right: clamp(160px, 19vw, 200px);
             width: 156px;
             min-height: 88px;
             padding: 12px 13px;
@@ -6476,24 +6475,27 @@
         }
 
         body.user-desktop-shell .sr-image-head-icons {
-            --sr-head-orbit-radius: 31px;
-            top: 12px;
-            right: 28px;
+            --sr-head-orbit-radius: 32px;
+            --sr-head-orbit-tilt: 74deg;
+            --sr-head-orbit-untilt: -74deg;
+            --sr-head-orbit-roll: -4deg;
+            top: -8px;
+            right: 42px;
             width: 88px;
-            height: 88px;
+            height: 56px;
         }
 
         body.user-desktop-shell .sr-image-head-icons::before {
-            inset: 12px;
+            inset: 4px;
         }
 
         body.user-desktop-shell .sr-image-head-icon {
-            --sr-head-icon-size: 20px;
-            font-size: 0.5rem;
+            --sr-head-icon-size: 18px;
+            font-size: 0.46rem;
         }
 
         body.user-desktop-shell .sr-image-head-icon:nth-child(3) {
-            --sr-head-icon-size: 24px;
+            --sr-head-icon-size: 22px;
         }
     }
 
@@ -6549,7 +6551,7 @@
 
         .sr-image-speech {
             top: 22px;
-            right: clamp(150px, 25cqw, 188px);
+            right: clamp(160px, 24cqw, 200px);
             width: 156px;
             min-height: 88px;
             padding: 12px 13px;
@@ -6582,24 +6584,27 @@
         }
 
         .sr-image-head-icons {
-            --sr-head-orbit-radius: 31px;
-            top: 12px;
-            right: 28px;
+            --sr-head-orbit-radius: 32px;
+            --sr-head-orbit-tilt: 74deg;
+            --sr-head-orbit-untilt: -74deg;
+            --sr-head-orbit-roll: -4deg;
+            top: -8px;
+            right: 42px;
             width: 88px;
-            height: 88px;
+            height: 56px;
         }
 
         .sr-image-head-icons::before {
-            inset: 12px;
+            inset: 4px;
         }
 
         .sr-image-head-icon {
-            --sr-head-icon-size: 20px;
-            font-size: 0.5rem;
+            --sr-head-icon-size: 18px;
+            font-size: 0.46rem;
         }
 
         .sr-image-head-icon:nth-child(3) {
-            --sr-head-icon-size: 24px;
+            --sr-head-icon-size: 22px;
         }
     }
 
@@ -6656,14 +6661,20 @@
         }
 
         body.user-desktop-shell .sr-hero-card.sr-hero-image-panel {
-            min-height: 132px;
+            min-height: 156px;
             border-radius: var(--dash-card-radius);
-            box-shadow: 0 10px 24px rgba(14, 72, 190, 0.2);
+            box-shadow: 0 14px 36px rgba(14, 72, 190, 0.28);
+            background:
+                radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.12), transparent 16%),
+                radial-gradient(circle at 84% 20%, rgba(255, 255, 255, 0.16), transparent 18%),
+                linear-gradient(105deg, #0c35d7 0%, #0752dc 44%, #18c2e5 100%) !important;
+            border: 0 !important;
+            color: #ffffff !important;
         }
 
         body.user-desktop-shell .sr-image-hero-inner {
-            min-height: 132px;
-            padding: 12px 14px;
+            min-height: 156px;
+            padding: 14px 18px;
         }
 
         body.user-desktop-shell .sr-image-hero-content {
@@ -6671,88 +6682,111 @@
         }
 
         body.user-desktop-shell .sr-image-title-row {
-            gap: 9px;
-            margin-top: 8px;
+            gap: 10px;
+            margin-top: 6px;
         }
 
         body.user-desktop-shell .sr-image-title {
-            font-size: 0.88rem;
+            font-size: 0.96rem;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        body.user-desktop-shell .sr-image-title span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        body.user-desktop-shell .sr-image-title strong {
+            color: #16f4df !important;
+            -webkit-text-fill-color: #16f4df !important;
         }
 
         body.user-desktop-shell .sr-image-copy {
             grid-template-columns: repeat(2, max-content);
-            column-gap: 10px;
-            row-gap: 2px;
-            margin: 7px 0 0 22px;
-            font-size: 0.55rem;
-            line-height: 1.28;
+            column-gap: 12px;
+            row-gap: 3px;
+            margin: 8px 0 0 22px;
+            font-size: 0.62rem;
+            line-height: 1.3;
         }
 
         body.user-desktop-shell .sr-image-chip-row {
-            gap: 4px;
-            margin: 8px 0 0 22px;
-            max-width: 420px;
+            gap: 5px;
+            margin: 10px 0 0 22px;
+            max-width: 440px;
         }
 
         body.user-desktop-shell .sr-image-chip {
-            min-height: 18px;
-            padding: 0 6px;
+            min-height: 20px;
+            padding: 0 7px;
             border-radius: 6px;
-            font-size: 0.45rem;
+            font-size: 0.48rem;
+            background: rgba(255, 255, 255, 0.96) !important;
+            color: #1e2a44 !important;
+        }
+
+        body.user-desktop-shell .sr-image-chip i {
+            color: #1976ff !important;
         }
 
         body.user-desktop-shell .sr-image-robot,
         body.user-desktop-shell .sr-image-robot-hand {
-            right: 5px;
-            height: calc(100% - 10px);
-            max-height: 124px;
+            right: 8px;
+            height: calc(100% - 8px);
+            max-height: 148px;
         }
 
         body.user-desktop-shell .sr-image-speech {
-            top: 16px;
-            right: clamp(124px, 16vw, 170px);
-            width: 142px;
-            min-height: 76px;
-            padding: 10px 11px;
-            border-radius: 16px;
+            display: flex !important;
+            top: 18px;
+            right: clamp(170px, 20vw, 220px);
+            width: 154px;
+            min-height: 84px;
+            padding: 12px 13px;
+            border-radius: 18px;
         }
 
         body.user-desktop-shell .sr-image-speech::after {
-            right: -12px;
-            bottom: 15px;
-            width: 20px;
-            height: 18px;
+            right: -14px;
+            bottom: 18px;
+            width: 22px;
+            height: 20px;
         }
 
         body.user-desktop-shell .sr-image-speech > strong {
             margin-bottom: 4px;
-            font-size: 0.74rem;
+            font-size: 0.8rem;
         }
 
         body.user-desktop-shell .sr-image-speech > span {
-            font-size: 0.55rem;
-            line-height: 1.14;
+            font-size: 0.58rem;
+            line-height: 1.15;
         }
 
         body.user-desktop-shell .sr-image-head-icons {
-            --sr-head-orbit-radius: 27px;
-            top: 10px;
-            right: 27px;
-            width: 78px;
-            height: 78px;
+            display: block !important;
+            --sr-head-orbit-radius: 36px;
+            --sr-head-orbit-tilt: 74deg;
+            --sr-head-orbit-untilt: -74deg;
+            --sr-head-orbit-roll: -4deg;
+            top: -10px;
+            right: 46px;
+            width: 100px;
+            height: 60px;
         }
 
         body.user-desktop-shell .sr-image-head-icons::before {
-            inset: 12px;
+            inset: 4px;
         }
 
         body.user-desktop-shell .sr-image-head-icon {
-            --sr-head-icon-size: 18px;
-            font-size: 0.46rem;
+            --sr-head-icon-size: 19px;
+            font-size: 0.48rem;
         }
 
         body.user-desktop-shell .sr-image-head-icon:nth-child(3) {
-            --sr-head-icon-size: 22px;
+            --sr-head-icon-size: 23px;
         }
 
         body.user-desktop-shell .sr-welcome-stack {

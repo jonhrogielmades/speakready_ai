@@ -6953,18 +6953,114 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     -webkit-text-fill-color: #0f172a !important;
   }
 
-  body:not(.admin-shell) :is(.sr-page-hero, .mod-hero, .ll-hero, .setup-hero, .premium-hero) {
-    border-radius: var(--user-panel-radius) !important;
-    border: 1px solid var(--user-panel-border) !important;
-    box-shadow: var(--user-panel-shadow) !important;
+  body:not(.admin-shell) :is(
+    .sr-page-hero,
+    .mod-hero,
+    .ll-hero,
+    .setup-hero,
+    .premium-hero,
+    .modules-hero,
+    .vr-hero,
+    .mission-progress-hero,
+    .sr-learning-hero,
+    .coach-progress-hero,
+    .mastery-hero-card,
+    .notif-hero
+  ) {
+    border-radius: var(--user-panel-radius, 16px) !important;
+    border: 1px solid rgba(147, 197, 253, 0.48) !important;
+    box-shadow: 0 10px 26px rgba(37, 99, 235, 0.18) !important;
+    background:
+      radial-gradient(circle at 94% 8%, rgba(255, 255, 255, 0.3), transparent 25%),
+      radial-gradient(circle at 68% 86%, rgba(56, 189, 248, 0.22), transparent 28%),
+      linear-gradient(112deg, #2563eb 0%, #1d7fe4 48%, #38a9dc 100%) !important;
+    color: #f8fbff !important;
   }
 
-  body:not(.admin-shell).lm :is(.sr-page-hero, .mod-hero, .ll-hero, .setup-hero, .premium-hero) {
-    background: linear-gradient(135deg, #ffffff, #f8fafc) !important;
+  body:not(.admin-shell) :is(
+    .sr-page-hero,
+    .mod-hero,
+    .ll-hero,
+    .setup-hero,
+    .premium-hero,
+    .modules-hero,
+    .vr-hero,
+    .mission-progress-hero,
+    .sr-learning-hero,
+    .coach-progress-hero,
+    .mastery-hero-card,
+    .notif-hero
+  ) :is(
+    h1, h2, h3, h4, h5, h6,
+    .sr-page-hero-title,
+    .setup-hero-title,
+    .modules-hero-title,
+    .notif-hero-title,
+    .mastery-title,
+    .feedback-title,
+    .text-gradient-primary
+  ) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
   }
 
-  body:not(.admin-shell):not(.lm) :is(.sr-page-hero, .mod-hero, .ll-hero, .setup-hero, .premium-hero) {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.78)) !important;
+  body:not(.admin-shell) :is(
+    .sr-page-hero,
+    .mod-hero,
+    .ll-hero,
+    .setup-hero,
+    .premium-hero,
+    .modules-hero,
+    .vr-hero,
+    .mission-progress-hero,
+    .sr-learning-hero,
+    .coach-progress-hero,
+    .mastery-hero-card,
+    .notif-hero
+  ) :is(
+    p,
+    .sr-page-hero-subtitle,
+    .setup-hero-subtitle,
+    .modules-hero-subtitle,
+    .notif-hero-subtitle,
+    .mastery-subtitle,
+    .feedback-subtitle
+  ) {
+    color: rgba(248, 251, 255, 0.9) !important;
+    -webkit-text-fill-color: rgba(248, 251, 255, 0.9) !important;
+  }
+
+  body:not(.admin-shell) :is(
+    .sr-page-hero,
+    .mod-hero,
+    .ll-hero,
+    .setup-hero,
+    .premium-hero,
+    .modules-hero,
+    .vr-hero,
+    .mission-progress-hero,
+    .sr-learning-hero,
+    .coach-progress-hero,
+    .mastery-hero-card,
+    .notif-hero
+  ) :is(
+    .setup-hero-icon,
+    .modules-hero-icon,
+    .vr-hero-icon,
+    .mission-hero-icon,
+    .learning-hero-icon,
+    .coach-hero-icon,
+    .reports-hero-icon,
+    .mastery-badge,
+    .notif-hero-icon,
+    .account-hero-icon,
+    .skill-tree-hero-icon,
+    .feedback-chat-mark
+  ) {
+    background: rgba(15, 23, 42, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.28) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
   }
 
   body:not(.admin-shell) :is(.fa, .fa-solid, .fa-regular, .fa-light, .fa-brands) {
@@ -7114,14 +7210,51 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     color: var(--saas-copy);
   }
 
-  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .db-stat-card, .ll-stat-card, .print-card, .module-card, .perk-card, .level-card, .sr-card, .sr-stat-card, .tracker-panel, .chapter-card, .mod-hero, .retry-panel, .stat-box, .card, .accordion-item, .sr-page-hero, .ll-hero, .setup-hero, .premium-hero) {
+  body:not(.admin-shell) :is(
+    .premium-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .premium-panel,
+    .setup-panel,
+    .panel,
+    .db-stat-card,
+    .ll-stat-card,
+    .print-card,
+    .module-card,
+    .perk-card,
+    .level-card,
+    .sr-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .sr-stat-card,
+    .tracker-panel,
+    .chapter-card,
+    .retry-panel,
+    .stat-box,
+    .card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .accordion-item
+  ) {
     background: var(--saas-panel) !important;
     border: 1px solid var(--saas-line) !important;
     border-radius: var(--saas-radius) !important;
     box-shadow: var(--saas-shadow) !important;
   }
 
-  body:not(.admin-shell) :is(.premium-card, .premium-panel, .setup-panel, .panel, .db-stat-card, .ll-stat-card, .print-card, .module-card, .perk-card, .level-card, .sr-card, .sr-stat-card, .tracker-panel, .chapter-card, .mod-hero, .retry-panel, .stat-box, .card):hover {
+  body:not(.admin-shell) :is(
+    .premium-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .premium-panel,
+    .setup-panel,
+    .panel,
+    .db-stat-card,
+    .ll-stat-card,
+    .print-card,
+    .module-card,
+    .perk-card,
+    .level-card,
+    .sr-card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero),
+    .sr-stat-card,
+    .tracker-panel,
+    .chapter-card,
+    .retry-panel,
+    .stat-box,
+    .card:not(.sr-hero-card):not(.sr-hero-image-panel):not(.sr-page-hero):not(.setup-hero):not(.modules-hero):not(.vr-hero):not(.mission-progress-hero):not(.sr-learning-hero):not(.coach-progress-hero):not(.mastery-hero-card):not(.notif-hero)
+  ):hover {
     border-color: var(--saas-line-strong) !important;
     box-shadow: var(--saas-shadow-lg) !important;
   }
