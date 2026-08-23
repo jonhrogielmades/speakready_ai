@@ -1953,6 +1953,12 @@ body:is(.user-desktop-shell, .user-mobile-shell) #voice-rehearsal-page .voice-re
     min-width: 0 !important;
 }
 
+body.user-mobile-shell.user-app-fullscreen #voice-rehearsal-page .sr-page-actions.vr-tabs-wrap {
+    position: static !important;
+    top: auto !important;
+    z-index: auto !important;
+}
+
 body:is(.user-desktop-shell, .user-mobile-shell) #voice-rehearsal-page :is(
     .instant-feedback-badge,
     .instant-feedback-status,
