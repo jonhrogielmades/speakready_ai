@@ -1405,7 +1405,7 @@
             min-height: 548px;
             gap: 15px;
             padding: 19px 20px 26px;
-            border: 1.5px solid var(--mobile-preview-card-border);
+            border: 0;
             border-radius: 15px;
             background: var(--mobile-preview-card-bg);
             box-shadow: 0 28px 58px var(--mobile-preview-shadow);

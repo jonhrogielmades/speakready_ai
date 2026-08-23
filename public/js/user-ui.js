@@ -594,6 +594,19 @@
         }
     }
 
+    function refreshFullscreenLayouts() {
+        refreshViewportMetrics();
+        window.dispatchEvent(new Event('resize'));
+
+        window.requestAnimationFrame(function () {
+            window.dispatchEvent(new Event('resize'));
+        });
+
+        window.setTimeout(function () {
+            window.dispatchEvent(new Event('resize'));
+        }, 220);
+    }
+
     async function toggleUserFullscreen(button) {
         if (userApp.fullscreenBusy) return;
 
@@ -621,7 +634,7 @@
                 await root.requestFullscreen();
                 rememberFullscreenPreference(true);
             }
-            refreshViewportMetrics();
+            refreshFullscreenLayouts();
         } catch (error) {
             console.warn('Fullscreen toggle failed:', error);
             showSafeNavigationStatus('Fullscreen could not be changed. Try again from the button.');
@@ -643,7 +656,7 @@
     function updateFullscreenButtons() {
         var isFullscreen = Boolean(fullscreenElement());
         document.body.classList.toggle('user-app-fullscreen', isFullscreen);
-        refreshViewportMetrics();
+        refreshFullscreenLayouts();
 
         document.querySelectorAll('[data-user-fullscreen-toggle], #dbFullscreenBtn, #mobFullscreenBtn').forEach(function (button) {
             button.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');

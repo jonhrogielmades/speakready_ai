@@ -90,6 +90,53 @@
             min-height: calc(var(--sr-visual-vh) - var(--mob-top-h) - var(--mob-safe-top) - var(--mob-nav-h) - var(--mob-safe-bottom));
          }
 
+         body.mobile-shell.user-app-fullscreen :is(#sec-progress-tracking, #voice-rehearsal-page) {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            padding-bottom: calc(var(--mob-safe-bottom) + 18px) !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen :is(#sec-progress-tracking, #voice-rehearsal-page) :is(.progress-chart-panel, .vr-progress-panel) {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen :is(#sec-progress-tracking, #voice-rehearsal-page) :is(.progress-chart-frame, .vr-chart-frame) {
+            position: relative !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            height: clamp(168px, 31svh, 240px) !important;
+            max-height: calc(var(--sr-visual-vh) - var(--mob-top-h) - var(--mob-safe-top) - var(--mob-nav-h) - var(--mob-safe-bottom) - 130px) !important;
+            overflow: hidden !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #voice-rehearsal-page .vr-chart-frame {
+            height: clamp(170px, 32svh, 250px) !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen :is(#sec-progress-tracking, #voice-rehearsal-page) :is(.progress-chart-frame, .vr-chart-frame) > canvas {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen :is(#sec-progress-tracking, #voice-rehearsal-page) .table-responsive {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            -webkit-overflow-scrolling: touch;
+         }
+
+         body.mobile-shell.user-app-fullscreen #voice-rehearsal-page .voice-history-table {
+            max-width: 100% !important;
+         }
+
          body.mobile-shell .mob-profile-dropdown,
          body.mobile-shell .mob-notif-dropdown,
          body.mobile-shell .mob-notification-dropdown {
