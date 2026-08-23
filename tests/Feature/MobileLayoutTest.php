@@ -30,6 +30,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
             ->assertSee('--mob-card-gap: 12px', false)
+            ->assertSee('--sr-visual-vh', false)
             ->assertSee('.tracker-panel', false)
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -51,6 +52,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
+            ->assertSee('--sr-visual-vh', false)
             ->assertSee('id="mob-bottom-nav"', false)
             ->assertDontSee('class="db-sidebar"', false);
     }
@@ -154,6 +156,28 @@ class MobileLayoutTest extends TestCase
         );
 
         $this->assertStringContainsString('class="mob-nav-item mob-nav-primary ', $content);
+    }
+
+    public function test_user_mobile_shell_includes_fullscreen_viewport_hardening(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('id="mobFullscreenBtn"', false)
+            ->assertSee('data-user-fullscreen-toggle', false)
+            ->assertSee('body.mobile-shell.user-app-fullscreen #mob-content', false)
+            ->assertSee('height: var(--sr-visual-vh) !important', false)
+            ->assertSee('js/main.js?v=7', false)
+            ->assertSee('js/user-ui.js', false)
+            ->assertSee('v=13', false);
     }
 
     public function test_user_mobile_shell_does_not_render_quick_navigation_launcher(): void

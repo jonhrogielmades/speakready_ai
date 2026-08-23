@@ -1318,7 +1318,7 @@
             width: 100%;
             max-width: 100% !important;
             border: 0;
-            background: transparent;
+            background: transparent !important;
             box-shadow: none;
             overflow: visible;
          }
@@ -1328,36 +1328,134 @@
          }
 
          .mobile-preview-image-swiper {
-            width: 100%;
+            --mobile-preview-card-bg: var(--sf, #ffffff);
+            --mobile-preview-card-border: #0f172a;
+            --mobile-preview-title: var(--tx, #0f172a);
+            --mobile-preview-body: var(--tx2, #334155);
+            --mobile-preview-list: var(--tx, #0f172a);
+            --mobile-preview-kicker: color-mix(in srgb, var(--tx2, #334155) 58%, var(--pur, #2563eb) 42%);
+            --mobile-preview-badge-bg: color-mix(in srgb, var(--tx, #0f172a) 78%, #2563eb 22%);
+            --mobile-preview-check-bg: color-mix(in srgb, var(--bg3, #e8eef7) 72%, var(--pur, #2563eb) 28%);
+            --mobile-preview-check: color-mix(in srgb, var(--pur, #2563eb) 76%, var(--tx, #0f172a) 24%);
+            --mobile-preview-dot: color-mix(in srgb, var(--tx3, #64748b) 22%, transparent);
+            --mobile-preview-dot-active: color-mix(in srgb, var(--pur, #2563eb) 68%, #06b6d4 32%);
+            --mobile-preview-control-bg: color-mix(in srgb, var(--sf, #ffffff) 92%, transparent);
+            --mobile-preview-control: var(--tx, #0f172a);
+            --mobile-preview-shadow: rgba(15, 23, 42, 0.14);
+            width: min(calc(100vw - 8px), 410px);
+            max-width: none;
+            margin-left: 50%;
+            padding: 4px 0 44px;
             overflow: visible;
+            isolation: isolate;
+            transform: translateX(-50%);
+            perspective: 1200px;
          }
 
          .mobile-preview-image-swiper .swiper-wrapper {
             align-items: stretch;
          }
 
+         html.lm #landing .mobile-preview-image-swiper,
+         html[data-theme="light"] #landing .mobile-preview-image-swiper,
+         body.lm #landing .mobile-preview-image-swiper {
+            --mobile-preview-card-bg: #ffffff;
+            --mobile-preview-card-border: #0f172a;
+            --mobile-preview-title: var(--tx, #0f172a);
+            --mobile-preview-body: var(--tx2, #334155);
+            --mobile-preview-list: var(--tx, #0f172a);
+            --mobile-preview-kicker: color-mix(in srgb, var(--tx2, #334155) 48%, var(--pur, #2563eb) 52%);
+            --mobile-preview-badge-bg: color-mix(in srgb, var(--tx, #0f172a) 82%, #2563eb 18%);
+            --mobile-preview-check-bg: color-mix(in srgb, #eff6ff 78%, var(--pur, #2563eb) 22%);
+            --mobile-preview-check: color-mix(in srgb, var(--pur, #2563eb) 86%, #0f172a 14%);
+            --mobile-preview-dot: #d9e7f8;
+            --mobile-preview-dot-active: color-mix(in srgb, var(--pur, #2563eb) 66%, #06b6d4 34%);
+            --mobile-preview-control-bg: rgba(255, 255, 255, 0.96);
+            --mobile-preview-shadow: rgba(22, 34, 58, 0.14);
+         }
+
+         html.dm #landing .mobile-preview-image-swiper,
+         html[data-theme="dark"] #landing .mobile-preview-image-swiper,
+         body.dm #landing .mobile-preview-image-swiper,
+         html:not(.lm) body:not(.lm) #landing .mobile-preview-image-swiper {
+            --mobile-preview-card-bg: color-mix(in srgb, var(--sf, #171d2d) 92%, #ffffff 8%);
+            --mobile-preview-card-border: rgba(248, 250, 252, 0.72);
+            --mobile-preview-title: #f8fafc;
+            --mobile-preview-body: #cbd5e1;
+            --mobile-preview-list: #f1f5f9;
+            --mobile-preview-kicker: color-mix(in srgb, #93c5fd 70%, #cbd5e1 30%);
+            --mobile-preview-badge-bg: color-mix(in srgb, var(--pur, #60a5fa) 46%, #020617 54%);
+            --mobile-preview-check-bg: rgba(96, 165, 250, 0.16);
+            --mobile-preview-check: #93c5fd;
+            --mobile-preview-dot: rgba(148, 163, 184, 0.28);
+            --mobile-preview-dot-active: color-mix(in srgb, #93c5fd 54%, var(--pur, #60a5fa) 46%);
+            --mobile-preview-control-bg: color-mix(in srgb, var(--sf, #171d2d) 88%, transparent);
+            --mobile-preview-shadow: rgba(0, 0, 0, 0.36);
+         }
+
          .mobile-preview-image-slide {
+            position: relative;
+            z-index: 1;
+            box-sizing: border-box;
+            width: min(calc(100vw - 52px), 345px) !important;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 18px;
+            min-height: 548px;
+            gap: 15px;
+            padding: 19px 20px 26px;
+            border: 1.5px solid var(--mobile-preview-card-border);
+            border-radius: 15px;
+            background: var(--mobile-preview-card-bg);
+            box-shadow: 0 28px 58px var(--mobile-preview-shadow);
+            opacity: 0.2;
+            filter: blur(1px) saturate(0.78);
+            transition: opacity 240ms ease, transform 240ms ease, filter 240ms ease, box-shadow 240ms ease;
+            pointer-events: none;
+            overflow: hidden;
+            will-change: transform, opacity, filter;
+         }
+
+         .mobile-preview-image-slide.swiper-slide-active {
+            z-index: 5;
+            opacity: 1;
+            filter: none;
+            pointer-events: auto;
+            box-shadow: 0 30px 62px var(--mobile-preview-shadow);
+         }
+
+         .mobile-preview-image-slide.swiper-slide-prev,
+         .mobile-preview-image-slide.swiper-slide-next {
+            z-index: 3;
+            opacity: 0.48;
+            filter: blur(0.35px) saturate(0.9);
+         }
+
+         .mobile-preview-image-slide.swiper-slide-prev {
+            transform-origin: right center;
+         }
+
+         .mobile-preview-image-slide.swiper-slide-next {
+            transform-origin: left center;
          }
 
          .mobile-preview-shell-img {
             display: block;
             width: 100%;
             max-width: 100%;
+            aspect-ratio: 2 / 3;
             height: auto;
-            border-radius: 18px;
-            filter: drop-shadow(0 18px 34px rgba(15, 23, 42, 0.18));
+            object-fit: contain;
+            border-radius: 28px;
+            filter: drop-shadow(0 15px 24px rgba(15, 23, 42, 0.22));
             user-select: none;
          }
 
          .mobile-preview-copy {
             width: min(100%, 760px);
             margin: 0 auto;
-            padding: 0 14px 10px;
+            padding: 0;
             text-align: center;
             color: var(--tx);
          }
@@ -1367,47 +1465,51 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 9px;
-            color: #2563eb;
-            font-size: 0.72rem;
+            max-width: 100%;
+            margin-bottom: 11px;
+            color: var(--mobile-preview-kicker) !important;
+            font-size: 0.68rem;
             font-weight: 900;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.12em;
+            line-height: 1.25;
+            text-align: center;
             text-transform: uppercase;
          }
 
          .mobile-preview-copy-kicker span {
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 999px;
-            background: #1f3b66;
+            background: var(--mobile-preview-badge-bg);
             color: #ffffff;
             font-size: 0.72rem;
             letter-spacing: 0;
          }
 
          .mobile-preview-copy-title {
-            margin: 0 0 10px;
-            color: var(--tx);
-            font-size: clamp(1.2rem, 4vw, 1.7rem);
+            margin: 0 auto 10px;
+            max-width: 310px;
+            color: var(--mobile-preview-title) !important;
+            font-size: 1.16rem;
             font-weight: 900;
-            line-height: 1.18;
+            line-height: 1.22;
          }
 
          .mobile-preview-copy-text {
-            max-width: 640px;
-            margin: 0 auto 14px;
-            color: var(--tx2);
-            font-size: 0.95rem;
-            line-height: 1.6;
+            max-width: 302px;
+            margin: 0 auto 16px;
+            color: var(--mobile-preview-body) !important;
+            font-size: 0.85rem;
+            line-height: 1.55;
          }
 
          .mobile-preview-copy-list {
             display: grid;
-            gap: 9px;
-            max-width: 520px;
+            gap: 11px;
+            max-width: 306px;
             margin: 0 auto;
             padding: 0;
             list-style: none;
@@ -1416,10 +1518,10 @@
 
          .mobile-preview-copy-list li {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
-            color: var(--tx);
-            font-size: 0.92rem;
+            color: var(--mobile-preview-list) !important;
+            font-size: 0.82rem;
             font-weight: 700;
             line-height: 1.35;
          }
@@ -1428,24 +1530,19 @@
             width: 22px;
             height: 22px;
             flex: 0 0 22px;
+            margin-top: -1px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 999px;
-            background: rgba(34, 197, 94, 0.12);
-            color: #16a34a;
-            font-size: 0.68rem;
+            background: var(--mobile-preview-check-bg);
+            color: var(--mobile-preview-check);
+            font-size: 0.62rem;
          }
 
          .mobile-preview-image-swiper .mobile-preview-next,
          .mobile-preview-image-swiper .mobile-preview-prev {
-            width: 30px;
-            height: 30px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.96);
-            border: 1px solid rgba(37, 99, 235, 0.18);
-            color: #2563eb;
-            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+            display: none !important;
          }
 
          .mobile-preview-image-swiper .mobile-preview-next::after,
@@ -1455,27 +1552,76 @@
          }
 
          .mobile-preview-image-swiper .mobile-preview-pagination {
-            position: static !important;
+            position: absolute !important;
+            left: 50% !important;
+            bottom: 10px !important;
+            transform: translateX(-50%) !important;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
             min-height: 18px;
-            margin-top: 20px;
+            width: 140px !important;
+            margin: 0;
+            z-index: 11;
          }
 
          .mobile-preview-image-swiper .swiper-pagination-bullet {
             width: 6px;
             height: 6px;
-            background: #2563eb;
-            opacity: 0.38;
+            background: var(--mobile-preview-dot);
+            opacity: 1;
             margin: 0 !important;
          }
 
          .mobile-preview-image-swiper .swiper-pagination-bullet-active {
-            width: 16px;
+            width: 20px;
+            background: var(--mobile-preview-dot-active);
             border-radius: 999px;
             opacity: 1;
+         }
+
+         .mobile-preview-autoplay-toggle {
+            position: absolute;
+            right: calc(50% - 116px);
+            bottom: 5px;
+            z-index: 12;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 1px solid var(--mobile-preview-card-border);
+            border-radius: 999px;
+            background: var(--mobile-preview-control-bg);
+            color: var(--mobile-preview-control);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+         }
+
+         .mobile-preview-autoplay-toggle i {
+            font-size: 0.64rem;
+            line-height: 1;
+         }
+
+         @media (max-width: 374.98px) {
+            .mobile-preview-image-slide {
+               min-height: 528px;
+               padding: 18px 16px 24px;
+            }
+
+            .mobile-preview-copy-title {
+               font-size: 1.06rem;
+            }
+
+            .mobile-preview-copy-text,
+            .mobile-preview-copy-list li {
+               font-size: 0.8rem;
+            }
+
+            .mobile-preview-autoplay-toggle {
+               right: calc(50% - 106px);
+            }
          }
 
          .ui-mobile-wire {
@@ -3468,27 +3614,8 @@
                    $previewClarity = 92;
                    $previewGrammar = 95;
                 @endphp
-                <div class="row align-items-center mt-4">
-                  <div class="col-lg-5 col-md-6 mb-4 mb-lg-0 text-center position-relative order-1 order-lg-2">
-                     <style>
-                        .mic-3d-anim {
-                           animation: float3d 4s ease-in-out infinite;
-                           filter: drop-shadow(0 20px 30px rgba(0,0,0,0.2));
-                           transform-style: preserve-3d;
-                           transition: transform 0.5s ease;
-                        }
-                        .mic-3d-anim:hover {
-                           transform: scale(1.05) rotateY(10deg) rotateX(5deg);
-                        }
-                        @keyframes float3d {
-                           0% { transform: translateY(0px) rotateY(0deg); }
-                           50% { transform: translateY(-15px) rotateY(5deg); }
-                           100% { transform: translateY(0px) rotateY(0deg); }
-                        }
-                     </style>
-                     <img src="{{ asset('img/hero_boy.png') }}" class="img-fluid mic-3d-anim afu" alt="SpeakReady AI Interview Practice" style="max-height: 450px; animation-delay: .1s; mix-blend-mode: multiply;">
-                  </div>
-                  <div class="col-lg-7 col-md-6 text-center order-2 order-lg-1">
+                <div class="row align-items-center justify-content-center mt-4">
+                  <div class="col-lg-7 col-md-10 text-center">
                      <h1 class="h1 afu" style="animation-delay:.12s">Practice Smarter.<br><span class="gt">Interview Better.</span></h1>
                      <p class="mx-auto afu" style="max-width:580px;font-size:clamp(.95rem,1.8vw,1.2rem);color:var(--tx2);margin-bottom:36px;animation-delay:.2s">SpeakReady AI offers simulated mock interviews, personalized feedback, and comprehensive coaching to help you land your dream opportunity.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap afu" style="animation-delay:.28s">
@@ -3520,7 +3647,7 @@
                    </div>
                 </div>
 
-                <div class="landing-section-heading mobile-demo-preview-heading text-center mt-4 mb-3 afu" style="animation-delay:.48s">
+                <div id="demo-preview" class="landing-section-heading mobile-demo-preview-heading text-center mt-4 mb-3 afu" style="animation-delay:.48s">
                   <span class="slbl">Demo Preview</span>
                   <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                 </div>
@@ -3714,6 +3841,9 @@
                                  @endforeach
                               </div>
                               <div class="swiper-pagination mobile-preview-pagination"></div>
+                              <button type="button" class="mobile-preview-autoplay-toggle" aria-label="Pause demo preview">
+                                 <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                              </button>
                               <div class="swiper-button-next mobile-preview-next"></div>
                               <div class="swiper-button-prev mobile-preview-prev"></div>
                            </div>
@@ -5307,9 +5437,15 @@
             color: var(--tx) !important;
          }
 
-         #landing .ui-device-mobile {
+         #landing .ui-device-mobile:not(.ui-device-mobile-image) {
             background: var(--mobile-preview-surface) !important;
             border-color: var(--mobile-preview-outline) !important;
+         }
+
+         #landing .ui-device-mobile.ui-device-mobile-image {
+            background: transparent !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
          }
 
          #landing .ui-device-mobile .ui-device-title {
@@ -5452,11 +5588,6 @@
             background: #dbeafe !important;
          }
 
-         html:not(.lm) #hero .mic-3d-anim {
-            mix-blend-mode: normal !important;
-            filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.34));
-         }
-
          #lofc .tab-sw-btn {
             color: var(--tx2) !important;
          }
@@ -5539,10 +5670,21 @@
 
              if(typeof Swiper !== 'undefined') {
                  document.querySelectorAll(".mobilePreviewSwiper").forEach(function(previewEl) {
-                     new Swiper(previewEl, {
-                         slidesPerView: 1,
-                         spaceBetween: 12,
+                     const previewSwiper = new Swiper(previewEl, {
+                         slidesPerView: "auto",
+                         centeredSlides: true,
+                         spaceBetween: 0,
+                         effect: "coverflow",
+                         coverflowEffect: {
+                             rotate: 0,
+                             stretch: 96,
+                             depth: 132,
+                             modifier: 1,
+                             scale: 0.92,
+                             slideShadows: false,
+                         },
                          loop: true,
+                         watchSlidesProgress: true,
                          autoplay: {
                              delay: 3000,
                              disableOnInteraction: false,
@@ -5556,6 +5698,25 @@
                              prevEl: previewEl.querySelector(".mobile-preview-prev"),
                          },
                      });
+
+                     const autoplayToggle = previewEl.querySelector(".mobile-preview-autoplay-toggle");
+                     if (autoplayToggle) {
+                         autoplayToggle.addEventListener("click", function() {
+                             const icon = autoplayToggle.querySelector("i");
+                             const paused = autoplayToggle.classList.toggle("is-paused");
+                             if (paused) {
+                                 previewSwiper.autoplay?.stop();
+                                 autoplayToggle.setAttribute("aria-label", "Play demo preview");
+                                 icon?.classList.remove("fa-pause");
+                                 icon?.classList.add("fa-play");
+                             } else {
+                                 previewSwiper.autoplay?.start();
+                                 autoplayToggle.setAttribute("aria-label", "Pause demo preview");
+                                 icon?.classList.remove("fa-play");
+                                 icon?.classList.add("fa-pause");
+                             }
+                         });
+                     }
                  });
 
              }
@@ -5675,7 +5836,16 @@
             };
 
             const toggleBackToTop = function() {
-               backToTopBtn.classList.toggle('is-visible', window.scrollY > 420);
+               const demoTargets = [
+                  document.getElementById('demo-preview'),
+                  document.querySelector('.mobilePreviewSwiper')
+               ].filter(Boolean);
+               const demoPreviewVisible = demoTargets.some(function(target) {
+                  const rect = target.getBoundingClientRect();
+                  return rect.bottom > 72 && rect.top < window.innerHeight - 72;
+               });
+
+               backToTopBtn.classList.toggle('is-visible', window.scrollY > 420 && !demoPreviewVisible);
             };
 
             toggleBackToTop();

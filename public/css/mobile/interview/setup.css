@@ -270,12 +270,12 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        width: 100vw;
-        min-width: 100vw;
+        width: 100%;
+        min-width: 0;
         height: 100vh;
-        height: 100dvh;
+        height: var(--sr-visual-vh, 100dvh);
         min-height: 100vh;
-        min-height: 100dvh;
+        min-height: var(--sr-visual-vh, 100dvh);
         margin: 0;
         padding: max(24px, env(safe-area-inset-top, 0px)) 20px max(24px, env(safe-area-inset-bottom, 0px));
         background: var(--bg, #ffffff);
@@ -4759,7 +4759,7 @@
 
     body.user-mobile-shell #mob-content:has(#sec-interview-setup) {
         box-sizing: border-box !important;
-        min-height: 100dvh !important;
+        min-height: var(--sr-visual-vh, 100dvh) !important;
     }
 
     #sec-interview-setup {

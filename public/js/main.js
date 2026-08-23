@@ -5,6 +5,66 @@ let chatHistory = [];
 let ovChartInst = null,
     anChartInst = null;
 
+/*  MOBILE VIEWPORT  */
+(function setupSpeakReadyViewportMetrics() {
+    const root = document.documentElement;
+    let frame = null;
+
+    function viewportSize() {
+        const visualViewport = window.visualViewport;
+        const width = visualViewport && visualViewport.width ? visualViewport.width : window.innerWidth;
+        const height = visualViewport && visualViewport.height ? visualViewport.height : window.innerHeight;
+
+        return {
+            width: Math.max(0, width || 0),
+            height: Math.max(0, height || 0)
+        };
+    }
+
+    function applyViewportMetrics() {
+        frame = null;
+        const size = viewportSize();
+
+        if (size.height > 0) {
+            root.style.setProperty('--sr-visual-vh', `${size.height.toFixed(2)}px`);
+        }
+
+        if (size.width > 0) {
+            root.style.setProperty('--sr-layout-vw', `${size.width.toFixed(2)}px`);
+        }
+
+        document.body?.classList.toggle('sr-browser-fullscreen', Boolean(document.fullscreenElement));
+    }
+
+    function queueViewportMetricsRefresh() {
+        if (frame !== null) {
+            window.cancelAnimationFrame(frame);
+        }
+
+        frame = window.requestAnimationFrame(applyViewportMetrics);
+    }
+
+    applyViewportMetrics();
+    window.SpeakReadyViewport = {
+        refresh: queueViewportMetricsRefresh,
+        refreshNow: applyViewportMetrics
+    };
+
+    window.addEventListener('resize', queueViewportMetricsRefresh, { passive: true });
+    window.addEventListener('orientationchange', () => {
+        queueViewportMetricsRefresh();
+        window.setTimeout(queueViewportMetricsRefresh, 120);
+        window.setTimeout(queueViewportMetricsRefresh, 320);
+    }, { passive: true });
+    document.addEventListener('fullscreenchange', queueViewportMetricsRefresh);
+    document.addEventListener('visibilitychange', queueViewportMetricsRefresh);
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', queueViewportMetricsRefresh, { passive: true });
+        window.visualViewport.addEventListener('scroll', queueViewportMetricsRefresh, { passive: true });
+    }
+})();
+
 /*  THEME  */
 function applyTheme() {
     const appliedTheme = window.SpeakReadyTheme

@@ -287,7 +287,7 @@
       <!-- CounterUp -->
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
-      <script src="{{ asset('js/main.js?v=6') }}"></script>
+      <script src="{{ asset('js/main.js?v=7') }}"></script>
       <!-- PWA Service Worker Registration -->
       <script>
          function closeDashboardSidebar() {

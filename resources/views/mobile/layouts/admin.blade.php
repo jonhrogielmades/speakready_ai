@@ -233,14 +233,16 @@
          #mob-content {
             padding-top: calc(var(--mob-top-h) + var(--mob-safe-top));
             padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 16px);
-            min-height: 100dvh;
+            min-height: 100vh;
+            min-height: var(--sr-visual-vh, 100dvh);
             overflow-x: hidden !important;
-            width: 100vw;
+            width: 100%;
             max-width: 100%;
          }
          .db-content { padding: 14px !important; }
 
          @include('mobile.partials.mobile-card-rhythm')
+         @include('mobile.partials.mobile-shell-viewport')
 
          /* ---- Admin Bottom Navigation Bar ---- */
          #mob-bottom-nav {
@@ -592,11 +594,11 @@
             body:not(.admin-mobile-shell) .modal-dialog:not(.modal-sm) {
                margin: 0 !important;
                max-width: 100% !important;
-               height: 100dvh;
+               height: var(--sr-visual-vh, 100dvh);
             }
             body:not(.admin-mobile-shell) .modal-dialog:not(.modal-sm) .modal-content {
                border-radius: 0 !important;
-               height: 100dvh;
+               height: var(--sr-visual-vh, 100dvh);
                border: none !important;
             }
             body:not(.admin-mobile-shell) .modal-xl .modal-dialog { margin: 0 !important; }
@@ -2585,7 +2587,7 @@
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <script src="{{ asset('js/main.js?v=6') }}"></script>
+      <script src="{{ asset('js/main.js?v=7') }}"></script>
 
       <script>
          function toggleMobileProfile(e, mode = 'pages') {

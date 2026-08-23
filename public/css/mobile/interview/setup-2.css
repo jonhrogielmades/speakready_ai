@@ -6,7 +6,7 @@ html.interview-setup-page-root,
 
     body.interview-setup-page #mob-content {
         box-sizing: border-box !important;
-        min-height: 100dvh !important;
+        min-height: var(--sr-visual-vh, 100dvh) !important;
     }
 
     body.interview-setup-page #userAppContent,

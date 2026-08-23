@@ -2126,6 +2126,7 @@
             function enterMobileFullscreen() {
                 if (!window.matchMedia('(max-width: 768px)').matches) return;
                 document.body.classList.add('mobile-interview-fullscreen');
+                window.SpeakReadyViewport?.refresh?.();
                 updateMobileFullscreenToggle();
 
                 const root = document.documentElement;
@@ -2138,6 +2139,7 @@
 
             function exitMobileFullscreen() {
                 document.body.classList.remove('mobile-interview-fullscreen');
+                window.SpeakReadyViewport?.refresh?.();
                 updateMobileFullscreenToggle();
 
                 if (document.fullscreenElement && document.exitFullscreen) {
@@ -2172,6 +2174,7 @@
                     document.body.classList.remove('mobile-interview-fullscreen');
                 }
 
+                window.SpeakReadyViewport?.refresh?.();
                 updateMobileFullscreenToggle();
             }
 

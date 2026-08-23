@@ -844,9 +844,10 @@
          #mob-content {
             padding-top: calc(var(--mob-top-h) + var(--mob-safe-top));
             padding-bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 8px);
-            min-height: 100dvh;
+            min-height: 100vh;
+            min-height: var(--sr-visual-vh, 100dvh);
             overflow-x: hidden !important;
-            width: 100vw;
+            width: 100%;
             max-width: 100%;
          }
          .db-content { padding: 10px 12px 12px !important; }
@@ -859,16 +860,17 @@
          body.mobile-interview-fullscreen #mob-content {
             padding-top: 0 !important;
             padding-bottom: 0 !important;
-            min-height: 100dvh;
+            min-height: var(--sr-visual-vh, 100dvh);
             overflow-y: auto;
          }
 
          body.mobile-interview-fullscreen #mob-content > .db-content {
-            min-height: 100dvh;
+            min-height: var(--sr-visual-vh, 100dvh);
             padding: 0 !important;
          }
 
          @include('mobile.partials.mobile-card-rhythm')
+         @include('mobile.partials.mobile-shell-viewport')
 
          /* ---- Bottom Navigation Bar ---- */
          #mob-bottom-nav {
@@ -2928,10 +2930,10 @@
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <script src="{{ asset('js/main.js?v=6') }}"></script>
+      <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=12" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=13" defer></script>
 
       <script>
          // Close open header menus with Escape
