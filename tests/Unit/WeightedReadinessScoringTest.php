@@ -450,6 +450,50 @@ class WeightedReadinessScoringTest extends TestCase
         ], $duplicateAnswers]));
     }
 
+    public function test_reused_provider_feedback_template_is_rejected_and_repaired_per_question(): void
+    {
+        $sameAnswer = 'I organize complex releases with checklists, coordinate dependencies, and verify each handoff before launch.';
+        $answers = [
+            [
+                'id' => 831,
+                'question_type' => 'Personal',
+                'question' => 'What is your greatest strength?',
+                'answer' => $sameAnswer,
+            ],
+            [
+                'id' => 832,
+                'question_type' => 'Personal',
+                'question' => 'What salary range are you expecting?',
+                'answer' => $sameAnswer,
+            ],
+        ];
+
+        $items = [];
+        foreach ($answers as $answer) {
+            $item = $this->feedbackItem((int) $answer['id'], 85, 85, 85, 85, 85, false, 0);
+            $item['evidence_quotes'] = [$sameAnswer];
+            $item['question_focus'] = $answer['question'];
+            $item['answer_alignment'] = 'directly_addressed';
+            $item['missing_criteria'] = [];
+            $item['ai_feedback'] = 'For "'.$answer['question'].'", you stated "'.$sameAnswer.'". This directly addressed the question and gives enough evidence for this prompt. Next attempt: add one truthful supporting detail.';
+            $items[] = $item;
+        }
+
+        $response = ['per_question_feedback' => $items];
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [$response, $answers]));
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [$response, $answers, []]);
+        $first = $normalized['per_question_feedback'][0];
+        $second = $normalized['per_question_feedback'][1];
+
+        $this->assertSame('local_evidence', $first['evaluation_source']);
+        $this->assertSame('local_evidence', $second['evaluation_source']);
+        $this->assertNotSame($first['ai_feedback'], $second['ai_feedback']);
+        $this->assertStringContainsString('Question-specific focus: this strength prompt', $first['ai_feedback']);
+        $this->assertStringContainsString('Question-specific focus: this salary-expectation prompt', $second['ai_feedback']);
+    }
+
     public function test_valid_items_are_preserved_when_another_question_item_is_invalid(): void
     {
         $answers = [
@@ -651,7 +695,12 @@ class WeightedReadinessScoringTest extends TestCase
         $item['question_focus'] = $question;
         $item['answer_alignment'] = $alignment;
         $item['missing_criteria'] = [];
-        $item['ai_feedback'] = 'For "'.$question.'", the exact answer evidence "'.$answerText.'" supports this question-specific evaluation.';
+        $focusTerms = implode(', ', array_slice(array_values(array_filter(
+            preg_split('/[^a-z0-9]+/i', strtolower($question)) ?: [],
+            fn (string $term): bool => strlen($term) > 3 && ! in_array($term, ['what', 'your', 'does', 'would', 'explain'], true)
+        )), 0, 4));
+        $focusTerms = $focusTerms !== '' ? $focusTerms : 'the exact prompt';
+        $item['ai_feedback'] = 'For "'.$question.'", the exact answer evidence "'.$answerText.'" directly addressed this question. Question-specific focus terms: '.$focusTerms.'. This explains the score using only the evidence from this answer.';
 
         return $item;
     }

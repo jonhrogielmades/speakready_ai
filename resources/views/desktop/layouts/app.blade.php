@@ -111,6 +111,12 @@
                <div class="db-nav-section">Personal Goals</div>
                <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}" title="Mastery"><i class="fa-solid fa-medal"></i><span class="db-nav-label">Mastery</span></a>
             </div>
+            <div class="db-bottom">
+               <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                  @csrf
+                  <button type="submit" class="db-nl db-nav-danger" title="Log Out" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
+               </form>
+            </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
          <!-- Main Content Area -->

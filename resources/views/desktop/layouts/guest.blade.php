@@ -1036,9 +1036,26 @@
                text-align: left;
             }
 
-            .landing-section-heading .slbl {
-               justify-content: flex-start;
-            }
+         .landing-section-heading .slbl {
+            justify-content: flex-start;
+         }
+
+         .mobile-demo-preview-heading {
+            align-items: center;
+            text-align: center;
+         }
+
+         .mobile-demo-preview-heading .slbl {
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+         }
+
+         .mobile-demo-preview-heading .stitle {
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+         }
 
             .slbl {
                margin-bottom: 10px;
@@ -3339,6 +3356,11 @@
                    </div>
                 </div>
 
+                <div class="landing-section-heading mobile-demo-preview-heading text-center mt-4 mb-3 afu" style="animation-delay:.48s">
+                  <span class="slbl">Demo Preview</span>
+                  <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
+                </div>
+
                 <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-12 adi">
                      <div class="ui-showcase">
@@ -4100,103 +4122,6 @@
             </div>
          </section>
 
-         <!-- DEMO PREVIEW GALLERY -->
-         <section id="demo-preview" class="sp position-relative">
-            <div class="aur aur-a" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
-            <div class="container position-relative" style="z-index:1">
-               <div class="text-center mb-5 rv">
-                  <span class="slbl">Demo Preview</span>
-                  <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
-               </div>
-
-               <div class="row justify-content-center">
-                   <div class="col-lg-10">
-                       <div class="gc p-2">
-                           <div class="swiper demoSwiper rounded" style="overflow:hidden">
-                               <div class="swiper-wrapper">
-                                   <!-- Slide 1: Overview -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-gauge-high fa-4x mb-4" style="color:var(--pur)"></i>
-                                           <h3 class="fs-3 fw-bold">Overview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track all your Philippine interview sessions and readiness.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 2: Mock Interview -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-microphone-lines fa-4x mb-4" style="color:#34d399"></i>
-                                           <h3 class="fs-3 fw-bold">Philippine Mock Interview</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Interactive AI avatar asking Philippine HR, BPO, IT, and fresh graduate questions.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 3: Voice Rehearsal -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-ear-listen fa-4x mb-4" style="color:#a855f7"></i>
-                                           <h3 class="fs-3 fw-bold">Voice Rehearsal</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Practice your enunciation and pacing with real-time feedback.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 4: Learning Lab -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-book-open fa-4x mb-4" style="color:#ef4444"></i>
-                                           <h3 class="fs-3 fw-bold">Learning Lab</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Access curated resources and tutorials for Philippine interview scenarios.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 5: AI Coach -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-robot fa-4x mb-4" style="color:#f59e0b"></i>
-                                           <h3 class="fs-3 fw-bold">AI Coach</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Get personalized advice and strategies from your AI mentor.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 6: Progress Tracking -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-chart-line fa-4x mb-4" style="color:#3b82f6"></i>
-                                           <h3 class="fs-3 fw-bold">Progress Tracking</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Visual charts tracking your improvement over time.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 7: Feedback Center -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-clipboard-check fa-4x mb-4" style="color:#10b981"></i>
-                                           <h3 class="fs-3 fw-bold">Feedback Center</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Actionable insights on content, tone, and delivery.</p>
-                                       </div>
-                                   </div>
-                                   <!-- Slide 8: Reports -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-file-invoice fa-4x mb-4" style="color:#6366f1"></i>
-                                           <h3 class="fs-3 fw-bold">Reports</h3>
-                                           <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Detailed summaries and exportable reports of your performance.</p>
-                                       </div>
-                                   </div>
-                                    <!-- Slide 9: Personal Mastery -->
-                                   <div class="swiper-slide text-center">
-                                       <div class="p-4" style="background:var(--bg); border-radius:8px; min-height:350px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                                           <i class="fa-solid fa-trophy fa-4x mb-4" style="color:#eab308"></i>
-                                            <h3 class="fs-3 fw-bold">Personal Mastery</h3>
-                                            <p class="mb-0" style="color:var(--tx2); max-width:400px; margin:0 auto;">Track your own baseline, personal best, and score-eligible assessment growth.</p>
-                                       </div>
-                                   </div>
-                               </div>
-                               <div class="swiper-pagination"></div>
-                               <div class="swiper-button-next" style="color:var(--pur)"></div>
-                               <div class="swiper-button-prev" style="color:var(--pur)"></div>
-                           </div>
-                       </div>
-                   </div>
-               </div>
-            </div>
-         </section>
-
          <!-- FAQ -->
          <section id="faq" class="sp" style="background:var(--bg2)">
             <div class="container">
@@ -4935,6 +4860,7 @@
          }
 
          #landing :where(.boc, #thbtn, #mbtog):hover,
+         #landing .nav-link.active,
          #landing .nav-link:hover,
          #pwa-install-prompt .pwa-btn-no:hover {
             background: rgba(59, 130, 246, 0.12) !important;
@@ -5241,7 +5167,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Counter-Up/1.0.0/jquery.counterup.min.js"></script>
 
-      <script src="{{ asset('js/main.js?v=6') }}"></script>
+      <script src="{{ asset('js/main.js?v=7') }}"></script>
       @if($errors->any())
       <script>
          document.addEventListener('DOMContentLoaded', function() {
@@ -5256,32 +5182,12 @@
       @endif
 
       <script>
-         // Initialize CounterUp and Swiper when document is ready
+         // Initialize CounterUp when document is ready
          $(document).ready(function() {
              if($.fn.counterUp) {
                  $('.counter').counterUp({
                      delay: 10,
                      time: 1500
-                 });
-             }
-
-             if(typeof Swiper !== 'undefined') {
-                 var swiper = new Swiper(".demoSwiper", {
-                     slidesPerView: 1,
-                     spaceBetween: 30,
-                     loop: true,
-                     autoplay: {
-                         delay: 3000,
-                         disableOnInteraction: false,
-                     },
-                     pagination: {
-                         el: ".swiper-pagination",
-                         clickable: true,
-                     },
-                     navigation: {
-                         nextEl: ".swiper-button-next",
-                         prevEl: ".swiper-button-prev",
-                     },
                  });
              }
          });

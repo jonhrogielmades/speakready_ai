@@ -3841,8 +3841,8 @@ body.admin-shell .db-logo {
 }
 
 body.admin-shell .db-logo .logo-i {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 16%;
   object-fit: contain;
 }
@@ -3856,17 +3856,24 @@ body.admin-shell .admin-brand {
 }
 
 body.admin-shell .db-nav {
-  padding-bottom: 16px;
+  padding: 10px 10px 12px;
+  overflow-y: hidden;
 }
 
 body.admin-shell .db-nl {
   min-width: 0;
   white-space: normal;
-  line-height: 1.25;
+  min-height: 34px;
+  padding: 7px 10px;
+  margin-bottom: 2px;
+  gap: 8px;
+  font-size: 0.8rem;
+  line-height: 1.15;
 }
 
 body.admin-shell .db-nl i {
-  flex: 0 0 20px;
+  flex: 0 0 18px;
+  font-size: 0.82rem;
 }
 
 body.admin-shell .db-main {
@@ -7398,8 +7405,8 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-logo {
-    min-height: 86px !important;
-    padding: 18px 18px 16px !important;
+    min-height: 76px !important;
+    padding: 14px 16px 12px !important;
     border-bottom: 1px solid var(--user-side-line) !important;
     background: color-mix(in srgb, var(--user-side-bg) 88%, transparent) !important;
     backdrop-filter: blur(18px) !important;
@@ -7412,9 +7419,9 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-logo .logo-i {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
     border: 2px solid #ffffff !important;
     border-radius: 16% !important;
     background: #ffffff !important;
@@ -7429,7 +7436,7 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-brand-text {
     color: var(--user-side-ink) !important;
-    font-size: 1.02rem !important;
+    font-size: 0.96rem !important;
     font-weight: 900 !important;
     line-height: 1.1 !important;
     letter-spacing: 0 !important;
@@ -7439,8 +7446,8 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-nav {
     flex: 1 1 auto !important;
     min-height: 0 !important;
-    padding: 16px 14px 18px !important;
-    overflow-y: auto !important;
+    padding: 10px 12px 12px !important;
+    overflow-y: hidden !important;
     overflow-x: hidden !important;
     scrollbar-width: thin !important;
     scrollbar-color: rgba(100, 116, 139, 0.35) transparent !important;
@@ -7462,11 +7469,11 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-nav-section {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
-    margin: 16px 8px 8px !important;
+    gap: 8px !important;
+    margin: 10px 7px 5px !important;
     padding: 0 !important;
     color: var(--user-side-muted) !important;
-    font-size: 0.62rem !important;
+    font-size: 0.58rem !important;
     font-weight: 900 !important;
     line-height: 1 !important;
     letter-spacing: 0 !important;
@@ -7489,17 +7496,17 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
     z-index: 1 !important;
     display: flex !important;
     align-items: center !important;
-    min-height: 42px !important;
+    min-height: 34px !important;
     width: 100% !important;
-    margin: 0 0 6px !important;
-    padding: 7px 10px !important;
-    gap: 11px !important;
+    margin: 0 0 3px !important;
+    padding: 5px 8px !important;
+    gap: 8px !important;
     border: 1px solid transparent !important;
     border-radius: 8px !important;
     background: transparent !important;
     color: var(--user-side-copy) !important;
     box-shadow: none !important;
-    font-size: 0.84rem !important;
+    font-size: 0.78rem !important;
     font-weight: 850 !important;
     line-height: 1.15 !important;
     letter-spacing: 0 !important;
@@ -7550,16 +7557,16 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-nl i {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    flex: 0 0 34px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    flex: 0 0 28px !important;
     border: 1px solid color-mix(in srgb, var(--db-nav-icon) 34%, transparent) !important;
     border-radius: 10px !important;
     background: color-mix(in srgb, var(--db-nav-icon-bg) 78%, #ffffff 22%) !important;
     color: var(--db-nav-icon) !important;
     box-shadow: 0 8px 18px color-mix(in srgb, var(--db-nav-icon) 14%, transparent) !important;
-    font-size: 0.86rem !important;
+    font-size: 0.78rem !important;
   }
 
   body.user-desktop-shell:not(.admin-shell):not(.lm) #dashboard .db-nl i {
@@ -7619,7 +7626,7 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-bottom {
     flex: 0 0 auto !important;
-    padding: 12px 14px 14px !important;
+    padding: 9px 12px 11px !important;
     border-top: 1px solid var(--user-side-line) !important;
     background: color-mix(in srgb, var(--user-side-bg) 90%, transparent) !important;
     backdrop-filter: blur(18px) !important;
@@ -7632,7 +7639,7 @@ body :is(#dashboard, #mob-content, .db-section, .modal, .dropdown-menu) :where(.
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-bottom .db-nl {
-    min-height: 40px !important;
+    min-height: 34px !important;
     margin: 0 !important;
     border-color: rgba(239, 68, 68, 0.18) !important;
     background: rgba(254, 242, 242, 0.72) !important;
@@ -8160,18 +8167,18 @@ body .modal-title {
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-logo {
-    min-height: 76px !important;
+    min-height: 70px !important;
     padding-inline: 14px !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-logo .logo-i {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-brand-text {
-    font-size: 0.92rem !important;
+    font-size: 0.88rem !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-nav {
@@ -8181,14 +8188,14 @@ body .modal-title {
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-nl {
     gap: 8px !important;
     padding-inline: 8px !important;
-    font-size: 0.78rem !important;
+    font-size: 0.74rem !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-nl i {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    flex-basis: 30px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    flex-basis: 26px !important;
   }
 
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-top {
@@ -8261,6 +8268,50 @@ body .modal-title {
 
   body.desktop-shell #dashboard .db-content .chat-sidebar {
     width: clamp(220px, 26vw, 260px) !important;
+  }
+}
+
+@media (min-width: 992px) and (max-height: 760px) {
+  body.desktop-shell #dashboard .db-logo {
+    min-height: 66px !important;
+    padding-block: 10px !important;
+  }
+
+  body.desktop-shell #dashboard .db-logo .logo-i {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+  }
+
+  body.desktop-shell #dashboard .db-nav {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    overflow-y: hidden !important;
+  }
+
+  body.desktop-shell #dashboard .db-nav-section {
+    margin-top: 8px !important;
+    margin-bottom: 4px !important;
+    font-size: 0.56rem !important;
+  }
+
+  body.desktop-shell #dashboard .db-nl {
+    min-height: 31px !important;
+    padding-block: 4px !important;
+    margin-bottom: 2px !important;
+    font-size: 0.72rem !important;
+  }
+
+  body.desktop-shell #dashboard .db-nl i {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    flex-basis: 24px !important;
+    font-size: 0.72rem !important;
+  }
+
+  body.desktop-shell #dashboard .db-bottom {
+    padding-block: 8px !important;
   }
 }
 

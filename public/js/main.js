@@ -239,6 +239,85 @@ guestAuthPanel?.addEventListener('hidden.bs.offcanvas', () => {
     });
 });
 
+const guestSectionIds = ['hero', 'features', 'how', 'benefits', 'developers', 'faq', 'contact'];
+const guestSections = guestSectionIds
+    .map(id => document.getElementById(id))
+    .filter(Boolean);
+const guestNavigationLinks = Array.from(document.querySelectorAll([
+    '#nbar .nav-link[href^="#"]',
+    '#mbmenu a[href^="#"]',
+    '#userCommandPalette .ucp-result[href^="#"]'
+].join(',')));
+
+function normalizeGuestHash(hash) {
+    return hash === '' || hash === '#' ? '#hero' : hash;
+}
+
+function setGuestActiveNavigation(sectionId) {
+    if (!sectionId || !guestNavigationLinks.length) return;
+
+    const activeHash = `#${sectionId}`;
+
+    guestNavigationLinks.forEach(link => {
+        const linkHash = normalizeGuestHash(link.getAttribute('href') || '');
+        const isActive = linkHash === activeHash;
+
+        link.classList.toggle('active', isActive);
+        link.classList.toggle('is-active', isActive);
+
+        if (isActive) {
+            link.setAttribute('aria-current', 'page');
+        } else {
+            link.removeAttribute('aria-current');
+        }
+    });
+}
+
+function getGuestCurrentSectionId() {
+    if (!guestSections.length) return null;
+
+    const navOffset = (document.getElementById('nbar')?.offsetHeight || 0) + 24;
+    const checkpoint = navOffset + Math.min(window.innerHeight * 0.22, 180);
+    let current = guestSections[0];
+
+    guestSections.forEach(section => {
+        if (section.getBoundingClientRect().top <= checkpoint) {
+            current = section;
+        }
+    });
+
+    return current.id;
+}
+
+let guestNavRaf = 0;
+function syncGuestActiveNavigation() {
+    if (guestNavRaf) return;
+
+    guestNavRaf = window.requestAnimationFrame(() => {
+        guestNavRaf = 0;
+        setGuestActiveNavigation(getGuestCurrentSectionId());
+    });
+}
+
+if (guestSections.length && guestNavigationLinks.length) {
+    syncGuestActiveNavigation();
+    window.addEventListener('scroll', syncGuestActiveNavigation, { passive: true });
+    window.addEventListener('resize', syncGuestActiveNavigation);
+    window.addEventListener('hashchange', syncGuestActiveNavigation);
+
+    guestNavigationLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            const href = normalizeGuestHash(link.getAttribute('href') || '');
+            const sectionId = href.slice(1);
+
+            if (guestSectionIds.includes(sectionId)) {
+                setGuestActiveNavigation(sectionId);
+                window.setTimeout(syncGuestActiveNavigation, 400);
+            }
+        });
+    });
+}
+
 /*  REVEAL  */
 const rvObs = new IntersectionObserver(
     entries => entries.forEach(e => {

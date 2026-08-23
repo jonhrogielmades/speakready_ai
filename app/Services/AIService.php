@@ -1049,6 +1049,14 @@ EOT;
         ];
         $bestPartialItemsById = [];
         $partialCommentaryFingerprints = [];
+        $partialTemplateFingerprints = [];
+        $answersById = [];
+        foreach ($answersData as $answer) {
+            $answerId = (string) ($answer['id'] ?? '');
+            if ($answerId !== '') {
+                $answersById[$answerId] = $answer;
+            }
+        }
 
         foreach ($providers as $currentProvider) {
             for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
@@ -1064,15 +1072,26 @@ EOT;
                     foreach ($partialItems as $partialItem) {
                         $partialId = (string) ($partialItem['id'] ?? '');
                         $fingerprint = mb_strtolower(self::normalizeEvidenceText((string) ($partialItem['ai_feedback'] ?? '')));
+                        $templateFingerprint = isset($answersById[$partialId])
+                            ? self::feedbackTemplateFingerprint(
+                                (string) ($partialItem['ai_feedback'] ?? ''),
+                                $partialItem,
+                                $answersById[$partialId]
+                            )
+                            : '';
                         if ($partialId === ''
                             || isset($bestPartialItemsById[$partialId])
-                            || ($fingerprint !== '' && isset($partialCommentaryFingerprints[$fingerprint]))) {
+                            || ($fingerprint !== '' && isset($partialCommentaryFingerprints[$fingerprint]))
+                            || ($templateFingerprint !== '' && isset($partialTemplateFingerprints[$templateFingerprint]))) {
                             continue;
                         }
 
                         $bestPartialItemsById[$partialId] = $partialItem;
                         if ($fingerprint !== '') {
                             $partialCommentaryFingerprints[$fingerprint] = true;
+                        }
+                        if ($templateFingerprint !== '') {
+                            $partialTemplateFingerprints[$templateFingerprint] = true;
                         }
                     }
 
@@ -2363,6 +2382,7 @@ PROMPT;
 
         $valid = [];
         $commentaryFingerprints = [];
+        $templateFingerprints = [];
         foreach ($answersData as $answer) {
             $id = (string) ($answer['id'] ?? '');
             if ($id === '' || count($itemsById[$id] ?? []) !== 1) {
@@ -2381,7 +2401,14 @@ PROMPT;
             if ($fingerprint !== '' && isset($commentaryFingerprints[$fingerprint])) {
                 continue;
             }
+            $templateFingerprint = self::feedbackTemplateFingerprint((string) ($item['ai_feedback'] ?? ''), $item, $answer);
+            if ($templateFingerprint !== '' && isset($templateFingerprints[$templateFingerprint])) {
+                continue;
+            }
             $commentaryFingerprints[$fingerprint] = true;
+            if ($templateFingerprint !== '') {
+                $templateFingerprints[$templateFingerprint] = true;
+            }
             $valid[] = $item;
         }
 
@@ -2430,6 +2457,7 @@ PROMPT;
         }
 
         $commentaryOwners = [];
+        $templateOwners = [];
 
         foreach ($expectedAnswers as $id => $answer) {
             if (! isset($feedbackById[$id])) {
@@ -2532,6 +2560,15 @@ PROMPT;
                 } else {
                     $commentaryOwners[$fingerprint] = $id;
                 }
+
+                $templateFingerprint = self::feedbackTemplateFingerprint($aiFeedback, $item, $answer);
+                if ($templateFingerprint !== ''
+                    && isset($templateOwners[$templateFingerprint])
+                    && $templateOwners[$templateFingerprint] !== $id) {
+                    $errors[] = "Feedback IDs {$templateOwners[$templateFingerprint]} and {$id} reused the same feedback template.";
+                } elseif ($templateFingerprint !== '') {
+                    $templateOwners[$templateFingerprint] = $id;
+                }
             }
         }
 
@@ -2541,8 +2578,12 @@ PROMPT;
     private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData): array
     {
         $feedbackById = [];
+        $duplicatedTemplateIds = self::duplicatedFeedbackTemplateIds(
+            is_array($response['per_question_feedback'] ?? null) ? $response['per_question_feedback'] : [],
+            $answersData
+        );
         foreach (($response['per_question_feedback'] ?? []) as $item) {
-            if (is_array($item) && isset($item['id'])) {
+            if (is_array($item) && isset($item['id']) && ! isset($duplicatedTemplateIds[(string) $item['id']])) {
                 $feedbackById[(string) $item['id']] = $item;
             }
         }
@@ -3046,6 +3087,93 @@ PROMPT;
         return trim((string) preg_replace('/\s+/u', ' ', $text));
     }
 
+    private static function duplicatedFeedbackTemplateIds(array $items, array $answersData): array
+    {
+        $answersById = [];
+        foreach ($answersData as $answer) {
+            $id = (string) ($answer['id'] ?? '');
+            if ($id !== '') {
+                $answersById[$id] = $answer;
+            }
+        }
+
+        $owners = [];
+        foreach ($items as $item) {
+            if (! is_array($item) || ! isset($item['id'])) {
+                continue;
+            }
+
+            $id = (string) $item['id'];
+            if (! isset($answersById[$id]) || self::isSkippedAnswer($answersById[$id])) {
+                continue;
+            }
+
+            $fingerprint = self::feedbackTemplateFingerprint((string) ($item['ai_feedback'] ?? ''), $item, $answersById[$id]);
+            if ($fingerprint === '') {
+                continue;
+            }
+
+            $owners[$fingerprint] ??= [];
+            $owners[$fingerprint][] = $id;
+        }
+
+        $duplicated = [];
+        foreach ($owners as $ids) {
+            $ids = array_values(array_unique($ids));
+            if (count($ids) < 2) {
+                continue;
+            }
+
+            foreach ($ids as $id) {
+                $duplicated[$id] = true;
+            }
+        }
+
+        return $duplicated;
+    }
+
+    private static function feedbackTemplateFingerprint(string $feedback, array $feedbackItem, array $answer): string
+    {
+        $normalized = mb_strtolower(self::normalizeEvidenceText($feedback));
+        if ($normalized === '' || self::isSkippedAnswer($answer)) {
+            return '';
+        }
+
+        $removableChunks = [
+            $feedbackItem['question_focus'] ?? null,
+            $answer['question'] ?? $answer['question_text'] ?? null,
+            self::candidateAnswerText($answer),
+        ];
+        foreach ((array) ($feedbackItem['evidence_quotes'] ?? []) as $quote) {
+            $removableChunks[] = $quote;
+        }
+        foreach ((array) ($feedbackItem['missing_criteria'] ?? []) as $criterion) {
+            $removableChunks[] = $criterion;
+        }
+
+        foreach ($removableChunks as $chunk) {
+            if (! is_scalar($chunk)) {
+                continue;
+            }
+
+            $chunk = mb_strtolower(self::normalizeEvidenceText((string) $chunk));
+            if (mb_strlen($chunk) >= 3) {
+                $normalized = str_replace($chunk, ' ', $normalized);
+            }
+        }
+
+        $normalized = preg_replace('/"[^"]*"|\'[^\']*\'/u', ' ', $normalized) ?? $normalized;
+        $tokens = array_values(array_filter(
+            self::meaningfulKeywords($normalized),
+            fn (string $token): bool => ! in_array($token, [
+                'candidate', 'commentary', 'evaluation', 'evidence', 'exact', 'feedback',
+                'provider', 'specific', 'submitted', 'supports',
+            ], true)
+        ));
+
+        return count($tokens) >= 3 ? implode(' ', array_slice($tokens, 0, 40)) : '';
+    }
+
     private static function answerEvidenceProfile(
         string $answerText,
         string $questionText,
@@ -3463,6 +3591,7 @@ PROMPT;
             : 'This assessment uses only evidence available in the submitted answer.';
 
         $parts[] = "{$prefix} For the question \"{$questionExcerpt}\", the strongest support in this answer was: \"{$excerpt}\".";
+        $parts[] = self::questionSpecificFeedbackDetail($profile, $questionText);
 
         foreach (($profile['missing'] ?? []) as $missing) {
             $parts[] = $missing;
@@ -3473,6 +3602,45 @@ PROMPT;
         }
 
         return implode(' ', $parts);
+    }
+
+    private static function questionSpecificFeedbackDetail(array $profile, string $questionText): string
+    {
+        $intent = (string) ($profile['question_intent'] ?? 'direct_evidence');
+        $intentLabel = match ($intent) {
+            'strength' => 'strength',
+            'strength_and_weakness' => 'strength-and-weakness',
+            'weakness' => 'development-area',
+            'salary_expectation' => 'salary-expectation',
+            'motivation' => 'motivation',
+            'self_introduction' => 'self-introduction',
+            'role_fit' => 'role-fit',
+            'career_transition' => 'career-transition',
+            'career_goal' => 'career-goal',
+            'work_setup' => 'work-setup',
+            'technical' => 'technical reasoning',
+            'situational' => 'situational judgment',
+            'behavioral' => 'behavioral evidence',
+            default => 'direct-answer',
+        };
+        $questionKeywords = array_values((array) ($profile['question_keywords'] ?? self::meaningfulKeywords($questionText)));
+        $answerKeywords = array_values((array) ($profile['answer_keywords'] ?? []));
+        $focusTerms = array_slice($questionKeywords, 0, 4);
+        $matchedTerms = array_slice(array_values(array_intersect($questionKeywords, $answerKeywords)), 0, 3);
+        $missingFocusTerms = array_slice(array_values(array_diff($questionKeywords, $answerKeywords)), 0, 3);
+
+        if ($focusTerms === []) {
+            return "Question-specific focus: this {$intentLabel} prompt was assessed against the exact wording of the question, not a generic interview template.";
+        }
+
+        $detail = "Question-specific focus: this {$intentLabel} prompt centers on ".self::readableList($focusTerms).'. ';
+        if ($matchedTerms !== []) {
+            return $detail.'The answer connected most clearly through '.self::readableList($matchedTerms).'.';
+        }
+
+        $missingFocusTerms = $missingFocusTerms !== [] ? $missingFocusTerms : $focusTerms;
+
+        return $detail.'The answer needs a clearer link to '.self::readableList($missingFocusTerms).'.';
     }
 
     private static function fallbackFeedbackFollowUp(
@@ -3944,6 +4112,26 @@ PROMPT;
     private static function countedLabel(int $count, string $singular): string
     {
         return $count.' '.$singular.($count === 1 ? '' : 's');
+    }
+
+    private static function readableList(array $items): string
+    {
+        $items = array_values(array_filter(array_map(
+            fn ($item): string => is_scalar($item) ? trim((string) $item) : '',
+            $items
+        )));
+        $count = count($items);
+        if ($count === 0) {
+            return '';
+        }
+        if ($count === 1) {
+            return $items[0];
+        }
+        if ($count === 2) {
+            return $items[0].' and '.$items[1];
+        }
+
+        return implode(', ', array_slice($items, 0, -1)).', and '.$items[$count - 1];
     }
 
     private static function candidateAnswerText(array $answer): string
