@@ -137,6 +137,69 @@
             max-width: 100% !important;
          }
 
+         body.mobile-shell.user-app-fullscreen #voice-rehearsal-page :is(#moduleTabs, .vr-tabs, .module-tabs) {
+            position: static !important;
+            inset: auto !important;
+            transform: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 0 12px !important;
+            overflow: visible !important;
+            z-index: auto !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #voice-rehearsal-page :is(.vr-practice-flow, .vr-options, .vr-setup-grid, .vr-option-grid) {
+            position: relative !important;
+            z-index: 0 !important;
+            clear: both !important;
+            margin-top: 0 !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #voice-rehearsal-page :is(.vr-setup-grid, .vr-option-grid) {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            width: 100% !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #voice-rehearsal-page :is(.vr-setup-card, .vr-option-card, .vr-select-card) {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            overflow: hidden !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #sec-progress-tracking .progress-actions {
+            position: static !important;
+            inset: auto !important;
+            transform: none !important;
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            margin: 0 0 14px !important;
+            overflow: visible !important;
+            z-index: auto !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #sec-progress-tracking .progress-actions :is(.btn, button, a) {
+            min-width: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            white-space: nowrap !important;
+         }
+
+         body.mobile-shell.user-app-fullscreen #sec-progress-tracking #progress-stats {
+            position: relative !important;
+            z-index: 0 !important;
+            clear: both !important;
+            margin-top: 0 !important;
+         }
+
          body.mobile-shell .mob-profile-dropdown,
          body.mobile-shell .mob-notif-dropdown,
          body.mobile-shell .mob-notification-dropdown {
