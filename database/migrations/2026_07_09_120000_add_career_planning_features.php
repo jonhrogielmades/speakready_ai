@@ -9,68 +9,76 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('job_applications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('company_name');
-            $table->string('job_title');
-            $table->string('status')->default('tracking');
-            $table->string('interview_stage')->nullable();
-            $table->date('interview_date')->nullable();
-            $table->string('source_url')->nullable();
-            $table->longText('resume_text')->nullable();
-            $table->longText('job_description')->nullable();
-            $table->integer('match_score')->default(0);
-            $table->json('matched_keywords')->nullable();
-            $table->json('missing_keywords')->nullable();
-            $table->json('smart_plan')->nullable();
-            $table->text('notes')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('job_applications')) {
+            Schema::create('job_applications', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->string('company_name');
+                $table->string('job_title');
+                $table->string('status')->default('tracking');
+                $table->string('interview_stage')->nullable();
+                $table->date('interview_date')->nullable();
+                $table->string('source_url')->nullable();
+                $table->longText('resume_text')->nullable();
+                $table->longText('job_description')->nullable();
+                $table->integer('match_score')->default(0);
+                $table->json('matched_keywords')->nullable();
+                $table->json('missing_keywords')->nullable();
+                $table->json('smart_plan')->nullable();
+                $table->text('notes')->nullable();
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('practice_plan_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('job_application_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('interview_session_id')->nullable()->constrained('interview_sessions')->nullOnDelete();
-            $table->integer('day_number')->default(1);
-            $table->date('due_date')->nullable();
-            $table->string('type')->default('practice');
-            $table->string('title');
-            $table->text('task');
-            $table->json('metadata')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('practice_plan_items')) {
+            Schema::create('practice_plan_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->foreignId('job_application_id')->nullable()->constrained()->nullOnDelete();
+                $table->foreignId('interview_session_id')->nullable()->constrained('interview_sessions')->nullOnDelete();
+                $table->integer('day_number')->default(1);
+                $table->date('due_date')->nullable();
+                $table->string('type')->default('practice');
+                $table->string('title');
+                $table->text('task');
+                $table->json('metadata')->nullable();
+                $table->timestamp('completed_at')->nullable();
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('interview_packs', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->string('company')->nullable();
-            $table->string('role_family')->nullable();
-            $table->string('difficulty')->default('medium');
-            $table->string('interview_focus')->default('General Practice');
-            $table->string('company_persona')->nullable();
-            $table->json('question_types')->nullable();
-            $table->json('sample_questions')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('pressure_mode')->default(false);
-            $table->string('status')->default('active');
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('interview_packs')) {
+            Schema::create('interview_packs', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->string('company')->nullable();
+                $table->string('role_family')->nullable();
+                $table->string('difficulty')->default('medium');
+                $table->string('interview_focus')->default('General Practice');
+                $table->string('company_persona')->nullable();
+                $table->json('question_types')->nullable();
+                $table->json('sample_questions')->nullable();
+                $table->text('description')->nullable();
+                $table->boolean('pressure_mode')->default(false);
+                $table->string('status')->default('active');
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('mentor_review_comments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('interview_session_id')->constrained('interview_sessions')->cascadeOnDelete();
-            $table->string('reviewer_name');
-            $table->string('reviewer_email')->nullable();
-            $table->unsignedTinyInteger('rating')->nullable();
-            $table->text('comment');
-            $table->string('visibility')->default('owner');
-            $table->string('ip_address', 45)->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('mentor_review_comments')) {
+            Schema::create('mentor_review_comments', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('interview_session_id')->constrained('interview_sessions')->cascadeOnDelete();
+                $table->string('reviewer_name');
+                $table->string('reviewer_email')->nullable();
+                $table->unsignedTinyInteger('rating')->nullable();
+                $table->text('comment');
+                $table->string('visibility')->default('owner');
+                $table->string('ip_address', 45)->nullable();
+                $table->timestamps();
+            });
+        }
 
         Schema::table('interview_sessions', function (Blueprint $table) {
             if (!Schema::hasColumn('interview_sessions', 'job_application_id')) {
@@ -94,7 +102,7 @@ return new class extends Migration
             }
         });
 
-        DB::table('interview_packs')->insert([
+        DB::table('interview_packs')->upsert([
             [
                 'name' => 'Amazon Leadership Principles',
                 'slug' => 'amazon-leadership-principles',
@@ -175,6 +183,19 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+        ], ['slug'], [
+            'name',
+            'company',
+            'role_family',
+            'difficulty',
+            'interview_focus',
+            'company_persona',
+            'question_types',
+            'sample_questions',
+            'description',
+            'pressure_mode',
+            'status',
+            'updated_at',
         ]);
     }
 

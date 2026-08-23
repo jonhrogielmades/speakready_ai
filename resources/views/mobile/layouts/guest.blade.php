@@ -1297,6 +1297,159 @@
             user-select: none;
          }
 
+         .ui-device-mobile.ui-device-mobile-image {
+            width: 100%;
+            max-width: 100% !important;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+            overflow: visible;
+         }
+
+         .ui-device-mobile-image .ui-device-bar {
+            display: none;
+         }
+
+         .mobile-preview-image-swiper {
+            width: 100%;
+            overflow: visible;
+         }
+
+         .mobile-preview-image-slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+         }
+
+         .mobile-preview-shell-img {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 18px;
+            filter: drop-shadow(0 18px 34px rgba(15, 23, 42, 0.18));
+            user-select: none;
+         }
+
+         .mobile-preview-copy {
+            width: min(100%, 760px);
+            margin: 0 auto;
+            padding: 0 14px 10px;
+            text-align: center;
+            color: var(--tx);
+         }
+
+         .mobile-preview-copy-kicker {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 9px;
+            color: #2563eb;
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+         }
+
+         .mobile-preview-copy-kicker span {
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #1f3b66;
+            color: #ffffff;
+            font-size: 0.72rem;
+            letter-spacing: 0;
+         }
+
+         .mobile-preview-copy-title {
+            margin: 0 0 10px;
+            color: var(--tx);
+            font-size: clamp(1.2rem, 4vw, 1.7rem);
+            font-weight: 900;
+            line-height: 1.18;
+         }
+
+         .mobile-preview-copy-text {
+            max-width: 640px;
+            margin: 0 auto 14px;
+            color: var(--tx2);
+            font-size: 0.95rem;
+            line-height: 1.6;
+         }
+
+         .mobile-preview-copy-list {
+            display: grid;
+            gap: 9px;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 0;
+            list-style: none;
+            text-align: left;
+         }
+
+         .mobile-preview-copy-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--tx);
+            font-size: 0.92rem;
+            font-weight: 700;
+            line-height: 1.35;
+         }
+
+         .mobile-preview-copy-list i {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(34, 197, 94, 0.12);
+            color: #16a34a;
+            font-size: 0.68rem;
+         }
+
+         .mobile-preview-image-swiper .mobile-preview-next,
+         .mobile-preview-image-swiper .mobile-preview-prev {
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            color: #2563eb;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.14);
+         }
+
+         .mobile-preview-image-swiper .mobile-preview-next::after,
+         .mobile-preview-image-swiper .mobile-preview-prev::after {
+            font-size: 0.78rem;
+            font-weight: 900;
+         }
+
+         .mobile-preview-image-swiper .mobile-preview-pagination {
+            bottom: 14px !important;
+         }
+
+         .mobile-preview-image-swiper .swiper-pagination-bullet {
+            width: 6px;
+            height: 6px;
+            background: #2563eb;
+            opacity: 0.38;
+         }
+
+         .mobile-preview-image-swiper .swiper-pagination-bullet-active {
+            width: 16px;
+            border-radius: 999px;
+            opacity: 1;
+         }
+
          .ui-mobile-wire {
             --wire-bg: #f8fafc;
             --wire-panel: #ffffff;
@@ -3342,14 +3495,196 @@
                 <div class="row justify-content-center mt-3 mb-3">
                   <div class="col-lg-12 adi">
                      <div class="ui-showcase">
-                        <div class="ui-device ui-device-mobile" aria-label="Mobile UI preview">
+                        <div class="ui-device ui-device-mobile ui-device-mobile-image" aria-label="Mobile UI preview">
                            <div class="ui-device-bar">
                               <span class="ui-device-dot" style="background:#ff5f57"></span>
                               <span class="ui-device-dot" style="background:#ffbd2e"></span>
                               <span class="ui-device-dot" style="background:#28c840"></span>
                               <span class="ui-device-title">SpeakReady AI Mobile Dashboard</span>
                            </div>
-                            <div class="ui-dashboard ui-dashboard-preview ui-mobile-wire" aria-label="SpeakReady AI mobile dashboard wireframe preview">
+                           <div class="swiper mobilePreviewSwiper mobile-preview-image-swiper">
+                              @php
+                                 $mobilePreviewSlides = [
+                                    [
+                                       'image' => 'img/mobile-preview-home-shell.png',
+                                       'alt' => 'SpeakReady AI mobile home preview',
+                                       'kicker' => 'Dashboard Overview',
+                                       'title' => 'See your readiness at a glance.',
+                                       'text' => 'Track your interview progress, practice streak, rating, and next goal from one clean mobile dashboard.',
+                                       'points' => [
+                                          'Check your overall readiness score',
+                                          'View practice sessions and ratings',
+                                          'Follow your next improvement goal',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-progress-shell.png',
+                                       'alt' => 'SpeakReady AI mobile progress preview',
+                                       'kicker' => 'Progress Tracking',
+                                       'title' => 'Know what to improve next.',
+                                       'text' => 'Review your streak, exported reports, AI insights, and a simple practice plan made for your interview growth.',
+                                       'points' => [
+                                          'Monitor streaks and total practice days',
+                                          'Export progress as PDF or Excel',
+                                          'Follow a personalized practice plan',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-setup-shell.png',
+                                       'alt' => 'SpeakReady AI mobile interview setup preview',
+                                       'kicker' => 'Interview Setup',
+                                       'title' => 'Configure a focused mock interview.',
+                                       'text' => 'Set your practice scenario, target position, and interview details before starting a tailored session.',
+                                       'points' => [
+                                          'Choose the interview scenario',
+                                          'Add your target position',
+                                          'Review each setup step clearly',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-feedback-center-shell.png',
+                                       'alt' => 'SpeakReady AI mobile feedback center preview',
+                                       'kicker' => 'Feedback Center',
+                                       'title' => 'Review coaching feedback after practice.',
+                                       'text' => 'Browse feedback summaries, priority recommendations, answer coaching, and history from the mobile shell.',
+                                       'points' => [
+                                          'Read AI feedback summaries',
+                                          'See recommended next practice',
+                                          'Review answer-by-answer coaching',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-modules-shell.png',
+                                       'alt' => 'SpeakReady AI mobile interview modules preview',
+                                       'kicker' => 'Interview Modules',
+                                       'title' => 'Explore guided preparation modules.',
+                                       'text' => 'Open learning paths and recommended lessons that keep interview preparation organized by topic.',
+                                       'points' => [
+                                          'Filter module topics',
+                                          'Follow recommended lessons',
+                                          'Track learning path progress',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-voice-rehearsal-shell.png',
+                                       'alt' => 'SpeakReady AI mobile voice rehearsal preview',
+                                       'kicker' => 'Voice Rehearsal',
+                                       'title' => 'Practice answers out loud.',
+                                       'text' => 'Record responses, check pacing, and review speaking metrics from the mobile interview practice screen.',
+                                       'points' => [
+                                          'Record spoken interview answers',
+                                          'Switch prompts and confidence level',
+                                          'Track duration, WPM, stability, and fillers',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-mission-mode-shell.png',
+                                       'alt' => 'SpeakReady AI mobile mission mode preview',
+                                       'kicker' => 'Mission Mode',
+                                       'title' => 'Generate real-life practice tasks.',
+                                       'text' => 'Turn target situations into mission tasks, then score written or spoken answers against the prompt.',
+                                       'points' => [
+                                          'Generate personalized mission tasks',
+                                          'Practice with text or voice',
+                                          'Score mission-specific answers',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-challenges-shell.png',
+                                       'alt' => 'SpeakReady AI mobile interview challenges preview',
+                                       'kicker' => 'Interview Challenges',
+                                       'title' => 'Build skill through challenge journeys.',
+                                       'text' => 'Complete gamified interview challenges with goals, question sets, skill rewards, and progress stats.',
+                                       'points' => [
+                                          'View level, XP, energy, and accuracy',
+                                          'Follow challenge goals',
+                                          'Complete success checklist items',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-readiness-coach-shell.png',
+                                       'alt' => 'SpeakReady AI mobile readiness coach preview',
+                                       'kicker' => 'Readiness Coach',
+                                       'title' => 'Ask for focused interview help.',
+                                       'text' => 'Use the coach chat for interview, resume, certificate, and practice guidance while keeping claims truthful.',
+                                       'points' => [
+                                          'Chat with the readiness coach',
+                                          'Attach context when needed',
+                                          'Send focused preparation questions',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-reports-shell.png',
+                                       'alt' => 'SpeakReady AI mobile interview reports preview',
+                                       'kicker' => 'Interview Reports',
+                                       'title' => 'Review and export interview reports.',
+                                       'text' => 'See report availability, start a scored interview, and access export actions from the mobile report screen.',
+                                       'points' => [
+                                          'Start a scored interview',
+                                          'Review generated report status',
+                                          'Export reports as PDF or Excel',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-personal-mastery-shell.png',
+                                       'alt' => 'SpeakReady AI mobile personal mastery preview',
+                                       'kicker' => 'Personal Mastery',
+                                       'title' => 'Track private growth over time.',
+                                       'text' => 'Follow personal bests, baseline growth, practice streaks, and recommended drills from one progress hub.',
+                                       'points' => [
+                                          'Compare baseline and latest score',
+                                          'Start a scored mock interview',
+                                          'Drill recommended weak areas',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-notifications-shell.png',
+                                       'alt' => 'SpeakReady AI mobile notifications preview',
+                                       'kicker' => 'Notifications',
+                                       'title' => 'Stay current on activity and alerts.',
+                                       'text' => 'View notification states and recent account activity in a mobile-friendly timeline.',
+                                       'points' => [
+                                          'Check progress alerts',
+                                          'Review activity history',
+                                          'Scan recent login events',
+                                       ],
+                                    ],
+                                    [
+                                       'image' => 'img/mobile-preview-account-shell.png',
+                                       'alt' => 'SpeakReady AI mobile account management preview',
+                                       'kicker' => 'Account Management',
+                                       'title' => 'Manage profile and security settings.',
+                                       'text' => 'Update profile details, target role, profile photo, and password fields from the mobile account screen.',
+                                       'points' => [
+                                          'Update account details',
+                                          'Upload a profile picture',
+                                          'Manage password settings',
+                                       ],
+                                    ],
+                                 ];
+                              @endphp
+                              <div class="swiper-wrapper">
+                                 @foreach($mobilePreviewSlides as $slide)
+                                    <div class="swiper-slide mobile-preview-image-slide">
+                                       <img class="mobile-preview-shell-img" src="{{ asset($slide['image']) }}" alt="{{ $slide['alt'] }}">
+                                       <div class="mobile-preview-copy">
+                                          <div class="mobile-preview-copy-kicker"><span>{{ $loop->iteration }}</span> {{ $slide['kicker'] }}</div>
+                                          <h3 class="mobile-preview-copy-title">{{ $slide['title'] }}</h3>
+                                          <p class="mobile-preview-copy-text">{{ $slide['text'] }}</p>
+                                          <ul class="mobile-preview-copy-list">
+                                             @foreach($slide['points'] as $point)
+                                                <li><i class="fa-solid fa-check"></i>{{ $point }}</li>
+                                             @endforeach
+                                          </ul>
+                                       </div>
+                                    </div>
+                                 @endforeach
+                              </div>
+                              <div class="swiper-pagination mobile-preview-pagination"></div>
+                              <div class="swiper-button-next mobile-preview-next"></div>
+                              <div class="swiper-button-prev mobile-preview-prev"></div>
+                           </div>
+                            <div class="ui-dashboard ui-dashboard-preview ui-mobile-wire d-none" aria-hidden="true">
                                <div class="ui-mobile-wire-topbar">
                                   <div class="ui-mobile-wire-brand">
                                      <span class="ui-mobile-wire-logo" aria-hidden="true"></span>
@@ -5266,22 +5601,44 @@
              }
 
              if(typeof Swiper !== 'undefined') {
-                 var swiper = new Swiper(".demoSwiper", {
-                     slidesPerView: 1,
-                     spaceBetween: 30,
-                     loop: true,
-                     autoplay: {
-                         delay: 3000,
-                         disableOnInteraction: false,
-                     },
-                     pagination: {
-                         el: ".swiper-pagination",
-                         clickable: true,
-                     },
-                     navigation: {
-                         nextEl: ".swiper-button-next",
-                         prevEl: ".swiper-button-prev",
-                     },
+                 document.querySelectorAll(".mobilePreviewSwiper").forEach(function(previewEl) {
+                     new Swiper(previewEl, {
+                         slidesPerView: 1,
+                         spaceBetween: 12,
+                         loop: true,
+                         autoplay: {
+                             delay: 3000,
+                             disableOnInteraction: false,
+                         },
+                         pagination: {
+                             el: previewEl.querySelector(".mobile-preview-pagination"),
+                             clickable: true,
+                         },
+                         navigation: {
+                             nextEl: previewEl.querySelector(".mobile-preview-next"),
+                             prevEl: previewEl.querySelector(".mobile-preview-prev"),
+                         },
+                     });
+                 });
+
+                 document.querySelectorAll(".demoSwiper").forEach(function(demoEl) {
+                     new Swiper(demoEl, {
+                         slidesPerView: 1,
+                         spaceBetween: 30,
+                         loop: true,
+                         autoplay: {
+                             delay: 3000,
+                             disableOnInteraction: false,
+                         },
+                         pagination: {
+                             el: demoEl.querySelector(".swiper-pagination"),
+                             clickable: true,
+                         },
+                         navigation: {
+                             nextEl: demoEl.querySelector(".swiper-button-next"),
+                             prevEl: demoEl.querySelector(".swiper-button-prev"),
+                         },
+                     });
                  });
              }
          });
