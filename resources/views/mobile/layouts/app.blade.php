@@ -2518,25 +2518,29 @@
             .mob-nav-items {
                max-width: 520px !important;
                margin: 0 auto !important;
-               gap: 5px !important;
-               padding: 7px max(8px, env(safe-area-inset-left, 0px)) 7px max(8px, env(safe-area-inset-right, 0px)) !important;
+               gap: 6px !important;
+               align-items: center !important;
+               padding: 8px max(8px, env(safe-area-inset-left, 0px)) 8px max(8px, env(safe-area-inset-right, 0px)) !important;
             }
 
             .mob-nav-item {
-               min-height: 54px !important;
-               padding: 5px 2px !important;
+               height: 50px !important;
+               min-height: 50px !important;
+               padding: 4px 2px !important;
                border: 1px solid transparent !important;
-               border-radius: 12px !important;
+               border-radius: 11px !important;
                color: var(--mob-dock-text) !important;
                font-size: 0.58rem !important;
                font-weight: 900 !important;
                line-height: 1.05 !important;
                background: transparent !important;
+               align-self: center !important;
+               transform: none !important;
             }
 
             .mob-nav-icon {
-               width: 28px !important;
-               height: 28px !important;
+               width: 24px !important;
+               height: 24px !important;
                border-radius: 9px !important;
                background: transparent !important;
                color: currentColor !important;
@@ -2566,21 +2570,23 @@
             }
 
             .mob-nav-primary {
-               min-height: 66px !important;
-               transform: translateY(-18px) !important;
+               height: 50px !important;
+               min-height: 50px !important;
+               padding: 4px 2px !important;
+               transform: none !important;
                color: var(--mob-dock-active) !important;
                background: transparent !important;
             }
 
             .mob-nav-primary-icon {
-               width: 54px !important;
-               height: 54px !important;
-               border: 4px solid var(--mob-dock-bg) !important;
-               border-radius: 16px !important;
+               width: 34px !important;
+               height: 34px !important;
+               border: 0 !important;
+               border-radius: 12px !important;
                background: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%) !important;
                color: #ffffff !important;
                box-shadow:
-                  0 14px 24px rgba(37, 99, 235, 0.34),
+                  0 8px 16px rgba(37, 99, 235, 0.28),
                   inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
             }
 
@@ -2592,7 +2598,7 @@
 
             .mob-nav-primary.active .mob-nav-primary-icon {
                box-shadow:
-                  0 16px 28px rgba(37, 99, 235, 0.42),
+                  0 9px 18px rgba(37, 99, 235, 0.36),
                   0 0 0 1px rgba(125, 211, 252, 0.34),
                   inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
             }
