@@ -7513,3 +7513,117 @@
         }
 
     }
+
+    @media (max-width: 767px) {
+        #card-recent-sessions .sr-section-actions {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            justify-content: stretch;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        #card-recent-sessions .sr-section-actions form,
+        #card-recent-sessions .sr-section-action {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+        }
+
+        #card-recent-sessions .sr-session-card-polished {
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr) minmax(54px, 64px);
+            grid-template-areas:
+                "icon meta score"
+                "review review delete";
+            column-gap: 10px;
+            row-gap: 10px;
+            align-items: center;
+            min-height: 0;
+            padding: 12px;
+        }
+
+        #card-recent-sessions .sr-session-card-polished .sr-session-icon {
+            grid-area: icon;
+            width: 36px;
+            height: 36px;
+            flex-basis: 36px;
+        }
+
+        #card-recent-sessions .sr-session-card-polished .sr-session-meta {
+            grid-area: meta;
+            min-width: 0;
+            align-self: center;
+        }
+
+        #card-recent-sessions .sr-session-card-polished .sr-session-title,
+        #card-recent-sessions .sr-session-card-polished .sr-session-date {
+            overflow-wrap: anywhere;
+        }
+
+        #card-recent-sessions .sr-session-card-polished .sr-session-score-stack {
+            grid-area: score;
+            justify-self: end;
+            align-self: center;
+            width: 100%;
+            max-width: 64px;
+            min-width: 0;
+        }
+
+        #card-recent-sessions .sr-session-score-pill {
+            justify-self: end;
+            white-space: nowrap;
+        }
+
+        #card-recent-sessions .sr-session-score-bar {
+            width: 100%;
+            min-width: 0;
+        }
+
+        #card-recent-sessions .sr-session-card-polished .sr-session-review-btn {
+            grid-area: review;
+            width: 100%;
+            min-width: 0;
+            justify-self: stretch;
+            align-self: stretch;
+            display: inline-flex;
+            justify-content: center;
+        }
+
+        #card-recent-sessions .sr-session-card-polished > form {
+            grid-area: delete;
+            justify-self: end;
+            align-self: stretch;
+            display: flex;
+            width: 42px;
+            margin: 0;
+        }
+
+        #card-recent-sessions .sr-session-delete-btn {
+            width: 42px;
+            min-width: 42px;
+            min-height: 38px;
+            margin: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #card-recent-sessions .sr-session-card-polished {
+            grid-template-columns: 36px minmax(0, 1fr) 42px;
+            grid-template-areas:
+                "icon meta meta"
+                "score score score"
+                "review review delete";
+        }
+
+        #card-recent-sessions .sr-session-card-polished .sr-session-score-stack {
+            justify-self: stretch;
+            max-width: none;
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: center;
+            gap: 8px;
+        }
+    }
