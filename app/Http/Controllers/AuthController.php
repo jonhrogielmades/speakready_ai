@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Helpers\ActivityLogger;
 use App\Models\Setting;
 use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -271,10 +273,32 @@ class AuthController extends Controller
 
     public function handleGoogleCallback(Request $request)
     {
+        if ($request->filled('error')) {
+            Log::warning('Google authentication returned an OAuth error.', [
+                'error' => $request->query('error'),
+                'error_description' => $request->query('error_description'),
+                'redirect_uri' => $this->googleRedirectUrl($request),
+            ]);
+
+            return redirect('/')->withErrors([
+                'email' => $this->googleOAuthErrorMessage($request),
+            ]);
+        }
+
+        if (! $request->filled('code')) {
+            Log::warning('Google authentication callback did not include an authorization code.', [
+                'redirect_uri' => $this->googleRedirectUrl($request),
+            ]);
+
+            return redirect('/')->withErrors([
+                'email' => 'Google did not return an authorization code. Please start Google sign-in again.',
+            ]);
+        }
+
         try {
             $intent = $request->session()->pull('google_auth_intent', 'login');
             $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
-            $driver = $this->googleDriver();
+            $driver = $this->googleDriver($request);
             $googleUser = $driver->user();
 
             if (blank($googleUser->email)) {
@@ -377,11 +401,31 @@ class AuthController extends Controller
 
             return redirect()->route('dashboard');
 
+        } catch (ConnectException $e) {
+            Log::error('Google authentication timed out while contacting Google.', [
+                'message' => $e->getMessage(),
+                'redirect_uri' => $this->googleRedirectUrl($request),
+            ]);
+
+            return redirect('/')->withErrors([
+                'email' => 'Google authentication could not reach Google in time. Please check your connection and try again.',
+            ]);
+        } catch (RequestException $e) {
+            Log::error('Google authentication token request failed.', [
+                'message' => $e->getMessage(),
+                'status' => $e->getResponse()?->getStatusCode(),
+                'body' => $this->googleErrorResponseBody($e),
+                'redirect_uri' => $this->googleRedirectUrl($request),
+            ]);
+
+            return redirect('/')->withErrors([
+                'email' => $this->googleRequestExceptionMessage($e),
+            ]);
         } catch (Throwable $e) {
             Log::error('Google authentication failed: ' . $e->getMessage(), ['exception' => $e]);
 
             return redirect('/')->withErrors([
-                'email' => 'Google authentication took too long or could not be completed. Please try again.',
+                'email' => 'Google authentication could not be completed. Please try again.',
             ]);
         }
     }
@@ -390,17 +434,19 @@ class AuthController extends Controller
     {
         $request->session()->put('google_auth_intent', $intent);
 
-        return Socialite::driver('google')->stateless()->redirect();
+        return $this->googleDriver($request)->redirect();
     }
 
-    private function googleDriver()
+    private function googleDriver(Request $request)
     {
-        $driver = Socialite::driver('google')->stateless();
+        $driver = Socialite::driver('google')
+            ->stateless()
+            ->redirectUrl($this->googleRedirectUrl($request));
 
         $guzzleOptions = [
-            'connect_timeout' => (float) config('services.google.connect_timeout', 3),
-            'timeout' => (float) config('services.google.timeout', 8),
-            'read_timeout' => (float) config('services.google.timeout', 8),
+            'connect_timeout' => (float) config('services.google.connect_timeout', 10),
+            'timeout' => (float) config('services.google.timeout', 30),
+            'read_timeout' => (float) config('services.google.timeout', 30),
         ];
 
         $curlOptions = [];
@@ -421,6 +467,48 @@ class AuthController extends Controller
         $driver->setHttpClient(new GuzzleClient($guzzleOptions));
 
         return $driver;
+    }
+
+    private function googleRedirectUrl(Request $request): string
+    {
+        return rtrim($request->getSchemeAndHttpHost(), '/') . route('auth.google.callback', [], false);
+    }
+
+    private function googleOAuthErrorMessage(Request $request): string
+    {
+        return match ((string) $request->query('error')) {
+            'access_denied' => 'Google sign-in was cancelled. Please choose your Google account again to continue.',
+            'redirect_uri_mismatch' => 'Google sign-in is using the wrong callback URL. Please open SpeakReady AI from its localhost or Render URL and try again.',
+            default => 'Google sign-in could not be completed. Please try again.',
+        };
+    }
+
+    private function googleRequestExceptionMessage(RequestException $e): string
+    {
+        $body = $this->googleErrorResponseBody($e);
+
+        if (Str::contains($body, ['redirect_uri_mismatch', 'redirect_uri'])) {
+            return 'Google sign-in is using the wrong callback URL. Please open SpeakReady AI from its localhost or Render URL and try again.';
+        }
+
+        if (Str::contains($body, ['invalid_grant', 'Bad Request'])) {
+            return 'Google could not verify this sign-in request. Please start Google sign-in again from the same app address.';
+        }
+
+        return 'Google authentication could not be completed. Please try again.';
+    }
+
+    private function googleErrorResponseBody(RequestException $e): string
+    {
+        $response = $e->getResponse();
+
+        if (! $response) {
+            return '';
+        }
+
+        $body = (string) $response->getBody();
+
+        return Str::limit($body, 1000);
     }
 
     private function logAuthenticationActivity(User $user, string $action, string $activity, ?string $ipAddress): void
