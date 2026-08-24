@@ -1197,6 +1197,104 @@
             }
          }
 
+         #about .about-system-panel {
+            position: relative;
+            overflow: hidden;
+            padding: 24px;
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            border-radius: 16px;
+            background:
+               linear-gradient(135deg, color-mix(in srgb, var(--sf, #ffffff) 94%, #2563eb 6%), color-mix(in srgb, var(--bg3, #f8fafc) 88%, #06b6d4 12%));
+            box-shadow: 0 20px 46px rgba(15, 23, 42, 0.12);
+         }
+
+         #about .about-system-panel::before {
+            content: "";
+            position: absolute;
+            top: 18px;
+            bottom: 18px;
+            left: 0;
+            width: 4px;
+            border-radius: 0 999px 999px 0;
+            background: linear-gradient(180deg, var(--pur, #2563eb), #06b6d4, #34d399);
+         }
+
+         #about .about-system-panel::after {
+            content: "";
+            position: absolute;
+            top: 18px;
+            bottom: 18px;
+            right: 0;
+            width: 4px;
+            border-radius: 999px 0 0 999px;
+            background: linear-gradient(180deg, #2563eb 0%, #06b6d4 50%, #34d399 100%);
+            box-shadow: -8px 0 18px rgba(14, 165, 233, 0.14);
+         }
+
+         html.lm #about .about-system-panel {
+            background: linear-gradient(135deg, #ffffff, #f3f8ff);
+            border-color: rgba(37, 99, 235, 0.18);
+            box-shadow: 0 20px 46px rgba(22, 34, 58, 0.12);
+         }
+
+         html:not(.lm) #about .about-system-panel {
+            background: linear-gradient(135deg, rgba(18, 18, 31, 0.98), rgba(15, 23, 42, 0.92));
+            border-color: rgba(148, 163, 184, 0.24);
+            box-shadow: 0 22px 52px rgba(0, 0, 0, 0.34);
+         }
+
+         #about .about-system-panel .about-system-copy {
+            margin-bottom: 22px !important;
+         }
+
+         #about .about-system-panel h4 {
+            color: var(--tx);
+            font-weight: 800;
+         }
+
+         #about .about-system-panel .target-users-grid {
+            margin-bottom: 0 !important;
+         }
+
+         @media (max-width: 575.98px) {
+            #about .about-system-panel {
+               padding: 20px 16px 18px;
+               border-radius: 14px;
+            }
+
+            #about .about-system-panel::before {
+               top: 16px;
+               bottom: 16px;
+               width: 3px;
+            }
+
+            #about .about-system-panel::after {
+               top: 16px;
+               bottom: 16px;
+               width: 3px;
+            }
+
+            #about .about-system-panel h4 {
+               margin-top: 18px !important;
+               font-size: 0.96rem !important;
+            }
+         }
+
+         @media (max-width: 390px) {
+            #about .about-system-panel .target-users-grid {
+               grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            #about .about-system-panel .target-users-grid .ftag {
+               min-height: 32px;
+               white-space: normal;
+            }
+
+            #about .about-system-panel .target-users-grid .ftag:last-child {
+               grid-column: 1 / -1;
+            }
+         }
+
          .ui-showcase {
             display: block;
             width: 100%;
@@ -1352,8 +1450,15 @@
             perspective: 1200px;
          }
 
+         .mobile-preview-image-swiper::before,
+         .mobile-preview-image-swiper::after {
+            display: none;
+         }
+
          .mobile-preview-image-swiper .swiper-wrapper {
             align-items: stretch;
+            position: relative;
+            z-index: 2;
          }
 
          html.lm #landing .mobile-preview-image-swiper,
@@ -1415,6 +1520,29 @@
             pointer-events: none;
             overflow: hidden;
             will-change: transform, opacity, filter;
+         }
+
+         .mobile-preview-image-slide::before,
+         .mobile-preview-image-slide::after {
+            content: "";
+            position: absolute;
+            top: 14px;
+            bottom: 14px;
+            z-index: 2;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #2563eb 0%, #06b6d4 50%, #34d399 100%);
+            pointer-events: none;
+         }
+
+         .mobile-preview-image-slide::before {
+            left: 0;
+            box-shadow: 8px 0 18px rgba(14, 165, 233, 0.12);
+         }
+
+         .mobile-preview-image-slide::after {
+            right: 0;
+            box-shadow: -8px 0 18px rgba(14, 165, 233, 0.12);
          }
 
          .mobile-preview-image-slide.swiper-slide-active {
@@ -1617,6 +1745,185 @@
             line-height: 1;
          }
 
+         #landing .landing-auto-carousel {
+            --landing-carousel-card-width: min(calc(100vw - 54px), 340px);
+            --landing-carousel-dot: color-mix(in srgb, var(--tx3, #64748b) 24%, transparent);
+            --landing-carousel-dot-active: color-mix(in srgb, var(--pur, #2563eb) 68%, #06b6d4 32%);
+            --landing-carousel-control-bg: color-mix(in srgb, var(--sf, #ffffff) 92%, transparent);
+            --landing-carousel-control: var(--tx, #0f172a);
+            --landing-carousel-control-border: rgba(15, 23, 42, 0.24);
+            width: min(calc(100vw - 8px), 430px);
+            max-width: none;
+            margin: 0 auto;
+            padding: 6px 0 44px;
+            overflow: visible;
+            isolation: isolate;
+            perspective: 1100px;
+         }
+
+         #landing .landing-auto-carousel::before,
+         #landing .landing-auto-carousel::after {
+            display: none;
+         }
+
+         html.lm #landing .landing-auto-carousel {
+            --landing-carousel-dot: #d9e7f8;
+            --landing-carousel-control-bg: rgba(255, 255, 255, 0.96);
+            --landing-carousel-control-border: rgba(37, 99, 235, 0.18);
+         }
+
+         html:not(.lm) #landing .landing-auto-carousel {
+            --landing-carousel-dot: rgba(148, 163, 184, 0.28);
+            --landing-carousel-control-bg: color-mix(in srgb, var(--sf, #171d2d) 88%, transparent);
+            --landing-carousel-control-border: rgba(248, 250, 252, 0.42);
+         }
+
+         #landing .landing-auto-carousel .swiper-wrapper.row {
+            --bs-gutter-x: 0;
+            --bs-gutter-y: 0;
+            position: relative;
+            z-index: 2;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            justify-content: flex-start !important;
+            width: 100%;
+            max-width: none !important;
+            margin-left: 0;
+            margin-right: 0;
+         }
+
+         #landing .landing-auto-carousel .swiper-slide {
+            width: var(--landing-carousel-card-width) !important;
+            max-width: var(--landing-carousel-card-width) !important;
+            height: auto;
+            flex: 0 0 auto !important;
+            display: flex;
+            padding: 0 !important;
+            opacity: 0.26;
+            filter: blur(0.5px) saturate(0.82);
+            transform: scale(0.94);
+            transition: opacity 240ms ease, transform 240ms ease, filter 240ms ease;
+            pointer-events: none;
+         }
+
+         #landing .landing-auto-carousel .swiper-slide-prev,
+         #landing .landing-auto-carousel .swiper-slide-next {
+            opacity: 0.58;
+            filter: blur(0.2px) saturate(0.9);
+            transform: scale(0.97);
+         }
+
+         #landing .landing-auto-carousel .swiper-slide-active {
+            opacity: 1;
+            filter: none;
+            transform: scale(1);
+            pointer-events: auto;
+         }
+
+         #landing .landing-auto-carousel .swiper-slide > .gc {
+            position: relative;
+            width: 100% !important;
+            min-height: 248px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+         }
+
+         #landing .landing-auto-carousel .swiper-slide > .gc::before,
+         #landing .landing-auto-carousel .swiper-slide > .gc::after {
+            content: "";
+            position: absolute;
+            top: 12px;
+            bottom: 12px;
+            z-index: 2;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #2563eb 0%, #06b6d4 50%, #34d399 100%);
+            pointer-events: none;
+         }
+
+         #landing .landing-auto-carousel .swiper-slide > .gc::before {
+            left: 0;
+            box-shadow: 8px 0 18px rgba(14, 165, 233, 0.12);
+         }
+
+         #landing .landing-auto-carousel .swiper-slide > .gc::after {
+            right: 0;
+            box-shadow: -8px 0 18px rgba(14, 165, 233, 0.12);
+         }
+
+         #landing .features-auto-carousel .feature-card {
+            min-height: 270px;
+         }
+
+         #landing .how-auto-carousel .gc {
+            min-height: 222px;
+         }
+
+         #landing .landing-auto-carousel .gc p {
+            margin-bottom: 0;
+         }
+
+         #landing .landing-auto-carousel .landing-carousel-next,
+         #landing .landing-auto-carousel .landing-carousel-prev {
+            display: none !important;
+         }
+
+         #landing .landing-auto-carousel .landing-carousel-pagination {
+            position: absolute !important;
+            left: 50% !important;
+            bottom: 10px !important;
+            transform: translateX(-50%) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 18px;
+            width: 140px !important;
+            margin: 0;
+            z-index: 11;
+         }
+
+         #landing .landing-auto-carousel .swiper-pagination-bullet {
+            width: 6px;
+            height: 6px;
+            margin: 0 !important;
+            background: var(--landing-carousel-dot);
+            opacity: 1;
+         }
+
+         #landing .landing-auto-carousel .swiper-pagination-bullet-active {
+            width: 20px;
+            border-radius: 999px;
+            background: var(--landing-carousel-dot-active);
+            opacity: 1;
+         }
+
+         #landing .landing-carousel-autoplay-toggle {
+            position: absolute;
+            right: calc(50% - 116px);
+            bottom: 5px;
+            z-index: 12;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 1px solid var(--landing-carousel-control-border);
+            border-radius: 999px;
+            background: var(--landing-carousel-control-bg);
+            color: var(--landing-carousel-control);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+         }
+
+         #landing .landing-carousel-autoplay-toggle i {
+            font-size: 0.64rem;
+            line-height: 1;
+         }
+
          @media (max-width: 374.98px) {
             .mobile-preview-image-slide {
                min-height: 528px;
@@ -1634,6 +1941,21 @@
 
             .mobile-preview-autoplay-toggle {
                right: calc(50% - 106px);
+            }
+
+            #landing .landing-auto-carousel {
+               --landing-carousel-card-width: min(calc(100vw - 42px), 318px);
+            }
+
+            #landing .landing-carousel-autoplay-toggle {
+               right: calc(50% - 106px);
+            }
+
+            #landing .landing-auto-carousel .swiper-slide > .gc::before,
+            #landing .landing-auto-carousel .swiper-slide > .gc::after,
+            .mobile-preview-image-slide::before,
+            .mobile-preview-image-slide::after {
+               width: 3px;
             }
          }
 
@@ -4327,15 +4649,17 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <div class="about-system-panel">
+                        <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
-                     <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
-                     <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-graduation-cap me-2"></i>Fresh Graduates</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-briefcase me-2"></i>Job Seekers</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-award me-2"></i>Scholarship Applicants</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-university me-2"></i>College Applicants</span>
+                        <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
+                        <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
+                           <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
+                           <span class="ftag px-3 py-2"><i class="fa-solid fa-graduation-cap me-2"></i>Fresh Graduates</span>
+                           <span class="ftag px-3 py-2"><i class="fa-solid fa-briefcase me-2"></i>Job Seekers</span>
+                           <span class="ftag px-3 py-2"><i class="fa-solid fa-award me-2"></i>Scholarship Applicants</span>
+                           <span class="ftag px-3 py-2"><i class="fa-solid fa-university me-2"></i>College Applicants</span>
+                        </div>
                      </div>
                   </div>
                   <div class="col-lg-6 rv" style="transition-delay:.1s">
@@ -4386,91 +4710,99 @@
                   <span class="slbl">Core Features</span>
                   <h2 class="stitle">Everything you need to <span class="gt">succeed</span></h2>
                </div>
-               <div class="row g-4">
-                  <div class="col-md-3 col-sm-6 rv">
+               <div class="swiper landingFeatureSwiper landing-auto-carousel features-auto-carousel" aria-label="Core features carousel">
+                  <div class="row g-4 swiper-wrapper">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#2563eb;--feature-icon-bg:rgba(37,99,235,.14);--feature-icon-border:rgba(37,99,235,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gauge-high fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Dashboard Overview</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Monitor readiness scores, recent sessions, learning progress, and AI feedback summaries from one home base.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.05s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.05s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#10b981;--feature-icon-bg:rgba(16,185,129,.14);--feature-icon-border:rgba(16,185,129,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-microphone-lines fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Philippine AI Mock Interviews</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Practice with a realistic AI interviewer using role, category, difficulty, focus, and timed question settings.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.1s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#f59e0b;--feature-icon-bg:rgba(245,158,11,.14);--feature-icon-border:rgba(245,158,11,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-file-lines fa-lg"></i></div>
                          <h3 class="fs-6 fw-bold mb-2">Job Evidence Mapping</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Compare your resume and role details to focus practice on the skills a job asks for.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.15s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.15s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#8b5cf6;--feature-icon-bg:rgba(139,92,246,.14);--feature-icon-border:rgba(139,92,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-ear-listen fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Voice Rehearsal Studio</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Improve pacing, clarity, delivery stability, and filler-word control without treating speaking style as personality.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.2s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ef4444;--feature-icon-bg:rgba(239,68,68,.14);--feature-icon-border:rgba(239,68,68,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-book-open-reader fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Interview Modules</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Study structured modules with chapters, resources, quizzes, and practice activities tied to interview skills.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.25s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.25s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#ec4899;--feature-icon-bg:rgba(236,72,153,.14);--feature-icon-border:rgba(236,72,153,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-gamepad fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Learning Games</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Complete challenge paths with levels, energy, lives, target tones, banned words, and score goals.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.3s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#06b6d4;--feature-icon-bg:rgba(6,182,212,.14);--feature-icon-border:rgba(6,182,212,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-robot fa-lg"></i></div>
                          <h3 class="fs-6 fw-bold mb-2">AI Practice Coach</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Get focused prep guidance, score explanations, and grounded advice without invented achievements.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.35s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.35s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#22c55e;--feature-icon-bg:rgba(34,197,94,.14);--feature-icon-border:rgba(34,197,94,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-clipboard-check fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Feedback Center</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">See evidence-linked rubrics, score confidence, fact-grounded revision templates, and targeted follow-ups.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.4s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#3b82f6;--feature-icon-bg:rgba(59,130,246,.14);--feature-icon-border:rgba(59,130,246,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-chart-line fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Progress Tracking</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Visualize readiness, STAR structure, skill breakdowns, learning progress, and voice rehearsal growth.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.45s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.45s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#0ea5e9;--feature-icon-bg:rgba(14,165,233,.14);--feature-icon-border:rgba(14,165,233,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-folder-open fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Reports &amp; Sharing</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Print detailed reviews and create expiring, password-protected links with reviewer permissions.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.5s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#6366f1;--feature-icon-bg:rgba(99,102,241,.14);--feature-icon-border:rgba(99,102,241,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-network-wired fa-lg"></i></div>
                         <h3 class="fs-6 fw-bold mb-2">Skill Trees</h3>
                         <p style="font-size:.85rem;color:var(--tx2)">Earn leadership, communication, technical, and problem-solving XP, then unlock perks as you improve.</p>
                      </div>
                   </div>
-                  <div class="col-md-3 col-sm-6 rv" style="transition-delay:.55s">
+                  <div class="col-md-3 col-sm-6 rv swiper-slide" style="transition-delay:.55s">
                      <div class="gc p-4 h-100 text-center feature-card">
                         <div class="ftico mx-auto mb-3" style="--feature-icon-color:#eab308;--feature-icon-bg:rgba(234,179,8,.14);--feature-icon-border:rgba(234,179,8,.28);width:50px;height:50px;display:flex;align-items:center;justify-content:center;border-radius:12px;"><i class="fa-solid fa-trophy fa-lg"></i></div>
                          <h3 class="fs-6 fw-bold mb-2">Personal Mastery</h3>
                          <p style="font-size:.85rem;color:var(--tx2)">Compare only against your own assessment baseline, personal best, and competency growth.</p>
                      </div>
                   </div>
+                  </div>
+                  <div class="swiper-pagination landing-carousel-pagination landing-features-pagination"></div>
+                  <button type="button" class="landing-carousel-autoplay-toggle landing-features-autoplay-toggle" aria-label="Pause core features carousel" data-pause-label="Pause core features carousel" data-play-label="Play core features carousel">
+                     <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                  </button>
+                  <div class="swiper-button-next landing-carousel-next landing-features-next"></div>
+                  <div class="swiper-button-prev landing-carousel-prev landing-features-prev"></div>
                </div>
             </div>
          </section>
@@ -4483,49 +4815,57 @@
                   <h2 class="stitle">Your journey to <span class="gt">Philippine interview mastery</span></h2>
                </div>
 
-               <div class="row g-4 justify-content-center">
-                  <div class="col-md-4 col-sm-6 rv">
+               <div class="swiper landingHowSwiper landing-auto-carousel how-auto-carousel" aria-label="How it works carousel">
+                  <div class="row g-4 justify-content-center swiper-wrapper">
+                  <div class="col-md-4 col-sm-6 rv swiper-slide">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">1</div>
                         <h3 class="fs-5 fw-semibold mb-2">Create an Account</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Join the community and access your personalized dashboard.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 col-sm-6 rv" style="transition-delay:.1s">
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
                         <h3 class="fs-5 fw-semibold mb-2">Configure Your Setup</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Choose your target role, difficulty, and Philippine interview scenario.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 col-sm-6 rv" style="transition-delay:.2s">
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
                         <h3 class="fs-5 fw-semibold mb-2">Take a Philippine Mock Interview</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Face our interactive AI avatar with Philippine HR, BPO, IT, and fresh graduate questions.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 col-sm-6 rv" style="transition-delay:.3s">
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">4</div>
                         <h3 class="fs-5 fw-semibold mb-2">Review AI Feedback</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Get instant, actionable evaluations on your performance.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 col-sm-6 rv" style="transition-delay:.4s">
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">5</div>
                         <h3 class="fs-5 fw-semibold mb-2">Train & Rehearse</h3>
                         <p style="font-size:.875rem;color:var(--tx2)">Refine your skills using Voice Rehearsal and the AI Coach.</p>
                      </div>
                   </div>
-                  <div class="col-md-4 col-sm-6 rv" style="transition-delay:.5s">
+                  <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
                         <h3 class="fs-5 fw-semibold mb-2">Track Your Progress</h3>
                          <p style="font-size:.875rem;color:var(--tx2)">Monitor competency growth, real interview outcomes, and your personal assessment baseline.</p>
                      </div>
                   </div>
+                  </div>
+                  <div class="swiper-pagination landing-carousel-pagination landing-how-pagination"></div>
+                  <button type="button" class="landing-carousel-autoplay-toggle landing-how-autoplay-toggle" aria-label="Pause how it works carousel" data-pause-label="Pause how it works carousel" data-play-label="Play how it works carousel">
+                     <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                  </button>
+                  <div class="swiper-button-next landing-carousel-next landing-how-next"></div>
+                  <div class="swiper-button-prev landing-carousel-prev landing-how-prev"></div>
                </div>
             </div>
          </section>
@@ -4540,35 +4880,43 @@
                         <span class="slbl">Interview Categories</span>
                         <h2 class="stitle">Tailored to your <span class="gt">goals</span></h2>
                      </div>
-                     <div class="row g-3">
-                        <div class="col-sm-6">
+                     <div class="swiper landingCategorySwiper landing-auto-carousel category-auto-carousel" aria-label="Interview categories carousel">
+                        <div class="row g-3 swiper-wrapper">
+                        <div class="col-sm-6 swiper-slide">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
                               <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
                               <h4 class="fs-5 fw-bold">Job Interview</h4>
                               <p style="font-size:.85rem;color:var(--tx2)">Practice employment interviews across various industries.</p>
                            </div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-6 swiper-slide">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #34d399;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#34d399"><i class="fa-solid fa-award"></i></div>
                               <h4 class="fs-5 fw-bold">Scholarship Interview</h4>
                               <p style="font-size:.85rem;color:var(--tx2)">Prepare for rigorous scholarship and grant applications.</p>
                            </div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-6 swiper-slide">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-university"></i></div>
                               <h4 class="fs-5 fw-bold">College Admission</h4>
                               <p style="font-size:.85rem;color:var(--tx2)">Improve admission interview performance for top universities.</p>
                            </div>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-6 swiper-slide">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-laptop-code"></i></div>
                               <h4 class="fs-5 fw-bold">IT/Programming</h4>
                               <p style="font-size:.85rem;color:var(--tx2)">Practice technical, coding, and system design interviews.</p>
                            </div>
                         </div>
+                        </div>
+                        <div class="swiper-pagination landing-carousel-pagination landing-category-pagination"></div>
+                        <button type="button" class="landing-carousel-autoplay-toggle landing-category-autoplay-toggle" aria-label="Pause interview categories carousel" data-pause-label="Pause interview categories carousel" data-play-label="Play interview categories carousel">
+                           <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                        </button>
+                        <div class="swiper-button-next landing-carousel-next landing-category-next"></div>
+                        <div class="swiper-button-prev landing-carousel-prev landing-category-prev"></div>
                      </div>
                   </div>
                </div>
@@ -5725,6 +6073,57 @@
                              } else {
                                  previewSwiper.autoplay?.start();
                                  autoplayToggle.setAttribute("aria-label", "Pause demo preview");
+                                 icon?.classList.remove("fa-play");
+                                 icon?.classList.add("fa-pause");
+                             }
+                         });
+                     }
+                 });
+
+                 document.querySelectorAll(".landingFeatureSwiper, .landingHowSwiper, .landingCategorySwiper").forEach(function(carouselEl) {
+                     const landingSwiper = new Swiper(carouselEl, {
+                         slidesPerView: "auto",
+                         centeredSlides: true,
+                         spaceBetween: 16,
+                         effect: "coverflow",
+                         coverflowEffect: {
+                             rotate: 0,
+                             stretch: 62,
+                             depth: 92,
+                             modifier: 1,
+                             scale: 0.94,
+                             slideShadows: false,
+                         },
+                         loop: true,
+                         watchSlidesProgress: true,
+                         autoplay: {
+                             delay: 2800,
+                             disableOnInteraction: false,
+                             pauseOnMouseEnter: true,
+                         },
+                         pagination: {
+                             el: carouselEl.querySelector(".landing-carousel-pagination"),
+                             clickable: true,
+                         },
+                         navigation: {
+                             nextEl: carouselEl.querySelector(".landing-carousel-next"),
+                             prevEl: carouselEl.querySelector(".landing-carousel-prev"),
+                         },
+                     });
+
+                     const carouselToggle = carouselEl.querySelector(".landing-carousel-autoplay-toggle");
+                     if (carouselToggle) {
+                         carouselToggle.addEventListener("click", function() {
+                             const icon = carouselToggle.querySelector("i");
+                             const paused = carouselToggle.classList.toggle("is-paused");
+                             if (paused) {
+                                 landingSwiper.autoplay?.stop();
+                                 carouselToggle.setAttribute("aria-label", carouselToggle.dataset.playLabel || "Play carousel");
+                                 icon?.classList.remove("fa-pause");
+                                 icon?.classList.add("fa-play");
+                             } else {
+                                 landingSwiper.autoplay?.start();
+                                 carouselToggle.setAttribute("aria-label", carouselToggle.dataset.pauseLabel || "Pause carousel");
                                  icon?.classList.remove("fa-play");
                                  icon?.classList.add("fa-pause");
                              }
