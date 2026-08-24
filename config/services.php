@@ -40,9 +40,9 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
-        'connect_timeout' => env('GOOGLE_HTTP_CONNECT_TIMEOUT', 10),
-        'timeout' => env('GOOGLE_HTTP_TIMEOUT', 30),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+        'connect_timeout' => env('GOOGLE_HTTP_CONNECT_TIMEOUT', 3),
+        'timeout' => env('GOOGLE_HTTP_TIMEOUT', 8),
     ],
 
     'openai' => [
