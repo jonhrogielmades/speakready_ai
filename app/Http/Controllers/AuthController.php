@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 use Laravel\Socialite\Facades\Socialite;
@@ -24,66 +25,34 @@ class AuthController extends Controller
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
-                'identifier' => 'New account registration is currently disabled by the administrator.',
-            ])->withInput($request->only('name', 'identifier', 'username', 'email'));
-        }
-
-        $submittedIdentifier = trim((string) $request->input('identifier'));
-        $submittedUsername = trim((string) $request->input('username'));
-        $submittedEmail = trim((string) $request->input('email'));
-
-        if ($submittedIdentifier !== '') {
-            $identifier = $submittedIdentifier;
-            $email = filter_var($identifier, FILTER_VALIDATE_EMAIL)
-                ? Str::lower($identifier)
-                : null;
-            $username = $email
-                ? User::generateUniqueUsernameFrom($email)
-                : User::normalizeUsername($identifier);
-        } else {
-            $identifier = $submittedUsername ?: $submittedEmail;
-            $email = $submittedEmail !== '' ? Str::lower($submittedEmail) : null;
-            $username = $submittedUsername !== ''
-                ? User::normalizeUsername($submittedUsername)
-                : ($email ? User::generateUniqueUsernameFrom($email) : '');
+                'email' => 'New account registration is currently disabled by the administrator.',
+            ])->withInput($request->only('name', 'email'));
         }
 
         $request->merge([
-            'identifier' => $identifier,
-            'username' => $username,
-            'email' => $email,
+            'email' => Str::lower(trim((string) $request->input('email'))),
         ]);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'identifier' => 'required|string|max:255',
-            'username' => 'required|string|min:3|max:30|regex:/^[a-z0-9_]+$/|unique:users,username',
-            'email' => 'nullable|string|email|max:255|unique:users,email',
+            'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-        ], [
-            'username.regex' => 'Username may only contain letters, numbers, and underscores.',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
-            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Create profile for SpeakReady AI features
-        Profile::create([
-            'user_id' => $user->id,
-            'readiness_score' => 0,
-            'total_sessions' => 0,
-        ]);
+        $this->ensureAuthenticationProfile($user);
 
         Auth::login($user, true);
 
-        ActivityLogger::log(
+        $this->safeActivityLog(
             $user,
             'user_registered',
-            "{$user->name} ({$this->accountIdentifier($user)}) registered a new account.",
+            "{$user->name} ({$user->email}) registered a new account.",
             $request->ip(),
             false
         );
@@ -103,23 +72,26 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $identifier = trim((string) $request->input('login', $request->input('email')));
-        $request->merge(['login' => $identifier]);
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
 
         $validated = $request->validate([
-            'login' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
             'password' => 'required|string',
             'remember' => 'sometimes|boolean',
         ]);
 
         $rememberDevice = $request->boolean('remember', true);
-        $loginField = filter_var($validated['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        $loginValue = $loginField === 'username'
-            ? User::normalizeUsername($validated['login'])
-            : Str::lower($validated['login']);
-        $user = User::whereRaw("LOWER({$loginField}) = ?", [$loginValue])->first();
+        $credentials = [
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ];
 
-        if ($user && is_string($user->password) && Hash::check($validated['password'], $user->password)) {
+        if (Auth::attempt($credentials, $rememberDevice)) {
+            $request->session()->regenerate();
+            $user = Auth::user();
+
             if (in_array($user->status, ['inactive', 'suspended'])) {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -128,13 +100,10 @@ class AuthController extends Controller
                 return back()->withErrors([
                     'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
                 ])->withInput([
-                    'login' => $validated['login'],
-                    'email' => $user->email,
+                    'email' => $validated['email'],
                 ]);
             }
 
-            Auth::login($user, $rememberDevice);
-            $request->session()->regenerate();
             $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in', $request->ip());
 
             if ($user->is_admin) {
@@ -144,32 +113,29 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'login' => 'The provided credentials do not match our records.',
-        ])->onlyInput('login');
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
 
     public function requestReactivation(Request $request)
     {
-        $identifier = trim((string) $request->input('login', $request->input('email')));
-        $request->merge(['login' => $identifier]);
-
-        $validated = $request->validate([
-            'login' => 'required|string|max:255',
+        $request->merge([
+            'email' => Str::lower(trim((string) $request->input('email'))),
         ]);
 
-        $loginField = filter_var($validated['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-        $loginValue = $loginField === 'username'
-            ? User::normalizeUsername($validated['login'])
-            : Str::lower($validated['login']);
-        $user = User::whereRaw("LOWER({$loginField}) = ?", [$loginValue])->first();
+        $validated = $request->validate([
+            'email' => 'required|string|email|max:255',
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
 
         if ($user && in_array($user->status, ['inactive', 'suspended'])) {
             $user->update(['reactivation_requested_at' => now()]);
 
-            ActivityLogger::log(
+            $this->safeActivityLog(
                 $user,
                 'reactivation_requested',
-                "{$user->name} ({$this->accountIdentifier($user)}) requested account reactivation.",
+                "{$user->name} ({$user->email}) requested account reactivation.",
                 $request->ip(),
                 false
             );
@@ -178,8 +144,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'login' => 'Unable to process your request at this time.',
-        ])->onlyInput('login');
+            'email' => 'Unable to process your request at this time.',
+        ])->onlyInput('email');
     }
 
     public function showForgotPasswordForm()
@@ -323,22 +289,16 @@ class AuthController extends Controller
                 }
 
                 $user = User::create([
-                    'name' => $googleUser->name,
-                    'username' => User::generateUniqueUsernameFrom($googleUser->email ?: $googleUser->name ?: 'google_user'),
+                    'name' => $googleUser->name ?: 'Google User',
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'password' => null,
                     'profile_photo_path' => $googleUser->avatar,
                 ]);
 
-                Profile::firstOrCreate([
-                    'user_id' => $user->id,
-                ], [
-                    'readiness_score' => 0,
-                    'total_sessions' => 0,
-                ]);
+                $this->ensureAuthenticationProfile($user);
 
-                ActivityLogger::log(
+                $this->safeActivityLog(
                     $user,
                     'user_registered',
                     "{$user->name} ({$user->email}) registered a new account with Google.",
@@ -352,9 +312,6 @@ class AuthController extends Controller
                 }
                 if (!$user->profile_photo_path) {
                     $updates['profile_photo_path'] = $googleUser->avatar;
-                }
-                if (!$user->username) {
-                    $updates['username'] = User::generateUniqueUsernameFrom($googleUser->email ?: $googleUser->name ?: 'google_user', $user->id);
                 }
                 if (!empty($updates)) {
                     $user->update($updates);
@@ -425,17 +382,50 @@ class AuthController extends Controller
 
     private function logAuthenticationActivity(User $user, string $action, string $activity, ?string $ipAddress): void
     {
-        ActivityLogger::log(
+        $this->safeActivityLog(
             $user,
             $action,
-            "{$user->name} ({$this->accountIdentifier($user)}) {$activity}.",
+            "{$user->name} ({$user->email}) {$activity}.",
             $ipAddress,
             false
         );
     }
 
-    private function accountIdentifier(User $user): string
+    private function ensureAuthenticationProfile(User $user): void
     {
-        return $user->email ?: $user->username ?: (string) $user->id;
+        try {
+            if (! Schema::hasTable('profiles')) {
+                return;
+            }
+
+            Profile::firstOrCreate([
+                'user_id' => $user->id,
+            ], [
+                'readiness_score' => 0,
+                'total_sessions' => 0,
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('Unable to create authentication profile.', [
+                'user_id' => $user->id,
+                'exception' => $e,
+            ]);
+        }
+    }
+
+    private function safeActivityLog(User $user, string $action, string $description, ?string $ipAddress, bool $notify): void
+    {
+        try {
+            if (! Schema::hasTable('activity_logs')) {
+                return;
+            }
+
+            ActivityLogger::log($user, $action, $description, $ipAddress, $notify);
+        } catch (Throwable $e) {
+            Log::warning('Unable to write authentication activity.', [
+                'user_id' => $user->id,
+                'action' => $action,
+                'exception' => $e,
+            ]);
+        }
     }
 }

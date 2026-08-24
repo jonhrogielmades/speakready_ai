@@ -31,7 +31,6 @@ class AdminAccountSeeder extends Seeder
         $admin->forceFill([
             'name' => $name,
             'email' => $email,
-            'username' => $admin->username ?: User::generateUniqueUsernameFrom($email ?: $name, $admin->id),
             'is_admin' => true,
             'status' => 'active',
             'reactivation_requested_at' => null,

@@ -60,7 +60,7 @@ class AdminController extends Controller
         $avgGrammar = round((clone $eligibleScoresQuery)->avg('grammar_score') ?? 0);
         $avgProfessionalism = round((clone $eligibleScoresQuery)->avg('professionalism_score') ?? 0);
 
-        $recentActivities = \App\Models\ActivityLog::orderBy('created_at', 'desc')->take(4)->get()->map(function($activity) {
+        $recentActivities = \App\Models\ActivityLog::orderBy('created_at', 'desc')->take(15)->get()->map(function($activity) {
             return [
                 'text' => $activity->description ?: $activity->action,
                 'time' => $activity->created_at->diffForHumans(),

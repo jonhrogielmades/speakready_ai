@@ -21,35 +21,6 @@
                      <div class="mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first('account_inactive') }}</span></div>
                      <form action="{{ route('request.reactivation') }}" method="POST">
                         @csrf
-                        <input type="hidden" name="login" value="{{ old('login', old('email')) }}">
-                        <button type="submit" class="btn btn-sm btn-warning w-100 fw-bold" style="border-radius:8px; background: #f59e0b; border: none; color: #fff;">Request Reactivation</button>
-                     </form>
-                  </div>
-               @endif
-               <form id="loginForm" action="{{ route('login') }}" method="POST">
-      <!-- ======================== LOGIN OFFCANVAS ======================== -->
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="lofc">
-         <div class="offcanvas-header">
-            <div class="d-flex align-items-center gap-2">
-               <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="width:30px;height:30px;background: #ffffff; padding: 0;">
-               <h5 class="offcanvas-title mb-0">SpeakReady AI</h5>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" style="filter:invert(1)"></button>
-         </div>
-         <div class="offcanvas-body p-4">
-            <div class="tab-switch"><button class="tab-sw-btn on" id="tabLogin" onclick="swTab('login')">Log In</button><button class="tab-sw-btn" id="tabSignup" onclick="swTab('signup')">Register</button></div>
-            <!-- Login -->
-            <div id="fLogin">
-               @if(session('success'))
-                  <div style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.2);padding:10px;border-radius:12px;font-size:0.85rem;margin-bottom:15px;">
-                     <i class="fa-solid fa-check-circle me-1"></i> {{ session('success') }}
-                  </div>
-               @endif
-               @if($errors->has('account_inactive'))
-                  <div class="err-msg" style="display:block; padding:12px; margin-bottom:15px; text-align:left; line-height: 1.4;">
-                     <div class="mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first('account_inactive') }}</span></div>
-                     <form action="{{ route('request.reactivation') }}" method="POST">
-                        @csrf
                         <input type="hidden" name="email" value="{{ old('email') }}">
                         <button type="submit" class="btn btn-sm btn-warning w-100 fw-bold" style="border-radius:8px; background: #f59e0b; border: none; color: #fff;">Request Reactivation</button>
                      </form>
@@ -60,8 +31,8 @@
                   @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
                      <div class="err-msg" style="display:block;"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first() }}</span></div>
                   @endif
-                  <label class="olbl"><i class="fa-solid fa-user me-1"></i>Username or email address</label>
-                  <input class="oinp" type="text" name="login" id="loginIdentifier" placeholder="username or you@example.com" required autocomplete="username" value="{{ old('login', old('email')) }}">
+                  <label class="olbl"><i class="fa-solid fa-envelope me-1"></i>Email address</label>
+                  <input class="oinp" type="email" name="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email" value="{{ old('email') }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required>
@@ -86,8 +57,8 @@
                   @endif
                   <label class="olbl"><i class="fa-solid fa-user me-1"></i>Full name</label>
                   <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required value="{{ old('name') }}">
-                  <label class="olbl"><i class="fa-solid fa-at me-1"></i>Username or email address</label>
-                  <input class="oinp" type="text" name="identifier" id="signupIdentifier" placeholder="username or you@example.com" required autocomplete="username" value="{{ old('identifier', old('username', old('email'))) }}">
+                  <label class="olbl"><i class="fa-solid fa-envelope me-1"></i>Email address</label>
+                  <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email" value="{{ old('email') }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required>

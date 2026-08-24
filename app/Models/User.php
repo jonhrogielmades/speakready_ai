@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -23,7 +22,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'username',
         'email',
         'password',
         'is_admin',
@@ -76,42 +74,5 @@ class User extends Authenticatable
         }
 
         $this->notify(new ResetPassword($token));
-    }
-
-    public static function normalizeUsername(?string $username): string
-    {
-        $username = Str::lower(Str::ascii(trim((string) $username)));
-        $username = preg_replace('/[^a-z0-9_]+/', '_', $username) ?? '';
-
-        return trim($username, '_');
-    }
-
-    public static function generateUniqueUsernameFrom(?string $source, ?int $ignoreUserId = null): string
-    {
-        $source = trim((string) $source);
-        $baseSource = Str::contains($source, '@') ? Str::before($source, '@') : $source;
-        $base = self::normalizeUsername($baseSource) ?: 'user';
-        $base = trim(Str::limit($base, 24, ''), '_') ?: 'user';
-        $candidate = $base;
-        $suffix = 2;
-
-        while (self::usernameExists($candidate, $ignoreUserId)) {
-            $suffixText = (string) $suffix;
-            $prefixLength = max(1, 30 - strlen($suffixText));
-            $prefix = trim(Str::limit($base, $prefixLength, ''), '_') ?: 'user';
-            $candidate = $prefix . $suffixText;
-            $suffix++;
-        }
-
-        return $candidate;
-    }
-
-    private static function usernameExists(string $username, ?int $ignoreUserId = null): bool
-    {
-        return self::withTrashed()
-            ->whereNotNull('username')
-            ->when($ignoreUserId, fn ($query) => $query->where('id', '!=', $ignoreUserId))
-            ->whereRaw('LOWER(username) = ?', [Str::lower($username)])
-            ->exists();
     }
 }
