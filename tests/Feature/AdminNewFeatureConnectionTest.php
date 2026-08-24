@@ -66,7 +66,7 @@ class AdminNewFeatureConnectionTest extends TestCase
             'email' => 'blocked@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ])->assertSessionHasErrors('email');
+        ])->assertSessionHasErrors('identifier');
 
         $this->assertDatabaseMissing('users', ['email' => 'blocked@example.com']);
     }

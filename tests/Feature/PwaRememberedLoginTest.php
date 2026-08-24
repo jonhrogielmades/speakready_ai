@@ -87,8 +87,7 @@ class PwaRememberedLoginTest extends TestCase
     {
         $response = $this->post(route('register'), [
             'name' => 'New Interview User',
-            'username' => 'new_interview_user',
-            'email' => 'new-interview-user@example.com',
+            'identifier' => 'new-interview-user@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ]);
@@ -113,6 +112,26 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Registration successful. Welcome to SpeakReady AI!');
     }
 
+    public function test_registration_accepts_username_only_identifier(): void
+    {
+        $response = $this->post(route('register'), [
+            'name' => 'Username Only User',
+            'identifier' => 'username_only_user',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ]);
+
+        $response->assertRedirect(route('dashboard'))
+            ->assertSessionHas('registration_success', true);
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'name' => 'Username Only User',
+            'username' => 'username_only_user',
+            'email' => null,
+        ]);
+    }
+
     public function test_guest_auth_modal_uses_loading_overlay_for_registration(): void
     {
         $response = $this->get('/');
@@ -121,9 +140,10 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('id="loginForm"', false)
             ->assertSee('id="signupForm"', false)
             ->assertSee('name="login"', false)
+            ->assertSee('name="identifier"', false)
             ->assertSee('Username or email address', false)
-            ->assertSee('name="username"', false)
-            ->assertSee('id="signupUsername"', false)
+            ->assertSee('id="signupIdentifier"', false)
+            ->assertDontSee('id="signupUsername"', false)
             ->assertSee('id="loginTransitionOverlay"', false)
             ->assertSee('id="authTransitionTitle"', false)
             ->assertSee('Creating your account...', false)

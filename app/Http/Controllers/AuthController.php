@@ -24,19 +24,41 @@ class AuthController extends Controller
     {
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
-                'email' => 'New account registration is currently disabled by the administrator.',
-            ])->withInput($request->only('name', 'username', 'email'));
+                'identifier' => 'New account registration is currently disabled by the administrator.',
+            ])->withInput($request->only('name', 'identifier', 'username', 'email'));
+        }
+
+        $submittedIdentifier = trim((string) $request->input('identifier'));
+        $submittedUsername = trim((string) $request->input('username'));
+        $submittedEmail = trim((string) $request->input('email'));
+
+        if ($submittedIdentifier !== '') {
+            $identifier = $submittedIdentifier;
+            $email = filter_var($identifier, FILTER_VALIDATE_EMAIL)
+                ? Str::lower($identifier)
+                : null;
+            $username = $email
+                ? User::generateUniqueUsernameFrom($email)
+                : User::normalizeUsername($identifier);
+        } else {
+            $identifier = $submittedUsername ?: $submittedEmail;
+            $email = $submittedEmail !== '' ? Str::lower($submittedEmail) : null;
+            $username = $submittedUsername !== ''
+                ? User::normalizeUsername($submittedUsername)
+                : ($email ? User::generateUniqueUsernameFrom($email) : '');
         }
 
         $request->merge([
-            'username' => User::normalizeUsername($request->input('username')),
-            'email' => Str::lower(trim((string) $request->input('email'))),
+            'identifier' => $identifier,
+            'username' => $username,
+            'email' => $email,
         ]);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'identifier' => 'required|string|max:255',
             'username' => 'required|string|min:3|max:30|regex:/^[a-z0-9_]+$/|unique:users,username',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
         ], [
             'username.regex' => 'Username may only contain letters, numbers, and underscores.',
@@ -61,7 +83,7 @@ class AuthController extends Controller
         ActivityLogger::log(
             $user,
             'user_registered',
-            "{$user->name} ({$user->email}) registered a new account.",
+            "{$user->name} ({$this->accountIdentifier($user)}) registered a new account.",
             $request->ip(),
             false
         );
@@ -128,11 +150,18 @@ class AuthController extends Controller
 
     public function requestReactivation(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
+        $identifier = trim((string) $request->input('login', $request->input('email')));
+        $request->merge(['login' => $identifier]);
+
+        $validated = $request->validate([
+            'login' => 'required|string|max:255',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $loginField = filter_var($validated['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $loginValue = $loginField === 'username'
+            ? User::normalizeUsername($validated['login'])
+            : Str::lower($validated['login']);
+        $user = User::whereRaw("LOWER({$loginField}) = ?", [$loginValue])->first();
 
         if ($user && in_array($user->status, ['inactive', 'suspended'])) {
             $user->update(['reactivation_requested_at' => now()]);
@@ -140,7 +169,7 @@ class AuthController extends Controller
             ActivityLogger::log(
                 $user,
                 'reactivation_requested',
-                "{$user->name} ({$user->email}) requested account reactivation.",
+                "{$user->name} ({$this->accountIdentifier($user)}) requested account reactivation.",
                 $request->ip(),
                 false
             );
@@ -149,8 +178,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Unable to process your request at this time.',
-        ])->onlyInput('email');
+            'login' => 'Unable to process your request at this time.',
+        ])->onlyInput('login');
     }
 
     public function showForgotPasswordForm()
@@ -399,9 +428,14 @@ class AuthController extends Controller
         ActivityLogger::log(
             $user,
             $action,
-            "{$user->name} ({$user->email}) {$activity}.",
+            "{$user->name} ({$this->accountIdentifier($user)}) {$activity}.",
             $ipAddress,
             false
         );
+    }
+
+    private function accountIdentifier(User $user): string
+    {
+        return $user->email ?: $user->username ?: (string) $user->id;
     }
 }
