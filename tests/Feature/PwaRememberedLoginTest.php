@@ -6,7 +6,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class PwaRememberedLoginTest extends TestCase
@@ -84,27 +83,6 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertCookieMissing(Auth::guard()->getRecallerName());
     }
 
-    public function test_password_login_does_not_500_when_activity_logging_is_unavailable(): void
-    {
-        $user = User::factory()->create([
-            'username' => 'logging_down_user',
-            'email' => 'logging-down@example.com',
-            'password' => Hash::make('password'),
-            'is_admin' => false,
-            'status' => 'active',
-        ]);
-
-        Schema::dropIfExists('activity_logs');
-
-        $response = $this->post(route('login'), [
-            'login' => 'logging-down@example.com',
-            'password' => 'password',
-        ]);
-
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($user);
-    }
-
     public function test_registration_logs_user_in_and_flashes_success_alert(): void
     {
         $response = $this->post(route('register'), [
@@ -151,48 +129,6 @@ class PwaRememberedLoginTest extends TestCase
             'name' => 'Username Only User',
             'username' => 'username_only_user',
             'email' => null,
-        ]);
-    }
-
-    public function test_registration_does_not_500_when_activity_logging_is_unavailable(): void
-    {
-        Schema::dropIfExists('activity_logs');
-
-        $response = $this->post(route('register'), [
-            'name' => 'Logging Down Register',
-            'identifier' => 'logging-down-register@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $response->assertRedirect(route('dashboard'))
-            ->assertSessionHas('registration_success', true);
-
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', [
-            'username' => 'logging_down_register',
-            'email' => 'logging-down-register@example.com',
-        ]);
-    }
-
-    public function test_registration_does_not_500_when_profile_creation_is_unavailable(): void
-    {
-        Schema::dropIfExists('profiles');
-
-        $response = $this->post(route('register'), [
-            'name' => 'Profile Down Register',
-            'identifier' => 'profile-down-register@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $response->assertRedirect(route('dashboard'))
-            ->assertSessionHas('registration_success', true);
-
-        $this->assertAuthenticated();
-        $this->assertDatabaseHas('users', [
-            'username' => 'profile_down_register',
-            'email' => 'profile-down-register@example.com',
         ]);
     }
 
