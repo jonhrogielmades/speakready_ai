@@ -1,19 +1,37 @@
 /* Unlock private review - Mobile */
 .unlock-shell {
    min-height: 100vh;
+   min-height: 100dvh;
    display: flex;
    align-items: center;
    justify-content: center;
-   padding: 16px;
+   padding:
+      max(16px, env(safe-area-inset-top, 0px))
+      max(16px, env(safe-area-inset-right, 0px))
+      max(16px, env(safe-area-inset-bottom, 0px))
+      max(16px, env(safe-area-inset-left, 0px));
    background: #0b1120;
    color: #f8fafc;
+   overflow-x: hidden;
+   -webkit-text-size-adjust: 100%;
+   text-size-adjust: 100%;
 }
 .unlock-card {
    width: 100%;
    max-width: 420px;
-   padding: 24px;
+   min-width: 0;
+   padding: clamp(18px, 5vw, 24px);
    border-radius: 16px;
    border: 1px solid #1e293b;
    background: #111827;
    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.unlock-card :where(h1, p, label, div) {
+   overflow-wrap: anywhere;
+}
+
+.unlock-card :where(input, button, .btn) {
+   min-height: 44px;
+   font-size: max(16px, 1rem);
 }

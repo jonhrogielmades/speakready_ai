@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
    <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f7fbff">
       <title>@yield('title', 'SpeakReady AI')</title>
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
@@ -14,7 +14,8 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}">
       <link rel="stylesheet" href="{{ asset('css/desktop/auth/auth.css?v=1') }}" data-page-style="auth-desktop">
    </head>
-   <body>
+   <body class="auth-desktop-shell desktop-shell" data-layout-shell="desktop" data-auth-layout="desktop">
+      @include('desktop.partials.viewport-mobile-cookie')
       <main class="auth-shell">
          <section class="auth-card">
             <a class="auth-brand" href="{{ url('/') }}">

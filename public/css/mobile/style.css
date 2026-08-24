@@ -8156,3 +8156,150 @@ body .modal-title {
     --desktop-content-max: 1720px;
   }
 }
+
+/* ======================== 2026 MOBILE RESPONSIVE FOUNDATION ======================== */
+:root {
+  --sr-mobile-vh: var(--sr-js-vh, 100vh);
+  --sr-mobile-vh: var(--sr-js-vh, 100dvh);
+  --sr-mobile-inline: clamp(12px, 4vw, 18px);
+  --sr-mobile-radius: 8px;
+  --sr-touch-target: 44px;
+}
+
+@supports (height: 100svh) {
+  :root {
+    --sr-mobile-vh: var(--sr-js-vh, 100svh);
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: var(--sr-mobile-vh);
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
+}
+
+@supports (overflow: clip) {
+  body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) {
+    overflow-x: clip !important;
+  }
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(
+  .container,
+  .container-fluid,
+  .row,
+  .row > *,
+  .col,
+  [class*="col-"],
+  .d-flex,
+  .d-grid,
+  [class*="grid"],
+  [class*="layout"],
+  [class*="shell"],
+  form,
+  fieldset,
+  .tab-content,
+  .tab-pane,
+  .card,
+  .gc,
+  .premium-card,
+  .premium-panel,
+  .panel,
+  .table-responsive
+) {
+  min-width: 0 !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(img, picture, video, canvas, iframe, svg) {
+  max-width: 100% !important;
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(img, video, canvas) {
+  height: auto;
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(p, small, span, strong, label, a:not(.btn), td, th, li, h1, h2, h3, h4, h5, h6) {
+  overflow-wrap: anywhere;
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(.table-responsive, .table-responsive-sm, .table-responsive-md, .table-responsive-lg, .table-responsive-xl) {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(a, button, .btn, [role="button"], input, select, textarea, summary, label) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(button, .btn, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], select) {
+  min-height: var(--sr-touch-target);
+  touch-action: manipulation;
+}
+
+body.guest-mobile-shell #hero {
+  min-height: var(--sr-mobile-vh);
+  padding-top: calc(var(--nav, 68px) + env(safe-area-inset-top, 0px));
+}
+
+body.guest-mobile-shell #nbar {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+body.guest-mobile-shell #mbmenu {
+  max-height: calc(var(--sr-mobile-vh) - var(--nav, 68px) - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.guest-mobile-shell #pwa-install-prompt {
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+}
+
+@media (hover: none), (pointer: coarse) {
+  body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(input, select, textarea, .form-control, .form-select, .oinp, .auth-input, .tracker-field) {
+    font-size: max(16px, 1rem) !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(.container, .container-fluid) {
+    padding-left: max(var(--sr-mobile-inline), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--sr-mobile-inline), env(safe-area-inset-right, 0px));
+  }
+
+  body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(.row) {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
+  }
+
+  body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) :where(.btn, button) {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 360px) {
+  body:is(.guest-mobile-shell, .auth-mobile-shell, .mobile-shell) {
+    --sr-mobile-inline: 10px;
+  }
+}

@@ -860,10 +860,12 @@ class InterviewController extends Controller
                     $totalGrammar += $g;
                     $totalProf += $p;
 
-                    $evidence = $assessment->answerEvidence(
-                        $answer->answer_text ?? '',
+                    $evidence = $this->safeAssessmentAnswerEvidence(
+                        $assessment,
+                        $session,
+                        $answer,
                         $qFeedback['ai_feedback'] ?? null,
-                        $answer->question
+                        'final_answer_evidence'
                     );
                     $rubric = $assessment->rubricLevel($qScore);
                     $coachingFeedback = $this->safeCoachingFeedback(
@@ -881,7 +883,14 @@ class InterviewController extends Controller
                     );
                     $answer->update([
                         'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
-                        'better_sample_answer' => $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence),
+                        'better_sample_answer' => $this->safeGroundedRevisionTemplate(
+                            $assessment,
+                            $session,
+                            $answer,
+                            $evidence,
+                            'final_answer_revision',
+                            $qFeedback['better_sample_answer'] ?? null
+                        ),
                         'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
                         'clarity_score' => $c,
                         'relevance_score' => $r,
@@ -924,7 +933,13 @@ class InterviewController extends Controller
                         'grammar_score' => 0,
                         'score' => $qScore,
                         'scoring_confidence' => 0,
-                        'evidence_map' => $assessment->answerEvidence($answer->answer_text ?? '', null, $answer->question),
+                        'evidence_map' => $this->safeAssessmentAnswerEvidence(
+                            $assessment,
+                            $session,
+                            $answer,
+                            null,
+                            'final_answer_evidence_fallback'
+                        ),
                         'rubric_level' => 'Unscored',
                         'improved_answer_source' => 'unavailable',
                         'coaching_feedback' => $coachingFeedback,
@@ -944,7 +959,7 @@ class InterviewController extends Controller
             $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
             $jobEvidenceScore = 0;
             $evaluatedAnswers = $answers->fresh(['question']);
-            $metadata = $assessment->sessionMetadata($session, $evaluatedAnswers, [
+            $metadata = $this->safeSessionMetadata($assessment, $session, $evaluatedAnswers, [
                 'clarity' => $clarity,
                 'relevance' => $relevance,
                 'grammar' => $grammar,
@@ -999,7 +1014,7 @@ class InterviewController extends Controller
 
             $session->update([
                 'status' => 'completed',
-                'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
+                'action_plan' => $this->safeActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
                 'current_question_index' => max(0, $answers->count() - 1),
                 'session_state' => null,
             ]);
@@ -1483,10 +1498,12 @@ class InterviewController extends Controller
                 $totalGrammar += $g;
                 $totalProf += $p;
 
-                $evidence = $assessment->answerEvidence(
-                    $answer->answer_text ?? '',
+                $evidence = $this->safeAssessmentAnswerEvidence(
+                    $assessment,
+                    $session,
+                    $answer,
                     $qFeedback['ai_feedback'] ?? null,
-                    $answer->question
+                    'refresh_answer_evidence'
                 );
                 $rubric = $assessment->rubricLevel($qScore);
                 $coachingFeedback = $this->safeCoachingFeedback(
@@ -1505,7 +1522,16 @@ class InterviewController extends Controller
 
                 $answer->update([
                     'ai_feedback' => $qFeedback['ai_feedback'] ?? 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
-                    'better_sample_answer' => $qFeedback ? $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence) : '',
+                    'better_sample_answer' => $qFeedback
+                        ? $this->safeGroundedRevisionTemplate(
+                            $assessment,
+                            $session,
+                            $answer,
+                            $evidence,
+                            'refresh_answer_revision',
+                            $qFeedback['better_sample_answer'] ?? null
+                        )
+                        : '',
                     'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
                     'clarity_score' => $c,
                     'relevance_score' => $r,
@@ -1529,7 +1555,7 @@ class InterviewController extends Controller
             $starScore = $this->scoreValue($sFeedback['star_method_score'] ?? 0);
             $jobEvidenceScore = 0;
             $evaluatedAnswers = $answers->fresh(['question']);
-            $metadata = $assessment->sessionMetadata($session, $evaluatedAnswers, [
+            $metadata = $this->safeSessionMetadata($assessment, $session, $evaluatedAnswers, [
                 'clarity' => $clarity,
                 'relevance' => $relevance,
                 'grammar' => $grammar,
@@ -1574,7 +1600,7 @@ class InterviewController extends Controller
             ]);
 
             $session->update([
-                'action_plan' => $this->buildActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
+                'action_plan' => $this->safeActionPlan($session, $scoreRecord, $feedbackRecord, $evaluatedAnswers),
             ]);
         });
     }
@@ -2082,6 +2108,203 @@ class InterviewController extends Controller
                 : null,
             'mapped_skills' => is_array($mappedSkills) ? $mappedSkills : [],
         ];
+    }
+
+    private function safeAssessmentAnswerEvidence(
+        TrustworthyAssessmentService $assessment,
+        InterviewSession $session,
+        InterviewAnswer $answer,
+        ?string $feedback,
+        string $stage
+    ): array {
+        try {
+            return $assessment->answerEvidence(
+                $answer->answer_text ?? '',
+                $feedback,
+                $answer->question
+            );
+        } catch (\Throwable $error) {
+            $this->logAnswerAnalysisFallback($stage, $error, $session, $answer->question);
+
+            return $this->fallbackAnswerEvidence((string) ($answer->answer_text ?? ''), $answer->question);
+        }
+    }
+
+    private function safeGroundedRevisionTemplate(
+        TrustworthyAssessmentService $assessment,
+        InterviewSession $session,
+        InterviewAnswer $answer,
+        array $evidence,
+        string $stage,
+        ?string $fallback = null
+    ): string {
+        try {
+            $revision = $assessment->groundedRevisionTemplate($answer->answer_text ?? '', $evidence);
+            if (trim($revision) !== '') {
+                return $revision;
+            }
+        } catch (\Throwable $error) {
+            $this->logAnswerAnalysisFallback($stage, $error, $session, $answer->question);
+        }
+
+        $fallback = trim((string) $fallback);
+
+        return $fallback !== ''
+            ? $fallback
+            : $this->fallbackGroundedRevisionTemplate((string) ($answer->answer_text ?? ''), $answer->question);
+    }
+
+    private function fallbackGroundedRevisionTemplate(string $answerText, Question|array|null $question): string
+    {
+        $clean = trim((string) preg_replace('/\s+/', ' ', $answerText));
+        if ($clean === '') {
+            return '';
+        }
+
+        $questionText = $this->questionTextFrom($question);
+        $questionLabel = $questionText !== '' ? ' for "'.mb_substr($questionText, 0, 180).'"' : '';
+
+        return "Fact-grounded revision template{$questionLabel} - preserve only details you can verify:\n"
+            .'Verified source answer: '.mb_substr($clean, 0, 700)."\n"
+            ."Direct response: [Answer the exact question using only facts already present in your answer.]\n"
+            ."Supporting detail: [Organize your verified action, reasoning, or responsibility.]\n"
+            .'Evidence/verification: [Add only a truthful result, lesson, or placeholder until you can verify one.]';
+    }
+
+    private function safeSessionMetadata(
+        TrustworthyAssessmentService $assessment,
+        InterviewSession $session,
+        $answers,
+        array $metrics,
+        int $starScore,
+        int $jobEvidenceScore
+    ): array {
+        try {
+            return $assessment->sessionMetadata($session, $answers, $metrics, $starScore, $jobEvidenceScore);
+        } catch (\Throwable $error) {
+            Log::warning('Interview session assessment metadata failed; using fallback.', [
+                'session_id' => $session->id,
+                'user_id' => $session->user_id,
+                'error_type' => $error::class,
+                'message' => Str::limit($error->getMessage(), 300),
+            ]);
+
+            return $this->fallbackSessionMetadata($session, $answers, $metrics, $starScore, $jobEvidenceScore);
+        }
+    }
+
+    private function fallbackSessionMetadata(
+        InterviewSession $session,
+        $answers,
+        array $metrics,
+        int $starScore,
+        int $jobEvidenceScore
+    ): array {
+        $answers = $answers instanceof \Illuminate\Support\Collection
+            ? $answers->values()
+            : collect($answers)->values();
+        $starApplicable = $answers->contains(
+            fn ($answer): bool => $answer instanceof InterviewAnswer
+                && QuestionIntentService::starApplicable($answer->question)
+        );
+        $languageScoring = ! ((bool) data_get($session->accommodation_profile, 'separate_language_scoring', false));
+        $overall = AIService::calculateWeightedReadinessScore(
+            $metrics['clarity'] ?? 0,
+            $metrics['relevance'] ?? 0,
+            $languageScoring ? ($metrics['grammar'] ?? 0) : 0,
+            $metrics['professionalism'] ?? 0,
+            $starScore,
+            $starApplicable
+        );
+        $answerConfidences = $answers
+            ->pluck('scoring_confidence')
+            ->filter(fn ($value): bool => is_numeric($value) && (int) $value > 0);
+        $deliveryScores = $answers
+            ->pluck('delivery_stability_score')
+            ->filter(fn ($value): bool => $value !== null);
+
+        return [
+            'overall' => $overall,
+            'readiness_band' => $this->fallbackReadinessBand($overall),
+            'scoring_confidence' => $answerConfidences->isNotEmpty()
+                ? max(20, min(80, (int) round($answerConfidences->avg())))
+                : 45,
+            'delivery_stability' => (int) round($deliveryScores->avg() ?? 0),
+            'job_evidence_match' => $jobEvidenceScore,
+            'evidence_map' => $answers->mapWithKeys(function ($answer): array {
+                if (! $answer instanceof InterviewAnswer) {
+                    return [];
+                }
+
+                return [
+                    $answer->id => $this->fallbackAnswerEvidence(
+                        (string) ($answer->answer_text ?? ''),
+                        $answer->question
+                    ),
+                ];
+            })->all(),
+            'rubric' => [
+                'version' => TrustworthyAssessmentService::SCORE_VERSION,
+                'scale' => [
+                    '1' => 'Insufficient evidence',
+                    '2' => 'Partial evidence',
+                    '3' => 'Competent job-related evidence',
+                    '4' => 'Strong evidence with ownership and impact',
+                ],
+                'weights' => [
+                    'clarity' => 25,
+                    'relevance' => 35,
+                    'professionalism' => 20,
+                    'grammar' => $languageScoring ? 10 : 0,
+                    'star_when_applicable' => $starApplicable ? 10 : 0,
+                ],
+                'body_language_included' => false,
+                'delivery_stability_included' => false,
+                'fallback_metadata' => true,
+            ],
+        ];
+    }
+
+    private function fallbackReadinessBand(int $score): string
+    {
+        return $score >= 80 ? 'Ready for Simulation' : ($score >= 60 ? 'Nearly Ready' : 'Developing');
+    }
+
+    private function safeActionPlan(InterviewSession $session, Score $score, Feedback $feedback, $answers): array
+    {
+        try {
+            return $this->buildActionPlan($session, $score, $feedback, $answers);
+        } catch (\Throwable $error) {
+            Log::warning('Interview action plan generation failed; using fallback.', [
+                'session_id' => $session->id,
+                'user_id' => $session->user_id,
+                'error_type' => $error::class,
+                'message' => Str::limit($error->getMessage(), 300),
+            ]);
+
+            $overall = (int) ($score->overall_readiness_score ?? 0);
+
+            return [
+                'headline' => 'Next focus: Clarity',
+                'target_score' => min(100, max(60, $overall + 10)),
+                'next_session' => [
+                    'difficulty' => $overall >= 80 ? 'hard' : ($overall >= 60 ? 'medium' : 'easy'),
+                    'assistance_level' => 'standard',
+                    'strictness' => 'neutral',
+                    'question_types' => [],
+                ],
+                'priorities' => [[
+                    'skill' => 'Clarity',
+                    'score' => (int) ($score->clarity_score ?? 0),
+                    'task' => 'Retry one answer and organize it into context, action, and verified result.',
+                ]],
+                'recommended_paths' => [],
+                'summary' => trim($feedback->improvement_suggestions ?? '')
+                    ?: 'Repeat your weakest answer and add only truthful evidence you can verify.',
+                'generated_at' => now()->toIso8601String(),
+                'fallback' => true,
+            ];
+        }
     }
 
     private function fallbackAnswerEvidence(string $answerText, Question|array|null $question): array

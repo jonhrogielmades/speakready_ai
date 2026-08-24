@@ -1,13 +1,21 @@
          /* ---- Mobile shell viewport and fullscreen hardening ---- */
          :root {
-            --sr-visual-vh: 100vh;
-            --sr-visual-vh: 100dvh;
+            --sr-visual-vh: var(--sr-js-vh, 100vh);
+            --sr-visual-vh: var(--sr-js-vh, 100dvh);
             --sr-layout-vw: 100vw;
+            --sr-mobile-inline: clamp(12px, 4vw, 18px);
+            --sr-touch-target: 44px;
          }
 
          @supports (height: 100svh) {
             :root {
-               --sr-visual-vh: 100svh;
+               --sr-visual-vh: var(--sr-js-vh, 100svh);
+            }
+         }
+
+         @supports (-webkit-touch-callout: none) {
+            html {
+               min-height: -webkit-fill-available;
             }
          }
 
@@ -17,6 +25,8 @@
             max-width: 100%;
             min-height: var(--sr-visual-vh);
             overflow-x: hidden !important;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
          }
 
          @supports (overflow: clip) {
@@ -31,6 +41,7 @@
          body.mobile-shell {
             min-height: var(--sr-visual-vh);
             overscroll-behavior-x: none;
+            touch-action: pan-y;
          }
 
          body.mobile-shell #dashboard,
@@ -64,6 +75,98 @@
          body.mobile-shell #mob-content > .db-content {
             min-width: 0;
             max-width: 100%;
+            padding-left: max(var(--sr-mobile-inline), env(safe-area-inset-left, 0px)) !important;
+            padding-right: max(var(--sr-mobile-inline), env(safe-area-inset-right, 0px)) !important;
+         }
+
+         body.mobile-shell #mob-content :where(
+            .container,
+            .container-fluid,
+            .row,
+            .row > *,
+            .col,
+            [class*="col-"],
+            .d-flex,
+            .d-grid,
+            [class*="grid"],
+            [class*="layout"],
+            [class*="shell"],
+            form,
+            fieldset,
+            .tab-content,
+            .tab-pane,
+            .card,
+            .premium-card,
+            .premium-panel,
+            .setup-panel,
+            .panel,
+            .module-card,
+            .ll-module-card,
+            .level-card,
+            .sr-card,
+            .print-card,
+            .table-responsive
+         ) {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+         }
+
+         body.mobile-shell #mob-content :where(img, picture, video, canvas, iframe, svg) {
+            max-width: 100% !important;
+         }
+
+         body.mobile-shell #mob-content :where(img, video, canvas) {
+            height: auto;
+         }
+
+         body.mobile-shell #mob-content :where(p, small, span, strong, label, a:not(.btn), td, th, li, h1, h2, h3, h4, h5, h6) {
+            overflow-wrap: anywhere;
+         }
+
+         body.mobile-shell #mob-content :where(.table-responsive, .table-responsive-sm, .table-responsive-md, .table-responsive-lg, .table-responsive-xl) {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-inline: contain;
+         }
+
+         body.mobile-shell #mob-content :where(.table, .custom-table, .db-table) {
+            width: 100%;
+         }
+
+         body.mobile-shell :where(a, button, .btn, [role="button"], input, select, textarea, summary, label) {
+            -webkit-tap-highlight-color: transparent;
+         }
+
+         body.mobile-shell #mob-content :where(button, .btn, [role="button"], input[type="button"], input[type="submit"], input[type="reset"], select) {
+            min-height: var(--sr-touch-target);
+            touch-action: manipulation;
+         }
+
+         @media (hover: none), (pointer: coarse) {
+            body.mobile-shell #mob-content :where(input, select, textarea, .form-control, .form-select, .oinp, .tracker-field) {
+               font-size: max(16px, 1rem) !important;
+            }
+         }
+
+         @media (max-width: 575.98px) {
+            body.mobile-shell #mob-content :where(.row) {
+               --bs-gutter-x: 0.75rem;
+               --bs-gutter-y: 0.75rem;
+            }
+
+            body.mobile-shell #mob-content :where(.card-header, .card-footer, .action-buttons, .btn-toolbar, .sr-page-actions, .progress-actions) {
+               flex-wrap: wrap !important;
+               gap: 8px !important;
+            }
+
+            body.mobile-shell #mob-content :where(.btn, button) {
+               max-width: 100%;
+               white-space: normal;
+            }
          }
 
          body.mobile-shell.user-app-fullscreen {

@@ -13,7 +13,9 @@ use App\Models\Profile;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
+use App\Services\TrustworthyAssessmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -345,6 +347,36 @@ class UserSideHardeningTest extends TestCase
             'clarity_score' => 0,
             'confidence_score' => 0,
         ]);
+    }
+
+    public function test_voice_analysis_returns_json_fallback_when_ai_and_revision_services_fail(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        Http::fake([
+            '*' => Http::response(['error' => 'provider unavailable'], 500),
+        ]);
+
+        $this->app->instance(TrustworthyAssessmentService::class, new class extends TrustworthyAssessmentService
+        {
+            public function answerEvidence(string $answer, ?string $feedback = null, Question|array|null $question = null): array
+            {
+                throw new \RuntimeException('Revision helper unavailable.');
+            }
+        });
+
+        $this->actingAs($user)
+            ->postJson(route('user.drills.voice.analyze'), [
+                'prompt' => 'Tell me about a time you handled customer feedback.',
+                'transcript' => 'I listened to the customer feedback, clarified the main concern, coordinated with my team, and followed up with a clearer response so the customer knew the next step.',
+            ])
+            ->assertOk()
+            ->assertJsonStructure([
+                'strengths',
+                'weaknesses',
+                'improved_answer',
+            ])
+            ->assertJsonPath('improved_answer', 'Service error occurred while trying to generate an improved answer.');
     }
 
     public function test_interview_answer_recomputes_delivery_metrics_from_server_evidence(): void

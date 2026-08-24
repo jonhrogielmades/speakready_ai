@@ -165,7 +165,7 @@
             <div class="chat-input-area" id="coach-input-area">
                 <div class="chat-attachment-preview" id="chatAttachmentPreview" aria-live="polite"></div>
                 <div class="chat-input-wrapper">
-                    <input class="chat-file-input" id="coachFiles" type="file" multiple accept=".pdf,.doc,.docx,.txt,.rtf,.csv,.png,.jpg,.jpeg,.webp">
+                    <input class="chat-file-input" id="coachFiles" type="file" multiple accept=".pdf,.doc,.docx,.odt,.txt,.rtf,.csv,.md,.json,.html,.htm,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tif,.tiff,.heic,.heif">
                     <button class="chat-attachment-btn" type="button" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
@@ -186,7 +186,7 @@
         const initialCoachPrompt = @json((string) request('ask', ''));
         let coachSelectedFiles = [];
         let coachSending = false;
-        const coachAllowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'rtf', 'csv', 'png', 'jpg', 'jpeg', 'webp'];
+        const coachAllowedExtensions = ['pdf', 'doc', 'docx', 'odt', 'txt', 'rtf', 'csv', 'md', 'json', 'html', 'htm', 'ppt', 'pptx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'heic', 'heif'];
         const coachMaxFiles = 3;
         const coachMaxFileBytes = 5 * 1024 * 1024;
         const coachUserPhotoUrl = @json($coachUserPhotoUrl);
@@ -276,9 +276,11 @@
         function coachFileIcon(fileName) {
             const extension = (fileName.split('.').pop() || '').toLowerCase();
             if (extension === 'pdf') return 'fa-file-pdf';
-            if (['doc', 'docx', 'rtf', 'txt'].includes(extension)) return 'fa-file-lines';
-            if (extension === 'csv') return 'fa-file-csv';
-            if (['png', 'jpg', 'jpeg', 'webp'].includes(extension)) return 'fa-file-image';
+            if (['doc', 'docx', 'odt', 'rtf', 'txt', 'md'].includes(extension)) return 'fa-file-lines';
+            if (['html', 'htm', 'json'].includes(extension)) return 'fa-file-code';
+            if (['csv', 'xls', 'xlsx'].includes(extension)) return 'fa-file-excel';
+            if (['ppt', 'pptx'].includes(extension)) return 'fa-file-powerpoint';
+            if (['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'heic', 'heif'].includes(extension)) return 'fa-file-image';
             return 'fa-file';
         }
 

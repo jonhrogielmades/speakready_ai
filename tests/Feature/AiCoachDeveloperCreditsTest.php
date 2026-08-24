@@ -293,6 +293,66 @@ class AiCoachDeveloperCreditsTest extends TestCase
         });
     }
 
+    public function test_ai_coach_extracts_text_from_office_attachments_before_replying(): void
+    {
+        Http::fake([
+            '*' => Http::response([
+                'candidates' => [
+                    [
+                        'content' => [
+                            'parts' => [
+                                ['text' => 'I can use the extracted document evidence for interview coaching.'],
+                            ],
+                        ],
+                    ],
+                ],
+            ]),
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $docx = UploadedFile::fake()->createWithContent('maria-profile.docx', $this->zipContent([
+            '[Content_Types].xml' => '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>',
+            'word/document.xml' => '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Maria Santos completed TESDA Contact Center Services NC II.</w:t></w:r></w:p></w:body></w:document>',
+        ]));
+        $pptx = UploadedFile::fake()->createWithContent('portfolio-deck.pptx', $this->zipContent([
+            '[Content_Types].xml' => '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/></Types>',
+            'ppt/slides/slide1.xml' => '<p:sld xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><p:cSld><p:spTree><p:sp><p:txBody><a:p><a:r><a:t>Billing escalation deck for customer support interviews.</a:t></a:r></a:p></p:txBody></p:sp></p:spTree></p:cSld></p:sld>',
+        ]));
+        $xlsx = UploadedFile::fake()->createWithContent('support-metrics.xlsx', $this->zipContent([
+            '[Content_Types].xml' => '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>',
+            'xl/sharedStrings.xml' => '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>Customer Satisfaction 94 percent</t></si><si><t>Average Handle Time improvement</t></si></sst>',
+        ]));
+
+        $response = $this->actingAs($user)->post(route('user.coach.chat'), [
+            'message' => 'Review these files for my Philippines customer support interview.',
+            'history' => json_encode([]),
+            'coach_attachments' => [$docx, $pptx, $xlsx],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response', 'I can use the extracted document evidence for interview coaching.');
+
+        Http::assertSent(function ($request) {
+            $latestMessage = data_get($request->data(), 'contents.0.parts.0.text', '');
+
+            return str_contains($latestMessage, 'UPLOADED INTERVIEW-RELATED FILE CONTEXT JSON')
+                && str_contains($latestMessage, 'maria-profile.docx')
+                && str_contains($latestMessage, 'TESDA Contact Center Services NC II')
+                && str_contains($latestMessage, 'portfolio-deck.pptx')
+                && str_contains($latestMessage, 'Billing escalation deck')
+                && str_contains($latestMessage, 'support-metrics.xlsx')
+                && str_contains($latestMessage, 'Customer Satisfaction 94 percent')
+                && str_contains($latestMessage, 'readable_text_extracted')
+                && str_contains($latestMessage, 'Ground every file-specific claim in readable_text');
+        });
+    }
+
     public function test_ai_coach_refuses_unrelated_requests_without_provider_call(): void
     {
         Http::fake();
@@ -319,5 +379,35 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $this->assertSame(4, ChatbotMessage::count());
         Http::assertNothingSent();
+    }
+
+    private function zipContent(array $entries): string
+    {
+        $local = '';
+        $central = '';
+        $offset = 0;
+
+        foreach ($entries as $name => $content) {
+            $name = str_replace('\\', '/', (string) $name);
+            $content = (string) $content;
+            $compressed = gzdeflate($content);
+            $crc = crc32($content);
+            $localHeader = "PK\x03\x04"
+                .pack('vvvvvVVVvv', 20, 0, 8, 0, 0, $crc, strlen($compressed), strlen($content), strlen($name), 0)
+                .$name
+                .$compressed;
+
+            $central .= "PK\x01\x02"
+                .pack('vvvvvvVVVvvvvvVV', 20, 20, 0, 8, 0, 0, $crc, strlen($compressed), strlen($content), strlen($name), 0, 0, 0, 0, 0, $offset)
+                .$name;
+
+            $local .= $localHeader;
+            $offset += strlen($localHeader);
+        }
+
+        return $local
+            .$central
+            ."PK\x05\x06"
+            .pack('vvvvVVv', 0, 0, count($entries), count($entries), strlen($central), strlen($local), 0);
     }
 }

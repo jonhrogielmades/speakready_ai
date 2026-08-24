@@ -877,6 +877,63 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertNotEmpty(data_get($feedback->coaching_summary, 'question_improvements'));
     }
 
+    public function test_interview_finish_completes_with_fallback_when_assessment_helpers_fail(): void
+    {
+        Http::preventStrayRequests();
+        $this->app->instance(TrustworthyAssessmentService::class, new class extends TrustworthyAssessmentService
+        {
+            public function answerEvidence(string $answer, ?string $feedback = null, Question|array|null $question = null): array
+            {
+                throw new \RuntimeException('Evidence assessment unavailable.');
+            }
+
+            public function groundedRevisionTemplate(string $answer, ?array $evidence = null): string
+            {
+                throw new \RuntimeException('Revision template unavailable.');
+            }
+
+            public function sessionMetadata(InterviewSession $session, \Illuminate\Support\Collection $answers, array $metrics, int $starScore, int $jobEvidenceScore): array
+            {
+                throw new \RuntimeException('Session metadata unavailable.');
+            }
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a process you improved.',
+        ]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I reviewed the process, coordinated the update with my team, and documented the final handoff result.',
+            'response_mode' => 'text',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $savedAnswer = $answer->fresh();
+        $score = Score::where('interview_session_id', $session->id)->firstOrFail();
+
+        $this->assertStringContainsString('Fact-grounded revision template', $savedAnswer->better_sample_answer);
+        $this->assertSame(
+            'A dependable automatic evidence assessment was unavailable for this retry.',
+            data_get($savedAnswer->evidence_map, 'missing_evidence.0')
+        );
+        $this->assertTrue((bool) data_get($score->rubric, 'fallback_metadata'));
+        $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
+    }
+
     public function test_stale_feedback_processing_state_can_recover_without_duplicate_records(): void
     {
         Http::preventStrayRequests();

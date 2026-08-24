@@ -1280,7 +1280,13 @@ OUTPUT SCHEMA:
 }
 EOT;
 
-        $providers = self::providerPriorityList($provider);
+        $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_VOICE_ANALYSIS_MAX_PROVIDERS', 2)));
+        $providers = array_slice(self::providerPriorityList($provider), 0, $maxProviders);
+        $requestOptions = [
+            'timeout_seconds' => max(3, min(20, (int) env('AI_VOICE_ANALYSIS_TIMEOUT', 12))),
+            'attempts' => max(1, min(2, (int) env('AI_VOICE_ANALYSIS_HTTP_ATTEMPTS', 1))),
+            'response_format' => self::voiceRehearsalResponseFormat(),
+        ];
 
         foreach ($providers as $currentProvider) {
             if (! self::shouldAttemptProvider($currentProvider)) {
@@ -1288,7 +1294,7 @@ EOT;
             }
 
             try {
-                $response = self::callStructuredProvider($currentProvider, $prompt);
+                $response = self::callStructuredProvider($currentProvider, $prompt, $requestOptions);
 
                 if (is_string($response)) {
                     $response = self::parseJsonResponse($response);
@@ -1304,7 +1310,7 @@ EOT;
                         return $normalized;
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error("Voice Rehearsal Analysis Error ($currentProvider): ".self::safeProviderErrorMessage($e));
             }
         }
@@ -1313,6 +1319,28 @@ EOT;
             'strengths' => 'Could not generate strengths due to a service error.',
             'weaknesses' => 'Could not generate weaknesses due to a service error.',
             'improved_answer' => 'Service error occurred while trying to generate an improved answer.',
+        ];
+    }
+
+    private static function voiceRehearsalResponseFormat(): array
+    {
+        return [
+            'type' => 'json_schema',
+            'json_schema' => [
+                'name' => 'voice_rehearsal_feedback_v1',
+                'description' => 'Short speech-coaching feedback for a voice rehearsal transcript.',
+                'strict' => true,
+                'schema' => [
+                    'type' => 'object',
+                    'additionalProperties' => false,
+                    'properties' => [
+                        'strengths' => ['type' => 'string'],
+                        'weaknesses' => ['type' => 'string'],
+                        'improved_answer' => ['type' => 'string'],
+                    ],
+                    'required' => ['strengths', 'weaknesses', 'improved_answer'],
+                ],
+            ],
         ];
     }
 
@@ -1808,7 +1836,7 @@ PROMPT;
     private static function providerSupportsAttachmentExtraction(string $provider, string $mimeType, string $extension): bool
     {
         $isImage = str_starts_with($mimeType, 'image/')
-            || in_array($extension, ['png', 'jpg', 'jpeg', 'webp'], true);
+            || in_array($extension, ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tif', 'tiff', 'heic', 'heif'], true);
 
         return match ($provider) {
             'gemini' => $isImage || $mimeType === 'application/pdf' || $extension === 'pdf',
@@ -1931,10 +1959,22 @@ PROMPT;
             'jpg', 'jpeg' => 'image/jpeg',
             'webp' => 'image/webp',
             'gif' => 'image/gif',
+            'bmp' => 'image/bmp',
+            'tif', 'tiff' => 'image/tiff',
+            'heic' => 'image/heic',
+            'heif' => 'image/heif',
             'doc' => 'application/msword',
             'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'odt' => 'application/vnd.oasis.opendocument.text',
             'rtf' => 'application/rtf',
             'csv' => 'text/csv',
+            'md' => 'text/markdown',
+            'json' => 'application/json',
+            'html', 'htm' => 'text/html',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'txt' => 'text/plain',
             default => 'application/octet-stream',
         };

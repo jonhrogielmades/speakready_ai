@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <title>Unlock Private Review · SpeakReady AI</title>
     <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/mobile/shared/unlock.css?v=1') }}" data-page-style="unlock-mobile">
+    <link rel="stylesheet" href="{{ asset('css/mobile/shared/unlock.css?v=2') }}" data-page-style="unlock-mobile">
 </head>
 <body class="unlock-shell">
 <main class="unlock-card">
