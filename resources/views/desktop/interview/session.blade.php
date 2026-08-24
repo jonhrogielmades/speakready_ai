@@ -97,9 +97,9 @@
                     </div>
 
                     <div id="aiAvatarContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);">
-                        <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;transition:border-color 0.4s;">
+                        <div class="avatar-wrapper" id="aiAvatarHead" style="width:110px;height:110px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;--avatar-ring-color:#8b5cf6;">
                             <!-- The Image Container (with border, glow, and clipping for the image itself) -->
-                            <div style="width:100%;height:100%;background:rgba(255,255,255,0.1);border-radius:50%;border:4px solid #8b5cf6;overflow:hidden;position:relative;z-index:10;box-shadow: 0 0 25px rgba(139,92,246,0.5);">
+                            <div class="avatar-frame">
                                 <img src="{{ asset('img/ai_avatar.jpg') }}" alt="AI Avatar" style="width:100%;height:100%;object-fit:cover;">
                             </div>
                         </div>
@@ -112,7 +112,7 @@
                                     $animClass = 'sb' . (($i * 7) % 10 + 1); 
                                     $rot = $i * 10;
                                 @endphp
-                                <div class="spectrum-bar {{ $animClass }}" style="transform: rotate({{ $rot }}deg) translateY(-65px);"></div>
+                                <div class="spectrum-bar {{ $animClass }}" style="--bar-rotation: {{ $rot }}deg;"></div>
                             @endfor
                         </div>
                     </div>
@@ -1773,7 +1773,7 @@
             function startSpeakingUi(text, boundaryAware = false) {
                 clearCaptionInterval();
                 document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
-                document.getElementById('aiAvatarHead').style.borderColor = '#34d399';
+                document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#34d399');
                 document.getElementById('aiQuestionText').innerText = text;
 
                 const words = captionWordsFor(text);
@@ -1798,7 +1798,7 @@
                 visualizerInterval = setInterval(() => {
                     currentAmplitude = Math.max(0.15, currentAmplitude - 0.1);
                     bars.forEach(bar => {
-                        let h = 6 + (Math.random() * 80 * currentAmplitude);
+                        let h = 8 + (Math.random() * 24 * currentAmplitude);
                         bar.style.height = h + 'px';
                     });
                 }, 50);
@@ -1819,7 +1819,7 @@
                 if (token !== questionSpeechToken) return;
 
                 document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'none');
-                document.getElementById('aiAvatarHead').style.borderColor = '#8b5cf6';
+                document.getElementById('aiAvatarHead')?.style.setProperty('--avatar-ring-color', '#8b5cf6');
                 if (visualizerInterval) clearInterval(visualizerInterval);
                 visualizerInterval = null;
                 clearCaptionInterval();
