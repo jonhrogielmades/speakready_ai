@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Philippines Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=1') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=2') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -196,6 +196,12 @@
                         <!-- Bottom mobile buttons moved to unified control panel above -->
                     </form>
                 </div>
+
+                <div class="mobile-response-end-session-action d-md-none animate-fade-up delay-200">
+                    <button type="button" class="btn btn-outline-danger mobile-response-end-session-btn" onclick="abortInterviewSession()">
+                        <i class="fa-solid fa-flag-checkered me-2"></i>End Session
+                    </button>
+                </div>
             </div>
 
             <!-- Side Panels -->
@@ -317,7 +323,7 @@
             })));
             const pendingFetchControllers = new Set();
             const displayedQuestionIds = new Set();
-            const firstQuestionIntroText = 'Heres your first questions';
+            const firstQuestionIntroText = 'Here is your first question.';
             const firstQuestionIntroDisplayKey = '__first_scored_question_intro__';
             
             // Answers state
@@ -566,13 +572,57 @@
                 lastCommittedAt = 0;
             }
 
+            function stripInterviewerPromptEcho(segment) {
+                let cleanSegment = cleanTranscriptText(segment);
+                const promptPatterns = [
+                    /^(?:here(?:'s| is|s)?\s+(?:your\s+)?first\s+questions?|here\s+you\s+first\s+questions?)[,:.\s-]*/i,
+                    /^(?:let(?:'s| us)\s+start\s+with\s+the\s+first\s+question)[,:.\s-]*/i,
+                    /^(?:to\s+begin,?\s+i\s+would\s+like\s+to\s+get\s+to\s+know\s+you\s+first)[,:.\s-]*/i,
+                ];
+
+                let changed = true;
+                while (changed) {
+                    changed = false;
+                    promptPatterns.forEach(pattern => {
+                        const next = cleanTranscriptText(cleanSegment.replace(pattern, ''));
+                        if (next !== cleanSegment) {
+                            cleanSegment = next;
+                            changed = true;
+                        }
+                    });
+                }
+
+                return cleanSegment;
+            }
+
+            function syncSpeechRecognitionBufferFromManualEdit() {
+                if (!isRecording) return;
+
+                const ta = document.getElementById('answerTextarea');
+                const currentText = ta ? cleanTranscriptText(ta.value) : '';
+                preRecordingText = currentText;
+                committedSpeechTranscript = '';
+                liveSpeechInterim = '';
+                lastCommittedSpeech = '';
+                lastCommittedAt = 0;
+
+                const answerState = answersData[currentQIdx] || defaultAnswerState();
+                answerState.speech_transcript = currentText;
+                answersData[currentQIdx] = answerState;
+            }
+
+            function handleAnswerInput() {
+                syncSpeechRecognitionBufferFromManualEdit();
+                triggerAnalysis();
+            }
+
             function isFillerOnlySpeech(segment) {
                 const normalized = normalizeTranscriptForMatch(segment);
                 return /^(?:(?:you know|i mean|sort of|kind of|um+|uh+|erm+|hmm+|like|actually|basically|literally)(?:\s+|$))+$/i.test(normalized);
             }
 
             function commitSpeechSegment(segment) {
-                const cleanSegment = collapseRepeatedSpeech(cleanTranscriptText(segment));
+                const cleanSegment = stripInterviewerPromptEcho(collapseRepeatedSpeech(cleanTranscriptText(segment)));
                 if (!cleanSegment) return false;
 
                 const normalized = normalizeTranscriptForMatch(cleanSegment);
@@ -2403,7 +2453,7 @@
                 if (!answerListenersBound) {
                     answerListenersBound = true;
                     const answerTextarea = document.getElementById('answerTextarea');
-                    answerTextarea.addEventListener('input', triggerAnalysis);
+                    answerTextarea.addEventListener('input', handleAnswerInput);
                     answerTextarea.addEventListener('paste', handleAnswerPaste);
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'hidden') autoSaveState();

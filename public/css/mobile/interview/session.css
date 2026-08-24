@@ -165,6 +165,9 @@
         padding: 14px;
         border-radius: 16px;
     }
+    .mobile-response-end-session-action {
+        display: none;
+    }
     .response-panel .panel-title {
         margin-bottom: 10px;
     }
@@ -1856,6 +1859,45 @@
             margin: 0 0 var(--session-pro-gap) !important;
             padding: 12px !important;
             background: var(--session-pro-card) !important;
+        }
+
+        html body #sec-interview-session .mobile-response-end-session-action {
+            display: flex !important;
+            width: 100% !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 0 var(--session-pro-gap) !important;
+            padding: 0 !important;
+        }
+
+        html body #sec-interview-session .mobile-response-end-session-btn {
+            width: min(74%, 220px) !important;
+            min-width: 152px !important;
+            min-height: 42px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 9px 14px !important;
+            border: 1px solid rgba(239, 68, 68, 0.28) !important;
+            border-radius: 8px !important;
+            background: rgba(254, 242, 242, 0.92) !important;
+            color: var(--session-pro-danger) !important;
+            font-size: 0.76rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            letter-spacing: 0 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+        }
+
+        html body #sec-interview-session .mobile-response-end-session-btn i {
+            font-size: 0.78rem !important;
+        }
+
+        html[data-theme="dark"] body #sec-interview-session .mobile-response-end-session-btn,
+        :root:not(.lm) body #sec-interview-session .mobile-response-end-session-btn,
+        .dm #sec-interview-session .mobile-response-end-session-btn {
+            background: rgba(127, 29, 29, 0.22) !important;
         }
 
         html body #sec-interview-session .response-panel .panel-title {

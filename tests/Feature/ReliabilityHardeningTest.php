@@ -726,7 +726,7 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee(route('interview.abort'), false)
             ->assertSee('openingHasPlayed', false)
             ->assertSee('firstQuestionIntroText', false)
-            ->assertSee('Heres your first questions', false)
+            ->assertSee('Here is your first question.', false)
             ->assertSee('first_question_intro', false)
             ->assertSee('startInterviewSession();', false)
             ->assertSee('finishTransitionOverlay', false)
@@ -999,6 +999,39 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('Evidence-Based Coaching Summary')
             ->assertSee('Question coverage')
             ->assertSee($question->question_text);
+    }
+
+    public function test_interview_finish_repairs_missing_report_tables(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the checklist, coordinated QA approval, and documented the final handoff result.',
+            'response_mode' => 'text',
+        ]);
+
+        Schema::dropIfExists('scores');
+        Schema::dropIfExists('feedback');
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertTrue(Schema::hasTable('scores'));
+        $this->assertTrue(Schema::hasTable('feedback'));
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
     }
 
     public function test_user_review_repairs_missing_coaching_report_data_without_ai_refresh(): void

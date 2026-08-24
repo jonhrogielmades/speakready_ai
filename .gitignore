@@ -26,3 +26,4 @@ __pycache__/
 _static_backup/
 .codex_tmp_git_push_*/
 .codex_tmp_chrome_*/
+.codex_tmp_ui_audit/

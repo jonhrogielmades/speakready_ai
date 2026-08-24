@@ -324,6 +324,9 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'))
             ->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('css/mobile/interview/session.css?v=2', false)
+            ->assertSee('mobile-response-end-session-action', false)
+            ->assertSee('mobile-response-end-session-btn', false)
             ->assertDontSee('<body class="mobile-interview-fullscreen"', false)
             ->assertDontSee('id="responseFullscreenToggle"', false);
     }

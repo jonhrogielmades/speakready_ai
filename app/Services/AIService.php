@@ -1047,6 +1047,8 @@ EOT;
             'response_format' => self::feedbackResponseFormat(),
             'model' => trim((string) env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-4o-mini'))),
         ];
+        $deadlineSeconds = max(8, min(45, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 25)));
+        $deadlineAt = microtime(true) + $deadlineSeconds;
         $bestPartialItemsById = [];
         $partialCommentaryFingerprints = [];
         $partialTemplateFingerprints = [];
@@ -1060,8 +1062,28 @@ EOT;
 
         foreach ($providers as $currentProvider) {
             for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+                $remainingSeconds = $deadlineAt - microtime(true);
+                if ($remainingSeconds < 3) {
+                    Log::warning('AI feedback deadline reached; using local fallback for remaining feedback.', [
+                        'deadline_seconds' => $deadlineSeconds,
+                        'providers_attempted' => $providers,
+                        'valid_provider_items_preserved' => count($bestPartialItemsById),
+                    ]);
+
+                    break 2;
+                }
+
+                $currentRequestOptions = $requestOptions;
+                $currentRequestOptions['timeout_seconds'] = max(
+                    3,
+                    min(
+                        $requestOptions['timeout_seconds'],
+                        (int) floor($remainingSeconds / max(1, $requestOptions['attempts']))
+                    )
+                );
+
                 try {
-                    $response = self::callStructuredProvider($currentProvider, $prompt, $requestOptions);
+                    $response = self::callStructuredProvider($currentProvider, $prompt, $currentRequestOptions);
 
                     $validationErrors = self::feedbackResponseValidationErrors($response, $answersData);
                     if ($validationErrors === []) {

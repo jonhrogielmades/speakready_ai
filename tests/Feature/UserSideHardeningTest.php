@@ -179,6 +179,30 @@ class UserSideHardeningTest extends TestCase
             ->assertDontSee('Game Category');
     }
 
+    public function test_interview_setup_shows_added_question_count_options_on_desktop_and_mobile(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category();
+        $expectedOptions = [
+            '<option value="1"',
+            '<option value="3"',
+            '<option value="25"',
+            '<option value="30"',
+        ];
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+        $desktopResponse = $this->actingAs($user)->get(route('interview.setup'))->assertOk();
+        $mobileResponse = $this->actingAs($user)
+            ->withHeader('User-Agent', $mobileUserAgent)
+            ->get(route('interview.setup'))
+            ->assertOk();
+
+        foreach ($expectedOptions as $option) {
+            $desktopResponse->assertSee($option, false);
+            $mobileResponse->assertSee($option, false);
+        }
+    }
+
     public function test_interview_start_accepts_active_core_category(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -203,6 +227,24 @@ class UserSideHardeningTest extends TestCase
             'game_level_id' => null,
             'status' => 'in_progress',
         ]);
+    }
+
+    public function test_interview_start_accepts_added_question_counts(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        foreach ([1, 3, 25, 30] as $count) {
+            $this->actingAs($user)
+                ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+                    'num_questions' => $count,
+                ]))
+                ->assertRedirect(route('interview.session'));
+
+            $session = InterviewSession::where('user_id', $user->id)->latest('id')->firstOrFail();
+
+            $this->assertSame($count, $session->num_questions);
+        }
     }
 
     public function test_interview_start_uses_category_source_pack_when_posted_pack_mismatches(): void

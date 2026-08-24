@@ -108,6 +108,8 @@ php-fpm -D
     php artisan app:ensure-voice-schema --force --create-missing || true
     php artisan app:ensure-question-schema --force --create-missing || true
     php artisan app:ensure-interview-answer-schema --force --create-missing || true
+    php artisan app:ensure-score-schema --force --create-missing || true
+    php artisan app:ensure-feedback-schema --force --create-missing || true
 
     # Create storage symlink for public uploads.
     php artisan storage:link --force || true
@@ -117,6 +119,8 @@ php-fpm -D
     php artisan app:ensure-voice-schema --force --create-missing || true
     php artisan app:ensure-question-schema --force --create-missing || true
     php artisan app:ensure-interview-answer-schema --force --create-missing || true
+    php artisan app:ensure-score-schema --force --create-missing || true
+    php artisan app:ensure-feedback-schema --force --create-missing || true
 
     # Repair Learning Game session tables if a previous migration was marked as run
     # while production schema drifted or missed the table creation.

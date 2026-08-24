@@ -23,9 +23,11 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
+use App\Support\FeedbackSchema;
 use App\Support\FeedbackCoachingRepair;
 use App\Support\InterviewAnswerSchema;
 use App\Support\QuestionSchema;
+use App\Support\ScoreSchema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +56,7 @@ class InterviewController extends Controller
             'custom_position' => 'nullable|string|max:255',
             'resume_text' => 'nullable|string|max:20000',
             'job_description' => 'nullable|string|max:20000',
-            'num_questions' => ['nullable', 'integer', Rule::in([5, 10, 15, 20])],
+            'num_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
             'coach_focus_mode' => 'nullable|string|max:80',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid'])],
             'interview_focus' => 'nullable|string|max:120',
@@ -721,6 +723,25 @@ class InterviewController extends Controller
         }
         $gameLevel = $this->gameLevelForSession($session);
 
+        try {
+            $this->ensureInterviewReportSchema();
+        } catch (\Throwable $error) {
+            Log::error('Interview report schema repair failed before feedback finalization.', [
+                'session_id' => $session->id,
+                'error_type' => $error::class,
+                'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
+            ]);
+
+            $message = 'The feedback report database schema is not ready yet. Please retry in a moment.';
+
+            return $request->expectsJson()
+                ? response()->json([
+                    'message' => $message,
+                    'retry_after_ms' => 1500,
+                ], 503)
+                : back()->with('error', $message);
+        }
+
         if ($session->status === 'completed') {
             if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
                 $session->refresh()->load(['score', 'feedback']);
@@ -1178,6 +1199,7 @@ class InterviewController extends Controller
             Log::error('Interview feedback finalization failed.', [
                 'session_id' => $session->id,
                 'error_type' => $error::class,
+                'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
             ]);
 
             $message = 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.';
@@ -1189,6 +1211,13 @@ class InterviewController extends Controller
                 ], 503)
                 : back()->with('error', $message);
         }
+    }
+
+    private function ensureInterviewReportSchema(): void
+    {
+        InterviewAnswerSchema::ensure();
+        ScoreSchema::ensure();
+        FeedbackSchema::ensure();
     }
 
     public function abortSession(Request $request)
@@ -2784,7 +2813,7 @@ class InterviewController extends Controller
 
     private function targetQuestionCountForSession(InterviewSession $session): int
     {
-        $count = max(1, min(20, (int) ($session->num_questions ?? 1)));
+        $count = max(1, min(30, (int) ($session->num_questions ?? 1)));
         $hasOpeningQuestion = Question::where('interview_session_id', $session->id)
             ->where('source_type', 'real_interview_opening')
             ->exists();
@@ -2911,7 +2940,7 @@ class InterviewController extends Controller
 
     private function sourceBackedQuestionRecords(array $dataset, array $selectedQuestionTypes, int $limit, string $difficulty, string $position): array
     {
-        $limit = max(1, min(20, $limit));
+        $limit = max(1, min(30, $limit));
         $selectedTypes = array_values(array_filter($selectedQuestionTypes));
         $difficulty = ucfirst(strtolower($difficulty));
         $questions = collect($dataset['questions'] ?? []);
@@ -3018,7 +3047,7 @@ class InterviewController extends Controller
         $employer = Str::contains(Str::lower($persona), ['philipp', 'filipino'])
             ? 'a Philippine employer'
             : $persona;
-        $limit = max(1, min(20, $limit));
+        $limit = max(1, min(30, $limit));
 
         $templates = [
             'Behavioral' => [

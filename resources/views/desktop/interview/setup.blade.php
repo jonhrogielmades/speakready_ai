@@ -314,10 +314,14 @@
                             <label class="olbl">Number of Questions</label>
                             <div class="structure-select-wrap">
                                 <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
+                                <option value="1" {{ $setupDefaults['num_questions'] === '1' ? 'selected' : '' }}>1 Question</option>
+                                <option value="3" {{ $setupDefaults['num_questions'] === '3' ? 'selected' : '' }}>3 Questions</option>
                                 <option value="5" {{ $setupDefaults['num_questions'] === '5' ? 'selected' : '' }}>5 Questions</option>
                                 <option value="10" {{ $setupDefaults['num_questions'] === '10' ? 'selected' : '' }}>10 Questions</option>
                                 <option value="15" {{ $setupDefaults['num_questions'] === '15' ? 'selected' : '' }}>15 Questions</option>
                                 <option value="20" {{ $setupDefaults['num_questions'] === '20' ? 'selected' : '' }}>20 Questions</option>
+                                <option value="25" {{ $setupDefaults['num_questions'] === '25' ? 'selected' : '' }}>25 Questions</option>
+                                <option value="30" {{ $setupDefaults['num_questions'] === '30' ? 'selected' : '' }}>30 Questions</option>
                                 </select>
                             </div>
                         </div>
