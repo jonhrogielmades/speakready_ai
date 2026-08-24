@@ -116,10 +116,6 @@
             max-width: 100% !important;
          }
 
-         body.mobile-shell #mob-content :where(img, video, canvas) {
-            height: auto;
-         }
-
          body.mobile-shell #mob-content :where(p, small, span, strong, label, a:not(.btn), td, th, li, h1, h2, h3, h4, h5, h6) {
             overflow-wrap: anywhere;
          }

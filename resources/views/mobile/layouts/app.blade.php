@@ -2733,6 +2733,121 @@
             }
          }
 
+         @media (max-width: 991px) {
+            body.user-mobile-shell #mob-header {
+               --mob-top-h: 56px;
+               height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
+               min-height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
+               padding: var(--mob-safe-top) 8px 0 10px !important;
+               gap: 7px !important;
+               align-items: center !important;
+               background: rgba(238, 249, 249, 0.94) !important;
+               border-bottom: 1px solid rgba(203, 213, 225, 0.72) !important;
+               box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            html:not(.lm) body.user-mobile-shell #mob-header {
+               background: rgba(10, 15, 25, 0.9) !important;
+               border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+               box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22) !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               width: clamp(112px, 36vw, 142px) !important;
+               height: 32px !important;
+               min-height: 32px !important;
+               padding: 4px 9px 4px 4px !important;
+               gap: 5px !important;
+               border-radius: 9px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
+               width: 23px !important;
+               height: 23px !important;
+               min-width: 23px !important;
+               flex-basis: 23px !important;
+               border-radius: 7px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               font-size: clamp(0.68rem, 2.35vw, 0.78rem) !important;
+               line-height: 1 !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-right {
+               flex: 0 0 auto !important;
+               gap: 5px !important;
+               min-width: 0 !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn,
+            body.user-mobile-shell #mob-header .mob-avatar {
+               width: 32px !important;
+               min-width: 32px !important;
+               height: 32px !important;
+               min-height: 32px !important;
+               flex: 0 0 32px !important;
+               padding: 0 !important;
+               border-radius: 9px !important;
+               border: 1px solid rgba(203, 213, 225, 0.78) !important;
+               background: rgba(255, 255, 255, 0.94) !important;
+               color: #0f172a !important;
+               box-shadow: 0 5px 12px rgba(15, 23, 42, 0.08) !important;
+            }
+
+            html:not(.lm) body.user-mobile-shell #mob-header .mob-icon-btn,
+            html:not(.lm) body.user-mobile-shell #mob-header .mob-avatar {
+               border-color: rgba(148, 163, 184, 0.22) !important;
+               background: rgba(255, 255, 255, 0.08) !important;
+               color: #f8fafc !important;
+               box-shadow: none !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-icon-btn i {
+               font-size: 0.78rem !important;
+               line-height: 1 !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar {
+               overflow: visible !important;
+               position: relative !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar img {
+               display: block !important;
+               width: 100% !important;
+               height: 100% !important;
+               object-fit: cover !important;
+               border-radius: 8px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-avatar::after {
+               content: "";
+               position: absolute;
+               right: -1px;
+               bottom: -1px;
+               width: 8px;
+               height: 8px;
+               border-radius: 999px;
+               background: #22c55e;
+               border: 2px solid #ffffff;
+               box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18);
+            }
+
+            html:not(.lm) body.user-mobile-shell #mob-header .mob-avatar::after {
+               border-color: #0f172a;
+            }
+
+            body.user-mobile-shell #mob-header #mobNotifBadge {
+               top: 5px !important;
+               right: 5px !important;
+               width: 7px !important;
+               height: 7px !important;
+               border-width: 2px !important;
+               background: #ef4444 !important;
+            }
+         }
+
        </style>
       @stack('styles')
    </head>
