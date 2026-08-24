@@ -73,12 +73,7 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Create profile for SpeakReady AI features
-        Profile::create([
-            'user_id' => $user->id,
-            'readiness_score' => 0,
-            'total_sessions' => 0,
-        ]);
+        $this->ensureAuthenticationProfile($user);
 
         Auth::login($user, true);
 
@@ -365,12 +360,7 @@ class AuthController extends Controller
                     'profile_photo_path' => $googleAvatar,
                 ]);
 
-                Profile::firstOrCreate([
-                    'user_id' => $user->id,
-                ], [
-                    'readiness_score' => 0,
-                    'total_sessions' => 0,
-                ]);
+                $this->ensureAuthenticationProfile($user);
 
                 ActivityLogger::log(
                     $user,
@@ -495,6 +485,23 @@ class AuthController extends Controller
         $localPart = trim(str_replace(['.', '_', '-'], ' ', Str::before($email, '@')));
 
         return $localPart !== '' ? Str::title($localPart) : 'Google User';
+    }
+
+    private function ensureAuthenticationProfile(User $user): void
+    {
+        try {
+            Profile::firstOrCreate([
+                'user_id' => $user->id,
+            ], [
+                'readiness_score' => 0,
+                'total_sessions' => 0,
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('Profile creation during authentication failed.', [
+                'user_id' => $user->id,
+                'exception' => $e,
+            ]);
+        }
     }
 
     private function googleOAuthErrorMessage(Request $request): string
