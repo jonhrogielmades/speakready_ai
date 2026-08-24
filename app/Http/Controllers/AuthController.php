@@ -300,20 +300,30 @@ class AuthController extends Controller
             $intent = in_array($intent, ['login', 'register'], true) ? $intent : 'login';
             $driver = $this->googleDriver($request);
             $googleUser = $driver->user();
+            $googleEmail = Str::lower(trim((string) $googleUser->email));
+            $googleId = trim((string) $googleUser->id);
+            $googleName = $this->googleDisplayName($googleUser->name, $googleEmail);
+            $googleAvatar = $googleUser->avatar ?: null;
 
-            if (blank($googleUser->email)) {
+            if (blank($googleEmail)) {
                 return redirect('/')->withErrors([
                     'email' => 'Google did not return an email address. Please try another Google account.',
                 ]);
             }
 
+            if (blank($googleId)) {
+                return redirect('/')->withErrors([
+                    'email' => 'Google did not return an account identifier. Please try another Google account.',
+                ]);
+            }
+
             $user = User::withTrashed()
-                ->where('google_id', $googleUser->id)
+                ->where('google_id', $googleId)
                 ->first();
 
             if (! $user) {
                 $user = User::withTrashed()
-                    ->where('email', $googleUser->email)
+                    ->where('email', $googleEmail)
                     ->first();
             }
 
@@ -325,15 +335,15 @@ class AuthController extends Controller
                 return redirect('/')->withErrors([
                     'email' => 'This Google email is already registered. Please log in with Google instead.',
                 ])->withInput([
-                    'name' => $googleUser->name ?: 'Google User',
-                    'email' => $googleUser->email,
+                    'name' => $googleName,
+                    'email' => $googleEmail,
                 ]);
             }
 
             if (! $user && $intent === 'login') {
                 return redirect('/')->withErrors([
                     'email' => 'No SpeakReady AI account was found for this Google email. Please register first.',
-                ])->withInput(['email' => $googleUser->email]);
+                ])->withInput(['email' => $googleEmail]);
             }
 
             if (! $user) {
@@ -341,18 +351,18 @@ class AuthController extends Controller
                     return redirect('/')->withErrors([
                         'email' => 'New account registration is currently disabled by the administrator.',
                     ])->withInput([
-                        'name' => $googleUser->name ?: 'Google User',
-                        'email' => $googleUser->email,
+                        'name' => $googleName,
+                        'email' => $googleEmail,
                     ]);
                 }
 
                 $user = User::create([
-                    'name' => $googleUser->name,
-                    'username' => User::generateUniqueUsernameFrom($googleUser->email ?: $googleUser->name ?: 'google_user'),
-                    'email' => $googleUser->email,
-                    'google_id' => $googleUser->id,
-                    'password' => null,
-                    'profile_photo_path' => $googleUser->avatar,
+                    'name' => $googleName,
+                    'username' => User::generateUniqueUsernameFrom($googleEmail ?: $googleName ?: 'google_user'),
+                    'email' => $googleEmail,
+                    'google_id' => $googleId,
+                    'password' => Hash::make(Str::random(64)),
+                    'profile_photo_path' => $googleAvatar,
                 ]);
 
                 Profile::firstOrCreate([
@@ -365,20 +375,20 @@ class AuthController extends Controller
                 ActivityLogger::log(
                     $user,
                     'user_registered',
-                    "{$user->name} ({$user->email}) registered a new account with Google.",
+                    "{$user->name} ({$googleEmail}) registered a new account with Google.",
                     $request->ip(),
                     false
                 );
             } else {
                 $updates = [];
                 if (!$user->google_id) {
-                    $updates['google_id'] = $googleUser->id;
+                    $updates['google_id'] = $googleId;
                 }
-                if (!$user->profile_photo_path) {
-                    $updates['profile_photo_path'] = $googleUser->avatar;
+                if (!$user->profile_photo_path && $googleAvatar) {
+                    $updates['profile_photo_path'] = $googleAvatar;
                 }
                 if (!$user->username) {
-                    $updates['username'] = User::generateUniqueUsernameFrom($googleUser->email ?: $googleUser->name ?: 'google_user', $user->id);
+                    $updates['username'] = User::generateUniqueUsernameFrom($googleEmail ?: $googleName ?: 'google_user', $user->id);
                 }
                 if (!empty($updates)) {
                     $user->update($updates);
@@ -472,6 +482,19 @@ class AuthController extends Controller
     private function googleRedirectUrl(Request $request): string
     {
         return rtrim($request->getSchemeAndHttpHost(), '/') . route('auth.google.callback', [], false);
+    }
+
+    private function googleDisplayName(?string $name, string $email): string
+    {
+        $name = trim((string) $name);
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        $localPart = trim(str_replace(['.', '_', '-'], ' ', Str::before($email, '@')));
+
+        return $localPart !== '' ? Str::title($localPart) : 'Google User';
     }
 
     private function googleOAuthErrorMessage(Request $request): string
