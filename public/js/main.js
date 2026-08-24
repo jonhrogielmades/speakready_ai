@@ -474,17 +474,17 @@ function setLoading(btnId, loading) {
 }
 
 function doLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
+    const identifier = (document.getElementById('loginIdentifier') || document.getElementById('loginEmail')).value.trim();
     const pass = document.getElementById('loginPass').value;
     document.getElementById('loginErr').style.display = 'none';
-    if (!email) return showErrLogin('Please enter your email address.');
+    if (!identifier) return showErrLogin('Please enter your username or email address.');
     if (!pass) return showErrLogin('Please enter your password.');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErrLogin('Please enter a valid email address.');
     if (pass.length < 6) return showErrLogin('Password must be at least 6 characters.');
     setLoading('loginBtn', true);
     setTimeout(() => {
         setLoading('loginBtn', false);
-        const name = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const email = identifier.includes('@') ? identifier : `${identifier}@example.com`;
+        const name = identifier.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         loginSuccess({
             name,
             email,
@@ -495,10 +495,12 @@ function doLogin() {
 
 function doSignup() {
     const name = document.getElementById('signupName').value.trim();
+    const username = document.getElementById('signupUsername')?.value.trim() || '';
     const email = document.getElementById('signupEmail').value.trim();
     const pass = document.getElementById('signupPass').value;
     document.getElementById('signupErr').style.display = 'none';
     if (!name) return showErrSignup('Please enter your full name.');
+    if (!/^[A-Za-z0-9_]{3,30}$/.test(username)) return showErrSignup('Please enter a valid username.');
     if (!email) return showErrSignup('Please enter your email address.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErrSignup('Please enter a valid email address.');
     if (pass.length < 8) return showErrSignup('Password must be at least 8 characters.');

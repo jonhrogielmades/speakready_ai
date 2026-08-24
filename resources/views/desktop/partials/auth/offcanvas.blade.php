@@ -60,8 +60,8 @@
                   @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
                      <div class="err-msg" style="display:block;"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first() }}</span></div>
                   @endif
-                  <label class="olbl"><i class="fa-solid fa-envelope me-1"></i>Email address</label>
-                  <input class="oinp" type="email" name="email" id="loginEmail" placeholder="you@example.com" required value="{{ old('email') }}">
+                  <label class="olbl"><i class="fa-solid fa-user me-1"></i>Username or email address</label>
+                  <input class="oinp" type="text" name="login" id="loginIdentifier" placeholder="username or you@example.com" required autocomplete="username" value="{{ old('login', old('email')) }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required>
@@ -86,8 +86,10 @@
                   @endif
                   <label class="olbl"><i class="fa-solid fa-user me-1"></i>Full name</label>
                   <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required value="{{ old('name') }}">
+                  <label class="olbl"><i class="fa-solid fa-at me-1"></i>Username</label>
+                  <input class="oinp" type="text" name="username" id="signupUsername" placeholder="john_doe" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" autocomplete="username" value="{{ old('username') }}">
                   <label class="olbl"><i class="fa-solid fa-envelope me-1"></i>Email address</label>
-                  <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required>
+                  <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email" value="{{ old('email') }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required>

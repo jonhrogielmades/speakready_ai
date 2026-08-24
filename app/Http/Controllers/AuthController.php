@@ -25,19 +25,28 @@ class AuthController extends Controller
         if (! Setting::enabled('acc_registration')) {
             return back()->withErrors([
                 'email' => 'New account registration is currently disabled by the administrator.',
-            ])->withInput($request->only('name', 'email'));
+            ])->withInput($request->only('name', 'username', 'email'));
         }
 
-        $request->validate([
+        $request->merge([
+            'username' => User::normalizeUsername($request->input('username')),
+            'email' => Str::lower(trim((string) $request->input('email'))),
+        ]);
+
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'username' => 'required|string|min:3|max:30|regex:/^[a-z0-9_]+$/|unique:users,username',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'username.regex' => 'Username may only contain letters, numbers, and underscores.',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
 
         // Create profile for SpeakReady AI features
@@ -72,22 +81,23 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $identifier = trim((string) $request->input('login', $request->input('email')));
+        $request->merge(['login' => $identifier]);
+
         $validated = $request->validate([
-            'email' => 'required|string|email',
+            'login' => 'required|string|max:255',
             'password' => 'required|string',
             'remember' => 'sometimes|boolean',
         ]);
 
-        $credentials = [
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ];
-
         $rememberDevice = $request->boolean('remember', true);
+        $loginField = filter_var($validated['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $loginValue = $loginField === 'username'
+            ? User::normalizeUsername($validated['login'])
+            : Str::lower($validated['login']);
+        $user = User::whereRaw("LOWER({$loginField}) = ?", [$loginValue])->first();
 
-        if (Auth::attempt($credentials, $rememberDevice)) {
-            $user = Auth::user();
-            
+        if ($user && is_string($user->password) && Hash::check($validated['password'], $user->password)) {
             if (in_array($user->status, ['inactive', 'suspended'])) {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -95,9 +105,13 @@ class AuthController extends Controller
 
                 return back()->withErrors([
                     'account_inactive' => 'Your account was inactivated please contact to the admin for request.',
-                ])->withInput($request->only('email'));
+                ])->withInput([
+                    'login' => $validated['login'],
+                    'email' => $user->email,
+                ]);
             }
 
+            Auth::login($user, $rememberDevice);
             $request->session()->regenerate();
             $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in', $request->ip());
 
@@ -108,8 +122,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+            'login' => 'The provided credentials do not match our records.',
+        ])->onlyInput('login');
     }
 
     public function requestReactivation(Request $request)
@@ -281,6 +295,7 @@ class AuthController extends Controller
 
                 $user = User::create([
                     'name' => $googleUser->name,
+                    'username' => User::generateUniqueUsernameFrom($googleUser->email ?: $googleUser->name ?: 'google_user'),
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
                     'password' => null,
@@ -308,6 +323,9 @@ class AuthController extends Controller
                 }
                 if (!$user->profile_photo_path) {
                     $updates['profile_photo_path'] = $googleUser->avatar;
+                }
+                if (!$user->username) {
+                    $updates['username'] = User::generateUniqueUsernameFrom($googleUser->email ?: $googleUser->name ?: 'google_user', $user->id);
                 }
                 if (!empty($updates)) {
                     $user->update($updates);

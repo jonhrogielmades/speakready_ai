@@ -118,6 +118,7 @@ class AdminUserController extends Controller
 
         User::create([
             'name' => $request->name,
+            'username' => User::generateUniqueUsernameFrom($request->email ?: $request->name),
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'is_admin' => $request->role === 'admin',
@@ -143,6 +144,10 @@ class AdminUserController extends Controller
             'is_admin' => $request->role === 'admin',
             'status' => $request->status,
         ];
+
+        if (!$user->username) {
+            $data['username'] = User::generateUniqueUsernameFrom($request->email ?: $request->name, $user->id);
+        }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);

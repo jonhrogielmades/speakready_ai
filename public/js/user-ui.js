@@ -432,6 +432,35 @@
             setActive(results[index], true, true);
         }
 
+        function getFixedHeaderOffset() {
+            var candidates = [
+                document.getElementById('mob-header'),
+                document.getElementById('nbar')
+            ];
+
+            return candidates.reduce(function (offset, header) {
+                if (!header || !header.getClientRects().length) return offset;
+
+                var styles = window.getComputedStyle(header);
+                if (styles.display === 'none' || (styles.position !== 'fixed' && styles.position !== 'sticky')) return offset;
+
+                var rect = header.getBoundingClientRect();
+                return Math.max(offset, rect.bottom > 0 ? rect.bottom : rect.height);
+            }, 0);
+        }
+
+        function scrollToHashDestination(destination) {
+            var currentScroll = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            var targetTop = destination.getBoundingClientRect().top + currentScroll - getFixedHeaderOffset() - 14;
+            var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            window.scrollTo({
+                top: Math.max(0, Math.round(targetTop)),
+                left: 0,
+                behavior: reducedMotion ? 'auto' : 'smooth'
+            });
+        }
+
         window.openUserCommandPalette = function (trigger) {
             openPalette(trigger);
         };
@@ -464,7 +493,7 @@
         results.forEach(function (item) {
             item.addEventListener('mousemove', function () { setActive(item, false); });
             item.addEventListener('focus', function () { setActive(item, false); });
-            item.addEventListener('click', function () {
+            item.addEventListener('click', function (event) {
                 var href = item.getAttribute('href') || '';
                 var destination = href.startsWith('#') && href.length > 1
                     ? document.getElementById(href.slice(1))
@@ -474,11 +503,18 @@
 
                 if (!destination) return;
 
+                event.preventDefault();
+
                 var hadTabIndex = destination.hasAttribute('tabindex');
                 if (!hadTabIndex) destination.setAttribute('tabindex', '-1');
 
                 window.requestAnimationFrame(function () {
+                    scrollToHashDestination(destination);
                     destination.focus({ preventScroll: true });
+
+                    if (window.history && window.history.pushState) {
+                        window.history.pushState(window.history.state, document.title, href);
+                    }
 
                     if (!hadTabIndex) {
                         destination.addEventListener('blur', function () {

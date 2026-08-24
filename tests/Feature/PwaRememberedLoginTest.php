@@ -15,6 +15,7 @@ class PwaRememberedLoginTest extends TestCase
     public function test_password_login_remembers_the_device_by_default(): void
     {
         $user = User::factory()->create([
+            'username' => 'pwa_user',
             'email' => 'pwa-user@example.com',
             'password' => Hash::make('password'),
             'is_admin' => false,
@@ -28,6 +29,25 @@ class PwaRememberedLoginTest extends TestCase
 
         $response->assertRedirect(route('dashboard'));
         $response->assertCookie(Auth::guard()->getRecallerName());
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_password_login_accepts_username_identifier(): void
+    {
+        $user = User::factory()->create([
+            'username' => 'ready_candidate',
+            'email' => 'candidate@example.com',
+            'password' => Hash::make('password'),
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+
+        $response = $this->post(route('login'), [
+            'login' => 'Ready_Candidate',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
     }
 
@@ -46,6 +66,7 @@ class PwaRememberedLoginTest extends TestCase
     public function test_password_login_can_opt_out_of_remembering_the_device(): void
     {
         User::factory()->create([
+            'username' => 'shared_device',
             'email' => 'shared-device@example.com',
             'password' => Hash::make('password'),
             'is_admin' => false,
@@ -66,6 +87,7 @@ class PwaRememberedLoginTest extends TestCase
     {
         $response = $this->post(route('register'), [
             'name' => 'New Interview User',
+            'username' => 'new_interview_user',
             'email' => 'new-interview-user@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
@@ -77,6 +99,7 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', [
+            'username' => 'new_interview_user',
             'email' => 'new-interview-user@example.com',
         ]);
         $this->assertDatabaseHas('profiles', [
@@ -97,6 +120,10 @@ class PwaRememberedLoginTest extends TestCase
         $response->assertOk()
             ->assertSee('id="loginForm"', false)
             ->assertSee('id="signupForm"', false)
+            ->assertSee('name="login"', false)
+            ->assertSee('Username or email address', false)
+            ->assertSee('name="username"', false)
+            ->assertSee('id="signupUsername"', false)
             ->assertSee('id="loginTransitionOverlay"', false)
             ->assertSee('id="authTransitionTitle"', false)
             ->assertSee('Creating your account...', false)

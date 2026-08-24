@@ -32,6 +32,12 @@
             width: 100%;
             position: relative;
          }
+         html {
+            scroll-padding-top: calc(var(--nav, 64px) + env(safe-area-inset-top, 0px) + 14px);
+         }
+         #landing :is(#hero, #features, #how, #benefits, #developers, #faq, #contact) {
+            scroll-margin-top: calc(var(--nav, 64px) + env(safe-area-inset-top, 0px) + 14px);
+         }
          .feature-card:hover {
             transform: translateY(-5px);
             transition: transform 0.3s ease;
@@ -5511,8 +5517,8 @@
                   @if($errors->any() && !$errors->has('account_inactive') && !old('name'))
                      <div class="err-msg" style="display:block;"><i class="fa-solid fa-circle-exclamation me-1"></i><span>{{ $errors->first() }}</span></div>
                   @endif
-                  <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
-                  <input class="oinp" type="email" name="email" id="loginEmail" placeholder="you@example.com" required value="{{ old('email') }}">
+                  <label class="olbl"><i class="fa-regular fa-user me-1"></i>Username or email address</label>
+                  <input class="oinp" type="text" name="login" id="loginIdentifier" placeholder="username or you@example.com" required autocomplete="username" value="{{ old('login', old('email')) }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="loginPass" placeholder="********" required>
@@ -5540,8 +5546,10 @@
                   @endif
                   <label class="olbl"><i class="fa-regular fa-user me-1"></i>Full name</label>
                   <input class="oinp" type="text" name="name" id="signupName" placeholder="John Doe" required value="{{ old('name') }}">
+                  <label class="olbl"><i class="fa-solid fa-at me-1"></i>Username</label>
+                  <input class="oinp" type="text" name="username" id="signupUsername" placeholder="john_doe" required minlength="3" maxlength="30" pattern="[A-Za-z0-9_]+" autocomplete="username" value="{{ old('username') }}">
                   <label class="olbl"><i class="fa-regular fa-envelope me-1"></i>Email address</label>
-                  <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required>
+                  <input class="oinp" type="email" name="email" id="signupEmail" placeholder="you@example.com" required autocomplete="email" value="{{ old('email') }}">
                   <label class="olbl"><i class="fa-solid fa-lock me-1"></i>Password</label>
                   <div class="password-field mb-3">
                      <input class="oinp" type="password" name="password" id="signupPass" placeholder="Min. 8 characters" required>
@@ -6148,13 +6156,66 @@
 
          // PWA Install Prompt Logic
          let deferredPrompt;
+
+         function isPwaAlreadyInstalled() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+               window.navigator.standalone === true ||
+               localStorage.getItem('pwa_app_installed') === 'true';
+         }
+
+         async function updateInstallButtonState() {
+            const installButton = document.getElementById('heroInstallBtn');
+            if (!installButton) return;
+
+            let isInstalled = isPwaAlreadyInstalled();
+
+            if (!isInstalled && 'getInstalledRelatedApps' in navigator) {
+               try {
+                  const relatedApps = await navigator.getInstalledRelatedApps();
+                  isInstalled = relatedApps.length > 0;
+               } catch (error) {
+                  isInstalled = isPwaAlreadyInstalled();
+               }
+            }
+
+            const icon = installButton.querySelector('i');
+            const label = isInstalled ? 'Already Installed' : 'Install App';
+
+            if (icon) {
+               installButton.replaceChildren(icon, document.createTextNode(label));
+            } else {
+               installButton.textContent = label;
+            }
+
+            installButton.setAttribute('aria-label', label);
+         }
+
          window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
+            localStorage.removeItem('pwa_app_installed');
+            updateInstallButtonState();
             if (!localStorage.getItem('pwa_prompt_dismissed')) {
                queuePwaInstallPrompt();
             }
          });
+
+         window.addEventListener('appinstalled', () => {
+            localStorage.setItem('pwa_app_installed', 'true');
+            deferredPrompt = null;
+            document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
+            updateInstallButtonState();
+         });
+
+         const standaloneDisplayMode = window.matchMedia('(display-mode: standalone)');
+         if (standaloneDisplayMode.addEventListener) {
+            standaloneDisplayMode.addEventListener('change', updateInstallButtonState);
+         } else if (standaloneDisplayMode.addListener) {
+            standaloneDisplayMode.addListener(updateInstallButtonState);
+         }
+
+         document.addEventListener('DOMContentLoaded', updateInstallButtonState);
+         updateInstallButtonState();
 
          function queuePwaInstallPrompt() {
             const prompt = document.getElementById('pwa-install-prompt');
@@ -6185,8 +6246,12 @@
                deferredPrompt.prompt();
                const { outcome } = await deferredPrompt.userChoice;
                console.log(`User response to the install prompt: ${outcome}`);
+               if (outcome === 'accepted') {
+                  localStorage.setItem('pwa_app_installed', 'true');
+               }
                deferredPrompt = null;
                document.getElementById('pwa-install-prompt').style.display = 'none';
+               updateInstallButtonState();
             } else {
                if (isIos) {
                    alert("To install on iOS, tap the 'Share' icon at the bottom of Safari and select 'Add to Home Screen'.");
