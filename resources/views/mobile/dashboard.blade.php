@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=3') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=4') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -698,19 +698,75 @@
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof Chart === 'undefined') return;
 
-    const rootStyle = getComputedStyle(document.documentElement);
-    const getThemeColor = (varName, fallback) => rootStyle.getPropertyValue(varName).trim() || fallback;
-    const isLightMode = document.documentElement.classList.contains('lm');
-    const txColor = isLightMode ? '#334155' : getThemeColor('--tx2', '#dbeafe');
-    const mutedColor = isLightMode ? '#64748b' : getThemeColor('--tx3', '#a8b4c7');
-    const surfaceColor = isLightMode ? '#ffffff' : getThemeColor('--sf', '#171d2d');
-    const gridColor = isLightMode ? 'rgba(100,116,139,0.28)' : 'rgba(219,234,254,0.42)';
-    const trendLineColor = isLightMode ? '#2563eb' : '#60a5fa';
-    const trendPointFill = isLightMode ? '#ffffff' : '#0f172a';
-    const radarGridColor = isLightMode ? 'rgba(100,116,139,0.32)' : 'rgba(219,234,254,0.58)';
-    const radarAngleColor = isLightMode ? 'rgba(100,116,139,0.34)' : 'rgba(219,234,254,0.42)';
-    const radarGridWidth = isLightMode ? 1.25 : 1.6;
-    const radarLabelColor = isLightMode ? '#334155' : '#e2e8f0';
+    const rootElement = document.documentElement;
+    const readThemeColor = (style, varName, fallback) => style.getPropertyValue(varName).trim() || fallback;
+    const getDashboardTheme = () => {
+        const theme = (window.SpeakReadyTheme?.get?.() || rootElement.dataset.theme || '').toLowerCase();
+        if (theme === 'light' || theme === 'dark') return theme;
+
+        return rootElement.classList.contains('lm') || document.body?.classList.contains('lm') ? 'light' : 'dark';
+    };
+    const getDashboardChartPalette = () => {
+        const rootStyle = getComputedStyle(rootElement);
+        const radarCard = document.getElementById('card-skill-radar');
+        const radarStyle = radarCard ? getComputedStyle(radarCard) : rootStyle;
+        const isLightMode = getDashboardTheme() === 'light';
+
+        return {
+            isLightMode,
+            txColor: isLightMode ? '#1e293b' : readThemeColor(rootStyle, '--tx', '#f8fafc'),
+            mutedColor: isLightMode ? '#475569' : readThemeColor(rootStyle, '--tx2', '#dbeafe'),
+            surfaceColor: isLightMode ? '#ffffff' : readThemeColor(rootStyle, '--sf', '#111827'),
+            gridColor: isLightMode ? 'rgba(71,85,105,0.34)' : 'rgba(226,232,240,0.5)',
+            trendLineColor: isLightMode ? '#1d4ed8' : '#93c5fd',
+            trendPointFill: isLightMode ? '#ffffff' : '#0f172a',
+            radarGridColor: readThemeColor(radarStyle, '--sr-radar-grid-color', isLightMode ? 'rgba(71,85,105,0.48)' : 'rgba(226,232,240,0.66)'),
+            radarAngleColor: readThemeColor(radarStyle, '--sr-radar-angle-color', isLightMode ? 'rgba(71,85,105,0.42)' : 'rgba(226,232,240,0.54)'),
+            radarGridWidth: isLightMode ? 1.35 : 1.75,
+            radarLabelColor: readThemeColor(radarStyle, '--sr-radar-label-color', isLightMode ? '#1e293b' : '#f8fafc')
+        };
+    };
+    const createTrendGradient = (ctx, palette) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+        gradient.addColorStop(0, palette.isLightMode ? 'rgba(37, 99, 235, 0.24)' : 'rgba(96, 165, 250, 0.28)');
+        gradient.addColorStop(0.58, palette.isLightMode ? 'rgba(59, 130, 246, 0.10)' : 'rgba(96, 165, 250, 0.14)');
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
+        return gradient;
+    };
+    const getRadarDatasetColors = (hasScores, palette) => ({
+        backgroundColor: hasScores
+            ? (palette.isLightMode ? 'rgba(219, 39, 119, 0.2)' : 'rgba(244, 114, 182, 0.28)')
+            : (palette.isLightMode ? 'rgba(219, 39, 119, 0.12)' : 'rgba(244, 114, 182, 0.2)'),
+        borderColor: hasScores
+            ? (palette.isLightMode ? '#be185d' : '#f9a8d4')
+            : (palette.isLightMode ? 'rgba(190, 24, 93, 0.78)' : 'rgba(251, 207, 232, 0.94)'),
+        pointBackgroundColor: hasScores
+            ? (palette.isLightMode ? '#be185d' : '#f9a8d4')
+            : (palette.isLightMode ? '#db2777' : '#fbcfe8'),
+        pointBorderColor: palette.surfaceColor,
+        pointHoverBackgroundColor: palette.surfaceColor,
+        pointHoverBorderColor: palette.isLightMode ? '#be185d' : '#f9a8d4'
+    });
+    const initialPalette = getDashboardChartPalette();
+    const {
+        isLightMode,
+        txColor,
+        mutedColor,
+        surfaceColor,
+        gridColor,
+        trendLineColor,
+        trendPointFill,
+        radarGridColor,
+        radarAngleColor,
+        radarGridWidth,
+        radarLabelColor
+    } = initialPalette;
+    const isCompactTrend = () => window.matchMedia('(max-width: 575px)').matches;
+    const radarPointLabelSize = () => window.matchMedia('(max-width: 380px)').matches ? 9 : 10;
+    let progressChart = null;
+    let progressCtx = null;
+    let radarChart = null;
+    let dashboardHasRadarScores = false;
 
     Chart.defaults.color = txColor;
     Chart.defaults.font.family = "'Poppins', sans-serif";
@@ -747,7 +803,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const progressCanvas = document.getElementById('progressChart');
     if (progressCanvas) {
-        const progressCtx = progressCanvas.getContext('2d');
+        progressCtx = progressCanvas.getContext('2d');
         const chartDataObj = {
             recent: {
                 labels: {!! json_encode(collect($scoreTrend ?? [])->pluck('date')) !!},
@@ -755,7 +811,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         };
         const trendRangeSelect = document.getElementById('readinessTrendRange');
-        const isCompactTrend = () => window.matchMedia('(max-width: 575px)').matches;
         const trendSlice = (count) => {
             const range = Number(count || 10);
             return {
@@ -771,12 +826,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const initialTrend = trendSlice(initialTrendRange);
 
-        const gradientLine = progressCtx.createLinearGradient(0, 0, 0, 320);
-        gradientLine.addColorStop(0, isLightMode ? 'rgba(37, 99, 235, 0.24)' : 'rgba(96, 165, 250, 0.28)');
-        gradientLine.addColorStop(0.58, isLightMode ? 'rgba(59, 130, 246, 0.10)' : 'rgba(96, 165, 250, 0.14)');
-        gradientLine.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
+        const gradientLine = createTrendGradient(progressCtx, initialPalette);
 
-        const progressChart = new Chart(progressCtx, {
+        progressChart = new Chart(progressCtx, {
             type: 'line',
             data: {
                 labels: initialTrend.labels.length ? initialTrend.labels : ['No Data'],
@@ -886,28 +938,35 @@ document.addEventListener("DOMContentLoaded", function() {
             {{ (int) ($radarData['delivery_stability'] ?? 0) }}
         ];
         const hasRadarScores = radarScores.some((value) => Number(value) > 0);
+        dashboardHasRadarScores = hasRadarScores;
         const radarDisplayScores = hasRadarScores ? radarScores : [35, 35, 35, 35, 35];
+        const radarColors = getRadarDatasetColors(hasRadarScores, initialPalette);
 
-        new Chart(radarCanvas.getContext('2d'), {
+        radarChart = new Chart(radarCanvas.getContext('2d'), {
             type: 'radar',
             data: {
                 labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism', 'Delivery Stability'],
                 datasets: [{
                     label: 'Score Level',
                     data: radarDisplayScores,
-                    backgroundColor: hasRadarScores ? (isLightMode ? 'rgba(236, 72, 153, 0.18)' : 'rgba(244, 114, 182, 0.22)') : (isLightMode ? 'rgba(236, 72, 153, 0.1)' : 'rgba(244, 114, 182, 0.16)'),
-                    borderColor: hasRadarScores ? (isLightMode ? '#db2777' : '#f472b6') : (isLightMode ? 'rgba(219, 39, 119, 0.72)' : 'rgba(251, 113, 133, 0.92)'),
-                    pointBackgroundColor: hasRadarScores ? (isLightMode ? '#db2777' : '#f472b6') : (isLightMode ? '#ec4899' : '#fecdd3'),
-                    pointBorderColor: surfaceColor,
-                    pointHoverBackgroundColor: surfaceColor,
-                    pointHoverBorderColor: '#ec4899',
-                    borderWidth: hasRadarScores ? 2 : 1.5,
+                    backgroundColor: radarColors.backgroundColor,
+                    borderColor: radarColors.borderColor,
+                    pointBackgroundColor: radarColors.pointBackgroundColor,
+                    pointBorderColor: radarColors.pointBorderColor,
+                    pointHoverBackgroundColor: radarColors.pointHoverBackgroundColor,
+                    pointHoverBorderColor: radarColors.pointHoverBorderColor,
+                    borderWidth: hasRadarScores ? 2.25 : 1.75,
                     borderDash: hasRadarScores ? [] : [6, 5]
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: { padding: { top: 8, right: 12, bottom: 8, left: 12 } },
+                elements: {
+                    line: { borderJoinStyle: 'round' },
+                    point: { radius: 3.5, hoverRadius: 5, borderWidth: 2 }
+                },
                 plugins: {
                     legend: { display: false },
                     emptyChartMessage: {
@@ -920,15 +979,57 @@ document.addEventListener("DOMContentLoaded", function() {
                     r: {
                         angleLines: { color: radarAngleColor, lineWidth: radarGridWidth },
                         grid: { color: radarGridColor, lineWidth: radarGridWidth },
-                        pointLabels: { color: radarLabelColor, font: { size: 10, weight: 800 } },
+                        pointLabels: { color: radarLabelColor, font: { size: radarPointLabelSize(), weight: 900 }, padding: 10 },
                         suggestedMin: 0,
                         suggestedMax: 100,
-                        ticks: { display: false, stepSize: 20 }
+                        ticks: { display: false, stepSize: 20, backdropColor: 'transparent' }
                     }
                 }
             }
         });
     }
+
+    const previousChartColorUpdater = window.updateChartColors;
+    window.updateChartColors = function() {
+        if (typeof previousChartColorUpdater === 'function' && previousChartColorUpdater !== window.updateChartColors) {
+            previousChartColorUpdater();
+        }
+
+        const palette = getDashboardChartPalette();
+        Chart.defaults.color = palette.txColor;
+
+        if (progressChart && progressCtx) {
+            const progressDataset = progressChart.data.datasets[0];
+            progressDataset.borderColor = palette.trendLineColor;
+            progressDataset.backgroundColor = createTrendGradient(progressCtx, palette);
+            progressDataset.pointBackgroundColor = palette.trendPointFill;
+            progressDataset.pointBorderColor = palette.trendLineColor;
+            progressChart.options.plugins.emptyChartMessage.color = palette.mutedColor;
+            progressChart.options.plugins.tooltip.backgroundColor = palette.isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)';
+            progressChart.options.plugins.tooltip.titleColor = palette.isLightMode ? '#0f172a' : '#fff';
+            progressChart.options.plugins.tooltip.bodyColor = palette.isLightMode ? '#334155' : '#dbeafe';
+            progressChart.options.plugins.tooltip.borderColor = palette.trendLineColor;
+            progressChart.options.scales.y.ticks.color = palette.txColor;
+            progressChart.options.scales.y.grid.color = palette.gridColor;
+            progressChart.options.scales.y.grid.lineWidth = palette.isLightMode ? 1.1 : 1.35;
+            progressChart.options.scales.x.ticks.color = palette.txColor;
+            progressChart.update('none');
+        }
+
+        if (radarChart) {
+            const radarColors = getRadarDatasetColors(dashboardHasRadarScores, palette);
+            const radarDataset = radarChart.data.datasets[0];
+            Object.assign(radarDataset, radarColors);
+            radarChart.options.plugins.emptyChartMessage.color = palette.mutedColor;
+            radarChart.options.scales.r.angleLines.color = palette.radarAngleColor;
+            radarChart.options.scales.r.angleLines.lineWidth = palette.radarGridWidth;
+            radarChart.options.scales.r.grid.color = palette.radarGridColor;
+            radarChart.options.scales.r.grid.lineWidth = palette.radarGridWidth;
+            radarChart.options.scales.r.pointLabels.color = palette.radarLabelColor;
+            radarChart.options.scales.r.pointLabels.font.size = radarPointLabelSize();
+            radarChart.update('none');
+        }
+    };
 });
 </script>
 
