@@ -55,4 +55,23 @@ return [
         'transcription_timeout' => env('AI_TRANSCRIPTION_TIMEOUT', 45),
     ],
 
+    'local_speech' => [
+        'enabled' => env('LOCAL_SPEECH_ENABLED', false),
+        'python' => env('LOCAL_SPEECH_PYTHON', 'python'),
+        'script' => env('LOCAL_SPEECH_SCRIPT', 'scripts/local_speech_assess.py'),
+        'timeout' => env('LOCAL_SPEECH_TIMEOUT', 90),
+        'asr_backend' => env('LOCAL_ASR_BACKEND', 'whisper'),
+        'asr_model' => env('LOCAL_ASR_MODEL', 'base'),
+        'asr_device' => env('LOCAL_ASR_DEVICE', 'auto'),
+        'pronunciation_backend' => env('LOCAL_PRONUNCIATION_BACKEND', 'ctc'),
+        'pronunciation_model' => env('LOCAL_PRONUNCIATION_MODEL', 'facebook/wav2vec2-base-960h'),
+        'alignment_backend' => env('LOCAL_ALIGNMENT_BACKEND', 'mfa'),
+        'mfa_command' => env('MFA_COMMAND', 'mfa'),
+        'mfa_dictionary' => env('MFA_DICTIONARY'),
+        'mfa_acoustic_model' => env('MFA_ACOUSTIC_MODEL'),
+        'ffmpeg_command' => env('FFMPEG_COMMAND', 'ffmpeg'),
+        'gop_backend' => env('LOCAL_GOP_BACKEND', 'mfa'),
+        'gop_command' => env('LOCAL_GOP_COMMAND'),
+    ],
+
 ];

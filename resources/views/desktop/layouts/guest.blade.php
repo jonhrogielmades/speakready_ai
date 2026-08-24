@@ -3179,7 +3179,7 @@
          }
       </style>
    </head>
-   <body @if(!$errors->any()) class="guest-splash-pending" @endif>
+   <body class="guest-shell guest-desktop-shell @if(!$errors->any()) guest-splash-pending @endif" data-layout-shell="desktop" data-guest-layout="desktop">
       @include('desktop.partials.viewport-mobile-cookie')
       @if(!$errors->any())
       <div id="srLaunchScreen" class="sr-launch-screen" role="status" aria-live="polite" aria-label="Opening SpeakReady AI">

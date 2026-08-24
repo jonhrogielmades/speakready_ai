@@ -212,6 +212,67 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         ));
     }
 
+    public function test_pronunciation_analysis_is_reported_as_separate_coaching_signal(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $coaching = $service->forAnswer(
+            'I resolved the customer issue and verified the final result.',
+            ['type' => 'Behavioral', 'question_text' => 'Tell me about a time you solved a customer issue.'],
+            [
+                'response_mode' => 'voice',
+                'voice_duration' => 24,
+                'pronunciation_analysis' => [
+                    'version' => 1,
+                    'status' => 'partial',
+                    'asr' => ['status' => 'measured', 'provider' => 'whisper'],
+                    'pronunciation' => ['status' => 'measured', 'provider' => 'wav2vec2', 'score' => 58],
+                    'forced_alignment' => ['status' => 'measured', 'provider' => 'mfa', 'word_alignments' => [['label' => 'resolved']]],
+                    'phoneme_alignment' => ['status' => 'measured', 'provider' => 'mfa', 'phoneme_alignments' => [['label' => 'r']]],
+                    'gop' => ['status' => 'not_measured'],
+                    'reliability' => ['score' => 58, 'band' => 'Limited', 'measured_components' => ['asr', 'pronunciation', 'forced_alignment']],
+                ],
+            ],
+            []
+        );
+
+        $this->assertSame('partial', $coaching['analysis_status']['pronunciation']);
+        $this->assertSame(58, $coaching['pronunciation_feedback']['evidence']['score']);
+        $this->assertStringContainsString('pronunciation/GOP coaching score', $coaching['pronunciation_feedback']['observation']);
+        $this->assertTrue(collect($coaching['priority_actions'])->contains(
+            fn (array $priority): bool => $priority['area'] === 'Pronunciation and phoneme clarity'
+        ));
+    }
+
+    public function test_pronunciation_feedback_does_not_use_reliability_as_score(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $coaching = $service->forAnswer(
+            'I resolved the customer issue and verified the final result.',
+            ['type' => 'Behavioral', 'question_text' => 'Tell me about a time you solved a customer issue.'],
+            [
+                'response_mode' => 'voice',
+                'voice_duration' => 24,
+                'pronunciation_analysis' => [
+                    'version' => 1,
+                    'status' => 'partial',
+                    'asr' => ['status' => 'measured', 'provider' => 'whisper'],
+                    'pronunciation' => ['status' => 'not_measured'],
+                    'forced_alignment' => ['status' => 'not_measured'],
+                    'phoneme_alignment' => ['status' => 'not_measured'],
+                    'gop' => ['status' => 'not_measured'],
+                    'reliability' => ['score' => 82, 'band' => 'Moderate', 'measured_components' => ['asr']],
+                ],
+            ],
+            []
+        );
+
+        $this->assertNull($coaching['pronunciation_feedback']['evidence']['score']);
+        $this->assertSame(82, $coaching['pronunciation_feedback']['evidence']['reliability_score']);
+        $this->assertStringContainsString('no calibrated pronunciation score', $coaching['pronunciation_feedback']['observation']);
+    }
+
     public function test_weakness_and_strength_questions_receive_specific_truthful_frameworks(): void
     {
         $service = new EvidenceBasedCoachingService;

@@ -18,6 +18,7 @@ use App\Models\Setting;
 use App\Services\AIService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\LearningGameCertificateService;
+use App\Services\LocalSpeechAssessmentService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
@@ -345,6 +346,7 @@ class InterviewController extends Controller
             'speech_transcript' => 'nullable|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
             'observation_data' => 'nullable|string|max:50000',
+            'pronunciation_analysis' => 'nullable|string|max:100000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
@@ -427,6 +429,7 @@ class InterviewController extends Controller
             'conversation_context' => 'nullable|string|max:50000',
             'transcript_timeline' => 'nullable|string|max:50000',
             'observation_data' => 'nullable|string|max:50000',
+            'pronunciation_analysis' => 'nullable|string|max:100000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'question_id' => 'required|exists:questions,id',
@@ -680,13 +683,23 @@ class InterviewController extends Controller
             return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
         }
 
-        $transcript = AIService::transcribeSpeech($request->file('audio'), $this->currentLanguageConfig());
+        $speechAssessment = app(LocalSpeechAssessmentService::class)
+            ->assessUploadedAudio($request->file('audio'), null, $this->currentLanguageConfig());
+        $transcript = app(LocalSpeechAssessmentService::class)->transcriptFrom($speechAssessment);
+        $transcriptionSource = $transcript !== null ? 'local_speech' : 'openai';
+
+        if ($transcript === null) {
+            $transcript = AIService::transcribeSpeech($request->file('audio'), $this->currentLanguageConfig());
+        }
+
         if ($transcript === null) {
             return response()->json(['error' => 'Live transcription is not available.'], 503);
         }
 
         return response()->json([
             'transcript' => TranscriptService::clean($transcript),
+            'transcription_source' => $transcriptionSource,
+            'pronunciation_analysis' => $speechAssessment,
         ]);
     }
 
@@ -1195,6 +1208,7 @@ class InterviewController extends Controller
             'speech_transcript' => 'nullable|string|max:20000',
             'transcript_timeline' => 'nullable|string|max:50000',
             'observation_data' => 'nullable|string|max:50000',
+            'pronunciation_analysis' => 'nullable|string|max:100000',
             'paste_event_count' => 'nullable|integer|min:0|max:500',
             'pasted_character_count' => 'nullable|integer|min:0|max:20000',
             'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
@@ -1578,9 +1592,15 @@ class InterviewController extends Controller
             $integrity = $this->fallbackAnswerIntegrity($validated);
         }
 
+        $pronunciationAnalysis = app(LocalSpeechAssessmentService::class)
+            ->normalizeAssessment($this->jsonPayloadFrom($validated['pronunciation_analysis'] ?? null));
+        $pronunciationScore = app(LocalSpeechAssessmentService::class)->scoreFrom($pronunciationAnalysis);
+
         $metrics = array_merge($deliveryMetrics, [
             'response_mode' => $validated['response_mode'] ?? 'text',
             'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'pronunciation_analysis' => $pronunciationAnalysis,
+            'pronunciation_score' => $pronunciationScore,
         ]);
         $observationData = $this->safeObservationData(
             $session,
@@ -1607,6 +1627,8 @@ class InterviewController extends Controller
             'ai_generated_likelihood' => $integrity['ai_generated_likelihood'],
             'answer_integrity_flags' => $integrity['answer_integrity_flags'],
             'observation_data' => $observationData,
+            'pronunciation_analysis' => $pronunciationAnalysis,
+            'pronunciation_score' => $pronunciationScore,
             'coaching_feedback' => $coachingFeedback,
             'response_mode' => $validated['response_mode'] ?? 'text',
             'is_skipped' => filter_var($validated['is_skipped'] ?? false, FILTER_VALIDATE_BOOLEAN),
@@ -1999,6 +2021,8 @@ class InterviewController extends Controller
             'filler_words_count' => $answer->filler_words_count ?? 0,
             'pause_count' => $answer->pause_count ?? 0,
             'delivery_transcript' => $answer->delivery_transcript,
+            'pronunciation_analysis' => $answer->pronunciation_analysis,
+            'pronunciation_score' => $answer->pronunciation_score,
             'scoring_confidence' => $scoringConfidence ?? $answer->scoring_confidence ?? 0,
             'is_skipped' => (bool) ($answer->is_skipped ?? false),
             'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_coaching', false),

@@ -21,6 +21,8 @@ yarn-error.log
 *.sql
 *.zip
 *.log
+__pycache__/
+*.py[cod]
 _static_backup/
 .codex_tmp_git_push_*/
 .codex_tmp_chrome_*/

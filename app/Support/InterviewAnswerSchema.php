@@ -64,6 +64,12 @@ class InterviewAnswerSchema
                 if (self::isMissing($missing, 'observation_data')) {
                     $table->json('observation_data')->nullable();
                 }
+                if (self::isMissing($missing, 'pronunciation_analysis')) {
+                    $table->json('pronunciation_analysis')->nullable();
+                }
+                if (self::isMissing($missing, 'pronunciation_score')) {
+                    $table->unsignedTinyInteger('pronunciation_score')->nullable();
+                }
                 if (self::isMissing($missing, 'coaching_feedback')) {
                     $table->json('coaching_feedback')->nullable();
                 }
@@ -185,6 +191,8 @@ class InterviewAnswerSchema
             $table->unsignedTinyInteger('ai_generated_likelihood')->nullable();
             $table->json('answer_integrity_flags')->nullable();
             $table->json('observation_data')->nullable();
+            $table->json('pronunciation_analysis')->nullable();
+            $table->unsignedTinyInteger('pronunciation_score')->nullable();
             $table->json('coaching_feedback')->nullable();
             $table->string('response_mode')->default('text');
             $table->text('ai_feedback')->nullable();
@@ -255,6 +263,8 @@ class InterviewAnswerSchema
             'ai_generated_likelihood',
             'answer_integrity_flags',
             'observation_data',
+            'pronunciation_analysis',
+            'pronunciation_score',
             'coaching_feedback',
             'response_mode',
             'ai_feedback',

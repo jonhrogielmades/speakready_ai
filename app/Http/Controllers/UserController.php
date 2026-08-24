@@ -23,6 +23,7 @@ use App\Services\AIService;
 use App\Services\CoachLanguageService;
 use App\Services\CsvExportService;
 use App\Services\LearningRecommendationService;
+use App\Services\LocalSpeechAssessmentService;
 use App\Services\PersonalizedPracticePlanService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
@@ -3413,11 +3414,15 @@ PROMPT;
             'ai_feedback_strengths' => 'nullable|string|max:10000',
             'ai_feedback_weaknesses' => 'nullable|string|max:10000',
             'ai_improved_answer' => 'nullable|string|max:20000',
+            'pronunciation_analysis' => 'nullable|string|max:100000',
         ]);
 
         $validated['transcript'] = TranscriptService::clean($validated['transcript'] ?? '');
 
         $metrics = $this->voiceSessionMetrics($validated);
+        $pronunciationAnalysis = app(LocalSpeechAssessmentService::class)
+            ->normalizeAssessment($this->jsonPayloadFrom($validated['pronunciation_analysis'] ?? null));
+        $pronunciationScore = app(LocalSpeechAssessmentService::class)->scoreFrom($pronunciationAnalysis);
         $user = Auth::user();
 
         $session = VoiceSession::create([
@@ -3434,6 +3439,8 @@ PROMPT;
             'ai_feedback_strengths' => $validated['ai_feedback_strengths'] ?? null,
             'ai_feedback_weaknesses' => $validated['ai_feedback_weaknesses'] ?? null,
             'ai_improved_answer' => $validated['ai_improved_answer'] ?? null,
+            'pronunciation_analysis' => $pronunciationAnalysis,
+            'pronunciation_score' => $pronunciationScore,
         ]);
 
         // Calculate some basic gamification points
@@ -4097,6 +4104,18 @@ PROMPT;
         }
 
         return max($min, min($max, (int) round($value)));
+    }
+
+    private function jsonPayloadFrom(?string $payload): ?array
+    {
+        $payload = trim((string) $payload);
+        if ($payload === '') {
+            return null;
+        }
+
+        $decoded = json_decode($payload, true);
+
+        return is_array($decoded) ? $decoded : null;
     }
 
     public function personalMastery()

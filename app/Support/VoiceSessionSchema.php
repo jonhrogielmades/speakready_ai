@@ -25,23 +25,7 @@ class VoiceSessionSchema
             return;
         }
 
-        $missing = self::missingColumns([
-            'user_id',
-            'speaking_pace',
-            'clarity_score',
-            'confidence_score',
-            'filler_words',
-            'category',
-            'prompt',
-            'transcript',
-            'ai_feedback_strengths',
-            'ai_feedback_weaknesses',
-            'ai_improved_answer',
-            'duration_seconds',
-            'wpm',
-            'created_at',
-            'updated_at',
-        ]);
+        $missing = self::missingColumns(self::requiredColumns());
 
         if ($missing !== []) {
             Schema::table('voice_sessions', function (Blueprint $table) use ($missing): void {
@@ -78,6 +62,12 @@ class VoiceSessionSchema
                 if (in_array('ai_improved_answer', $missing, true)) {
                     $table->text('ai_improved_answer')->nullable();
                 }
+                if (in_array('pronunciation_analysis', $missing, true)) {
+                    $table->json('pronunciation_analysis')->nullable();
+                }
+                if (in_array('pronunciation_score', $missing, true)) {
+                    $table->unsignedTinyInteger('pronunciation_score')->nullable();
+                }
                 if (in_array('duration_seconds', $missing, true)) {
                     $table->integer('duration_seconds')->nullable();
                 }
@@ -99,7 +89,7 @@ class VoiceSessionSchema
     public static function hasRequiredColumns(): bool
     {
         return Schema::hasTable('voice_sessions')
-            && self::missingColumns(['user_id', 'created_at', 'updated_at']) === [];
+            && self::missingColumns(self::requiredColumns()) === [];
     }
 
     private static function createTable(): void
@@ -117,10 +107,35 @@ class VoiceSessionSchema
             $table->text('ai_feedback_strengths')->nullable();
             $table->text('ai_feedback_weaknesses')->nullable();
             $table->text('ai_improved_answer')->nullable();
+            $table->json('pronunciation_analysis')->nullable();
+            $table->unsignedTinyInteger('pronunciation_score')->nullable();
             $table->integer('duration_seconds')->nullable();
             $table->integer('wpm')->nullable();
             $table->timestamps();
         });
+    }
+
+    private static function requiredColumns(): array
+    {
+        return [
+            'user_id',
+            'speaking_pace',
+            'clarity_score',
+            'confidence_score',
+            'filler_words',
+            'category',
+            'prompt',
+            'transcript',
+            'ai_feedback_strengths',
+            'ai_feedback_weaknesses',
+            'ai_improved_answer',
+            'pronunciation_analysis',
+            'pronunciation_score',
+            'duration_seconds',
+            'wpm',
+            'created_at',
+            'updated_at',
+        ];
     }
 
     private static function addUserId(Blueprint $table): void

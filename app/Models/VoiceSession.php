@@ -21,7 +21,13 @@ class VoiceSession extends Model
         'ai_feedback_strengths',
         'ai_feedback_weaknesses',
         'ai_improved_answer',
+        'pronunciation_analysis',
+        'pronunciation_score',
         'duration_seconds',
         'wpm'
+    ];
+
+    protected $casts = [
+        'pronunciation_analysis' => 'array',
     ];
 }

@@ -5,16 +5,21 @@ namespace App\Services;
 use App\Models\Score;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class LandingStatsService
 {
     public function summary(): array
     {
-        $registeredUsers = $this->registeredUsers();
-        $interviewSessions = $this->tableCount('interview_sessions');
-        $questionsAvailable = $this->questionsAvailable();
-        $feedbackGenerated = $this->feedbackGenerated();
-        $successRate = $this->successRate();
+        try {
+            $registeredUsers = $this->registeredUsers();
+            $interviewSessions = $this->tableCount('interview_sessions');
+            $questionsAvailable = $this->questionsAvailable();
+            $feedbackGenerated = $this->feedbackGenerated();
+            $successRate = $this->successRate();
+        } catch (Throwable) {
+            return $this->emptySummary();
+        }
 
         return [
             'registered_users' => $this->stat($registeredUsers),
@@ -22,6 +27,17 @@ class LandingStatsService
             'questions_available' => $this->stat($questionsAvailable),
             'feedback_generated' => $this->stat($feedbackGenerated),
             'success_rate' => $this->stat($successRate),
+        ];
+    }
+
+    private function emptySummary(): array
+    {
+        return [
+            'registered_users' => $this->stat(0),
+            'interview_sessions' => $this->stat(0),
+            'questions_available' => $this->stat(0),
+            'feedback_generated' => $this->stat(0),
+            'success_rate' => $this->stat(0),
         ];
     }
 

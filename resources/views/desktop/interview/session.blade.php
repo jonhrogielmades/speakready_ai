@@ -343,7 +343,8 @@
                         filler_events: [],
                         camera_samples: [],
                         camera_unavailable_reason: cameraUnavailableReason
-                    }
+                    },
+                    pronunciation_analysis: null
                 };
             }
 
@@ -811,6 +812,8 @@
                     throw new Error(data.error || 'Transcription request failed.');
                 }
 
+                recordLocalSpeechAnalysis(job.questionIndex, data.pronunciation_analysis || null);
+
                 const transcript = cleanTranscriptText(data.transcript || '');
                 if (!transcript || job.token !== serverTranscriptionSessionToken || job.questionIndex !== currentQIdx) return;
 
@@ -823,6 +826,105 @@
                 if (isRecording && activeTranscriptionEngine === 'server') {
                     setTranscriptionStatus('Listening - server transcription');
                 }
+            }
+
+            function localSpeechScoreFrom(analysis) {
+                const candidates = [
+                    Number(analysis?.gop?.score),
+                    Number(analysis?.pronunciation?.score)
+                ];
+                return candidates.find(score => Number.isFinite(score) && score >= 0 && score <= 100);
+            }
+
+            function localSpeechReliabilityBand(score) {
+                if (!Number.isFinite(score) || score <= 0) return 'Unavailable';
+                if (score >= 85) return 'High';
+                if (score >= 65) return 'Moderate';
+                return 'Limited';
+            }
+
+            function localSpeechMeasuredComponents(analysis) {
+                const direct = Array.isArray(analysis?.reliability?.measured_components)
+                    ? analysis.reliability.measured_components
+                    : [];
+                const inferred = ['asr', 'pronunciation', 'forced_alignment', 'phoneme_alignment', 'gop']
+                    .filter(key => String(analysis?.[key]?.status || '') === 'measured');
+                return [...new Set([...direct, ...inferred].map(item => String(item)).filter(Boolean))];
+            }
+
+            function localSpeechChunkSummary(analysis) {
+                const score = localSpeechScoreFrom(analysis);
+                const reliabilityScore = Number(analysis?.reliability?.score);
+                return {
+                    status: String(analysis?.status || 'partial'),
+                    score: Number.isFinite(score) ? Math.round(score) : null,
+                    reliability_score: Number.isFinite(reliabilityScore) ? Math.round(Math.max(0, Math.min(100, reliabilityScore))) : null,
+                    reliability_band: analysis?.reliability?.band || null,
+                    asr_provider: analysis?.asr?.provider || null,
+                    asr_model: analysis?.asr?.model || null,
+                    pronunciation_provider: analysis?.pronunciation?.provider || null,
+                    pronunciation_model: analysis?.pronunciation?.model || null,
+                    alignment_provider: analysis?.forced_alignment?.provider || null,
+                    gop_provider: analysis?.gop?.provider || null,
+                    word_alignment_count: Array.isArray(analysis?.forced_alignment?.word_alignments) ? analysis.forced_alignment.word_alignments.length : Number(analysis?.forced_alignment?.word_alignment_count || 0),
+                    phoneme_alignment_count: Array.isArray(analysis?.phoneme_alignment?.phoneme_alignments) ? analysis.phoneme_alignment.phoneme_alignments.length : Number(analysis?.phoneme_alignment?.phoneme_alignment_count || 0),
+                    measured_components: localSpeechMeasuredComponents(analysis),
+                    limitations: Array.isArray(analysis?.limitations) ? analysis.limitations.slice(0, 4) : []
+                };
+            }
+
+            function aggregateLocalSpeechAnalysis(chunks, latestAnalysis) {
+                const scores = chunks.map(chunk => Number(chunk.score)).filter(score => Number.isFinite(score));
+                const averageScore = scores.length
+                    ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+                    : null;
+                const reliabilityScores = chunks.map(chunk => Number(chunk.reliability_score)).filter(score => Number.isFinite(score));
+                const reliabilityScore = reliabilityScores.length
+                    ? Math.round(reliabilityScores.reduce((sum, score) => sum + score, 0) / reliabilityScores.length)
+                    : Number(latestAnalysis?.reliability?.score || 0);
+                const measuredComponents = [...new Set(chunks.flatMap(chunk => Array.isArray(chunk.measured_components) ? chunk.measured_components : []))];
+                const limitations = [...new Set([
+                    ...chunks.flatMap(chunk => Array.isArray(chunk.limitations) ? chunk.limitations : []),
+                    'Aggregated from server transcription chunks; the browser does not retain full-answer raw audio for later reanalysis.'
+                ].filter(Boolean))].slice(0, 8);
+
+                return {
+                    version: 1,
+                    status: averageScore !== null ? 'partial' : String(latestAnalysis?.status || 'not_measured'),
+                    source: 'server_transcription_chunk_aggregation',
+                    pronunciation: {
+                        status: averageScore !== null ? 'partial' : String(latestAnalysis?.pronunciation?.status || 'not_measured'),
+                        score: averageScore,
+                        provider: latestAnalysis?.pronunciation?.provider || null,
+                        model: latestAnalysis?.pronunciation?.model || null,
+                        method: latestAnalysis?.pronunciation?.method || 'chunk_average'
+                    },
+                    asr: latestAnalysis?.asr || {},
+                    forced_alignment: latestAnalysis?.forced_alignment || {},
+                    phoneme_alignment: latestAnalysis?.phoneme_alignment || {},
+                    gop: latestAnalysis?.gop || {},
+                    reliability: {
+                        score: reliabilityScore,
+                        band: latestAnalysis?.reliability?.band || chunks.find(chunk => chunk.reliability_band)?.reliability_band || localSpeechReliabilityBand(reliabilityScore),
+                        measured_components: measuredComponents
+                    },
+                    chunks,
+                    limitations,
+                    recommendations: Array.isArray(latestAnalysis?.recommendations) ? latestAnalysis.recommendations.slice(0, 5) : []
+                };
+            }
+
+            function recordLocalSpeechAnalysis(questionIndex, analysis) {
+                if (!analysis || typeof analysis !== 'object') return;
+                const useful = ['measured', 'partial'].includes(String(analysis.status || ''))
+                    || Number.isFinite(localSpeechScoreFrom(analysis));
+                if (!useful || !answersData[questionIndex]) return;
+
+                const existing = Array.isArray(answersData[questionIndex].pronunciation_analysis?.chunks)
+                    ? answersData[questionIndex].pronunciation_analysis.chunks.slice(-5)
+                    : [];
+                existing.push(localSpeechChunkSummary(analysis));
+                answersData[questionIndex].pronunciation_analysis = aggregateLocalSpeechAnalysis(existing.slice(-6), analysis);
             }
 
             function startServerTranscriptionEngine() {
@@ -2792,6 +2894,7 @@
                 formData.append('speech_transcript', answersData[currentQIdx].speech_transcript || '');
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
                 formData.append('observation_data', JSON.stringify(answersData[currentQIdx].observation_data || {}));
+                formData.append('pronunciation_analysis', JSON.stringify(answersData[currentQIdx].pronunciation_analysis || {}));
                 formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);
                 formData.append('pasted_character_count', answersData[currentQIdx].pasted_character_count || 0);
                 formData.append('is_skipped', isSkipped);
@@ -2990,6 +3093,7 @@
                 formData.append('conversation_context', JSON.stringify(interviewChatHistory.slice(-16)));
                 formData.append('transcript_timeline', JSON.stringify(answersData[currentQIdx].transcript_timeline || []));
                 formData.append('observation_data', JSON.stringify(answersData[currentQIdx].observation_data || {}));
+                formData.append('pronunciation_analysis', JSON.stringify(answersData[currentQIdx].pronunciation_analysis || {}));
                 formData.append('paste_event_count', answersData[currentQIdx].paste_event_count || 0);
                 formData.append('pasted_character_count', answersData[currentQIdx].pasted_character_count || 0);
                 formData.append('is_skipped', wasSkipped);

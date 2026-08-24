@@ -9,7 +9,11 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
 use App\Models\User;
+use App\Services\LandingStatsService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
+use PDOException;
 use Tests\TestCase;
 
 class LandingStatsTest extends TestCase
@@ -90,6 +94,27 @@ class LandingStatsTest extends TestCase
         $this->assertLandingStat($content, 'questions-available', '2');
         $this->assertLandingStat($content, 'feedback-generated', '4');
         $this->assertLandingStat($content, 'success-rate', '60');
+    }
+
+    public function test_landing_stats_fall_back_to_zero_when_database_is_unavailable(): void
+    {
+        Schema::shouldReceive('hasTable')
+            ->with('users')
+            ->once()
+            ->andThrow(new QueryException(
+                'mysql',
+                'select * from information_schema.tables',
+                [],
+                new PDOException('SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it')
+            ));
+
+        $stats = app(LandingStatsService::class)->summary();
+
+        $this->assertSame('0', $stats['registered_users']['display']);
+        $this->assertSame('0', $stats['interview_sessions']['display']);
+        $this->assertSame('0', $stats['questions_available']['display']);
+        $this->assertSame('0', $stats['feedback_generated']['display']);
+        $this->assertSame('0', $stats['success_rate']['display']);
     }
 
     private function question(Category $category, string $text, array $overrides = []): Question

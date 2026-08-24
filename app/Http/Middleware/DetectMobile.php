@@ -36,6 +36,16 @@ class DetectMobile
 
     private function detectMobile(Request $request): bool
     {
+        $queryLayout = strtolower((string) $request->query('sr_layout', ''));
+        if ($request->isMethod('GET') && in_array($queryLayout, ['mobile', 'desktop'], true)) {
+            return $queryLayout === 'mobile';
+        }
+
+        $queryViewportWidth = filter_var($request->query('sr_viewport_width'), FILTER_VALIDATE_INT);
+        if ($request->isMethod('GET') && $queryViewportWidth !== false && $queryViewportWidth > 0) {
+            return $queryViewportWidth <= self::MOBILE_VIEWPORT_MAX;
+        }
+
         $userAgent = $this->userAgent($request);
         $isMobile = $userAgent !== '' && (bool) preg_match($this->mobilePattern, $userAgent);
 

@@ -13,6 +13,88 @@ class MobileLayoutTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_guest_landing_uses_new_mobile_guest_layout_for_mobile_user_agents(): void
+    {
+        $mobileUserAgents = [
+            'iPhone 13 Safari' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+            'Android Chrome' => 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36',
+        ];
+
+        foreach ($mobileUserAgents as $label => $userAgent) {
+            $this->withHeader('User-Agent', $userAgent)
+                ->get('/')
+                ->assertOk()
+                ->assertSee('guest-shell guest-mobile-shell', false)
+                ->assertSee('data-layout-shell="mobile"', false)
+                ->assertSee('data-guest-layout="mobile"', false)
+                ->assertSee('css/mobile/style.css?v=7', false)
+                ->assertSee('mobilePreviewSwiper', false)
+                ->assertSee('mobile-preview-image-swiper', false)
+                ->assertDontSee('css/desktop/style.css?v=7', false);
+        }
+    }
+
+    public function test_guest_landing_uses_mobile_guest_layout_from_viewport_cookie(): void
+    {
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withHeader('User-Agent', $desktopUserAgent)
+            ->withUnencryptedCookie('sr_is_mobile', '1')
+            ->withUnencryptedCookie('sr_viewport_width', '390')
+            ->get('/')
+            ->assertOk()
+            ->assertSee('guest-shell guest-mobile-shell', false)
+            ->assertSee('data-layout-shell="mobile"', false)
+            ->assertSee('css/mobile/style.css?v=7', false)
+            ->assertSee('mobilePreviewSwiper', false)
+            ->assertDontSee('css/desktop/style.css?v=7', false);
+    }
+
+    public function test_guest_landing_uses_mobile_guest_layout_from_viewport_query_hint(): void
+    {
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withHeader('User-Agent', $desktopUserAgent)
+            ->get('/?sr_layout=mobile&sr_viewport_width=390')
+            ->assertOk()
+            ->assertSee('guest-shell guest-mobile-shell', false)
+            ->assertSee('data-layout-shell="mobile"', false)
+            ->assertSee('css/mobile/style.css?v=7', false)
+            ->assertSee('mobilePreviewSwiper', false)
+            ->assertDontSee('css/desktop/style.css?v=7', false);
+    }
+
+    public function test_guest_landing_desktop_query_hint_can_override_stale_mobile_cookie(): void
+    {
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withHeader('User-Agent', $desktopUserAgent)
+            ->withUnencryptedCookie('sr_is_mobile', '1')
+            ->withUnencryptedCookie('sr_viewport_width', '390')
+            ->get('/?sr_layout=desktop&sr_viewport_width=1280')
+            ->assertOk()
+            ->assertSee('guest-shell guest-desktop-shell', false)
+            ->assertSee('data-layout-shell="desktop"', false)
+            ->assertSee('css/desktop/style.css?v=7', false)
+            ->assertDontSee('css/mobile/style.css?v=7', false);
+    }
+
+    public function test_guest_landing_exposes_shell_marker_for_viewport_repair(): void
+    {
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $this->withHeader('User-Agent', $desktopUserAgent)
+            ->get('/')
+            ->assertOk()
+            ->assertSee('guest-shell guest-desktop-shell', false)
+            ->assertSee('data-layout-shell="desktop"', false)
+            ->assertSee("body.getAttribute('data-layout-shell')", false)
+            ->assertSee("bodyClasses.contains('guest-desktop-shell')", false)
+            ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
+            ->assertSee('window.location.replace(url.toString())', false)
+            ->assertSee('css/desktop/style.css?v=7', false);
+    }
+
     public function test_user_dashboard_uses_mobile_shell_for_mobile_user_agent(): void
     {
         $user = User::factory()->create([

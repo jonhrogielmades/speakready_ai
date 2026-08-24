@@ -117,6 +117,30 @@ Create a free Brevo account, verify the sender email/domain, and generate an API
 key from Brevo's SMTP & API settings. The app will automatically use Brevo for
 password reset emails when `BREVO_API_KEY` is present.
 
+**Optional Local Speech Assessment:**
+SpeakReady can run a local speech pipeline before falling back to OpenAI
+transcription. The Laravel app calls `scripts/local_speech_assess.py`, which
+uses installed local tools when available:
+
+```env
+LOCAL_SPEECH_ENABLED=true
+LOCAL_ASR_BACKEND=whisper          # whisper, faster_whisper, conformer, transformers
+LOCAL_ASR_MODEL=base
+LOCAL_PRONUNCIATION_BACKEND=ctc    # ctc, wav2vec2, hubert, wavlm
+LOCAL_PRONUNCIATION_MODEL=facebook/wav2vec2-base-960h
+LOCAL_ALIGNMENT_BACKEND=mfa
+MFA_DICTIONARY=english_us_arpa
+MFA_ACOUSTIC_MODEL=english_us_arpa
+LOCAL_GOP_BACKEND=mfa
+LOCAL_GOP_COMMAND=
+```
+
+Install the selected Python/back-end packages on the host first. MFA provides
+word and phoneme alignment when its dictionary/acoustic model are configured.
+For true Goodness of Pronunciation scoring, set `LOCAL_GOP_COMMAND` to a local
+GOP scorer that returns JSON; otherwise the app reports GOP as not measured
+instead of inventing a score.
+
 ### 4. Generate Application Key
 Generate a new cryptographic key for the application. This will automatically update your `.env` file securely:
 ```bash

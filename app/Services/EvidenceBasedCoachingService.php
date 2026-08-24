@@ -92,12 +92,16 @@ final class EvidenceBasedCoachingService
         }
 
         $deliveryFeedback = $this->deliveryFeedback($observationData['delivery'] ?? []);
+        $pronunciationFeedback = $this->pronunciationFeedback(
+            is_array($metrics['pronunciation_analysis'] ?? null) ? $metrics['pronunciation_analysis'] : null
+        );
         $cameraFeedback = $this->cameraFeedback($observationData['camera'] ?? []);
         $questionTip = $this->questionTip($question);
         $contentAlignment = $this->contentAlignment($answerText, $question, $metrics, $questionTip);
         $priorityActions = $this->priorityActions(
             $answerText,
             $deliveryFeedback,
+            $pronunciationFeedback,
             $cameraFeedback,
             $questionTip,
             $contentAlignment
@@ -120,10 +124,12 @@ final class EvidenceBasedCoachingService
                 'content' => $contentStatus,
                 'alignment' => $contentAlignment['status'],
                 'delivery' => $deliveryFeedback['status'],
+                'pronunciation' => $pronunciationFeedback['status'],
                 'camera' => $cameraFeedback['status'],
             ],
             // Compact compatibility keys used by tests and API consumers.
             'delivery_feedback' => $deliveryFeedback,
+            'pronunciation_feedback' => $pronunciationFeedback,
             'camera_feedback' => $cameraFeedback,
             'question_tip' => $questionTip,
             'content_alignment' => $contentAlignment,
@@ -135,6 +141,13 @@ final class EvidenceBasedCoachingService
                 'evidence' => $deliveryFeedback['evidence'],
                 'tips' => $deliveryFeedback['tips'],
                 'limitation' => $deliveryFeedback['limitation'],
+            ],
+            'pronunciation' => [
+                'status' => $pronunciationFeedback['status'],
+                'observation' => $pronunciationFeedback['observation'],
+                'evidence' => $pronunciationFeedback['evidence'],
+                'tips' => $pronunciationFeedback['tips'],
+                'limitation' => $pronunciationFeedback['limitation'],
             ],
             'camera' => [
                 'status' => $cameraFeedback['status'],
@@ -153,7 +166,7 @@ final class EvidenceBasedCoachingService
                 'mapped_skills' => $questionTip['mapped_skills'],
             ],
             'priority_actions' => $priorityActions,
-            'transparency_note' => 'Question alignment is tied to this answer, its exact question, and cited answer excerpts. Content feedback cannot verify facts beyond the submitted response. Delivery uses transcript and timing evidence. Optional body-language coaching is a browser estimate, is never used to infer confidence, honesty, personality, employability, or intent, and does not affect readiness scoring.',
+            'transparency_note' => 'Question alignment is tied to this answer, its exact question, and cited answer excerpts. Content feedback cannot verify facts beyond the submitted response. Delivery uses transcript and timing evidence. Local pronunciation, phoneme alignment, and GOP are coaching signals only when configured and measured. Optional body-language coaching is a browser estimate, is never used to infer confidence, honesty, personality, employability, or intent, and does not affect readiness scoring.',
         ];
     }
 
@@ -607,6 +620,106 @@ final class EvidenceBasedCoachingService
                 'filler_events' => array_values((array) ($delivery['filler_events'] ?? [])),
             ],
             'limitation' => (string) ($delivery['caveat'] ?? ''),
+        ];
+    }
+
+    private function pronunciationFeedback(?array $analysis): array
+    {
+        if (! is_array($analysis)) {
+            return [
+                'status' => 'not_measured',
+                'observation' => 'Local pronunciation analysis was not measured for this answer.',
+                'tip' => 'Use server audio transcription with LOCAL_SPEECH_ENABLED=true to collect local ASR, phoneme alignment, and GOP evidence.',
+                'tips' => ['Use server audio transcription with LOCAL_SPEECH_ENABLED=true to collect local ASR, phoneme alignment, and GOP evidence.'],
+                'evidence' => [],
+                'limitation' => 'No local speech analysis payload was saved with this answer.',
+            ];
+        }
+
+        $score = $this->nullableBoundedInt(
+            data_get($analysis, 'gop.score')
+                ?? data_get($analysis, 'pronunciation.score'),
+            0,
+            100
+        );
+        $status = in_array((string) ($analysis['status'] ?? ''), ['measured', 'partial'], true)
+            ? (string) $analysis['status']
+            : ($score !== null ? 'partial' : 'not_measured');
+        $asrProvider = trim((string) data_get($analysis, 'asr.provider', ''));
+        $pronunciationProvider = trim((string) data_get($analysis, 'pronunciation.provider', ''));
+        $alignmentProvider = trim((string) data_get($analysis, 'forced_alignment.provider', ''));
+        $gopProvider = trim((string) data_get($analysis, 'gop.provider', ''));
+        $phonemeCount = count((array) data_get($analysis, 'phoneme_alignment.phoneme_alignments', []));
+        $wordAlignmentCount = count((array) data_get($analysis, 'forced_alignment.word_alignments', []));
+        $measuredComponents = (array) data_get($analysis, 'reliability.measured_components', []);
+
+        if ($status === 'not_measured') {
+            $limitations = array_values(array_filter((array) ($analysis['limitations'] ?? []), fn ($item): bool => trim((string) $item) !== ''));
+            $limitation = $limitations !== []
+                ? implode(' ', array_slice(array_map(fn ($item): string => trim((string) $item), $limitations), 0, 3))
+                : 'Local speech models were not available or not configured for this answer.';
+
+            return [
+                'status' => 'not_measured',
+                'observation' => 'Local pronunciation analysis was not measured for this answer.',
+                'tip' => 'Install and configure the local ASR/pronunciation/alignment backends before relying on pronunciation scoring.',
+                'tips' => ['Install and configure the local ASR/pronunciation/alignment backends before relying on pronunciation scoring.'],
+                'evidence' => [
+                    'asr_status' => data_get($analysis, 'asr.status'),
+                    'pronunciation_status' => data_get($analysis, 'pronunciation.status'),
+                    'forced_alignment_status' => data_get($analysis, 'forced_alignment.status'),
+                    'gop_status' => data_get($analysis, 'gop.status'),
+                ],
+                'limitation' => $limitation,
+            ];
+        }
+
+        $componentText = $measuredComponents !== []
+            ? ' Measured local components: '.implode(', ', array_map(fn ($item): string => (string) $item, $measuredComponents)).'.'
+            : '';
+        $observation = $score !== null
+            ? "Local speech analysis produced a pronunciation/GOP coaching score of {$score}%."
+            : 'Local speech analysis ran, but no calibrated pronunciation score was produced.';
+        if ($phonemeCount > 0 || $wordAlignmentCount > 0) {
+            $observation .= " It included {$wordAlignmentCount} word alignments and {$phonemeCount} phoneme alignments.";
+        }
+        $observation .= $componentText;
+
+        $tips = [];
+        if ($score !== null && $score < 70) {
+            $tips[] = 'Repeat the answer more slowly and focus on crisp word endings before comparing the next local pronunciation score.';
+        }
+        if ($phonemeCount === 0) {
+            $tips[] = 'Enable Montreal Forced Aligner with a matching dictionary and acoustic model to receive phoneme-level timing.';
+        }
+        if (data_get($analysis, 'gop.status') !== 'measured') {
+            $tips[] = 'Configure LOCAL_GOP_COMMAND for true Goodness of Pronunciation scoring.';
+        }
+        if ($tips === []) {
+            $tips[] = 'Keep the same pacing and articulation, then retry with a harder prompt to confirm consistency.';
+        }
+
+        return [
+            'status' => $status,
+            'observation' => $observation,
+            'tip' => $tips[0],
+            'tips' => array_values(array_unique($tips)),
+            'evidence' => [
+                'score' => $score,
+                'asr_provider' => $asrProvider !== '' ? $asrProvider : null,
+                'pronunciation_provider' => $pronunciationProvider !== '' ? $pronunciationProvider : null,
+                'alignment_provider' => $alignmentProvider !== '' ? $alignmentProvider : null,
+                'gop_provider' => $gopProvider !== '' ? $gopProvider : null,
+                'word_alignment_count' => $wordAlignmentCount,
+                'phoneme_alignment_count' => $phonemeCount,
+                'reliability_score' => data_get($analysis, 'reliability.score'),
+                'reliability_band' => data_get($analysis, 'reliability.band'),
+                'measured_components' => $measuredComponents,
+            ],
+            'limitation' => implode(' ', array_slice(array_map(
+                fn ($item): string => trim((string) $item),
+                array_filter((array) ($analysis['limitations'] ?? []))
+            ), 0, 3)),
         ];
     }
 
@@ -1203,6 +1316,7 @@ final class EvidenceBasedCoachingService
     private function priorityActions(
         string $answerText,
         array $delivery,
+        array $pronunciation,
         array $camera,
         array $questionTip,
         array $contentAlignment
@@ -1230,6 +1344,17 @@ final class EvidenceBasedCoachingService
                 'observation' => $delivery['observation'],
                 'action' => $delivery['tip'],
                 'severity' => 65,
+            ];
+        }
+
+        if (in_array(($pronunciation['status'] ?? null), ['measured', 'partial'], true)
+            && is_numeric($pronunciation['evidence']['score'] ?? null)
+            && (int) $pronunciation['evidence']['score'] < 70) {
+            $priorities[] = [
+                'area' => 'Pronunciation and phoneme clarity',
+                'observation' => $pronunciation['observation'],
+                'action' => $pronunciation['tip'],
+                'severity' => 60,
             ];
         }
 
@@ -1300,6 +1425,7 @@ final class EvidenceBasedCoachingService
         return match (true) {
             str_contains($area, 'answer evidence') => 85,
             str_contains($area, 'relevance') => 80,
+            str_contains($area, 'pronunciation') || str_contains($area, 'phoneme') => 60,
             str_contains($area, 'filler') || str_contains($area, 'delivery') => 65,
             str_contains($area, 'camera') || str_contains($area, 'body-language') => 45,
             default => 25,
