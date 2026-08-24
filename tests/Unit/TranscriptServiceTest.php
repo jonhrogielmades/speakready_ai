@@ -38,6 +38,17 @@ class TranscriptServiceTest extends TestCase
         );
     }
 
+    public function test_it_collapses_long_repeated_transcription_chunks(): void
+    {
+        $phrase = 'I reviewed the customer issue with the team and documented the root cause before deployment';
+        $transcript = "{$phrase} {$phrase} so the release was safer.";
+
+        $this->assertSame(
+            "{$phrase} so the release was safer.",
+            TranscriptService::clean($transcript)
+        );
+    }
+
     public function test_it_counts_common_fillers_as_phrases(): void
     {
         $this->assertSame(

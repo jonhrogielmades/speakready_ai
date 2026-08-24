@@ -1148,7 +1148,7 @@
 
             #about .target-users-grid {
                display: grid !important;
-               grid-template-columns: repeat(3, minmax(0, 1fr));
+               grid-template-columns: repeat(2, minmax(0, 1fr));
                gap: 8px !important;
             }
 
@@ -1156,20 +1156,25 @@
                width: 100%;
                min-width: 0;
                margin-top: 0;
-               padding: 7px 5px !important;
+               padding: 8px 7px !important;
                display: inline-flex;
                align-items: center;
                justify-content: center;
-               gap: 4px;
-               font-size: 0.58rem;
-               line-height: 1.1;
+               gap: 5px;
+               font-size: 0.64rem;
+               line-height: 1.18;
                text-align: center;
-               white-space: nowrap;
+               white-space: normal;
+               overflow-wrap: normal;
+            }
+
+            #about .target-users-grid .ftag:last-child {
+               grid-column: 1 / -1;
             }
 
             #about .target-users-grid .ftag i {
                margin-right: 0 !important;
-               font-size: 0.58rem;
+               font-size: 0.64rem;
                flex: 0 0 auto;
             }
 
@@ -1287,17 +1292,8 @@
          }
 
          @media (max-width: 390px) {
-            #about .about-system-panel .target-users-grid {
-               grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
             #about .about-system-panel .target-users-grid .ftag {
-               min-height: 32px;
-               white-space: normal;
-            }
-
-            #about .about-system-panel .target-users-grid .ftag:last-child {
-               grid-column: 1 / -1;
+               min-height: 34px;
             }
          }
 

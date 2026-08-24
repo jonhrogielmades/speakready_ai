@@ -829,7 +829,6 @@ class InterviewController extends Controller
                 $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
             }
             $assessment = app(TrustworthyAssessmentService::class);
-            $coaching = app(EvidenceBasedCoachingService::class);
             DB::beginTransaction();
 
             $totalClarity = 0;
@@ -867,16 +866,18 @@ class InterviewController extends Controller
                         $answer->question
                     );
                     $rubric = $assessment->rubricLevel($qScore);
-                    $coachingFeedback = $coaching->forAnswer(
-                        (string) ($answer->answer_text ?? ''),
+                    $coachingFeedback = $this->safeCoachingFeedback(
+                        $session,
                         $answer->question,
+                        (string) ($answer->answer_text ?? ''),
                         $this->coachingMetricsFromAnswer(
                             $answer,
                             $this->scoreValue($qFeedback['scoring_confidence'] ?? 80),
                             $session,
                             $this->coachingEvaluationMetrics($qFeedback)
                         ),
-                        is_array($answer->observation_data) ? $answer->observation_data : []
+                        is_array($answer->observation_data) ? $answer->observation_data : [],
+                        'final_answer_coaching'
                     );
                     $answer->update([
                         'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
@@ -906,11 +907,13 @@ class InterviewController extends Controller
                     $totalGrammar += $g;
                     $totalProf += $p;
 
-                    $coachingFeedback = $coaching->forAnswer(
-                        (string) ($answer->answer_text ?? ''),
+                    $coachingFeedback = $this->safeCoachingFeedback(
+                        $session,
                         $answer->question,
+                        (string) ($answer->answer_text ?? ''),
                         $this->coachingMetricsFromAnswer($answer, 0, $session),
-                        is_array($answer->observation_data) ? $answer->observation_data : []
+                        is_array($answer->observation_data) ? $answer->observation_data : [],
+                        'final_answer_coaching_fallback'
                     );
                     $answer->update([
                         'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
@@ -952,7 +955,7 @@ class InterviewController extends Controller
                 : $metadata['overall'];
             $metadata['overall'] = $overall;
             $metadata['readiness_band'] = $assessment->readinessBand($overall);
-            $coachingSummary = $coaching->sessionSummary($evaluatedAnswers);
+            $coachingSummary = $this->safeSessionCoachingSummary($evaluatedAnswers, $session);
 
             // Game perks affect game progression, never the stored assessment score.
             $profile = Profile::firstOrCreate(['user_id' => Auth::id()]);
@@ -1112,19 +1115,28 @@ class InterviewController extends Controller
             $profile->save();
             $profile->refresh();
 
-            ActivityLogger::log(
-                Auth::user(),
-                'interview_completed',
-                Auth::user()->name." completed an interview session with an overall score of {$overall}%.",
-                $request->ip(),
-                true,
-                [
-                    'title' => 'Interview Completed',
-                    'message' => "You completed an interview session with an overall score of {$overall}%.",
-                    'icon' => 'fa-flag-checkered',
-                    'type' => 'success',
-                ]
-            );
+            try {
+                ActivityLogger::log(
+                    Auth::user(),
+                    'interview_completed',
+                    Auth::user()->name." completed an interview session with an overall score of {$overall}%.",
+                    $request->ip(),
+                    true,
+                    [
+                        'title' => 'Interview Completed',
+                        'message' => "You completed an interview session with an overall score of {$overall}%.",
+                        'icon' => 'fa-flag-checkered',
+                        'type' => 'success',
+                    ]
+                );
+            } catch (\Throwable $activityError) {
+                Log::warning('Interview completion activity log failed after report generation.', [
+                    'session_id' => $session->id,
+                    'user_id' => Auth::id(),
+                    'error_type' => $activityError::class,
+                    'message' => Str::limit($activityError->getMessage(), 300),
+                ]);
+            }
 
             DB::commit();
             $this->forgetCompletedSessionState($session, $gameLevel);
@@ -1153,7 +1165,14 @@ class InterviewController extends Controller
                 'error_type' => $error::class,
             ]);
 
-            throw $error;
+            $message = 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.';
+
+            return $request->expectsJson()
+                ? response()->json([
+                    'message' => $message,
+                    'retry_after_ms' => 1500,
+                ], 503)
+                : back()->with('error', $message);
         }
     }
 
@@ -1442,9 +1461,8 @@ class InterviewController extends Controller
             : AIService::generateFeedback($sessionData, $answersData, session('active_interview_provider', AIService::defaultProviderKey()));
 
         $assessment = app(TrustworthyAssessmentService::class);
-        $coaching = app(EvidenceBasedCoachingService::class);
 
-        DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment, $coaching) {
+        DB::transaction(function () use ($session, $answers, $aiFeedback, $assessment) {
             $totalClarity = 0;
             $totalRelevance = 0;
             $totalGrammar = 0;
@@ -1471,16 +1489,18 @@ class InterviewController extends Controller
                     $answer->question
                 );
                 $rubric = $assessment->rubricLevel($qScore);
-                $coachingFeedback = $coaching->forAnswer(
-                    (string) ($answer->answer_text ?? ''),
+                $coachingFeedback = $this->safeCoachingFeedback(
+                    $session,
                     $answer->question,
+                    (string) ($answer->answer_text ?? ''),
                     $this->coachingMetricsFromAnswer(
                         $answer,
                         $this->scoreValue($qFeedback['scoring_confidence'] ?? ($qFeedback ? 80 : 0)),
                         $session,
                         $this->coachingEvaluationMetrics($qFeedback ?? [])
                     ),
-                    is_array($answer->observation_data) ? $answer->observation_data : []
+                    is_array($answer->observation_data) ? $answer->observation_data : [],
+                    'refresh_answer_coaching'
                 );
 
                 $answer->update([
@@ -1550,7 +1570,7 @@ class InterviewController extends Controller
                 'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
                 'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
                 'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
-                'coaching_summary' => $coaching->sessionSummary($evaluatedAnswers),
+                'coaching_summary' => $this->safeSessionCoachingSummary($evaluatedAnswers, $session),
             ]);
 
             $session->update([
@@ -1669,7 +1689,7 @@ class InterviewController extends Controller
 
     private function safeCoachingFeedback(
         InterviewSession $session,
-        Question $question,
+        Question|array|null $question,
         string $answerText,
         array $metrics,
         array $observationData,
@@ -1687,6 +1707,136 @@ class InterviewController extends Controller
 
             return $this->fallbackAnswerCoaching($answerText, $question, $metrics, $observationData);
         }
+    }
+
+    private function safeSessionCoachingSummary($answers, InterviewSession $session): array
+    {
+        try {
+            return app(EvidenceBasedCoachingService::class)->sessionSummary($answers->values());
+        } catch (\Throwable $error) {
+            Log::warning('Interview session optional coaching summary failed; using fallback.', [
+                'session_id' => $session->id,
+                'user_id' => $session->user_id,
+                'error_type' => $error::class,
+                'message' => Str::limit($error->getMessage(), 300),
+            ]);
+
+            return $this->fallbackSessionCoachingSummary($answers);
+        }
+    }
+
+    private function fallbackSessionCoachingSummary($answers): array
+    {
+        $answers = $answers instanceof \Illuminate\Support\Collection
+            ? $answers->values()
+            : collect($answers)->values();
+        $contentOverview = [
+            'directly_answered' => 0,
+            'partially_answered' => 0,
+            'low_relevance' => 0,
+            'insufficient_evidence' => 0,
+            'skipped' => 0,
+            'not_evaluated' => 0,
+        ];
+        $questionImprovements = [];
+        $questionIds = [];
+        $questionTexts = [];
+        $evidenceQuotes = [];
+        $missingPoints = [];
+
+        foreach ($answers as $index => $answer) {
+            if (! $answer instanceof InterviewAnswer) {
+                continue;
+            }
+
+            $alignment = is_array($answer->coaching_feedback ?? null)
+                ? (array) data_get($answer->coaching_feedback, 'content_alignment', [])
+                : [];
+            $status = (string) ($alignment['status'] ?? ((bool) ($answer->is_skipped ?? false) ? 'skipped' : 'not_evaluated'));
+            if (! array_key_exists($status, $contentOverview)) {
+                $status = 'not_evaluated';
+            }
+            $contentOverview[$status]++;
+
+            $questionText = $this->questionTextFrom($answer->question) ?: 'Question '.($index + 1);
+            $questionId = $this->questionIdFrom($answer->question);
+            $excerpt = trim((string) ($alignment['evidence_quotes'][0] ?? preg_replace('/\s+/u', ' ', mb_substr((string) ($answer->answer_text ?? ''), 0, 180))));
+            $answerMissingPoints = is_array($alignment['missing_points'] ?? null)
+                ? array_values(array_filter($alignment['missing_points']))
+                : ['A full coaching summary could not be generated for this answer.'];
+
+            if ($questionId !== null) {
+                $questionIds[] = $questionId;
+            }
+            $questionTexts[] = $questionText;
+            if ($excerpt !== '') {
+                $evidenceQuotes[] = $excerpt;
+            }
+            $missingPoints = array_merge($missingPoints, $answerMissingPoints);
+
+            $questionImprovements[] = [
+                'question_number' => $index + 1,
+                'question_id' => $questionId,
+                'answer_id' => $answer->id,
+                'question' => $questionText,
+                'status' => $status,
+                'status_label' => Str::headline(str_replace('_', ' ', $status)),
+                'relevance_score' => $this->scoreValue($answer->relevance_score ?? 0),
+                'what_worked' => $excerpt !== ''
+                    ? 'The saved answer included this reviewable evidence: "'.$excerpt.'".'
+                    : 'The answer was saved and remains available for manual review.',
+                'improvement_focus' => $answerMissingPoints[0] ?? 'Generate a fuller answer-to-question relevance review.',
+                'next_attempt' => 'Re-answer "'.$questionText.'" directly, then add one specific supporting detail.',
+                'success_check' => 'A reviewer can identify the sentence that answers the question and the evidence that supports it.',
+                'evidence_quote' => $excerpt,
+                'missing_points' => $answerMissingPoints,
+            ];
+        }
+
+        $answerCount = $answers->count();
+
+        return [
+            'version' => EvidenceBasedCoachingService::VERSION,
+            'focus_headline' => 'Fallback coaching summary generated from saved answer evidence.',
+            'filler_total' => 0,
+            'filler_breakdown' => [],
+            'observations' => [
+                "Question coverage across {$answerCount} answers used saved answer feedback because detailed summary generation was unavailable.",
+                'No new delivery or optional camera conclusions were added during fallback summary generation.',
+            ],
+            'priority_actions' => $answerCount > 0 ? [[
+                'issue_code' => 'fallback_summary_review',
+                'area' => 'Answer-to-question relevance',
+                'severity' => 50,
+                'affected_count' => $answerCount,
+                'eligible_count' => $answerCount,
+                'observation' => 'The report was completed with fallback summary generation.',
+                'action' => 'Review each question map and add the missing direct-answer detail in the next attempt.',
+                'success_check' => 'Each answer starts by addressing its exact question and cites truthful supporting evidence.',
+                'questions' => array_values(array_unique($questionTexts)),
+                'question_ids' => array_values(array_unique($questionIds)),
+                'evidence_quotes' => array_slice(array_values(array_unique($evidenceQuotes)), 0, 3),
+                'missing_points' => array_slice(array_values(array_unique(array_filter($missingPoints))), 0, 3),
+                'rank' => 1,
+            ]] : [],
+            'content_overview' => $contentOverview,
+            'question_improvements' => $questionImprovements,
+            'coverage' => [
+                'answers' => $answerCount,
+                'delivery_measured' => 0,
+                'camera_measured' => 0,
+                'camera_insufficient' => 0,
+            ],
+            'feedback_quality' => [
+                'status' => 'limited',
+                'checks_passed' => 2,
+                'checks_total' => 4,
+                'completeness_percent' => 50,
+                'scope' => 'Fallback session summary based on saved answers and per-answer coaching.',
+                'limitation' => 'The full automated session summary was unavailable, so this report should be treated as a limited review.',
+            ],
+            'transparency_note' => 'This report used fallback summary generation after optional coaching analysis failed. Scores and answer text were still saved; no unavailable delivery or camera signal was inferred.',
+        ];
     }
 
     private function fallbackDeliveryMetrics(array $input): array
@@ -1792,7 +1942,7 @@ class InterviewController extends Controller
         ];
     }
 
-    private function fallbackAnswerCoaching(string $answerText, Question $question, array $metrics, array $observationData): array
+    private function fallbackAnswerCoaching(string $answerText, Question|array|null $question, array $metrics, array $observationData): array
     {
         $wordCount = TranscriptService::wordCount($answerText);
         $isSkipped = (bool) ($metrics['is_skipped'] ?? false) || $wordCount === 0;
@@ -1802,7 +1952,8 @@ class InterviewController extends Controller
         $contentStatus = $wordCount === 0
             ? 'unscored'
             : ($wordCount < 10 ? 'limited_evidence' : 'limited_evidence');
-        $questionText = trim((string) $question->question_text);
+        $questionText = $this->questionTextFrom($question) ?: 'this question';
+        $questionId = $this->questionIdFrom($question);
         $answerExcerpt = trim((string) preg_replace('/\s+/u', ' ', mb_substr($answerText, 0, 220)));
         $deliveryStatus = (string) data_get($observationData, 'delivery.status', 'not_measured');
         $cameraStatus = (string) data_get($observationData, 'camera.status', 'not_measured');
@@ -1836,7 +1987,7 @@ class InterviewController extends Controller
         ];
         $contentAlignment = [
             'answer_id' => $metrics['answer_id'] ?? null,
-            'question_id' => $question->id,
+            'question_id' => $questionId,
             'question' => $questionText,
             'status' => $alignmentStatus,
             'evidence_quotes' => $answerExcerpt !== '' ? [$answerExcerpt] : [],
@@ -1897,7 +2048,7 @@ class InterviewController extends Controller
                 'action' => 'Check that the first sentence directly answers the question and add one specific supporting detail.',
                 'success_check' => 'The next attempt clearly answers the question and includes truthful evidence.',
                 'questions' => [$questionText],
-                'question_ids' => [$question->id],
+                'question_ids' => $questionId !== null ? [$questionId] : [],
                 'evidence_quotes' => $answerExcerpt !== '' ? [$answerExcerpt] : [],
                 'missing_points' => $contentAlignment['missing_points'],
                 'rank' => 1,
@@ -1906,8 +2057,15 @@ class InterviewController extends Controller
         ];
     }
 
-    private function fallbackQuestionTip(Question $question): array
+    private function fallbackQuestionTip(Question|array|null $question): array
     {
+        $expectedGuide = $question instanceof Question
+            ? ($question->expected_guide ?? null)
+            : (is_array($question) ? ($question['expected_guide'] ?? null) : null);
+        $mappedSkills = $question instanceof Question
+            ? ($question->mapped_skills ?? [])
+            : (is_array($question) ? ($question['mapped_skills'] ?? []) : []);
+
         return [
             'framework' => 'direct_evidence',
             'title' => 'Direct-answer strategy',
@@ -1919,14 +2077,14 @@ class InterviewController extends Controller
                 'Close with a verified result, implication, or lesson when relevant.',
             ],
             'guidance' => 'Answer directly, support the claim with truthful evidence, and avoid details that do not help answer the question.',
-            'expected_guide' => filled($question->expected_guide ?? null)
-                ? mb_substr((string) $question->expected_guide, 0, 800)
+            'expected_guide' => filled($expectedGuide)
+                ? mb_substr((string) $expectedGuide, 0, 800)
                 : null,
-            'mapped_skills' => is_array($question->mapped_skills ?? null) ? $question->mapped_skills : [],
+            'mapped_skills' => is_array($mappedSkills) ? $mappedSkills : [],
         ];
     }
 
-    private function fallbackAnswerEvidence(string $answerText, ?Question $question): array
+    private function fallbackAnswerEvidence(string $answerText, Question|array|null $question): array
     {
         $excerpt = trim((string) preg_replace('/\s+/u', ' ', mb_substr($answerText, 0, 220)));
 
@@ -1934,7 +2092,7 @@ class InterviewController extends Controller
             'supporting_excerpts' => $excerpt !== '' ? [$excerpt] : [],
             'missing_evidence' => ['A dependable automatic evidence assessment was unavailable for this retry.'],
             'feedback_basis' => null,
-            'question_text' => $question?->question_text,
+            'question_text' => $this->questionTextFrom($question) ?: null,
             'question_intent' => 'direct_evidence',
             'star_applicable' => false,
             'result_required' => true,
@@ -1944,15 +2102,41 @@ class InterviewController extends Controller
         ];
     }
 
-    private function logAnswerAnalysisFallback(string $stage, \Throwable $error, InterviewSession $session, Question $question): void
+    private function logAnswerAnalysisFallback(string $stage, \Throwable $error, InterviewSession $session, Question|array|null $question): void
     {
         Log::warning('Interview answer optional analysis failed; using fallback.', [
             'stage' => $stage,
             'session_id' => $session->id,
-            'question_id' => $question->id,
+            'question_id' => $this->questionIdFrom($question),
             'error_type' => $error::class,
             'message' => Str::limit($error->getMessage(), 300),
         ]);
+    }
+
+    private function questionTextFrom(Question|array|null $question): string
+    {
+        if ($question instanceof Question) {
+            return trim((string) $question->question_text);
+        }
+
+        if (is_array($question)) {
+            return trim((string) ($question['question_text'] ?? $question['question'] ?? ''));
+        }
+
+        return '';
+    }
+
+    private function questionIdFrom(Question|array|null $question): ?int
+    {
+        if ($question instanceof Question) {
+            return $question->id !== null ? (int) $question->id : null;
+        }
+
+        if (is_array($question) && isset($question['id']) && is_numeric($question['id'])) {
+            return (int) $question['id'];
+        }
+
+        return null;
     }
 
     private function safeDatabaseErrorMessage(\Throwable $error): string

@@ -409,6 +409,9 @@
                 'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
                 'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like'
             ]);
+            const transcriptDuplicatePhraseMaxWords = 32;
+            const transcriptOverlapMaxWords = 64;
+            const transcriptRecentDuplicateScanWords = 180;
 
             function cleanTranscriptText(value) {
                 return String(value || '').replace(/\s+/g, ' ').trim();
@@ -426,6 +429,49 @@
                 return cleanTranscriptText(value).split(/\s+/).filter(Boolean);
             }
 
+            function normalizedTranscriptWords(value) {
+                return wordsForTranscript(value).map(normalizeTranscriptForMatch);
+            }
+
+            function normalizedWordsEqualAt(words, start, comparison) {
+                for (let offset = 0; offset < comparison.length; offset++) {
+                    if (words[start + offset] !== comparison[offset]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function isRecentDuplicateTranscript(existingNormalized, additionNormalized) {
+                if (additionNormalized.length === 0 || additionNormalized.length > existingNormalized.length) {
+                    return false;
+                }
+
+                const normalizedAddition = additionNormalized.join(' ');
+                if (isFillerOnlySpeech(normalizedAddition)) {
+                    return false;
+                }
+
+                const additionChars = normalizedAddition.replace(/\s+/g, '').length;
+                if (additionNormalized.length < 3 && additionChars < 12) {
+                    return false;
+                }
+
+                const scanSize = Math.min(
+                    existingNormalized.length,
+                    Math.max(transcriptRecentDuplicateScanWords, additionNormalized.length + transcriptOverlapMaxWords)
+                );
+                const scanStart = Math.max(0, existingNormalized.length - scanSize);
+
+                for (let start = scanStart; start <= existingNormalized.length - additionNormalized.length; start++) {
+                    if (normalizedWordsEqualAt(existingNormalized, start, additionNormalized)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             function appendWithoutOverlap(existing, addition) {
                 const existingClean = cleanTranscriptText(existing);
                 const additionClean = cleanTranscriptText(addition);
@@ -434,9 +480,13 @@
 
                 const existingWords = wordsForTranscript(existingClean);
                 const additionWords = wordsForTranscript(additionClean);
-                const existingNormalized = existingWords.map(normalizeTranscriptForMatch);
-                const additionNormalized = additionWords.map(normalizeTranscriptForMatch);
-                const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, 24);
+                const existingNormalized = normalizedTranscriptWords(existingClean);
+                const additionNormalized = normalizedTranscriptWords(additionClean);
+                if (isRecentDuplicateTranscript(existingNormalized, additionNormalized)) {
+                    return existingClean;
+                }
+
+                const maxOverlap = Math.min(existingNormalized.length, additionNormalized.length, transcriptOverlapMaxWords);
                 let overlap = 0;
 
                 for (let size = maxOverlap; size > 0; size--) {
@@ -468,7 +518,7 @@
                 let index = 0;
                 while (index < words.length) {
                     let collapsed = false;
-                    const maxWindow = Math.min(12, Math.floor((words.length - index) / 2));
+                    const maxWindow = Math.min(transcriptDuplicatePhraseMaxWords, Math.floor((words.length - index) / 2));
 
                     for (let size = maxWindow; size >= 1; size--) {
                         const first = words.slice(index, index + size).map(normalizeTranscriptForMatch).join(' ');
@@ -536,9 +586,21 @@
                 const appendSpeech = existing => fillerOnly
                     ? cleanTranscriptText(`${existing || ''} ${cleanSegment}`)
                     : appendWithoutOverlap(existing || '', cleanSegment);
-                committedSpeechTranscript = collapseRepeatedSpeech(appendSpeech(committedSpeechTranscript));
                 const answerState = answersData[currentQIdx] || defaultAnswerState();
-                answerState.speech_transcript = collapseRepeatedSpeech(appendSpeech(answerState.speech_transcript));
+                const nextCommittedTranscript = collapseRepeatedSpeech(appendSpeech(committedSpeechTranscript));
+                const currentAnswerTranscript = cleanTranscriptText(answerState.speech_transcript);
+                const nextAnswerTranscript = collapseRepeatedSpeech(appendSpeech(currentAnswerTranscript));
+
+                if (
+                    !fillerOnly
+                    && normalizeTranscriptForMatch(nextCommittedTranscript) === normalizeTranscriptForMatch(committedSpeechTranscript)
+                    && normalizeTranscriptForMatch(nextAnswerTranscript) === normalizeTranscriptForMatch(currentAnswerTranscript)
+                ) {
+                    return false;
+                }
+
+                committedSpeechTranscript = nextCommittedTranscript;
+                answerState.speech_transcript = nextAnswerTranscript;
                 answersData[currentQIdx] = answerState;
                 lastCommittedSpeech = normalized;
                 lastCommittedAt = now;

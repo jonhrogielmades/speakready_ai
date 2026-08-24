@@ -4,6 +4,8 @@ namespace App\Services;
 
 final class TranscriptService
 {
+    private const MAX_DUPLICATE_PHRASE_WORDS = 32;
+
     private const DUPLICATE_SAFE_WORDS = [
         'i', "i'm", 'the', 'a', 'an', 'and', 'to', 'of', 'for', 'in', 'on', 'it', 'is', 'was',
         'were', 'am', 'are', 'my', 'we', 'you', 'that', 'this', 'with', 'um', 'uh', 'like',
@@ -88,7 +90,7 @@ final class TranscriptService
         $index = 0;
         while ($index < count($words)) {
             $collapsed = false;
-            $maxWindow = min(12, intdiv(count($words) - $index, 2));
+            $maxWindow = min(self::MAX_DUPLICATE_PHRASE_WORDS, intdiv(count($words) - $index, 2));
 
             for ($size = $maxWindow; $size >= 1; $size--) {
                 $first = self::phraseKey(array_slice($words, $index, $size));

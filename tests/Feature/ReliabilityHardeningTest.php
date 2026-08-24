@@ -831,6 +831,52 @@ class ReliabilityHardeningTest extends TestCase
         );
     }
 
+    public function test_interview_finish_completes_with_fallback_when_report_coaching_analysis_fails(): void
+    {
+        Http::preventStrayRequests();
+        $this->app->instance(EvidenceBasedCoachingService::class, new class
+        {
+            public function forAnswer(string $answerText, Question|array|null $question, array $metrics, array $observationData = []): array
+            {
+                throw new \RuntimeException('Report answer coaching unavailable.');
+            }
+
+            public function sessionSummary($answers): array
+            {
+                throw new \RuntimeException('Report summary unavailable.');
+            }
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the support checklist, coordinated the update, and documented the final handoff result.',
+            'response_mode' => 'text',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $savedAnswer = $answer->fresh();
+        $feedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+
+        $this->assertSame('local_fallback', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+        $this->assertSame('limited', data_get($feedback->coaching_summary, 'feedback_quality.status'));
+        $this->assertNotEmpty(data_get($feedback->coaching_summary, 'content_overview'));
+        $this->assertNotEmpty(data_get($feedback->coaching_summary, 'question_improvements'));
+    }
+
     public function test_stale_feedback_processing_state_can_recover_without_duplicate_records(): void
     {
         Http::preventStrayRequests();
