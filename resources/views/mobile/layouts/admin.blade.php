@@ -181,6 +181,15 @@
             display: flex; align-items: center; gap: 8px;
             font-size: 0.88rem; font-weight: 700;
             color: var(--tx); text-decoration: none;
+            min-width: 0;
+            flex: 1 1 auto;
+         }
+         .mob-header-brand > span:not(.mob-admin-logo-ring):not(.adm-badge) {
+            min-width: 0;
+            max-width: min(42vw, 12rem);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
          }
          .mob-admin-logo-ring {
             width: 34px;
@@ -210,7 +219,7 @@
             text-transform: uppercase; letter-spacing: 0.05em;
             flex-shrink: 0;
          }
-         .mob-header-right { display: flex; align-items: center; gap: 10px; }
+         .mob-header-right { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 0 0 auto; }
          .mob-icon-btn {
             width: 36px; height: 36px; border-radius: 10px;
             border: 1px solid var(--adm-bd);
@@ -218,6 +227,7 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 0.9rem; cursor: pointer; transition: 0.2s;
             -webkit-tap-highlight-color: transparent;
+            flex: 0 0 36px;
          }
          .mob-icon-btn:active { background: var(--adm-bg); transform: scale(0.92); }
          .mob-avatar-adm {
@@ -259,21 +269,31 @@
          }
          .lm #mob-bottom-nav { background: rgba(255, 248, 248, 0.97); }
          .mob-nav-items {
-            display: flex; width: 100%;
-            align-items: center; justify-content: space-around;
-            padding: 0 4px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            width: 100%;
+            align-items: center;
+            gap: 2px;
+            padding: 0 6px;
          }
          .mob-nav-item {
             display: flex; flex-direction: column; align-items: center; gap: 3px;
-            padding: 8px 10px; border-radius: 12px;
+            padding: 7px 2px; border-radius: 12px;
             text-decoration: none; color: var(--tx3);
             font-size: 0.6rem; font-weight: 600; letter-spacing: 0.02em;
-            min-width: 50px;
+            min-width: 0;
+            width: 100%;
             transition: color 0.2s;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
             border: none; background: transparent; cursor: pointer;
             font-family: "Poppins", sans-serif;
+         }
+         .mob-nav-item span {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
          }
          .mob-nav-item i { font-size: 1.2rem; transition: transform 0.18s; }
          .mob-nav-item:active i { transform: scale(0.82); }
@@ -317,7 +337,7 @@
             right: auto;
             bottom: calc(var(--mob-nav-h) + var(--mob-safe-bottom) + 12px);
             width: min(92vw, 420px);
-            max-height: min(68dvh, 540px);
+            max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-nav-h) - var(--mob-safe-bottom) - var(--mob-safe-top) - 24px);
             transform: translateX(-50%);
          }
          .lm .mob-profile-dropdown {
@@ -381,6 +401,9 @@
             overflow-y: auto;
             overscroll-behavior: contain;
             padding: 10px;
+         }
+         .mob-profile-dropdown[data-origin="bottom"] .mob-profile-menu {
+            max-height: calc(var(--sr-visual-vh, 100dvh) - var(--mob-nav-h) - var(--mob-safe-bottom) - var(--mob-safe-top) - 48px);
          }
          .mob-profile-dropdown[data-mode="account"] .mob-profile-pages,
          .mob-profile-dropdown[data-mode="pages"] .mob-profile-account {

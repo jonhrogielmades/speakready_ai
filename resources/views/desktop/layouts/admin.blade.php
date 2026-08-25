@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=28') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=34') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -143,10 +143,13 @@
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
-             <div class="db-logo d-flex justify-content-between align-items-center">
+            <div class="db-logo d-flex justify-content-between align-items-center">
                 <div class="db-brand d-flex align-items-center gap-2">
                    <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0;">
-                   <span class="admin-brand db-brand-text">SpeakReady AI Admin</span>
+                   <div class="db-brand-copy">
+                      <span class="admin-brand db-brand-text">SpeakReady AI</span>
+                      <span class="db-brand-subtitle">Admin Control Portal</span>
+                   </div>
                 </div>
                 <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                    <i class="fa-solid fa-xmark"></i>
@@ -174,10 +177,10 @@
                <a href="{{ route('admin.settings.index') }}" class="db-nl db-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" title="System Settings"><i class="fa-solid fa-gear"></i><span class="db-nav-label">System Settings</span></a>
             </div>
             <div class="db-bottom">
-               <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                  @csrf
-                  <button type="submit" class="db-nl db-nav-danger" title="Log Out" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
-               </form>
+                <form action="{{ route('logout') }}" method="POST" class="db-logout-form">
+                   @csrf
+                   <button type="submit" class="db-nl db-nav-danger" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
+                </form>
             </div>
          </div>
          <button class="db-sidebar-backdrop" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()"></button>
@@ -197,36 +200,31 @@
                   <input type="text" aria-label="Search PH interview admin portal" placeholder="Search PH interview admin">
                </div>
                <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
-                  <div class="dropdown">
+                  <div class="dropdown admin-activity-dropdown-wrap">
                       <button class="boc d-flex align-items-center justify-content-center position-relative db-activity-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open live activity" title="Live Activity" style="width:38px;height:38px;padding:0;border-radius:12px;text-decoration:none;color:var(--tx);" onclick="resetAdminActivityBadge('desktop')">
                           <i class="fa-regular fa-bell"></i>
                           <span id="admin-activity-badge-desktop" class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="display:none; width: 10px; height: 10px;">
                               <span class="visually-hidden">New alerts</span>
                           </span>
                       </button>
-                      <div class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 320px; border-radius: 12px; border: 1px solid var(--bd); background: var(--bg3); padding: 0; overflow: hidden; margin-top: 10px;">
-                          <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="border-color: var(--bd) !important; background: var(--sf);">
-                              <div>
-                                  <span class="fw-bold" style="color: var(--tx); font-size: 0.95rem;">Live User Activity</span>
-                                  <span id="admin-activity-count-desktop" class="badge bg-danger rounded-pill ms-1" style="display:none;">0</span>
+                      <div class="dropdown-menu dropdown-menu-end shadow-lg admin-activity-dropdown-menu">
+                          <div class="admin-activity-header">
+                              <div class="admin-activity-title">
+                                  <i class="fa-regular fa-bell"></i>
+                                  <span>Live User Activity</span>
+                                  <span id="admin-activity-count-desktop" class="admin-activity-count" style="display:none;">0 new</span>
                               </div>
-                              <div class="dropdown">
-                                  <button class="btn btn-sm p-0 m-0 text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="event.stopPropagation();">
-                                      <i class="fa-solid fa-ellipsis-vertical"></i>
-                                  </button>
-                                  <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:8px; border:1px solid var(--bd); background:var(--bg3);">
-                                      <li><a class="dropdown-item" href="#" onclick="markAllActivitiesRead(event)"><i class="fa-solid fa-check-double me-2 text-primary"></i>Mark all as read</a></li>
-                                      <li><hr class="dropdown-divider" style="border-color:var(--bd)"></li>
-                                      <li><a class="dropdown-item text-danger" href="#" onclick="clearAllActivities(event)"><i class="fa-solid fa-trash-can me-2"></i>Clear all</a></li>
-                                  </ul>
+                              <div class="admin-activity-actions">
+                                  <button class="admin-activity-action" type="button" onclick="markAllActivitiesRead(event)" title="Mark all as read"><i class="fa-solid fa-check"></i><span>Read All</span></button>
+                                  <button class="admin-activity-action danger" type="button" onclick="clearAllActivities(event)" title="Clear all"><i class="fa-solid fa-trash"></i><span>Clear All</span></button>
                               </div>
                           </div>
-                          <div id="admin-activity-list-desktop" style="max-height: 300px; overflow-y: auto; background: var(--bg2);">
+                          <div id="admin-activity-list-desktop" class="admin-activity-list">
                               <div class="p-3 text-center text-muted" style="font-size:0.85rem;">Loading activities...</div>
                           </div>
-                          <div class="p-2 border-top text-center" style="border-color: var(--bd) !important; background: var(--sf);">
-                              <a href="{{ route('admin.notifications.index') }}" class="btn btn-sm w-100 fw-bold" style="background: rgba(59,130,246,0.15); color: #3b82f6; border-radius: 8px;">
-                                  <i class="fa-solid fa-list-check me-2"></i>View All Activities
+                          <div class="admin-activity-footer">
+                              <a href="{{ route('admin.notifications.index') }}" class="admin-activity-view-all">
+                                  <i class="fa-solid fa-list-check"></i>View All Activities
                               </a>
                           </div>
                       </div>
@@ -427,7 +425,7 @@
                       const badgeEls = [document.getElementById('admin-activity-badge-desktop'), document.getElementById('admin-activity-badge-mobile')];
                       
                       if (data.new_count > 0) {
-                          countEls.forEach(el => { if(el) { el.style.display = 'inline-block'; el.innerText = data.new_count; } });
+                          countEls.forEach(el => { if(el) { el.style.display = 'inline-flex'; el.innerText = data.new_count + ' new'; } });
                           badgeEls.forEach(el => { if(el) { el.style.display = 'block'; } });
                       } else {
                           countEls.forEach(el => { if(el) { el.style.display = 'none'; } });

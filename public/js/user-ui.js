@@ -797,6 +797,7 @@
             return;
         }
 
+        var destinationUrl = new URL(url, window.location.href);
         var token = ++userApp.navigationToken;
         if (userApp.navigationController) {
             userApp.navigationController.abort();
@@ -846,10 +847,10 @@
             cleanupUserPageRuntime({ preserveStyles: true });
             pruneRuntimePageStyles(nextPageStyles.map(getPageStyleKey));
             replaceUserContent(content, nextContent);
-            updateDocumentMetadata(doc, nextContent, url, options);
+            updateDocumentMetadata(doc, nextContent, destinationUrl.href, options);
             await runPageScripts(html, contentScripts, { skipStyles: true });
             refreshCommonEnhancements();
-            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            restoreUserPageScroll(destinationUrl);
             hideSafeNavigationStatus();
         } catch (error) {
             if (error.name === 'AbortError') return;
@@ -957,6 +958,66 @@
         });
 
         updateMobileBottomNavigation(url);
+        keepActiveSidebarItemVisible();
+    }
+
+    function keepActiveSidebarItemVisible() {
+        var scroller = document.querySelector('.db-sidebar .db-nav');
+        var activeLink = scroller ? scroller.querySelector('a.active[href]') : null;
+        if (!scroller || !activeLink || scroller.scrollHeight <= scroller.clientHeight) return;
+
+        var gutter = 10;
+        var scrollerRect = scroller.getBoundingClientRect();
+        var activeRect = activeLink.getBoundingClientRect();
+
+        if (activeRect.top < scrollerRect.top + gutter) {
+            scroller.scrollTop += activeRect.top - scrollerRect.top - gutter;
+        } else if (activeRect.bottom > scrollerRect.bottom - gutter) {
+            scroller.scrollTop += activeRect.bottom - scrollerRect.bottom + gutter;
+        }
+    }
+
+    function getUserFixedHeaderOffset() {
+        var candidates = [
+            document.querySelector('.db-top'),
+            document.getElementById('mob-header'),
+            document.getElementById('nbar')
+        ];
+
+        return candidates.reduce(function (offset, header) {
+            if (!header || !header.getClientRects().length) return offset;
+
+            var styles = window.getComputedStyle(header);
+            if (styles.display === 'none' || (styles.position !== 'fixed' && styles.position !== 'sticky')) return offset;
+
+            var rect = header.getBoundingClientRect();
+            return Math.max(offset, rect.bottom > 0 ? rect.bottom : rect.height);
+        }, 0);
+    }
+
+    function getHashTarget(hash) {
+        if (!hash || hash === '#') return null;
+
+        var id = hash.slice(1);
+        try {
+            id = decodeURIComponent(id);
+        } catch (error) {
+            return null;
+        }
+
+        return document.getElementById(id);
+    }
+
+    function restoreUserPageScroll(url) {
+        var destination = getHashTarget(url.hash);
+        if (!destination) {
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            return;
+        }
+
+        var currentScroll = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        var targetTop = destination.getBoundingClientRect().top + currentScroll - getUserFixedHeaderOffset() - 14;
+        window.scrollTo({ top: Math.max(0, Math.round(targetTop)), left: 0, behavior: 'auto' });
     }
 
     function extractPageScriptHtml(html) {

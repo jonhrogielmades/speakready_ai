@@ -1,7 +1,7 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/feedback/index.css?v=1') }}" data-page-style="admin-feedback-index">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/feedback/index.css?v=5') }}" data-page-style="admin-feedback-index">
 @endpush
 
 @section('content')
@@ -84,7 +84,7 @@
     </div>
 
     <!-- Analytics Charts -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 feedback-main-grid">
         <div class="col-md-4">
             <div class="card boc feedback-content-card" style="border-radius: 16px; background: var(--sf); border: 1px solid var(--bd);">
                 <div class="card-body p-4">

@@ -1607,3 +1607,77 @@
         font-size: 0.68rem !important;
         font-weight: 900 !important;
     }
+
+    @media (min-width: 992px) {
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero {
+            display: block !important;
+            min-height: 92px !important;
+            margin: 0 0 12px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-inner {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            min-height: 92px !important;
+            padding: 14px clamp(156px, 14vw, 178px) 14px 18px !important;
+            box-sizing: border-box !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-copy {
+            display: grid !important;
+            grid-template-columns: 38px minmax(0, 1fr) !important;
+            align-items: center !important;
+            justify-content: start !important;
+            gap: 12px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            text-align: left !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .reports-hero-icon {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 8px !important;
+            color: #0f3b6f !important;
+            -webkit-text-fill-color: #0f3b6f !important;
+            background: linear-gradient(135deg, #eef6ff, #bfe9ff) !important;
+            border: 1px solid rgba(59, 130, 246, 0.28) !important;
+            box-shadow: none !important;
+        }
+        html:not(.lm) body.user-desktop-shell:not(.admin-shell) #portfolioReport .reports-hero-icon,
+        body.dm.user-desktop-shell:not(.admin-shell) #portfolioReport .reports-hero-icon {
+            color: #dbeafe !important;
+            -webkit-text-fill-color: #dbeafe !important;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.26), rgba(20, 184, 166, 0.18)) !important;
+            border-color: rgba(96, 165, 250, 0.34) !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .reports-hero-icon * {
+            color: inherit !important;
+            -webkit-text-fill-color: inherit !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-title {
+            margin: 0 0 4px !important;
+            font-size: 1.16rem !important;
+            line-height: 1.12 !important;
+            text-align: left !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-title svg {
+            display: none !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-subtitle {
+            max-width: 720px !important;
+            margin: 0 !important;
+            font-size: 0.8rem !important;
+            line-height: 1.4 !important;
+            text-align: left !important;
+        }
+        html body.user-desktop-shell:not(.admin-shell) #portfolioReport .sr-page-hero-art {
+            top: 50% !important;
+            right: 14px !important;
+            bottom: auto !important;
+            width: clamp(116px, 11vw, 132px) !important;
+            max-height: calc(100% - 14px) !important;
+            transform: translate3d(0, -50%, 0) !important;
+        }
+    }

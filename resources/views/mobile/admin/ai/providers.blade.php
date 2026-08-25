@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=1') }}" data-page-style="admin-ai-providers">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/ai/providers.css?v=3') }}" data-page-style="admin-ai-providers">
 @endpush
 
 @section('content')
@@ -20,7 +20,7 @@
     </div>
     @endif
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 ai-providers-header">
         <div>
             <h4 class="fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-microchip me-2"></i>AI Providers Dashboard</h4>
             <p style="font-size:0.95rem;color:var(--tx2);margin:0;">Manage AI Providers and view system metrics.</p>
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Feature 1: Overview Cards -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 ai-overview-grid">
         <div class="col-6 col-md-4 col-xl-2">
             <div class="premium-card text-center p-3 h-100">
                 <div style="font-size:1.5rem;margin-bottom:8px;" class="text-primary"><i class="fa-solid fa-robot"></i></div>
@@ -74,7 +74,7 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 ai-main-grid">
         <!-- Main Column -->
         <div class="col-lg-8">
             <!-- Feature 7: Module Requests Breakdown -->
@@ -108,7 +108,7 @@
         <!-- Sidebar Column -->
         <div class="col-lg-4">
             <!-- Feature 8: Cost Monitoring -->
-            <div class="premium-card mb-4">
+            <div class="premium-card mb-4 ai-monitoring-card">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-coins me-2 text-warning"></i>Cost Monitoring</h6>
                 
                 <div class="d-flex justify-content-between mb-3 align-items-center">
@@ -120,10 +120,9 @@
                     <span style="color:var(--tx2);">Daily Cost (Avg)</span>
                     <span class="fw-bold">${{ number_format($monthlyCost / max(now()->day, 1), 2) }}</span>
                 </div>
-            </div>
-            
-            <!-- Feature 6: Provider Status Monitoring -->
-            <div class="premium-card">
+
+                <div class="ai-monitoring-divider"></div>
+
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-network-wired me-2 text-info"></i>Provider Status</h6>
                 
                 <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background:var(--bg3);">
@@ -144,7 +143,7 @@
     </div>
 
     <!-- Active & Fallback System -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 ai-provider-role-grid">
         <div class="col-md-6">
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-3 text-primary"><i class="fa-solid fa-star me-2"></i>Primary Provider</h6>
@@ -171,7 +170,7 @@
 
     <!-- Individual Providers Status & Usage -->
     <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-primary"></i>Providers Status & Usage</h5>
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 ai-provider-stats-grid">
         @foreach($providerStats as $provider)
         <div class="col-md-6 col-lg-4">
             <div class="premium-card h-100 position-relative">
@@ -432,4 +431,3 @@
     });
 </script>
 @endsection
-

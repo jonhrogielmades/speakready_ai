@@ -1,6 +1,11 @@
 /* Page styles extracted from resources/views/admin/feedback/complaints.blade.php. */
 #sec-admin-complaints {
         max-width: 100%;
+        overflow-x: hidden;
+    }
+    #sec-admin-complaints,
+    #sec-admin-complaints * {
+        box-sizing: border-box;
     }
     #sec-admin-complaints .complaints-panel {
         background: var(--sf);
@@ -13,31 +18,71 @@
         table-layout: fixed;
         width: 100%;
         min-width: 0;
-        font-size: 0.86rem;
+        font-size: 0.72rem;
     }
     #mainComplaintsTable th,
     #mainComplaintsTable td {
         vertical-align: middle;
+        min-width: 0;
+        padding: 10px 7px !important;
+        overflow-wrap: anywhere;
+    }
+    #mainComplaintsTable th {
+        font-size: 0.64rem;
+        line-height: 1.15;
+        white-space: normal;
     }
     #mainComplaintsTable th:nth-child(1),
-    #mainComplaintsTable td:nth-child(1) { width: 10%; }
+    #mainComplaintsTable td:nth-child(1) { width: 9%; }
     #mainComplaintsTable th:nth-child(2),
-    #mainComplaintsTable td:nth-child(2) { width: 23%; }
+    #mainComplaintsTable td:nth-child(2) { width: 22%; }
     #mainComplaintsTable th:nth-child(3),
-    #mainComplaintsTable td:nth-child(3) { width: 14%; }
+    #mainComplaintsTable td:nth-child(3) { width: 16%; }
     #mainComplaintsTable th:nth-child(4),
     #mainComplaintsTable td:nth-child(4) {
-        width: 24%;
+        width: 22%;
         white-space: normal !important;
     }
     #mainComplaintsTable th:nth-child(5),
-    #mainComplaintsTable td:nth-child(5) { width: 13%; }
+    #mainComplaintsTable td:nth-child(5) { width: 12%; }
     #mainComplaintsTable th:nth-child(6),
-    #mainComplaintsTable td:nth-child(6) { width: 10%; }
+    #mainComplaintsTable td:nth-child(6) { width: 9%; }
     #mainComplaintsTable th:nth-child(7),
     #mainComplaintsTable td:nth-child(7) { width: 10%; }
     #mainComplaintsTableWrapper {
+        width: 100%;
+        max-width: 100%;
         overflow-x: hidden !important;
+        overflow-y: hidden;
+    }
+    #mainComplaintsTable td:nth-child(2) .d-flex {
+        min-width: 0;
+    }
+    #mainComplaintsTable td:nth-child(2) .d-flex > div:last-child {
+        min-width: 0;
+    }
+    #mainComplaintsTable td:nth-child(2) .fw-bold,
+    #mainComplaintsTable td:nth-child(2) .small {
+        max-width: 190px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+    }
+    #mainComplaintsTable td:nth-child(2) .rounded-circle {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.7rem !important;
+        flex: 0 0 28px;
+    }
+    #mainComplaintsTable .badge {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.2;
+        text-align: left;
+        font-size: 0.62rem;
+        padding: 4px 6px;
+        border-radius: 4px;
     }
     #mainComplaintsTable .complaint-notes {
         display: -webkit-box;
@@ -60,9 +105,19 @@
         white-space: normal !important;
         overflow-wrap: anywhere;
     }
+    #mainComplaintsTable .complaint-action-btn {
+        width: 100%;
+        min-height: 32px;
+        padding: 5px 6px;
+        white-space: normal;
+        line-height: 1.15;
+        font-size: 0.66rem;
+        font-weight: 700;
+    }
     @media (max-width: 1199.98px) {
         #mainComplaintsTable {
-            font-size: 0.78rem;
+            min-width: 0;
+            font-size: 0.68rem;
         }
         #mainComplaintsTable th,
         #mainComplaintsTable td {
@@ -81,6 +136,9 @@
     }
     /* Mobile Card-based Table Layout for Main Complaints Table */
     @media (max-width: 767px) {
+        #sec-admin-complaints .complaints-panel {
+            padding: 12px;
+        }
         #mainComplaintsTableWrapper {
             overflow-x: visible !important;
             -webkit-overflow-scrolling: auto !important;
@@ -108,7 +166,7 @@
         }
         #mainComplaintsTable tbody td:last-child {
             border-bottom: none !important;
-            justify-content: flex-end;
+            justify-content: stretch;
             gap: 10px;
             padding-top: 12px !important;
         }
@@ -147,9 +205,15 @@
         }
         #mainComplaintsTable {
             table-layout: auto;
+            min-width: 0;
         }
         #mainComplaintsTable th,
         #mainComplaintsTable td {
             width: auto !important;
+        }
+        #mainComplaintsTable .complaint-action-btn {
+            width: 100%;
+            min-height: 38px;
+            white-space: nowrap;
         }
     }

@@ -2488,3 +2488,453 @@
         margin-top: 10px !important;
         justify-content: flex-end !important;
     }
+
+    /* Final mobile feedback history action row. */
+    @media (max-width: 767px) {
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) {
+            display: block !important;
+            width: 100% !important;
+            padding: 6px 0 0 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 38px !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+            flex-wrap: nowrap !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions > a,
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions > form {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            height: 38px !important;
+            padding: 0 10px !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 0.68rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            box-shadow: none !important;
+            opacity: 1 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-primary {
+            border: 0 !important;
+            background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-primary i {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger {
+            border: 1px solid rgba(239, 68, 68, 0.28) !important;
+            background: rgba(254, 242, 242, 0.96) !important;
+            color: #dc2626 !important;
+            -webkit-text-fill-color: #dc2626 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger i {
+            color: #dc2626 !important;
+            -webkit-text-fill-color: #dc2626 !important;
+        }
+
+        html:not(.lm) body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger,
+        body.dm .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger {
+            border-color: rgba(248, 113, 113, 0.34) !important;
+            background: rgba(127, 29, 29, 0.32) !important;
+            color: #fecaca !important;
+            -webkit-text-fill-color: #fecaca !important;
+        }
+
+        html:not(.lm) body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger i,
+        body.dm .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-actions .btn-outline-danger i {
+            color: #fecaca !important;
+            -webkit-text-fill-color: #fecaca !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody td:nth-child(5) .feedback-history-delete-label {
+            display: none !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+            display: grid !important;
+            grid-template-columns: 58px 66px minmax(0, 1fr) !important;
+            column-gap: 6px !important;
+            row-gap: 6px !important;
+            align-items: stretch !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(1),
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(2) {
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3) {
+            grid-column: 1 !important;
+            grid-row: 3 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4) {
+            grid-column: 2 !important;
+            grid-row: 3 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(5) {
+            grid-column: 3 !important;
+            grid-row: 3 !important;
+            align-self: stretch !important;
+            padding: 0 !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3),
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4) {
+            display: flex !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            padding: 5px 6px !important;
+            border-radius: 7px !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 2px !important;
+            overflow: hidden !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            font-size: 0.64rem !important;
+            line-height: 1 !important;
+            text-align: left !important;
+            white-space: nowrap !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3)::before,
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4)::before {
+            display: block !important;
+            margin: 0 !important;
+            color: #475569 !important;
+            -webkit-text-fill-color: #475569 !important;
+            font-size: 0.48rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            text-transform: uppercase !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3)::before {
+            content: "Score" !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4)::before {
+            content: "Rating" !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4) .badge {
+            align-self: flex-start !important;
+            max-width: 100% !important;
+            padding: 4px 6px !important;
+            overflow: hidden !important;
+            font-size: 0.48rem !important;
+            line-height: 1 !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(5) .feedback-history-actions {
+            height: 100% !important;
+            grid-template-columns: minmax(0, 1fr) 34px !important;
+            gap: 6px !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(5) .feedback-history-actions .btn {
+            min-height: 38px !important;
+            height: 38px !important;
+            padding-inline: 8px !important;
+            border-radius: 7px !important;
+            font-size: 0.62rem !important;
+        }
+
+        :root:not(.lm) body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3),
+        :root:not(.lm) body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4),
+        body.dm .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3),
+        body.dm .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4) {
+            background: rgba(15, 23, 42, 0.88) !important;
+            color: #f8fafc !important;
+            -webkit-text-fill-color: #f8fafc !important;
+        }
+
+        :root:not(.lm) body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3)::before,
+        :root:not(.lm) body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4)::before,
+        body.dm .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(3)::before,
+        body.dm .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) td:nth-child(4)::before {
+            color: #bfdbfe !important;
+            -webkit-text-fill-color: #bfdbfe !important;
+        }
+
+        html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) .feedback-mobile-history-cell {
+            display: block !important;
+            grid-column: 1 / -1 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-row {
+            display: grid !important;
+            grid-template-columns: 58px 66px minmax(0, 1fr) !important;
+            align-items: stretch !important;
+            gap: 6px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-stat {
+            display: flex !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            padding: 5px 6px !important;
+            border-radius: 7px !important;
+            background: rgba(255, 255, 255, 0.96) !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            gap: 2px !important;
+            overflow: hidden !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: #0f172a !important;
+            line-height: 1 !important;
+            text-align: left !important;
+            white-space: nowrap !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-stat > span:first-child {
+            color: #475569 !important;
+            -webkit-text-fill-color: #475569 !important;
+            font-size: 0.48rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            text-transform: uppercase !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-stat strong {
+            color: inherit !important;
+            -webkit-text-fill-color: currentColor !important;
+            font-size: 0.64rem !important;
+            line-height: 1 !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-stat .badge {
+            align-self: flex-start !important;
+            max-width: 100% !important;
+            padding: 4px 6px !important;
+            overflow: hidden !important;
+            font-size: 0.48rem !important;
+            line-height: 1 !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) 34px !important;
+            align-items: stretch !important;
+            gap: 6px !important;
+            width: 100% !important;
+            height: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions > a,
+        html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions > form {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+
+        html body .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn {
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 38px !important;
+            height: 38px !important;
+            padding: 0 8px !important;
+            border-radius: 7px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 0.62rem !important;
+            font-weight: 900 !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            opacity: 1 !important;
+        }
+
+        :root:not(.lm) body .feedback-shell .feedback-mobile-history-stat,
+        body.dm .feedback-shell .feedback-mobile-history-stat {
+            background: rgba(15, 23, 42, 0.88) !important;
+            color: #f8fafc !important;
+            -webkit-text-fill-color: #f8fafc !important;
+        }
+
+        :root:not(.lm) body .feedback-shell .feedback-mobile-history-stat > span:first-child,
+        body.dm .feedback-shell .feedback-mobile-history-stat > span:first-child {
+            color: #bfdbfe !important;
+            -webkit-text-fill-color: #bfdbfe !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+            display: block !important;
+            width: 100% !important;
+            border: 1px solid rgba(203, 213, 225, 0.82) !important;
+            border-radius: 9px !important;
+            box-shadow: none !important;
+            outline: 0 !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(1),
+        #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td:nth-child(2) {
+            display: block !important;
+            width: 100% !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td.feedback-mobile-history-cell {
+            display: block !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: inherit !important;
+            -webkit-text-fill-color: currentColor !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) > td.feedback-mobile-history-cell::before {
+            content: none !important;
+            display: none !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-row {
+            display: grid !important;
+            grid-template-columns: 48px 62px minmax(0, 1fr) !important;
+            align-items: stretch !important;
+            gap: 5px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions {
+            display: grid !important;
+            grid-template-columns: minmax(88px, 1fr) 30px !important;
+            align-items: stretch !important;
+            gap: 5px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            height: 34px !important;
+            margin: 0 !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn {
+            min-width: 0 !important;
+            min-height: 34px !important;
+            height: 34px !important;
+            padding: 0 5px !important;
+            gap: 4px !important;
+            border-radius: 7px !important;
+            font-size: 0.52rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: clip !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn-outline-danger {
+            padding: 0 !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-stat {
+            min-height: 38px !important;
+            padding: 5px 5px !important;
+            border: 0 !important;
+            box-shadow: none !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-stat > span:first-child {
+            font-size: 0.46rem !important;
+        }
+
+        #mob-content .feedback-shell .feedback-mobile-history-stat strong,
+        #mob-content .feedback-shell .feedback-mobile-history-stat .badge {
+            font-size: 0.55rem !important;
+        }
+
+        #mob-content .feedback-shell #feedbackTable .feedback-mobile-history-stat .badge {
+            min-height: 0 !important;
+            padding: 3px 6px !important;
+            font-size: 0.48rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+            text-align: center !important;
+        }
+
+        #mob-content .feedback-shell .feedback-table-wrap,
+        #mob-content .feedback-shell #feedbackTable,
+        #mob-content .feedback-shell #feedbackTable tbody {
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            outline: 0 !important;
+        }
+
+        :root:not(.lm) #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row),
+        body.dm #mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+            border-color: rgba(147, 197, 253, 0.22) !important;
+            box-shadow: none !important;
+            outline: 0 !important;
+        }
+
+        @media (max-width: 340px) {
+            #mob-content .feedback-shell .feedback-mobile-history-row {
+                grid-template-columns: 44px 56px minmax(0, 1fr) !important;
+                gap: 4px !important;
+            }
+
+            #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions {
+                grid-template-columns: minmax(84px, 1fr) 28px !important;
+                gap: 4px !important;
+            }
+
+            #mob-content .feedback-shell .feedback-mobile-history-row .feedback-history-actions .btn {
+                font-size: 0.48rem !important;
+                gap: 3px !important;
+            }
+        }
+    }

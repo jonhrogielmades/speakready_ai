@@ -2,7 +2,7 @@
 @section('title', 'Philippines Interview Feedback')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=1') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=9') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -214,35 +214,41 @@
                 </thead>
                 <tbody>
                     @foreach($sessions as $session)
-                    <tr style="border-bottom: 1px solid var(--bd);" data-scenario="{{ $session->practice_scenario ?? 'General Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
+                    <tr data-scenario="{{ $session->practice_scenario ?? 'General Job Interview' }}" data-date="{{ $session->created_at->timestamp }}">
                         <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
                         <td class="border-0 py-3 fw-bold">{{ $session->practice_scenario ?? 'General Job Interview' }}</td>
-                        <td class="border-0 py-3 fw-bold">
-                            @if($session->score)
-                                {{ $session->score->overall_readiness_score }}%
-                            @else
-                                <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Score pending</span>
-                            @endif
-                        </td>
-                        <td class="border-0 py-3">
-                            @php $sc = $session->score ? $session->score->overall_readiness_score : null; @endphp
-                            @if($sc === null) <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
-                            @elseif($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
-                            @elseif($sc >= 70) <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
-                            @elseif($sc >= 50) <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
-                            @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Improvement</span>
-                            @endif
-                        </td>
-                        <td class="border-0 py-3 text-end">
-                            <div class="d-flex justify-content-end gap-2 feedback-history-actions">
-                                <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine"><i class="fa-solid fa-chart-simple"></i> View Details</a>
-                                <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session">
-                                        <i class="fa-solid fa-trash-can"></i> <span class="feedback-history-delete-label">Delete</span>
-                                    </button>
-                                </form>
+                        @php $sc = $session->score ? $session->score->overall_readiness_score : null; @endphp
+                        <td class="border-0 py-3 feedback-mobile-history-cell" colspan="3">
+                            <div class="feedback-mobile-history-row">
+                                <div class="feedback-mobile-history-stat">
+                                    <span>Score</span>
+                                    <strong>
+                                        @if($session->score)
+                                            {{ $session->score->overall_readiness_score }}%
+                                        @else
+                                            Pending
+                                        @endif
+                                    </strong>
+                                </div>
+                                <div class="feedback-mobile-history-stat">
+                                    <span>Rating</span>
+                                    @if($sc === null) <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
+                                    @elseif($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
+                                    @elseif($sc >= 70) <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
+                                    @elseif($sc >= 50) <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
+                                    @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Improvement</span>
+                                    @endif
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 feedback-history-actions">
+                                    <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine"><i class="fa-solid fa-chart-simple"></i> View Details</a>
+                                    <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session">
+                                            <i class="fa-solid fa-trash-can"></i> <span class="feedback-history-delete-label">Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>

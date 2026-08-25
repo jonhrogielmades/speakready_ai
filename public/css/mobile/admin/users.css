@@ -151,6 +151,24 @@
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
     }
+    #sec-admin-users .admin-users-summary-grid {
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    #sec-admin-users .admin-users-summary-grid > [class*="col-"] {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    @media (min-width: 992px) {
+        #sec-admin-users .admin-users-summary-grid {
+            column-gap: 1.5rem;
+        }
+        #sec-admin-users .admin-users-summary-grid > .col-lg-6 {
+            flex: 0 0 calc(50% - .75rem);
+            max-width: calc(50% - .75rem);
+        }
+    }
 
     /* Modal Styles */
     .custom-modal .modal-content {

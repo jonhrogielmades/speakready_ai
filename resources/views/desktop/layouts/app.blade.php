@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=29') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=32') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -82,7 +82,10 @@
             <div class="db-logo d-flex justify-content-between align-items-center">
                <div class="db-brand d-flex align-items-center gap-2">
                   <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0;">
-                  <span class="db-brand-text">SpeakReady AI</span>
+                  <div class="db-brand-copy">
+                     <span class="db-brand-text">SpeakReady AI</span>
+                     <span class="db-brand-subtitle">AI-Based Interview Practice</span>
+                  </div>
                </div>
                <button class="db-sidebar-close d-lg-none" type="button" aria-label="Close navigation" onclick="closeDashboardSidebar()">
                   <i class="fa-solid fa-xmark"></i>
@@ -90,31 +93,39 @@
             </div>
             <div class="db-nav">
                <div class="db-nav-section">Dashboard</div>
-               <a href="{{ route('dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Overview"><i class="fa-solid fa-gauge-high"></i><span class="db-nav-label">Overview</span></a>
+               <a href="{{ route('dashboard') }}" class="db-nl db-nav-blue {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Overview"><i class="fa-solid fa-house"></i><span class="db-nav-label">Overview</span></a>
 
 
                 <div class="db-nav-section">Interview Practice</div>
                 <a href="{{ route('interview.setup') }}" class="db-nl db-nav-purple {{ request()->routeIs('interview.setup') ? 'active' : '' }}" title="Mock Interview"><i class="fa-solid fa-microphone-lines"></i><span class="db-nav-label">Mock Interview</span></a>
 
                 <div class="db-nav-section">Specialized Training</div>
-               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Modules"><i class="fa-solid fa-book-open-reader"></i><span class="db-nav-label">Modules</span></a>
-               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}" title="Voice Rehearsal"><i class="fa-solid fa-ear-listen"></i><span class="db-nav-label">Voice Rehearsal</span></a>
-               <a href="{{ route('user.missions') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.missions') ? 'active' : '' }}" title="Missions"><i class="fa-solid fa-route"></i><span class="db-nav-label">Missions</span></a>
-               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}" title="Challenges"><i class="fa-solid fa-gamepad"></i><span class="db-nav-label">Challenges</span></a>
-               <a href="{{ route('user.coach') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="Readiness Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">Readiness Coach</span></a>
+               <a href="{{ route('user.modules.index') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.modules.*') ? 'active' : '' }}" title="Modules"><i class="fa-solid fa-book-open"></i><span class="db-nav-label">Modules</span></a>
+               <a href="{{ route('user.drills.voice') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.drills.voice') ? 'active' : '' }}" title="Voice Rehearsal"><i class="fa-solid fa-wave-square"></i><span class="db-nav-label">Voice Rehearsal</span></a>
+               <a href="{{ route('user.missions') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.missions') ? 'active' : '' }}" title="Missions"><i class="fa-solid fa-user-check"></i><span class="db-nav-label">Missions</span></a>
+               <a href="{{ route('user.learning') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.learning') ? 'active' : '' }}" title="Challenges"><i class="fa-solid fa-trophy"></i><span class="db-nav-label">Challenges</span></a>
+               <a href="{{ route('user.coach') }}" class="db-nl db-nav-rose {{ request()->routeIs('user.coach') ? 'active' : '' }}" title="Readiness Coach"><i class="fa-solid fa-robot"></i><span class="db-nav-label">Readiness Coach</span></a>
 
                <div class="db-nav-section">Performance</div>
                <a href="{{ route('user.progress') }}" class="db-nl db-nav-emerald {{ request()->routeIs('user.progress') ? 'active' : '' }}" title="Progress"><i class="fa-solid fa-chart-line"></i><span class="db-nav-label">Progress</span></a>
-               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-blue {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-clipboard-check"></i><span class="db-nav-label">Feedback</span></a>
-               <a href="{{ route('user.reports') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-folder-open"></i><span class="db-nav-label">Reports</span></a>
+               <a href="{{ route('user.feedback') }}" class="db-nl db-nav-cyan {{ request()->routeIs('user.feedback') ? 'active' : '' }}" title="Feedback"><i class="fa-solid fa-bookmark"></i><span class="db-nav-label">Feedback</span></a>
+               <a href="{{ route('user.reports') }}" class="db-nl db-nav-purple {{ request()->routeIs('user.reports') ? 'active' : '' }}" title="Reports"><i class="fa-solid fa-file-lines"></i><span class="db-nav-label">Reports</span></a>
 
                <div class="db-nav-section">Personal Goals</div>
-               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}" title="Mastery"><i class="fa-solid fa-medal"></i><span class="db-nav-label">Mastery</span></a>
+               <a href="{{ route('user.leaderboard') }}" class="db-nl db-nav-amber {{ request()->routeIs('user.leaderboard') ? 'active' : '' }}" title="Mastery"><i class="fa-solid fa-crown"></i><span class="db-nav-label">Mastery</span></a>
             </div>
             <div class="db-bottom">
-               <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+               <a href="{{ route('user.skills') }}" class="db-upgrade-card" title="View skill perks">
+                  <span class="db-upgrade-icon"><i class="fa-solid fa-gem"></i></span>
+                  <span class="db-upgrade-copy">
+                     <strong>Unlock Pro Features</strong>
+                     <small>Get advanced AI feedback and personalized insights.</small>
+                  </span>
+                  <span class="db-upgrade-action">Upgrade Now <i class="fa-solid fa-arrow-right"></i></span>
+               </a>
+               <form action="{{ route('logout') }}" method="POST" class="db-logout-form">
                   @csrf
-                  <button type="submit" class="db-nl db-nav-danger" title="Log Out" style="color:#f87171; width:100%; text-align:left; border:none; background:none;"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
+                  <button type="submit" class="db-nl db-nav-danger" title="Log Out"><i class="fa-solid fa-right-from-bracket"></i><span class="db-nav-label">Log Out</span></button>
                </form>
             </div>
          </div>
@@ -375,6 +386,12 @@
                .catch(err => console.error('Error fetching notifications:', err));
          }
 
+         function escapeNotifHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value == null ? '' : String(value);
+            return div.innerHTML;
+         }
+
          function updateNotifUI(data) {
             const badge = document.getElementById('notifBadge');
             const unreadBadge = document.getElementById('unreadCountBadge');
@@ -396,26 +413,26 @@
 
             let html = '';
             data.notifications.forEach(n => {
-               const isRead = n.read_at ? 'read' : '';
                const unreadClass = n.read_at ? '' : 'notif-unread';
-               const icon = n.data.icon || 'fa-bell';
-               const typeClass = n.data.type || 'info'; // Use for colors later if needed
+               const title = escapeNotifHtml(n.data?.title || 'Notification');
+               const message = escapeNotifHtml(n.data?.message || '');
+               const icon = escapeNotifHtml(n.data?.icon || 'fa-bell');
                
                // Formatting date
-               const date = new Date(n.created_at).toLocaleString();
+               const date = escapeNotifHtml(new Date(n.created_at).toLocaleString());
 
                html += `
-                  <div class="notif-item ${unreadClass} d-flex gap-3 mb-2" style="position:relative">
-                     <div class="notif-ico flex-shrink-0" style="background:rgba(59,130,246,.12);cursor:pointer" onclick="window.location.href='/notifications'"><i class="fa-solid ${icon}" style="color:#60a5fa;font-size:.9rem"></i></div>
-                     <div style="flex:1;min-width:0;">
-                        <div style="cursor:pointer" onclick="window.location.href='/notifications'">
-                           <div style="font-size:.85rem;font-weight:600;margin-bottom:3px;word-wrap:break-word;white-space:normal;">${n.data.title || 'Notification'}</div>
-                           <div style="font-size:.78rem;color:var(--tx2);word-wrap:break-word;white-space:normal;">${n.data.message || ''}</div>
-                           <div style="font-size:.7rem;color:var(--tx3);margin-top:5px"><i class="fa-regular fa-clock me-1"></i>${date}</div>
+                  <div class="notif-item user-notif-item ${unreadClass}">
+                     <button class="notif-ico user-notif-ico" type="button" onclick="window.location.href='/notifications'" aria-label="Open notifications page"><i class="fa-solid ${icon}"></i></button>
+                     <div class="user-notif-copy">
+                        <div class="user-notif-open" onclick="window.location.href='/notifications'">
+                           <strong>${title}</strong>
+                           <span>${message}</span>
+                           <small><i class="fa-regular fa-clock me-1"></i>${date}</small>
                         </div>
-                        <div class="d-flex gap-3 mt-2">
-                           ${n.read_at ? '' : `<button class="btn btn-sm btn-link text-decoration-none p-0" onclick="markReadDD('${n.id}', event)" style="font-size:.75rem;color:var(--pur)">Mark as read</button>`}
-                           <button class="btn btn-sm btn-link text-decoration-none text-danger p-0" onclick="deleteNotificationDD('${n.id}', event)" style="font-size:.75rem;">Delete</button>
+                        <div class="user-notif-row-actions">
+                           ${n.read_at ? '' : `<button class="user-notif-link-btn" type="button" onclick="markReadDD('${n.id}', event)">Mark as read</button>`}
+                           <button class="user-notif-link-btn danger" type="button" onclick="deleteNotificationDD('${n.id}', event)">Delete</button>
                         </div>
                      </div>
                   </div>

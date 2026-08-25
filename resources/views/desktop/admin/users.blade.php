@@ -1,7 +1,7 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/users.css?v=1') }}" data-page-style="admin-users">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/users.css?v=2') }}" data-page-style="admin-users">
 @endpush
 
 @section('content')
@@ -100,7 +100,7 @@
     @endif
 
     <!-- Feature 16 & 17: Top Users & Needs Improvement -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 admin-users-summary-grid">
         <div class="col-lg-6">
             <div class="premium-card h-100">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-trophy me-2 text-warning"></i>Top Performing Users</h6>

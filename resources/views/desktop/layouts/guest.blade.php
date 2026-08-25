@@ -866,7 +866,7 @@
 
             #hero {
                min-height: auto;
-               padding-top: calc(var(--nav) + env(safe-area-inset-top, 0px) + 14px);
+               padding-top: calc(var(--nav) + env(safe-area-inset-top, 0px) + 28px);
                padding-bottom: 20px;
                justify-content: flex-start;
                background:
@@ -885,7 +885,7 @@
             }
 
             #hero .text-center.mt-3.pt-3 {
-               margin-top: 0 !important;
+               margin-top: 14px !important;
                padding-top: 0 !important;
             }
 
@@ -1431,6 +1431,10 @@
             font-size: 0.7rem;
          }
 
+         .ui-mobile-wire-action {
+            border-radius: 50%;
+         }
+
          .ui-mobile-wire-avatar {
             font-weight: 800;
          }
@@ -1476,9 +1480,9 @@
             content: "";
             position: absolute;
             left: 0;
-            top: 0;
-            width: 3px;
-            height: 100%;
+            top: 3px;
+            bottom: 3px;
+            width: 2px;
             border-radius: 999px;
             background: var(--wire-fill);
          }
@@ -2270,14 +2274,25 @@
          }
 
          .ui-desktop-wire-welcome-title {
+            position: relative;
             margin: 0 0 12px;
             padding-left: 14px;
-            border-left: 5px solid var(--wire-fill);
             color: var(--wire-ink);
             font-size: 1.18rem;
             font-weight: 900;
             line-height: 1.08;
             text-transform: uppercase;
+         }
+
+         .ui-desktop-wire-welcome-title::before {
+            content: "";
+            position: absolute;
+            top: 3px;
+            bottom: 3px;
+            left: 0;
+            width: 2px;
+            border-radius: 999px;
+            background: var(--wire-fill);
          }
 
          .ui-desktop-wire-welcome-title span {
@@ -3268,7 +3283,7 @@
                      <a href="#contact" class="nav-link">Contact Us</a>
                   </div>
                   <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                     <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:12px" aria-label="Toggle theme">
+                     <button class="boc d-flex align-items-center justify-content-center" id="thbtn" style="width:38px;height:38px;padding:0;border-radius:10px" aria-label="Toggle theme">
                      <i class="fa-solid fa-sun" id="suni" style="display:none"></i>
                      <i class="fa-solid fa-moon" id="mooni"></i>
                      </button>

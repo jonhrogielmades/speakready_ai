@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/complaints.css?v=1') }}" data-page-style="admin-feedback-complaints">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/feedback/complaints.css?v=4') }}" data-page-style="admin-feedback-complaints">
 @endpush
 
 @section('content')
@@ -70,7 +70,7 @@
                                 @endif
                             </td>
                             <td style="border-bottom: 1px solid var(--bd);">
-                                <a href="{{ route('admin.feedback.show', $complaint->interview_answer_id) }}" class="btn btn-sm btn-dark" style="border-radius: 6px;">Investigate</a>
+                                <a href="{{ route('admin.feedback.show', $complaint->interview_answer_id) }}" class="btn btn-sm btn-dark complaint-action-btn" style="border-radius: 6px;">Investigate</a>
                             </td>
                         </tr>
                         @empty
@@ -92,4 +92,3 @@
     </div>
 </div>
 @endsection
-

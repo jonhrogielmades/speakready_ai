@@ -145,4 +145,32 @@
             animation: none !important;
         }
     }
+
+    @media (min-width: 768px) {
+        body.user-desktop-shell:not(.admin-shell) .sr-page-hero {
+            min-height: 92px;
+        }
+
+        body.user-desktop-shell:not(.admin-shell) .sr-page-hero-inner {
+            min-height: 92px;
+            padding-right: clamp(156px, 14vw, 178px);
+        }
+
+        body.user-desktop-shell:not(.admin-shell) .sr-page-hero-art {
+            top: 50%;
+            right: 14px;
+            bottom: auto;
+            width: clamp(116px, 11vw, 132px);
+            max-height: calc(100% - 14px);
+            transform: translate3d(0, -50%, 0);
+            transform-origin: 50% 50%;
+            animation: srDesktopHeroArtFloat 4.8s ease-in-out infinite;
+        }
+
+        @keyframes srDesktopHeroArtFloat {
+            0%, 100% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(1); }
+            35% { transform: translate3d(0, calc(-50% - 5px), 0) rotate(1deg) scale(1.01); }
+            70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
+        }
+    }
 </style>

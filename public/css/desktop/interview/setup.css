@@ -5180,3 +5180,765 @@
             line-height: 1.34 !important;
         }
     }
+
+    /* Desktop shell SaaSPro polish for Interview Setup. */
+    @media (min-width: 992px) {
+        html body.user-desktop-shell:not(.admin-shell) #userAppContent:has(#sec-interview-setup) {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup {
+            --setup-saas-gap: clamp(12px, 1vw, 16px);
+            --setup-saas-radius: 8px;
+            --setup-summary-width: 340px;
+            --setup-saas-rail: min(1248px, calc(100vw - 32px));
+            --setup-saas-surface: color-mix(in srgb, var(--sf, #ffffff) 96%, #f8fafc 4%);
+            --setup-saas-soft: color-mix(in srgb, var(--bg3, #f8fafc) 88%, #eff6ff 12%);
+            --setup-saas-line: color-mix(in srgb, var(--bd, #e2e8f0) 72%, #93c5fd 28%);
+            --setup-saas-muted-line: color-mix(in srgb, var(--bd, #e2e8f0) 86%, transparent 14%);
+            --setup-saas-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+            --setup-saas-shadow-soft: 0 8px 20px rgba(15, 23, 42, 0.06);
+            width: 100% !important;
+            max-width: var(--setup-saas-rail) !important;
+            margin-inline: auto !important;
+            padding: 0 0 18px !important;
+            overflow-x: clip !important;
+        }
+
+        html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-interview-setup,
+        html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #sec-interview-setup,
+        body.dm.user-desktop-shell:not(.admin-shell) #sec-interview-setup {
+            --setup-saas-surface: color-mix(in srgb, var(--sf, #111827) 92%, #0f172a 8%);
+            --setup-saas-soft: color-mix(in srgb, var(--bg3, #0f172a) 82%, #1e293b 18%);
+            --setup-saas-line: rgba(148, 163, 184, 0.26);
+            --setup-saas-muted-line: rgba(148, 163, 184, 0.2);
+            --setup-saas-shadow: 0 16px 34px rgba(0, 0, 0, 0.24);
+            --setup-saas-shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero {
+            width: 100% !important;
+            min-height: 92px !important;
+            margin: 0 0 var(--setup-saas-gap) !important;
+            border: 1px solid var(--setup-saas-line) !important;
+            border-radius: var(--setup-saas-radius) !important;
+            background:
+                linear-gradient(135deg, var(--setup-saas-surface) 0%, color-mix(in srgb, var(--setup-saas-soft) 82%, #e0f2fe 18%) 100%) !important;
+            box-shadow: var(--setup-saas-shadow-soft) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero::after {
+            content: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-inner {
+            min-height: 92px !important;
+            grid-template-columns: 38px minmax(0, 1fr) !important;
+            gap: 12px !important;
+            justify-content: start !important;
+            padding: 14px 148px 14px 18px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-icon,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.setup-details-icon, .setup-card-label-icon, .setup-calibrated-icon, .setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .assistance-context-icon, .summary-icon, #panel-summary h5 i) {
+            background: linear-gradient(135deg, #eef6ff, #bfe9ff) !important;
+            border: 1px solid rgba(59, 130, 246, 0.28) !important;
+            color: #0f3b6f !important;
+            -webkit-text-fill-color: #0f3b6f !important;
+            box-shadow: none !important;
+        }
+
+        html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-icon,
+        html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.setup-details-icon, .setup-card-label-icon, .setup-calibrated-icon, .setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .response-head-icon, .structure-difficulty-icon, .assistance-question-icon, .assistance-context-icon, .summary-icon, #panel-summary h5 i) {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.26), rgba(20, 184, 166, 0.18)) !important;
+            border-color: rgba(96, 165, 250, 0.34) !important;
+            color: #dbeafe !important;
+            -webkit-text-fill-color: #dbeafe !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-icon {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 8px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-title {
+            margin: 0 0 4px !important;
+            font-size: 1.16rem !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+            color: var(--tx, #0f172a) !important;
+            -webkit-text-fill-color: var(--tx, #0f172a) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-subtitle {
+            max-width: 720px !important;
+            font-size: 0.8rem !important;
+            line-height: 1.4 !important;
+            font-weight: 500 !important;
+            color: var(--tx3, #64748b) !important;
+            -webkit-text-fill-color: var(--tx3, #64748b) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-art {
+            right: 16px !important;
+            bottom: -12px !important;
+            width: 126px !important;
+            opacity: 0.92 !important;
+            animation: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row.g-4 {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, var(--setup-summary-width)) !important;
+            align-items: start !important;
+            gap: var(--setup-saas-gap) !important;
+            margin: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row > .col-lg-8,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-8,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row > .col-lg-4,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #setupForm > .row > .col-lg-4 {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            padding: 0 !important;
+            flex: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row > .col-lg-4 {
+            display: block !important;
+            align-self: start !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setup-left-col {
+            gap: var(--setup-saas-gap) !important;
+            min-width: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-panel,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            border: 1px solid var(--setup-saas-line) !important;
+            border-radius: var(--setup-saas-radius) !important;
+            background: var(--setup-saas-surface) !important;
+            box-shadow: var(--setup-saas-shadow) !important;
+            box-sizing: border-box !important;
+            transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-panel:hover,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary:hover {
+            transform: none !important;
+            border-color: color-mix(in srgb, var(--setup-saas-line) 72%, #2563eb 28%) !important;
+            box-shadow: var(--setup-saas-shadow) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 10px !important;
+            align-items: center !important;
+            padding: 10px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-track {
+            display: grid !important;
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            gap: 8px !important;
+            min-width: 0 !important;
+            min-height: 34px !important;
+            padding: 0 10px !important;
+            border: 1px solid var(--setup-saas-muted-line) !important;
+            border-radius: 8px !important;
+            background: var(--setup-saas-soft) !important;
+            color: var(--tx2, #334155) !important;
+            box-shadow: none !important;
+            text-align: left !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-item.is-active {
+            border-color: rgba(37, 99, 235, 0.52) !important;
+            background: color-mix(in srgb, var(--setup-saas-soft) 70%, #dbeafe 30%) !important;
+            color: var(--tx, #0f172a) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-dot {
+            width: 7px !important;
+            height: 7px !important;
+            flex: 0 0 7px !important;
+            margin: 0 !important;
+            border-radius: 999px !important;
+            border: 1px solid rgba(148, 163, 184, 0.48) !important;
+            background: color-mix(in srgb, var(--setup-saas-surface) 78%, #cbd5e1 22%) !important;
+            box-shadow: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-label {
+            min-width: 0 !important;
+            margin: 0 !important;
+            font-size: 0.62rem !important;
+            line-height: 1.12 !important;
+            font-weight: 800 !important;
+            letter-spacing: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-dot,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-item.is-complete .setup-stepper-dot {
+            border-color: #0ea5e9 !important;
+            background: #0ea5e9 !important;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions {
+            display: flex !important;
+            gap: 8px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-step-btn {
+            min-height: 34px !important;
+            padding: 7px 11px !important;
+            border-radius: 8px !important;
+            font-size: 0.74rem !important;
+            font-weight: 800 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-panel,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary {
+            padding: 14px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(
+            #panel-basic.setup-details-card,
+            #panel-structure.setup-structure-card,
+            #panel-inclusive.setup-inclusive-card,
+            #panel-content.setup-assistance-card,
+            #panel-response.setup-response-card
+        ) {
+            max-width: none !important;
+            min-height: 0 !important;
+            background: var(--setup-saas-surface) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active:not(#panel-basic) {
+            display: block !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #setup-left-col > #panel-basic.setup-details-card.setup-step-active {
+            display: grid !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.setup-details-card-head, .setup-structure-head, .setup-inclusive-head, .assistance-head, .response-head) {
+            display: grid !important;
+            grid-template-columns: 34px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-height: 0 !important;
+            margin: 0 0 12px !important;
+            padding: 0 0 12px !important;
+            border-bottom: 1px solid var(--setup-saas-muted-line) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.setup-details-icon, .setup-structure-head-icon, .setup-inclusive-head-icon, .assistance-head-icon, .response-head-icon) {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 8px !important;
+            font-size: 0.84rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-card-label-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.setup-details-card-title, .setup-structure-title, .setup-inclusive-title, .assistance-title, .response-title),
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary h5 {
+            margin: 0 !important;
+            color: var(--tx, #0f172a) !important;
+            -webkit-text-fill-color: var(--tx, #0f172a) !important;
+            font-size: 0.94rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.setup-details-card-subtitle, .setup-inclusive-copy, .desc-text, .structure-info-note, .inclusive-note) {
+            color: var(--tx3, #64748b) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.38 !important;
+            font-weight: 500 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-inclusive-copy {
+            margin: -3px 0 12px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-card-fields {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-select-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-basic .setup-calibrated-simple,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-info-note,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .inclusive-note,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-context-panel {
+            border: 1px solid var(--setup-saas-muted-line) !important;
+            border-radius: 8px !important;
+            background: var(--setup-saas-soft) !important;
+            box-shadow: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-basic .setup-calibrated-simple {
+            grid-column: 1 / -1 !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            min-height: 58px !important;
+            padding: 10px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-basic .setup-calibrated-icon,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-context-icon {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 8px !important;
+            font-size: 0.8rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-basic .setup-calibrated-simple h6 {
+            margin: 0 0 3px !important;
+            color: var(--tx, #0f172a) !important;
+            font-size: 0.84rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-basic .setup-calibrated-simple p {
+            margin: 0 !important;
+            color: var(--tx3, #64748b) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-card-field,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-field {
+            min-width: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-card-label,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .olbl,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-structure-section-title {
+            margin: 0 0 6px !important;
+            color: var(--tx2, #334155) !important;
+            font-size: 0.7rem !important;
+            line-height: 1.2 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-card-label {
+            display: grid !important;
+            grid-template-columns: 28px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            align-items: center !important;
+            min-height: 28px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.oinp, select.oinp, input.oinp, textarea.oinp) {
+            min-height: 40px !important;
+            height: auto !important;
+            padding: 8px 10px !important;
+            border: 1px solid var(--setup-saas-muted-line) !important;
+            border-radius: 8px !important;
+            background: var(--setup-saas-soft) !important;
+            color: var(--tx, #0f172a) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36) !important;
+            font-size: 0.78rem !important;
+            font-weight: 650 !important;
+            line-height: 1.25 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup select.oinp {
+            padding-right: 34px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.oinp, select.oinp, input.oinp, textarea.oinp):focus {
+            border-color: rgba(37, 99, 235, 0.58) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+            outline: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-difficulty-list,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .response-mode-list {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .inclusive-option-list {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-stack {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-stack > .assistance-field:nth-child(2),
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-context-panel {
+            grid-column: 1 / -1 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-question-list {
+            display: grid !important;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.structure-difficulty-card, .inclusive-option, .assistance-question-card, .response-mode-card) {
+            min-width: 0 !important;
+            min-height: 54px !important;
+            padding: 10px !important;
+            border: 1px solid var(--setup-saas-muted-line) !important;
+            border-radius: 8px !important;
+            background: var(--setup-saas-soft) !important;
+            color: var(--tx, #0f172a) !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .inclusive-option {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            min-height: 42px !important;
+            font-size: 0.74rem !important;
+            font-weight: 750 !important;
+            line-height: 1.22 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.structure-difficulty-card, .assistance-question-card, .response-mode-card):hover,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .inclusive-option:hover {
+            border-color: rgba(37, 99, 235, 0.42) !important;
+            transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.structure-difficulty-card, .assistance-question-card, .response-mode-card, .inclusive-option):has(input:checked) {
+            border-color: rgba(37, 99, 235, 0.64) !important;
+            background: color-mix(in srgb, var(--setup-saas-soft) 72%, #dbeafe 28%) !important;
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.16) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.structure-difficulty-title, .response-mode-title, .assistance-question-text, .assistance-context-title) {
+            color: var(--tx, #0f172a) !important;
+            font-size: 0.78rem !important;
+            line-height: 1.18 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup :is(.structure-difficulty-desc, .response-mode-desc) {
+            color: var(--tx3, #64748b) !important;
+            font-size: 0.66rem !important;
+            line-height: 1.28 !important;
+            font-weight: 500 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-question-card {
+            grid-template-columns: 18px 28px minmax(0, 1fr) !important;
+            gap: 7px !important;
+            min-height: 50px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-question-icon,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-difficulty-icon {
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 8px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-context-panel {
+            display: grid !important;
+            grid-template-columns: 36px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 10px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-summary-wrap,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary {
+            display: block !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            flex: none !important;
+            align-self: start !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary {
+            padding: 14px !important;
+            background:
+                linear-gradient(180deg, color-mix(in srgb, var(--setup-saas-surface) 92%, #eff6ff 8%) 0%, var(--setup-saas-surface) 100%) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary .setup-summary-title {
+            display: grid !important;
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin: 0 0 10px !important;
+            padding: 0 0 10px !important;
+            border-bottom: 1px solid var(--setup-saas-muted-line) !important;
+            text-align: left !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary h5 i {
+            width: 30px !important;
+            height: 30px !important;
+            margin: 0 !important;
+            border-radius: 8px !important;
+            font-size: 0.74rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary .summary-row {
+            grid-template-columns: 24px minmax(78px, 0.72fr) minmax(0, 1.28fr) !important;
+            min-height: 34px !important;
+            gap: 7px !important;
+            padding: 5px 0 !important;
+            border-bottom: 1px solid var(--setup-saas-muted-line) !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .summary-icon {
+            width: 24px !important;
+            height: 24px !important;
+            border-radius: 8px !important;
+            font-size: 0.6rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .summary-label {
+            color: var(--tx3, #64748b) !important;
+            font-size: 0.66rem !important;
+            line-height: 1.2 !important;
+            font-weight: 700 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .summary-val {
+            color: var(--tx, #0f172a) !important;
+            font-size: 0.72rem !important;
+            line-height: 1.22 !important;
+            font-weight: 900 !important;
+            text-align: right !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-summary .setup-start-action {
+            margin-top: 10px !important;
+            padding-top: 10px !important;
+            border-top: 1px solid var(--setup-saas-muted-line) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #btn-start-interview {
+            min-height: 42px !important;
+            padding: 0 12px !important;
+            border: 0 !important;
+            border-radius: 8px !important;
+            background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+            color: #ffffff !important;
+            box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            font-size: 0.82rem !important;
+            line-height: 1.15 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            white-space: normal !important;
+            transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #btn-start-interview:hover {
+            box-shadow: 0 14px 26px rgba(37, 99, 235, 0.28) !important;
+            transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #btn-start-interview i {
+            margin-left: 0 !important;
+        }
+    }
+
+    @media (min-width: 1200px) and (max-width: 1320px) {
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup {
+            --setup-summary-width: 324px;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-question-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup {
+            --setup-saas-rail: min(100%, calc(100vw - 24px));
+            --setup-saas-gap: 14px;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row.g-4 {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-difficulty-list,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .inclusive-option-list,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .response-mode-list,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-stack {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .structure-select-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-question-list {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
+    }
+
+    /* Final desktop alignment and active-step guard. */
+    @media (min-width: 992px) {
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup {
+            --setup-page-gap: var(--setup-saas-gap) !important;
+            --setup-gap: var(--setup-saas-gap) !important;
+            width: 100% !important;
+            max-width: var(--setup-saas-rail) !important;
+            margin-inline: auto !important;
+            padding: 0 0 18px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setupForm > .row,
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setupForm > .row.g-4 {
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setupForm > .row > .col-lg-8,
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setupForm > .row > .col-lg-4 {
+            margin-top: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup .setup-hero {
+            margin-bottom: var(--setup-saas-gap) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setup-left-col {
+            gap: var(--setup-saas-gap) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup .response-mode-card {
+            grid-template-columns: 24px minmax(0, 1fr) !important;
+            gap: 10px !important;
+            align-items: center !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #panel-summary {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup.setup-step-mode #setup-left-col > .setup-panel.setup-step-active {
+            animation: none !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row,
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #setupForm > .row.g-4,
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setupForm > .row,
+        html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-interview-setup #setupForm > .row.g-4 {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+    }
+
+    @media (min-width: 768px) {
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-structure .structure-select-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            align-items: start !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-structure .structure-select-grid > div {
+            min-width: 0 !important;
+        }
+    }
+
+    /* Keep the desktop setup illustration inside the shallow shell. */
+    @media (min-width: 768px) {
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero {
+            min-height: 92px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-inner {
+            min-height: 92px !important;
+            padding-right: clamp(156px, 14vw, 178px) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-hero-art {
+            top: 50% !important;
+            right: 14px !important;
+            bottom: auto !important;
+            width: clamp(116px, 11vw, 132px) !important;
+            max-height: calc(100% - 14px) !important;
+            opacity: 0.92 !important;
+            transform: translate3d(0, -50%, 0) !important;
+            transform-origin: 50% 50% !important;
+            animation: setupDesktopHeroFloat 5.5s ease-in-out infinite !important;
+        }
+
+        @keyframes setupDesktopHeroFloat {
+            0%, 100% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(1); }
+            35% { transform: translate3d(0, calc(-50% - 5px), 0) rotate(1deg) scale(1.01); }
+            70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
+        }
+    }

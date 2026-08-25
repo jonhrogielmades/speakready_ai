@@ -1,16 +1,16 @@
 @extends('desktop.layouts.admin')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/game.css?v=1') }}" data-page-style="admin-game">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/game.css?v=2') }}" data-page-style="admin-game">
 @endpush
 
 @section('content')
 <div class="db-section active" id="sec-admin-game">
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-center admin-game-header">
         <div>
             <h4 style="font-size:1.4rem;font-weight:700;margin-bottom:4px">Philippines Interview Learning Games</h4>
             <p style="font-size:.875rem;color:var(--tx3);margin:0">Manage gamified Philippine interview drills, local practice missions, and coaching modifiers.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 admin-game-actions">
             <button class="btn btn-outline-info px-3 py-2" style="font-size:.85rem;font-weight:600" data-bs-toggle="modal" data-bs-target="#generateGameModal">
                 <i class="fa-solid fa-wand-magic-sparkles me-1"></i> Generate PH Games
             </button>
@@ -82,8 +82,8 @@
             @endphp
 
             <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="cat-pane-{{ $categoryRow->id }}" role="tabpanel">
-                <div class="mb-4" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;overflow:hidden;">
-            <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--bd);background:var(--bg3)">
+                <div class="mb-4 admin-game-panel">
+            <div class="p-3 d-flex justify-content-between align-items-center admin-game-panel-header">
                 <h6 style="color:var(--tx);margin:0;font-size:1.05rem;font-weight:700;"><i class="fa-solid fa-layer-group text-info me-2"></i>{{ $categoryRow->title }}</h6>
                 <span class="badge bg-secondary">{{ $catLevels->count() }} Levels</span>
             </div>

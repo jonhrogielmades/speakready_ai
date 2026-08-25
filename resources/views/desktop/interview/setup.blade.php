@@ -1,8 +1,8 @@
 @extends('desktop.layouts.app')
 @section('title', 'Philippines Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=1') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=6') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=2') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -500,8 +500,8 @@
             <!-- Right Column: Live Summary -->
             <div class="col-lg-4 animate-fade-up delay-200">
                 <div class="setup-summary-wrap">
-                    <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%); border:1px solid rgba(59,130,246,0.25); box-shadow: 0 15px 35px rgba(59,130,246,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
-                        <h5 style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
+                    <div class="setup-panel setup-summary-panel" id="panel-summary">
+                        <h5 class="setup-summary-title"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
                         
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
@@ -549,8 +549,8 @@
                             <span class="summary-val text-success" id="sumDuration">15 Minutes</span>
                         </div>
                         
-                        <div class="setup-start-action" style="margin-top:30px;">
-                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine" style="font-size:1.1rem;font-weight:700;border-radius:14px;background:var(--dash-primary, #60a5fa);color:white;border:none;box-shadow:0 8px 25px rgba(96,165,250,0.4);transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 30px rgba(96,165,250,0.6)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 25px rgba(96,165,250,0.4)'">
+                        <div class="setup-start-action">
+                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine">
                                 Start Philippine Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
                         </div>
@@ -904,15 +904,23 @@
 
             body.interview-setup-page #dashboard .db-nav,
             html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav {
-                scrollbar-width: none !important;
-                -ms-overflow-style: none !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                scrollbar-width: thin !important;
+                scrollbar-color: rgba(125, 211, 252, 0.32) transparent !important;
+                -ms-overflow-style: auto !important;
             }
 
             body.interview-setup-page #dashboard .db-nav::-webkit-scrollbar,
             html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav::-webkit-scrollbar {
-                width: 0 !important;
-                height: 0 !important;
-                display: none !important;
+                width: 5px !important;
+                height: 5px !important;
+            }
+
+            body.interview-setup-page #dashboard .db-nav::-webkit-scrollbar-thumb,
+            html body.user-desktop-shell.interview-setup-page:not(.admin-shell) #dashboard .db-nav::-webkit-scrollbar-thumb {
+                border-radius: 999px !important;
+                background: rgba(125, 211, 252, 0.26) !important;
             }
         `;
 

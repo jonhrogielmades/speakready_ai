@@ -1025,3 +1025,124 @@
         object-fit: cover !important;
         border-radius: inherit !important;
     }
+
+    /* Readiness Coach desktop hero: align with the Interview Setup shell. */
+    @media (min-width: 992px) {
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero {
+            --coach-hero-title: var(--tx, #0f172a);
+            --coach-hero-text: var(--tx3, #64748b);
+            --coach-hero-icon: #0f3b6f;
+            --coach-hero-icon-bg: linear-gradient(135deg, #eef6ff, #bfe9ff);
+            --coach-hero-icon-border: rgba(59, 130, 246, 0.28);
+            display: block !important;
+            width: 100% !important;
+            min-height: 92px !important;
+            margin: 0 0 12px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            border: 1px solid color-mix(in srgb, var(--bd, #e2e8f0) 72%, #93c5fd 28%) !important;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--sf, #ffffff) 96%, #f8fafc 4%) 0%, color-mix(in srgb, var(--bg3, #f8fafc) 74%, #e0f2fe 26%) 100%) !important;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06) !important;
+            overflow: hidden !important;
+            isolation: isolate !important;
+        }
+
+        html:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero,
+        html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero,
+        body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero {
+            --coach-hero-title: var(--tx, #f8fafc);
+            --coach-hero-text: var(--tx3, #cbd5e1);
+            --coach-hero-icon: #dbeafe;
+            --coach-hero-icon-bg: linear-gradient(135deg, rgba(37, 99, 235, 0.26), rgba(20, 184, 166, 0.18));
+            --coach-hero-icon-border: rgba(96, 165, 250, 0.34);
+            border-color: rgba(148, 163, 184, 0.26) !important;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--sf, #111827) 92%, #0f172a 8%) 0%, color-mix(in srgb, var(--bg3, #0f172a) 68%, #1e293b 32%) 100%) !important;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero::before,
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero::after {
+            content: none !important;
+            display: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-progress-hero .sr-page-hero-inner {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            min-height: 92px !important;
+            padding: 14px clamp(156px, 14vw, 178px) 14px 18px !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-progress-hero .sr-page-hero-copy {
+            display: grid !important;
+            grid-template-columns: 38px minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 12px !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-hero-icon {
+            width: 38px !important;
+            height: 38px !important;
+            border-radius: 8px !important;
+            background: var(--coach-hero-icon-bg) !important;
+            border: 1px solid var(--coach-hero-icon-border) !important;
+            box-shadow: none !important;
+            font-size: 0.95rem !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-hero-icon,
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-hero-icon * {
+            color: var(--coach-hero-icon) !important;
+            -webkit-text-fill-color: var(--coach-hero-icon) !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-progress-hero .sr-page-hero-title {
+            margin: 0 0 4px !important;
+            color: var(--coach-hero-title) !important;
+            -webkit-text-fill-color: var(--coach-hero-title) !important;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            font-size: 1.16rem !important;
+            line-height: 1.12 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0 !important;
+            text-transform: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-progress-hero .sr-page-hero-title svg {
+            display: none !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+            max-width: 720px !important;
+            margin: 0 !important;
+            color: var(--coach-hero-text) !important;
+            -webkit-text-fill-color: var(--coach-hero-text) !important;
+            font-size: 0.8rem !important;
+            line-height: 1.4 !important;
+            font-weight: 500 !important;
+        }
+
+        html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-progress-hero .sr-page-hero-art {
+            top: 50% !important;
+            right: 14px !important;
+            bottom: auto !important;
+            width: clamp(116px, 11vw, 132px) !important;
+            max-height: calc(100% - 14px) !important;
+            opacity: 0.92 !important;
+            transform: translate3d(0, -50%, 0) !important;
+            transform-origin: 50% 50% !important;
+            animation: coachSetupShellHeroFloat 5.5s ease-in-out infinite !important;
+            filter: drop-shadow(0 14px 22px rgba(37, 99, 235, 0.16)) !important;
+        }
+
+        @keyframes coachSetupShellHeroFloat {
+            0%, 100% { transform: translate3d(0, -50%, 0) rotate(0deg) scale(1); }
+            35% { transform: translate3d(0, calc(-50% - 5px), 0) rotate(1deg) scale(1.01); }
+            70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
+        }
+    }

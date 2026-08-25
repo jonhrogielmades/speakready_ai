@@ -1173,19 +1173,22 @@ EOT;
                 $userName = htmlspecialchars($activity->user ? $activity->user->name : 'System', ENT_QUOTES, 'UTF-8');
                 $time = htmlspecialchars($time, ENT_QUOTES, 'UTF-8');
                 $isNew = is_null($activity->read_at);
-                $bgClass = $isNew ? 'rgba(59,130,246,0.1)' : 'transparent';
+                $description = htmlspecialchars($activity->description ?: $activity->action, ENT_QUOTES, 'UTF-8');
                 
                 $html .= '
-                <div class="dropdown-item d-flex flex-column gap-1 border-bottom admin-activity-item" data-id="'.$activity->id.'" style="background: '.$bgClass.'; padding: 12px 16px; border-color: var(--bd) !important; white-space: normal;">
-                    <div class="d-flex justify-content-between align-items-start gap-2">
-                        <span class="fw-bold text-truncate" style="font-size: 0.85rem; color: var(--tx);">'.$userName.'</span>
-                        <div class="d-flex gap-2 align-items-center flex-shrink-0">
-                            <span style="font-size: 0.7rem; color: var(--tx3);">'.$time.'</span>
-                            '.($isNew ? '<button class="btn btn-sm p-0 m-0 act-mark-read text-primary" onclick="markActivityRead('.$activity->id.', event)" title="Mark as read"><i class="fa-solid fa-circle text-primary" style="font-size:8px;"></i></button>' : '').'
-                            <button class="btn btn-sm p-0 m-0 act-delete text-danger" onclick="deleteActivity('.$activity->id.', event)" title="Delete"><i class="fa-solid fa-xmark"></i></button>
+                <div class="admin-activity-item '.($isNew ? 'is-unread' : '').'" data-id="'.$activity->id.'">
+                    <div class="admin-activity-ico"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="admin-activity-copy">
+                        <div class="admin-activity-row-head">
+                            <strong>'.$userName.'</strong>
+                            <small>'.$time.'</small>
+                        </div>
+                        <span>'.$description.'</span>
+                        <div class="admin-activity-row-actions">
+                            '.($isNew ? '<button class="admin-activity-link-btn" type="button" onclick="markActivityRead('.$activity->id.', event)">Mark as read</button>' : '').'
+                            <button class="admin-activity-link-btn danger" type="button" onclick="deleteActivity('.$activity->id.', event)">Delete</button>
                         </div>
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--tx2);">'.htmlspecialchars($activity->description ?: $activity->action).'</div>
                 </div>';
             }
         }

@@ -1,4 +1,4 @@
-@extends('mobile.layouts.app')
+@extends('mobile.layouts.admin')
 
 @section('content')
 <div class="db-section active">

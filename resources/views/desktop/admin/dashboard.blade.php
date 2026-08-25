@@ -1,12 +1,12 @@
 @extends('desktop.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/admin/dashboard.css?v=1') }}" data-page-style="admin-dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/admin/dashboard.css?v=2') }}" data-page-style="admin-dashboard">
 @endpush
 
 @section('content')
 
-<div class="db-section active" id="sec-overview">
+<div class="db-section active admin-dashboard-shell" id="sec-overview">
     @if(session('message'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399">
         {{ session('message') }}
@@ -14,9 +14,9 @@
     </div>
     @endif
 
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="admin-dashboard-header d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h4 class="admin-dashboard-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie"></i> Philippines Interview Admin Dashboard</h4>
+            <h4 class="admin-dashboard-title fw-bold mb-1" style="font-size:1.6rem;"><i class="fa-solid fa-chart-pie"></i><span class="admin-dashboard-title-text">Philippines Interview Admin Dashboard</span></h4>
             <p class="admin-dashboard-subtitle" style="font-size:0.95rem;color:var(--tx2);margin:0;">Overview for Philippine interview practice, user analytics, and platform health.</p>
         </div>
     </div>
@@ -68,7 +68,7 @@
     </div>
 
     <!-- Analytics Charts Row -->
-    <div class="row g-4 mb-4">
+    <div class="row g-4 mb-4 dashboard-analytics-grid">
         <!-- Feature 2: User Analytics (Line Chart) -->
         <div class="col-lg-6">
             <div class="premium-card h-100">
@@ -99,12 +99,12 @@
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 dashboard-work-grid">
         <!-- LEFT COLUMN (Main Content) -->
-        <div class="col-lg-8">
+        <div class="col-lg-8 dashboard-primary-column">
             
             <!-- Feature 6: Recent Interview Sessions -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-table mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold m-0">Recent Philippines Interview Sessions</h6>
                     <a href="{{ route('admin.sessions.index') }}" class="btn btn-sm mobile-action-btn admin-dashboard-mini-action" style="border-radius:8px;border:1px solid var(--bd);color:var(--tx2);background:var(--bg3);"><i class="fa-solid fa-list"></i>View All</a>
@@ -147,9 +147,9 @@
             </div>
 
             <!-- Feature 14: Activity Logs & Feature 10: Top Users -->
-            <div class="row g-4 mb-4">
+            <div class="row g-4 mb-4 dashboard-mini-grid">
                 <div class="col-md-6">
-                    <div class="premium-card h-100">
+                    <div class="premium-card dashboard-panel h-100">
                         <h6 class="fw-bold mb-4">Activity Logs</h6>
                         <div class="activity-timeline">
                             @forelse($recentActivities as $activity)
@@ -166,7 +166,7 @@
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="premium-card h-100">
+                    <div class="premium-card dashboard-panel h-100">
                         <h6 class="fw-bold mb-1"><i class="fa-solid fa-scale-balanced me-2 text-warning"></i>Assessment Quality</h6>
                         <p class="small mb-3" style="color:var(--tx3);">Anonymous readiness-band distribution from score-eligible and legacy assessments.</p>
                         @forelse($readinessBandSummary as $band)
@@ -185,7 +185,7 @@
             </div>
 
             <!-- Feature 11: Users Needing Improvement -->
-            <div class="premium-card mb-4" style="border-left: 4px solid var(--danger-tx); background: var(--danger-bg);">
+            <div class="premium-card dashboard-panel dashboard-panel-alert mb-4" style="border-left: 4px solid var(--danger-tx); background: var(--danger-bg);">
                 <h6 class="fw-bold mb-3" style="color: var(--danger-tx);"><i class="fa-solid fa-triangle-exclamation me-2"></i>Users Needing Support</h6>
                 <div class="table-responsive">
                     <table class="table custom-table mb-0 w-100">
@@ -206,7 +206,7 @@
             </div>
 
             <!-- Feature 12 & 13: Communications Center -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-comms mb-4">
                 <ul class="nav nav-pills mb-3" id="commsTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#announcements" type="button" style="border-radius:8px;font-size:0.9rem;">Announcements</button>
@@ -245,10 +245,10 @@
         </div>
 
         <!-- RIGHT COLUMN (Sidebar) -->
-        <div class="col-lg-4">
+        <div class="col-lg-4 dashboard-side-column">
 
             <!-- Feature 7: AI Usage Monitoring -->
-            <div class="premium-card mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
+            <div class="premium-card dashboard-panel dashboard-panel-featured mb-4" style="background: linear-gradient(135deg, var(--sf) 0%, rgba(59,130,246,0.05) 100%);">
                 <h6 class="fw-bold mb-4"><i class="fa-solid fa-microchip me-2 text-primary"></i>AI Usage Monitoring</h6>
                 
                 <div class="d-flex justify-content-between mb-1" style="font-size:0.85rem;">
@@ -277,7 +277,7 @@
             </div>
 
             <!-- Feature 4: Interview Performance Analytics -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-performance mb-4">
                 <h6 class="fw-bold mb-4">Average PH Interview Performance</h6>
                 
                 <div class="mb-3">
@@ -299,7 +299,7 @@
             </div>
 
             <!-- Feature 15: System Monitoring -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-health mb-4">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-server me-2 text-info"></i>System Health</h6>
                 <div class="d-flex justify-content-between align-items-center mb-2 p-2 rounded" style="background:var(--bg3);">
                     <span style="font-size:0.85rem;">Server</span>
@@ -320,7 +320,7 @@
             </div>
 
             <!-- Feature 8: Question Bank Statistics -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-compact mb-4">
                 <h6 class="fw-bold mb-3">PH Question Bank Stats</h6>
                 <div class="text-center mb-3">
                     <h3 class="fw-bold text-primary mb-0">500</h3>
@@ -335,7 +335,7 @@
             </div>
 
             <!-- Feature 9: Learning Lab Analytics -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-compact mb-4">
                 <h6 class="fw-bold mb-3">PH Interview Learning Stats</h6>
                 <div class="p-2 mb-2 rounded" style="background:var(--bg3);border:1px solid var(--bd);">
                     <div style="font-size:0.75rem;color:var(--tx3);">Most Viewed & Completed</div>
@@ -348,7 +348,7 @@
             </div>
 
             <!-- Feature 17: Reports & Exports -->
-            <div class="premium-card mb-4">
+            <div class="premium-card dashboard-panel dashboard-panel-side dashboard-panel-reports mb-4">
                 <h6 class="fw-bold mb-3"><i class="fa-solid fa-file-export me-2 text-primary"></i>Generate Reports</h6>
                 <select class="form-select mb-3" style="background:var(--bg3);border:1px solid var(--bd);color:var(--tx);">
                     <option>User Reports</option>
