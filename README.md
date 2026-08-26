@@ -1,200 +1,512 @@
 # SpeakReady AI
 
-SpeakReady AI is a comprehensive web application for interview preparation. Follow these instructions to clone, configure, and run the project locally.
+SpeakReady AI is a Laravel-based interview preparation and career readiness platform. It combines mock interview sessions, AI-assisted feedback, voice rehearsal, learning modules, practice missions, learning games, progress reporting, mentor review links, and an admin console for managing the whole system.
+
+The current system includes separate desktop and mobile Blade experiences, a redesigned guest/landing experience, legal and security pages, richer user dashboards, AI provider fallbacks, local speech assessment hooks, Render deployment hardening, and automated schema repair commands for production reliability.
+
+## Repository
+
+- GitHub: https://github.com/jonhrogielmades/speakready_ai.git
+- Main branch: `main`
+- Framework: Laravel 12
+- Runtime: PHP 8.2 or higher
+- Front end build tool: Vite
+
+## Current System Highlights
+
+- Responsive guest landing pages with separate desktop and mobile CSS in `public/css/desktop/guest.css` and `public/css/mobile/guest.css`.
+- Desktop preview images for the landing/product walkthrough in `public/img/desktop-preview`.
+- Email/password authentication, password reset, Google OAuth login/register, logout, and account reactivation requests.
+- User dashboard with interview history, progress summaries, recommendations, readiness metrics, notifications, and quick access to practice tools.
+- Mock interview setup and live interview session flow with text answers, speech transcription, answer retries, state saving, abort, finish, review, and share controls.
+- AI coaching, feedback generation, interview chat replies, voice prompt generation, mission generation, and attachment/text extraction support.
+- Voice rehearsal drills with prompt generation, voice analysis, saved sessions, and clear-history actions.
+- Learning modules with chapters, resources, quizzes, progress tracking, and personalized recommendations.
+- Learning Games with admin-generated levels, user sessions, answer scoring, progress, energy, and downloadable certificates.
+- Job applications and interview packs for targeted practice.
+- Progress, feedback, reports, session exports, personal mastery checklist/stories, skills/perks, and account settings.
+- Public shared review pages with optional unlock flow and mentor comments.
+- Public contact form, newsletter subscription response, privacy policy, terms of service, security page, and cookie preferences page.
+- Admin console for users, categories, questions, modules, learning games, interview sessions, contacts, feedback audits, AI providers, settings, notifications, and activity logs.
+- Render-focused production startup script that binds early, runs migrations, repairs known schema drift, links storage, seeds the admin account, and rebuilds Laravel caches.
+
+## Tech Stack
+
+- Laravel 12 with Blade views
+- PHP 8.2+ with PDO MySQL and PDO PostgreSQL support
+- MySQL for local development by default
+- PostgreSQL support for Render production through `DATABASE_URL`
+- Laravel Sanctum, Socialite, Breeze scaffolding dependencies, and Tinker
+- Jenssegers Agent for device-aware desktop/mobile view selection
+- Vite 8 for front-end asset builds
+- PHPUnit 11 for feature and reliability tests
+- Optional Python speech pipeline through `scripts/local_speech_assess.py`
+
+## Main Feature Areas
+
+### Public And Guest Pages
+
+- `/` renders the guest landing page when signed out.
+- Signed-in admins are redirected to `/admin/dashboard`.
+- Signed-in regular users are redirected to `/dashboard`.
+- `/contact/send` stores contact messages and attempts to email the current admin.
+- `/newsletter/subscribe` returns a subscription confirmation.
+- `/privacy-policy`, `/terms-of-service`, `/security`, and `/cookie-preferences` render the new legal pages through `LegalPageController`.
+
+### Authentication
+
+- Register, login, logout, and password reset routes are handled by `AuthController`.
+- Google login/register uses Socialite and the `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` environment variables.
+- Deleted or inactive users can request reactivation, and admins can approve those requests.
+
+### User Workspace
+
+Regular users can access:
+
+- `/dashboard` for the main readiness dashboard.
+- `/interview/setup` and `/interview/session` for mock interview practice.
+- `/progress`, `/feedback`, `/reports`, and `/session/{id}/review` for results and reflection.
+- `/coach` for AI coaching conversations.
+- `/learning`, `/modules`, `/modules/{id}`, and `/skills` for learning content and unlockable perks.
+- `/applications` and `/packs` for targeted interview preparation.
+- `/missions` for AI-generated practice tasks.
+- `/drills/voice` for voice rehearsal.
+- `/personal-mastery` for personal goals, checklist items, and stories.
+- `/notifications` and `/account` for utility workflows.
+
+### Interviews And Feedback
+
+Interview sessions support:
+
+- Category, pack, application, resume, and job-description context.
+- Live answer submission and saved in-progress session state.
+- Speech-to-text through OpenAI when configured, with browser speech APIs as no-key fallback behavior where the UI supports it.
+- Optional local speech assessment for ASR evidence, pronunciation evidence, alignment data, and GOP integration.
+- Evidence-based coaching and AI provider fallback handling when external providers are unavailable or return incomplete JSON.
+- Shareable review links and mentor comments for external review.
+
+### Learning Games
+
+The system uses "Learning Games" terminology throughout the user and admin UI. Game features include:
+
+- Admin-created or AI-generated game levels.
+- Category-linked game practice.
+- User game sessions and answer records.
+- Energy and progression tracking.
+- Learning guidance, success criteria, scoring, and certificates.
+- Downloadable certificates by category.
+
+### Admin Console
+
+Admins can access:
+
+- `/admin/dashboard` for overview metrics.
+- `/admin/settings` for system settings.
+- `/admin/users` for user management, exports, status updates, delete/restore-related flows, and reactivation approval.
+- `/admin/categories` for interview and game categories.
+- `/admin/questions` for question CRUD, bulk delete, import, export, analytics, dataset imports, and AI generation.
+- `/admin/modules` for learning modules, chapters, resources, quizzes, quiz questions, AI generation, and game-level attachments.
+- `/admin/game` for Learning Game level management and AI generation.
+- `/admin/sessions` for session monitoring, archive, restore, flagging, deletion, review, and CSV export.
+- `/admin/contacts` for stored contact messages.
+- `/admin/feedback` for feedback audits, complaints, status updates, notes, and export.
+- `/admin/ai/providers` for AI provider configuration, primary provider selection, and fallback provider selection.
+- `/admin/notifications` and admin activity APIs for announcements and activity cleanup.
+
+## Project Structure
+
+```text
+app/
+  Console/Commands/        Custom schema repair, dataset, and maintenance commands
+  Helpers/ViewHelper.php   Device-aware `mobile_view()` helper
+  Http/Controllers/        Public, user, admin, auth, interview, and game controllers
+  Models/                  Eloquent models for interviews, learning, games, AI, contacts, and users
+  Services/                AI, speech, scoring, recommendations, exports, and readiness services
+config/                    Laravel app, database, mail, services, session, cache, and filesystem config
+database/
+  migrations/              Full application schema
+  seeders/                 Admin account and optional category/game seeders
+public/
+  css/desktop/             Desktop-specific UI styles
+  css/mobile/              Mobile-specific UI styles
+  img/desktop-preview/     Landing preview images
+  js/                      Shared front-end scripts and vendor helpers
+resources/views/
+  desktop/                 Desktop Blade pages and layouts
+  mobile/                  Mobile Blade pages and layouts
+  legal/                   Shared legal page view
+routes/web.php             Public, user, and admin web routes
+scripts/local_speech_assess.py
+tests/Feature/             Feature, smoke, hardening, and route tests
+Dockerfile
+render-start.sh            Render startup and maintenance entrypoint
+```
 
 ## Requirements
 
-Before you begin, ensure you have the following installed on your machine:
-- **PHP** 8.2 or higher
-- **Composer** (Dependency Manager for PHP). Make sure `php` is available on PATH before running `composer install`.
-- **Node.js** 20.19 or higher, or 22.12 or higher, with **npm** 10 or higher
-- **MySQL** (or any preferred database)
-- **Git**
+Install these before running the app locally:
 
----
+- PHP 8.2 or higher
+- Composer
+- Node.js 20.19 or higher, or Node.js 22.12 or higher
+- npm 10 or higher
+- MySQL, MariaDB, PostgreSQL, or SQLite
+- Git
+- Optional: Python 3, FFmpeg, Whisper/faster-whisper/transformers, and Montreal Forced Aligner for local speech assessment
 
-## 🚀 Full Configuration & Setup Guide
+## Local Setup
 
-### 1. Clone the Repository
-Open your terminal and clone the repository to your local machine:
+### 1. Clone The Repository
+
 ```bash
 git clone https://github.com/jonhrogielmades/speakready_ai.git
 cd speakready_ai
 ```
 
 ### 2. Install Dependencies
-Install all the required PHP and front-end dependencies. Make sure you are in the project root directory.
-```bash
-# Install PHP dependencies
-composer install
 
-# Install JavaScript/CSS dependencies
+```bash
+composer install
 npm install
 ```
 
-If you are using Laragon and `composer install` fails with `php is not recognized`, open Laragon's terminal or add Laragon's active PHP folder to PATH before running Composer.
+If Composer cannot find PHP on Windows, open a Laragon terminal or add Laragon's active PHP folder to your PATH.
 
-### 3. Configure Environment Variables
-Copy the example environment file to create your active `.env` file:
+### 3. Create The Environment File
+
 ```bash
 cp .env.example .env
 ```
-*(On Windows Command Prompt, use `copy .env.example .env`, or simply copy and rename it in File Explorer)*
 
-Open the `.env` file in your code editor and update the following essential configurations:
+On Windows Command Prompt:
 
-**Application & Database:**
+```cmd
+copy .env.example .env
+```
+
+### 4. Configure Core Environment Values
+
+Update `.env` for local development:
+
 ```env
 APP_NAME="SpeakReady AI"
+APP_ENV=local
+APP_DEBUG=true
 APP_URL=http://localhost:8000
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=speakready_ai   # Create this empty database in your SQL manager first
-DB_USERNAME=root            # Your database username (usually 'root' locally)
-DB_PASSWORD=                # Your database password (leave blank if none)
+DB_DATABASE=speakready_ai
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
-**Render Production Database:**
-Set these core production variables in the Render service dashboard:
-```env
-APP_NAME="SpeakReady AI"
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-service.onrender.com
-SESSION_SECURE_COOKIE=true
-```
+Create the empty `speakready_ai` database before running migrations.
 
-If `APP_URL` is missing or accidentally left as `http://localhost`, the Render
-start script and app config fall back to Render's `RENDER_EXTERNAL_URL`. For a
-custom domain, set `APP_URL` to that exact HTTPS domain.
+### 5. Generate The App Key
 
-For Render Postgres, prefer the full connection URL instead of splitting the
-credentials into separate `DB_*` values:
-```env
-DB_CONNECTION=pgsql
-DATABASE_URL=postgresql://user:password@host:5432/database
-```
-
-Use the Internal Database URL only when the Render web service and Render
-Postgres database are in the same account and region. If they are not, use the
-full External Database URL from the database Connect/Info page. Do not use only
-a partial Render host such as `dpg-...-a` for `DB_HOST`; that can produce
-`could not translate host name ... to address`.
-
-If production still has only a partial `DB_HOST`, the Render start script expands
-it to the Singapore public Postgres hostname by default. Set
-`RENDER_POSTGRES_REGION=oregon`, `frankfurt`, `ohio`, or `virginia` if your
-database was created in a different Render region.
-
-**Mail Configuration (SMTP):**
-*(If you are using Gmail, you MUST use a Google "App Password" instead of your regular password)*
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=capstonespeakreadyai@gmail.com
-MAIL_PASSWORD=your_app_password   # Generate a 16-character App Password in Google Account settings
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="capstonespeakreadyai@gmail.com"
-MAIL_FROM_NAME="${APP_NAME}"
-```
-
-Render Free web services cannot send through SMTP ports `25`, `465`, or `587`.
-For Gmail SMTP on Render, use a paid Render instance. On a Free Render instance,
-use an HTTPS/API mail provider instead of SMTP.
-
-**Render Free Password Reset Email:**
-For a free Render web service, use Brevo's HTTPS API instead of SMTP:
-```env
-BREVO_API_KEY=your_brevo_api_key
-MAIL_FROM_ADDRESS=your_verified_brevo_sender@example.com
-MAIL_FROM_NAME="${APP_NAME}"
-```
-
-Create a free Brevo account, verify the sender email/domain, and generate an API
-key from Brevo's SMTP & API settings. The app will automatically use Brevo for
-password reset emails when `BREVO_API_KEY` is present.
-
-**Optional Local Speech Assessment:**
-SpeakReady can run a local speech pipeline before falling back to OpenAI
-transcription. The Laravel app calls `scripts/local_speech_assess.py`, which
-uses installed local tools when available:
-
-```env
-LOCAL_SPEECH_ENABLED=true
-LOCAL_ASR_BACKEND=whisper          # whisper, faster_whisper, conformer, transformers
-LOCAL_ASR_MODEL=base
-LOCAL_PRONUNCIATION_BACKEND=ctc    # ctc, wav2vec2, hubert, wavlm
-LOCAL_PRONUNCIATION_MODEL=facebook/wav2vec2-base-960h
-LOCAL_ALIGNMENT_BACKEND=mfa
-MFA_DICTIONARY=english_us_arpa
-MFA_ACOUSTIC_MODEL=english_us_arpa
-LOCAL_GOP_BACKEND=mfa
-LOCAL_GOP_COMMAND=
-```
-
-Install the selected Python/back-end packages on the host first. MFA provides
-word and phoneme alignment when its dictionary/acoustic model are configured.
-For true Goodness of Pronunciation scoring, set `LOCAL_GOP_COMMAND` to a local
-GOP scorer that returns JSON; otherwise the app reports GOP as not measured
-instead of inventing a score.
-
-### 4. Generate Application Key
-Generate a new cryptographic key for the application. This will automatically update your `.env` file securely:
 ```bash
 php artisan key:generate
 ```
 
-### 5. Setup the Database
-Make sure your database server (e.g., MySQL via XAMPP, Laragon, or Docker) is running and you have created an empty database named `speakready_ai`.
+### 6. Run Migrations And Seed The Admin Account
 
-**Option A: Import Database Dump (Recommended)**
-Since a `database_dump.sql` file is included in the root folder, you can import it directly using your preferred MySQL client (phpMyAdmin, HeidiSQL, Laragon's default database client, etc.) or via terminal:
 ```bash
-mysql -u root -p speakready_ai < database_dump.sql
+php artisan migrate --seed
 ```
 
-**Option B: Run Migrations**
-Alternatively, if you prefer to build the schema from scratch, run the Laravel migrations:
-```bash
-php artisan migrate
-```
-*(If you have seeders to populate initial data, run: `php artisan migrate --seed`)*
+`DatabaseSeeder` seeds the admin account only. By default it creates:
 
-### 6. Link Storage
-Create a symbolic link for the storage folder so that public assets (like uploaded images or audio files) are accessible to the browser:
+```text
+Email: admin@speakreadyai.com
+Password: password
+```
+
+For a safer seeded admin account, set these before seeding:
+
+```env
+ADMIN_EMAIL=admin@example.com
+ADMIN_NAME="System Admin"
+ADMIN_PASSWORD=change-this-password
+```
+
+There is no tracked `database_dump.sql` in this repository, so migrations are the source of truth for setup.
+
+Optional starter content seeders are available if you want baseline categories or Learning Game levels:
+
+```bash
+php artisan db:seed --class=CategorySeeder
+php artisan db:seed --class=GameLevelSeeder
+```
+
+### 7. Link Public Storage
+
 ```bash
 php artisan storage:link
 ```
 
-### 7. Build Front-End Assets
-Compile the front-end assets using Vite.
+### 8. Start The Front-End Build
 
-For local development (this command will keep running and watch for changes):
 ```bash
 npm run dev
 ```
 
-*(Keep this terminal running in the background. Open a new terminal tab/window for the next step.)*
+Keep this terminal running while developing.
 
-### 8. Run the Local Development Server
-In a **new terminal window** inside your project directory, start the Laravel development server:
+### 9. Start Laravel
+
+Open a second terminal:
+
 ```bash
 php artisan serve --host=0.0.0.0 --port=8000
 ```
 
-### 9. Access the Application
-Your application should now be fully functional and accessible in your web browser at:
-[http://localhost:8000](http://localhost:8000)
+Then open http://localhost:8000.
 
----
+## Production Build
 
-## 🛠 Troubleshooting
-- **500 Server Error**: Ensure your `.env` file is properly configured, the `APP_KEY` has been generated, and your MySQL database is actively running.
-- **Vite or CSS not loading**: Ensure you are running `npm run dev` in a separate terminal and haven't closed it.
-- **Images/Media not loading**: Run `php artisan storage:link` to ensure the symbolic link is created correctly.
-- **View not found or cache issues**: Run `php artisan optimize:clear` to clear all compiled caches.
-- **Email not sending**: Double-check your Google App Password and ensure your Gmail account has 2-Step Verification enabled to allow App Passwords.
-# speakready_ai
+For a production asset build:
+
+```bash
+npm run build
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+Do not commit generated `public/build`, `vendor`, `node_modules`, `.env`, SQL dumps, ZIP files, logs, or temporary audit folders.
+
+## Environment Reference
+
+### App And Session
+
+```env
+APP_NAME="SpeakReady AI"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.example
+SESSION_SECURE_COOKIE=true
+```
+
+When deployed on Render, `config/app.php` and `render-start.sh` can use `RENDER_EXTERNAL_URL` if `APP_URL` is missing or still points to localhost.
+
+### Database
+
+Local MySQL example:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=speakready_ai
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Render PostgreSQL example:
+
+```env
+DB_CONNECTION=pgsql
+DATABASE_URL=postgresql://user:password@host:5432/database
+DB_SSLMODE=require
+RENDER_POSTGRES_REGION=singapore
+```
+
+Use the full internal database URL when the Render web service and database are in the same account and region. Use the full external database URL otherwise. Do not use only a partial host such as `dpg-...-a`; the app includes fallback expansion for partial Render hosts, but the full URL is still the preferred setup.
+
+### Mail And Password Reset
+
+Local mailpit-style development from `.env.example`:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=mailpit
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Gmail SMTP example:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=yourgmail@gmail.com
+MAIL_PASSWORD="your-google-app-password"
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=yourgmail@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+Gmail requires a Google App Password. Render Free web services block common SMTP ports, so use a paid Render instance for SMTP or use an HTTPS/API mail provider.
+
+Brevo API example for Render Free password reset emails:
+
+```env
+BREVO_API_KEY=your_brevo_api_key
+MAIL_FROM_ADDRESS=your_verified_sender@example.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### Google OAuth
+
+```env
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
+```
+
+For production, change `GOOGLE_REDIRECT_URI` to your HTTPS domain callback URL.
+
+### AI Providers
+
+The app can use multiple AI providers and fall back by priority:
+
+```env
+AI_PROVIDER=huggingface
+INTERVIEW_CHATBOT_DEFAULT_PROVIDER=huggingface
+AI_DEFAULT_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere
+INTERVIEW_CHATBOT_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere
+AI_FEEDBACK_PROVIDER_PRIORITY=huggingface,gemini,groq,openrouter,cohere
+AI_ATTACHMENT_EXTRACTION_PROVIDER_PRIORITY=gemini
+
+HUGGINGFACE_API_KEY=
+GEMINI_API_KEY=
+GROQ_API_KEY=
+OPENROUTER_API_KEY=
+COHERE_API_KEY=
+OPENAI_API_KEY=
+```
+
+Provider URLs and model names are already listed in `.env.example`. Configure at least one provider key for AI generation, coaching, and feedback features.
+
+### Speech, Transcription, And Voice Analysis
+
+OpenAI transcription and optional TTS:
+
+```env
+OPENAI_API_KEY=
+OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe
+AI_TRANSCRIPTION_TIMEOUT=45
+AI_TTS_ENABLED=false
+OPENAI_TTS_MODEL=gpt-4o-mini-tts
+OPENAI_TTS_VOICE=alloy
+OPENAI_TTS_SPEED=0.95
+```
+
+Optional local speech assessment:
+
+```env
+LOCAL_SPEECH_ENABLED=false
+LOCAL_SPEECH_PYTHON=python
+LOCAL_SPEECH_SCRIPT=scripts/local_speech_assess.py
+LOCAL_SPEECH_TIMEOUT=90
+LOCAL_ASR_BACKEND=whisper
+LOCAL_ASR_MODEL=base
+LOCAL_ASR_DEVICE=auto
+LOCAL_PRONUNCIATION_BACKEND=ctc
+LOCAL_PRONUNCIATION_MODEL=facebook/wav2vec2-base-960h
+LOCAL_ALIGNMENT_BACKEND=mfa
+MFA_COMMAND=mfa
+MFA_DICTIONARY=
+MFA_ACOUSTIC_MODEL=
+FFMPEG_COMMAND=ffmpeg
+LOCAL_GOP_BACKEND=mfa
+LOCAL_GOP_COMMAND=
+```
+
+Install the selected Python tools first. If `LOCAL_GOP_COMMAND` is not configured, the app does not invent a true GOP score; it reports GOP as unavailable or uses limited proxy evidence where supported.
+
+## Render Deployment
+
+This repository includes `Dockerfile`, `railpack.json`, `nginx.conf`, and `render-start.sh`.
+
+Recommended Render settings:
+
+- Environment: Docker or Railpack-compatible PHP runtime
+- PHP package version: 8.3 when using `railpack.json`
+- Start command: handled by the Docker `CMD` when using the included Dockerfile
+- Public port: `$PORT`, defaulting to `10000`
+- Database: Render PostgreSQL with `DATABASE_URL`
+- `APP_ENV=production`
+- `APP_DEBUG=false`
+- `SESSION_SECURE_COOKIE=true`
+
+On startup, `render-start.sh`:
+
+- Sets `APP_URL` from `RENDER_EXTERNAL_URL` when needed.
+- Warns when Gmail SMTP is configured on Render Free.
+- Expands partial Render PostgreSQL hosts if necessary.
+- Creates required storage and cache directories.
+- Starts PHP-FPM and binds Nginx early.
+- Clears stale Laravel caches.
+- Runs schema repair commands for AI providers, voice sessions, questions, interview answers, scores, feedback, and game tables.
+- Runs migrations and seeds the admin account.
+- Links storage and rebuilds optimized caches.
+
+Optional production maintenance:
+
+```env
+RENDER_REPAIR_FEEDBACK_ON_START=true
+RENDER_REPAIR_FEEDBACK_LIMIT=250
+```
+
+Use this only when older completed interviews need feedback coaching backfill during startup.
+
+## Useful Artisan Commands
+
+```bash
+php artisan datasets:check
+php artisan app:ensure-ai-provider-schema --force --create-missing
+php artisan app:ensure-voice-schema --force --create-missing
+php artisan app:ensure-question-schema --force --create-missing
+php artisan app:ensure-interview-answer-schema --force --create-missing
+php artisan app:ensure-score-schema --force --create-missing
+php artisan app:ensure-feedback-schema --force --create-missing
+php artisan app:ensure-game-schema --force
+php artisan app:normalize-id-sequences --force
+php artisan app:repair-feedback-coaching --limit=250
+```
+
+## Testing
+
+Run the feature test suite:
+
+```bash
+php artisan test
+```
+
+Run a focused test file:
+
+```bash
+php artisan test tests/Feature/RouteIntegrityTest.php
+```
+
+The current feature tests cover authentication, password reset, route integrity, page smoke checks, mobile layout behavior, landing stats, admin flows, AI provider schema repair, question/voice schema repair, interview security, learning game guidance, progress/report accuracy, user utilities, and hardening paths.
+
+## Troubleshooting
+
+- `500 Server Error`: check `.env`, generate `APP_KEY`, verify database credentials, run migrations, then run `php artisan optimize:clear`.
+- CSS or JavaScript missing: run `npm install`, then `npm run dev` for local work or `npm run build` for production.
+- Uploaded files or audio are not loading: run `php artisan storage:link`.
+- Login or session problems in production: verify `APP_URL`, HTTPS, `SESSION_SECURE_COOKIE`, and cache state.
+- Google login fails: verify Google OAuth credentials and callback URL.
+- Password reset emails do not send: check mail credentials; on Render Free use Brevo/API mail instead of SMTP.
+- AI features return fallback messages: configure at least one provider API key and check provider priority values.
+- Speech analysis is incomplete: configure OpenAI transcription or enable and install the local speech pipeline tools.
+- Render database host cannot resolve: use the full `DATABASE_URL` or set `RENDER_POSTGRES_REGION` for partial Render hosts.
+- Schema drift after deployment: run the relevant `app:ensure-*` command or redeploy so `render-start.sh` runs maintenance.
+
+## Notes For Maintainers
+
+- `mobile_view()` selects `desktop.*` or `mobile.*` Blade templates based on request device attributes.
+- Guest layout CSS was moved into dedicated desktop/mobile CSS files to keep guest Blade layouts smaller and easier to maintain.
+- Legal pages share `resources/views/legal/show.blade.php` and are populated by `LegalPageController`.
+- Learning Games are the current terminology and replaced older Arena wording in the UI and data model.
+- Contact messages are saved to the database before email is attempted, so support requests are not lost if SMTP fails.
+- Temporary Codex audit and browser profile folders are ignored by Git and should not be committed.
