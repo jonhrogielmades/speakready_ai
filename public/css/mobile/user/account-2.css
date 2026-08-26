@@ -1306,6 +1306,20 @@
             max-width: 100% !important;
         }
 
+        html body.user-mobile-shell #account-page .account-danger-section form .delete-account-btn,
+        html body.user-mobile-shell #account-page .delete-account-btn {
+            width: fit-content !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            border-color: #dc2626 !important;
+            background: #dc2626 !important;
+            background-image: none !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.22) !important;
+            white-space: nowrap !important;
+        }
+
         html body.user-mobile-shell #account-page .password-field .oinp {
             min-height: 44px !important;
             padding-right: 58px !important;

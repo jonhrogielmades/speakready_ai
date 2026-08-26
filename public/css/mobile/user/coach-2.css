@@ -1212,3 +1212,52 @@
         padding: 10px 12px !important;
     }
 }
+
+@media (max-width: 767px) {
+    html body #mob-content #ai-coach-page .chat-input-area,
+    html body #ai-coach-page .chat-input-area {
+        width: 100% !important;
+    }
+
+    html body #mob-content #ai-coach-page .chat-input-wrapper,
+    html body #ai-coach-page .chat-input-wrapper {
+        display: grid !important;
+        grid-template-columns: 38px minmax(0, 1fr) 38px !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-height: 50px !important;
+        gap: 7px !important;
+        padding: 6px !important;
+        border-radius: 10px !important;
+    }
+
+    html body #mob-content #ai-coach-page .chat-textarea,
+    html body #ai-coach-page .chat-textarea {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        max-height: 92px !important;
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        line-height: 20px !important;
+    }
+
+    html body #mob-content #ai-coach-page .chat-attachment-btn,
+    html body #mob-content #ai-coach-page .chat-send-btn,
+    html body #ai-coach-page .chat-attachment-btn,
+    html body #ai-coach-page .chat-send-btn {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        aspect-ratio: 1 / 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
