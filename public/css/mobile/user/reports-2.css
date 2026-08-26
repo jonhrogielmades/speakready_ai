@@ -1012,7 +1012,7 @@
         }
 
         html body #portfolioReport #report-readiness {
-            padding: 10px !important;
+            padding: 8px !important;
             border: 1px solid rgba(37, 99, 235, 0.16) !important;
             border-radius: 8px !important;
             background:
@@ -1023,7 +1023,7 @@
         html body #portfolioReport #report-readiness .row {
             display: grid !important;
             grid-template-columns: 1fr !important;
-            gap: 8px !important;
+            gap: 6px !important;
             text-align: left !important;
         }
 
@@ -1031,22 +1031,22 @@
             width: 100% !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 9px !important;
+            padding: 8px !important;
             border: 1px solid var(--reports-pro-border) !important;
             border-radius: 8px !important;
             background: var(--reports-pro-field) !important;
         }
 
         html body #portfolioReport #report-readiness [style*="font-size:3.5rem"] {
-            font-size: 2.1rem !important;
+            font-size: 1.95rem !important;
         }
 
         html body #portfolioReport #report-readiness [style*="font-size:2rem"] {
-            font-size: 1.3rem !important;
+            font-size: 1.12rem !important;
         }
 
         html body #portfolioReport #report-readiness [style*="font-size:2.5rem"] {
-            font-size: 1.42rem !important;
+            font-size: 1.18rem !important;
         }
 
         html body #portfolioReport #report-readiness .fs-1 {
@@ -1061,8 +1061,40 @@
         }
 
         html body #portfolioReport #report-readiness .d-flex.align-items-center.gap-3 {
-            gap: 8px !important;
+            gap: 6px !important;
             justify-content: flex-start !important;
+        }
+
+        html body #portfolioReport #report-readiness p {
+            margin-top: 5px !important;
+            margin-bottom: 0 !important;
+            font-size: 0.62rem !important;
+            line-height: 1.22 !important;
+        }
+
+        html body #portfolioReport #report-readiness .report-summary-grid {
+            grid-template-columns: 1fr !important;
+            gap: 7px !important;
+            margin-top: 9px !important;
+        }
+
+        html body #portfolioReport #report-readiness .report-summary-item {
+            min-height: 0 !important;
+            padding: 9px 10px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #portfolioReport #report-readiness .report-summary-label {
+            margin-bottom: 4px !important;
+            font-size: 0.58rem !important;
+            line-height: 1.1 !important;
+        }
+
+        html body #portfolioReport #report-readiness .report-summary-value {
+            font-size: 0.8rem !important;
+            line-height: 1.22 !important;
+            overflow-wrap: anywhere !important;
+            word-break: normal !important;
         }
 
         html body #portfolioReport .bg-light.bg-opacity-10 {
