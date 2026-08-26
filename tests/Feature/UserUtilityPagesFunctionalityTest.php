@@ -154,6 +154,52 @@ class UserUtilityPagesFunctionalityTest extends TestCase
             ->assertDontSee('Other user activity should stay private.');
     }
 
+    public function test_activity_history_actions_are_scoped_to_the_current_user(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $otherUser = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $ownActivity = ActivityLog::create([
+            'user_id' => $user->id,
+            'action' => 'profile_updated',
+            'description' => 'User updated their profile.',
+        ]);
+
+        $otherActivity = ActivityLog::create([
+            'user_id' => $otherUser->id,
+            'action' => 'login',
+            'description' => 'Other user logged in.',
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('user.activities.delete', $otherActivity->id))
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('activity_logs', ['id' => $otherActivity->id]);
+
+        $this->actingAs($user)
+            ->delete(route('user.activities.delete', $ownActivity->id))
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseMissing('activity_logs', ['id' => $ownActivity->id]);
+        $this->assertDatabaseHas('activity_logs', ['id' => $otherActivity->id]);
+
+        ActivityLog::create([
+            'user_id' => $user->id,
+            'action' => 'language_updated',
+            'description' => 'User changed preferred language.',
+        ]);
+
+        $this->actingAs($user)
+            ->delete(route('user.activities.clearAll'))
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseMissing('activity_logs', ['user_id' => $user->id]);
+        $this->assertDatabaseHas('activity_logs', ['id' => $otherActivity->id]);
+    }
+
     public function test_modules_filters_search_and_pagination_remain_functional(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

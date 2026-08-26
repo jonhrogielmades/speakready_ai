@@ -3958,6 +3958,25 @@ PROMPT;
         return response()->json(['success' => false], 404);
     }
 
+    public function clearAllActivities()
+    {
+        ActivityLog::where('user_id', Auth::id())->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function deleteActivity($id)
+    {
+        $activity = ActivityLog::where('user_id', Auth::id())->where('id', $id)->first();
+        if ($activity) {
+            $activity->delete();
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false], 404);
+    }
+
     public function account()
     {
         return $this->mobileView('user.account');
