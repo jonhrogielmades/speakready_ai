@@ -341,7 +341,9 @@
             grid-template-columns: minmax(0, 1fr) auto;
             align-items: start;
             gap: 8px;
-            min-height: 82px;
+            min-height: 0;
+            height: auto;
+            padding: 11px 12px;
         }
 
         #portfolioReport .report-export-choice .btn {
