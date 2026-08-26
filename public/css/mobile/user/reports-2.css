@@ -592,11 +592,14 @@
             min-width: 520px;
             margin-bottom: 0 !important;
         }
+        #portfolioReport .report-chart-frame {
+            min-height: 132px !important;
+        }
         #portfolioReport :is(#trendChart, #catChart) {
-            max-height: 180px !important;
+            max-height: 132px !important;
         }
         #portfolioReport [style*="height:250px"] {
-            height: 180px !important;
+            height: 132px !important;
         }
         #portfolioReport #report-feedback .row.g-4 {
             --bs-gutter-y: 8px;
@@ -1316,11 +1319,34 @@
         }
 
         html body #portfolioReport :is(#trendChart, #catChart) {
-            max-height: 168px !important;
+            max-height: 124px !important;
         }
 
         html body #portfolioReport [style*="height:250px"] {
-            height: 168px !important;
+            height: 124px !important;
+            min-height: 124px !important;
+        }
+
+        html body #portfolioReport .report-chart-frame {
+            min-height: 124px !important;
+        }
+
+        html body #portfolioReport .report-chart-frame canvas {
+            height: 124px !important;
+        }
+
+        html body #portfolioReport .row.g-4.mb-4:has(#trendChart, #catChart) {
+            gap: 8px !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body #portfolioReport .row.g-4.mb-4:has(#trendChart, #catChart) > [class*="col-"] > .print-card {
+            padding: 10px !important;
+            height: auto !important;
+        }
+
+        html body #portfolioReport .row.g-4.mb-4:has(#trendChart, #catChart) h5 {
+            margin-bottom: 6px !important;
         }
 
         html body #portfolioReport #report-feedback .row.g-4 {
