@@ -65,14 +65,14 @@
                     <span class="badge notification-status-badge">NEW</span>
                     @endif
                     <span class="notification-meta"><i class="fa-regular fa-clock"></i>{{ $notification->created_at->diffForHumans() }}</span>
+                    <div class="notification-actions">
+                    @if(!$isRead)
+                        <button class="notification-action-btn read" data-notification-id="{{ $notification->id }}" data-read-url="{{ route('user.notifications.read', $notification->id) }}" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
+                    @endif
+                        <button class="notification-action-btn delete" data-notification-id="{{ $notification->id }}" data-delete-url="{{ route('user.notifications.delete', $notification->id) }}" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
+                    </div>
                 </div>
                 <p class="notification-message">{{ $notification->data['message'] ?? '' }}</p>
-                <div class="notification-actions">
-                    @if(!$isRead)
-                    <button class="notification-action-btn read" data-notification-id="{{ $notification->id }}" data-read-url="{{ route('user.notifications.read', $notification->id) }}" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
-                    @endif
-                    <button class="notification-action-btn delete" data-notification-id="{{ $notification->id }}" data-delete-url="{{ route('user.notifications.delete', $notification->id) }}" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
-                </div>
             </div>
         </div>
         @empty

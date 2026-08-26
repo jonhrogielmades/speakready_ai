@@ -271,19 +271,21 @@
         overflow-wrap: anywhere;
     }
     .notification-actions {
-        display:grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap:8px;
-        max-width: 360px;
+        display:flex;
+        align-items:center;
+        justify-content:flex-end;
+        flex-wrap:wrap;
+        gap:6px;
+        margin-left:auto;
     }
     .notification-action-btn {
         border:1px solid var(--notif-primary-border);
         background: var(--notif-primary-bg);
         color: var(--notif-primary-text);
-        padding:8px 10px;
-        min-height:34px;
-        border-radius: 11px;
-        font-size:0.68rem;
+        padding:6px 9px;
+        min-height:28px;
+        border-radius: 8px;
+        font-size:0.62rem;
     }
     .notification-action-btn.read {
         color: var(--notif-primary-text);
@@ -1496,19 +1498,10 @@
     }
 
     body.user-desktop-shell #notifications-page .notification-content {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) auto !important;
-        grid-template-areas:
-            "head actions"
-            "message message" !important;
-        column-gap: 12px !important;
-        row-gap: 6px !important;
-        align-items: start !important;
         min-width: 0 !important;
     }
 
     body.user-desktop-shell #notifications-page .notification-head {
-        grid-area: head !important;
         display: flex !important;
         align-items: center !important;
         gap: 8px !important;
@@ -1557,7 +1550,6 @@
     }
 
     body.user-desktop-shell #notifications-page .notification-message {
-        grid-area: message !important;
         margin: 0 0 8px !important;
         color: var(--notif-shell-text) !important;
         -webkit-text-fill-color: var(--notif-shell-text) !important;
@@ -1568,14 +1560,13 @@
     }
 
     body.user-desktop-shell #notifications-page .notification-actions {
-        grid-area: actions !important;
         display: flex !important;
         justify-content: flex-end !important;
         align-self: start !important;
-        gap: 8px !important;
+        gap: 6px !important;
         flex-wrap: nowrap !important;
         min-width: max-content !important;
-        margin: 0 !important;
+        margin: 0 0 0 auto !important;
     }
 
     body.user-desktop-shell #notifications-page .notifications-empty-state {
@@ -1838,15 +1829,42 @@
             line-height: 1.12 !important;
         }
 
-        body.user-mobile-shell #notifications-page .notification-actions {
+        body.user-mobile-shell #notifications-page .notification-head {
             display: grid !important;
-            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-            gap: 8px !important;
-            max-width: 100% !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 5px 6px !important;
+            align-items: start !important;
         }
 
-        body.user-mobile-shell #notifications-page .notification-actions > :only-child {
-            grid-column: 1 / -1 !important;
+        body.user-mobile-shell #notifications-page .notification-head > :is(.notification-title, .notification-status-badge, .notification-meta) {
+            grid-column: 1 !important;
+        }
+
+        body.user-mobile-shell #notifications-page .notification-actions {
+            grid-column: 2 !important;
+            grid-row: 1 / span 3 !important;
+            display: flex !important;
+            align-self: start !important;
+            justify-content: flex-end !important;
+            gap: 5px !important;
+            margin-left: 4px !important;
+            max-width: 116px !important;
+        }
+
+        body.user-mobile-shell #notifications-page .notification-action-btn {
+            width: 34px !important;
+            min-width: 34px !important;
+            height: 30px !important;
+            min-height: 30px !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            font-size: 0 !important;
+            line-height: 1 !important;
+        }
+
+        body.user-mobile-shell #notifications-page .notification-action-btn i {
+            font-size: 0.72rem !important;
+            margin: 0 !important;
         }
 
         body.user-mobile-shell #notifications-page .notifications-pagination .page-link,
@@ -1862,6 +1880,6 @@
 
     @media (max-width: 360px) {
         body.user-mobile-shell #notifications-page .notification-actions {
-            grid-template-columns: 1fr !important;
+            max-width: 78px !important;
         }
     }
