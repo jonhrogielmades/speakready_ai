@@ -232,6 +232,13 @@
         gap: 6px 8px;
         margin-bottom: 7px;
     }
+    .notification-head-copy {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px 8px;
+        min-width: 0;
+    }
     .notification-title {
         color: var(--notif-title);
         margin: 0;
@@ -1510,6 +1517,14 @@
         margin-bottom: 0 !important;
     }
 
+    body.user-desktop-shell #notifications-page .notification-head-copy {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
     body.user-desktop-shell #notifications-page .notification-title {
         margin: 0 !important;
         color: var(--notif-shell-title) !important;
@@ -1901,8 +1916,23 @@
             align-items: start !important;
         }
 
-        body.user-mobile-shell #notifications-page .notification-head > :is(.notification-title, .notification-status-badge, .notification-meta) {
+        body.user-mobile-shell #notifications-page .notification-head-copy {
             grid-column: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 5px 6px !important;
+            min-width: 0 !important;
+        }
+
+        body.user-mobile-shell #notifications-page .notification-title {
+            flex: 1 1 100% !important;
+        }
+
+        body.user-mobile-shell #notifications-page :is(.notification-status-badge, .notification-meta) {
+            width: fit-content !important;
+            flex: 0 0 auto !important;
+            justify-self: start !important;
         }
 
         body.user-mobile-shell #notifications-page .notification-actions {

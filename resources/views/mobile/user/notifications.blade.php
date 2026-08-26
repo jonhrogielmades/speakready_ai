@@ -58,13 +58,15 @@
             </div>
             <div class="notification-content">
                 <div class="notification-head">
-                    <h6 class="notification-title" style="font-weight:{{ $isRead ? '700' : '800' }};">
-                        {{ $notification->data['title'] ?? 'Notification' }}
-                    </h6>
-                    @if(!$isRead)
-                    <span class="badge notification-status-badge">NEW</span>
-                    @endif
-                    <span class="notification-meta"><i class="fa-regular fa-clock"></i>{{ $notification->created_at->diffForHumans() }}</span>
+                    <div class="notification-head-copy">
+                        <h6 class="notification-title" style="font-weight:{{ $isRead ? '700' : '800' }};">
+                            {{ $notification->data['title'] ?? 'Notification' }}
+                        </h6>
+                        @if(!$isRead)
+                        <span class="badge notification-status-badge">NEW</span>
+                        @endif
+                        <span class="notification-meta"><i class="fa-regular fa-clock"></i>{{ $notification->created_at->diffForHumans() }}</span>
+                    </div>
                     <div class="notification-actions">
                     @if(!$isRead)
                         <button class="notification-action-btn read" data-notification-id="{{ $notification->id }}" data-read-url="{{ route('user.notifications.read', $notification->id) }}" onclick="markRead('{{ $notification->id }}')"><i class="fa-solid fa-check"></i>Mark as read</button>
