@@ -1148,6 +1148,95 @@
             line-height: 1.15 !important;
         }
 
+        html body #portfolioReport #report-question-review {
+            padding: 10px !important;
+        }
+
+        html body #portfolioReport #report-question-review > .d-flex {
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+        }
+
+        html body #portfolioReport .report-question-card {
+            padding: 10px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #portfolioReport .report-question-card > .d-flex {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+            align-items: start !important;
+        }
+
+        html body #portfolioReport .report-question-card > .d-flex > div:first-child h6 {
+            margin-top: 4px !important;
+            font-size: 0.62rem !important;
+            line-height: 1.18 !important;
+        }
+
+        html body #portfolioReport .report-question-card > .d-flex > .d-flex {
+            justify-content: flex-end !important;
+            gap: 5px !important;
+            max-width: 96px !important;
+        }
+
+        html body #portfolioReport .report-question-card .report-chip {
+            min-height: 24px !important;
+            padding: 4px 7px !important;
+            border-radius: 999px !important;
+            font-size: 0.56rem !important;
+            line-height: 1 !important;
+            white-space: nowrap !important;
+        }
+
+        html body #portfolioReport .report-question-card .report-chip i {
+            margin: 0 !important;
+            font-size: 0.62rem !important;
+        }
+
+        html body #portfolioReport .report-question-card .row.g-3 {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 9px !important;
+        }
+
+        html body #portfolioReport .report-question-card .row.g-3 > [class*="col-"] {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 !important;
+        }
+
+        html body #portfolioReport .report-question-answer {
+            min-height: 0 !important;
+            padding: 9px !important;
+            border-radius: 8px !important;
+            font-size: 0.76rem !important;
+            line-height: 1.42 !important;
+        }
+
+        html body #portfolioReport .report-question-card [style*="padding:12px"] {
+            height: auto !important;
+            padding: 9px !important;
+            border-radius: 8px !important;
+        }
+
+        html body #portfolioReport .report-question-card [style*="font-size:.74rem"] {
+            margin-bottom: 5px !important;
+            font-size: 0.62rem !important;
+            line-height: 1 !important;
+        }
+
+        html body #portfolioReport .report-question-card [style*="font-size:.9rem"] {
+            font-size: 0.68rem !important;
+            line-height: 1.34 !important;
+        }
+
+        html body #portfolioReport .report-question-card .mt-3 {
+            margin-top: 0 !important;
+        }
+
         html body #portfolioReport .table-responsive {
             border: 1px solid var(--reports-pro-border) !important;
             border-radius: 8px !important;
