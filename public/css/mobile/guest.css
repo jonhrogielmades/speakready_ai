@@ -4271,11 +4271,28 @@ html, body {
                     letter-spacing: 0.04em;
                 }
 
+                .footer-links {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0;
+                    margin: 0 !important;
+                }
+
                 .footer-links li {
-                    margin-bottom: 0.48rem;
+                    display: block;
+                    margin: 0 0 0.46rem;
+                    min-height: 0;
+                }
+
+                .footer-links li:last-child {
+                    margin-bottom: 0;
                 }
 
                 .footer-links a {
+                    display: inline-flex;
+                    align-items: center;
+                    min-height: 0;
+                    padding: 0;
                     font-size: 0.74rem;
                     line-height: 1.25;
                     word-break: normal;
