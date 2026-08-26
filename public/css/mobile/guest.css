@@ -4226,8 +4226,9 @@ html, body {
                 }
 
                 #foot .footer-panel {
-                    gap: 13px;
-                    padding: 14px;
+                    gap: 16px;
+                    padding: 16px;
+                    overflow: hidden;
                 }
 
                 .footer-brand-link {
@@ -4236,54 +4237,106 @@ html, body {
                     margin-bottom: 10px;
                 }
 
+                .footer-brand-link span {
+                    font-size: 1.16rem;
+                }
+
+                .footer-logo {
+                    width: 30px !important;
+                    height: 30px !important;
+                }
+
                 .footer-copy {
-                    text-align: justify;
-                    text-align-last: center;
-                    font-size: 0.8rem;
-                    line-height: 1.5;
+                    max-width: 310px;
+                    margin-inline: auto;
+                    text-align: center;
+                    font-size: 0.82rem;
+                    line-height: 1.45;
                 }
 
                 .footer-nav-grid {
                     grid-template-columns: repeat(2, minmax(0, 1fr));
-                    gap: 12px;
+                    gap: 10px;
+                    align-items: stretch;
+                }
+
+                .footer-nav-grid > div {
+                    min-width: 0;
+                    padding: 2px 0;
                 }
 
                 .footer-heading {
-                    margin-bottom: 0.55rem;
-                    font-size: 0.66rem;
+                    margin-bottom: 0.62rem;
+                    font-size: 0.65rem;
+                    letter-spacing: 0.04em;
                 }
 
                 .footer-links li {
-                    margin-bottom: 0.36rem;
+                    margin-bottom: 0.48rem;
                 }
 
                 .footer-links a {
-                    font-size: 0.72rem;
+                    font-size: 0.74rem;
+                    line-height: 1.25;
+                    word-break: normal;
                 }
 
                 .footer-action {
-                    gap: 10px;
+                    gap: 12px;
                     padding: 12px;
                 }
 
                 .footer-action p {
                     font-size: 0.76rem;
+                    line-height: 1.45;
+                }
+
+                .footer-newsletter {
+                    grid-template-columns: minmax(0, 1fr) 38px;
+                    gap: 7px !important;
+                }
+
+                .footer-newsletter input {
+                    height: 38px;
+                    font-size: 0.78rem !important;
+                    padding-inline: 10px !important;
+                }
+
+                .footer-newsletter-btn {
+                    width: 38px;
+                    height: 38px;
                 }
 
                 .footer-socials {
                     justify-content: center;
+                    gap: 7px;
+                }
+
+                .footer-social-link {
+                    width: 34px;
+                    height: 34px;
+                    font-size: 0.82rem;
                 }
 
                 .footer-bottom {
                     justify-content: center;
                     text-align: center;
+                    gap: 8px;
                     padding-top: 12px;
                     margin-top: 12px;
+                }
+
+                .footer-bottom p {
+                    width: 100%;
+                    font-size: 0.72rem;
+                    line-height: 1.35;
                 }
 
                 .footer-legal {
                     justify-content: center;
                     gap: 8px;
+                    width: 100%;
+                    font-size: 0.72rem;
                 }
             }
 
