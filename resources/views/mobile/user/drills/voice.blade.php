@@ -59,9 +59,9 @@
                         </button>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mb-4 vr-hidden-selects" aria-hidden="true">
+                    <div class="d-flex justify-content-between align-items-center mb-4 vr-hidden-selects" aria-hidden="true" hidden>
                         <div class="d-flex flex-wrap gap-2">
-                            <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
+                            <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;" tabindex="-1">
                                 <option value="Tell Me About Yourself">General Job Interview</option>
                                 <option value="Strengths and Weaknesses">Strengths & Weaknesses</option>
                                 <option value="Leadership">Leadership / Teamwork</option>
@@ -70,7 +70,7 @@
                                 <option value="Technical">IT / Technical Interview</option>
                                 <option value="Scholarship">Scholarship / Admission</option>
                             </select>
-                            <select id="intentionSelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;">
+                            <select id="intentionSelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;" tabindex="-1">
                                 <option value="Confident">Confident</option>
                                 <option value="Friendly">Friendly</option>
                                 <option value="Calm">Calm</option>
@@ -84,6 +84,7 @@
                     <div class="vr-prompt-card">
                         <div class="vr-prompt-kicker">PHILIPPINES PROMPT</div>
                         <h3 id="promptText" class="vr-prompt-text">"Tell me about a time you showed leadership."</h3>
+                        <div id="voiceStatusNotice" class="vr-notice" role="status" aria-live="polite" hidden></div>
 
                     <!-- Mic Visualization -->
                     <div class="vr-mic-stage">
@@ -208,7 +209,7 @@
                                 </div>
                             </div>
 
-                            <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:700;border-radius:10px;border:none;min-height:42px;box-shadow:0 4px 15px rgba(52,211,153,0.32);" onclick="saveSession()"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
+                            <button id="btnSave" class="btn w-100 btn-shine" style="background:#34d399;color:#fff;font-weight:700;border-radius:10px;border:none;min-height:42px;box-shadow:0 4px 15px rgba(52,211,153,0.32);" onclick="saveSession()" disabled aria-disabled="true" title="Record or analyze an answer first"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Save Session</button>
                         </div>
                     </div>
             </div>
@@ -320,9 +321,9 @@
                     <div class="voice-history-head">
                         <h5 class="vr-progress-title"><i class="fa-solid fa-clock-rotate-left"></i> Rehearsal History</h5>
                         <div class="voice-history-actions">
-                            <button class="btn btn-sm btn-outline-primary" type="button" style="border-radius:8px;" onclick="downloadReport()"><i class="fa-solid fa-download me-1"></i> Download PDF</button>
+                            <button class="btn btn-sm btn-outline-primary" type="button" style="border-radius:8px;" onclick="downloadReport()"><i class="fa-solid fa-print me-1"></i> Print / Save PDF</button>
                             @if($history->count() > 0)
-                                <form action="{{ route('user.drills.voice.clear') }}" method="POST" onsubmit="return confirm('Clear all voice rehearsal sessions? This cannot be undone.');">
+                                <form action="{{ route('user.drills.voice.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear all voice rehearsal sessions?" data-sr-confirm-message="This will permanently remove your saved voice rehearsal history. This cannot be undone." data-sr-confirm-action="Clear All" data-sr-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:8px;">
@@ -390,7 +391,6 @@
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Tab Switching
 document.querySelectorAll('#moduleTabs .nav-link').forEach(link => {
@@ -422,6 +422,41 @@ const voiceMissionPreset = {
     prompt: @json(request('prompt')),
     intent: @json(request('intent'))
 };
+let promptRequestSequence = 0;
+let voiceNoticeTimer = null;
+
+function setVoiceNotice(message, variant = 'info', persist = false) {
+    const notice = document.getElementById('voiceStatusNotice');
+    if (!notice) return;
+
+    window.clearTimeout(voiceNoticeTimer);
+    const cleanMessage = cleanTranscriptText(message);
+    notice.hidden = !cleanMessage;
+    notice.textContent = cleanMessage;
+    notice.className = `vr-notice vr-notice-${variant}`;
+
+    if (cleanMessage && !persist) {
+        voiceNoticeTimer = window.setTimeout(() => setVoiceNotice(''), 4500);
+    }
+}
+
+function setVoiceSaveReady(isReady) {
+    const btn = document.getElementById('btnSave');
+    if (!btn) return;
+
+    btn.disabled = !isReady;
+    btn.setAttribute('aria-disabled', isReady ? 'false' : 'true');
+    btn.title = isReady ? 'Save analyzed rehearsal' : 'Record or analyze an answer first';
+}
+
+function setAnalysisPanelActive(isActive) {
+    const panel = document.getElementById('analysisPanel');
+    if (!panel) return;
+
+    panel.style.opacity = isActive ? '1' : '0.5';
+    panel.style.pointerEvents = isActive ? 'auto' : 'none';
+    if (!isActive) setVoiceSaveReady(false);
+}
 
 function voiceScenarioLabel(category) {
     const labels = {
@@ -494,21 +529,27 @@ function localFallbackPrompt(category) {
     return list[Math.floor(Math.random() * list.length)];
 }
 
-async function randomizePrompt() {
+async function randomizePrompt(options = {}) {
     const cat = document.getElementById('categorySelect').value;
     const promptEl = document.getElementById('promptText');
     const btn = document.getElementById('btnRandomizePrompt');
     const originalBtn = btn ? btn.innerHTML : '';
+    const requestId = ++promptRequestSequence;
+    const fallbackPrompt = localFallbackPrompt(cat);
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+
+    promptEl.innerText = `"${fallbackPrompt}"`;
 
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span class="vr-option-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><span>Generating</span><i class="fa-solid fa-chevron-right"></i>';
+        btn.innerHTML = '<span class="vr-option-icon"><i class="fa-solid fa-spinner fa-spin"></i></span><span>Refreshing</span><i class="fa-solid fa-chevron-right"></i>';
     }
-    promptEl.innerText = '"Generating an AI practice question..."';
 
     try {
         const response = await fetch("{{ route('user.drills.voice.prompt') }}", {
             method: 'POST',
+            signal: controller.signal,
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -521,12 +562,18 @@ async function randomizePrompt() {
         const prompt = cleanTranscriptText(data.prompt || '');
         if (!prompt) throw new Error('AI returned an empty prompt');
 
-        promptEl.innerText = `"${prompt}"`;
+        if (requestId === promptRequestSequence) {
+            promptEl.innerText = `"${prompt}"`;
+            if (!options.silent) setVoiceNotice('Prompt refreshed.', 'success');
+        }
     } catch (error) {
         console.error('AI prompt generation failed:', error);
-        promptEl.innerText = `"${localFallbackPrompt(cat)}"`;
+        if (requestId === promptRequestSequence && !options.silent) {
+            setVoiceNotice('Using a local prompt because the AI prompt refresh is unavailable.', 'warning');
+        }
     } finally {
-        if (btn) {
+        window.clearTimeout(timeoutId);
+        if (btn && requestId === promptRequestSequence) {
             btn.disabled = false;
             btn.innerHTML = originalBtn || '<span class="vr-option-icon"><i class="fa-solid fa-shuffle"></i></span><span>Randomize</span><i class="fa-solid fa-chevron-right"></i>';
         }
@@ -534,7 +581,7 @@ async function randomizePrompt() {
 }
 document.getElementById('categorySelect').addEventListener('change', () => {
     syncVoiceOptionLabels();
-    randomizePrompt();
+    randomizePrompt({ silent: true });
 });
 document.getElementById('intentionSelect').addEventListener('change', () => {
     syncVoiceOptionLabels();
@@ -1419,7 +1466,8 @@ async function startRec() {
         const message = 'Live microphone transcription is not supported in this browser.';
         setMicrophoneHelp(message, '#fbbf24');
         setTranscriptionStatus(message, '#fbbf24');
-        return alert("Speech recognition is not supported in this browser.");
+        setVoiceNotice(message, 'warning', true);
+        return;
     }
     if (isRec || stopInProgress) return;
 
@@ -1445,6 +1493,8 @@ async function startRec() {
     fillerCount = 0;
     window.currentAnalysis = null;
     window.analysisTranscript = null;
+    setAnalysisPanelActive(false);
+    setVoiceNotice('');
     
     document.getElementById('transcriptView').innerHTML = "";
     document.getElementById('transcriptView').setAttribute('contenteditable', 'false');
@@ -1555,8 +1605,7 @@ async function resetRec() {
     wordCount = 0;
     fillerCount = 0;
     document.getElementById('transcriptView').innerHTML = "Your speech will appear here...";
-    document.getElementById('analysisPanel').style.opacity = '0.5';
-    document.getElementById('analysisPanel').style.pointerEvents = 'none';
+    setAnalysisPanelActive(false);
     document.getElementById('comparisonPanel').style.display = 'none';
     updateInstantFeedback();
     startRec();
@@ -1608,6 +1657,7 @@ transcriptView.addEventListener('input', () => {
     updateWPM();
     window.currentAnalysis = null;
     window.analysisTranscript = null;
+    setVoiceSaveReady(false);
 });
 transcriptView.addEventListener('blur', () => {
     if (!isRec) processTranscript(transcript);
@@ -1669,14 +1719,13 @@ async function generateAnalysis() {
         processTranscript(transcript);
     }
     if (!transcript) {
-        alert('No speech was detected. Record or enter a transcript before analysis.');
+        setAnalysisPanelActive(false);
+        setVoiceNotice('Record or enter a transcript before analysis.', 'warning', true);
         return false;
     }
 
-    // Unlock analysis panel
-    const panel = document.getElementById('analysisPanel');
-    panel.style.opacity = '1';
-    panel.style.pointerEvents = 'auto';
+    setAnalysisPanelActive(true);
+    setVoiceSaveReady(false);
     
     // Calculate metrics
     const metrics = currentVoiceMetrics();
@@ -1754,6 +1803,8 @@ async function generateAnalysis() {
             duration_seconds: seconds
         };
         window.analysisTranscript = transcript;
+        setVoiceSaveReady(true);
+        setVoiceNotice('Analysis ready. You can save this rehearsal now.', 'success');
         return true;
 
     } catch (error) {
@@ -1764,6 +1815,8 @@ async function generateAnalysis() {
         document.getElementById('compAI').innerText = fallback.ai_improved_answer;
         window.currentAnalysis = fallback;
         window.analysisTranscript = transcript;
+        setVoiceSaveReady(true);
+        setVoiceNotice('Local analysis is ready. AI feedback was unavailable, so fallback coaching was used.', 'warning');
         return true;
     }
 }
@@ -1773,7 +1826,8 @@ async function saveSession() {
     processTranscript(transcript);
 
     if (!transcript) {
-        alert('No transcript is available to save.');
+        setVoiceNotice('Record or enter a transcript before saving.', 'warning', true);
+        setVoiceSaveReady(false);
         return;
     }
 
@@ -1786,6 +1840,7 @@ async function saveSession() {
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
     btn.disabled = true;
+    btn.setAttribute('aria-disabled', 'true');
 
     try {
         const payload = {
@@ -1808,7 +1863,7 @@ async function saveSession() {
         if (!response.ok) throw new Error(data.message || `Save failed with status ${response.status}`);
         
         if (data.success) {
-            alert("Session saved successfully to your History!");
+            setVoiceNotice('Session saved to your history.', 'success');
 
             const clarityScore = Number(data.session.score) || parseInt(String(data.session.clarity || '').replace(/[^\d]/g, ''), 10) || 0;
             voiceHistoryData.unshift({
@@ -1823,18 +1878,19 @@ async function saveSession() {
             loadHistory();
             renderVoiceProgressChart();
         } else {
-            alert("Failed to save session.");
+            setVoiceNotice('Failed to save the session.', 'danger', true);
         }
     } catch (error) {
         console.error("Save Error:", error);
-        alert(error.message || "An error occurred while saving.");
+        setVoiceNotice(error.message || "An error occurred while saving.", 'danger', true);
     } finally {
         btn.innerHTML = originalText;
-        btn.disabled = false;
+        setVoiceSaveReady(Boolean(window.currentAnalysis && window.analysisTranscript === transcript));
     }
 }
 
 function downloadReport() {
+    setVoiceNotice('Use the print dialog destination to save this report as a PDF.', 'info');
     window.print();
 }
 
@@ -1947,9 +2003,10 @@ document.addEventListener("DOMContentLoaded", function() {
     if (voiceMissionPreset.prompt) {
         document.getElementById('promptText').innerText = `"${cleanTranscriptText(voiceMissionPreset.prompt)}"`;
     } else {
-        randomizePrompt();
+        randomizePrompt({ silent: true });
     }
     syncVoiceOptionLabels();
+    setVoiceSaveReady(false);
     refreshMicrophoneAvailabilityUi();
     updateInstantFeedback();
     updateIntentionCoach();

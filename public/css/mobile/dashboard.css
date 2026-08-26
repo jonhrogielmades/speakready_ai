@@ -1370,6 +1370,11 @@
         font-weight: 500;
     }
 
+    .sr-trend-note.is-empty {
+        border-style: dashed;
+        background: color-mix(in srgb, var(--trend-soft) 70%, transparent);
+    }
+
     .sr-trend-note i {
         width: 36px;
         height: 36px;
@@ -1611,6 +1616,12 @@
         color: #60a5fa;
         font-size: 0.78rem;
         font-weight: 800;
+    }
+
+    .sr-tag.sr-tag-accent {
+        background: color-mix(in srgb, var(--accent, #3b82f6) 12%, transparent);
+        border-color: color-mix(in srgb, var(--accent, #3b82f6) 22%, transparent);
+        color: var(--accent, #3b82f6);
     }
 
     .sr-rec-list,
@@ -2812,7 +2823,10 @@
 
     .sr-notification-card {
         display: grid;
-        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-columns: 48px minmax(0, 1fr);
+        grid-template-areas:
+            "icon copy"
+            ". meta";
         gap: 14px;
         align-items: start;
         min-height: 94px;
@@ -2823,6 +2837,7 @@
     }
 
     .sr-notification-card-icon {
+        grid-area: icon;
         width: 48px;
         height: 48px;
         border-radius: 14px;
@@ -2831,6 +2846,11 @@
         color: #2563eb;
         background: rgba(37, 99, 235, 0.09);
         font-size: 1.18rem;
+    }
+
+    .sr-notification-card > .min-w-0 {
+        grid-area: copy;
+        min-width: 0;
     }
 
     .sr-notification-title {
@@ -2846,16 +2866,22 @@
         font-size: 0.8rem;
         line-height: 1.45;
         font-weight: 600;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .sr-notification-meta {
+        grid-area: meta;
         display: inline-flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 8px;
         color: var(--side-muted);
         font-size: 0.72rem;
         font-weight: 700;
-        white-space: nowrap;
+        justify-self: start;
+        min-width: 0;
+        white-space: normal;
     }
 
     .sr-notification-dot {
@@ -2979,7 +3005,9 @@
         }
 
         .sr-welcome-stack {
-            display: contents;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .sr-hero-card {
@@ -3902,7 +3930,10 @@
         }
 
         .sr-notification-card {
-            grid-template-columns: 38px minmax(0, 1fr) auto;
+            grid-template-columns: 38px minmax(0, 1fr);
+            grid-template-areas:
+                "icon copy"
+                ". meta";
             gap: 10px;
             min-height: 82px;
             padding: 12px;
@@ -3928,6 +3959,8 @@
         .sr-notification-meta {
             gap: 6px;
             font-size: 0.62rem;
+            justify-self: start;
+            white-space: normal;
         }
 
         .sr-notification-dot {
@@ -5777,11 +5810,11 @@
 
     .sr-image-copy {
         display: grid;
-        grid-template-columns: repeat(2, max-content);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: 14px;
         row-gap: 4px;
         margin: 10px 0 0 30px;
-        max-width: 540px;
+        max-width: min(540px, calc(100% - 210px));
         padding: 0;
         list-style: none;
         color: rgba(255, 255, 255, 0.88);
@@ -5794,7 +5827,8 @@
         --sr-image-detail-color: rgba(255, 255, 255, 0.9);
         position: relative;
         padding-left: 8px;
-        white-space: nowrap;
+        min-width: 0;
+        overflow-wrap: anywhere;
         color: var(--sr-image-detail-color);
         text-shadow: 0 1px 6px rgba(15, 23, 42, 0.22);
     }
@@ -5829,11 +5863,10 @@
 
     .sr-image-chip-row {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 5px;
         margin: 12px 0 0 30px;
-        max-width: 620px;
-        white-space: nowrap;
+        max-width: min(620px, calc(100% - 190px));
     }
 
     .sr-image-chip {
@@ -6680,7 +6713,7 @@
         }
 
         body.user-desktop-shell .sr-image-copy {
-            grid-template-columns: repeat(2, max-content);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             column-gap: 10px;
             row-gap: 2px;
             margin: 7px 0 0 22px;
@@ -7032,7 +7065,10 @@
         }
 
         body.user-desktop-shell .sr-notification-card {
-            grid-template-columns: 30px minmax(0, 1fr) auto;
+            grid-template-columns: 30px minmax(0, 1fr);
+            grid-template-areas:
+                "icon copy"
+                ". meta";
             gap: 9px;
             min-height: 68px;
             padding: 9px;
@@ -7229,7 +7265,7 @@
 
         .sr-image-copy {
             display: grid;
-            grid-template-columns: repeat(2, max-content);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             position: absolute;
             z-index: 4;
             left: 26px;
@@ -7246,6 +7282,8 @@
 
         .sr-image-copy li {
             padding-left: 6px;
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .sr-image-copy li::before {

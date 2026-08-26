@@ -508,11 +508,11 @@
     .interview-start-modal.active {
         opacity: 1;
         visibility: visible;
-        pointer-events: none;
+        pointer-events: auto;
     }
     body.interview-start-modal-active {
-        overflow: auto !important;
-        touch-action: auto;
+        overflow: hidden !important;
+        touch-action: none;
     }
     body.interview-start-modal-active #mob-header {
         z-index: 1000002 !important;
@@ -554,6 +554,11 @@
     }
     .interview-start-icon i {
         font-size: 1.55rem;
+    }
+    .interview-start-icon.danger {
+        color: #f87171;
+        background: linear-gradient(145deg, rgba(239, 68, 68, 0.16), rgba(245, 158, 11, 0.12));
+        border-color: rgba(248, 113, 113, 0.3);
     }
     .interview-start-dialog h4 {
         margin: 0;
@@ -614,14 +619,95 @@
         color: #fff;
         box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
     }
-    .finish-retry-button {
+    .interview-start-button.danger {
+        background: linear-gradient(135deg, #dc2626, #f97316);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(220, 38, 38, 0.22);
+    }
+    .finish-recovery-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
         margin-top: 16px;
+    }
+    .finish-retry-button {
         border: 0;
         border-radius: 12px;
         padding: 10px 18px;
         background: linear-gradient(135deg, #2563eb, #0ea5e9);
         color: #fff;
         font-weight: 800;
+    }
+    .finish-secondary-button {
+        border: 1px solid var(--bd);
+        border-radius: 12px;
+        padding: 10px 18px;
+        background: var(--bg3);
+        color: var(--tx);
+        font-weight: 800;
+    }
+    .session-inline-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: -8px 0 16px;
+        border: 1px solid rgba(239, 68, 68, 0.34);
+        border-radius: 12px;
+        background: rgba(254, 242, 242, 0.94);
+        color: #b91c1c;
+        padding: 10px 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+    .session-inline-alert.warning {
+        border-color: rgba(245, 158, 11, 0.36);
+        background: rgba(255, 251, 235, 0.95);
+        color: #92400e;
+    }
+    .session-inline-alert.success {
+        border-color: rgba(16, 185, 129, 0.34);
+        background: rgba(236, 253, 245, 0.95);
+        color: #047857;
+    }
+    .session-inline-alert[hidden] {
+        display: none !important;
+    }
+    :root:not(.lm) .session-inline-alert {
+        border-color: rgba(248, 113, 113, 0.42);
+        background: rgba(127, 29, 29, 0.34);
+        color: #fecaca;
+    }
+    :root:not(.lm) .session-inline-alert.warning {
+        border-color: rgba(251, 191, 36, 0.4);
+        background: rgba(120, 53, 15, 0.32);
+        color: #fde68a;
+    }
+    :root:not(.lm) .session-inline-alert.success {
+        border-color: rgba(52, 211, 153, 0.36);
+        background: rgba(6, 78, 59, 0.3);
+        color: #bbf7d0;
+    }
+    .voice-control-disabled {
+        opacity: 0.55;
+        cursor: not-allowed !important;
+        filter: grayscale(0.3);
+    }
+    .interview-empty-panel {
+        max-width: 520px;
+        margin: 24px auto;
+        text-align: center;
+    }
+    .interview-empty-panel h5 {
+        margin: 0 0 8px;
+        color: var(--tx);
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+    .interview-empty-panel .interview-start-button {
+        margin-top: 8px;
+        text-decoration: none;
     }
     @keyframes finishSpin {
         0% { transform: rotate(0deg); }
@@ -2647,4 +2733,72 @@
         border-color: transparent !important;
         box-shadow: none !important;
         transform: translateY(8px) !important;
+    }
+
+    html body #sec-interview-session .interview-confidence-control {
+        display: grid;
+        gap: 8px;
+        margin: 10px 0 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 10px;
+        background: rgba(248, 250, 252, 0.72);
+    }
+
+    html:not(.lm) body #sec-interview-session .interview-confidence-control,
+    html[data-theme="dark"] body #sec-interview-session .interview-confidence-control,
+    body.dm #sec-interview-session .interview-confidence-control,
+    .dm #sec-interview-session .interview-confidence-control {
+        border-color: rgba(148, 163, 184, 0.2);
+        background: rgba(15, 23, 42, 0.46);
+    }
+
+    html body #sec-interview-session .interview-confidence-control label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 0;
+        color: var(--tx2);
+        font-size: 0.74rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    html body #sec-interview-session .interview-confidence-control label span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    html body #sec-interview-session .interview-confidence-control strong {
+        flex: 0 0 auto;
+        color: #2563eb;
+        font-size: 0.78rem;
+        font-weight: 900;
+    }
+
+    html:not(.lm) body #sec-interview-session .interview-confidence-control strong,
+    html[data-theme="dark"] body #sec-interview-session .interview-confidence-control strong,
+    body.dm #sec-interview-session .interview-confidence-control strong,
+    .dm #sec-interview-session .interview-confidence-control strong {
+        color: #93c5fd;
+    }
+
+    html body #sec-interview-session #selfConfidenceRange {
+        width: 100%;
+        accent-color: #2563eb;
+    }
+
+    @media (max-width: 767px) {
+        html body #sec-interview-session .interview-confidence-control {
+            margin: 8px 0 10px !important;
+            padding: 8px 9px !important;
+            border-radius: 9px !important;
+        }
+
+        html body #sec-interview-session .interview-confidence-control label {
+            font-size: 0.66rem !important;
+        }
     }

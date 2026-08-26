@@ -1277,3 +1277,55 @@
         font-size: 0.72rem !important;
         box-shadow: var(--account-shell-shadow) !important;
     }
+
+    html body .profile-crop-modal[hidden],
+    html body .profile-crop-modal[aria-hidden="true"]:not(.open) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    html body .profile-crop-modal.open {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    @media (max-width: 767px) {
+        html body.user-mobile-shell #account-page :is(.upload-picture-btn, .account-submit-btn, .delete-account-btn, .premium-panel form button[type="submit"]) {
+            min-height: 44px !important;
+            padding: 10px 12px !important;
+            border-radius: 10px !important;
+        }
+
+        html body.user-mobile-shell #account-page .upload-picture-btn {
+            min-height: 44px !important;
+            min-width: min(100%, 178px) !important;
+            max-width: 100% !important;
+        }
+
+        html body.user-mobile-shell #account-page .password-field .oinp {
+            min-height: 44px !important;
+            padding-right: 58px !important;
+        }
+
+        html body.user-mobile-shell #account-page .password-toggle {
+            width: 44px !important;
+            min-width: 44px !important;
+            max-width: 44px !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            right: 4px !important;
+            border-radius: 10px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        html body.user-mobile-shell .profile-crop-actions .btn {
+            min-height: 44px !important;
+            padding: 10px 12px !important;
+        }
+    }

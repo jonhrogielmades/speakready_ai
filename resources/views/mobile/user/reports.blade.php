@@ -7,6 +7,11 @@
 @endpush
 
 @section('content')
+@php
+    $reportDateSource = isset($latestSession) ? $latestSession?->created_at : null;
+    $reportGeneratedDate = $reportDateSource ? $reportDateSource->format('F j, Y') : 'Not available yet';
+    $reportGeneratedShortDate = $reportDateSource ? $reportDateSource->format('M d, Y') : 'Pending';
+@endphp
 <!-- Add print styles specifically for this Philippines interview report -->
 @include('mobile.partials.page-hero-styles')
 
@@ -30,19 +35,17 @@
             <rect x="42" y="18" width="128" height="116" rx="16" fill="url(#reportPanel)" stroke="#BFDBFE" stroke-width="3"/><path d="M138 18v30h32" fill="#BAE6FD"/><path d="M68 63h74M68 81h62M68 99h34" stroke="#93C5FD" stroke-width="7" stroke-linecap="round"/><path d="M76 118l18-18 15 10 25-30" fill="none" stroke="url(#reportBlue)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="164" cy="48" r="17" fill="#22C55E"/><path d="M157 48l5 5 10-12" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 134c34-11 72-11 108 0s58 8 78-3" fill="none" stroke="#93C5FD" stroke-width="5" stroke-linecap="round" opacity=".5"/>
         </svg>
     </div>
-    <div class="sr-page-actions report-export-actions btn-no-print">
-        <button class="btn btn-primary btn-shine js-export-pdf" id="exportPdfBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-pdf me-2"></i>Export as PDF</button>
-        <button class="btn btn-success btn-shine js-export-excel" id="exportExcelBtn" style="border-radius:12px;font-weight:600;"><i class="fa-solid fa-file-excel me-2"></i>Export as Excel</button>
-        @if($sessions->count() > 0)
-            <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+    @if($sessions->count() > 0)
+        <div class="sr-page-actions report-export-actions btn-no-print">
+            <form action="{{ route('user.sessions.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear interview sessions" data-sr-confirm-message="This will permanently delete all completed interview sessions and report data. This cannot be undone." data-sr-confirm-action="Clear Sessions" data-sr-confirm-variant="danger">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger btn-shine" style="border-radius:12px;font-weight:600;width:100%;">
                     <i class="fa-solid fa-trash-can me-2"></i>Clear Sessions
                 </button>
             </form>
-        @endif
-    </div>
+        </div>
+    @endif
 
     <!-- Print Header visible only when printing or mimicking paper -->
     <div class="report-print-identity d-flex align-items-center mb-4 gap-3">
@@ -51,7 +54,7 @@
         </div>
         <div>
             <h3 class="text-gradient-primary" style="margin:0;font-weight:800;letter-spacing:-0.5px;">{{ $user->name ?? 'Candidate' }}</h3>
-            <p style="color:var(--tx3);margin:0;">SpeakReady AI Philippines Interview Report &bull; Generated on {{ now()->format('F j, Y') }}</p>
+            <p style="color:var(--tx3);margin:0;">SpeakReady AI Philippines Interview Report &bull; Generated from {{ $reportGeneratedDate }}</p>
         </div>
     </div>
 
@@ -64,7 +67,7 @@
                 <h5 style="color:var(--tx);font-weight:bold;margin:4px 0 0;"><i class="fa-solid fa-file-invoice text-primary me-2"></i>Report Summary</h5>
             </div>
             <span class="report-chip align-self-start" style="color:#3b82f6;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.22);">
-                <i class="fa-regular fa-calendar"></i> Generated {{ now()->format('M d, Y') }}
+                <i class="fa-regular fa-calendar"></i> Report date {{ $reportGeneratedShortDate }}
             </span>
         </div>
         <div class="row align-items-center text-center text-md-start">
@@ -148,7 +151,7 @@
                             <span style="color:var(--tx3);font-weight:800;">{{ $metric['score'] }}%</span>
                         </div>
                         <div class="progress">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $metric['bar'] }}%;"></div>
+                            <div class="progress-bar bg-primary" role="progressbar" aria-label="{{ $metric['name'] }} score" aria-valuenow="{{ $metric['bar'] }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $metric['bar'] }}%;"></div>
                         </div>
                     </div>
                     @endforeach
@@ -399,6 +402,7 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm mt-3 js-print-report btn-no-print" style="border-radius:10px;font-weight:800;">
                     <i class="fa-solid fa-print me-1"></i>Print Report
                 </button>
+                <p class="report-export-status" id="reportExportStatus" role="status" aria-live="polite" hidden></p>
             </div>
         </div>
     </div>
@@ -408,16 +412,18 @@
         <div class="col-md-8">
             <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-chart-line text-success me-2"></i>Readiness Score Trend</h5>
-                <div style="height:250px;">
+                <div class="report-chart-frame" style="height:250px;">
                     <canvas id="trendChart"></canvas>
+                    <div class="report-chart-fallback d-none" id="trendChartFallback">Score trend chart is unavailable right now.</div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="print-card" style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
                 <h5 style="color:var(--tx);font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-chart-bar text-primary me-2"></i>Scenario Performance</h5>
-                <div style="height:250px;">
+                <div class="report-chart-frame" style="height:250px;">
                     <canvas id="catChart"></canvas>
+                    <div class="report-chart-fallback d-none" id="catChartFallback">Scenario performance chart is unavailable right now.</div>
                 </div>
             </div>
         </div>
@@ -439,7 +445,7 @@
                         <span style="color:var(--tx3)">{{ $sk['current'] }}% <span class="{{ $sk['delta'] >= 0 ? 'text-success' : 'text-danger' }} ms-2">({{ $sk['delta'] >= 0 ? '+' : '' }}{{ $sk['delta'] }}%)</span></span>
                     </div>
                     <div class="progress" style="height:8px;background:var(--bd);border-radius:4px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $sk['bar'] }}%;border-radius:4px;"></div>
+                        <div class="progress-bar bg-primary" role="progressbar" aria-label="{{ $sk['label'] }} score" aria-valuenow="{{ $sk['bar'] }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $sk['bar'] }}%;border-radius:4px;"></div>
                     </div>
                 </div>
                 @endforeach
@@ -513,7 +519,7 @@
     </div>
     @else
     <!-- Empty State -->
-    <div class="print-card report-empty-card text-center mb-4">
+    <div id="report-empty-state" class="print-card report-empty-card text-center mb-4">
         <svg class="report-empty-art" viewBox="0 0 220 170" aria-hidden="true">
             <defs>
                 <linearGradient id="emptyFolderBack" x1="58" y1="36" x2="159" y2="142"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#60A5FA"/></linearGradient>
@@ -544,13 +550,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const showChartFallback = function(canvas, message) {
+            if (canvas) {
+                canvas.classList.add('d-none');
+            }
+
+            const fallback = canvas ? document.getElementById(canvas.id + 'Fallback') : null;
+            if (!fallback) return;
+
+            fallback.textContent = message;
+            fallback.classList.remove('d-none');
+        };
+
         @if($hasScoreData)
         const trendData = @json($scoreTrend);
         const labels = trendData.map(d => d.date);
         const scores = trendData.map(d => d.score);
 
         const trendChart = document.getElementById('trendChart');
-        if (window.Chart && trendChart) {
+        if (window.Chart && trendChart && labels.length > 0) {
             new Chart(trendChart, {
                 type: 'line',
                 data: {
@@ -577,18 +595,22 @@
                     }
                 }
             });
+        } else {
+            showChartFallback(trendChart, 'Score trend chart is unavailable right now.');
         }
 
         const scenarioPerf = @json($categoryPerf);
+        const scenarioLabels = Object.keys(scenarioPerf);
+        const scenarioScores = Object.values(scenarioPerf);
 
         const categoryChart = document.getElementById('catChart');
-        if (window.Chart && categoryChart) {
+        if (window.Chart && categoryChart && scenarioLabels.length > 0) {
             new Chart(categoryChart, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(scenarioPerf),
+                    labels: scenarioLabels,
                     datasets: [{
-                        data: Object.values(scenarioPerf),
+                        data: scenarioScores,
                         backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
                         borderRadius: 6
                     }]
@@ -603,11 +625,20 @@
                     }
                 }
             });
+        } else {
+            showChartFallback(categoryChart, 'Scenario performance chart is unavailable right now.');
         }
         @endif
 
         const latestScoreRows = @json($latestPerformanceMetrics ?? []);
         const reportFinalScore = @json($reportSummary->final_score_label ?? 'N/A');
+        const exportStatus = document.getElementById('reportExportStatus');
+        const setExportStatus = function(message, state = 'info') {
+            if (!exportStatus) return;
+            exportStatus.textContent = message;
+            exportStatus.dataset.state = state;
+            exportStatus.hidden = false;
+        };
         const withReportActionsHidden = function(callback) {
             const element = document.getElementById('portfolioReport');
             const hiddenActions = element ? Array.from(element.querySelectorAll('.btn-no-print')) : [];
@@ -677,10 +708,12 @@
         const exportPdf = function() {
             const element = document.getElementById('portfolioReport');
             if (!element) {
+                setExportStatus('No report content is available to export.', 'warning');
                 return;
             }
 
             if (typeof window.html2pdf !== 'function') {
+                setExportStatus('PDF export is unavailable, so the print dialog is opening instead.', 'warning');
                 withReportActionsHidden((restore) => {
                     const afterPrint = function() {
                         restore();
@@ -702,7 +735,11 @@
             };
 
             withReportActionsHidden((restore) => {
-                html2pdf().set(opt).from(element).save().catch(() => {
+                setExportStatus('Preparing your PDF report...', 'info');
+                html2pdf().set(opt).from(element).save().then(() => {
+                    setExportStatus('PDF export started.', 'success');
+                }).catch(() => {
+                    setExportStatus('PDF export failed, so the print dialog is opening instead.', 'warning');
                     window.print();
                 }).finally(() => {
                     restore();
@@ -719,12 +756,14 @@
             if (table) {
                 if (!window.XLSX) {
                     downloadCsvFromTable(table, 'interview_report_scores.csv');
+                    setExportStatus('Excel library is unavailable, so a CSV score sheet was downloaded.', 'warning');
                     return;
                 }
                 const wb = XLSX.utils.table_to_book(table, {sheet: "Comparison"});
                 XLSX.writeFile(wb, 'interview_report_scores.xlsx');
+                setExportStatus('Excel export started.', 'success');
             } else {
-                alert('No score data is available to export.');
+                setExportStatus('No score data is available to export.', 'warning');
             }
         };
         document.querySelectorAll('.js-export-excel').forEach((button) => {
@@ -748,21 +787,29 @@
             { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, result level, interview type, date, duration, and question count.', side: 'bottom', align: 'start' }},
             { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
             { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes and the next fix for each one.', side: 'top', align: 'start' }},
-            { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'start' }}
+            { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'start' }},
+            { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock reports and exports.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
             { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the final score, result level, interview type, date, duration, and question count.', side: 'bottom', align: 'start' }},
             { element: '#report-question-review', popover: { title: 'Question Analysis', description: 'Review each question with the answer, score, strength, feedback, and next improvement.', side: 'bottom', align: 'start' }},
             { element: '#report-improvements', popover: { title: 'Improvement Areas', description: 'Focus on repeated mistakes and the next fix for each one.', side: 'top', align: 'start' }},
-            { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'end' }}
+            { element: '#report-export', popover: { title: 'Export Report', description: 'Download the report as PDF, Excel, CSV, or print it.', side: 'top', align: 'end' }},
+            { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock reports and exports.', side: 'top', align: 'center' }}
         ];
+
+        const filterTourSteps = (steps) => steps.filter((step) => document.querySelector(step.element));
+        const visibleMobileSteps = filterTourSteps(stepsMobile);
+        const visibleDesktopSteps = filterTourSteps(stepsDesktop);
+
+        if (!visibleMobileSteps.length && !visibleDesktopSteps.length) return;
 
         window.createSpeakReadyTour({
             completionKey: 'onboarding_completed_reports',
             serverDetectedMobile: true,
-            stepsMobile,
-            stepsDesktop,
+            stepsMobile: visibleMobileSteps,
+            stepsDesktop: visibleDesktopSteps,
             autoStartDelay: 500,
         });
     });

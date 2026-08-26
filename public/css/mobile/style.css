@@ -8299,3 +8299,181 @@ body.guest-mobile-shell #pwa-install-prompt {
     --sr-mobile-inline: 10px;
   }
 }
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-dialog {
+  margin: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-content {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.98);
+  color: #f8fafc;
+  box-shadow: 0 24px 72px rgba(2, 6, 23, 0.42);
+  overflow: hidden;
+}
+
+html.lm body.user-mobile-shell .sr-mobile-confirm-modal .modal-content,
+body.user-mobile-shell.lm .sr-mobile-confirm-modal .modal-content {
+  border-color: rgba(37, 99, 235, 0.16);
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-header,
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-footer {
+  border-color: rgba(148, 163, 184, 0.2);
+  gap: 10px;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-header {
+  align-items: center;
+  padding: 14px;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-body {
+  padding: 14px;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-body p {
+  margin: 0;
+  color: inherit;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.14);
+}
+
+body.user-mobile-shell .sr-mobile-confirm-icon.is-danger {
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.14);
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-title {
+  min-width: 0;
+  color: inherit;
+  font-size: 1rem;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .btn-close {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: invert(1) grayscale(100%);
+  opacity: 0.75;
+}
+
+html.lm body.user-mobile-shell .sr-mobile-confirm-modal .btn-close,
+body.user-mobile-shell.lm .sr-mobile-confirm-modal .btn-close {
+  filter: none;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-modal .modal-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 12px 14px 14px;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-cancel,
+body.user-mobile-shell .sr-mobile-confirm-action {
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-cancel {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.12);
+  color: inherit;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-action {
+  border: 0;
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+  color: #ffffff;
+}
+
+body.user-mobile-shell .sr-mobile-confirm-action.is-danger {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+body.user-mobile-shell .mob-notif-copy-main {
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+}
+
+body.user-mobile-shell .mob-notif-copy-main:focus-visible,
+body.user-mobile-shell .mob-notif-link-btn:focus-visible,
+body.user-mobile-shell .mob-notif-retry:focus-visible {
+  outline: 2px solid var(--mob-notif-accent, #60a5fa);
+  outline-offset: 3px;
+}
+
+body.user-mobile-shell .mob-notif-status {
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 12px;
+  color: var(--mob-notif-muted, var(--tx3, #94a3b8));
+  font-size: 0.76rem;
+  line-height: 1.35;
+  font-weight: 800;
+  text-align: center;
+}
+
+body.user-mobile-shell .mob-notif-status i {
+  color: var(--mob-notif-accent, #60a5fa);
+  font-size: 1rem;
+}
+
+body.user-mobile-shell .mob-notif-status span {
+  max-width: 28ch;
+}
+
+body.user-mobile-shell .mob-notif-status.is-error {
+  color: var(--mob-notif-danger, #f87171);
+}
+
+body.user-mobile-shell .mob-notif-status.is-error i {
+  color: var(--mob-notif-danger, #f87171);
+}
+
+body.user-mobile-shell .mob-notif-retry {
+  min-height: 44px;
+  border: 1px solid var(--mob-notif-danger-border, rgba(248, 113, 113, 0.3));
+  border-radius: 10px;
+  background: var(--mob-notif-danger-bg, rgba(248, 113, 113, 0.12));
+  color: var(--mob-notif-danger, #f87171);
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+body.user-mobile-shell .mob-notif-link-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

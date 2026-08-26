@@ -1025,3 +1025,176 @@
         object-fit: cover !important;
         border-radius: inherit !important;
     }
+/* Final mobile UI bug fixes for Readiness Coach. */
+@media (max-width: 767px) {
+    html body #ai-coach-page {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    }
+
+    html body #mob-content #ai-coach-page .chat-container,
+    html body #ai-coach-page .chat-container {
+        width: 100% !important;
+        max-width: none !important;
+        height: clamp(320px, calc(100dvh - var(--mob-top-h, 56px) - var(--mob-nav-h, 78px) - 104px), 660px) !important;
+        min-height: 0 !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+
+    html body #ai-coach-page .coach-chat-header {
+        min-height: 58px !important;
+        padding: 9px 10px !important;
+        gap: 10px !important;
+    }
+
+    html body #ai-coach-page .coach-chat-title {
+        display: block !important;
+        max-width: calc(100vw - 128px) !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        color: var(--tx, #0f172a) !important;
+        font-size: 0.78rem !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+    }
+
+    html body #ai-coach-page .coach-status {
+        display: block !important;
+        margin-top: 4px !important;
+        font-size: 0.64rem !important;
+        line-height: 1 !important;
+    }
+
+    html body #ai-coach-page .coach-actions-menu {
+        right: 0 !important;
+        width: min(320px, calc(100vw - 24px)) !important;
+        max-height: min(70dvh, 480px) !important;
+        overflow-y: auto !important;
+        border-radius: 8px !important;
+        overscroll-behavior: contain !important;
+    }
+
+    html body #ai-coach-page .coach-actions-history.active {
+        background: rgba(37, 99, 235, 0.12) !important;
+        color: #2563eb !important;
+    }
+
+    html body #ai-coach-page .chat-messages {
+        padding: 10px !important;
+        overscroll-behavior: contain !important;
+    }
+
+    html body #ai-coach-page .chat-bubble {
+        max-width: calc(100% - 42px) !important;
+        border-radius: 8px !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    html body #ai-coach-page .chat-input-area {
+        padding: 8px 9px calc(8px + env(safe-area-inset-bottom)) !important;
+    }
+
+    html body #ai-coach-page .chat-input-wrapper {
+        min-height: 50px !important;
+        border-radius: 8px !important;
+        align-items: flex-end !important;
+    }
+
+    html body #ai-coach-page .chat-attachment-btn,
+    html body #ai-coach-page .chat-send-btn {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 8px !important;
+    }
+
+    html body #ai-coach-page .chat-send-btn:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.68 !important;
+    }
+
+    html body #ai-coach-page .chat-textarea {
+        min-height: 24px !important;
+        max-height: 96px !important;
+        overflow-y: hidden !important;
+        padding: 10px 0 !important;
+        font-size: 0.8rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body #ai-coach-page .chat-attachment-preview.has-files {
+        max-height: 118px !important;
+        overflow-y: auto !important;
+        padding-bottom: 6px !important;
+    }
+
+    html body #ai-coach-page .chat-attachment-chip {
+        max-width: 100% !important;
+        border-radius: 8px !important;
+    }
+
+    html body #ai-coach-page .chat-attachment-chip span {
+        min-width: 0 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+
+    html body #ai-coach-page .chat-attachment-remove {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 8px !important;
+    }
+
+    html body #ai-coach-page .coach-inline-feedback {
+        display: none !important;
+        margin-top: 8px !important;
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+        background: rgba(37, 99, 235, 0.1) !important;
+        border: 1px solid rgba(37, 99, 235, 0.22) !important;
+        color: #1d4ed8 !important;
+        font-size: 0.72rem !important;
+        font-weight: 800 !important;
+        line-height: 1.35 !important;
+    }
+
+    html body #ai-coach-page .coach-inline-feedback.show {
+        display: block !important;
+    }
+
+    html body #ai-coach-page .coach-inline-feedback[data-type="error"] {
+        background: rgba(239, 68, 68, 0.1) !important;
+        border-color: rgba(239, 68, 68, 0.24) !important;
+        color: #dc2626 !important;
+    }
+
+    html body #ai-coach-page .coach-disclaimer {
+        font-size: 0.6rem !important;
+        line-height: 1.35 !important;
+    }
+}
+
+@media (max-width: 360px) {
+    html body #ai-coach-page .coach-chat-title {
+        max-width: calc(100vw - 112px) !important;
+        font-size: 0.72rem !important;
+    }
+
+    html body #ai-coach-page .chat-attachment-btn,
+    html body #ai-coach-page .chat-send-btn {
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+    }
+
+    html body #ai-coach-page .chat-bubble {
+        max-width: calc(100% - 34px) !important;
+        padding: 10px 12px !important;
+    }
+}

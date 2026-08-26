@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=6') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=7') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -33,6 +33,89 @@
     $trendImprovement = ($trendFirst !== null && $trendFirst > 0 && $trendLast !== null)
         ? (int) round((($trendLast - $trendFirst) / $trendFirst) * 100)
         : 0;
+    $hasTrendScores = $trendScores->isNotEmpty();
+    $trendSessionCount = $trendScores->count();
+    if (! $hasTrendScores) {
+        $trendNoteTitle = 'Start your trend';
+        $trendNoteBody = 'Complete a scored interview to unlock your readiness trend.';
+        $trendNoteIcon = 'fa-regular fa-compass';
+    } elseif ($trendSessionCount < 2) {
+        $trendNoteTitle = 'One score logged';
+        $trendNoteBody = 'Complete one more scored session to compare your progress.';
+        $trendNoteIcon = 'fa-regular fa-star';
+    } elseif ($trendImprovement > 0) {
+        $trendNoteTitle = 'Keep it up';
+        $trendNoteBody = 'Your readiness is up '.$trendImprovement.'% across your latest scored sessions.';
+        $trendNoteIcon = 'fa-solid fa-arrow-trend-up';
+    } elseif ($trendImprovement < 0) {
+        $trendNoteTitle = 'Practice focus';
+        $trendNoteBody = 'Your latest scores dipped. Review feedback and try one focused session today.';
+        $trendNoteIcon = 'fa-solid fa-bullseye';
+    } else {
+        $trendNoteTitle = 'Steady trend';
+        $trendNoteBody = 'Your readiness is holding steady. Consistent practice will help move it higher.';
+        $trendNoteIcon = 'fa-regular fa-star';
+    }
+    $goalNote = $goalPercent >= 100
+        ? 'Target reached. Set your next readiness goal.'
+        : ($goalPercent >= 75
+            ? 'Almost there. A focused session can close the gap.'
+            : ($goalPercent >= 40
+                ? 'You are building momentum toward this goal.'
+                : 'Start with one scored session to build momentum.'));
+    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced PH answers' : 'Answer 3 Philippine HR questions';
+    $challengeCopy = $scoreVal >= 75
+        ? 'Polish role-fit stories, metrics, and confident closing answers.'
+        : 'Practice structure, confidence, and local role-fit responses.';
+    $challengeXp = $hasTrendScores ? 60 : 40;
+    $dashboardAccentFallbacks = ['#3b82f6', '#22c55e', '#06b6d4', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444'];
+    $safeAccent = static function ($value, string $fallback = '#3b82f6') use ($dashboardAccentFallbacks): string {
+        $color = trim((string) $value);
+        if (preg_match('/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $color)) {
+            return $color;
+        }
+
+        return in_array($fallback, $dashboardAccentFallbacks, true) ? $fallback : '#3b82f6';
+    };
+    $safeFaIcon = static function ($value, string $fallback = 'fa-clipboard-list'): string {
+        $icon = trim((string) $value);
+
+        return preg_match('/^fa-[a-z0-9-]+$/', $icon) ? $icon : $fallback;
+    };
+    $achievementCatalog = [
+        [
+            'name' => 'First Interview',
+            'label' => 'First Interview',
+            'icon' => 'fa-medal',
+            'accent' => '#f59e0b',
+            'earned' => (($totalSessions ?? 0) > 0) || in_array('First Interview', $badgesEarned ?? [], true),
+            'status' => (($totalSessions ?? 0) > 0) ? 'Earned' : 'Start one',
+        ],
+        [
+            'name' => '3-Day Streak',
+            'label' => '3-Day Streak',
+            'icon' => 'fa-fire',
+            'accent' => '#ef4444',
+            'earned' => (($currentStreak ?? 0) >= 3) || in_array('3-Day Streak', $badgesEarned ?? [], true),
+            'status' => (($currentStreak ?? 0) >= 3) ? 'Earned' : max(0, (int) ($currentStreak ?? 0)).'/3 days',
+        ],
+        [
+            'name' => 'STAR Master',
+            'label' => 'STAR Master',
+            'icon' => 'fa-star',
+            'accent' => '#2563eb',
+            'earned' => in_array('STAR Master', $badgesEarned ?? [], true),
+            'status' => in_array('STAR Master', $badgesEarned ?? [], true) ? 'Earned' : 'In Progress',
+        ],
+        [
+            'name' => 'Top Comm',
+            'label' => 'Top Comm',
+            'icon' => 'fa-bullhorn',
+            'accent' => '#22c55e',
+            'earned' => ($scoreVal >= 80) || in_array('Top Comm', $badgesEarned ?? [], true),
+            'status' => ($scoreVal >= 80) ? 'Earned' : 'Locked',
+        ],
+    ];
 @endphp
 
 <div class="db-section active sr-dashboard" id="sec-overview">
@@ -250,9 +333,9 @@
                 <div class="sr-chart-box sr-trend-chart-wrap">
                     <canvas id="progressChart"></canvas>
                 </div>
-                <div class="sr-trend-note">
-                    <i class="fa-regular fa-star"></i>
-                    <span><strong>Keep it up!</strong> You're improving your readiness. Continue practicing consistently.</span>
+                <div class="sr-trend-note {{ $hasTrendScores ? '' : 'is-empty' }}">
+                    <i class="{{ $trendNoteIcon }}"></i>
+                    <span><strong>{{ $trendNoteTitle }}.</strong> {{ $trendNoteBody }}</span>
                 </div>
             </section>
 
@@ -272,8 +355,12 @@
                 @if(isset($practicePlan) && $practicePlan->count() > 0)
                     <div class="sr-rec-list">
                         @foreach($practicePlan as $item)
-                            <a href="{{ $item->url }}" class="sr-rec-item" style="--accent: {{ $item->color }}; text-decoration:none;color:inherit;">
-                                <div class="sr-rec-icon" style="--accent: {{ $item->color }}"><i class="fa-solid {{ $item->icon ?? 'fa-clipboard-list' }}"></i></div>
+                            @php
+                                $itemAccent = $safeAccent($item->color ?? null, '#3b82f6');
+                                $itemIcon = $safeFaIcon($item->icon ?? null, 'fa-clipboard-list');
+                            @endphp
+                            <a href="{{ $item->url }}" class="sr-rec-item" style="--accent: {{ $itemAccent }}; text-decoration:none;color:inherit;">
+                                <div class="sr-rec-icon" style="--accent: {{ $itemAccent }}"><i class="fa-solid {{ $itemIcon }}"></i></div>
                                 <div class="sr-plan-copy">
                                     <div class="sr-plan-top">
                                         <span class="sr-plan-step">{{ $item->day }}</span>
@@ -282,7 +369,7 @@
                                     <div class="sr-plan-action">{{ $item->action }}</div>
                                     <div class="sr-plan-meta">
                                         <span class="sr-tag" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.18);color:#10b981">{{ $item->minutes }} min</span>
-                                        <span class="sr-tag" style="background:color-mix(in srgb, {{ $item->color }} 12%, transparent);border-color:color-mix(in srgb, {{ $item->color }} 22%, transparent);color:{{ $item->color }}">{{ $item->focus }}</span>
+                                        <span class="sr-tag sr-tag-accent" style="--accent: {{ $itemAccent }}">{{ $item->focus }}</span>
                                     </div>
                                     <span class="sr-plan-cta">{{ $item->cta }} <i class="fa-solid fa-arrow-right"></i></span>
                                 </div>
@@ -343,9 +430,13 @@
                     @if($moduleCount > 0)
                         <div class="sr-learning-list">
                             @foreach($learningLabProgress as $prog)
-                                @php $progVal = max(0, min(100, (int) $prog->progress)); @endphp
-                                <div class="sr-learning-item" style="--accent: {{ $prog->color }}">
-                                    <div class="sr-learning-icon"><i class="fa-solid {{ $prog->icon }}"></i></div>
+                                @php
+                                    $progVal = max(0, min(100, (int) $prog->progress));
+                                    $progAccent = $safeAccent($prog->color ?? null, '#3b82f6');
+                                    $progIcon = $safeFaIcon($prog->icon ?? null, 'fa-book-open');
+                                @endphp
+                                <div class="sr-learning-item" style="--accent: {{ $progAccent }}">
+                                    <div class="sr-learning-icon"><i class="fa-solid {{ $progIcon }}"></i></div>
                                     <div class="min-w-0">
                                         <div class="sr-learning-top">
                                             <div class="sr-learning-title">{{ $prog->title }}</div>
@@ -423,8 +514,12 @@
                     @if(isset($aiRecommendations) && count($aiRecommendations) > 0)
                         <div class="sr-rec-list">
                             @foreach($aiRecommendations as $rec)
-                                <a href="{{ $rec->url ?? route('user.modules.index') }}" class="sr-recommendation-card" style="--accent: {{ $rec->color }}">
-                                    <div class="sr-recommendation-icon"><i class="fa-solid {{ $rec->icon }}"></i></div>
+                                @php
+                                    $recAccent = $safeAccent($rec->color ?? null, '#f59e0b');
+                                    $recIcon = $safeFaIcon($rec->icon ?? null, 'fa-lightbulb');
+                                @endphp
+                                <a href="{{ $rec->url ?? route('user.modules.index') }}" class="sr-recommendation-card" style="--accent: {{ $recAccent }}">
+                                    <div class="sr-recommendation-icon"><i class="fa-solid {{ $recIcon }}"></i></div>
                                     <div class="min-w-0">
                                         <div class="sr-recommendation-title">{{ $rec->text }}</div>
                                         @if(!empty($rec->reason))
@@ -460,7 +555,7 @@
                 <div class="sr-section-actions">
                     <a href="{{ route('user.reports') }}" class="sr-btn sr-section-action"><i class="fa-regular fa-rectangle-list"></i> View Reports</a>
                     @if(isset($recentSessions) && $recentSessions->count() > 0)
-                        <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                        <form action="{{ route('user.sessions.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear all sessions?" data-sr-confirm-message="This will permanently clear all completed interview sessions. This cannot be undone." data-sr-confirm-action="Clear All" data-sr-confirm-variant="danger">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="sr-btn sr-section-action danger w-100">
@@ -493,10 +588,10 @@
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2">
                                             <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary" style="min-height:34px;padding:6px 11px;font-size:.78rem">Review</a>
-                                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="sr-btn" title="Delete session" style="width:34px;min-height:34px;padding:0;color:#ef4444;border-color:rgba(239,68,68,.35)">
+                                                <button type="submit" class="sr-btn" title="Delete session" aria-label="Delete session from {{ $session->created_at ? $session->created_at->format('M d, Y') : 'recent sessions' }}" style="width:34px;min-height:34px;padding:0;color:#ef4444;border-color:rgba(239,68,68,.35)">
                                                     <i class="fa-solid fa-trash-can"></i>
                                                 </button>
                                             </form>
@@ -529,10 +624,10 @@
                                 <div class="sr-session-score-bar"><span style="--score-value: {{ $sessionScore }}%"></span></div>
                             </div>
                             <a href="{{ route('user.review', $session->id) }}" class="sr-btn sr-btn-primary sr-session-review-btn">Review</a>
-                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                            <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete this session?" data-sr-confirm-message="This interview session and its saved feedback will be permanently deleted." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="sr-btn sr-session-delete-btn" title="Delete session">
+                                <button type="submit" class="sr-btn sr-session-delete-btn" title="Delete session" aria-label="Delete session from {{ $session->created_at ? $session->created_at->format('M d, Y') : 'recent sessions' }}">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </form>
@@ -576,11 +671,11 @@
                     </div>
                     <div class="sr-challenge-star"><i class="fa-regular fa-star"></i></div>
                 </div>
-                <h5 class="sr-challenge-title">Answer 3 Philippine HR questions</h5>
-                <p class="sr-challenge-copy">Earn extra XP, sharpen structure, and practice local role-fit answers.</p>
+                <h5 class="sr-challenge-title">{{ $challengeTitle }}</h5>
+                <p class="sr-challenge-copy">{{ $challengeCopy }}</p>
                 <div class="sr-reward-row">
-                    <span class="sr-reward-pill xp"><i class="fa-regular fa-star"></i> +60 XP</span>
-                    <span class="sr-reward-pill streak"><i class="fa-solid fa-fire"></i> +1 Streak</span>
+                    <span class="sr-reward-pill xp"><i class="fa-regular fa-star"></i> +{{ $challengeXp }} XP</span>
+                    <span class="sr-reward-pill streak"><i class="fa-solid fa-fire"></i> Streak eligible</span>
                 </div>
                 <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> Start PH Challenge</a>
             </section>
@@ -605,7 +700,7 @@
                             <div class="sr-progress"><span style="--value: {{ $goalPercent }}%; background:linear-gradient(90deg,#22c55e,#0ea5e9)"></span></div>
                         </div>
                         <div class="sr-goal-footer">
-                            <div class="sr-goal-note"><i class="fa-solid fa-chart-line"></i> You're just getting started!</div>
+                            <div class="sr-goal-note"><i class="fa-solid fa-chart-line"></i> {{ $goalNote }}</div>
                             <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View Goals <i class="fa-solid fa-chevron-right"></i></a>
                         </div>
                     </div>
@@ -631,22 +726,14 @@
                     <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
                 </div>
                 <div class="sr-achievement-showcase">
-                    @php
-                        $achievements = [
-                            ['name' => 'First Interview', 'label' => 'First Interview', 'icon' => 'fa-medal', 'accent' => '#f59e0b', 'fallback' => 'Earned'],
-                            ['name' => '3-Day Streak', 'label' => '3-Day Streak', 'icon' => 'fa-fire', 'accent' => '#ef4444', 'fallback' => 'In Progress'],
-                            ['name' => 'STAR Master', 'label' => 'STAR Master', 'icon' => 'fa-star', 'accent' => '#2563eb', 'fallback' => 'In Progress'],
-                            ['name' => 'Top Comm', 'label' => 'Top Comm', 'icon' => 'fa-bullhorn', 'accent' => '#22c55e', 'fallback' => 'Locked'],
-                        ];
-                    @endphp
-                    @foreach($achievements as $achievement)
-                        @php $earned = in_array($achievement['name'], $badgesEarned ?? []); @endphp
+                    @foreach($achievementCatalog as $achievement)
+                        @php $earned = (bool) $achievement['earned']; @endphp
                         <div class="sr-achievement-tile" style="--accent: {{ $achievement['accent'] }}">
                             <div class="sr-achievement-tile-icon"><i class="fa-solid {{ $achievement['icon'] }}"></i></div>
                             <div class="sr-achievement-tile-title">{{ $achievement['label'] }}</div>
                             <div class="sr-achievement-status">
-                                @if(! $earned && $achievement['fallback'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
-                                {{ $earned ? 'Earned' : $achievement['fallback'] }}
+                                @if(! $earned && $achievement['status'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
+                                {{ $earned ? 'Earned' : $achievement['status'] }}
                             </div>
                         </div>
                     @endforeach
@@ -667,8 +754,9 @@
                 @if(isset($recentNotifications) && count($recentNotifications) > 0)
                     <div class="sr-notification-list-polished">
                         @foreach($recentNotifications as $notif)
+                            @php $notifIcon = $safeFaIcon($notif->data['icon'] ?? null, 'fa-bell'); @endphp
                             <div class="sr-notification-card">
-                                <div class="sr-notification-card-icon"><i class="fa-solid {{ $notif->data['icon'] ?? 'fa-bell' }}"></i></div>
+                                <div class="sr-notification-card-icon"><i class="fa-solid {{ $notifIcon }}"></i></div>
                                 <div class="min-w-0">
                                     <div class="sr-notification-title">{{ $notif->data['title'] ?? 'Notification' }}</div>
                                     <div class="sr-notification-message">{{ $notif->data['message'] ?? '' }}</div>
@@ -693,7 +781,7 @@
     </div>
 </div>
 
-<script src="{{ asset('js/chart.umd.min.js') }}"></script>
+@push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof Chart === 'undefined') return;
@@ -790,24 +878,47 @@ document.addEventListener("DOMContentLoaded", function() {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.font = "700 13px 'Poppins', sans-serif";
-            ctx.fillText(
-                options?.text || 'Complete a scored interview to see this chart.',
-                (chartArea.left + chartArea.right) / 2,
-                (chartArea.top + chartArea.bottom) / 2
-            );
+            const message = options?.text || 'Complete a scored interview to see this chart.';
+            const maxWidth = Math.max(120, chartArea.right - chartArea.left - 24);
+            const words = message.split(' ');
+            const lines = [];
+            let currentLine = '';
+            words.forEach((word) => {
+                const testLine = currentLine ? `${currentLine} ${word}` : word;
+                if (ctx.measureText(testLine).width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            });
+            if (currentLine) lines.push(currentLine);
+            const lineHeight = 18;
+            const startY = ((chartArea.top + chartArea.bottom) / 2) - ((lines.length - 1) * lineHeight / 2);
+            lines.forEach((line, index) => {
+                ctx.fillText(line, (chartArea.left + chartArea.right) / 2, startY + (index * lineHeight));
+            });
             ctx.restore();
         }
     };
 
-    Chart.register(emptyChartPlugin);
+    if (!window.SpeakReadyEmptyChartPluginRegistered) {
+        Chart.register(emptyChartPlugin);
+        window.SpeakReadyEmptyChartPluginRegistered = true;
+    }
 
     const progressCanvas = document.getElementById('progressChart');
     if (progressCanvas) {
         progressCtx = progressCanvas.getContext('2d');
+        const normalizeTrendValue = (value) => {
+            const numericValue = Number(value);
+
+            return Number.isFinite(numericValue) ? Math.max(0, Math.min(100, Math.round(numericValue))) : null;
+        };
         const chartDataObj = {
             recent: {
-                labels: {!! json_encode(collect($scoreTrend ?? [])->pluck('date')) !!},
-                data: {!! json_encode(collect($scoreTrend ?? [])->pluck('score')) !!}
+                labels: @json(collect($scoreTrend ?? [])->pluck('date')->values()),
+                data: @json(collect($scoreTrend ?? [])->pluck('score')->values()).map(normalizeTrendValue)
             }
         };
         const trendRangeSelect = document.getElementById('readinessTrendRange');
@@ -818,23 +929,31 @@ document.addEventListener("DOMContentLoaded", function() {
                 data: chartDataObj.recent.data.slice(-range)
             };
         };
+        const displayTrend = (trend) => {
+            const hasData = trend.data.some((value) => value !== null);
+
+            return {
+                labels: hasData ? trend.labels : ['No scored sessions'],
+                data: hasData ? trend.data : [null]
+            };
+        };
         const initialTrendRange = isCompactTrend() ? 5 : 10;
 
         if (trendRangeSelect) {
             trendRangeSelect.value = String(initialTrendRange);
         }
 
-        const initialTrend = trendSlice(initialTrendRange);
+        const initialTrend = displayTrend(trendSlice(initialTrendRange));
 
         const gradientLine = createTrendGradient(progressCtx, initialPalette);
 
         progressChart = new Chart(progressCtx, {
             type: 'line',
             data: {
-                labels: initialTrend.labels.length ? initialTrend.labels : ['No Data'],
+                labels: initialTrend.labels,
                 datasets: [{
                     label: 'Readiness Score',
-                    data: initialTrend.data.length ? initialTrend.data : [0],
+                    data: initialTrend.data,
                     borderColor: trendLineColor,
                     backgroundColor: gradientLine,
                     borderWidth: isCompactTrend() ? 2 : 3,
@@ -854,7 +973,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     legend: { display: false },
                     emptyChartMessage: {
                         color: mutedColor,
-                        text: ''
+                        text: 'Complete a scored interview to see your readiness trend.'
                     },
                     tooltip: {
                         mode: 'index',
@@ -868,6 +987,10 @@ document.addEventListener("DOMContentLoaded", function() {
                         displayColors: false,
                         callbacks: {
                             label: function(context) {
+                                if (context.parsed.y === null || typeof context.parsed.y === 'undefined') {
+                                    return ' No readiness score yet';
+                                }
+
                                 return ' Readiness Score: ' + context.parsed.y + '%';
                             }
                         }
@@ -903,9 +1026,9 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         const applyTrendRange = (range) => {
-            const nextTrend = trendSlice(range);
-            progressChart.data.labels = nextTrend.labels.length ? nextTrend.labels : ['No Data'];
-            progressChart.data.datasets[0].data = nextTrend.data.length ? nextTrend.data : [0];
+            const nextTrend = displayTrend(trendSlice(range));
+            progressChart.data.labels = nextTrend.labels;
+            progressChart.data.datasets[0].data = nextTrend.data;
             progressChart.update();
         };
 
@@ -913,7 +1036,10 @@ document.addEventListener("DOMContentLoaded", function() {
             applyTrendRange(event.target.value);
         });
 
+        let trendResizeTimer = null;
         window.addEventListener('resize', () => {
+            window.clearTimeout(trendResizeTimer);
+            trendResizeTimer = window.setTimeout(() => {
             const compact = isCompactTrend();
             progressChart.data.datasets[0].borderWidth = compact ? 2 : 3;
             progressChart.data.datasets[0].pointBorderWidth = compact ? 2 : 3;
@@ -925,6 +1051,7 @@ document.addEventListener("DOMContentLoaded", function() {
             progressChart.options.scales.x.ticks.font.size = compact ? 9 : 11;
             progressChart.options.scales.x.ticks.maxTicksLimit = compact ? 4 : 8;
             progressChart.update('none');
+            }, 120);
         });
     }
 
@@ -939,7 +1066,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ];
         const hasRadarScores = radarScores.some((value) => Number(value) > 0);
         dashboardHasRadarScores = hasRadarScores;
-        const radarDisplayScores = hasRadarScores ? radarScores : [35, 35, 35, 35, 35];
+        const radarDisplayScores = hasRadarScores ? radarScores : [0, 0, 0, 0, 0];
         const radarColors = getRadarDatasetColors(hasRadarScores, initialPalette);
 
         radarChart = new Chart(radarCanvas.getContext('2d'), {
@@ -971,8 +1098,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     legend: { display: false },
                     emptyChartMessage: {
                         color: mutedColor,
-                        force: false,
-                        text: ''
+                        force: !hasRadarScores,
+                        text: 'Complete scored interviews to build your skill radar.'
                     }
                 },
                 scales: {
@@ -1032,6 +1159,7 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 });
 </script>
+@endpush
 
 @push('scripts')
 <script>

@@ -6733,3 +6733,201 @@
             width: 100%;
         }
     }
+/* Final mobile UI bug fixes for Progress. */
+#sec-progress-tracking .progress-export-status {
+    margin: 8px 0 12px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    color: #1d4ed8;
+    font-size: 0.76rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+#sec-progress-tracking .progress-export-status[data-type="success"] {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.24);
+    color: #047857;
+}
+
+#sec-progress-tracking .progress-export-status[data-type="error"] {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.24);
+    color: #dc2626;
+}
+
+#sec-progress-tracking.progress-exporting .progress-actions,
+#sec-progress-tracking.progress-exporting .history-search,
+#sec-progress-tracking.progress-exporting .history-actions,
+#sec-progress-tracking.progress-exporting .history-card-actions,
+#sec-progress-tracking.progress-exporting .progress-export-status {
+    display: none !important;
+}
+
+#sec-progress-tracking .progress-chart-runtime-empty {
+    min-height: 260px;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 18px;
+    border-radius: 8px;
+    border: 1px dashed rgba(37, 99, 235, 0.26);
+    color: var(--tx3);
+}
+
+#sec-progress-tracking .progress-chart-runtime-empty i {
+    color: #2563eb;
+    font-size: 1.35rem;
+    margin-bottom: 10px;
+}
+
+#sec-progress-tracking .progress-chart-runtime-empty h6 {
+    margin: 0 0 6px;
+    color: var(--tx);
+    font-size: 0.88rem;
+    font-weight: 900;
+}
+
+#sec-progress-tracking .progress-chart-runtime-empty p {
+    margin: 0;
+    font-size: 0.76rem;
+    line-height: 1.35;
+}
+
+@media (max-width: 991.98px) {
+    html body #sec-progress-tracking {
+        overflow-x: hidden !important;
+        padding-bottom: calc(var(--mob-nav-h, 78px) + env(safe-area-inset-bottom) + 12px) !important;
+    }
+
+    html body #sec-progress-tracking > .row {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body #sec-progress-tracking > .row > [class*="col-"],
+    html body #sec-progress-tracking #readiness-trend,
+    html body #sec-progress-tracking #category-perf,
+    html body #sec-progress-tracking #skill-tracker,
+    html body #sec-progress-tracking #strengths-tracker,
+    html body #sec-progress-tracking #history-table,
+    html body #sec-progress-tracking #learning-progress,
+    html body #sec-progress-tracking #voice-progress,
+    html body #sec-progress-tracking #activity-calendar,
+    html body #sec-progress-tracking #goals-milestones,
+    html body #sec-progress-tracking #achievements-badges {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    html body #sec-progress-tracking .progress-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        position: static !important;
+        margin: 8px 0 10px !important;
+    }
+
+    html body #sec-progress-tracking .progress-export-btn {
+        width: 100% !important;
+        min-height: 44px !important;
+        border-radius: 8px !important;
+        font-size: 0.76rem !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+
+    html body #sec-progress-tracking .premium-panel,
+    html body #sec-progress-tracking .history-card,
+    html body #sec-progress-tracking .learning-panel,
+    html body #sec-progress-tracking .recommend-panel,
+    html body #sec-progress-tracking .voice-panel,
+    html body #sec-progress-tracking .activity-panel,
+    html body #sec-progress-tracking .milestone-panel,
+    html body #sec-progress-tracking .achievement-panel {
+        border-radius: 8px !important;
+    }
+
+    html body #sec-progress-tracking .premium-panel:hover,
+    html body #sec-progress-tracking .history-card:hover {
+        transform: none !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-list {
+        grid-template-columns: 1fr !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-card-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 44px !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-feedback-btn,
+    html body #sec-progress-tracking #history-table .history-delete-btn,
+    html body #sec-progress-tracking #history-table .history-clear-btn {
+        min-height: 44px !important;
+        border-radius: 8px !important;
+    }
+
+    html body #sec-progress-tracking #activity-calendar .activity-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    html body #sec-progress-tracking #activity-calendar .activity-grid {
+        grid-template-columns: repeat(7, minmax(38px, 1fr)) !important;
+        gap: 5px !important;
+        overflow-x: auto !important;
+        padding-bottom: 4px !important;
+    }
+
+    html body #sec-progress-tracking #activity-calendar .activity-day {
+        min-height: 50px !important;
+        border-radius: 8px !important;
+    }
+
+    html body #sec-progress-tracking #activity-calendar .activity-legend {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    html body #sec-progress-tracking .chart-frame {
+        min-height: 260px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    html body #sec-progress-tracking .progress-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    html body #sec-progress-tracking .progress-export-btn {
+        min-height: 42px !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-card-actions {
+        grid-template-columns: 1fr !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-delete-btn {
+        width: 100% !important;
+    }
+
+    html body #sec-progress-tracking #activity-calendar .activity-day {
+        min-width: 36px !important;
+    }
+
+    html body #sec-progress-tracking .chart-frame {
+        min-height: 238px !important;
+    }
+}

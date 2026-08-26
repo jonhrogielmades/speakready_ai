@@ -1085,7 +1085,7 @@
                 serverDetectedMobile: context.serverDetectedMobile,
                 stepsDesktop: steps,
                 stepsMobile: steps,
-                autoStart: context.autoStart,
+                autoStart: context.autoStart === true,
                 autoStartDelay: context.autoStartDelay ?? 700,
                 startDelay: context.startDelay ?? 0,
                 isFallback: true,

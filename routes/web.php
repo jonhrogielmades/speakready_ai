@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InterviewController;
 use App\Http\Controllers\InterviewPackController;
+use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\MentorReviewController;
 use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
@@ -54,6 +55,13 @@ Route::post('/shared/{token}/mentor-comments', [MentorReviewController::class, '
 
 // Contact Form Route
 Route::post('/contact/send', [ContactController::class, 'send'])->name('contact.send');
+Route::post('/newsletter/subscribe', [ContactController::class, 'subscribe'])->name('newsletter.subscribe');
+
+// Public Legal Routes
+Route::get('/privacy-policy', [LegalPageController::class, 'privacy'])->name('legal.privacy');
+Route::get('/terms-of-service', [LegalPageController::class, 'terms'])->name('legal.terms');
+Route::get('/security', [LegalPageController::class, 'security'])->name('legal.security');
+Route::get('/cookie-preferences', [LegalPageController::class, 'cookies'])->name('legal.cookies');
 
 // User Routes
 Route::middleware(['auth', 'user'])->group(function () {

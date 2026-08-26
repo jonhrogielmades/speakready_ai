@@ -290,7 +290,7 @@ if (typeof desktopMenuBreakpoint.addEventListener === 'function') {
 }
 
 const guestAuthPanel = document.getElementById('lofc');
-guestAuthPanel?.addEventListener('hidden.bs.offcanvas', () => {
+guestAuthPanel?.addEventListener('hidden.bs.modal', () => {
     if (!restoreMobileMenuFocusAfterAuth) return;
 
     restoreMobileMenuFocusAfterAuth = false;
@@ -445,6 +445,8 @@ function swTab(t) {
 
     loginTab?.classList.toggle('on', isL);
     signupTab?.classList.toggle('on', !isL);
+    loginTab?.setAttribute('aria-selected', isL ? 'true' : 'false');
+    signupTab?.setAttribute('aria-selected', isL ? 'false' : 'true');
     if (loginErr) loginErr.style.display = 'none';
     if (signupErr) signupErr.style.display = 'none';
 }
@@ -538,9 +540,11 @@ function loginSuccess(user) {
     if (oc) oc.hide();
     const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     // topbar
-    document.getElementById('userAvatar').textContent = initials;
-    document.getElementById('userName').textContent = user.name;
-    document.getElementById('userPlan').textContent = user.plan;
+    document.querySelectorAll('#userAvatar, .user-avatar').forEach(el => {
+        el.textContent = initials;
+    });
+    if (document.getElementById('userName')) document.getElementById('userName').textContent = user.name;
+    if (document.getElementById('userPlan')) document.getElementById('userPlan').textContent = user.plan;
     // profile dropdown
     document.getElementById('pdAvatar').textContent = initials;
     document.getElementById('pdName').textContent = user.name;
@@ -919,14 +923,26 @@ document.getElementById('chatInp')?.addEventListener('input', function() {
 });
 
 /*  NOTIFICATION DROPDOWN  */
+function setDropdownA11y(dropdownId, triggerId, isOpen) {
+    const dropdown = document.getElementById(dropdownId);
+    const trigger = document.getElementById(triggerId);
+    if (dropdown) {
+        dropdown.classList.toggle('open', Boolean(isOpen));
+        dropdown.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }
+    if (trigger) {
+        trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+}
+
 function toggleNotif(e) {
     if (e) e.stopPropagation();
     const nd = document.getElementById('notifDropdown');
     const pd = document.getElementById('profileDropdown');
-    if (pd) pd.classList.remove('open');
+    if (pd) setDropdownA11y('profileDropdown', 'userPill', false);
     const ch = document.getElementById('profileChevron');
     if (ch) ch.style.transform = 'rotate(0deg)';
-    if (nd) nd.classList.toggle('open');
+    if (nd) setDropdownA11y('notifDropdown', 'bellBtn', !nd.classList.contains('open'));
 }
 
 function markAllRead() {
@@ -947,8 +963,8 @@ function toggleProfile(e) {
     if (e) e.stopPropagation();
     const pd = document.getElementById('profileDropdown');
     const nd = document.getElementById('notifDropdown');
-    if (nd) nd.classList.remove('open');
-    if (pd) pd.classList.toggle('open');
+    if (nd) setDropdownA11y('notifDropdown', 'bellBtn', false);
+    if (pd) setDropdownA11y('profileDropdown', 'userPill', !pd.classList.contains('open'));
     const ch = document.getElementById('profileChevron');
     if (ch && pd) {
         ch.style.transform = pd.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
@@ -958,10 +974,18 @@ function toggleProfile(e) {
 /* Close dropdowns on outside click */
 document.addEventListener('click', (e) => {
     if (!document.getElementById('notifWrap')?.contains(e.target))
-        document.getElementById('notifDropdown')?.classList.remove('open');
+        setDropdownA11y('notifDropdown', 'bellBtn', false);
     if (!document.getElementById('profileWrap')?.contains(e.target)) {
-        document.getElementById('profileDropdown')?.classList.remove('open');
+        setDropdownA11y('profileDropdown', 'userPill', false);
         const ch = document.getElementById('profileChevron');
         if (ch) ch.style.transform = 'rotate(0deg)';
     }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    setDropdownA11y('notifDropdown', 'bellBtn', false);
+    setDropdownA11y('profileDropdown', 'userPill', false);
+    const ch = document.getElementById('profileChevron');
+    if (ch) ch.style.transform = 'rotate(0deg)';
 });

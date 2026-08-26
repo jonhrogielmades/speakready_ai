@@ -89,9 +89,16 @@
         <div class="tab-pane fade show active" id="chapters" role="tabpanel" aria-labelledby="chapters-tab">
             @if($module->chapters->count() > 0)
                 @foreach($module->chapters as $index => $chapter)
+                    @php
+                        $chapterNumber = $index + 1;
+                        $chapterTitle = trim((string) ($chapter->title ?? ''));
+                        $chapterLabel = preg_match('/^chapter\s+\d+\b/i', $chapterTitle)
+                            ? $chapterTitle
+                            : 'Chapter ' . $chapterNumber . ($chapterTitle !== '' ? ': ' . $chapterTitle : '');
+                    @endphp
                     <div class="chapter-card">
                         <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
-                            <h4 class="chapter-title">Chapter {{ $index + 1 }}: {{ $chapter->title }}</h4>
+                            <h4 class="chapter-title">{{ $chapterLabel }}</h4>
                             <span class="badge" style="background:var(--bg2); color:var(--tx3); border:1px solid var(--bd);">{{ $chapter->reading_time ?? 5 }} min read</span>
                         </div>
                         <div class="chapter-content">

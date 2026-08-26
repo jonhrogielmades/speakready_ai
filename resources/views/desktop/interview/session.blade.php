@@ -72,6 +72,9 @@
         @if($sessionRecord && $questions->count() > 0)
         @php
             $showCameraPanel = (bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false);
+            $savedStateForUi = json_decode($sessionRecord->session_state ?? '', true);
+            $hasSavedInterviewState = is_array($savedStateForUi) && !empty($savedStateForUi['has_started']);
+            $initialQuestionCounter = $hasSavedInterviewState ? 'Resume' : 'Ready';
         @endphp
         <div id="workspaceWrapper" style="display:none;">
         <div class="row g-4" id="workspaceRow">
@@ -82,14 +85,16 @@
                 <!-- Simulated AI Video Avatar Panel -->
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
-                    <!-- Video-call style self-view -->
-                    <div class="d-block mobile-camera-pip">
+                    @if($showCameraPanel)
+                    <!-- Mobile fallback self-view; desktop uses the full camera coach panel. -->
+                    <div class="mobile-camera-pip d-lg-none">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                         <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
                     </div>
+                    @endif
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
-                        <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">1/10</span>
+                        <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">{{ $initialQuestionCounter }}</span>
                     </div>
                     <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> Philippines interviewer</span>
                     <div class="question-timer-anchor">
@@ -134,7 +139,7 @@
                     <!-- Left: Navigation / Secondary -->
                     <div class="d-flex gap-2 w-100 flex-fill">
                         <button type="button" class="btn btn-outline-info flex-fill" onclick="repeatQuestion()" style="border-radius:12px;"><i class="fa-solid fa-volume-high me-2"></i>Repeat</button>
-                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="abortInterviewSession()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
+                        <button type="button" class="btn btn-outline-danger flex-fill" onclick="requestAbortInterviewSession()" style="border-radius:12px;"><i class="fa-solid fa-flag-checkered me-2"></i>End Session</button>
                     </div>
                     
                     <!-- Right: Primary Actions (Mic + Send) -->
@@ -149,8 +154,8 @@
                                 </button>
                             @else
                                 <div class="d-flex gap-2">
-                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;"><i class="fa-solid fa-pause"></i></button>
-                                    <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;"><i class="fa-solid fa-stop"></i></button>
+                                    <button type="button" id="micPauseBtn" class="btn btn-warning" onclick="toggleRecordingPause()" style="display:inline-flex; border-radius:12px;" aria-label="Pause recording" title="Pause recording"><i class="fa-solid fa-pause"></i></button>
+                                    <button type="button" id="micStopBtn" class="btn btn-danger" onclick="stopRecording()" style="display:inline-flex; border-radius:12px;" aria-label="Stop recording" title="Stop recording"><i class="fa-solid fa-stop"></i></button>
                                 </div>
                             @endif
                         </div>
@@ -158,6 +163,7 @@
 
                     </div>
                 </div>
+                <div id="sessionNotice" class="session-inline-alert" role="alert" aria-live="assertive" hidden></div>
 
                 <!-- Answer Response System -->
                 <div class="panel response-panel mb-4 animate-fade-up delay-200">
@@ -178,13 +184,22 @@
                         <!-- Voice controls moved to interviewControls panel -->
 
                         <div id="chatTranscriptContainer" style="max-height: none; overflow: visible; padding: 0; margin-bottom: 12px; background: transparent; border: 0; display: none; flex-direction: column; gap: 10px;"></div>
-                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..."></textarea>
+                        <label for="answerTextarea" class="visually-hidden">Your interview answer</label>
+                        <textarea id="answerTextarea" class="oinp mb-2" style="min-height:76px;font-size:.82rem" placeholder="Type your answer using your own Philippine school, work, internship, or project evidence..." aria-describedby="sessionNotice"></textarea>
                         
                         <div class="response-count-bar">
                             <div>
                                 <span id="wordCount">0 words</span> - <span id="charCount">0 characters</span>
                                 <span id="autoSaveIndicator" class="ms-3 text-success" style="display:none;"><i class="fa-solid fa-check me-1"></i>Auto-saved</span>
                             </div>
+                        </div>
+
+                        <div class="interview-confidence-control">
+                            <label for="selfConfidenceRange">
+                                <span><i class="fa-solid fa-chart-simple"></i> Self-rated confidence</span>
+                                <strong id="selfConfidenceValue">50%</strong>
+                            </label>
+                            <input type="range" id="selfConfidenceRange" min="0" max="100" step="5" value="50" aria-label="Self-rated confidence">
                         </div>
 
                         <div class="question-source-panel response-source-panel" id="questionSourcePanel">
@@ -225,11 +240,6 @@
         </div>
         </div>
 
-        @php
-            $savedStateForUi = json_decode($sessionRecord->session_state ?? '', true);
-            $hasSavedInterviewState = is_array($savedStateForUi) && !empty($savedStateForUi['has_started']);
-        @endphp
-
         <form id="finishForm" action="{{ route('interview.finish') }}" method="POST" style="display:none;">
             @csrf
             <input type="hidden" name="session_id" value="{{ $sessionRecord->id }}">
@@ -244,7 +254,10 @@
             </div>
             <h4>Analyzing your response...</h4>
             <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
-            <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
+            <div class="finish-recovery-actions">
+                <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
+                <button type="button" id="finishBackButton" class="finish-secondary-button" style="display:none;" onclick="returnToInterviewAfterFinishError()"><i class="fa-solid fa-arrow-left me-1"></i>Back to answer</button>
+            </div>
         </div>
 
         <div id="interviewStartModal" class="interview-start-modal" role="dialog" aria-modal="true" aria-labelledby="interviewStartTitle" aria-describedby="interviewStartDescription">
@@ -271,9 +284,27 @@
             </div>
         </div>
 
+        <div id="endSessionModal" class="interview-start-modal interview-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="endSessionTitle" aria-describedby="endSessionDescription">
+            <div class="interview-start-dialog">
+                <div class="interview-start-icon danger" aria-hidden="true">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                </div>
+                <h4 id="endSessionTitle">End this interview?</h4>
+                <p id="endSessionDescription">Your current interview will close and you will return to setup.</p>
+                <div class="interview-start-actions">
+                    <button type="button" class="interview-start-button cancel" onclick="cancelAbortInterviewSession()">
+                        <i class="fa-solid fa-arrow-left"></i> Keep Practicing
+                    </button>
+                    <button type="button" id="confirmEndSessionButton" class="interview-start-button danger" onclick="confirmAbortInterviewSession()">
+                        End Session <i class="fa-solid fa-flag-checkered"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <script>
             const savedSessionState = @json($savedStateForUi ?? []);
-            const initialQuestions = {!! json_encode($questions) !!};
+            const initialQuestions = @json($questions->values());
             const savedQuestionSequence = Array.isArray(savedSessionState.questions)
                 ? savedSessionState.questions.filter(question => question && question.id && question.question_text)
                 : [];
@@ -283,12 +314,12 @@
             const sessionTargetPosition = @json($sessionRecord->target_position ?? 'this role');
             const sessionScenarioLabel = @json($scenarioLabel ?? 'Philippines Interview');
             const sessionDifficultyLabel = @json(ucfirst((string) ($sessionRecord->difficulty ?? 'medium')));
-            const responseMode = "{{ $sessionRecord->response_mode }}";
+            const responseMode = @json($sessionRecord->response_mode ?? 'voice');
             const perQuestionLimitSeconds = {{ (int) (($sessionRecord->time_limit ?? 0) * 60) }};
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
-            const cameraPreviewEnabled = true;
+            const cameraPreviewEnabled = cameraCoachingEnabled;
             let cameraUnavailableReason = null;
             const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
@@ -319,6 +350,9 @@
             const displayedQuestionIds = new Set();
             const firstQuestionIntroText = 'Here is your first question.';
             const firstQuestionIntroDisplayKey = '__first_scored_question_intro__';
+            let currentRepeatPrompt = '';
+            let currentRepeatOptions = {};
+            let sessionNoticeTimer = null;
             
             // Answers state
             function defaultAnswerState() {
@@ -355,6 +389,30 @@
                         answersData[idx] = Object.assign(defaultAnswerState(), savedAnswer);
                     }
                 });
+            }
+
+            function normalizeSelfConfidence(value) {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) return 50;
+                return Math.max(0, Math.min(100, Math.round(numeric)));
+            }
+
+            function syncSelfConfidenceControl(value = null) {
+                const normalized = normalizeSelfConfidence(value ?? document.getElementById('selfConfidenceRange')?.value ?? 50);
+                const selfConfidenceRange = document.getElementById('selfConfidenceRange');
+                const selfConfidenceValue = document.getElementById('selfConfidenceValue');
+
+                if (selfConfidenceRange) {
+                    selfConfidenceRange.value = normalized;
+                }
+                if (selfConfidenceValue) {
+                    selfConfidenceValue.textContent = normalized + '%';
+                }
+                if (answersData[currentQIdx]) {
+                    answersData[currentQIdx].self_reported_confidence = normalized;
+                }
+
+                return normalized;
             }
 
             // Voice state and optional, non-scoring body-language state
@@ -666,6 +724,26 @@
                 status.textContent = message || '';
                 status.style.color = color;
                 status.style.display = message ? 'inline-block' : 'none';
+            }
+
+            function showSessionNotice(message, type = 'error', focus = false) {
+                const notice = document.getElementById('sessionNotice');
+                if (!notice || !message) return;
+                clearTimeout(sessionNoticeTimer);
+                notice.textContent = message;
+                notice.hidden = false;
+                notice.classList.toggle('warning', type === 'warning');
+                notice.classList.toggle('success', type === 'success');
+                if (focus) notice.focus();
+                sessionNoticeTimer = setTimeout(() => {
+                    notice.hidden = true;
+                }, 9000);
+            }
+
+            function clearSessionNotice() {
+                const notice = document.getElementById('sessionNotice');
+                clearTimeout(sessionNoticeTimer);
+                if (notice) notice.hidden = true;
             }
 
             function microphoneRequiresSecureOrigin() {
@@ -2273,6 +2351,10 @@
             function showInterviewerConversation(text, counterText = null) {
                 const qText = document.getElementById('aiQuestionText');
                 if (qText) qText.innerText = text;
+                setRepeatPrompt(text, {
+                    phase: counterText === 'Done' ? 'closing' : 'conversation',
+                    speechText: text
+                });
 
                 const qCounter = document.getElementById('qCounter');
                 if (qCounter && counterText) qCounter.innerText = counterText;
@@ -2395,15 +2477,21 @@
                 document.getElementById('interviewControls').style.opacity = '1';
                 document.getElementById('interviewControls').style.pointerEvents = 'auto';
                 
-                if (cameraPreviewEnabled || cameraCoachingEnabled) initCamera();
+                if (cameraCoachingEnabled || cameraPreviewEnabled) initCamera();
                 
                 if(isVoiceTranscriptionMode()) {
                     document.getElementById('voiceControls').style.display = 'flex';
                     const transcriptionEngine = preferredTranscriptionEngine();
                     if (!transcriptionEngine) {
-                        setTranscriptionStatus(transcriptionUnavailableMessage(), '#f87171');
+                        const message = transcriptionUnavailableMessage();
+                        setTranscriptionStatus(message, '#f87171');
+                        setVoiceControlsEnabled(false, message);
+                        showSessionNotice(`${message} You can type your answer instead.`, 'warning');
                     } else if (transcriptionEngine === 'server') {
+                        setVoiceControlsEnabled(true);
                         setTranscriptionStatus('Server transcription ready');
+                    } else {
+                        setVoiceControlsEnabled(true);
                     }
                 }
 
@@ -2444,8 +2532,17 @@
                 if (!answerListenersBound) {
                     answerListenersBound = true;
                     const answerTextarea = document.getElementById('answerTextarea');
-                    answerTextarea.addEventListener('input', handleAnswerInput);
-                    answerTextarea.addEventListener('paste', handleAnswerPaste);
+                    if (answerTextarea) {
+                        answerTextarea.addEventListener('input', handleAnswerInput);
+                        answerTextarea.addEventListener('paste', handleAnswerPaste);
+                    }
+                    const selfConfidenceRange = document.getElementById('selfConfidenceRange');
+                    if (selfConfidenceRange) {
+                        selfConfidenceRange.addEventListener('input', () => {
+                            syncSelfConfidenceControl();
+                            scheduleStateSave();
+                        });
+                    }
                     document.addEventListener('visibilitychange', () => {
                         if (document.visibilityState === 'hidden') autoSaveState();
                     });
@@ -2486,17 +2583,15 @@
 
                 // Restore answer state if navigated back (though disabled in chat mode)
                 document.getElementById('answerTextarea').value = answersData[idx] ? answersData[idx].text : '';
-                const selfConfidenceRange = document.getElementById('selfConfidenceRange');
-                const selfConfidenceValue = document.getElementById('selfConfidenceValue');
-                if (selfConfidenceRange) {
-                    selfConfidenceRange.value = answersData[idx]?.self_reported_confidence ?? 50;
-                }
-                if (selfConfidenceValue) {
-                    selfConfidenceValue.textContent = (answersData[idx]?.self_reported_confidence ?? 50) + '%';
-                }
+                syncSelfConfidenceControl(answersData[idx]?.self_reported_confidence ?? 50);
                 resetSpeechRecognitionBufferFromTextarea();
                 lastTimelineCaptureAt = 0;
                 
+                setRepeatPrompt(q.question_text, {
+                    questionId: q.id,
+                    phase: 'question',
+                    speechText: q.question_text
+                });
                 await speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
                 if (interviewTerminated || interviewEnding) return;
                 setAnswerInputEnabled(true);
@@ -2555,9 +2650,25 @@
                 return cleanName;
             }
 
+            function setRepeatPrompt(text, options = {}) {
+                currentRepeatPrompt = String(text || '').trim();
+                currentRepeatOptions = {
+                    questionId: options.questionId || null,
+                    phase: options.phase || 'repeat',
+                    speechText: options.speechText || currentRepeatPrompt
+                };
+            }
+
             function repeatQuestion() {
-                if(questions && questions[currentQIdx]) {
-                    speakQuestion(questions[currentQIdx].question_text, { questionId: questions[currentQIdx].id });
+                const fallbackQuestion = questions && questions[currentQIdx] ? questions[currentQIdx] : null;
+                const repeatText = currentRepeatPrompt || fallbackQuestion?.question_text || '';
+                if(repeatText) {
+                    speakQuestion(repeatText, {
+                        ...currentRepeatOptions,
+                        questionId: currentRepeatOptions.questionId || fallbackQuestion?.id,
+                        speechText: currentRepeatOptions.speechText || repeatText,
+                        startTimerAfterSpeech: false
+                    });
                 }
             }
 
@@ -2850,8 +2961,27 @@
                     pauseBtn.setAttribute('title', state === 'paused' ? 'Resume recording' : 'Pause recording');
                 }
 
-                if (stopBtn) stopBtn.style.display = 'inline-flex';
+                if (stopBtn) {
+                    stopBtn.style.display = 'inline-flex';
+                    stopBtn.setAttribute('aria-label', 'Stop recording');
+                    stopBtn.setAttribute('title', 'Stop recording');
+                }
                 if (timer) timer.style.display = 'block';
+            }
+
+            function setVoiceControlsEnabled(enabled, reason = '') {
+                ['holdToTalkBtn', 'micPauseBtn', 'micStopBtn'].forEach(id => {
+                    const button = document.getElementById(id);
+                    if (!button) return;
+                    button.disabled = !enabled;
+                    button.classList.toggle('voice-control-disabled', !enabled);
+                    if (!button.dataset.defaultTitle) {
+                        button.dataset.defaultTitle = button.getAttribute('title') || button.textContent.trim() || 'Voice recording';
+                    }
+                    const title = enabled ? button.dataset.defaultTitle : (reason || 'Voice recording is unavailable');
+                    button.setAttribute('title', title);
+                    button.setAttribute('aria-label', title);
+                });
             }
 
             async function startRecording(options = {}) {
@@ -2862,7 +2992,8 @@
                 if (!engine) {
                     const message = transcriptionUnavailableMessage();
                     setTranscriptionStatus(message, '#f87171');
-                    if(!silent) alert(message);
+                    setVoiceControlsEnabled(false, message);
+                    if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
                     return false;
                 }
 
@@ -2873,7 +3004,7 @@
                 if (!await ensureMicrophoneReady(engine)) {
                     if(!silent) {
                         const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
-                        alert(message);
+                        showSessionNotice(`${message} You can type your answer instead.`);
                     }
                     return false;
                 }
@@ -2898,10 +3029,14 @@
                     shouldAutoRestartRecognition = false;
                     isRecording = false;
                     isRecordingPaused = false;
-                    if(!silent) alert(document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage());
+                    const message = document.getElementById('transcriptionStatus')?.textContent || transcriptionUnavailableMessage();
+                    setVoiceControlsEnabled(false, message);
+                    if(!silent) showSessionNotice(`${message} You can type your answer instead.`);
                     return false;
                 }
 
+                clearSessionNotice();
+                setVoiceControlsEnabled(true);
                 setRecordingControlButtons('recording');
                 clearInterval(recTimerInterval);
                 
@@ -3012,7 +3147,7 @@
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
                 formData.append('pause_count', answersData[currentQIdx].pause_count);
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
-                answersData[currentQIdx].self_reported_confidence = Number(document.getElementById('selfConfidenceRange')?.value ?? 50);
+                answersData[currentQIdx].self_reported_confidence = syncSelfConfidenceControl();
                 formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
@@ -3137,7 +3272,11 @@
                 let answerText = document.getElementById('answerTextarea').value.trim();
                 const wasSkipped = options.skipped === true || (timedOut && !answerText);
 
-                if(!answerText && !timedOut && !wasSkipped) return alert("Please provide an answer before submitting.");
+                if(!answerText && !timedOut && !wasSkipped) {
+                    showSessionNotice('Please provide an answer before submitting.');
+                    document.getElementById('answerTextarea')?.focus();
+                    return;
+                }
                 if(!answerText && timedOut) {
                     answerText = "[Time expired with no answer]";
                     document.getElementById('answerTextarea').value = answerText;
@@ -3167,7 +3306,7 @@
                         isSubmittingAnswer = false;
                         if (!interviewTerminated) {
                             setAnswerInputEnabled(true);
-                            alert('We could not save your final answer. Please try again before finishing.');
+                            showSessionNotice('We could not save your final answer. Please try again before finishing.');
                         }
                     }
                     return;
@@ -3211,7 +3350,7 @@
                 formData.append('filler_words_count', answersData[currentQIdx].filler_words);
                 formData.append('pause_count', answersData[currentQIdx].pause_count);
                 formData.append('confidence_score', answersData[currentQIdx].confidence_score);
-                answersData[currentQIdx].self_reported_confidence = Number(document.getElementById('selfConfidenceRange')?.value ?? 50);
+                answersData[currentQIdx].self_reported_confidence = syncSelfConfidenceControl();
                 formData.append('self_reported_confidence', answersData[currentQIdx].self_reported_confidence);
                 formData.append('eye_contact_score', answersData[currentQIdx].eye_contact_score);
                 formData.append('posture_score', answersData[currentQIdx].posture_score);
@@ -3254,7 +3393,7 @@
                     console.error(err);
                     if (!interviewTerminated && err.name !== 'AbortError') {
                         setAnswerInputEnabled(true);
-                        alert(err.message || "Network error.");
+                        showSessionNotice(err.message || 'Network error.');
                     }
                 }
             }
@@ -3352,6 +3491,61 @@
                 }
             }
 
+            function activeInterviewModal() {
+                return document.querySelector('#interviewStartModal.active, #endSessionModal.active');
+            }
+
+            function syncInterviewModalBodyState() {
+                document.body.classList.toggle('interview-start-modal-active', Boolean(activeInterviewModal()));
+            }
+
+            function focusFirstModalAction(modal, selector) {
+                if (!modal) return;
+                setTimeout(() => {
+                    const target = modal.querySelector(selector) || modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                    target?.focus();
+                }, 50);
+            }
+
+            function trapModalFocus(event, modal) {
+                const focusable = Array.from(modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+                    .filter(element => !element.disabled && element.offsetParent !== null);
+                if (!focusable.length) return;
+
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            }
+
+            function requestAbortInterviewSession() {
+                if (interviewTerminated || interviewEnding) return;
+                const modal = document.getElementById('endSessionModal');
+                if (!modal) return;
+                if (modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+                modal.classList.add('active');
+                syncInterviewModalBodyState();
+                focusFirstModalAction(modal, '.interview-start-button.cancel');
+            }
+
+            function cancelAbortInterviewSession() {
+                const modal = document.getElementById('endSessionModal');
+                modal?.classList.remove('active');
+                syncInterviewModalBodyState();
+            }
+
+            function confirmAbortInterviewSession() {
+                cancelAbortInterviewSession();
+                abortInterviewSession();
+            }
+
             function waitForFeedbackRetry(delayMs) {
                 return new Promise(resolve => setTimeout(resolve, Math.max(250, Math.min(2500, delayMs || 1000))));
             }
@@ -3375,8 +3569,10 @@
                 document.getElementById('formNotes').value = '';
                 const transitionMessage = document.getElementById('finishTransitionMessage');
                 const retryButton = document.getElementById('finishRetryButton');
+                const backButton = document.getElementById('finishBackButton');
                 if (transitionMessage) transitionMessage.textContent = 'Please wait while we finalize your interview report.';
                 if (retryButton) retryButton.style.display = 'none';
+                if (backButton) backButton.style.display = 'none';
                 setFinishTransitionVisible(true);
                 const form = document.getElementById('finishForm');
                 const formData = new FormData(form);
@@ -3412,14 +3608,28 @@
                     feedbackSubmissionInFlight = false;
                     const message = document.getElementById('finishTransitionMessage');
                     const retryButton = document.getElementById('finishRetryButton');
+                    const backButton = document.getElementById('finishBackButton');
                     if (message) message.textContent = error.message || 'We could not finish the report. Your final answer is saved.';
                     if (retryButton) retryButton.style.display = 'inline-flex';
+                    if (backButton) backButton.style.display = 'inline-flex';
                     setFinishTransitionVisible(true);
                 }
             }
 
             function retryFinishInterview() {
+                const backButton = document.getElementById('finishBackButton');
+                if (backButton) backButton.style.display = 'none';
                 if (!feedbackSubmissionInFlight) finishInterview();
+            }
+
+            function returnToInterviewAfterFinishError() {
+                if (feedbackSubmissionInFlight) return;
+                interviewEnding = false;
+                finalAnswerSubmitted = false;
+                setFinishTransitionVisible(false);
+                setAnswerInputEnabled(true);
+                showSessionNotice('Report generation paused. Your final answer is still on screen.', 'warning');
+                document.getElementById('answerTextarea')?.focus();
             }
 
             function setInterviewStartModalVisible(visible) {
@@ -3429,13 +3639,10 @@
                     document.body.appendChild(modal);
                 }
                 modal.classList.toggle('active', visible);
-                document.body.classList.toggle('interview-start-modal-active', visible);
+                syncInterviewModalBodyState();
 
                 if (visible) {
-                    setTimeout(() => {
-                        const beginButton = document.getElementById('confirmInterviewStartButton');
-                        if (beginButton) beginButton.focus();
-                    }, 50);
+                    focusFirstModalAction(modal, '#confirmInterviewStartButton');
                 }
             }
 
@@ -3456,12 +3663,34 @@
             document.addEventListener('DOMContentLoaded', () => {
                 updateMobileFullscreenToggle();
                 document.addEventListener('fullscreenchange', handleBrowserFullscreenChange);
+                document.addEventListener('keydown', event => {
+                    const modal = activeInterviewModal();
+                    if (!modal) return;
+
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        if (modal.id === 'endSessionModal') {
+                            cancelAbortInterviewSession();
+                        } else {
+                            cancelInterviewStart();
+                        }
+                        return;
+                    }
+
+                    if (event.key === 'Tab') {
+                        trapModalFocus(event, modal);
+                    }
+                });
                 setInterviewStartModalVisible(!interviewStarted && !interviewTerminated);
             });
         </script>
         @else
-        <div class="panel">
-            <p style="color:var(--tx3)">No questions found for this setup. Please ask an admin to add some.</p>
+        <div class="panel interview-empty-panel">
+            <h5><i class="fa-solid fa-circle-exclamation me-2"></i>No questions found</h5>
+            <p style="color:var(--tx3)">No questions are available for this setup yet.</p>
+            <a href="{{ route('interview.setup') }}" class="interview-start-button begin">
+                Back to setup <i class="fa-solid fa-arrow-right"></i>
+            </a>
         </div>
         @endif
     @endif

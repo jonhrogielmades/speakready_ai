@@ -6,6 +6,9 @@
 @endpush
 
 @section('content')
+@php
+    $hasActiveFeedbackFilters = filled($feedbackFilters['scenario'] ?? '') || filled($feedbackFilters['search'] ?? '');
+@endphp
 
 <div class="db-section active animate-fade-up feedback-shell">
     <div class="feedback-hero" id="feedbackModulesLikeHero">
@@ -180,7 +183,7 @@
                     {{ ($feedbackFilters['sort'] ?? 'desc') === 'desc' ? 'Newest First' : 'Oldest First' }}
                 </a>
                 @if($sessions->total() > 0)
-                    <form class="feedback-clear-form" action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                    <form class="feedback-clear-form" action="{{ route('user.sessions.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear feedback history" data-sr-confirm-message="This will permanently delete all completed interview sessions and their feedback. This cannot be undone." data-sr-confirm-action="Clear All" data-sr-confirm-variant="danger">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-outline-danger">
@@ -188,9 +191,14 @@
                         </button>
                     </form>
                 @endif
+                <label for="feedbackSearch" class="visually-hidden">Search feedback history</label>
                 <div class="input-group db-filter-input feedback-search-wrap">
                     <span class="input-group-text border-0"><i class="fa-solid fa-search"></i></span>
-                    <input type="text" id="feedbackSearch" name="search" form="feedbackFilterForm" class="form-control border-0" placeholder="Search feedback..." value="{{ $feedbackFilters['search'] ?? '' }}">
+                    <input type="text" id="feedbackSearch" name="search" form="feedbackFilterForm" class="form-control border-0" placeholder="Search feedback..." value="{{ $feedbackFilters['search'] ?? '' }}" aria-describedby="feedbackFilterStatus" autocomplete="off">
+                </div>
+                <div class="feedback-filter-status" id="feedbackFilterStatus" role="status" aria-live="polite" hidden>
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span>Updating feedback...</span>
                 </div>
             </div>
         </div>
@@ -198,7 +206,12 @@
         @if($sessions->count() == 0)
             <div class="feedback-empty-state">
                 <i class="fa-solid fa-message" aria-hidden="true"></i>
-                {{ $hasFeedbackRecords ? 'No feedback records match your current filters.' : 'Complete a practice interview to generate feedback.' }}
+                <div class="feedback-empty-copy">
+                    <span>{{ $hasFeedbackRecords ? 'No feedback records match your current filters.' : 'Complete a practice interview to generate feedback.' }}</span>
+                    @if($hasActiveFeedbackFilters)
+                        <a href="{{ route('user.feedback') }}" class="feedback-empty-reset">Clear filters</a>
+                    @endif
+                </div>
             </div>
         @else
         <div class="table-responsive feedback-table-wrap">
@@ -241,7 +254,7 @@
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 feedback-history-actions">
                                     <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-primary btn-shine"><i class="fa-solid fa-chart-simple"></i> View Details</a>
-                                    <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                    <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete interview session" data-sr-confirm-message="This will permanently delete this interview session and its feedback. This cannot be undone." data-sr-confirm-action="Delete Session" data-sr-confirm-variant="danger">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session">
@@ -258,10 +271,12 @@
         </div>
         @endif
         
-        <!-- Pagination UI -->
-        <div class="mt-4 d-flex justify-content-end" id="feedbackPagination">
-            {{ $sessions->links('pagination::bootstrap-5') }}
-        </div>
+        @if($sessions->hasPages())
+            <!-- Pagination UI -->
+            <div class="mt-4 d-flex justify-content-end" id="feedbackPagination">
+                {{ $sessions->links('pagination::bootstrap-5') }}
+            </div>
+        @endif
     </div>
 </div>
 
@@ -270,10 +285,19 @@
         const searchInput = document.getElementById('feedbackSearch');
         const scenarioFilter = document.getElementById('scenarioFilter');
         const filterForm = document.getElementById('feedbackFilterForm');
+        const filterStatus = document.getElementById('feedbackFilterStatus');
+        const feedbackShell = document.querySelector('.feedback-shell');
         let searchTimer = null;
+        let isSubmitting = false;
 
         function submitFilters() {
-            if (!filterForm) return;
+            if (!filterForm || isSubmitting) return;
+            isSubmitting = true;
+            feedbackShell?.classList.add('feedback-is-filtering');
+            filterForm.setAttribute('aria-busy', 'true');
+            if (filterStatus) {
+                filterStatus.hidden = false;
+            }
             filterForm.submit();
         }
 
@@ -285,6 +309,12 @@
             searchInput.addEventListener('input', function() {
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(submitFilters, 450);
+            });
+            searchInput.addEventListener('keydown', function(event) {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                clearTimeout(searchTimer);
+                submitFilters();
             });
         }
     });
@@ -313,11 +343,17 @@
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}
         ];
 
+        const filterTourSteps = (steps) => steps.filter((step) => document.querySelector(step.element));
+        const visibleMobileSteps = filterTourSteps(stepsMobile);
+        const visibleDesktopSteps = filterTourSteps(stepsDesktop);
+
+        if (!visibleMobileSteps.length && !visibleDesktopSteps.length) return;
+
         window.createSpeakReadyTour({
             completionKey: 'onboarding_completed_feedback',
             serverDetectedMobile: true,
-            stepsMobile,
-            stepsDesktop,
+            stepsMobile: visibleMobileSteps,
+            stepsDesktop: visibleDesktopSteps,
             autoStartDelay: 500,
         });
     });

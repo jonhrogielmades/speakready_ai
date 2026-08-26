@@ -1325,6 +1325,10 @@ a {
   padding: 6px 12px;
   border-radius: 12px;
   border: 1px solid var(--bd);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   transition: 0.2s;
 }
@@ -1332,6 +1336,15 @@ a {
 .db-user-pill:hover {
   border-color: var(--pur);
   background: rgba(139, 92, 246, 0.06);
+}
+
+.db-user-pill:focus-visible,
+.dd-close:focus-visible,
+#notifDropdown .user-notif-link-btn:focus-visible,
+#notifDropdown .user-notif-open:focus-visible,
+#notifDropdown .user-notif-ico:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.34);
+  outline-offset: 3px;
 }
 
 .db-avatar {
@@ -1479,6 +1492,71 @@ a {
   flex: 0 0 auto;
   padding: 16px 12px;
   border-top: 1px solid var(--bd);
+}
+
+.db-upgrade-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #eaf4ff;
+  background: linear-gradient(135deg, #0f3b6f 0%, #1d4ed8 62%, #0891b2 100%);
+  border: 1px solid rgba(191, 219, 254, 0.32);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.24);
+}
+
+.db-upgrade-card:hover {
+  color: #fff;
+  border-color: rgba(219, 234, 254, 0.56);
+  transform: translateY(-1px);
+}
+
+.db-upgrade-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #fef3c7;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.db-upgrade-copy {
+  min-width: 0;
+}
+
+.db-upgrade-copy strong,
+.db-upgrade-copy small {
+  display: block;
+}
+
+.db-upgrade-copy strong {
+  color: #fff;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.db-upgrade-copy small {
+  color: rgba(239, 246, 255, 0.86);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  margin-top: 3px;
+}
+
+.db-upgrade-action {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  color: #dbeafe;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 /* DB MAIN */
@@ -2134,7 +2212,15 @@ a {
 }
 
 #notifDropdown .user-notif-open {
+  display: block;
+  border-radius: 8px;
+  color: inherit;
   cursor: pointer;
+  text-decoration: none;
+}
+
+#notifDropdown .user-notif-open:hover strong {
+  color: var(--user-notif-accent);
 }
 
 #notifDropdown .user-notif-copy strong,
@@ -2172,6 +2258,34 @@ a {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 8px;
+}
+
+#notifDropdown .user-notif-status {
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  min-height: 94px;
+  padding: 18px;
+  color: var(--tx3);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+#notifDropdown .user-notif-status.error {
+  color: #ef4444;
+}
+
+#notifDropdown .user-notif-retry {
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  font-size: 0.74rem;
+  font-weight: 900;
 }
 
 #notifDropdown .user-notif-link-btn {
@@ -2222,6 +2336,86 @@ a {
 #notifDropdown .user-notif-view-all i {
   color: var(--user-notif-accent);
   font-size: 0.72rem;
+}
+
+.sr-confirm-modal .modal-content {
+  background: var(--sf, #fff);
+  color: var(--tx, #0f172a);
+  border: 1px solid var(--bd, rgba(148, 163, 184, .24));
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .26);
+  overflow: hidden;
+}
+
+.sr-confirm-modal .modal-header,
+.sr-confirm-modal .modal-footer {
+  border-color: var(--bd, rgba(148, 163, 184, .22));
+}
+
+.sr-confirm-modal .modal-header {
+  background: color-mix(in srgb, var(--sf, #fff) 88%, #2563eb 12%);
+}
+
+.sr-confirm-modal .modal-body {
+  padding: 18px 20px 20px;
+}
+
+.sr-confirm-modal .modal-body p {
+  margin: 0;
+  color: var(--tx2, #475569);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.sr-confirm-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sr-confirm-heading .modal-title {
+  color: var(--tx, #0f172a);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.sr-confirm-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(37, 99, 235, .12);
+  color: #2563eb;
+}
+
+.sr-confirm-icon.danger {
+  background: rgba(239, 68, 68, .12);
+  color: #ef4444;
+}
+
+.sr-confirm-action,
+.sr-confirm-cancel {
+  min-width: 104px;
+  min-height: 40px;
+  border-radius: 9px;
+  font-weight: 900;
+}
+
+.sr-confirm-cancel {
+  border: 1px solid var(--bd, rgba(148, 163, 184, .28));
+  background: transparent;
+  color: var(--tx2, #475569);
+}
+
+.sr-confirm-action.primary {
+  background: #2563eb;
+  color: #fff;
+}
+
+.sr-confirm-action.danger {
+  background: #dc2626;
+  color: #fff;
 }
 
 @media (max-width: 360px) {
@@ -2438,55 +2632,6 @@ a {
   .db-content {
     padding: 16px;
   }
-}
-
-/* Font Awesome 6 Pro Webfonts Fix */
-@font-face {
-  font-family: 'Font Awesome 6 Pro';
-  font-style: normal;
-  font-weight: 900;
-  font-display: block;
-  src: url("../webfonts/fa-solid-900.woff2") format("woff2"), url("../webfonts/fa-solid-900.ttf") format("truetype");
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Pro';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url("../webfonts/fa-regular-400.woff2") format("woff2"), url("../webfonts/fa-regular-400.ttf") format("truetype");
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Pro';
-  font-style: normal;
-  font-weight: 300;
-  font-display: block;
-  src: url("../webfonts/fa-light-300.woff2") format("woff2"), url("../webfonts/fa-light-300.ttf") format("truetype");
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Pro';
-  font-style: normal;
-  font-weight: 100;
-  font-display: block;
-  src: url("../webfonts/fa-thin-100.woff2") format("woff2"), url("../webfonts/fa-thin-100.ttf") format("truetype");
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Brands';
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url("../webfonts/fa-brands-400.woff2") format("woff2"), url("../webfonts/fa-brands-400.ttf") format("truetype");
-}
-
-@font-face {
-  font-family: 'Font Awesome 6 Duotone';
-  font-style: normal;
-  font-weight: 900;
-  font-display: block;
-  src: url("../webfonts/fa-duotone-900.woff2") format("woff2"), url("../webfonts/fa-duotone-900.ttf") format("truetype");
 }
 
 /* DESKTOP SIDEBAR COLLAPSE */
@@ -9234,6 +9379,25 @@ body .modal-title {
   }
 }
 
+/* Final desktop sidebar contrast guard for the upgrade card. */
+@media (min-width: 992px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-upgrade-card {
+    color: #ffffff !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-upgrade-card .db-upgrade-copy strong,
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-upgrade-card .db-upgrade-action,
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-upgrade-card .db-upgrade-action i {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+  }
+
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-upgrade-card .db-upgrade-copy small {
+    color: rgba(255, 255, 255, 0.86) !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.86) !important;
+  }
+}
+
 /* ======================== ADMIN DESKTOP SHELL LAYOUT GUARD ======================== */
 @media (min-width: 992px) {
   body.admin-shell #dashboard,
@@ -9567,4 +9731,28 @@ body.admin-shell.collapsed-sidebar #dashboard .db-main,
 body.admin-shell.collapsed-sidebar #dashboard .db-top,
 body.admin-shell.collapsed-sidebar #dashboard .db-content {
   max-width: calc(100vw - 84px) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill > .d-none.d-md-block {
+  min-width: 0 !important;
+  max-width: 150px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #userName,
+body.user-desktop-shell:not(.admin-shell) #dashboard #userPlan {
+  max-width: 150px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+@media (min-width: 992px) and (max-width: 1100px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill > .d-none.d-md-block {
+    display: none !important;
+  }
 }

@@ -2,7 +2,7 @@
 @section('title', 'Notifications')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=3') }}" data-page-style="user-notifications">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/notifications.css?v=4') }}" data-page-style="user-notifications">
 @endpush
 
 @section('content')

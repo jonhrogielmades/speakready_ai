@@ -445,7 +445,7 @@
     #learning-games-page .score-badge {
         overflow-wrap: anywhere;
     }
-    @media (max-width: 767px) {
+    @media (max-width: 991.98px) {
         #learning-games-page {
             padding-left: 2px;
             padding-right: 2px;
@@ -2271,5 +2271,101 @@
         html body #learning-games-page .journey-header-actions .journey-lives i {
             margin-right: 3px !important;
             font-size: 0.58rem !important;
+        }
+    }
+
+    html body #learning-games-page .learning-search-empty {
+        grid-column: 1 / -1 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 96px;
+        padding: 14px;
+        color: var(--tx3);
+        background: var(--bg3);
+        border: 1px dashed var(--bd2);
+        border-radius: 12px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    html body #learning-games-page .learning-search-empty[hidden],
+    html body #learning-games-page #modules-list > .level-path-line[hidden],
+    html body #learning-games-page #modules-list > .level-node[hidden] {
+        display: none !important;
+    }
+
+    html body #learning-games-page .learning-badge-row {
+        margin-bottom: 0 !important;
+    }
+
+    html body #learning-games-page .learning-badge-row-active {
+        margin-bottom: 20px !important;
+    }
+
+    html body #learning-games-page .start-challenge-btn:disabled {
+        cursor: wait;
+        opacity: 0.74;
+        box-shadow: none !important;
+    }
+
+    @media (max-width: 767px) {
+        html body #learning-games-page #tour-search {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 0 !important;
+        }
+
+        html body #learning-games-page #tour-search input {
+            min-width: 0 !important;
+        }
+
+        html body #learning-games-page #nav-pills-container {
+            display: none !important;
+        }
+
+        html body #learning-games-page .learning-mobile-control-row {
+            width: 100% !important;
+            display: flex !important;
+        }
+
+        html body #learning-games-page .sr-page-actions.learning-actions {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            gap: 8px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between {
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between > span:first-child {
+            min-width: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            font-size: 0.88rem !important;
+        }
+
+        html body #learning-games-page #dashboard-stats .ll-stat-card .d-flex.justify-content-between > span:last-child {
+            flex: 0 0 auto !important;
+            white-space: nowrap !important;
+            font-size: 0.64rem !important;
+            padding: 3px 6px !important;
+        }
+
+        html body #learning-games-page #modules-list.level-path-container {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        html body #learning-games-page #modules-list .level-card {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
         }
     }

@@ -10,6 +10,7 @@
             pageTitle: @json($tutorialPageTitle),
             pageScope: @json(request()->getRequestUri()),
             serverDetectedMobile: @json((bool) ($isMobile ?? false)),
+            autoStart: false,
         };
 
         window.setTimeout(function() {

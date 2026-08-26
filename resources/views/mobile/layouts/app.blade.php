@@ -19,7 +19,7 @@
       <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=32') }}" />
       @include('mobile.partials.onboarding-styles')
       <style>
          /* Global Mobile Responsiveness for Premium UI Updates */
@@ -146,7 +146,7 @@
          }
          :root {
             --mob-nav-h: 72px;
-            --mob-top-h: 56px;
+            --mob-top-h: 64px;
             --mob-safe-top: env(safe-area-inset-top, 0px);
             --mob-safe-bottom: env(safe-area-inset-bottom, 0px);
          }
@@ -233,8 +233,8 @@
          .mob-header-right { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 
          .mob-icon-btn {
-            width: 34px; height: 34px;
-            border-radius: 11px;
+            width: 44px; height: 44px;
+            border-radius: 12px;
             border: 1px solid rgba(148, 163, 184, 0.22);
             background: rgba(255, 255, 255, 0.04); color: var(--tx);
             display: flex; align-items: center; justify-content: center;
@@ -245,7 +245,7 @@
          .lm .mob-icon-btn { background: rgba(255, 255, 255, 0.72); border-color: rgba(37, 99, 235, 0.14); }
 
          .mob-avatar {
-            width: 34px; height: 34px; border-radius: 50%;
+            width: 44px; height: 44px; border-radius: 50%;
             background: #1d4ed8;
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-size: 0.8rem; font-weight: 700;
@@ -676,8 +676,8 @@
          }
 
          .mob-notif-action {
-            min-width: 34px;
-            min-height: 32px;
+            min-width: 44px;
+            min-height: 44px;
             border: 1px solid var(--bd2);
             border-radius: 10px;
             background: transparent;
@@ -686,7 +686,7 @@
             align-items: center;
             justify-content: center;
             gap: 5px;
-            padding: 6px 8px;
+            padding: 10px 12px;
             font-size: 0.72rem;
             font-weight: 800;
          }
@@ -723,10 +723,10 @@
          }
 
          .mob-notif-ico {
-            width: 34px;
-            height: 34px;
+            width: 44px;
+            height: 44px;
             border: 0;
-            border-radius: 11px;
+            border-radius: 12px;
             background: rgba(96, 165, 250, 0.14);
             color: #60a5fa;
             display: flex;
@@ -770,17 +770,20 @@
          .mob-notif-row-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 8px;
             margin-top: 8px;
          }
 
          .mob-notif-link-btn {
-            border: 0;
-            background: transparent;
-            padding: 0;
+            min-height: 44px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: rgba(96, 165, 250, 0.1);
+            padding: 10px 12px;
             color: var(--pur);
             font-size: 0.73rem;
             font-weight: 800;
+            line-height: 1.1;
          }
 
          .mob-notif-link-btn.danger {
@@ -2238,11 +2241,11 @@
             }
 
             .mob-notif-action {
-               min-width: 30px !important;
-               min-height: 30px !important;
-               padding: 6px 8px !important;
+               min-width: 44px !important;
+               min-height: 44px !important;
+               padding: 10px 12px !important;
                border: 1px solid var(--mob-notif-border) !important;
-               border-radius: 8px !important;
+               border-radius: 10px !important;
                background: var(--mob-notif-soft) !important;
                color: var(--mob-notif-title) !important;
                font-size: 0.62rem !important;
@@ -2288,7 +2291,7 @@
 
             .mob-notif-item {
                display: grid !important;
-               grid-template-columns: 32px minmax(0, 1fr) !important;
+               grid-template-columns: 44px minmax(0, 1fr) !important;
                gap: 9px !important;
                padding: 10px !important;
                border: 1px solid var(--mob-notif-border) !important;
@@ -2304,9 +2307,11 @@
             }
 
             .mob-notif-ico {
-               width: 32px !important;
-               height: 32px !important;
-               border-radius: 8px !important;
+               width: 44px !important;
+               height: 44px !important;
+               min-width: 44px !important;
+               min-height: 44px !important;
+               border-radius: 12px !important;
                background: rgba(37, 99, 235, 0.12) !important;
                color: var(--mob-notif-accent) !important;
                font-size: 0.84rem !important;
@@ -2333,9 +2338,18 @@
             }
 
             .mob-notif-link-btn {
+               min-height: 44px !important;
+               display: inline-flex !important;
+               align-items: center !important;
+               justify-content: center !important;
+               padding: 10px 12px !important;
+               border: 1px solid rgba(37, 99, 235, 0.2) !important;
+               border-radius: 10px !important;
+               background: rgba(37, 99, 235, 0.1) !important;
                color: var(--mob-notif-accent) !important;
                font-size: 0.64rem !important;
                font-weight: 900 !important;
+               line-height: 1.12 !important;
             }
 
             .mob-notif-link-btn.danger {
@@ -2349,7 +2363,7 @@
             }
 
             .mob-notif-view-all {
-               min-height: 36px !important;
+               min-height: 44px !important;
                border: 1px solid var(--mob-notif-border) !important;
                border-radius: 8px !important;
                background: var(--mob-notif-card) !important;
@@ -2367,7 +2381,7 @@
 
             /* Final SaaSPro topbar and mobile navigation polish. */
             :root {
-               --mob-top-h: 60px;
+               --mob-top-h: 64px;
                --mob-nav-h: 74px;
             }
 
@@ -2380,7 +2394,7 @@
                --mob-shell-muted: #cbd5e1;
                --mob-shell-accent: #60a5fa;
                --mob-shell-accent-2: #22d3ee;
-               height: calc(60px + var(--mob-safe-top)) !important;
+               height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
                padding: var(--mob-safe-top) 10px 0 !important;
                background:
                   linear-gradient(180deg, var(--mob-shell-bg), var(--mob-shell-bg-2)) !important;
@@ -2402,9 +2416,9 @@
             }
 
             .mob-header-logo {
-               min-height: 38px !important;
-               max-width: clamp(132px, 46vw, 184px) !important;
-               padding: 3px 8px 3px 3px !important;
+               min-height: 44px !important;
+               max-width: clamp(128px, 44vw, 184px) !important;
+               padding: 4px 8px 4px 4px !important;
                border: 1px solid var(--mob-shell-border) !important;
                border-radius: 12px !important;
                background: var(--mob-shell-card) !important;
@@ -2440,8 +2454,11 @@
 
             .mob-icon-btn,
             .mob-avatar {
-               width: 36px !important;
-               height: 36px !important;
+               width: 44px !important;
+               min-width: 44px !important;
+               height: 44px !important;
+               min-height: 44px !important;
+               flex: 0 0 44px !important;
                border: 1px solid var(--mob-shell-border) !important;
                border-radius: 10px !important;
                background: var(--mob-shell-card) !important;
@@ -2646,14 +2663,14 @@
             justify-content: space-between !important;
          }
 
-         body.user-mobile-shell #mob-header .mob-header-brand-pill {
-            flex: 0 0 auto !important;
-            width: clamp(98px, calc(100vw - 222px), 154px) !important;
-            max-width: none !important;
-            height: 36px !important;
-            min-height: 36px !important;
-            box-sizing: border-box !important;
-            padding: 4px 9px 4px 5px !important;
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               flex: 0 0 auto !important;
+               width: clamp(112px, calc(100vw - 282px), 170px) !important;
+               max-width: none !important;
+               height: 44px !important;
+               min-height: 44px !important;
+               box-sizing: border-box !important;
+               padding: 5px 10px 5px 5px !important;
             gap: 5px !important;
             overflow: hidden !important;
             border: 1px solid rgba(191, 219, 254, 0.72) !important;
@@ -2709,6 +2726,7 @@
 
          @media (max-width: 380px) {
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               width: 108px !important;
                padding-right: 7px !important;
                gap: 5px !important;
             }
@@ -2720,6 +2738,7 @@
 
          @media (max-width: 340px) {
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               width: 102px !important;
                padding-right: 6px !important;
             }
 
@@ -2735,7 +2754,7 @@
 
          @media (max-width: 991px) {
             body.user-mobile-shell #mob-header {
-               --mob-top-h: 56px;
+               --mob-top-h: 64px;
                height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
                min-height: calc(var(--mob-top-h) + var(--mob-safe-top)) !important;
                padding: var(--mob-safe-top) 8px 0 10px !important;
@@ -2753,20 +2772,20 @@
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill {
-               width: clamp(112px, 36vw, 142px) !important;
-               height: 32px !important;
-               min-height: 32px !important;
-               padding: 4px 9px 4px 4px !important;
+               width: clamp(112px, 34vw, 148px) !important;
+               height: 44px !important;
+               min-height: 44px !important;
+               padding: 5px 9px 5px 5px !important;
                gap: 5px !important;
-               border-radius: 9px !important;
+               border-radius: 12px !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-logo-ring {
-               width: 23px !important;
-               height: 23px !important;
-               min-width: 23px !important;
-               flex-basis: 23px !important;
-               border-radius: 7px !important;
+               width: 30px !important;
+               height: 30px !important;
+               min-width: 30px !important;
+               flex-basis: 30px !important;
+               border-radius: 8px !important;
             }
 
             body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
@@ -2776,19 +2795,19 @@
 
             body.user-mobile-shell #mob-header .mob-header-right {
                flex: 0 0 auto !important;
-               gap: 5px !important;
+               gap: 4px !important;
                min-width: 0 !important;
             }
 
             body.user-mobile-shell #mob-header .mob-icon-btn,
             body.user-mobile-shell #mob-header .mob-avatar {
-               width: 32px !important;
-               min-width: 32px !important;
-               height: 32px !important;
-               min-height: 32px !important;
-               flex: 0 0 32px !important;
+               width: 44px !important;
+               min-width: 44px !important;
+               height: 44px !important;
+               min-height: 44px !important;
+               flex: 0 0 44px !important;
                padding: 0 !important;
-               border-radius: 9px !important;
+               border-radius: 12px !important;
                border: 1px solid rgba(203, 213, 225, 0.78) !important;
                background: rgba(255, 255, 255, 0.94) !important;
                color: #0f172a !important;
@@ -2804,7 +2823,7 @@
             }
 
             body.user-mobile-shell #mob-header .mob-icon-btn i {
-               font-size: 0.78rem !important;
+               font-size: 0.9rem !important;
                line-height: 1 !important;
             }
 
@@ -2818,7 +2837,7 @@
                width: 100% !important;
                height: 100% !important;
                object-fit: cover !important;
-               border-radius: 8px !important;
+               border-radius: 11px !important;
             }
 
             body.user-mobile-shell #mob-header .mob-avatar::after {
@@ -2839,12 +2858,48 @@
             }
 
             body.user-mobile-shell #mob-header #mobNotifBadge {
-               top: 5px !important;
-               right: 5px !important;
+               top: 8px !important;
+               right: 8px !important;
                width: 7px !important;
                height: 7px !important;
                border-width: 2px !important;
                background: #ef4444 !important;
+            }
+
+            body.user-mobile-shell #mob-header #mobFullscreenBtn {
+               display: inline-flex !important;
+            }
+         }
+
+         @media (max-width: 420px) {
+            body.user-mobile-shell #mob-header #mobFullscreenBtn {
+               display: none !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               width: 132px !important;
+            }
+         }
+
+         @media (max-width: 380px) {
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               width: 132px !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               font-size: 0.68rem !important;
+            }
+         }
+
+         @media (max-width: 350px) {
+            body.user-mobile-shell #mob-header .mob-header-brand-pill {
+               width: 54px !important;
+               padding-right: 5px !important;
+               justify-content: center !important;
+            }
+
+            body.user-mobile-shell #mob-header .mob-header-brand-pill .mob-header-brand-text {
+               display: none !important;
             }
          }
 
@@ -2866,24 +2921,24 @@
             <h6 class="mob-header-brand-text">SpeakReady <span>AI</span></h6>
          </a>
          <div class="mob-header-right">
-            <button class="mob-icon-btn" id="mobTutorialBtn" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
+            <button class="mob-icon-btn" id="mobTutorialBtn" type="button" aria-label="Start tutorial" onclick="triggerMobTutorial()" title="Start Tutorial" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
                <i class="fa-solid fa-circle-play"></i>
             </button>
             <button class="mob-icon-btn" id="mobFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
                <i class="fa-solid fa-expand" id="mobFullscreenIcon"></i>
             </button>
-            <button class="mob-icon-btn" id="mobThBtn" onclick="toggleTheme()" title="Toggle theme">
+            <button class="mob-icon-btn" id="mobThBtn" type="button" aria-label="Toggle color theme" onclick="toggleTheme()" title="Toggle theme">
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
             </button>
             <div class="mob-notif-wrap" id="mobNotifWrap">
-               <button class="mob-icon-btn" id="mobBellBtn" type="button" aria-label="Open notifications" aria-controls="mobNotifDropdown" aria-expanded="false" onclick="toggleMobileNotif(event)" style="position:relative;">
+               <button class="mob-icon-btn" id="mobBellBtn" type="button" aria-label="Open notifications" aria-controls="mobNotifDropdown" aria-expanded="false" aria-haspopup="true" onclick="toggleMobileNotif(event)" style="position:relative;">
                   <i class="fa-regular fa-bell"></i>
                   <span id="mobNotifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
                </button>
             </div>
             <div class="mob-profile-wrap" id="mobProfileWrap">
-               <button class="mob-avatar" id="mobProfileBtn" type="button" aria-label="Open account menu" aria-controls="mobProfileDropdown" aria-expanded="false" onclick="toggleMobileProfile(event, 'account')" title="Profile" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+               <button class="mob-avatar" id="mobProfileBtn" type="button" aria-label="Open account menu" aria-controls="mobProfileDropdown" aria-expanded="false" aria-haspopup="true" onclick="toggleMobileProfile(event, 'account')" title="Profile" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
                   @if(Auth::check() && Auth::user()->profile_photo_path)
                      @php
                          $photoPath = Auth::user()->profile_photo_path;
@@ -2898,7 +2953,7 @@
          </div>
       </header>
 
-      <div class="mob-profile-dropdown" id="mobProfileDropdown" aria-hidden="true" data-mode="pages" data-origin="top">
+      <div class="mob-profile-dropdown" id="mobProfileDropdown" aria-hidden="true" role="dialog" aria-modal="false" aria-labelledby="mobProfileBtn" data-mode="pages" data-origin="top">
          <div class="mob-profile-head">
             <div class="mob-profile-head-avatar">
                @if(Auth::check() && Auth::user()->profile_photo_path)
@@ -2961,11 +3016,11 @@
          </div>
       </div>
 
-      <div class="mob-notif-dropdown" id="mobNotifDropdown" aria-hidden="true">
+      <div class="mob-notif-dropdown" id="mobNotifDropdown" aria-hidden="true" role="dialog" aria-modal="false" aria-labelledby="mobNotifDropdownTitle">
          <div class="mob-notif-header">
             <div class="mob-notif-title">
                <i class="fa-regular fa-bell" style="color:var(--pur)"></i>
-               <span>Notifications</span>
+               <span id="mobNotifDropdownTitle">Notifications</span>
                <span class="mob-notif-count" id="mobUnreadCountBadge">0 new</span>
             </div>
             <div class="mob-notif-actions">
@@ -2990,6 +3045,25 @@
       </div>
 
       <div id="mobMoreBackdrop" class="mob-more-backdrop" aria-hidden="true" onclick="closeMobileProfile()"></div>
+
+      <div class="modal fade sr-mobile-confirm-modal" id="srMobileConfirmModal" tabindex="-1" aria-labelledby="srMobileConfirmModalTitle" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <div class="sr-mobile-confirm-icon" id="srMobileConfirmModalIcon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                  <h5 class="modal-title" id="srMobileConfirmModalTitle">Confirm Action</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <p id="srMobileConfirmModalMessage">Are you sure you want to continue?</p>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn sr-mobile-confirm-cancel" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn sr-mobile-confirm-action" id="srMobileConfirmModalAction">Confirm</button>
+               </div>
+            </div>
+         </div>
+      </div>
 
       <!-- ===== BOTTOM NAVIGATION ===== -->
       <nav id="mob-bottom-nav" aria-label="Main navigation">
@@ -3051,12 +3125,87 @@
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <script src="{{ asset('js/main.js?v=7') }}"></script>
+      <script src="{{ asset('js/main.js?v=8') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       <script src="{{ asset('js/user-ui.js') }}?v=13" defer></script>
 
       <script>
+         (function initializeSpeakReadyMobileConfirm() {
+            const getConfirmParts = () => ({
+               modalElement: document.getElementById('srMobileConfirmModal'),
+               title: document.getElementById('srMobileConfirmModalTitle'),
+               message: document.getElementById('srMobileConfirmModalMessage'),
+               action: document.getElementById('srMobileConfirmModalAction'),
+               icon: document.getElementById('srMobileConfirmModalIcon')
+            });
+
+            window.SpeakReadyMobileConfirm = {
+               show(options = {}) {
+                  const parts = getConfirmParts();
+                  if (!parts.modalElement || !parts.action || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+                     return Promise.resolve(false);
+                  }
+
+                  const title = options.title || 'Confirm Action';
+                  const message = options.message || 'Are you sure you want to continue?';
+                  const actionText = options.actionText || options.action || 'Confirm';
+                  const variant = options.variant || 'default';
+
+                  if (parts.title) parts.title.textContent = title;
+                  if (parts.message) parts.message.textContent = message;
+                  parts.action.textContent = actionText;
+                  parts.action.classList.toggle('is-danger', variant === 'danger');
+                  if (parts.icon) parts.icon.classList.toggle('is-danger', variant === 'danger');
+
+                  const modal = bootstrap.Modal.getOrCreateInstance(parts.modalElement);
+
+                  return new Promise(resolve => {
+                     let settled = false;
+                     const cleanup = () => {
+                        parts.action.removeEventListener('click', handleAction);
+                        parts.modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+                     };
+                     const finish = (confirmed) => {
+                        if (settled) return;
+                        settled = true;
+                        cleanup();
+                        resolve(confirmed);
+                     };
+                     const handleAction = () => {
+                        modal.hide();
+                        finish(true);
+                     };
+                     const handleHidden = () => finish(false);
+
+                     parts.action.addEventListener('click', handleAction);
+                     parts.modalElement.addEventListener('hidden.bs.modal', handleHidden);
+                     if (typeof closeMobileNotif === 'function') closeMobileNotif();
+                     if (typeof closeMobileProfile === 'function') closeMobileProfile();
+                     modal.show();
+                  });
+               }
+            };
+
+            document.addEventListener('submit', function(event) {
+               const form = event.target?.closest?.('form[data-sr-confirm-form]');
+               if (!form || form.dataset.srConfirmSubmitting === 'true') return;
+
+               event.preventDefault();
+               window.SpeakReadyMobileConfirm.show({
+                  title: form.dataset.srConfirmTitle,
+                  message: form.dataset.srConfirmMessage,
+                  action: form.dataset.srConfirmAction,
+                  variant: form.dataset.srConfirmVariant
+               }).then(confirmed => {
+                  if (!confirmed) return;
+
+                  form.dataset.srConfirmSubmitting = 'true';
+                  HTMLFormElement.prototype.submit.call(form);
+               });
+            });
+         })();
+
          // Close open header menus with Escape
          (function() {
             document.addEventListener('keydown', e => {
@@ -3269,66 +3418,135 @@
             if (moreBackdrop) moreBackdrop.classList.remove('open');
          }
 
-         function fetchMobileNotifications(forceRender = false) {
-            fetch('/notifications/fetch')
-               .then(res => res.json())
-               .then(data => {
-                  updateMobileNotifUI(data, forceRender);
-               })
-               .catch(err => console.error('Error fetching notifications:', err));
+         const mobileNotificationsUrl = @json(route('user.notifications'));
+         const mobileNotifJsonHeaders = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+         };
+
+         function safeMobileNotificationIcon(value) {
+            const icon = String(value ?? '').trim();
+
+            return /^fa-[a-z0-9-]+$/.test(icon) ? icon : 'fa-bell';
          }
 
-         function updateMobileNotifUI(data, forceRender = false) {
+         function isMobileNotificationDrawerOpen() {
+            return Boolean(document.getElementById('mobNotifDropdown')?.classList.contains('open'));
+         }
+
+         async function requestMobileNotificationJson(url, options = {}) {
+            const response = await fetch(url, {
+               ...options,
+               headers: {
+                  ...mobileNotifJsonHeaders,
+                  ...(options.headers || {})
+               }
+            });
+            const contentType = response.headers.get('content-type') || '';
+            const payload = contentType.includes('application/json') ? await response.json().catch(() => null) : null;
+
+            if (!response.ok) {
+               const message = payload?.message || (response.status === 401
+                  ? 'Please sign in again to view notifications.'
+                  : 'Notifications could not be loaded.');
+               throw new Error(message);
+            }
+
+            return payload || {};
+         }
+
+         function renderMobileNotificationStatus(message, isError = false) {
+            const listContainer = document.getElementById('mobNotifListContainer');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = `
+               <div class="mob-notif-status ${isError ? 'is-error' : ''}">
+                  <i class="fa-solid ${isError ? 'fa-circle-exclamation' : 'fa-bell-slash'}"></i>
+                  <span>${escapeMobileNotifHtml(message)}</span>
+                  ${isError ? '<button class="mob-notif-retry" type="button" data-mob-notif-retry>Retry</button>' : ''}
+               </div>
+            `;
+         }
+
+         function handleMobileNotificationError(error, fallbackMessage = 'Notifications could not be loaded.', shouldReport = true) {
+            if (shouldReport) {
+               console.warn('Mobile notification action failed:', error);
+            }
+
+            if (shouldReport && isMobileNotificationDrawerOpen()) {
+               renderMobileNotificationStatus(error?.message || fallbackMessage, true);
+            }
+         }
+
+         function fetchMobileNotifications(forceRender = false, options = {}) {
+            const quiet = options.quiet === true;
+            const shouldRender = forceRender || (!quiet && isMobileNotificationDrawerOpen());
+            if (shouldRender) {
+               renderMobileNotificationStatus('Loading notifications...');
+            }
+
+            requestMobileNotificationJson('/notifications/fetch')
+               .then(data => updateMobileNotifUI(data, forceRender))
+               .catch(error => handleMobileNotificationError(error, 'Notifications could not be loaded.', !quiet && shouldRender));
+         }
+
+         function updateMobileNotifUI(data = {}, forceRender = false) {
             const badge = document.getElementById('mobNotifBadge');
             const unreadBadge = document.getElementById('mobUnreadCountBadge');
             const listContainer = document.getElementById('mobNotifListContainer');
+            const notifications = Array.isArray(data.notifications) ? data.notifications : [];
+            const unreadCount = Number.isFinite(Number(data.unreadCount))
+               ? Math.max(0, Number(data.unreadCount))
+               : notifications.filter(notification => !notification.read_at).length;
 
             if (badge) {
-               if (data.unreadCount > 0) {
-                  badge.style.display = 'block';
-               } else {
-                  badge.style.display = 'none';
-               }
+               badge.style.display = unreadCount > 0 ? 'block' : 'none';
             }
 
             if (unreadBadge) {
-               if (data.unreadCount > 0) {
+               if (unreadCount > 0) {
                   unreadBadge.style.display = 'inline-block';
-                  unreadBadge.textContent = data.unreadCount + ' new';
+                  unreadBadge.textContent = unreadCount + ' new';
                } else {
                   unreadBadge.style.display = 'none';
                }
             }
 
-            if (!listContainer || (!forceRender && !document.getElementById('mobNotifDropdown')?.classList.contains('open'))) return;
+            if (!listContainer || (!forceRender && !isMobileNotificationDrawerOpen())) return;
 
-            if (!data.notifications || data.notifications.length === 0) {
-               listContainer.innerHTML = '<div class="mob-notif-empty">No notifications to show.</div>';
+            if (notifications.length === 0) {
+               renderMobileNotificationStatus('No notifications to show.');
                return;
             }
 
-            listContainer.innerHTML = data.notifications.map(n => {
-               const title = escapeMobileNotifHtml(n.data?.title || 'Notification');
-               const message = escapeMobileNotifHtml(n.data?.message || '');
-               const icon = escapeMobileNotifHtml(n.data?.icon || 'fa-bell');
-               const date = escapeMobileNotifHtml(new Date(n.created_at).toLocaleString());
-               const unreadClass = n.read_at ? '' : 'unread';
-               const markRead = n.read_at ? '' : `<button class="mob-notif-link-btn" type="button" onclick="markMobileNotificationRead('${n.id}', event)">Mark as read</button>`;
+            listContainer.innerHTML = notifications.map(notification => {
+               const notificationId = escapeMobileNotifHtml(notification.id || '');
+               const title = escapeMobileNotifHtml(notification.data?.title || 'Notification');
+               const message = escapeMobileNotifHtml(notification.data?.message || '');
+               const icon = safeMobileNotificationIcon(notification.data?.icon);
+               const createdAt = notification.created_at ? new Date(notification.created_at) : null;
+               const date = createdAt && !Number.isNaN(createdAt.getTime())
+                  ? escapeMobileNotifHtml(createdAt.toLocaleString())
+                  : '';
+               const unreadClass = notification.read_at ? '' : 'unread';
+               const actionAttr = notificationId ? `data-mob-notif-id="${notificationId}"` : 'disabled aria-disabled="true"';
+               const markRead = notification.read_at ? '' : `<button class="mob-notif-link-btn" type="button" data-mob-notif-action="mark-read" ${actionAttr}>Mark as read</button>`;
 
                return `
                   <div class="mob-notif-item ${unreadClass}">
-                     <button class="mob-notif-ico" type="button" onclick="window.location.href='/notifications'" aria-label="Open notifications page">
+                     <button class="mob-notif-ico" type="button" data-mob-notif-action="open" aria-label="Open notifications page">
                         <i class="fa-solid ${icon}"></i>
                      </button>
                      <div class="mob-notif-copy">
-                        <div onclick="window.location.href='/notifications'" style="cursor:pointer;">
+                        <div class="mob-notif-copy-main" data-mob-notif-action="open" role="link" tabindex="0">
                            <strong>${title}</strong>
                            <span>${message}</span>
-                           <small><i class="fa-regular fa-clock me-1"></i>${date}</small>
+                           ${date ? `<small><i class="fa-regular fa-clock me-1"></i>${date}</small>` : ''}
                         </div>
                         <div class="mob-notif-row-actions">
                            ${markRead}
-                           <button class="mob-notif-link-btn danger" type="button" onclick="deleteMobileNotification('${n.id}', event)">Delete</button>
+                           <button class="mob-notif-link-btn danger" type="button" data-mob-notif-action="delete" ${actionAttr}>Delete</button>
                         </div>
                      </div>
                   </div>
@@ -3336,77 +3554,103 @@
             }).join('');
          }
 
+         function refreshMobileNotificationsAfterAction(data) {
+            if (data.success === false) {
+               throw new Error(data.message || 'Notification action could not be completed.');
+            }
+
+            fetchMobileNotifications(true);
+            if (typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
+         }
+
          function markAllMobileNotificationsRead(e) {
             if (e) e.stopPropagation();
-            fetch('/notifications/read-all', {
-               method: 'POST',
-               headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json'
-               }
-            })
-            .then(res => res.json())
-            .then(data => {
-               if (data.success) {
-                  fetchMobileNotifications(true);
-                  if (typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
-               }
-            });
+            requestMobileNotificationJson('/notifications/read-all', { method: 'POST' })
+               .then(refreshMobileNotificationsAfterAction)
+               .catch(error => handleMobileNotificationError(error, 'Notifications could not be marked as read.'));
          }
 
          function clearAllMobileNotifications(e) {
             if (e) e.stopPropagation();
-            if (confirm('Are you sure you want to clear all notifications?')) {
-               fetch('/notifications/clear-all', {
-                  method: 'DELETE',
-                  headers: {
-                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                     'Content-Type': 'application/json'
-                  }
-               })
-               .then(res => res.json())
-               .then(data => {
-                  if (data.success) {
-                     fetchMobileNotifications(true);
-                     if (typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
-                  }
-               });
-            }
+            window.SpeakReadyMobileConfirm.show({
+               title: 'Clear all notifications?',
+               message: 'This will permanently remove every notification from your account.',
+               action: 'Clear All',
+               variant: 'danger'
+            }).then(confirmed => {
+               if (!confirmed) return;
+
+               requestMobileNotificationJson('/notifications/clear-all', { method: 'DELETE' })
+                  .then(refreshMobileNotificationsAfterAction)
+                  .catch(error => handleMobileNotificationError(error, 'Notifications could not be cleared.'));
+            });
          }
 
          function markMobileNotificationRead(id, e) {
             if (e) e.stopPropagation();
-            fetch('/notifications/' + id + '/read', {
-               method: 'POST',
-               headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json'
-               }
-            })
-            .then(res => res.json())
-            .then(data => {
-               if (data.success) fetchMobileNotifications(true);
-            });
+            if (!id) return;
+
+            requestMobileNotificationJson('/notifications/' + encodeURIComponent(id) + '/read', { method: 'POST' })
+               .then(refreshMobileNotificationsAfterAction)
+               .catch(error => handleMobileNotificationError(error, 'Notification could not be marked as read.'));
          }
 
          function deleteMobileNotification(id, e) {
             if (e) e.stopPropagation();
-            fetch('/notifications/' + id, {
-               method: 'DELETE',
-               headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json'
-               }
-            })
-            .then(res => res.json())
-            .then(data => {
-               if (data.success) fetchMobileNotifications(true);
+            if (!id) return;
+
+            window.SpeakReadyMobileConfirm.show({
+               title: 'Delete notification?',
+               message: 'This notification will be permanently removed.',
+               action: 'Delete',
+               variant: 'danger'
+            }).then(confirmed => {
+               if (!confirmed) return;
+
+               requestMobileNotificationJson('/notifications/' + encodeURIComponent(id), { method: 'DELETE' })
+                  .then(refreshMobileNotificationsAfterAction)
+                  .catch(error => handleMobileNotificationError(error, 'Notification could not be deleted.'));
             });
          }
 
          document.addEventListener('DOMContentLoaded', function() {
-            fetchMobileNotifications();
-            setInterval(fetchMobileNotifications, 60000);
+            document.getElementById('mobNotifDropdown')?.addEventListener('click', function(event) {
+               const clickedElement = event.target instanceof Element ? event.target : event.target?.parentElement;
+               const retryButton = clickedElement?.closest('[data-mob-notif-retry]');
+               if (retryButton) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  fetchMobileNotifications(true);
+                  return;
+               }
+
+               const actionButton = clickedElement?.closest('[data-mob-notif-action]');
+               if (!actionButton) return;
+
+               event.preventDefault();
+               event.stopPropagation();
+               const action = actionButton.dataset.mobNotifAction;
+               const notificationId = actionButton.dataset.mobNotifId;
+
+               if (action === 'open') {
+                  window.location.href = mobileNotificationsUrl;
+               } else if (action === 'mark-read') {
+                  markMobileNotificationRead(notificationId, event);
+               } else if (action === 'delete') {
+                  deleteMobileNotification(notificationId, event);
+               }
+            });
+
+            document.getElementById('mobNotifDropdown')?.addEventListener('keydown', function(event) {
+               const focusedElement = event.target instanceof Element ? event.target : null;
+               if ((event.key === 'Enter' || event.key === ' ') && focusedElement?.matches('[role="link"][data-mob-notif-action="open"]')) {
+                  event.preventDefault();
+                  focusedElement.click();
+               }
+            });
+
+            fetchMobileNotifications(false, { quiet: true });
+            setInterval(() => fetchMobileNotifications(false, { quiet: true }), 60000);
             document.addEventListener('click', function(e) {
                const notifDropdown = document.getElementById('mobNotifDropdown');
                const notifWrap = document.getElementById('mobNotifWrap');

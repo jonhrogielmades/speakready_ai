@@ -572,3 +572,20 @@
             grid-template-columns: minmax(0, 1fr) !important;
         }
     }
+
+    html body #mission-mode-page .mission-card-copy {
+        display: block !important;
+        overflow: visible !important;
+        -webkit-line-clamp: unset !important;
+        -webkit-box-orient: initial !important;
+    }
+
+    html body #mission-mode-page .mission-card {
+        min-height: 134px !important;
+    }
+
+    @media (max-width: 575.98px) {
+        html body #mission-mode-page .mission-card {
+            min-height: 0 !important;
+        }
+    }

@@ -140,6 +140,7 @@
         'interview_format' => old('interview_format', 'standard'),
     ];
     $selectedQuestionTypes = old('question_types', $packQuestionTypes ?: ['Behavioral', 'Situational']);
+    $hasScenarioOptions = $scenarioOptions->isNotEmpty();
 @endphp
 
 <div class="db-section active setup-step-mode" id="sec-interview-setup">
@@ -232,8 +233,8 @@
                                 Practice Scenario
                             </label>
                             <div class="setup-select-wrap">
-                                <select class="oinp setup-input" name="category_id" id="valScenario" required>
-                                @foreach($scenarioOptions as $scenario)
+                                <select class="oinp setup-input" name="category_id" id="valScenario" aria-describedby="scenarioHelp{{ $hasScenarioOptions ? '' : ' scenarioEmptyState' }}" aria-invalid="{{ $hasScenarioOptions ? 'false' : 'true' }}" required>
+                                @forelse($scenarioOptions as $scenario)
                                     <option value="{{ $scenario['category_id'] }}"
                                         data-source-pack-key="{{ $scenario['key'] }}"
                                         data-focus="{{ $scenario['focus'] }}"
@@ -242,12 +243,17 @@
                                         {{ $selectedScenario && (int) $selectedScenario['category_id'] === (int) $scenario['category_id'] ? 'selected' : '' }}>
                                         {{ $scenario['label'] }}
                                     </option>
-                                @endforeach
+                                @empty
+                                    <option value="" selected>No active interview scenarios available</option>
+                                @endforelse
                                 </select>
                             </div>
                             <input type="hidden" name="source_pack_key" id="valSourcePack" value="{{ $selectedScenario['key'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
-                            <div class="desc-text">Active core categories from admin appear here with the matching Philippines source pack.</div>
+                            <div class="desc-text" id="scenarioHelp">Active core categories from admin appear here with the matching Philippines source pack.</div>
+                            @unless($hasScenarioOptions)
+                                <div class="setup-inline-error setup-inline-error-visible" id="scenarioEmptyState" role="alert">No active interview scenarios are available. Ask an admin to activate at least one core category before starting.</div>
+                            @endunless
                         </div>
 
                         <div class="setup-card-field">
@@ -256,8 +262,9 @@
                                 Target Position
                             </label>
                             <div class="setup-search-wrap">
-                                <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ $targetPositionDefault }}" required>
+                                <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ $targetPositionDefault }}" required aria-describedby="targetPositionError">
                             </div>
+                            <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>Enter the target position before continuing.</div>
                         </div>
 
                         <div class="setup-calibrated-simple">
@@ -311,7 +318,7 @@
 
                     <div class="structure-select-grid">
                         <div>
-                            <label class="olbl">Number of Questions</label>
+                            <label class="olbl" for="valNumQuestions">Number of Questions</label>
                             <div class="structure-select-wrap">
                                 <select class="oinp setup-input" name="num_questions" id="valNumQuestions">
                                 <option value="1" {{ $setupDefaults['num_questions'] === '1' ? 'selected' : '' }}>1 Question</option>
@@ -326,7 +333,7 @@
                             </div>
                         </div>
                         <div>
-                            <label class="olbl">Time Limit</label>
+                            <label class="olbl" for="valTimeLimit">Time Limit</label>
                             <div class="structure-select-wrap">
                                 <select class="oinp setup-input" name="time_limit" id="valTimeLimit">
                                 <option value="0" {{ $setupDefaults['time_limit'] === '0' ? 'selected' : '' }}>No Limit</option>
@@ -337,7 +344,7 @@
                             </div>
                         </div>
                         <div>
-                            <label class="olbl">Interview Format Laboratory</label>
+                            <label class="olbl" for="valInterviewFormat">Interview Format Laboratory</label>
                             <div class="structure-select-wrap">
                                 <select class="oinp setup-input" name="interview_format" id="valInterviewFormat">
                                 @foreach([
@@ -401,7 +408,7 @@
 
                     <div class="assistance-stack">
                         <div class="assistance-field">
-                            <label class="olbl">AI Assistance Level</label>
+                            <label class="olbl" for="valAssistance">AI Assistance Level</label>
                             <div class="assistance-select-wrap">
                                 <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance">
                                     <option value="beginner" {{ $setupDefaults['ai_assistance_level'] === 'beginner' ? 'selected' : '' }}>Beginner Mode (More hints & feedback)</option>
@@ -412,8 +419,8 @@
                         </div>
 
                         <div class="assistance-field">
-                            <label class="olbl">Question Types</label>
-                            <div class="assistance-question-list">
+                            <label class="olbl" id="questionTypesLabel">Question Types</label>
+                            <div class="assistance-question-list" id="questionTypeGroup" role="group" aria-labelledby="questionTypesLabel" aria-describedby="questionTypeError" aria-invalid="false">
                                 @foreach([
                                     'Behavioral' => 'fa-regular fa-message',
                                     'Situational' => 'fa-regular fa-user',
@@ -427,10 +434,11 @@
                                     </label>
                                 @endforeach
                             </div>
+                            <div class="setup-inline-error" id="questionTypeError" role="alert" hidden>Select at least one question type.</div>
                         </div>
 
                         <div class="assistance-field">
-                            <label class="olbl">Interviewer Strictness</label>
+                            <label class="olbl" for="valStrictness">Interviewer Strictness</label>
                             <div class="assistance-select-wrap">
                                 <select class="oinp setup-input" name="interviewer_strictness" id="valStrictness">
                                     <option value="friendly" {{ $setupDefaults['interviewer_strictness'] === 'friendly' ? 'selected' : '' }}>Friendly Interviewer</option>
@@ -442,7 +450,7 @@
                         </div>
 
                         <div class="assistance-field">
-                            <label class="olbl">Live Feedback Mode</label>
+                            <label class="olbl" for="valFeedbackMode">Live Feedback Mode</label>
                             <div class="assistance-select-wrap">
                                 <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode">
                                     <option value="coaching" {{ $setupDefaults['live_feedback_mode'] === 'coaching' ? 'selected' : '' }}>Coaching On</option>
@@ -511,7 +519,7 @@
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>
                             <span class="summary-label">Position:</span>
-                            <span class="summary-val" id="sumPosition">Not Specified</span>
+                            <span class="summary-val" id="sumPosition">{{ filled($targetPositionDefault) ? $targetPositionDefault : 'Not Specified' }}</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
@@ -571,7 +579,149 @@
 </div>
 
 <script>
+    const setupRequiredFieldIds = [
+        'valScenario',
+        'valPosition',
+        'valNumQuestions',
+        'valTimeLimit',
+        'valInterviewFormat',
+        'valAssistance',
+        'valStrictness',
+        'valFeedbackMode',
+    ];
+    const setupPanelRequiredFields = {
+        'panel-basic': ['valScenario', 'valPosition'],
+        'panel-structure': ['valNumQuestions', 'valTimeLimit', 'valInterviewFormat'],
+        'panel-content': ['valAssistance', 'valStrictness', 'valFeedbackMode'],
+    };
+    const defaultCompanyPersona = @json($companyPersonaDefault ?: 'Philippines hiring context');
+    let setupValidationVisible = false;
+    const setupFieldErrorIds = {
+        valPosition: 'targetPositionError',
+    };
+
+    function ensureCompanyPersonaFallback() {
+        const personaInput = document.getElementById('valPersona');
+        if (personaInput && !String(personaInput.value || '').trim()) {
+            personaInput.value = defaultCompanyPersona;
+        }
+        return personaInput?.value || defaultCompanyPersona;
+    }
+
+    function setSetupFieldInvalid(field, invalid) {
+        if (!field) return;
+        field.classList.toggle('setup-field-invalid', invalid);
+        field.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+    }
+
+    function setSetupFieldError(fieldId, visible) {
+        const error = document.getElementById(setupFieldErrorIds[fieldId]);
+        if (!error) return;
+        error.hidden = !visible;
+        error.classList.toggle('setup-inline-error-visible', visible);
+    }
+
+    function hasCheckedSetupInput(name) {
+        return Boolean(document.querySelector(`input[name="${name}"]:checked`));
+    }
+
+    function setQuestionTypeError(visible) {
+        const group = document.getElementById('questionTypeGroup');
+        const error = document.getElementById('questionTypeError');
+        if (group) {
+            group.classList.toggle('setup-field-invalid', visible);
+            group.setAttribute('aria-invalid', visible ? 'true' : 'false');
+        }
+        if (error) {
+            error.hidden = !visible;
+            error.classList.toggle('setup-inline-error-visible', visible);
+        }
+    }
+
+    function missingSetupItems(panelId = null) {
+        const fieldIds = panelId ? (setupPanelRequiredFields[panelId] || []) : setupRequiredFieldIds;
+        const missing = fieldIds
+            .map(id => ({ type: 'field', id, panelId }))
+            .filter(item => {
+                const field = document.getElementById(item.id);
+                return !field || String(field.value || '').trim().length === 0;
+            });
+
+        if (!panelId || panelId === 'panel-structure') {
+            if (!hasCheckedSetupInput('difficulty')) {
+                missing.push({ type: 'group', name: 'difficulty', panelId: 'panel-structure' });
+            }
+        }
+
+        if (!panelId || panelId === 'panel-content') {
+            if (!hasCheckedSetupInput('question_types[]')) {
+                missing.push({ type: 'group', name: 'question_types[]', panelId: 'panel-content' });
+            }
+        }
+
+        if (!panelId || panelId === 'panel-response') {
+            if (!hasCheckedSetupInput('response_mode')) {
+                missing.push({ type: 'group', name: 'response_mode', panelId: 'panel-response' });
+            }
+        }
+
+        return missing;
+    }
+
+    function markSetupValidation(missing) {
+        const missingFieldIds = new Set(missing.filter(item => item.type === 'field').map(item => item.id));
+        setupRequiredFieldIds.forEach(id => setSetupFieldInvalid(document.getElementById(id), missingFieldIds.has(id)));
+        Object.keys(setupFieldErrorIds).forEach(id => setSetupFieldError(id, missingFieldIds.has(id)));
+        setQuestionTypeError(missing.some(item => item.name === 'question_types[]'));
+    }
+
+    function focusSetupItem(item) {
+        if (!item) return;
+        const targetPanelId = item.panelId || Object.entries(setupPanelRequiredFields).find(([, ids]) => ids.includes(item.id))?.[0];
+        if (targetPanelId) {
+            const steps = getSetupSteps();
+            const stepIndex = steps.findIndex(step => step.id === targetPanelId);
+            if (stepIndex >= 0) showSetupStep(stepIndex);
+        }
+
+        window.setTimeout(() => {
+            if (item.type === 'field') {
+                document.getElementById(item.id)?.focus();
+                return;
+            }
+
+            if (item.name === 'question_types[]') {
+                document.querySelector('input[name="question_types[]"]')?.focus();
+                return;
+            }
+
+            document.querySelector(`input[name="${item.name}"]`)?.focus();
+        }, 40);
+    }
+
+    function validateSetupStep(panelId, reveal = false) {
+        const missing = missingSetupItems(panelId);
+        if (reveal) {
+            setupValidationVisible = true;
+            markSetupValidation(missing);
+            focusSetupItem(missing[0]);
+        }
+        return missing.length === 0;
+    }
+
+    function validateSetupForm(reveal = false) {
+        ensureCompanyPersonaFallback();
+        const missing = missingSetupItems();
+        if (reveal || setupValidationVisible) {
+            setupValidationVisible = true;
+            markSetupValidation(missing);
+            focusSetupItem(missing[0]);
+        }
+        return missing.length === 0;
+    }
+
     function updateSummary() {
+        ensureCompanyPersonaFallback();
         const scenarioSelect = document.getElementById('valScenario');
         if (scenarioSelect) {
             const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
@@ -607,10 +757,8 @@
             document.getElementById('sumFeedbackMode').innerText = feedbackMode.options[feedbackMode.selectedIndex].text;
         }
 
-        const personaInput = document.getElementById('valPersona');
-        if (personaInput) {
-            document.getElementById('sumPersona').innerText = personaInput.value || 'Standard';
-        }
+        const personaValue = ensureCompanyPersonaFallback();
+        document.getElementById('sumPersona').innerText = personaValue || 'Philippines hiring context';
 
         const timeLimit = parseInt(document.getElementById('valTimeLimit').value);
         let durationStr = "Self-paced";
@@ -627,32 +775,30 @@
         const startButton = document.getElementById('btn-start-interview');
         if (!startButton) return;
 
-        const requiredFields = [
-            'valScenario',
-            'valPosition',
-            'valNumQuestions',
-            'valTimeLimit',
-            'valInterviewFormat',
-            'valAssistance',
-            'valStrictness',
-            'valFeedbackMode',
-            'valPersona',
-        ];
+        ensureCompanyPersonaFallback();
 
-        const hasRequiredFields = requiredFields.every(id => {
+        const hasRequiredFields = setupRequiredFieldIds.every(id => {
             const field = document.getElementById(id);
             return field && String(field.value || '').trim().length > 0;
         });
 
-        const hasDifficulty = Boolean(document.querySelector('input[name="difficulty"]:checked'));
-        const hasResponseMode = Boolean(document.querySelector('input[name="response_mode"]:checked'));
-        const hasQuestionType = Boolean(document.querySelector('input[name="question_types[]"]:checked'));
-        const canStart = hasRequiredFields && hasDifficulty && hasResponseMode && hasQuestionType;
+        const hasDifficulty = hasCheckedSetupInput('difficulty');
+        const hasResponseMode = hasCheckedSetupInput('response_mode');
+        const hasQuestionType = hasCheckedSetupInput('question_types[]');
+        const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasResponseMode && hasQuestionType;
+        const hasReviewedSetupSteps = getRequiredSetupReviewStepIds().every(stepId => visitedSetupStepIds.has(stepId));
+        const canStart = hasCompleteSetupFields && hasReviewedSetupSteps;
+
+        if (setupValidationVisible) {
+            markSetupValidation(missingSetupItems());
+        }
 
         startButton.disabled = !canStart;
         startButton.classList.toggle('setup-start-disabled', !canStart);
         startButton.setAttribute('aria-disabled', canStart ? 'false' : 'true');
-        startButton.title = canStart ? 'Start interview' : 'Complete all required details first';
+        startButton.title = canStart
+            ? 'Start interview'
+            : (hasCompleteSetupFields ? 'Review all setup steps first' : 'Complete all required details first');
     }
 
     document.querySelectorAll('.setup-input').forEach(el => {
@@ -661,7 +807,7 @@
     });
 
     document.querySelectorAll('input[name="question_types[]"]').forEach(el => {
-        el.addEventListener('change', updateStartInterviewState);
+        el.addEventListener('change', updateSummary);
     });
 
     const setupStepState = {
@@ -675,6 +821,7 @@
             { id: 'panel-response', label: 'Response' },
         ],
     };
+    const visitedSetupStepIds = new Set();
 
     function getSetupSteps() {
         const steps = [...setupStepState.baseSteps];
@@ -682,6 +829,10 @@
             steps.push({ id: 'panel-summary', label: 'Summary' });
         }
         return steps;
+    }
+
+    function getRequiredSetupReviewStepIds() {
+        return setupStepState.baseSteps.map(step => step.id);
     }
 
     function renderSetupStepper() {
@@ -702,7 +853,14 @@
 
         track.querySelectorAll('[data-setup-step]').forEach(button => {
             button.addEventListener('click', () => {
-                showSetupStep(Number(button.dataset.setupStep));
+                const targetIndex = Number(button.dataset.setupStep);
+                if (targetIndex > setupStepState.index) {
+                    const steps = getSetupSteps();
+                    for (let index = setupStepState.index; index < targetIndex; index++) {
+                        if (!validateSetupStep(steps[index]?.id, true)) return;
+                    }
+                }
+                showSetupStep(targetIndex);
             });
         });
     }
@@ -719,6 +877,9 @@
 
         renderSetupStepper();
         setupStepState.index = Math.max(0, Math.min(steps.length - 1, nextIndex));
+        if (steps[setupStepState.index]?.id) {
+            visitedSetupStepIds.add(steps[setupStepState.index].id);
+        }
 
         section.classList.add('setup-step-mode');
         section.classList.toggle('setup-summary-step', !isDesktop && steps[setupStepState.index]?.id === 'panel-summary');
@@ -749,6 +910,8 @@
             const isLast = setupStepState.index === steps.length - 1;
             nextButton.hidden = isLast;
         }
+
+        updateStartInterviewState();
 
     }
 
@@ -799,6 +962,8 @@
     });
 
     document.getElementById('setupStepNext')?.addEventListener('click', () => {
+        const currentPanelId = getSetupSteps()[setupStepState.index]?.id;
+        if (!validateSetupStep(currentPanelId, true)) return;
         showSetupStep(setupStepState.index + 1);
     });
 
@@ -821,20 +986,8 @@
     if (setupForm && setupTransitionOverlay) {
         setupForm.addEventListener('submit', function(event) {
             updateStartInterviewState();
-            if (startInterviewButton?.disabled) {
+            if (!validateSetupForm(true) || startInterviewButton?.disabled) {
                 event.preventDefault();
-                const firstMissingField = [
-                    'valScenario',
-                    'valPosition',
-                    'valNumQuestions',
-                    'valTimeLimit',
-                    'valInterviewFormat',
-                    'valAssistance',
-                    'valStrictness',
-                    'valFeedbackMode',
-                    'valPersona',
-                ].map(id => document.getElementById(id)).find(field => field && String(field.value || '').trim().length === 0);
-                firstMissingField?.focus();
                 return;
             }
 
@@ -936,6 +1089,11 @@
             const active = Boolean(document.getElementById('sec-interview-setup'));
             document.documentElement.classList.toggle('interview-setup-page-root', active);
             document.body.classList.toggle('interview-setup-page', active);
+            if (!active) {
+                style.remove();
+                window.__interviewSetupScrollObserver?.disconnect?.();
+                window.__interviewSetupScrollObserver = null;
+            }
         };
 
         syncPageClass();

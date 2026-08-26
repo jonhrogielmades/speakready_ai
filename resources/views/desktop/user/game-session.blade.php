@@ -10,9 +10,7 @@
 <div class="db-section active" id="sec-learning-game-session">
     @if(session('active_game_session_id'))
         @php
-            $sessionRecord = \App\Models\GameSession::with('level')
-                ->where('user_id', auth()->id())
-                ->find(session('active_game_session_id'));
+            $sessionRecord = $gameSession ?? null;
             if ($sessionRecord) {
                 $cameraCoachingEnabled = (bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false);
                 $num = $sessionRecord->num_questions ?? count($sessionRecord->questions ?? []);
@@ -24,6 +22,8 @@
                     ];
                 });
             } else {
+                $cameraCoachingEnabled = false;
+                $num = 0;
                 $questions = collect([]);
             }
         @endphp

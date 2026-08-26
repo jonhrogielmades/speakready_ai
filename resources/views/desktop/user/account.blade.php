@@ -2,8 +2,8 @@
 @section('title', 'Account Management')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/account.css?v=1') }}" data-page-style="user-account">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/account-2.css?v=3') }}" data-page-style="user-account-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/account.css?v=2') }}" data-page-style="user-account">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/account-2.css?v=4') }}" data-page-style="user-account-2">
 @endpush
 
 @section('content')
@@ -140,7 +140,7 @@
                 <div class="account-danger-section">
                     <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>
                     <p class="danger-copy">Once you delete your account, there is no going back. Please be certain.</p>
-                    <form action="{{ route('user.account.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+                    <form class="danger-action-form" action="{{ route('user.account.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
                         @csrf
                         <button type="submit" class="btn delete-account-btn"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
                     </form>
@@ -150,7 +150,7 @@
     </div>
 </div>
 
-<div class="profile-crop-modal" id="profileCropModal" aria-hidden="true">
+<div class="profile-crop-modal" id="profileCropModal" aria-hidden="true" hidden>
     <div class="profile-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="profileCropTitle">
         <h6 id="profileCropTitle" style="color:var(--tx);font-weight:800;margin:0;">Crop Profile Picture</h6>
         <div class="profile-crop-frame">
@@ -215,6 +215,8 @@
                 const baseScale = Math.max(size / cropImage.width, size / cropImage.height);
                 cropOffsetX = (size - cropImage.width * baseScale) / 2;
                 cropOffsetY = (size - cropImage.height * baseScale) / 2;
+                if (!cropModal) return;
+                cropModal.hidden = false;
                 cropModal.classList.add('open');
                 cropModal.setAttribute('aria-hidden', 'false');
                 drawProfileCrop();
@@ -225,8 +227,10 @@
     }
 
     function cancelProfileCrop() {
+        if (!cropModal) return;
         cropModal.classList.remove('open');
         cropModal.setAttribute('aria-hidden', 'true');
+        cropModal.hidden = true;
         if (profileInput) profileInput.value = '';
         document.getElementById('photo-filename').textContent = 'JPG, GIF or PNG. Max size of 2MB.';
     }
@@ -250,6 +254,7 @@
             document.getElementById('photo-filename').textContent = file.name;
             cropModal.classList.remove('open');
             cropModal.setAttribute('aria-hidden', 'true');
+            cropModal.hidden = true;
         }, 'image/jpeg', 0.9);
     }
 

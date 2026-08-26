@@ -1262,6 +1262,27 @@
         line-height: 1.32 !important;
     }
 
+    body.user-desktop-shell #account-page .account-danger-section {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        column-gap: 18px !important;
+    }
+
+    body.user-desktop-shell #account-page .account-danger-section .danger-action-form {
+        grid-column: 2 !important;
+        grid-row: 1 / span 2 !important;
+        align-self: center !important;
+        text-align: center !important;
+    }
+
+    body.user-desktop-shell #account-page .account-danger-section .delete-account-btn {
+        width: auto !important;
+        min-width: 176px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+
     body.user-desktop-shell #account-page .upload-hint {
         width: 100% !important;
         margin: 0 !important;
@@ -1349,5 +1370,81 @@
             width: clamp(116px, 11vw, 132px) !important;
             max-height: calc(100% - 14px) !important;
             transform: translate3d(0, -50%, 0) !important;
+        }
+    }
+
+    body.user-desktop-shell #account-page .password-toggle {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        right: 4px !important;
+        border-radius: 9px !important;
+    }
+
+    body.user-desktop-shell #account-page .password-field .oinp {
+        padding-right: 46px !important;
+    }
+
+    body.user-desktop-shell .profile-crop-modal[hidden],
+    body.user-desktop-shell .profile-crop-modal[aria-hidden="true"]:not(.open) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    body.user-desktop-shell .profile-crop-modal.open {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    @media (min-width: 992px) and (max-width: 1240px) {
+        body.user-desktop-shell #account-page .account-danger-section {
+            grid-template-columns: minmax(0, 1fr) !important;
+            row-gap: 10px !important;
+            align-items: start !important;
+        }
+
+        body.user-desktop-shell #account-page .account-danger-section .danger-title,
+        body.user-desktop-shell #account-page .account-danger-section .danger-copy,
+        body.user-desktop-shell #account-page .account-danger-section .danger-action-form {
+            grid-column: 1 !important;
+            grid-row: auto !important;
+            min-width: 0 !important;
+        }
+
+        body.user-desktop-shell #account-page .account-danger-section .danger-title {
+            margin-bottom: 0 !important;
+            white-space: normal !important;
+        }
+
+        body.user-desktop-shell #account-page .account-danger-section .danger-copy {
+            margin-bottom: 0 !important;
+            overflow-wrap: anywhere !important;
+        }
+
+        body.user-desktop-shell #account-page .account-danger-section .danger-action-form {
+            justify-self: start !important;
+            width: 100% !important;
+            text-align: left !important;
+        }
+
+        body.user-desktop-shell #account-page .account-danger-section .delete-account-btn {
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+    }
+
+    @media (min-width: 992px) and (max-width: 1120px) {
+        body.user-desktop-shell #account-page .row.account-grid {
+            grid-template-columns: minmax(0, 1fr) !important;
+        }
+
+        body.user-desktop-shell #account-page .row.account-grid > [class*="col-"]:first-child .account-card {
+            height: auto !important;
         }
     }

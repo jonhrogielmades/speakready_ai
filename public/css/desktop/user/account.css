@@ -366,6 +366,10 @@
         margin-top: 16px;
         padding-top: 16px;
         border-top: 1px solid var(--acct-danger-border);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        column-gap: 18px;
     }
     #account-page .danger-title {
         display: flex;
@@ -410,6 +414,12 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
+    }
+    #account-page .account-danger-section .danger-action-form {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: center;
+        text-align: center;
     }
     #account-page .danger-card form {
         text-align: center;
@@ -456,8 +466,18 @@
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
+    .profile-crop-modal[hidden],
+    .profile-crop-modal[aria-hidden="true"]:not(.open) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
     .profile-crop-modal.open {
-        display: flex;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
     .profile-crop-dialog {
         width: min(420px, 100%);

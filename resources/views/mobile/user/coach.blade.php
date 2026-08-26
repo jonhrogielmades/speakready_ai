@@ -88,6 +88,7 @@
             <div class="coach-chat-header">
                 <div class="d-flex align-items-center">
                     <div>
+                        <div class="coach-chat-title" id="coachChatTitle">New conversation</div>
                         <span class="coach-status">Online</span>
                     </div>
                 </div>
@@ -104,7 +105,7 @@
                             <div class="coach-actions-divider"></div>
                             <div class="coach-actions-heading">Recent history</div>
                             @forelse($recentConversations as $conv)
-                                <button class="coach-actions-history" type="button" role="menuitem" onclick="loadConversation({{ $conv->id }}); closeCoachActions();">
+                                <button class="coach-actions-history" type="button" role="menuitem" data-conversation-id="{{ $conv->id }}" onclick="loadConversation({{ $conv->id }}); closeCoachActions();">
                                     <i class="fa-regular fa-message"></i>
                                     <span>{{ $conv->title ?: 'New Conversation' }}</span>
                                 </button>
@@ -113,7 +114,7 @@
                             @endforelse
                             <div class="coach-actions-heading">Older history</div>
                             @forelse($olderConversations as $conv)
-                                <button class="coach-actions-history" type="button" role="menuitem" onclick="loadConversation({{ $conv->id }}); closeCoachActions();">
+                                <button class="coach-actions-history" type="button" role="menuitem" data-conversation-id="{{ $conv->id }}" onclick="loadConversation({{ $conv->id }}); closeCoachActions();">
                                     <i class="fa-regular fa-clock"></i>
                                     <span>{{ $conv->title ?: 'New Conversation' }}</span>
                                 </button>
@@ -169,9 +170,10 @@
                     <button class="chat-attachment-btn" type="button" aria-label="Attach interview file" title="Attach resume, certificate, PDF, DOCX, or image" onclick="document.getElementById('coachFiles').click()">
                         <i class="fa-solid fa-paperclip"></i>
                     </button>
-                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about interviews, resumes, certificates..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
-                    <button class="chat-send-btn" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
+                    <textarea class="chat-textarea" id="chatMsg" rows="1" placeholder="Ask about interviews, resumes, certificates..." oninput="resizeCoachTextarea(this)"></textarea>
+                    <button class="chat-send-btn" type="button" id="chatSendBtn" aria-label="Send message" title="Send message" onclick="sendMsg()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
+                <div class="coach-inline-feedback" id="coachInlineFeedback" role="status" aria-live="polite"></div>
                 <div class="coach-disclaimer">
                     <i class="fa-regular fa-circle-info" aria-hidden="true"></i>
                     The coach can make mistakes. Verify advice and keep every personal claim truthful.
@@ -191,6 +193,106 @@
         const coachMaxFileBytes = 5 * 1024 * 1024;
         const coachUserPhotoUrl = @json($coachUserPhotoUrl);
         const coachUserInitial = @json($coachUserInitial);
+        const coachEmptyRecentText = 'No recent conversations';
+        const coachEmptyOlderText = 'No older conversations';
+
+        function setCoachTitle(title) {
+            const titleEl = document.getElementById('coachChatTitle');
+            if (titleEl) {
+                titleEl.textContent = title || 'New conversation';
+            }
+        }
+
+        function showCoachFeedback(message, type = 'info') {
+            const feedback = document.getElementById('coachInlineFeedback');
+            if (!feedback) return;
+
+            feedback.textContent = message || '';
+            feedback.dataset.type = type;
+            feedback.classList.toggle('show', Boolean(message));
+        }
+
+        function resizeCoachTextarea(textarea) {
+            if (!textarea) return;
+
+            const maxHeight = Number.parseFloat(getComputedStyle(textarea).maxHeight) || 96;
+            textarea.style.height = 'auto';
+            const nextHeight = Math.min(textarea.scrollHeight, maxHeight);
+            textarea.style.height = `${nextHeight}px`;
+            textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        }
+
+        function setCoachSending(isSending) {
+            coachSending = isSending;
+            const sendButton = document.getElementById('chatSendBtn');
+            const input = document.getElementById('chatMsg');
+
+            if (sendButton) {
+                sendButton.disabled = isSending;
+                sendButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
+            }
+            if (input) {
+                input.setAttribute('aria-busy', isSending ? 'true' : 'false');
+            }
+        }
+
+        async function confirmCoachAction(options) {
+            if (window.SpeakReadyMobileConfirm?.show) {
+                return window.SpeakReadyMobileConfirm.show(options);
+            }
+
+            return confirm(options?.message || 'Are you sure you want to continue?');
+        }
+
+        function coachHistoryButtonMarkup(id, title, iconClass) {
+            return `
+                <button class="coach-actions-history" type="button" role="menuitem" data-conversation-id="${id}" onclick="loadConversation(${id}); closeCoachActions();">
+                    <i class="${iconClass}" aria-hidden="true"></i>
+                    <span>${escapeHtml(title || 'New Conversation')}</span>
+                </button>
+            `;
+        }
+
+        function syncCoachActionsMenu(action, payload = {}) {
+            const menu = document.getElementById('coachActionsMenu');
+            if (!menu) return;
+
+            const headings = Array.from(menu.querySelectorAll('.coach-actions-heading'));
+            const recentHeading = headings.find(heading => heading.textContent.trim() === 'Recent history');
+            const olderHeading = headings.find(heading => heading.textContent.trim() === 'Older history');
+
+            if (action === 'add') {
+                menu.querySelectorAll('.coach-actions-empty').forEach(empty => {
+                    if (empty.textContent.trim() === coachEmptyRecentText) empty.remove();
+                });
+
+                menu.querySelectorAll('.coach-actions-history').forEach(item => item.classList.remove('active'));
+                const existingItem = menu.querySelector(`[data-conversation-id="${payload.id}"]`);
+                if (recentHeading && !existingItem) {
+                    recentHeading.insertAdjacentHTML('afterend', coachHistoryButtonMarkup(payload.id, payload.title, 'fa-regular fa-message'));
+                }
+                menu.querySelector(`[data-conversation-id="${payload.id}"]`)?.classList.add('active');
+                return;
+            }
+
+            if (action === 'delete' && payload.id) {
+                menu.querySelectorAll(`[data-conversation-id="${payload.id}"]`).forEach(item => item.remove());
+            }
+
+            if (action === 'clear') {
+                menu.querySelectorAll('.coach-actions-history, .coach-actions-empty').forEach(item => item.remove());
+            }
+
+            const recentHasItems = recentHeading && recentHeading.nextElementSibling?.classList.contains('coach-actions-history');
+            const olderHasItems = olderHeading && olderHeading.nextElementSibling?.classList.contains('coach-actions-history');
+
+            if (recentHeading && !recentHasItems) {
+                recentHeading.insertAdjacentHTML('afterend', `<div class="coach-actions-empty">${coachEmptyRecentText}</div>`);
+            }
+            if (olderHeading && !olderHasItems) {
+                olderHeading.insertAdjacentHTML('afterend', `<div class="coach-actions-empty">${coachEmptyOlderText}</div>`);
+            }
+        }
 
         function toggleCoachActions(event) {
             event.stopPropagation();
@@ -213,17 +315,18 @@
         function handleCoachFiles(input) {
             const incomingFiles = Array.from(input.files || []);
             const acceptedFiles = [];
+            const rejectedFiles = [];
 
             incomingFiles.forEach(file => {
                 const extension = (file.name.split('.').pop() || '').toLowerCase();
 
                 if (!coachAllowedExtensions.includes(extension)) {
-                    alert(`${file.name} is not a supported interview file type.`);
+                    rejectedFiles.push(`${file.name} is not a supported interview file type.`);
                     return;
                 }
 
                 if (file.size > coachMaxFileBytes) {
-                    alert(`${file.name} is larger than the 5MB upload limit.`);
+                    rejectedFiles.push(`${file.name} is larger than the 5MB upload limit.`);
                     return;
                 }
 
@@ -233,11 +336,12 @@
             const availableSlots = Math.max(0, coachMaxFiles - coachSelectedFiles.length);
             coachSelectedFiles = coachSelectedFiles.concat(acceptedFiles.slice(0, availableSlots));
             if (acceptedFiles.length > availableSlots) {
-                alert('You can attach up to 3 files at a time.');
+                rejectedFiles.push('You can attach up to 3 files at a time.');
             }
 
             input.value = '';
             renderCoachAttachments();
+            showCoachFeedback(rejectedFiles[0] || '', rejectedFiles.length ? 'error' : 'info');
         }
 
         function renderCoachAttachments() {
@@ -324,7 +428,8 @@
             const files = coachSelectedFiles.slice();
             const displayText = text || (files.length ? 'Please review the attached interview file(s).' : '');
             if(!displayText || coachSending) return;
-            coachSending = true;
+            setCoachSending(true);
+            showCoachFeedback('');
 
             // Create user bubble
             const userMsgDiv = document.createElement('div');
@@ -342,7 +447,7 @@
             box.insertBefore(userMsgDiv, document.getElementById('typingIndicator'));
             
             ta.value = '';
-            ta.style.height = '';
+            resizeCoachTextarea(ta);
             clearCoachAttachments();
             box.scrollTop = box.scrollHeight;
             
@@ -380,6 +485,9 @@
                 
                 if (data.conversation_id && !currentConversationId) {
                     currentConversationId = data.conversation_id;
+                    setCoachTitle(data.title || 'New Conversation');
+                    syncCoachActionsMenu('add', { id: data.conversation_id, title: data.title || 'New Conversation' });
+
                     // Add to sidebar if we just created it
                     const recentDiv = document.querySelector('#conversationsList > div:nth-child(2)'); // The first 'No recent conversations' or item
                     if (recentDiv && recentDiv.textContent.includes('No recent')) {
@@ -443,7 +551,8 @@
                 box.insertBefore(errorMsgDiv, typing);
                 box.scrollTop = box.scrollHeight;
             } finally {
-                coachSending = false;
+                setCoachSending(false);
+                resizeCoachTextarea(ta);
             }
         }
         
@@ -528,9 +637,12 @@
             // Reset state
             coachChatHistory = [];
             currentConversationId = null;
+            setCoachTitle('New conversation');
+            showCoachFeedback('');
             
             // Remove active classes from sidebar
             document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('#coachActionsMenu .coach-actions-history').forEach(el => el.classList.remove('active'));
 
             // Remove all dynamic messages
             document.querySelectorAll('.dynamic-msg').forEach(e => e.remove());
@@ -539,7 +651,7 @@
             // Focus the input
             const ta = document.getElementById('chatMsg');
             ta.value = '';
-            ta.style.height = '';
+            resizeCoachTextarea(ta);
             ta.focus();
         }
 
@@ -557,12 +669,17 @@
                 
                 // Update State
                 currentConversationId = data.conversation.id;
+                setCoachTitle(data.conversation.title || 'New Conversation');
+                showCoachFeedback('');
                 coachChatHistory = [];
                 
                 // Update UI active state
                 document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
                 const activeItem = document.getElementById('conv-' + id);
                 if (activeItem) activeItem.classList.add('active');
+                document.querySelectorAll('#coachActionsMenu .coach-actions-history').forEach(el => {
+                    el.classList.toggle('active', el.dataset.conversationId === String(id));
+                });
                 
                 // Clear chatbox
                 document.querySelectorAll('.dynamic-msg').forEach(e => e.remove());
@@ -601,13 +718,19 @@
 
             } catch (error) {
                 console.error(error);
-                alert('Could not load conversation');
+                showCoachFeedback('Could not load conversation. Please try again.', 'error');
             }
         }
 
         async function deleteConversation(id) {
             closeCoachActions();
-            if (!confirm('Are you sure you want to delete this conversation?')) return;
+            const confirmed = await confirmCoachAction({
+                title: 'Delete conversation?',
+                message: 'This conversation will be permanently removed.',
+                action: 'Delete',
+                variant: 'danger'
+            });
+            if (!confirmed) return;
             
             try {
                 const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
@@ -622,21 +745,22 @@
                 // Remove from UI
                 const item = document.getElementById('conv-' + id);
                 if (item) item.remove();
+                syncCoachActionsMenu('delete', { id });
                 
                 // If it was the active conversation, start a new one
-                if (currentConversationId === id) {
+                if (String(currentConversationId) === String(id)) {
                     newConversation();
                 }
             } catch (error) {
                 console.error(error);
-                alert('Could not delete conversation');
+                showCoachFeedback('Could not delete conversation. Please try again.', 'error');
             }
         }
 
         function deleteCurrentConversation() {
             if (!currentConversationId) {
                 closeCoachActions();
-                alert('No active conversation to delete.');
+                showCoachFeedback('No active conversation to delete.', 'info');
                 return;
             }
 
@@ -646,7 +770,13 @@
         async function clearCoachHistory() {
             closeCoachActions();
 
-            if (!confirm('Are you sure you want to clear all AI Coach conversation history?')) return;
+            const confirmed = await confirmCoachAction({
+                title: 'Clear coach history?',
+                message: 'This will permanently remove all AI Coach conversations.',
+                action: 'Clear All',
+                variant: 'danger'
+            });
+            if (!confirmed) return;
 
             try {
                 const response = await fetch(coachEndpoint('clearUrl', @json(route('user.coach.clear'))), {
@@ -659,6 +789,7 @@
                 if (!response.ok) throw new Error('Failed to clear conversations');
 
                 document.querySelectorAll('.history-item').forEach(item => item.remove());
+                syncCoachActionsMenu('clear');
                 const list = document.getElementById('conversationsList');
                 if (list) {
                     const recentHeading = list.querySelector('div:first-child');
@@ -681,12 +812,12 @@
                 newConversation();
             } catch (error) {
                 console.error(error);
-                alert('Could not clear conversation history');
+                showCoachFeedback('Could not clear conversation history. Please try again.', 'error');
             }
         }
 
-        document.getElementById('chatMsg').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        document.getElementById('chatMsg')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
                 e.preventDefault();
                 sendMsg();
             }
@@ -718,8 +849,7 @@
             }
 
             input.value = prompt;
-            input.style.height = '';
-            input.style.height = input.scrollHeight + 'px';
+            resizeCoachTextarea(input);
             window.setTimeout(sendMsg, 250);
         });
     </script>

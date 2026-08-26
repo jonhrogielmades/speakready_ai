@@ -6799,3 +6799,158 @@
             transform: translate3d(0, -50%, 0) !important;
         }
     }
+
+/* Final desktop UI bug fixes for Progress. */
+#sec-progress-tracking .progress-export-status {
+    margin: -2px 0 12px;
+    padding: 9px 12px;
+    border: 1px solid rgba(37, 99, 235, 0.22);
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+#sec-progress-tracking .progress-export-status[hidden] {
+    display: none !important;
+}
+
+#sec-progress-tracking .progress-export-status[data-type="success"] {
+    border-color: rgba(16, 185, 129, 0.26);
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+}
+
+#sec-progress-tracking .progress-export-status[data-type="error"] {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.09);
+    color: #b91c1c;
+}
+
+:root:not(.lm) #sec-progress-tracking .progress-export-status,
+html[data-theme="dark"] #sec-progress-tracking .progress-export-status,
+body.dm #sec-progress-tracking .progress-export-status {
+    color: #bfdbfe;
+}
+
+:root:not(.lm) #sec-progress-tracking .progress-export-status[data-type="success"],
+html[data-theme="dark"] #sec-progress-tracking .progress-export-status[data-type="success"],
+body.dm #sec-progress-tracking .progress-export-status[data-type="success"] {
+    color: #bbf7d0;
+}
+
+:root:not(.lm) #sec-progress-tracking .progress-export-status[data-type="error"],
+html[data-theme="dark"] #sec-progress-tracking .progress-export-status[data-type="error"],
+body.dm #sec-progress-tracking .progress-export-status[data-type="error"] {
+    color: #fecaca;
+}
+
+#sec-progress-tracking.progress-exporting :is(.progress-actions, .history-actions, .history-search, .progress-export-status) {
+    visibility: hidden !important;
+}
+
+#sec-progress-tracking .progress-chart-runtime-empty {
+    min-height: 100% !important;
+}
+
+@media (min-width: 992px) {
+    html body #sec-progress-tracking :is(
+        .premium-panel,
+        .progress-chart-panel,
+        .practice-plan-panel,
+        .practice-plan-row,
+        .history-panel,
+        .history-card,
+        .learning-panel,
+        .recommend-panel,
+        .recommend-item,
+        .voice-panel,
+        .activity-panel,
+        .activity-summary-item,
+        .activity-day,
+        .goals-panel,
+        .badges-panel,
+        .badge-item,
+        .progress-export-status
+    ) {
+        border-radius: 8px !important;
+    }
+
+    html body #sec-progress-tracking .premium-panel:hover {
+        transform: none !important;
+    }
+
+    html body #sec-progress-tracking .progress-export-btn:disabled {
+        cursor: wait !important;
+        opacity: 0.74 !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    html body #sec-progress-tracking #history-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-panel,
+    html body #sec-progress-tracking #activity-calendar .activity-panel,
+    html body #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        min-width: 0 !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1320px) {
+    html body #sec-progress-tracking #readiness-trend,
+    html body #sec-progress-tracking #category-perf,
+    html body #sec-progress-tracking #skill-tracker,
+    html body #sec-progress-tracking #learning-progress,
+    html body #sec-progress-tracking #recommended-next,
+    html body #sec-progress-tracking #voice-progress,
+    html body #sec-progress-tracking #goals-milestones,
+    html body #sec-progress-tracking #achievements-badges {
+        width: 50% !important;
+        max-width: 50% !important;
+        flex: 0 0 50% !important;
+    }
+
+    html body #sec-progress-tracking #history-table,
+    html body #sec-progress-tracking #strengths-tracker,
+    html body #sec-progress-tracking #activity-calendar {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    html body #sec-progress-tracking #history-table .history-list,
+    html body #sec-progress-tracking #activity-calendar .activity-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    html body #sec-progress-tracking #activity-calendar .activity-grid {
+        grid-template-columns: repeat(7, minmax(48px, 1fr)) !important;
+        overflow-x: auto !important;
+        padding-bottom: 2px !important;
+    }
+}
+
+@media (min-width: 1321px) {
+    html body #sec-progress-tracking #strengths-tracker,
+    html body #sec-progress-tracking #activity-calendar {
+        width: 50% !important;
+        max-width: 50% !important;
+        flex: 0 0 50% !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    html body #sec-progress-tracking #history-table .history-list {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}

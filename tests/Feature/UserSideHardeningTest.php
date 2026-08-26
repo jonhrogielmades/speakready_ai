@@ -41,6 +41,36 @@ class UserSideHardeningTest extends TestCase
             ->assertOk();
     }
 
+    public function test_mobile_learning_page_includes_mobile_challenge_controls(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create([
+            'user_id' => $user->id,
+            'energy' => Profile::MAX_ENERGY,
+            'player_level' => 1,
+        ]);
+        $category = $this->category(['type' => 'game', 'title' => 'Mobile Challenge Path']);
+        $this->gameLevel($category, [
+            'title' => 'Mobile Opening Challenge',
+            'skill_focus' => 'Clarity',
+            'learning_objective' => 'Give a concise opening answer.',
+        ]);
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->get(route('user.learning', ['category_id' => $category->id]))
+            ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('css/mobile/user/learning.css?v=1', false)
+            ->assertSee('id="learningSearchInput"', false)
+            ->assertSee('data-search-text=', false)
+            ->assertSee('learning-badge-row-active', false)
+            ->assertSee('start-challenge-form', false)
+            ->assertSee('Starting...', false)
+            ->assertSee('autoStart: false', false)
+            ->assertDontSee('mb-20px', false);
+    }
+
     public function test_user_can_choose_language_from_profile_menu(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

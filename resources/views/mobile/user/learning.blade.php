@@ -35,7 +35,7 @@
     <div class="sr-page-actions learning-actions">
         <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
             <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-            <input type="text" placeholder="Search challenges, skills, scenarios..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
+            <input type="text" id="learningSearchInput" placeholder="Search challenges, skills, scenarios..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
         </div>
         <div class="learning-mobile-control-row">
             <div class="learning-category-select-wrap">
@@ -197,7 +197,18 @@
                             $successChecklist = $level->guidance_checklist;
                             $lockedArtIcons = ['fa-lightbulb', 'fa-comment-dots', 'fa-chalkboard-user', 'fa-trophy'];
                             $lockedArtIcon = $lockedArtIcons[$loop->index % count($lockedArtIcons)];
-                            
+                            $levelSearchText = strtolower(implode(' ', array_filter([
+                                'level ' . $level->level_number,
+                                $level->title,
+                                $level->description,
+                                $level->skill_focus,
+                                $level->learning_objective,
+                                $level->target_tone,
+                                $level->custom_badge_name,
+                                $selectedCategory?->title,
+                                $status,
+                            ])));
+
                             $nodeClass = '';
                             $iconHtml = '';
                             if($status === 'completed') {
@@ -212,7 +223,7 @@
                             }
                         @endphp
 
-                        <div class="level-node {{ $nodeClass }} animate-fade-up" style="animation-delay: {{ $loop->index * 0.1 }}s">
+                        <div class="level-node {{ $nodeClass }} animate-fade-up" data-search-text="{{ $levelSearchText }}" style="animation-delay: {{ $loop->index * 0.1 }}s">
                             <div class="level-icon-wrapper">
                                 <div class="level-icon">{!! $iconHtml !!}</div>
                             </div>
@@ -249,7 +260,7 @@
                                 @endif
                                 
                                 @if($status === 'active' || $status === 'completed')
-                                    <div class="d-flex flex-wrap gap-2 mb-{{ $status==='active' ? '20' : '0' }}px">
+                                    <div class="d-flex flex-wrap gap-2 learning-badge-row {{ $status === 'active' ? 'learning-badge-row-active' : '' }}">
                                         @if($level->skill_focus)
                                             <span class="badge border" style="background:var(--bg3); color:var(--tx);"><i class="fa-solid fa-graduation-cap text-info me-1"></i> {{ $level->skill_focus }}</span>
                                         @endif
@@ -287,7 +298,7 @@
                                         @endif
                                         <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $level->energy_cost }} Energy</div>
                                     </div>
-                                    <form action="{{ route('user.game.start', $level->id) }}" method="POST">
+                                    <form action="{{ route('user.game.start', $level->id) }}" method="POST" class="start-challenge-form">
                                         @csrf
                                         <button type="submit" class="btn btn-shine start-challenge-btn" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
                                     </form>
@@ -324,7 +335,7 @@
                                 return $progress && (int) $progress->best_score >= (int) $level->required_score;
                             });
                     @endphp
-                    <div class="level-node {{ $certificateUnlocked ? 'completed' : 'locked' }} animate-fade-up" style="animation-delay: {{ $gameLevels->count() * 0.1 }}s">
+                    <div class="level-node {{ $certificateUnlocked ? 'completed' : 'locked' }} animate-fade-up" data-search-text="final reward completion certificate pdf download unlock completed locked {{ strtolower($selectedCategory?->title ?? '') }}" style="animation-delay: {{ $gameLevels->count() * 0.1 }}s">
                         <div class="level-icon-wrapper">
                             <div class="level-icon">
                                 @if($certificateUnlocked)
@@ -359,6 +370,10 @@
                                 </div>
                             @endif
                         </div>
+                    </div>
+                    <div class="learning-search-empty" id="learningSearchEmpty" hidden>
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>No challenges match that search.</span>
                     </div>
                 @else
                     <div class="text-center py-5">
@@ -653,12 +668,52 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const categorySelect = document.getElementById('learningCategorySelect');
-        if (!categorySelect) return;
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function () {
+                if (this.value) {
+                    window.location.href = this.value;
+                }
+            });
+        }
 
-        categorySelect.addEventListener('change', function () {
-            if (this.value) {
-                window.location.href = this.value;
-            }
+        const searchInput = document.getElementById('learningSearchInput');
+        const searchEmpty = document.getElementById('learningSearchEmpty');
+        const challengeNodes = Array.from(document.querySelectorAll('#modules-list > .level-node'));
+        const pathLines = Array.from(document.querySelectorAll('#modules-list > .level-path-line'));
+
+        if (searchInput && challengeNodes.length > 0) {
+            const applySearch = () => {
+                const query = searchInput.value.trim().toLowerCase();
+                let visibleCount = 0;
+
+                challengeNodes.forEach(node => {
+                    const isVisible = !query || (node.dataset.searchText || '').includes(query);
+                    node.hidden = !isVisible;
+                    if (isVisible) visibleCount++;
+                });
+
+                pathLines.forEach(line => {
+                    line.hidden = Boolean(query);
+                });
+
+                if (searchEmpty) {
+                    searchEmpty.hidden = !query || visibleCount > 0;
+                }
+            };
+
+            searchInput.addEventListener('input', applySearch);
+            applySearch();
+        }
+
+        document.querySelectorAll('.start-challenge-form').forEach(form => {
+            form.addEventListener('submit', function () {
+                const button = form.querySelector('.start-challenge-btn');
+                if (!button || button.disabled) return;
+
+                button.disabled = true;
+                button.dataset.originalHtml = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Starting...';
+            });
         });
     });
 
@@ -685,6 +740,7 @@
             serverDetectedMobile: true,
             stepsMobile,
             stepsDesktop,
+            autoStart: false,
             autoStartDelay: 500,
         });
     });

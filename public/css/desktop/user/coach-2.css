@@ -1146,3 +1146,112 @@
             70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
         }
     }
+
+/* Final desktop UI bug fixes for Readiness Coach. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:has(#ai-coach-page),
+    html body.user-desktop-shell:has(#ai-coach-page) .db-main,
+    html body.user-desktop-shell #userAppContent:has(#ai-coach-page) {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: auto !important;
+        min-height: calc(100vh - var(--nav, 70px)) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page {
+        height: auto !important;
+        min-height: calc(100vh - var(--nav, 70px) - 32px) !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-container {
+        min-height: 560px !important;
+        height: min(680px, calc(100vh - var(--nav, 70px) - 148px)) !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-header {
+        gap: 12px !important;
+        min-height: 58px !important;
+        padding: 9px 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-title {
+        max-width: min(42vw, 520px);
+        color: var(--coach-desktop-title, var(--tx, #0f172a)) !important;
+        font-size: 0.82rem !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-status {
+        display: inline-flex !important;
+        margin-top: 4px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-actions-history.active {
+        background: rgba(37, 99, 235, 0.1) !important;
+        color: var(--coach-desktop-accent, #2563eb) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea {
+        min-height: 24px !important;
+        max-height: 96px !important;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn:disabled {
+        cursor: wait !important;
+        opacity: 0.72 !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn[aria-busy="true"] i {
+        animation: coachSendPulse 0.9s ease-in-out infinite;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback {
+        display: none;
+        margin: 7px 0 0;
+        padding: 8px 10px;
+        border: 1px solid rgba(245, 158, 11, 0.24);
+        border-radius: 8px;
+        background: rgba(245, 158, 11, 0.1);
+        color: #92400e;
+        font-size: 0.72rem;
+        font-weight: 800;
+        line-height: 1.3;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback,
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback {
+        color: #fef3c7;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback.show {
+        display: block;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback[data-type="error"] {
+        border-color: rgba(239, 68, 68, 0.28);
+        background: rgba(239, 68, 68, 0.09);
+        color: #b91c1c;
+    }
+
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback[data-type="error"],
+    :root:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback[data-type="error"],
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-inline-feedback[data-type="error"] {
+        color: #fecaca;
+    }
+}
+
+@keyframes coachSendPulse {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(2px); opacity: 0.68; }
+}

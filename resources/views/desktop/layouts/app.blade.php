@@ -23,7 +23,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=32') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=34') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           
@@ -151,22 +151,22 @@
                   
                   <!-- Notifications -->
                   <div style="position:relative" id="notifWrap">
-                     <button class="boc d-flex align-items-center justify-content-center" id="bellBtn" type="button" aria-label="Open notifications" title="Notifications" onclick="toggleNotif(event)">
+                     <button class="boc d-flex align-items-center justify-content-center" id="bellBtn" type="button" aria-label="Open notifications" title="Notifications" aria-haspopup="true" aria-expanded="false" aria-controls="notifDropdown" onclick="toggleNotif(event)">
                         <i class="fa-regular fa-bell"></i>
                      </button>
                      <span id="notifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
                      
                      <!-- Notification Dropdown -->
-                     <div class="db-dropdown" id="notifDropdown" style="right:0;width:360px;max-width:calc(100vw - 30px);">
+                     <div class="db-dropdown" id="notifDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="notifDropdownTitle" style="right:0;width:360px;max-width:calc(100vw - 30px);">
                         <div class="dd-header d-flex flex-wrap align-items-center justify-content-between gap-2" style="border-bottom:1px solid var(--bd);padding-bottom:12px;margin-bottom:12px;">
-                           <div class="dd-header-title d-flex align-items-center mb-0">
+                           <div class="dd-header-title d-flex align-items-center mb-0" id="notifDropdownTitle">
                               <i class="fa-regular fa-bell me-2" style="color:var(--pur)"></i>Notifications 
                               <span id="unreadCountBadge" style="background:rgba(248,113,113,.15);color:#f87171;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;display:none;">0 new</span>
                            </div>
                            <div class="d-flex align-items-center gap-1 flex-wrap">
-                              <button class="dd-close" onclick="markAllNotificationsRead()" title="Mark all read" style="width:auto;padding:4px 8px;font-size:.7rem;color:var(--pur);border-color:rgba(59,130,246,.3)"><i class="fa-solid fa-check me-1"></i><span class="d-none d-sm-inline">Read All</span></button>
-                              <button class="dd-close text-danger" onclick="clearAllNotificationsDD()" title="Clear all" style="width:auto;padding:4px 8px;font-size:.7rem;border-color:rgba(248,113,113,.3)"><i class="fa-solid fa-trash me-1"></i><span class="d-none d-sm-inline">Clear All</span></button>
-                              <button class="dd-close" onclick="toggleNotif(event)" style="padding:4px 8px;width:auto;"><i class="fa-solid fa-xmark"></i></button>
+                              <button type="button" class="dd-close" onclick="markAllNotificationsRead()" title="Mark all read" style="width:auto;padding:4px 8px;font-size:.7rem;color:var(--pur);border-color:rgba(59,130,246,.3)"><i class="fa-solid fa-check me-1"></i><span class="d-none d-sm-inline">Read All</span></button>
+                              <button type="button" class="dd-close text-danger" onclick="clearAllNotificationsDD()" title="Clear all" style="width:auto;padding:4px 8px;font-size:.7rem;border-color:rgba(248,113,113,.3)"><i class="fa-solid fa-trash me-1"></i><span class="d-none d-sm-inline">Clear All</span></button>
+                              <button type="button" class="dd-close" onclick="toggleNotif(event)" aria-label="Close notifications" style="padding:4px 8px;width:auto;"><i class="fa-solid fa-xmark"></i></button>
                            </div>
                         </div>
                         <div class="dd-body" id="notifListContainer" style="max-height: 350px; overflow-y: auto;">
@@ -179,28 +179,28 @@
                   </div>
 
                   <div style="position:relative" id="profileWrap">
-                     <div class="db-user-pill" id="userPill" onclick="toggleProfile(event)">
-                        <div class="user-avatar-presence">
+                     <button class="db-user-pill" id="userPill" type="button" aria-label="Open profile menu" aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown" onclick="toggleProfile(event)">
+                        <span class="user-avatar-presence">
                     @if(Auth::check() && Auth::user()->profile_photo_path)
                            @php
                                $photoPath = Auth::user()->profile_photo_path;
                                $photoUrl = (str_starts_with($photoPath, 'http') || str_starts_with($photoPath, 'data:')) ? $photoPath : asset('storage/' . $photoPath);
                            @endphp
-                           <div class="db-avatar" id="userAvatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
+                           <span class="db-avatar user-avatar" style="padding:0;overflow:hidden;border:1px solid var(--bd);">
                               <img src="{{ $photoUrl }}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
-                           </div>
-                    @else
-                           <div class="db-avatar" id="userAvatar">{{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}</div>
-                    @endif
-                        </div>
-                        <div class="d-none d-md-block">
-                           <div style="font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ Auth::user()->name ?? 'User' }}</div>
-                           <div style="font-size:.72rem;color:var(--tx3)" id="userPlan">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</div>
-                        </div>
+                           </span>
+                     @else
+                           <span class="db-avatar user-avatar">{{ Auth::check() ? strtoupper(substr(Auth::user()->name, 0, 1)) : 'U' }}</span>
+                     @endif
+                        </span>
+                        <span class="d-none d-md-block">
+                           <span style="display:block;font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ Auth::user()->name ?? 'User' }}</span>
+                           <span style="display:block;font-size:.72rem;color:var(--tx3)" id="userPlan">{{ Auth::check() && Auth::user()->is_admin ? 'ADMIN' : 'USER' }}</span>
+                        </span>
                         <i class="fa-solid fa-chevron-down fa-xs" id="profileChevron" style="color:var(--tx3);margin-left:2px;transition:.3s"></i>
-                     </div>
+                     </button>
                      <!-- Profile Dropdown -->
-                     <div class="db-dropdown profile-dd" id="profileDropdown" style="right:0">
+                     <div class="db-dropdown profile-dd" id="profileDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="userPill" style="right:0">
                         <div style="padding:8px 0">
                            <a href="{{ route('user.account') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
@@ -236,6 +236,26 @@
       </div>
       @include('desktop.partials.user-command-palette')
       @include('desktop.partials.viewport-mobile-cookie')
+      <div class="modal fade sr-confirm-modal" id="srConfirmModal" tabindex="-1" aria-labelledby="srConfirmModalTitle" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <div class="sr-confirm-heading">
+                     <span class="sr-confirm-icon" id="srConfirmModalIcon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                     <h5 class="modal-title" id="srConfirmModalTitle">Confirm action</h5>
+                  </div>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                  <p id="srConfirmModalMessage">Are you sure you want to continue?</p>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn sr-confirm-cancel" data-bs-dismiss="modal">Cancel</button>
+                  <button type="button" class="btn sr-confirm-action danger" id="srConfirmModalAction">Continue</button>
+               </div>
+            </div>
+         </div>
+      </div>
       <!-- ======================== SCRIPTS ======================== -->
       <!-- jQuery -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
@@ -249,10 +269,117 @@
       <!-- CounterUp -->
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
       <!-- Main js -->
-      <script src="{{ asset('js/main.js?v=7') }}"></script>
+      <script src="{{ asset('js/main.js?v=8') }}"></script>
       @include('desktop.partials.language-translation')
       <!-- PWA Service Worker Registration -->
       <script>
+         (function initializeSpeakReadyConfirm() {
+            if (window.SpeakReadyConfirm?.initialized) return;
+
+            const modalEl = document.getElementById('srConfirmModal');
+            const titleEl = document.getElementById('srConfirmModalTitle');
+            const messageEl = document.getElementById('srConfirmModalMessage');
+            const actionBtn = document.getElementById('srConfirmModalAction');
+            const iconEl = document.getElementById('srConfirmModalIcon');
+            let resolver = null;
+            let confirmed = false;
+
+            const resolvePending = (value) => {
+               if (typeof resolver === 'function') {
+                  resolver(Boolean(value));
+               }
+               resolver = null;
+            };
+
+            actionBtn?.addEventListener('click', function() {
+               confirmed = true;
+               const instance = window.bootstrap?.Modal?.getOrCreateInstance(modalEl);
+               if (instance) {
+                  instance.hide();
+               } else {
+                  resolvePending(true);
+               }
+            });
+
+            modalEl?.addEventListener('hidden.bs.modal', function() {
+               resolvePending(confirmed);
+               confirmed = false;
+            });
+
+            window.SpeakReadyConfirm = {
+               initialized: true,
+               show(options = {}) {
+                  const title = options.title || 'Confirm action';
+                  const message = options.message || 'Are you sure you want to continue?';
+                  const action = options.action || 'Continue';
+                  const variant = options.variant === 'danger' ? 'danger' : 'primary';
+
+                  if (!modalEl || !window.bootstrap?.Modal) {
+                     console.warn('Confirmation modal is unavailable.');
+                     return Promise.resolve(false);
+                  }
+
+                  if (titleEl) titleEl.textContent = title;
+                  if (messageEl) messageEl.textContent = message;
+                  if (actionBtn) {
+                     actionBtn.textContent = action;
+                     actionBtn.className = 'btn sr-confirm-action ' + variant;
+                  }
+                  if (iconEl) {
+                     iconEl.className = 'sr-confirm-icon ' + variant;
+                  }
+
+                  confirmed = false;
+                  return new Promise((resolve) => {
+                     resolvePending(false);
+                     resolver = resolve;
+                     window.bootstrap.Modal.getOrCreateInstance(modalEl, {
+                        backdrop: 'static',
+                        keyboard: true
+                     }).show();
+                  });
+               }
+            };
+
+            document.addEventListener('submit', function(event) {
+               const form = event.target?.closest?.('form[data-sr-confirm-form]');
+               if (!form || form.dataset.srConfirmResolved === 'true') return;
+
+               event.preventDefault();
+               window.SpeakReadyConfirm.show({
+                  title: form.dataset.srConfirmTitle,
+                  message: form.dataset.srConfirmMessage,
+                  action: form.dataset.srConfirmAction,
+                  variant: form.dataset.srConfirmVariant
+               }).then((isConfirmed) => {
+                  if (!isConfirmed) return;
+                  form.dataset.srConfirmResolved = 'true';
+                  form.submit();
+               });
+            });
+         })();
+
+         function setUserDropdownState(dropdownId, triggerId, isOpen) {
+            const dropdown = document.getElementById(dropdownId);
+            const trigger = document.getElementById(triggerId);
+            if (!dropdown) return;
+
+            dropdown.classList.toggle('open', Boolean(isOpen));
+            dropdown.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            trigger?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+         }
+
+         function closeUserHeaderDropdowns(exceptId = null) {
+            if (exceptId !== 'notifDropdown') {
+               setUserDropdownState('notifDropdown', 'bellBtn', false);
+            }
+            if (exceptId !== 'profileDropdown') {
+               setUserDropdownState('profileDropdown', 'userPill', false);
+               const ch = document.getElementById('profileChevron');
+               if (ch) ch.style.transform = 'rotate(0deg)';
+            }
+         }
+
          function closeDashboardSidebar() {
             document.getElementById('dbSidebar')?.classList.remove('mob-open');
             document.body.classList.remove('sidebar-open');
@@ -356,34 +483,24 @@
             console.warn('Tutorial could not initialize on this page.');
          }
          
-         function toggleNotif(e) {
-            e.stopPropagation();
-            const dd = document.getElementById('notifDropdown');
-            if (dd.classList.contains('open')) {
-               dd.classList.remove('open');
-            } else {
-               // Close profile dropdown if open
-               const pd = document.getElementById('profileDropdown');
-               if(pd && pd.classList.contains('open')) pd.classList.remove('open');
-               
-               const ch = document.getElementById('profileChevron');
-               if (ch) ch.style.transform = 'rotate(0deg)';
-               
-               dd.classList.add('open');
-               if (dd.getAttribute('data-loaded') !== 'true') {
-                  fetchNotifications();
-               }
-            }
-         }
+         const userNotificationsUrl = @json(route('user.notifications'));
+         const notificationJsonHeaders = {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+         };
 
-         function fetchNotifications() {
-            fetch('/notifications/fetch')
-               .then(res => res.json())
-               .then(data => {
-                  updateNotifUI(data);
-                  document.getElementById('notifDropdown').setAttribute('data-loaded', 'true');
-               })
-               .catch(err => console.error('Error fetching notifications:', err));
+         function toggleNotif(e) {
+            e?.stopPropagation?.();
+            const dd = document.getElementById('notifDropdown');
+            if (!dd) return;
+
+            const willOpen = !dd.classList.contains('open');
+            closeUserHeaderDropdowns(willOpen ? 'notifDropdown' : null);
+            setUserDropdownState('notifDropdown', 'bellBtn', willOpen);
+            if (willOpen && dd.getAttribute('data-loaded') !== 'true') {
+               fetchNotifications();
+            }
          }
 
          function escapeNotifHtml(value) {
@@ -392,47 +509,111 @@
             return div.innerHTML;
          }
 
+         function safeNotificationIcon(value) {
+            const icon = String(value || 'fa-bell').trim();
+
+            return /^fa-[a-z0-9-]+$/i.test(icon) ? icon : 'fa-bell';
+         }
+
+         function renderNotificationStatus(message, isError = false) {
+            const listContainer = document.getElementById('notifListContainer');
+            if (!listContainer) return;
+
+            const retry = isError
+               ? '<button type="button" class="user-notif-retry" onclick="fetchNotifications()">Try again</button>'
+               : '';
+            listContainer.innerHTML = `<div class="user-notif-status ${isError ? 'error' : ''}">${escapeNotifHtml(message)}${retry}</div>`;
+         }
+
+         function requestNotificationJson(url, options = {}) {
+            return fetch(url, {
+               ...options,
+               headers: {
+                  ...notificationJsonHeaders,
+                  ...(options.headers || {})
+               }
+            }).then(async (res) => {
+               const contentType = res.headers.get('content-type') || '';
+               if (!res.ok) {
+                  throw new Error('Notification request failed with status ' + res.status);
+               }
+               if (!contentType.includes('application/json')) {
+                  throw new Error('Notification request returned a non-JSON response.');
+               }
+
+               return res.json();
+            });
+         }
+
+         function fetchNotifications(options = {}) {
+            const quiet = Boolean(options.quiet);
+            const dropdown = document.getElementById('notifDropdown');
+            const isDropdownOpen = dropdown?.classList.contains('open');
+            if (!quiet && dropdown?.getAttribute('data-loaded') !== 'true') {
+               renderNotificationStatus('Loading notifications...');
+            }
+
+            requestNotificationJson('/notifications/fetch')
+               .then(data => {
+                  updateNotifUI(data);
+                  dropdown?.setAttribute('data-loaded', 'true');
+               })
+               .catch(err => {
+                  if (!quiet) {
+                     console.error('Error fetching notifications:', err);
+                  }
+                  if (!quiet && isDropdownOpen) {
+                     renderNotificationStatus('Notifications could not load right now.', true);
+                  }
+               });
+         }
+
          function updateNotifUI(data) {
             const badge = document.getElementById('notifBadge');
             const unreadBadge = document.getElementById('unreadCountBadge');
             const listContainer = document.getElementById('notifListContainer');
+            if (!badge || !unreadBadge || !listContainer) return;
 
-            if (data.unreadCount > 0) {
+            const unreadCount = Number(data?.unreadCount || 0);
+            const notifications = Array.isArray(data?.notifications) ? data.notifications : [];
+
+            if (unreadCount > 0) {
                badge.style.display = 'block';
                unreadBadge.style.display = 'inline-block';
-               unreadBadge.textContent = data.unreadCount + ' new';
+               unreadBadge.textContent = unreadCount + ' new';
             } else {
                badge.style.display = 'none';
                unreadBadge.style.display = 'none';
             }
 
-            if (data.notifications.length === 0) {
-               listContainer.innerHTML = '<div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;">No notifications to show.</div>';
+            if (notifications.length === 0) {
+               renderNotificationStatus('No notifications to show.');
                return;
             }
 
             let html = '';
-            data.notifications.forEach(n => {
+            const notificationUrl = escapeNotifHtml(userNotificationsUrl);
+            notifications.forEach(n => {
                const unreadClass = n.read_at ? '' : 'notif-unread';
                const title = escapeNotifHtml(n.data?.title || 'Notification');
                const message = escapeNotifHtml(n.data?.message || '');
-               const icon = escapeNotifHtml(n.data?.icon || 'fa-bell');
-               
-               // Formatting date
-               const date = escapeNotifHtml(new Date(n.created_at).toLocaleString());
+               const icon = escapeNotifHtml(safeNotificationIcon(n.data?.icon));
+               const id = escapeNotifHtml(n.id);
+               const createdAt = new Date(n.created_at);
+               const date = escapeNotifHtml(Number.isNaN(createdAt.getTime()) ? 'Recently' : createdAt.toLocaleString());
 
                html += `
                   <div class="notif-item user-notif-item ${unreadClass}">
-                     <button class="notif-ico user-notif-ico" type="button" onclick="window.location.href='/notifications'" aria-label="Open notifications page"><i class="fa-solid ${icon}"></i></button>
+                     <a class="notif-ico user-notif-ico" href="${notificationUrl}" aria-label="Open notifications page"><i class="fa-solid ${icon}"></i></a>
                      <div class="user-notif-copy">
-                        <div class="user-notif-open" onclick="window.location.href='/notifications'">
+                        <a class="user-notif-open" href="${notificationUrl}">
                            <strong>${title}</strong>
                            <span>${message}</span>
                            <small><i class="fa-regular fa-clock me-1"></i>${date}</small>
-                        </div>
+                        </a>
                         <div class="user-notif-row-actions">
-                           ${n.read_at ? '' : `<button class="user-notif-link-btn" type="button" onclick="markReadDD('${n.id}', event)">Mark as read</button>`}
-                           <button class="user-notif-link-btn danger" type="button" onclick="deleteNotificationDD('${n.id}', event)">Delete</button>
+                           ${n.read_at ? '' : `<button class="user-notif-link-btn" type="button" data-notif-action="read" data-notif-id="${id}">Mark as read</button>`}
+                           <button class="user-notif-link-btn danger" type="button" data-notif-action="delete" data-notif-id="${id}">Delete</button>
                         </div>
                      </div>
                   </div>
@@ -443,80 +624,107 @@
          }
 
          function markAllNotificationsRead() {
-            fetch('/notifications/read-all', {
-               method: 'POST',
-               headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json'
-               }
-            })
-            .then(res => res.json())
-            .then(data => {
-               if(data.success) {
-                  fetchNotifications();
-                  if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
-               }
-            });
-         }
-
-         function clearAllNotificationsDD() {
-            if(confirm('Are you sure you want to clear all notifications?')) {
-               fetch('/notifications/clear-all', {
-                  method: 'DELETE',
-                  headers: {
-                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                     'Content-Type': 'application/json'
-                  }
-               })
-               .then(res => res.json())
+            requestNotificationJson('/notifications/read-all', { method: 'POST' })
                .then(data => {
                   if(data.success) {
                      fetchNotifications();
                      if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
                   }
+               })
+               .catch(err => {
+                  console.error('Error marking notifications read:', err);
+                  renderNotificationStatus('Could not mark notifications as read.', true);
                });
-            }
          }
 
-         function markReadDD(id, e) {
-            e.stopPropagation();
-            fetch('/notifications/' + id + '/read', {
-               method: 'POST',
-               headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json'
-               }
-            })
-            .then(res => res.json())
-            .then(data => {
-               if(data.success) {
-                  fetchNotifications();
-               }
+         function clearAllNotificationsDD() {
+            window.SpeakReadyConfirm.show({
+               title: 'Clear all notifications?',
+               message: 'This will permanently remove all notifications from your account.',
+               action: 'Clear All',
+               variant: 'danger'
+            }).then((isConfirmed) => {
+               if (!isConfirmed) return;
+
+               requestNotificationJson('/notifications/clear-all', { method: 'DELETE' })
+                  .then(data => {
+                     if(data.success) {
+                        fetchNotifications();
+                        if(typeof reloadNotificationsPage === 'function') reloadNotificationsPage();
+                     }
+                  })
+                  .catch(err => {
+                     console.error('Error clearing notifications:', err);
+                     renderNotificationStatus('Could not clear notifications.', true);
+                  });
             });
          }
 
+         function markReadDD(id, e) {
+            e?.stopPropagation?.();
+            if (!id) return;
+
+            requestNotificationJson('/notifications/' + encodeURIComponent(id) + '/read', { method: 'POST' })
+               .then(data => {
+                  if(data.success) {
+                     fetchNotifications();
+                  }
+               })
+               .catch(err => {
+                  console.error('Error marking notification read:', err);
+                  renderNotificationStatus('Could not update that notification.', true);
+               });
+         }
+
          function deleteNotificationDD(id, e) {
-            e.stopPropagation();
-            fetch('/notifications/' + id, {
-               method: 'DELETE',
-               headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json'
-               }
-            })
-            .then(res => res.json())
-            .then(data => {
-               if(data.success) {
-                  fetchNotifications();
-               }
+            e?.stopPropagation?.();
+            if (!id) return;
+
+            window.SpeakReadyConfirm.show({
+               title: 'Delete notification?',
+               message: 'This notification will be permanently removed.',
+               action: 'Delete',
+               variant: 'danger'
+            }).then((isConfirmed) => {
+               if (!isConfirmed) return;
+
+               requestNotificationJson('/notifications/' + encodeURIComponent(id), { method: 'DELETE' })
+                  .then(data => {
+                     if(data.success) {
+                        fetchNotifications();
+                     }
+                  })
+                  .catch(err => {
+                     console.error('Error deleting notification:', err);
+                     renderNotificationStatus('Could not delete that notification.', true);
+                  });
             });
          }
 
          // Fetch initially to set badge
          document.addEventListener('DOMContentLoaded', function() {
-            fetchNotifications();
+            fetchNotifications({ quiet: true });
             // Poll every minute
-            setInterval(fetchNotifications, 60000);
+            setInterval(() => fetchNotifications({ quiet: true }), 60000);
+         });
+
+         document.addEventListener('click', function(event) {
+            const actionButton = event.target.closest('#notifDropdown [data-notif-action]');
+            if (!actionButton) return;
+
+            event.preventDefault();
+            const notificationId = actionButton.dataset.notifId;
+            if (actionButton.dataset.notifAction === 'read') {
+               markReadDD(notificationId, event);
+            } else if (actionButton.dataset.notifAction === 'delete') {
+               deleteNotificationDD(notificationId, event);
+            }
+         });
+
+         document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+               closeUserHeaderDropdowns();
+            }
          });
       </script>
       <style>

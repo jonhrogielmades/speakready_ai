@@ -2989,6 +2989,48 @@
         filter: grayscale(0.25);
     }
 
+    #sec-interview-setup .setup-inline-error {
+        display: none;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 8px;
+        border: 1px solid rgba(239, 68, 68, 0.32);
+        border-radius: 10px;
+        background: rgba(254, 242, 242, 0.92);
+        color: #b91c1c;
+        padding: 8px 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    #sec-interview-setup .setup-inline-error.setup-inline-error-visible,
+    #sec-interview-setup .setup-inline-error:not([hidden]) {
+        display: flex;
+    }
+
+    #sec-interview-setup .oinp.setup-field-invalid {
+        border-color: rgba(239, 68, 68, 0.75) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+    }
+
+    #sec-interview-setup .assistance-question-list.setup-field-invalid {
+        border: 1px solid rgba(239, 68, 68, 0.42);
+        border-radius: 14px;
+        padding: 8px;
+        background: rgba(254, 242, 242, 0.5);
+    }
+
+    :root:not(.lm) #sec-interview-setup .setup-inline-error {
+        background: rgba(127, 29, 29, 0.34);
+        border-color: rgba(248, 113, 113, 0.42);
+        color: #fecaca;
+    }
+
+    :root:not(.lm) #sec-interview-setup .assistance-question-list.setup-field-invalid {
+        background: rgba(127, 29, 29, 0.18);
+    }
+
     @media (max-width: 767px) {
         #sec-interview-setup {
             --setup-saas-radius: 12px;

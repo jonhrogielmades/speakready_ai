@@ -262,16 +262,19 @@ class UserController extends Controller
         $aiRecommendations = app(LearningRecommendationService::class)->forUser($user_id, 3);
         $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($user_id, 3);
 
-        // Get past scores for chart
+        // Get the latest scored sessions, then render them chronologically for the chart.
         $scoreTrend = (clone $completedSessions)
             ->with('score')
-            ->orderBy('created_at', 'asc')
+            ->whereHas('score')
+            ->orderBy('created_at', 'desc')
             ->take(10)
             ->get()
+            ->sortBy('created_at')
+            ->values()
             ->map(function ($session) {
                 return [
                     'date' => $session->created_at->format('M d'),
-                    'score' => $session->score ? $session->score->overall_readiness_score : 0,
+                    'score' => (int) round($session->score->overall_readiness_score ?? 0),
                 ];
             });
 
@@ -3231,7 +3234,7 @@ class UserController extends Controller
 
     public function missions()
     {
-        $missions = collect();
+        $missions = $this->fallbackMissions();
 
         $recentVoiceSessions = VoiceSession::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')

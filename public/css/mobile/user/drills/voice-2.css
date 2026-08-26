@@ -2202,3 +2202,76 @@ body:is(.user-desktop-shell, .user-mobile-shell) #voice-rehearsal-page :is(
         white-space: normal !important;
     }
 }
+
+#voice-rehearsal-page .vr-hidden-selects[hidden] {
+    display: none !important;
+}
+
+#voice-rehearsal-page .vr-notice {
+    margin: 10px auto 0;
+    max-width: 620px;
+    padding: 9px 12px;
+    border: 1px solid rgba(59, 130, 246, 0.22);
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.08);
+    color: #1d4ed8;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+}
+
+#voice-rehearsal-page .vr-notice[hidden] {
+    display: none !important;
+}
+
+#voice-rehearsal-page .vr-notice-success {
+    border-color: rgba(16, 185, 129, 0.24);
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+}
+
+#voice-rehearsal-page .vr-notice-warning {
+    border-color: rgba(245, 158, 11, 0.28);
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+}
+
+#voice-rehearsal-page .vr-notice-danger {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.1);
+    color: #b91c1c;
+}
+
+html:not(.lm) body #voice-rehearsal-page .vr-notice,
+.dm #voice-rehearsal-page .vr-notice,
+body.dm #voice-rehearsal-page .vr-notice {
+    color: #bfdbfe;
+}
+
+html:not(.lm) body #voice-rehearsal-page .vr-notice-success,
+.dm #voice-rehearsal-page .vr-notice-success,
+body.dm #voice-rehearsal-page .vr-notice-success {
+    color: #86efac;
+}
+
+html:not(.lm) body #voice-rehearsal-page .vr-notice-warning,
+.dm #voice-rehearsal-page .vr-notice-warning,
+body.dm #voice-rehearsal-page .vr-notice-warning {
+    color: #fde68a;
+}
+
+html:not(.lm) body #voice-rehearsal-page .vr-notice-danger,
+.dm #voice-rehearsal-page .vr-notice-danger,
+body.dm #voice-rehearsal-page .vr-notice-danger {
+    color: #fecaca;
+}
+
+#voice-rehearsal-page #btnSave:disabled,
+#voice-rehearsal-page #btnSave[aria-disabled="true"],
+#voice-rehearsal-page .vr-option-row:disabled {
+    opacity: 0.58 !important;
+    cursor: not-allowed !important;
+    filter: saturate(0.7);
+    box-shadow: none !important;
+}

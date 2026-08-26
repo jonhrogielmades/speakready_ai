@@ -2,8 +2,8 @@
 @section('title', 'Account Management')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/account.css?v=1') }}" data-page-style="user-account">
-<link rel="stylesheet" href="{{ asset('css/mobile/user/account-2.css?v=1') }}" data-page-style="user-account-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/account.css?v=2') }}" data-page-style="user-account">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/account-2.css?v=2') }}" data-page-style="user-account-2">
 @endpush
 
 @section('content')
@@ -150,7 +150,7 @@
     </div>
 </div>
 
-<div class="profile-crop-modal" id="profileCropModal" aria-hidden="true">
+<div class="profile-crop-modal" id="profileCropModal" aria-hidden="true" hidden>
     <div class="profile-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="profileCropTitle">
         <h6 id="profileCropTitle" style="color:var(--tx);font-weight:800;margin:0;">Crop Profile Picture</h6>
         <div class="profile-crop-frame">
@@ -174,6 +174,7 @@
     const cropCanvas = document.getElementById('profileCropCanvas');
     const cropZoom = document.getElementById('profileCropZoom');
     const cropCtx = cropCanvas ? cropCanvas.getContext('2d') : null;
+    const photoFilename = document.getElementById('photo-filename');
     let cropImage = null;
     let cropSourceName = 'profile-photo.jpg';
     let cropScale = 1;
@@ -202,9 +203,9 @@
     }
 
     function openProfileCrop(file) {
-        if (!file) return;
+        if (!file || !cropModal || !cropCanvas || !cropZoom) return;
         cropSourceName = file.name || 'profile-photo.jpg';
-        document.getElementById('photo-filename').textContent = cropSourceName;
+        if (photoFilename) photoFilename.textContent = cropSourceName;
         const reader = new FileReader();
         reader.onload = event => {
             cropImage = new Image();
@@ -215,8 +216,9 @@
                 const baseScale = Math.max(size / cropImage.width, size / cropImage.height);
                 cropOffsetX = (size - cropImage.width * baseScale) / 2;
                 cropOffsetY = (size - cropImage.height * baseScale) / 2;
-                cropModal.classList.add('open');
+                cropModal.hidden = false;
                 cropModal.setAttribute('aria-hidden', 'false');
+                cropModal.classList.add('open');
                 drawProfileCrop();
             };
             cropImage.src = event.target.result;
@@ -225,14 +227,17 @@
     }
 
     function cancelProfileCrop() {
-        cropModal.classList.remove('open');
-        cropModal.setAttribute('aria-hidden', 'true');
+        if (cropModal) {
+            cropModal.classList.remove('open');
+            cropModal.setAttribute('aria-hidden', 'true');
+            cropModal.hidden = true;
+        }
         if (profileInput) profileInput.value = '';
-        document.getElementById('photo-filename').textContent = 'JPG, GIF or PNG. Max size of 2MB.';
+        if (photoFilename) photoFilename.textContent = 'JPG, GIF or PNG. Max size of 2MB.';
     }
 
     function applyProfileCrop() {
-        if (!cropCanvas || !profileInput) return;
+        if (!cropCanvas || !profileInput || !cropModal) return;
         cropCanvas.toBlob(blob => {
             if (!blob) return;
             const file = new File([blob], cropSourceName.replace(/\.[^.]+$/, '') + '-cropped.jpg', { type: 'image/jpeg' });
@@ -247,9 +252,10 @@
                 const initial = document.getElementById('profilePhotoInitial');
                 if (initial) initial.style.display = 'none';
             }
-            document.getElementById('photo-filename').textContent = file.name;
+            if (photoFilename) photoFilename.textContent = file.name;
             cropModal.classList.remove('open');
             cropModal.setAttribute('aria-hidden', 'true');
+            cropModal.hidden = true;
         }, 'image/jpeg', 0.9);
     }
 

@@ -693,3 +693,20 @@
             70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
         }
     }
+
+    html body #mission-mode-page .mission-card-copy {
+        display: block !important;
+        overflow: visible !important;
+        -webkit-line-clamp: unset !important;
+        -webkit-box-orient: initial !important;
+    }
+
+    html body #mission-mode-page .mission-card {
+        min-height: 134px !important;
+    }
+
+    @media (min-width: 992px) and (max-width: 1320px) {
+        html body #mission-mode-page .mission-card {
+            min-height: 144px !important;
+        }
+    }

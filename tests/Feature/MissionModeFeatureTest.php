@@ -26,11 +26,28 @@ class MissionModeFeatureTest extends TestCase
             ->assertSee('Real-Life Mission Mode')
             ->assertSee('Generate Task')
             ->assertSee('Tell AI what you want to practice to generate your mission tasks.', false)
-            ->assertDontSee('First Impression Sprint')
+            ->assertSee('First Impression Sprint')
+            ->assertSee('Introduce yourself to a Philippine recruiter in 60 seconds', false)
             ->assertSee('missionVoiceModal', false)
             ->assertSee('AI Speak Mission')
             ->assertSee('missionGenerateUrl', false)
             ->assertDontSee('id="voiceMissionLink"', false);
+    }
+
+    public function test_mobile_user_can_open_mission_mode_with_starter_missions(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->get(route('user.missions'))
+            ->assertOk()
+            ->assertSee('class="user-mobile-shell mobile-shell"', false)
+            ->assertSee('css/mobile/user/missions.css?v=1', false)
+            ->assertSee('First Impression Sprint')
+            ->assertSee('setMissionVoiceButtonStates', false)
+            ->assertSee('onboarding_completed_mobile_user_missions', false)
+            ->assertSee('missionVoiceModal', false);
     }
 
     public function test_authenticated_user_can_generate_personalized_missions(): void

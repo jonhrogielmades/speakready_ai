@@ -46,9 +46,10 @@
     </div>
     <div class="progress-actions">
         <!-- Feature 15: Progress Reports -->
-        <button class="btn btn-primary btn-shine progress-export-btn pdf" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
-        <button class="btn btn-success btn-shine progress-export-btn excel" id="exportExcelBtn"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+        <button class="btn btn-primary btn-shine progress-export-btn pdf" type="button" id="exportPdfBtn"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
+        <button class="btn btn-success btn-shine progress-export-btn excel" type="button" id="exportExcelBtn"><i class="fa-solid fa-file-excel"></i> Export CSV</button>
     </div>
+    <div class="progress-export-status" id="progressExportStatus" role="status" aria-live="polite" hidden></div>
 
     <!-- Feature 9, 14: Top Stats (Streaks, Comparison) -->
     <div id="progress-stats" class="row g-4">
@@ -341,7 +342,7 @@
                     </div>
                     @if($sessions->count() > 0)
                     <div class="history-actions">
-                        <form action="{{ route('user.sessions.clear') }}" method="POST" onsubmit="return confirm('Clear all completed interview sessions? This cannot be undone.');">
+                        <form action="{{ route('user.sessions.clear') }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Clear all sessions?" data-sr-confirm-message="This will permanently remove all completed interview sessions." data-sr-confirm-action="Clear All" data-sr-confirm-variant="danger">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-outline-danger history-clear-btn">
@@ -380,7 +381,7 @@
                             </div>
                             <div class="history-card-actions">
                                 <a href="{{ route('user.review', $session->id) }}" class="btn btn-outline-primary history-feedback-btn"><i class="fa-regular fa-message"></i> View Feedback</a>
-                                <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete session?" data-sr-confirm-message="This interview session will be permanently removed." data-sr-confirm-action="Delete" data-sr-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger history-delete-btn" title="Delete session">
@@ -415,7 +416,7 @@
                         </thead>
                         <tbody>
                             @foreach($sessions as $session)
-                            <tr style="border-bottom: 1px solid var(--bd);">
+                            <tr style="border-bottom: 1px solid var(--bd);" data-history-export-row>
                                 <td class="border-0 py-3">{{ $session->created_at->format('M d, Y') }}</td>
                                 <td class="border-0 py-3 fw-bold">{{ $session->practice_scenario ?? 'General Job Interview' }}</td>
                                 <td class="border-0 py-3">
@@ -437,7 +438,7 @@
                                 <td class="border-0 py-3 text-end">
                                     <div class="d-flex justify-content-end gap-2">
                                         <a href="{{ route('user.review', $session->id) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">View Feedback</a>
-                                        <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" onsubmit="return confirm('Delete this interview session? This cannot be undone.');">
+                                        <form action="{{ route('user.sessions.destroy', $session->id) }}" method="POST" data-sr-confirm-form data-sr-confirm-title="Delete session?" data-sr-confirm-message="This interview session will be permanently removed." data-sr-confirm-action="Delete" data-sr-confirm-variant="danger">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete session" style="border-radius:8px;">
@@ -764,8 +765,6 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Enable tooltips
@@ -781,6 +780,32 @@
             const scenarioPerformance = @json($categoryPerf);
             const progressCharts = [];
             const previousChartColorUpdater = window.updateChartColors;
+            const progressExportStatus = document.getElementById('progressExportStatus');
+            const setProgressExportStatus = (message, type = 'info') => {
+                if (!progressExportStatus) return;
+
+                progressExportStatus.textContent = message || '';
+                progressExportStatus.dataset.type = type;
+                progressExportStatus.hidden = !message;
+            };
+            const setProgressButtonBusy = (button, isBusy, label) => {
+                if (!button) return;
+
+                if (isBusy) {
+                    button.dataset.originalHtml = button.innerHTML;
+                    button.disabled = true;
+                    button.setAttribute('aria-busy', 'true');
+                    button.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${label}`;
+                    return;
+                }
+
+                button.disabled = false;
+                button.setAttribute('aria-busy', 'false');
+                if (button.dataset.originalHtml) {
+                    button.innerHTML = button.dataset.originalHtml;
+                    delete button.dataset.originalHtml;
+                }
+            };
             const progressThemeColors = () => {
                 const isLight = document.documentElement.dataset.theme === 'light' || document.documentElement.classList.contains('lm');
                 return {
@@ -802,103 +827,136 @@
                 }
                 chart.update('none');
             };
+            const showProgressChartFallback = (canvas, message) => {
+                if (!canvas) return;
+
+                const fallback = document.createElement('div');
+                fallback.className = 'progress-chart-empty progress-chart-runtime-empty';
+                fallback.innerHTML = `
+                    <div>
+                        <i class="fa-solid fa-chart-line"></i>
+                        <h6>Chart unavailable</h6>
+                        <p>${message}</p>
+                    </div>
+                `;
+                canvas.replaceWith(fallback);
+            };
             
             // Feature 1: Readiness Trend
             const labels = trendData.map(s => s.date);
             const scores = trendData.map(s => s.score);
             
-            if(window.Chart && document.getElementById('readinessChart')) {
-                const readinessCanvas = document.getElementById('readinessChart');
-                const readinessGradient = readinessCanvas.getContext('2d').createLinearGradient(0, 0, 0, 340);
-                readinessGradient.addColorStop(0, 'rgba(37, 99, 235, 0.18)');
-                readinessGradient.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+            const readinessCanvas = document.getElementById('readinessChart');
+            if (readinessCanvas) {
+                if (window.Chart) {
+                    try {
+                        const readinessGradient = readinessCanvas.getContext('2d').createLinearGradient(0, 0, 0, 340);
+                        readinessGradient.addColorStop(0, 'rgba(37, 99, 235, 0.18)');
+                        readinessGradient.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
 
-                const readinessChart = new Chart(readinessCanvas, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Readiness Score',
-                            data: scores,
-                            borderColor: '#2563eb',
-                            backgroundColor: readinessGradient,
-                            borderWidth: 3,
-                            tension: 0.34,
-                            fill: true,
-                            pointBackgroundColor: '#2563eb',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        elements: { line: { capBezierPoints: true } },
-                        scales: { 
-                            y: { 
-                                beginAtZero: true, 
-                                max: 100,
-                                ticks: { color: progressThemeColors().tick, stepSize: 10, padding: 12 },
-                                border: { display: false },
-                                grid: { color: progressThemeColors().grid, borderDash: [4, 5], drawTicks: false }
+                        const readinessChart = new Chart(readinessCanvas, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Readiness Score',
+                                    data: scores,
+                                    borderColor: '#2563eb',
+                                    backgroundColor: readinessGradient,
+                                    borderWidth: 3,
+                                    tension: 0.34,
+                                    fill: true,
+                                    pointBackgroundColor: '#2563eb',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 5,
+                                    pointHoverRadius: 7
+                                }]
                             },
-                            x: {
-                                ticks: { color: progressThemeColors().tick, maxRotation: 0, autoSkipPadding: 16 },
-                                border: { color: progressThemeColors().border },
-                                grid: { display: false }
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                elements: { line: { capBezierPoints: true } },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        ticks: { color: progressThemeColors().tick, stepSize: 10, padding: 12 },
+                                        border: { display: false },
+                                        grid: { color: progressThemeColors().grid, borderDash: [4, 5], drawTicks: false }
+                                    },
+                                    x: {
+                                        ticks: { color: progressThemeColors().tick, maxRotation: 0, autoSkipPadding: 16 },
+                                        border: { color: progressThemeColors().border },
+                                        grid: { display: false }
+                                    }
+                                }
                             }
-                        }
+                        });
+                        progressCharts.push(readinessChart);
+                    } catch (error) {
+                        console.error(error);
+                        showProgressChartFallback(readinessCanvas, 'Readiness trend data is available, but the chart could not be rendered.');
                     }
-                });
-                progressCharts.push(readinessChart);
+                } else {
+                    showProgressChartFallback(readinessCanvas, 'Readiness trend data is available, but the chart library did not load.');
+                }
             }
 
             // Feature 3: Scenario Performance
-            if(window.Chart && document.getElementById('categoryChart')) {
-                const scenarioLabels = Object.keys(scenarioPerformance);
-                const scenarioData = Object.values(scenarioPerformance);
+            const categoryCanvas = document.getElementById('categoryChart');
+            if (categoryCanvas) {
+                if (window.Chart) {
+                    try {
+                        const scenarioLabels = Object.keys(scenarioPerformance);
+                        const scenarioData = Object.values(scenarioPerformance);
 
-                const categoryChart = new Chart(document.getElementById('categoryChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: scenarioLabels,
-                        datasets: [{
-                            label: 'Avg Score',
-                            data: scenarioData,
-                            backgroundColor: [
-                                '#3b82f6',
-                                '#10b981',
-                                '#8b5cf6',
-                                '#fb923c'
-                            ],
-                            borderRadius: 4,
-                            maxBarThickness: 96
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { 
-                            y: { 
-                                beginAtZero: true, 
-                                max: 100,
-                                ticks: { color: progressThemeColors().tick, stepSize: 10, padding: 12 },
-                                border: { display: false },
-                                grid: { color: progressThemeColors().grid, borderDash: [4, 5], drawTicks: false }
+                        const categoryChart = new Chart(categoryCanvas, {
+                            type: 'bar',
+                            data: {
+                                labels: scenarioLabels,
+                                datasets: [{
+                                    label: 'Avg Score',
+                                    data: scenarioData,
+                                    backgroundColor: [
+                                        '#3b82f6',
+                                        '#10b981',
+                                        '#8b5cf6',
+                                        '#fb923c'
+                                    ],
+                                    borderRadius: 4,
+                                    maxBarThickness: 96
+                                }]
                             },
-                            x: {
-                                ticks: { color: progressThemeColors().tick, maxRotation: 0, font: { weight: 500 } },
-                                border: { color: progressThemeColors().border },
-                                grid: { display: false }
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        ticks: { color: progressThemeColors().tick, stepSize: 10, padding: 12 },
+                                        border: { display: false },
+                                        grid: { color: progressThemeColors().grid, borderDash: [4, 5], drawTicks: false }
+                                    },
+                                    x: {
+                                        ticks: { color: progressThemeColors().tick, maxRotation: 0, font: { weight: 500 } },
+                                        border: { color: progressThemeColors().border },
+                                        grid: { display: false }
+                                    }
+                                }
                             }
-                        }
+                        });
+                        progressCharts.push(categoryChart);
+                    } catch (error) {
+                        console.error(error);
+                        showProgressChartFallback(categoryCanvas, 'Scenario scores are available, but the chart could not be rendered.');
                     }
-                });
-                progressCharts.push(categoryChart);
+                } else {
+                    showProgressChartFallback(categoryCanvas, 'Scenario scores are available, but the chart library did not load.');
+                }
             }
             window.updateChartColors = function() {
                 if (typeof previousChartColorUpdater === 'function') {
@@ -910,19 +968,18 @@
             // Feature 2: Table Search Filter
             const searchInput = document.getElementById('historySearch');
             if(searchInput) {
-                searchInput.addEventListener('keyup', function() {
+                searchInput.addEventListener('input', function() {
                     const filter = searchInput.value.toLowerCase();
-                    const rows = document.querySelectorAll('#history-table table tbody tr');
+                    const rows = document.querySelectorAll('#history-table table tbody tr[data-history-export-row]');
                     const cards = document.querySelectorAll('#history-table [data-history-record]');
                     const noResults = document.getElementById('historyNoResults');
+                    let visibleRows = 0;
                     let visibleCards = 0;
                     rows.forEach(row => {
                         const text = row.textContent.toLowerCase();
-                        if(text.includes(filter)) {
-                            row.style.display = '';
-                        } else {
-                            row.style.display = 'none';
-                        }
+                        const isVisible = text.includes(filter);
+                        row.style.display = isVisible ? '' : 'none';
+                        if (isVisible) visibleRows++;
                     });
                     cards.forEach(card => {
                         const text = card.textContent.toLowerCase();
@@ -933,29 +990,23 @@
                         }
                     });
                     if (noResults) {
-                        noResults.hidden = filter.length === 0 || cards.length === 0 || visibleCards > 0;
+                        const hasRecords = rows.length > 0 || cards.length > 0;
+                        noResults.hidden = filter.length === 0 || !hasRecords || (visibleRows + visibleCards) > 0;
                     }
                 });
             }
 
             const progressPage = document.querySelector('.db-section');
-            const temporaryExportHiding = (callback) => {
+            const temporaryExportMode = (callback) => {
                 if (!progressPage) {
                     callback();
                     return;
                 }
 
-                const controls = progressPage.querySelectorAll('button, input');
-                const originalDisplays = [];
-                controls.forEach(control => {
-                    originalDisplays.push(control.style.display);
-                    control.style.display = 'none';
-                });
+                progressPage.classList.add('progress-exporting');
 
                 const restore = () => {
-                    controls.forEach((control, index) => {
-                        control.style.display = originalDisplays[index];
-                    });
+                    progressPage.classList.remove('progress-exporting');
                 };
 
                 try {
@@ -971,10 +1022,14 @@
                 if (!table) return null;
 
                 const clonedTable = table.cloneNode(true);
+                const exportRows = clonedTable.querySelectorAll('tbody tr[data-history-export-row]');
+                if (!exportRows.length) return null;
+
                 const headers = clonedTable.querySelectorAll('th');
                 if (headers.length > 0) headers[headers.length - 1].remove();
 
-                clonedTable.querySelectorAll('tbody tr').forEach(row => {
+                clonedTable.querySelectorAll('tbody tr:not([data-history-export-row])').forEach(row => row.remove());
+                clonedTable.querySelectorAll('tbody tr[data-history-export-row]').forEach(row => {
                     const cells = row.querySelectorAll('td');
                     if (cells.length > 0) cells[cells.length - 1].remove();
                 });
@@ -991,7 +1046,7 @@
                 const rows = Array.from(table.querySelectorAll('tr'))
                     .map(row => Array.from(row.querySelectorAll('th,td')).map(cell => csvEscape(cell.textContent)).join(','))
                     .join('\n');
-                const blob = new Blob([rows], { type: 'text/csv;charset=utf-8;' });
+                const blob = new Blob([`\uFEFF${rows}`], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
@@ -1011,15 +1066,20 @@
                         return;
                     }
 
+                    setProgressButtonBusy(exportPdfBtn, true, 'Preparing');
+                    setProgressExportStatus('Preparing the report view...', 'info');
+
                     if (typeof window.html2pdf !== 'function') {
-                        temporaryExportHiding((restore) => {
+                        temporaryExportMode((restore) => {
                             const afterPrint = () => {
                                 restore();
+                                setProgressButtonBusy(exportPdfBtn, false);
+                                setProgressExportStatus('Use the print dialog to save the report as PDF.', 'info');
                                 window.removeEventListener('afterprint', afterPrint);
                             };
                             window.addEventListener('afterprint', afterPrint);
                             window.print();
-                            setTimeout(afterPrint, 1200);
+                            setTimeout(afterPrint, 2200);
                         });
                         return;
                     }
@@ -1032,29 +1092,37 @@
                         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
                     };
 
-                    temporaryExportHiding((restore) => {
-                        html2pdf().set(opt).from(element).save().catch(() => {
+                    temporaryExportMode((restore) => {
+                        window.html2pdf().set(opt).from(element).save().catch(() => {
+                            setProgressExportStatus('PDF export failed. Opening the print dialog instead.', 'error');
                             window.print();
                         }).finally(() => {
                             restore();
+                            setProgressButtonBusy(exportPdfBtn, false);
                         });
                     });
                 });
             }
 
-            // Export Excel
+            // Export CSV
             const exportExcelBtn = document.getElementById('exportExcelBtn');
             if (exportExcelBtn) {
                 exportExcelBtn.addEventListener('click', function() {
                     const table = cloneHistoryTableWithoutActions();
-                    if (table) {
-                        if (!window.XLSX) {
-                            downloadCsvFromTable(table);
-                            return;
-                        }
+                    if (!table) {
+                        setProgressExportStatus('No interview history is available to export yet.', 'error');
+                        return;
+                    }
 
-                        const wb = XLSX.utils.table_to_book(table, {sheet: "History"});
-                        XLSX.writeFile(wb, 'interview_history.xlsx');
+                    setProgressButtonBusy(exportExcelBtn, true, 'Exporting');
+                    try {
+                        downloadCsvFromTable(table);
+                        setProgressExportStatus('CSV export downloaded. You can open it in Excel or Google Sheets.', 'success');
+                    } catch (error) {
+                        console.error(error);
+                        setProgressExportStatus('Could not export interview history. Please try again.', 'error');
+                    } finally {
+                        setProgressButtonBusy(exportExcelBtn, false);
                     }
                 });
             }

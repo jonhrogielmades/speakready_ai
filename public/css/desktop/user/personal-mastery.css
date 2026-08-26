@@ -1291,7 +1291,7 @@
     }
 
     #personal-mastery-page .mastery-mini-link {
-        min-height: 30px;
+        min-height: 34px;
         padding: 6px 9px;
         background: rgba(37, 99, 235, 0.1);
         color: var(--mastery-shell-accent, var(--mastery-blue));
@@ -1300,6 +1300,7 @@
     #personal-mastery-page .mastery-section-grid {
         display: grid;
         grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+        align-items: start;
         gap: 10px;
         margin-bottom: 10px;
     }
@@ -1552,6 +1553,17 @@
     #personal-mastery-page .mastery-badge-item.earned .mastery-badge-icon {
         background: rgba(245, 158, 11, 0.16);
         color: #d97706;
+    }
+
+    @media (max-width: 1180px) {
+        #personal-mastery-page .mastery-section-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #personal-mastery-page .mastery-panel,
+        #personal-mastery-page .mastery-stack {
+            align-self: start;
+        }
     }
 
     @media (max-width: 991.98px) {

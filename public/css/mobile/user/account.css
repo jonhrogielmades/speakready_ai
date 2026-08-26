@@ -745,3 +745,44 @@
             font-size: 0.68rem;
         }
     }
+
+    .profile-crop-modal[hidden],
+    .profile-crop-modal[aria-hidden="true"]:not(.open) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    .profile-crop-modal.open {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+    }
+
+    @media (max-width: 767px) {
+        body.user-mobile-shell #account-page :is(.upload-picture-btn, .account-submit-btn, .delete-account-btn, .premium-panel form button[type="submit"]) {
+            min-height: 44px !important;
+            padding-block: 10px !important;
+        }
+
+        body.user-mobile-shell #account-page .password-field .oinp {
+            min-height: 44px !important;
+            padding-right: 58px !important;
+        }
+
+        body.user-mobile-shell #account-page .password-toggle {
+            width: 44px !important;
+            min-width: 44px !important;
+            height: 44px !important;
+            min-height: 44px !important;
+            right: 4px !important;
+            border-radius: 10px !important;
+        }
+
+        body.user-mobile-shell .profile-crop-actions .btn {
+            min-height: 44px !important;
+            padding-block: 10px !important;
+        }
+    }

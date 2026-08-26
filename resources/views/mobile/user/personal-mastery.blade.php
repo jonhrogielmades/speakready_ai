@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Philippines Interview Personal Mastery')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/personal-mastery.css?v=1') }}" data-page-style="user-personal-mastery">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/personal-mastery.css?v=2') }}" data-page-style="user-personal-mastery">
 @endpush
 
 @section('content')

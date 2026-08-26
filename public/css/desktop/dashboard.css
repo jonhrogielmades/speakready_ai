@@ -1387,6 +1387,11 @@
         font-weight: 900;
     }
 
+    .sr-trend-note.is-empty {
+        border-style: dashed;
+        background: color-mix(in srgb, var(--trend-soft) 80%, transparent);
+    }
+
     :root:not(.lm) .sr-trend-note strong {
         color: #dbeafe;
     }
@@ -1611,6 +1616,12 @@
         color: #60a5fa;
         font-size: 0.78rem;
         font-weight: 800;
+    }
+
+    .sr-tag.sr-tag-accent {
+        background: color-mix(in srgb, var(--accent, #60a5fa) 12%, transparent);
+        border-color: color-mix(in srgb, var(--accent, #60a5fa) 22%, transparent);
+        color: var(--accent, #60a5fa);
     }
 
     .sr-rec-list,
@@ -2812,8 +2823,8 @@
 
     .sr-notification-card {
         display: grid;
-        grid-template-columns: 48px minmax(0, 1fr) auto;
-        gap: 14px;
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 12px 14px;
         align-items: start;
         min-height: 94px;
         padding: 16px;
@@ -2846,16 +2857,19 @@
         font-size: 0.8rem;
         line-height: 1.45;
         font-weight: 600;
+        overflow-wrap: anywhere;
     }
 
     .sr-notification-meta {
+        grid-column: 2;
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        justify-self: start;
         color: var(--side-muted);
         font-size: 0.72rem;
         font-weight: 700;
-        white-space: nowrap;
+        white-space: normal;
     }
 
     .sr-notification-dot {
@@ -2979,7 +2993,9 @@
         }
 
         .sr-welcome-stack {
-            display: contents;
+            display: flex;
+            flex-direction: column;
+            gap: var(--dash-section-gap);
         }
 
         .sr-hero-card {
@@ -5777,11 +5793,11 @@
 
     .sr-image-copy {
         display: grid;
-        grid-template-columns: repeat(2, max-content);
+        grid-template-columns: repeat(2, minmax(0, max-content));
         column-gap: 14px;
         row-gap: 4px;
         margin: 10px 0 0 30px;
-        max-width: 540px;
+        max-width: clamp(260px, calc(100% - 190px), 540px);
         padding: 0;
         list-style: none;
         color: rgba(255, 255, 255, 0.88);
@@ -5794,7 +5810,9 @@
         --sr-image-detail-color: rgba(255, 255, 255, 0.9);
         position: relative;
         padding-left: 8px;
-        white-space: nowrap;
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
         color: var(--sr-image-detail-color);
         text-shadow: 0 1px 6px rgba(15, 23, 42, 0.22);
     }
@@ -5829,11 +5847,11 @@
 
     .sr-image-chip-row {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 5px;
         margin: 12px 0 0 30px;
-        max-width: 620px;
-        white-space: nowrap;
+        max-width: clamp(260px, calc(100% - 190px), 620px);
+        white-space: normal;
     }
 
     .sr-image-chip {
@@ -7084,7 +7102,7 @@
 
     @media (min-width: 992px) and (max-width: 1199.98px) {
         body.user-desktop-shell .sr-dashboard {
-            max-width: 820px;
+            max-width: none;
         }
 
         body.user-desktop-shell .sr-summary-grid,
@@ -7831,7 +7849,9 @@
     }
 
     body.user-desktop-shell:not(.admin-shell) .sr-dashboard-shell > .sr-main-stack {
-        display: contents;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
     }
 
     body.user-desktop-shell:not(.admin-shell) #card-progress-chart,
