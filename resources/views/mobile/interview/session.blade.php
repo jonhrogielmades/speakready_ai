@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Philippines Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=2') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=3') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -85,13 +85,11 @@
                 <!-- Simulated AI Video Avatar Panel -->
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
-                    @if($showCameraPanel)
-                    <!-- Mobile fallback self-view; desktop uses the full camera coach panel. -->
-                    <div class="mobile-camera-pip d-lg-none">
+                    <!-- Mobile self-view; desktop keeps using the optional full camera coach panel. -->
+                    <div class="mobile-camera-pip d-lg-none" aria-label="Camera preview">
                         <video id="userCameraMobile" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);background:#222;"></video>
                         <div class="mobile-camera-placeholder" aria-hidden="true"><i class="fa-solid fa-video"></i></div>
                     </div>
-                    @endif
                     <!-- Question Counter (Top Left) -->
                     <div style="position:absolute; top:15px; left:15px; z-index:50;">
                         <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">{{ $initialQuestionCounter }}</span>
@@ -328,7 +326,8 @@
             const assistanceLevel = @json($sessionRecord->ai_assistance_level ?? 'standard');
             const liveFeedbackMode = @json($sessionRecord->live_feedback_mode ?? 'coaching');
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
-            const cameraPreviewEnabled = cameraCoachingEnabled;
+            const cameraPreviewEnabled = Boolean(document.getElementById('userCameraMobile'))
+                && (typeof window.matchMedia !== 'function' || window.matchMedia('(max-width: 991px)').matches);
             let cameraUnavailableReason = null;
             const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
@@ -733,6 +732,26 @@
                 status.textContent = message || '';
                 status.style.color = color;
                 status.style.display = message ? 'inline-block' : 'none';
+            }
+
+            function clearSubmittedAnswerInput() {
+                const textarea = document.getElementById('answerTextarea');
+                if (textarea) textarea.value = '';
+
+                const wordCount = document.getElementById('wordCount');
+                const charCount = document.getElementById('charCount');
+                if (wordCount) wordCount.innerText = '0 words';
+                if (charCount) charCount.innerText = '0 characters';
+
+                resetSpeechRecognitionBufferFromTextarea();
+                setTranscriptionStatus('');
+            }
+
+            function restoreSubmittedAnswerInput(answerText) {
+                const textarea = document.getElementById('answerTextarea');
+                if (textarea) textarea.value = answerText || '';
+                resetSpeechRecognitionBufferFromTextarea();
+                triggerAnalysis();
             }
 
             function showSessionNotice(message, type = 'error', focus = false) {
@@ -2409,7 +2428,7 @@
                 await waitForMinimumElapsed(closingStartedAt, naturalDelayFor(closingText, 3600, 7600));
 
                 if (!interviewTerminated) {
-                    finishInterview();
+                    await finishInterview();
                 }
             }
 
@@ -3174,7 +3193,9 @@
             function autoSaveState() {
                 if (interviewEnding || interviewTerminated) return Promise.resolve();
                 if (answersData[currentQIdx]) {
-                    answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
+                    if (!isSubmittingAnswer) {
+                        answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
+                    }
                     answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
                 }
 
@@ -3302,6 +3323,7 @@
                 answersData[currentQIdx].timed_out = timedOut;
 
                 appendChatMessage('user', answerText);
+                clearSubmittedAnswerInput();
 
                 const answeredOpeningQuestion = isOpeningQuestion(questions[currentQIdx]);
                 const isLastQuestion = !answeredOpeningQuestion && isLastScoredQuestion(currentQIdx);
@@ -3317,6 +3339,7 @@
                         finalAnswerSubmitted = false;
                         isSubmittingAnswer = false;
                         if (!interviewTerminated) {
+                            restoreSubmittedAnswerInput(answerText);
                             setAnswerInputEnabled(true);
                             showSessionNotice('We could not save your final answer. Please try again before finishing.');
                         }
@@ -3404,6 +3427,7 @@
                     isSubmittingAnswer = false;
                     console.error(err);
                     if (!interviewTerminated && err.name !== 'AbortError') {
+                        restoreSubmittedAnswerInput(answerText);
                         setAnswerInputEnabled(true);
                         showSessionNotice(err.message || 'Network error.');
                     }
@@ -3573,7 +3597,7 @@
             }
 
             async function finishInterview() {
-                if (feedbackSubmissionInFlight || interviewTerminated) return;
+                if (feedbackSubmissionInFlight || interviewTerminated) return false;
                 feedbackSubmissionInFlight = true;
                 cleanupInterviewProcesses();
                 stopQuestionTimer();
@@ -3599,7 +3623,8 @@
                                 'Accept': 'application/json'
                             }
                         });
-                        const data = await response.json().catch(() => ({}));
+                        const payload = await parseResponsePayload(response);
+                        const data = payload.data || {};
 
                         if (response.status === 409) {
                             await waitForFeedbackRetry(data.retry_after_ms);
@@ -3607,11 +3632,13 @@
                         }
 
                         if (!response.ok || !data.redirect_url) {
-                            throw new Error(data.message || 'The feedback service returned an incomplete response.');
+                            const error = new Error(finishResponseErrorMessage(response, payload));
+                            error.status = response.status;
+                            throw error;
                         }
 
                         window.location.replace(data.redirect_url);
-                        return;
+                        return true;
                     }
 
                     throw new Error('The report is still processing. Please retry in a moment.');
@@ -3625,7 +3652,30 @@
                     if (retryButton) retryButton.style.display = 'inline-flex';
                     if (backButton) backButton.style.display = 'inline-flex';
                     setFinishTransitionVisible(true);
+                    return false;
                 }
+            }
+
+            function finishResponseErrorMessage(response, payload) {
+                const data = payload?.data || {};
+                const explicitMessage = data.error || data.message || validationErrorMessage(data.errors);
+                if (explicitMessage) return String(explicitMessage);
+
+                if (response.status === 419) {
+                    return 'Your secure session expired. Please refresh the page, then retry report generation.';
+                }
+                if (response.status === 403) {
+                    return 'This interview session is no longer active for your account.';
+                }
+                if (response.status === 422) {
+                    return 'Some report details were rejected. Please retry the feedback report.';
+                }
+                if (response.status >= 500) {
+                    return 'The server had a temporary problem while finalizing your feedback report. Please retry in a moment.';
+                }
+
+                const plainText = String(payload?.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                return plainText ? plainText.slice(0, 220) : 'The feedback service returned an incomplete response.';
             }
 
             function retryFinishInterview() {

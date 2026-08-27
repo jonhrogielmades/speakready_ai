@@ -726,6 +726,26 @@
                 status.style.display = message ? 'inline-block' : 'none';
             }
 
+            function clearSubmittedAnswerInput() {
+                const textarea = document.getElementById('answerTextarea');
+                if (textarea) textarea.value = '';
+
+                const wordCount = document.getElementById('wordCount');
+                const charCount = document.getElementById('charCount');
+                if (wordCount) wordCount.innerText = '0 words';
+                if (charCount) charCount.innerText = '0 characters';
+
+                resetSpeechRecognitionBufferFromTextarea();
+                setTranscriptionStatus('');
+            }
+
+            function restoreSubmittedAnswerInput(answerText) {
+                const textarea = document.getElementById('answerTextarea');
+                if (textarea) textarea.value = answerText || '';
+                resetSpeechRecognitionBufferFromTextarea();
+                triggerAnalysis();
+            }
+
             function showSessionNotice(message, type = 'error', focus = false) {
                 const notice = document.getElementById('sessionNotice');
                 if (!notice || !message) return;
@@ -2400,7 +2420,7 @@
                 await waitForMinimumElapsed(closingStartedAt, naturalDelayFor(closingText, 3600, 7600));
 
                 if (!interviewTerminated) {
-                    finishInterview();
+                    await finishInterview();
                 }
             }
 
@@ -3162,7 +3182,9 @@
             function autoSaveState() {
                 if (interviewEnding || interviewTerminated) return Promise.resolve();
                 if (answersData[currentQIdx]) {
-                    answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
+                    if (!isSubmittingAnswer) {
+                        answersData[currentQIdx].text = document.getElementById('answerTextarea').value;
+                    }
                     answersData[currentQIdx].elapsed_seconds = getQuestionElapsedSeconds();
                 }
 
@@ -3290,6 +3312,7 @@
                 answersData[currentQIdx].timed_out = timedOut;
 
                 appendChatMessage('user', answerText);
+                clearSubmittedAnswerInput();
 
                 const answeredOpeningQuestion = isOpeningQuestion(questions[currentQIdx]);
                 const isLastQuestion = !answeredOpeningQuestion && isLastScoredQuestion(currentQIdx);
@@ -3305,6 +3328,7 @@
                         finalAnswerSubmitted = false;
                         isSubmittingAnswer = false;
                         if (!interviewTerminated) {
+                            restoreSubmittedAnswerInput(answerText);
                             setAnswerInputEnabled(true);
                             showSessionNotice('We could not save your final answer. Please try again before finishing.');
                         }
@@ -3392,6 +3416,7 @@
                     isSubmittingAnswer = false;
                     console.error(err);
                     if (!interviewTerminated && err.name !== 'AbortError') {
+                        restoreSubmittedAnswerInput(answerText);
                         setAnswerInputEnabled(true);
                         showSessionNotice(err.message || 'Network error.');
                     }
@@ -3561,7 +3586,7 @@
             }
 
             async function finishInterview() {
-                if (feedbackSubmissionInFlight || interviewTerminated) return;
+                if (feedbackSubmissionInFlight || interviewTerminated) return false;
                 feedbackSubmissionInFlight = true;
                 cleanupInterviewProcesses();
                 stopQuestionTimer();
@@ -3587,7 +3612,8 @@
                                 'Accept': 'application/json'
                             }
                         });
-                        const data = await response.json().catch(() => ({}));
+                        const payload = await parseResponsePayload(response);
+                        const data = payload.data || {};
 
                         if (response.status === 409) {
                             await waitForFeedbackRetry(data.retry_after_ms);
@@ -3595,11 +3621,13 @@
                         }
 
                         if (!response.ok || !data.redirect_url) {
-                            throw new Error(data.message || 'The feedback service returned an incomplete response.');
+                            const error = new Error(finishResponseErrorMessage(response, payload));
+                            error.status = response.status;
+                            throw error;
                         }
 
                         window.location.replace(data.redirect_url);
-                        return;
+                        return true;
                     }
 
                     throw new Error('The report is still processing. Please retry in a moment.');
@@ -3613,7 +3641,30 @@
                     if (retryButton) retryButton.style.display = 'inline-flex';
                     if (backButton) backButton.style.display = 'inline-flex';
                     setFinishTransitionVisible(true);
+                    return false;
                 }
+            }
+
+            function finishResponseErrorMessage(response, payload) {
+                const data = payload?.data || {};
+                const explicitMessage = data.error || data.message || validationErrorMessage(data.errors);
+                if (explicitMessage) return String(explicitMessage);
+
+                if (response.status === 419) {
+                    return 'Your secure session expired. Please refresh the page, then retry report generation.';
+                }
+                if (response.status === 403) {
+                    return 'This interview session is no longer active for your account.';
+                }
+                if (response.status === 422) {
+                    return 'Some report details were rejected. Please retry the feedback report.';
+                }
+                if (response.status >= 500) {
+                    return 'The server had a temporary problem while finalizing your feedback report. Please retry in a moment.';
+                }
+
+                const plainText = String(payload?.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                return plainText ? plainText.slice(0, 220) : 'The feedback service returned an incomplete response.';
             }
 
             function retryFinishInterview() {

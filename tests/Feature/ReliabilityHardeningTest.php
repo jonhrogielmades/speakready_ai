@@ -722,7 +722,8 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('concludeAndFinishInterview', false)
             ->assertSee('playClosingConversationAndSubmit', false)
             ->assertSee('abortInterviewSession', false)
-            ->assertSee('onclick="abortInterviewSession()"', false)
+            ->assertSee('requestAbortInterviewSession', false)
+            ->assertSee('confirmAbortInterviewSession', false)
             ->assertSee(route('interview.abort'), false)
             ->assertSee('openingHasPlayed', false)
             ->assertSee('firstQuestionIntroText', false)
@@ -959,6 +960,91 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_interview_finish_repairs_missing_optional_session_columns_before_processing(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the final checklist, coordinated the review, and confirmed the release result with my lead.',
+            'response_mode' => 'text',
+        ]);
+
+        foreach (['action_plan', 'session_state', 'current_question_index', 'duration_seconds', 'notes'] as $column) {
+            if (Schema::hasColumn('interview_sessions', $column)) {
+                Schema::table('interview_sessions', function (Blueprint $table) use ($column): void {
+                    $table->dropColumn($column);
+                });
+            }
+        }
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'local',
+            ])
+            ->postJson(route('interview.finish'), [
+                'session_id' => $session->id,
+                'duration_seconds' => 75,
+            ])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        foreach (['action_plan', 'session_state', 'current_question_index', 'duration_seconds', 'notes'] as $column) {
+            $this->assertTrue(Schema::hasColumn('interview_sessions', $column), "Expected {$column} to be repaired.");
+        }
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_interview_finish_uses_local_feedback_when_feedback_generation_crashes(): void
+    {
+        Http::preventStrayRequests();
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, ['interview_session_id' => $session->id]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I organized the handoff, clarified ownership, and verified the result with the receiving team.',
+            'response_mode' => 'text',
+        ]);
+
+        $this->app->instance(InterviewController::class, new class extends InterviewController
+        {
+            protected function generateInterviewFeedbackForSession(
+                InterviewSession $session,
+                ?GameLevel $gameLevel,
+                array $sessionData,
+                array $answersData,
+                ?string $feedbackProvider = null
+            ): array {
+                throw new \RuntimeException('Simulated provider crash.');
+            }
+        });
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+            ])
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertOk()
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+        $this->assertNotEmpty(InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->ai_feedback);
     }
 
     public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void

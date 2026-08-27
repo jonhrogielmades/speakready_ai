@@ -342,10 +342,16 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'))
             ->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=2', false)
+            ->assertSee('css/mobile/interview/session.css?v=3', false)
+            ->assertSee('class="mobile-camera-pip d-lg-none"', false)
+            ->assertSee('id="userCameraMobile"', false)
+            ->assertSee('const cameraPreviewEnabled = Boolean(document.getElementById(\'userCameraMobile\'))', false)
+            ->assertSee('function clearSubmittedAnswerInput()', false)
+            ->assertSee('if (!isSubmittingAnswer)', false)
             ->assertSee('mobile-response-end-session-action', false)
             ->assertSee('mobile-response-end-session-btn', false)
+            ->assertSee('id="responseFullscreenToggle"', false)
             ->assertDontSee('<body class="mobile-interview-fullscreen"', false)
-            ->assertDontSee('id="responseFullscreenToggle"', false);
+            ->assertDontSee('class="mobile-interview-fullscreen"', false);
     }
 }

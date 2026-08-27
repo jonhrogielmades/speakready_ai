@@ -26,6 +26,7 @@ use App\Services\TrustworthyAssessmentService;
 use App\Support\FeedbackSchema;
 use App\Support\FeedbackCoachingRepair;
 use App\Support\InterviewAnswerSchema;
+use App\Support\InterviewSessionSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use Illuminate\Http\Request;
@@ -841,14 +842,9 @@ class InterviewController extends Controller
                 $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
             }
 
-            // Learning games must finish quickly and cannot wait on external AI retries.
-            if ($gameLevel) {
-                $aiFeedback = $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
-            } else {
-                // Provider routing is controlled by the configured primary/fallback chain, not by users.
-                $feedbackProvider = session('active_interview_provider', AIService::defaultProviderKey());
-                $aiFeedback = AIService::generateFeedback($sessionData, $answersData, $feedbackProvider);
-            }
+            // Provider routing is controlled by the configured primary/fallback chain, not by users.
+            $feedbackProvider = $gameLevel ? null : session('active_interview_provider', AIService::defaultProviderKey());
+            $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
             $assessment = app(TrustworthyAssessmentService::class);
             DB::beginTransaction();
 
@@ -1215,6 +1211,7 @@ class InterviewController extends Controller
 
     private function ensureInterviewReportSchema(): void
     {
+        InterviewSessionSchema::ensure();
         InterviewAnswerSchema::ensure();
         ScoreSchema::ensure();
         FeedbackSchema::ensure();
@@ -1500,9 +1497,8 @@ class InterviewController extends Controller
             $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
         }
 
-        $aiFeedback = $gameLevel
-            ? $this->learningGameFeedback($gameLevel, $sessionData, $answersData)
-            : AIService::generateFeedback($sessionData, $answersData, session('active_interview_provider', AIService::defaultProviderKey()));
+        $feedbackProvider = $gameLevel ? null : session('active_interview_provider', AIService::defaultProviderKey());
+        $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
 
         $assessment = app(TrustworthyAssessmentService::class);
 
@@ -3616,6 +3612,88 @@ class InterviewController extends Controller
         }
 
         return $energyCost;
+    }
+
+    private function safeInterviewFeedback(
+        InterviewSession $session,
+        ?GameLevel $gameLevel,
+        array $sessionData,
+        array $answersData,
+        ?string $feedbackProvider = null
+    ): array {
+        try {
+            return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+        } catch (\Throwable $error) {
+            Log::warning('Interview feedback generation failed; using local fallback.', [
+                'session_id' => $session->id,
+                'user_id' => $session->user_id,
+                'provider' => $feedbackProvider,
+                'error_type' => $error::class,
+                'message' => Str::limit($error->getMessage(), 300),
+            ]);
+
+            return $this->localInterviewFeedback($session, $sessionData, $answersData);
+        }
+    }
+
+    protected function generateInterviewFeedbackForSession(
+        InterviewSession $session,
+        ?GameLevel $gameLevel,
+        array $sessionData,
+        array $answersData,
+        ?string $feedbackProvider = null
+    ): array {
+        if ($gameLevel) {
+            return $this->learningGameFeedback($gameLevel, $sessionData, $answersData);
+        }
+
+        return AIService::generateFeedback($sessionData, $answersData, $feedbackProvider ?: AIService::defaultProviderKey());
+    }
+
+    private function localInterviewFeedback(InterviewSession $session, array $sessionData, array $answersData): array
+    {
+        try {
+            return AIService::generateFeedback($sessionData, $answersData, 'local');
+        } catch (\Throwable $fallbackError) {
+            Log::error('Interview local feedback fallback failed; using minimal report shell.', [
+                'session_id' => $session->id,
+                'user_id' => $session->user_id,
+                'error_type' => $fallbackError::class,
+                'message' => Str::limit($fallbackError->getMessage(), 300),
+            ]);
+
+            return $this->minimalInterviewFeedback($answersData);
+        }
+    }
+
+    private function minimalInterviewFeedback(array $answersData): array
+    {
+        $perQuestion = collect($answersData)
+            ->map(fn (array $answer): array => [
+                'id' => $answer['id'] ?? null,
+                'score' => 0,
+                'clarity_score' => 0,
+                'relevance_score' => 0,
+                'grammar_score' => 0,
+                'professionalism_score' => 0,
+                'scoring_confidence' => 0,
+                'ai_feedback' => 'Your response was saved, but automatic AI analysis was unavailable. Please retry feedback generation or request a manual review before relying on this score.',
+                'better_sample_answer' => '',
+                'follow_up_question' => '',
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'per_question_feedback' => $perQuestion,
+            'session_feedback' => [
+                'overall_readiness_score' => 0,
+                'star_method_score' => 0,
+                'strengths' => 'Your interview responses were saved successfully.',
+                'weaknesses' => 'Automatic AI analysis was unavailable for this report.',
+                'improvement_suggestions' => 'Retry feedback generation or ask for a manual review before using this score for readiness decisions.',
+            ],
+        ];
     }
 
     private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array
