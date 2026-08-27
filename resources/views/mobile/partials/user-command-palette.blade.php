@@ -297,6 +297,21 @@
             background: color-mix(in srgb, var(--bg3, #1e293b) 87%, #3b82f6 13%);
             border-color: color-mix(in srgb, var(--bd, #334155) 72%, #60a5fa 28%);
         }
+        .ucp-result.is-active {
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, .24), rgba(14, 165, 233, .13)),
+                color-mix(in srgb, var(--bg3, #1e293b) 84%, #2563eb 16%);
+            border-color: rgba(96, 165, 250, .58);
+            box-shadow: 0 12px 28px rgba(37, 99, 235, .18), 0 0 0 1px rgba(147, 197, 253, .08) inset;
+        }
+        .ucp-result.is-active .ucp-result-icon {
+            color: #ffffff;
+            background: linear-gradient(135deg, #2563eb, #0ea5e9);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, .28);
+        }
+        .ucp-result.is-active .ucp-result-copy small {
+            color: color-mix(in srgb, var(--tx2, #cbd5e1) 84%, #93c5fd 16%);
+        }
         .ucp-result:active { transform: scale(.992); }
         .ucp-result-icon {
             width: 40px;
@@ -426,5 +441,5 @@
         }
     </style>
 
-    <script src="{{ asset('js/user-ui.js') }}?v=14" defer></script>
+    <script src="{{ asset('js/user-ui.js') }}?v=15" defer></script>
 @endonce

@@ -206,6 +206,7 @@ class PageSmokeTest extends TestCase
             ->assertSee(route('interview.abort'), false)
             ->assertSee('onclick="submitAnswer()"', false)
             ->assertSee('function clearSubmittedAnswerInput()', false)
+            ->assertSee("chatContainer.innerHTML = ''", false)
             ->assertSee('if (!isSubmittingAnswer)', false);
 
         $this->actingAs($user)

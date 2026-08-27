@@ -347,6 +347,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('id="userCameraMobile"', false)
             ->assertSee('const cameraPreviewEnabled = Boolean(document.getElementById(\'userCameraMobile\'))', false)
             ->assertSee('function clearSubmittedAnswerInput()', false)
+            ->assertSee("chatContainer.innerHTML = ''", false)
             ->assertSee('if (!isSubmittingAnswer)', false)
             ->assertSee('mobile-response-end-session-action', false)
             ->assertSee('mobile-response-end-session-btn', false)

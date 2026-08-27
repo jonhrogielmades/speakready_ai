@@ -361,6 +361,11 @@
         var paletteOpen = false;
         var mobileLauncher = document.querySelector('.ucp-mobile-launcher');
         var movableLauncher = setupMovableLauncher(mobileLauncher);
+        var hashResults = results.filter(function (item) {
+            var href = item.getAttribute('href') || '';
+            return href.charAt(0) === '#' && href.length > 1 && document.getElementById(href.slice(1));
+        });
+        var activeSyncFrame = 0;
 
         function setTriggerExpanded(expanded) {
             openTriggers.forEach(function (trigger) {
@@ -372,6 +377,11 @@
             results.forEach(function (result) {
                 var selected = result === item;
                 result.classList.toggle('is-active', selected);
+                if (selected) {
+                    result.setAttribute('aria-current', 'location');
+                } else {
+                    result.removeAttribute('aria-current');
+                }
             });
 
             activeItem = item || null;
@@ -383,6 +393,53 @@
             if (activeItem && shouldFocus) {
                 activeItem.focus({ preventScroll: true });
             }
+        }
+
+        function getItemHash(item) {
+            var href = item ? item.getAttribute('href') || '' : '';
+            return href.charAt(0) === '#' && href.length > 1 ? href : '';
+        }
+
+        function getSectionItemInView() {
+            if (!hashResults.length) return null;
+
+            var offset = getFixedHeaderOffset() + 72;
+            var viewportAnchor = Math.min(window.innerHeight * 0.42, 280);
+            var probeY = offset + viewportAnchor;
+            var current = hashResults[0];
+
+            hashResults.forEach(function (item) {
+                var hash = getItemHash(item);
+                var section = hash ? document.getElementById(hash.slice(1)) : null;
+                if (!section || !section.getClientRects().length) return;
+
+                var rect = section.getBoundingClientRect();
+                if (rect.top <= probeY) {
+                    current = item;
+                }
+            });
+
+            return current;
+        }
+
+        function syncActiveToLocation(shouldScroll) {
+            var hashItem = null;
+
+            if (window.location.hash) {
+                hashItem = hashResults.find(function (item) {
+                    return getItemHash(item) === window.location.hash;
+                }) || null;
+            }
+
+            setActive(hashItem || getSectionItemInView() || results[0] || null, Boolean(shouldScroll), false);
+        }
+
+        function queueActiveSync() {
+            if (activeSyncFrame) window.cancelAnimationFrame(activeSyncFrame);
+            activeSyncFrame = window.requestAnimationFrame(function () {
+                activeSyncFrame = 0;
+                syncActiveToLocation(false);
+            });
         }
 
         function openPalette(trigger) {
@@ -398,7 +455,7 @@
             palette.setAttribute('aria-hidden', 'false');
             setTriggerExpanded(true);
             document.body.style.overflow = 'hidden';
-            setActive(results[0] || null, false, false);
+            syncActiveToLocation(false);
 
             window.requestAnimationFrame(function () {
                 (activeItem || dialog).focus({ preventScroll: true });
@@ -414,7 +471,7 @@
             palette.setAttribute('aria-hidden', 'true');
             setTriggerExpanded(false);
             document.body.style.overflow = previousBodyOverflow;
-            setActive(null, false);
+            syncActiveToLocation(false);
 
             if (restoreFocus && lastFocusedElement && lastFocusedElement.isConnected && typeof lastFocusedElement.focus === 'function') {
                 window.requestAnimationFrame(function () {
@@ -504,6 +561,7 @@
                 if (!destination) return;
 
                 event.preventDefault();
+                setActive(item, true, false);
 
                 var hadTabIndex = destination.hasAttribute('tabindex');
                 if (!hadTabIndex) destination.setAttribute('tabindex', '-1');
@@ -516,6 +574,8 @@
                         window.history.pushState(window.history.state, document.title, href);
                     }
 
+                    syncActiveToLocation(false);
+
                     if (!hadTabIndex) {
                         destination.addEventListener('blur', function () {
                             destination.removeAttribute('tabindex');
@@ -524,6 +584,11 @@
                 });
             });
         });
+
+        syncActiveToLocation(false);
+        window.addEventListener('hashchange', function () { syncActiveToLocation(true); });
+        window.addEventListener('scroll', queueActiveSync, { passive: true });
+        window.addEventListener('resize', queueActiveSync, { passive: true });
 
         palette.querySelectorAll('[data-ucp-action]').forEach(function (action) {
             action.addEventListener('click', function () {
