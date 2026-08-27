@@ -122,6 +122,43 @@ html, body {
             }
          }
 
+         #landing #faq {
+            --faq-card-bg: rgba(255, 255, 255, 0.96);
+            --faq-card-border: rgba(37, 99, 235, 0.14);
+            --faq-active-bg: rgba(37, 99, 235, 0.1);
+            --faq-heading: #0f172a;
+            --faq-body: #334155;
+            --faq-shadow: 0 14px 30px rgba(15, 23, 42, 0.09);
+         }
+
+         html:not(.lm) #landing #faq {
+            --faq-card-bg: rgba(15, 23, 42, 0.86);
+            --faq-card-border: rgba(96, 165, 250, 0.24);
+            --faq-active-bg: rgba(96, 165, 250, 0.16);
+            --faq-heading: #f8fafc;
+            --faq-body: #cbd5e1;
+            --faq-shadow: 0 18px 38px rgba(0, 0, 0, 0.32);
+         }
+
+         #landing #faq .stitle {
+            color: var(--faq-heading) !important;
+            -webkit-text-fill-color: var(--faq-heading) !important;
+         }
+
+         #landing #faq .stitle .gt {
+            -webkit-text-fill-color: transparent !important;
+         }
+
+         #landing #faq .slbl {
+            color: #2563eb !important;
+            -webkit-text-fill-color: #2563eb !important;
+         }
+
+         html:not(.lm) #landing #faq .slbl {
+            color: #93c5fd !important;
+            -webkit-text-fill-color: #93c5fd !important;
+         }
+
          #landing #faq .acco {
             display: grid;
             gap: 10px;
@@ -130,10 +167,10 @@ html, body {
          #landing #faq .acco .accordion-item {
             margin-bottom: 0;
             overflow: hidden;
-            background: var(--sf);
-            border: 1px solid var(--bd);
+            background: var(--faq-card-bg);
+            border: 1px solid var(--faq-card-border);
             border-radius: 8px !important;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            box-shadow: var(--faq-shadow);
          }
 
          #landing #faq .acco .accordion-header {
@@ -144,21 +181,21 @@ html, body {
             min-height: 52px;
             padding: 14px 16px;
             gap: 12px;
-            color: var(--tx) !important;
-            background: var(--sf) !important;
+            color: var(--faq-heading) !important;
+            background: var(--faq-card-bg) !important;
             border: 0;
             border-radius: 8px !important;
             font-size: 0.9rem;
-            font-weight: 800;
+            font-weight: 900;
             line-height: 1.25;
             letter-spacing: 0;
             box-shadow: none !important;
          }
 
          #landing #faq .acco .accordion-button:not(.collapsed) {
-            color: var(--tx) !important;
-            background: rgba(59, 130, 246, 0.12) !important;
-            border-bottom: 1px solid var(--bd);
+            color: var(--faq-heading) !important;
+            background: var(--faq-active-bg) !important;
+            border-bottom: 1px solid var(--faq-card-border);
             border-radius: 8px 8px 0 0 !important;
          }
 
@@ -172,8 +209,8 @@ html, body {
 
          #landing #faq .acco .accordion-body {
             padding: 12px 16px 16px;
-            color: var(--tx2) !important;
-            background: var(--sf) !important;
+            color: var(--faq-body) !important;
+            background: var(--faq-card-bg) !important;
             border-top: 0;
             font-size: 0.86rem;
             line-height: 1.58;
@@ -184,11 +221,11 @@ html, body {
          html.lm #landing #faq .acco .accordion-item,
          html.lm #landing #faq .acco .accordion-body,
          html.lm #landing #faq .acco .accordion-button {
-            background: #ffffff !important;
+            background: var(--faq-card-bg) !important;
          }
 
          html.lm #landing #faq .acco .accordion-button:not(.collapsed) {
-            background: #eaf2ff !important;
+            background: var(--faq-active-bg) !important;
          }
 
          @media (max-width: 575.98px) {
@@ -2046,11 +2083,11 @@ html, body {
             line-height: 1;
          }
 
-         @media (max-width: 374.98px) {
-            .mobile-preview-image-slide {
-               min-height: 528px;
-               padding: 18px 16px 24px;
-            }
+          @media (max-width: 374.98px) {
+             .mobile-preview-image-slide {
+                min-height: 528px;
+                padding: 18px 16px 24px;
+             }
 
             .mobile-preview-copy-title {
                font-size: 1.06rem;
@@ -2074,12 +2111,63 @@ html, body {
             }
 
             #landing .landing-auto-carousel .swiper-slide > .gc::before,
-            .mobile-preview-image-slide::before {
-               padding: 2px;
-            }
-         }
+             .mobile-preview-image-slide::before {
+                padding: 2px;
+             }
+          }
 
-         .ui-mobile-wire {
+          @media (max-width: 575.98px) {
+             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                width: min(100%, 360px) !important;
+                gap: 6px !important;
+                margin-bottom: 18px !important;
+             }
+
+             #hero .d-flex.align-items-center.justify-content-center.gap-3.flex-wrap.hero-cta-row > .btn {
+                min-height: 38px !important;
+                height: 38px !important;
+                padding: 7px 4px !important;
+                font-size: clamp(0.58rem, 2.45vw, 0.72rem) !important;
+                line-height: 1.05 !important;
+                white-space: nowrap !important;
+             }
+
+             #landing .mobile-preview-image-swiper {
+                width: min(calc(100vw - 24px), 370px);
+                padding-bottom: 38px;
+                overflow: hidden;
+             }
+
+             #landing .mobile-preview-image-slide {
+                width: min(calc(100vw - 44px), 326px) !important;
+                min-height: 0;
+                padding: 16px 14px 22px;
+             }
+
+             #landing .mobile-preview-shell-img {
+                max-height: min(54vh, 430px);
+             }
+
+             #landing .mobile-preview-copy-title {
+                font-size: 1.02rem;
+             }
+
+             #landing .mobile-preview-copy-text {
+                margin-bottom: 12px;
+                font-size: 0.78rem;
+             }
+
+             #landing .mobile-preview-copy-list {
+                gap: 8px;
+             }
+
+             #landing .mobile-preview-copy-list li {
+                font-size: 0.75rem;
+             }
+          }
+
+          .ui-mobile-wire {
             --wire-bg: #f8fafc;
             --wire-panel: #ffffff;
             --wire-panel-soft: #f1f5f9;
@@ -3961,11 +4049,40 @@ html, body {
 .tech-icons a { color: inherit; text-decoration: none; display: flex; align-items: center; transition: all 0.2s ease; }
                         .tech-icons a:hover { transform: translateY(-3px) scale(1.1); color: var(--hero-tech-color, #000000); }
 
-#foot {
-                background: linear-gradient(180deg, var(--bg2) 0%, var(--bg3) 100%);
+            #foot {
+                --footer-bg-start: #eef4fb;
+                --footer-bg-end: #f8fbff;
+                --footer-panel-bg: rgba(255, 255, 255, 0.96);
+                --footer-panel-border: rgba(37, 99, 235, 0.14);
+                --footer-action-bg: rgba(248, 250, 252, 0.92);
+                --footer-action-border: rgba(37, 99, 235, 0.16);
+                --footer-heading: #0f172a;
+                --footer-copy: #334155;
+                --footer-link: #334155;
+                --footer-muted: #475569;
+                --footer-input-bg: #ffffff;
+                --footer-icon-bg: rgba(239, 246, 255, 0.96);
+                --footer-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+                background: linear-gradient(180deg, var(--footer-bg-start) 0%, var(--footer-bg-end) 100%);
                 position: relative;
                 overflow: hidden;
-                border-top: 1px solid var(--bd);
+                border-top: 1px solid var(--footer-panel-border);
+            }
+
+            html:not(.lm) #foot {
+                --footer-bg-start: #070d1d;
+                --footer-bg-end: #0f172a;
+                --footer-panel-bg: rgba(15, 23, 42, 0.9);
+                --footer-panel-border: rgba(96, 165, 250, 0.24);
+                --footer-action-bg: rgba(2, 6, 23, 0.42);
+                --footer-action-border: rgba(96, 165, 250, 0.24);
+                --footer-heading: #f8fafc;
+                --footer-copy: #cbd5e1;
+                --footer-link: #dbeafe;
+                --footer-muted: #cbd5e1;
+                --footer-input-bg: rgba(15, 23, 42, 0.92);
+                --footer-icon-bg: rgba(30, 41, 59, 0.9);
+                --footer-shadow: 0 22px 46px rgba(0, 0, 0, 0.36);
             }
 
             #foot::before {
@@ -3990,15 +4107,15 @@ html, body {
                 align-items: stretch;
                 gap: 18px;
                 padding: 20px;
-                background: rgba(255, 255, 255, 0.035);
-                border: 1px solid var(--bd);
+                background: var(--footer-panel-bg);
+                border: 1px solid var(--footer-panel-border);
                 border-radius: 8px;
-                box-shadow: 0 18px 48px rgba(2, 6, 23, 0.16);
+                box-shadow: var(--footer-shadow);
             }
 
             html.lm #foot .footer-panel {
-                background: rgba(255, 255, 255, 0.9);
-                box-shadow: 0 18px 46px rgba(37, 99, 235, 0.08);
+                background: var(--footer-panel-bg);
+                box-shadow: var(--footer-shadow);
             }
 
             .footer-brand,
@@ -4011,7 +4128,7 @@ html, body {
                 align-items: center;
                 gap: 10px;
                 margin-bottom: 12px;
-                color: var(--tx);
+                color: var(--footer-heading);
                 text-decoration: none;
             }
 
@@ -4020,6 +4137,7 @@ html, body {
                 font-weight: 800;
                 line-height: 1;
                 letter-spacing: 0;
+                color: var(--footer-heading);
             }
 
             .footer-logo {
@@ -4030,9 +4148,9 @@ html, body {
             }
 
             .footer-copy {
-                max-width: 330px;
+                max-width: 380px;
                 margin: 0;
-                color: var(--tx2);
+                color: var(--footer-copy);
                 font-size: 0.88rem;
                 line-height: 1.62;
             }
@@ -4046,7 +4164,7 @@ html, body {
             .footer-heading {
                 font-size: 0.76rem;
                 font-weight: 800;
-                color: var(--tx);
+                color: var(--footer-heading);
                 margin-bottom: 0.72rem;
                 letter-spacing: 0.08em;
                 text-transform: uppercase;
@@ -4062,7 +4180,7 @@ html, body {
             }
 
             .footer-links a {
-                color: var(--tx2);
+                color: var(--footer-link);
                 text-decoration: none;
                 font-size: 0.84rem;
                 line-height: 1.35;
@@ -4081,13 +4199,13 @@ html, body {
                 justify-content: space-between;
                 gap: 14px;
                 padding: 14px;
-                background: var(--bg);
-                border: 1px solid var(--bd);
+                background: var(--footer-action-bg);
+                border: 1px solid var(--footer-action-border);
                 border-radius: 8px;
             }
 
             .footer-action p {
-                color: var(--tx2);
+                color: var(--footer-copy);
                 font-size: 0.84rem;
                 line-height: 1.55;
                 margin: 0;
@@ -4103,9 +4221,9 @@ html, body {
             .footer-newsletter input {
                 min-width: 0;
                 height: 42px;
-                background: var(--sf) !important;
-                border: 1px solid var(--bd) !important;
-                color: var(--tx) !important;
+                background: var(--footer-input-bg) !important;
+                border: 1px solid var(--footer-action-border) !important;
+                color: var(--footer-heading) !important;
                 padding: 0 12px !important;
                 border-radius: 8px !important;
                 font-size: 0.84rem !important;
@@ -4149,10 +4267,10 @@ html, body {
                 justify-content: center;
                 width: 36px;
                 height: 36px;
-                background: var(--bg3);
-                border: 1px solid var(--bd);
+                background: var(--footer-icon-bg);
+                border: 1px solid var(--footer-action-border);
                 border-radius: 8px;
-                color: var(--tx2);
+                color: var(--footer-link);
                 transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
                 text-decoration: none;
                 font-size: 0.9rem;
@@ -4172,13 +4290,13 @@ html, body {
                 justify-content: space-between;
                 flex-wrap: wrap;
                 gap: 12px;
-                border-top: 1px solid var(--bd);
+                border-top: 1px solid var(--footer-panel-border);
                 padding: 14px 2px 0;
                 margin-top: 14px;
             }
 
             .footer-bottom p {
-                color: var(--tx3);
+                color: var(--footer-muted);
                 margin: 0;
                 font-size: 0.8rem;
             }
@@ -4192,7 +4310,7 @@ html, body {
             }
 
             .footer-legal-link {
-                color: var(--tx3);
+                color: var(--footer-muted);
                 text-decoration: none;
                 transition: color 0.2s ease;
             }
@@ -4205,7 +4323,7 @@ html, body {
                 width: 4px;
                 height: 4px;
                 border-radius: 50%;
-                background: var(--bd2);
+                background: var(--footer-panel-border);
             }
 
             @media (max-width: 991.98px) {
@@ -4455,6 +4573,51 @@ html, body {
             border-color: #dbeafe !important;
          }
 
+         #landing #foot .footer-panel {
+            background: var(--footer-panel-bg) !important;
+            border-color: var(--footer-panel-border) !important;
+            box-shadow: var(--footer-shadow) !important;
+         }
+
+         #landing #foot .footer-action {
+            background: var(--footer-action-bg) !important;
+            border-color: var(--footer-action-border) !important;
+         }
+
+         #landing #foot :where(.footer-brand-link, .footer-brand-link span, .footer-heading) {
+            color: var(--footer-heading) !important;
+            -webkit-text-fill-color: var(--footer-heading) !important;
+         }
+
+         #landing #foot :where(.footer-copy, .footer-action p) {
+            color: var(--footer-copy) !important;
+            -webkit-text-fill-color: var(--footer-copy) !important;
+         }
+
+         #landing #foot .footer-links a {
+            color: var(--footer-link) !important;
+            -webkit-text-fill-color: var(--footer-link) !important;
+         }
+
+         #landing #foot :where(.footer-bottom p, .footer-legal-link) {
+            color: var(--footer-muted) !important;
+            -webkit-text-fill-color: var(--footer-muted) !important;
+         }
+
+         #landing #foot .footer-newsletter input {
+            background: var(--footer-input-bg) !important;
+            border-color: var(--footer-action-border) !important;
+            color: var(--footer-heading) !important;
+            -webkit-text-fill-color: var(--footer-heading) !important;
+         }
+
+         #landing #foot .footer-social-link {
+            background: var(--footer-icon-bg) !important;
+            border-color: var(--footer-action-border) !important;
+            color: var(--footer-link) !important;
+            -webkit-text-fill-color: var(--footer-link) !important;
+         }
+
          #landing .feature-card .ftico {
             background: var(--feature-icon-bg) !important;
             border-color: var(--feature-icon-border) !important;
@@ -4537,6 +4700,29 @@ html, body {
 
          html.lm #landing .acco .accordion-body {
             background: #f8fafc !important;
+         }
+
+         #landing #faq .acco .accordion-item,
+         #landing #faq .acco .accordion-button,
+         #landing #faq .acco .accordion-body {
+            background: var(--faq-card-bg) !important;
+            border-color: var(--faq-card-border) !important;
+         }
+
+         #landing #faq .acco .accordion-button {
+            color: var(--faq-heading) !important;
+            -webkit-text-fill-color: var(--faq-heading) !important;
+         }
+
+         #landing #faq .acco .accordion-button:not(.collapsed) {
+            background: var(--faq-active-bg) !important;
+            color: var(--faq-heading) !important;
+            -webkit-text-fill-color: var(--faq-heading) !important;
+         }
+
+         #landing #faq .acco .accordion-body {
+            color: var(--faq-body) !important;
+            -webkit-text-fill-color: var(--faq-body) !important;
          }
 
          #landing .accordion-button::after {

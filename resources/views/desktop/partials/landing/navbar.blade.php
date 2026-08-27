@@ -6,7 +6,7 @@
                      <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i" style="background: #ffffff; padding: 0; flex-shrink: 0;">
                      <span class="text-truncate">SpeakReady AI</span>
                   </a>
-                  <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
+                  <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
                      <a href="#" class="nav-link">Home</a>
                      <a href="#features" class="nav-link">Features</a>
                      <a href="#how" class="nav-link">How It Works</a>
@@ -26,7 +26,7 @@
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="offcanvas" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
-                     <button class="boc d-lg-none px-2 py-2" id="mbtog" style="border-radius:10px">
+                     <button class="boc d-xl-none px-2 py-2" id="mbtog" style="border-radius:10px">
                      <i class="fa-solid fa-bars" id="barIcon"></i>
                      <i class="fa-solid fa-xmark" id="xIcon" style="display:none"></i>
                      </button>

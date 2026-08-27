@@ -772,16 +772,18 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 8px;
+            justify-content: flex-end;
+            align-items: center;
          }
 
          .mob-notif-link-btn {
-            min-height: 44px;
+            min-height: 32px;
             border: 1px solid transparent;
-            border-radius: 10px;
+            border-radius: 8px;
             background: rgba(96, 165, 250, 0.1);
-            padding: 10px 12px;
+            padding: 7px 10px;
             color: var(--pur);
-            font-size: 0.73rem;
+            font-size: 0.65rem;
             font-weight: 800;
             line-height: 1.1;
          }
@@ -2338,18 +2340,25 @@
             }
 
             .mob-notif-link-btn {
-               min-height: 44px !important;
+               min-height: 30px !important;
                display: inline-flex !important;
                align-items: center !important;
                justify-content: center !important;
-               padding: 10px 12px !important;
+               padding: 6px 9px !important;
                border: 1px solid rgba(37, 99, 235, 0.2) !important;
-               border-radius: 10px !important;
+               border-radius: 8px !important;
                background: rgba(37, 99, 235, 0.1) !important;
                color: var(--mob-notif-accent) !important;
-               font-size: 0.64rem !important;
+               font-size: 0.6rem !important;
                font-weight: 900 !important;
                line-height: 1.12 !important;
+            }
+
+            .mob-notif-row-actions {
+               justify-content: flex-end !important;
+               align-items: center !important;
+               gap: 6px !important;
+               margin-top: 7px !important;
             }
 
             .mob-notif-link-btn.danger {

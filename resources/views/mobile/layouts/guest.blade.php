@@ -106,7 +106,7 @@
                         </time>
                      </span>
                   </a>
-                  <div class="d-none d-lg-flex align-items-center gap-1 mx-auto">
+                  <div class="d-none d-xl-flex align-items-center gap-1 mx-auto">
                      <a href="#hero" class="nav-link">Home</a>
                      <a href="#features" class="nav-link">Features</a>
                      <a href="#how" class="nav-link">How It Works</a>
@@ -126,7 +126,7 @@
                      <button class="bgrd btn px-3 py-2 d-none d-sm-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#lofc" onclick="swTab('signup')">
                      Register <i class="fa-solid fa-arrow-right fa-sm"></i>
                      </button>
-                     <button class="boc d-lg-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
+                     <button class="boc d-xl-none d-flex align-items-center justify-content-center" id="mbtog" style="width:38px;height:38px;padding:0;border-radius:10px" type="button" data-ucp-open aria-label="Open quick navigation" aria-haspopup="dialog" aria-controls="userCommandPalette" aria-expanded="false">
                      <i class="fa-solid fa-bars" aria-hidden="true"></i>
                      </button>
                   </div>
@@ -182,7 +182,7 @@
                 </div>
 
                 <div id="demo-preview" class="landing-section-heading mobile-demo-preview-heading text-center mt-4 mb-3 afu" style="animation-delay:.48s">
-                  <span class="slbl">Demo Preview</span>
+                  <span class="slbl">Mobile Demo Preview</span>
                   <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                 </div>
 
@@ -1028,43 +1028,43 @@
                   <div class="col-md-4 col-sm-6 rv swiper-slide">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">1</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Create an Account</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Join the community and access your personalized dashboard.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Create Your Profile</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Register or log in, then open your readiness dashboard with sessions, progress, and recommendations.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.1s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">2</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Configure Your Setup</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Choose your target role, difficulty, and Philippine interview scenario.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Set Your Interview Target</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Choose your role, category, difficulty, focus area, timer, resume details, and job context.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.2s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">3</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Take a Philippine Mock Interview</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Face our interactive AI avatar with Philippine HR, BPO, IT, and fresh graduate questions.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Practice With AI</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Answer realistic Philippine interview questions through typed, voice, or guided practice modes.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.3s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">4</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Review AI Feedback</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Get instant, actionable evaluations on your performance.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Review Evidence-Based Feedback</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Study rubric scores, coaching summaries, answer-level notes, and fact-grounded revision guidance.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.4s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">5</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Train & Rehearse</h3>
-                        <p style="font-size:.875rem;color:var(--tx2)">Refine your skills using Voice Rehearsal and the AI Coach.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Train With Modules And Games</h3>
+                        <p style="font-size:.875rem;color:var(--tx2)">Build skills through modules, quizzes, voice rehearsal, missions, learning games, and the AI coach.</p>
                      </div>
                   </div>
                   <div class="col-md-4 col-sm-6 rv swiper-slide" style="transition-delay:.5s">
                      <div class="gc p-4 h-100 text-center position-relative">
                         <div class="hnum">6</div>
-                        <h3 class="fs-5 fw-semibold mb-2">Track Your Progress</h3>
-                         <p style="font-size:.875rem;color:var(--tx2)">Monitor competency growth, real interview outcomes, and your personal assessment baseline.</p>
+                        <h3 class="fs-5 fw-semibold mb-2">Track Progress And Share</h3>
+                         <p style="font-size:.875rem;color:var(--tx2)">Follow readiness trends, personal mastery, reports, certificates, and private review links over time.</p>
                      </div>
                   </div>
                   </div>
@@ -1094,28 +1094,42 @@
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
                               <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
                               <h4 class="fs-5 fw-bold">Job Interview</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice employment interviews across various industries.</p>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice HR, behavioral, role-fit, and salary expectation questions for local hiring.</p>
+                           </div>
+                        </div>
+                        <div class="col-sm-6 swiper-slide">
+                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #06b6d4;">
+                              <div style="font-size:2rem; margin-bottom:15px; color:#06b6d4"><i class="fa-solid fa-headset"></i></div>
+                              <h4 class="fs-5 fw-bold">BPO Interview</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Prepare for customer service, call handling, shifting schedule, and empathy scenarios.</p>
+                           </div>
+                        </div>
+                        <div class="col-sm-6 swiper-slide">
+                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
+                              <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-laptop-code"></i></div>
+                              <h4 class="fs-5 fw-bold">IT / Technical</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Rehearse technical explanations, project walkthroughs, debugging, and system design answers.</p>
+                           </div>
+                        </div>
+                        <div class="col-sm-6 swiper-slide">
+                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #8b5cf6;">
+                              <div style="font-size:2rem; margin-bottom:15px; color:#8b5cf6"><i class="fa-solid fa-user-graduate"></i></div>
+                              <h4 class="fs-5 fw-bold">Fresh Graduate</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Turn school, internship, capstone, and organization experience into interview-ready proof.</p>
                            </div>
                         </div>
                         <div class="col-sm-6 swiper-slide">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #34d399;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#34d399"><i class="fa-solid fa-award"></i></div>
                               <h4 class="fs-5 fw-bold">Scholarship Interview</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Prepare for rigorous scholarship and grant applications.</p>
+                              <p style="font-size:.85rem;color:var(--tx2)">Shape academic goals, leadership stories, financial need, and community impact answers.</p>
                            </div>
                         </div>
                         <div class="col-sm-6 swiper-slide">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-university"></i></div>
                               <h4 class="fs-5 fw-bold">College Admission</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Improve admission interview performance for top universities.</p>
-                           </div>
-                        </div>
-                        <div class="col-sm-6 swiper-slide">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-laptop-code"></i></div>
-                              <h4 class="fs-5 fw-bold">IT/Programming</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice technical, coding, and system design interviews.</p>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for admissions.</p>
                            </div>
                         </div>
                         </div>
@@ -1178,33 +1192,33 @@
                   <div class="col-lg-8">
                      <div class="accordion acco" id="faqAcc">
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1">What is SpeakReady AI?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#f1" aria-expanded="true" aria-controls="f1">What is SpeakReady AI?</button></h2>
                            <div id="f1" class="accordion-collapse collapse show" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI is an intelligent mock interview platform designed to help students, job seekers, and applicants practice their interview skills using advanced AI simulations.</div>
+                              <div class="accordion-body">SpeakReady AI is a Philippine-focused interview practice system with AI mock interviews, role-based setup, voice rehearsal, learning modules, games, rubric feedback, progress tracking, reports, and private review sharing.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2">How does AI feedback work?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f2" aria-expanded="false" aria-controls="f2">How does AI feedback work?</button></h2>
                            <div id="f2" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
                                <div class="accordion-body">SpeakReady evaluates answer relevance, clarity, professionalism, applicable STAR evidence, and job evidence using a versioned rubric. Delivery signals and optional body-language prompts are coaching aids, do not affect readiness scores, and do not infer confidence, honesty, or personality.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3">Is my data secure?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f3" aria-expanded="false" aria-controls="f3">Is my data secure?</button></h2>
                            <div id="f3" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
                                <div class="accordion-body">Interview records are private by default. When you choose to share a review, you can set an expiry, optional password, reviewer permissions, and hide sensitive identity or application context.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4">Can I practice multiple interview types?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">Can I practice multiple interview types?</button></h2>
                            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Absolutely. You can choose from Job Interviews, Scholarship Interviews, College Admissions, or specific IT/Programming technical interviews.</div>
+                              <div class="accordion-body">Yes. You can practice Job, BPO, IT and technical, Fresh Graduate, Scholarship, and College Admission interviews, then adjust difficulty, focus area, timer, resume context, and job details.</div>
                            </div>
                         </div>
                         <div class="accordion-item">
-                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5">Is the system free to use?</button></h2>
+                           <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f5" aria-expanded="false" aria-controls="f5">What can I do after a practice session?</button></h2>
                            <div id="f5" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">SpeakReady AI offers a free basic tier so you can start practicing immediately. We also offer premium plans with unlimited sessions and advanced analytics.</div>
+                              <div class="accordion-body">You can review scores and coaching notes, revise weak answers, continue recommended lessons, play learning games, monitor readiness trends, generate reports, earn certificates, and share selected reviews privately.</div>
                            </div>
                         </div>
                      </div>
@@ -1309,7 +1323,7 @@
                         <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI" class="logo-i footer-logo">
                         <span>SpeakReady AI</span>
                      </a>
-                     <p class="footer-copy">Your personal Philippine interview coach for smarter practice, clearer feedback, and confident interview preparation.</p>
+                     <p class="footer-copy">Your Philippine interview practice system for AI mock interviews, voice rehearsal, learning modules, progress reports, and private feedback sharing.</p>
                   </div>
                   <nav class="footer-nav-grid" aria-label="Footer navigation">
                      <div>
@@ -1336,7 +1350,7 @@
                   <div class="footer-action">
                      <div>
                         <h5 class="footer-heading">Stay Updated</h5>
-                        <p>Get interview tips, feature updates, and practice reminders in one clean digest.</p>
+                        <p>Get practice tips, system updates, module releases, and readiness reminders in one clean digest.</p>
                      </div>
                      @if(session('newsletter_success'))
                          <div class="alert alert-success mb-0 py-2 px-3" role="status" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.24);color:#10b981;border-radius:8px;font-size:0.78rem;">

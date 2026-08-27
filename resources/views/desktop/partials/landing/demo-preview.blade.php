@@ -3,7 +3,7 @@
             <div class="aur aur-a" style="top:50%;left:50%;transform:translate(-50%,-50%)"></div>
             <div class="container position-relative" style="z-index:1">
                <div class="text-center mb-5 rv">
-                  <span class="slbl">Demo Preview</span>
+                  <span class="slbl">Desktop Demo Preview</span>
                   <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                </div>
                
