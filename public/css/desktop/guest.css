@@ -2402,6 +2402,12 @@
           #hero .hero-demo-preview-heading .slbl {
              justify-content: center;
              margin-bottom: 8px;
+             position: relative;
+          }
+
+          #hero .hero-demo-preview-heading .slbl::before {
+             position: absolute;
+             right: calc(100% + 6px);
           }
 
           #hero .hero-demo-preview-heading .stitle {

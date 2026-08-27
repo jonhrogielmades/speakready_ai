@@ -4989,12 +4989,16 @@ html, body {
 
             #about .target-users-grid .ftag:last-child {
                grid-column: 1 / -1 !important;
-               width: min(100%, 210px);
+               width: min(100%, 190px);
                justify-self: center;
             }
 
             #about .target-users-grid .ftag {
-               justify-content: center !important;
+               display: grid !important;
+               grid-template-columns: 24px minmax(0, 1fr);
+               align-items: center;
+               justify-content: initial !important;
+               column-gap: 7px;
                min-height: 38px;
                padding: 9px 8px !important;
                border-radius: 10px;
@@ -5013,6 +5017,7 @@ html, body {
                border-radius: 8px;
                background: rgba(37, 99, 235, 0.12);
                color: #2563eb;
+               margin-right: 0 !important;
             }
 
             #about .landing-stats-row {

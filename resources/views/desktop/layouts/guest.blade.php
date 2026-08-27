@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=7') }}" />
-      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=2') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=4') }}" />
    </head>
    <body class="guest-shell guest-desktop-shell @if(!$errors->any()) guest-splash-pending @endif" data-layout-shell="desktop" data-guest-layout="desktop">
       @include('desktop.partials.viewport-mobile-cookie')
@@ -181,7 +181,7 @@
                   </div>
 
                   <div class="col-xl-7 col-lg-7 col-md-11 hero-demo-preview-col">
-                     <div id="demo-preview" class="landing-section-heading mobile-demo-preview-heading hero-demo-preview-heading text-center text-lg-start mb-3 afu" style="animation-delay:.48s">
+                     <div id="demo-preview" class="landing-section-heading mobile-demo-preview-heading hero-demo-preview-heading text-center mb-3 afu" style="animation-delay:.48s">
                         <span class="slbl">Desktop Demo Preview</span>
                         <h2 class="stitle">Inside <span class="gt">SpeakReady AI</span></h2>
                      </div>

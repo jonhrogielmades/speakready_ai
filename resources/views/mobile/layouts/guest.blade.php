@@ -25,7 +25,7 @@
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Style CSS -->
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=30') }}" />
-      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=14') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/guest.css?v=16') }}" />
    </head>
    <body class="guest-shell guest-mobile-shell @if(!$errors->any()) guest-splash-pending @endif" data-layout-shell="mobile" data-guest-layout="mobile">
       @include('mobile.partials.viewport-mobile-cookie')
