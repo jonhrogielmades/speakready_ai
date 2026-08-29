@@ -7404,8 +7404,8 @@ body.dm #sec-progress-tracking .progress-export-status[data-type="error"] {
         #personalized-practice-plan,
         .row
     ) {
-        width: min(100%, 1180px) !important;
-        max-width: 1180px !important;
+        width: 100% !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
         margin-left: auto !important;
         margin-right: auto !important;
         box-sizing: border-box !important;
@@ -7905,8 +7905,8 @@ body.dm #sec-progress-tracking .progress-export-status[data-type="error"] {
 
     html body.user-desktop-shell #sec-progress-tracking #personalized-practice-plan,
     html body.user-desktop-shell #sec-progress-tracking #personalized-practice-plan > .col-12 {
-        width: min(100%, 1180px) !important;
-        max-width: 1180px !important;
+        width: 100% !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
         flex: 0 0 auto !important;
         padding-left: 0 !important;
         padding-right: 0 !important;

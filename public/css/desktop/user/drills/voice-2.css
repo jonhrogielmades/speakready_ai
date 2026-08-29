@@ -1967,8 +1967,8 @@ body:is(.user-desktop-shell, .user-mobile-shell) #voice-rehearsal-page :is(
 
 @media (min-width: 992px) {
     body.user-desktop-shell #voice-rehearsal-page .vr-shell {
-        max-width: 1320px !important;
-        width: min(100%, 1320px) !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
+        width: 100% !important;
     }
 
     body.user-desktop-shell #voice-rehearsal-page .vr-practice-flow {

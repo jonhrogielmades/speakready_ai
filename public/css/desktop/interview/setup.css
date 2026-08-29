@@ -5270,7 +5270,7 @@
             --setup-saas-gap: clamp(12px, 1vw, 16px);
             --setup-saas-radius: 8px;
             --setup-summary-width: 340px;
-            --setup-saas-rail: min(1248px, calc(100vw - 32px));
+            --setup-saas-rail: var(--desktop-content-max, 1480px);
             --setup-saas-surface: color-mix(in srgb, var(--sf, #ffffff) 96%, #f8fafc 4%);
             --setup-saas-soft: color-mix(in srgb, var(--bg3, #f8fafc) 88%, #eff6ff 12%);
             --setup-saas-line: color-mix(in srgb, var(--bd, #e2e8f0) 72%, #93c5fd 28%);
@@ -5927,7 +5927,7 @@
             --setup-page-gap: var(--setup-saas-gap) !important;
             --setup-gap: var(--setup-saas-gap) !important;
             width: 100% !important;
-            max-width: var(--setup-saas-rail) !important;
+            max-width: var(--desktop-content-max, 1480px) !important;
             margin-inline: auto !important;
             padding: 0 0 18px !important;
         }

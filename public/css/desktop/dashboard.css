@@ -7670,11 +7670,11 @@
 /* ======================== USER DESKTOP SAASPRO DASHBOARD ======================== */
 @media (min-width: 992px) {
     body.user-desktop-shell:not(.admin-shell) #dashboard {
-        --desktop-content-max: calc(100vw - var(--dsb));
+        --desktop-content-max: 1480px;
     }
 
     body.user-desktop-shell:not(.admin-shell) #dashboard .db-content {
-        max-width: calc(100vw - var(--dsb)) !important;
+        max-width: min(var(--desktop-content-max, 1480px), calc(100vw - var(--dsb))) !important;
         padding-inline: clamp(16px, 1.4vw, 28px) !important;
     }
 
@@ -7688,8 +7688,8 @@
         --dash-saas-line: rgba(15, 23, 42, 0.09);
         --dash-saas-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 16px 34px rgba(15, 23, 42, 0.08);
         width: 100%;
-        max-width: none !important;
-        margin-inline: 0 !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
+        margin-inline: auto !important;
         padding-top: 0 !important;
         padding-bottom: 18px !important;
     }
@@ -7703,7 +7703,8 @@
 
     body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .db-section.active.sr-dashboard {
         width: 100%;
-        max-width: none !important;
+        max-width: var(--desktop-content-max, 1480px) !important;
+        margin-inline: auto !important;
         gap: var(--dash-section-gap);
         padding-top: 0 !important;
         padding-bottom: 18px !important;

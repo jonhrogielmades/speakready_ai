@@ -2,7 +2,7 @@
 @section('title', 'Philippines Interview Progress')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/progress.css?v=19') }}" data-page-style="user-progress">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/progress.css?v=20') }}" data-page-style="user-progress">
 @endpush
 
 @section('content')
