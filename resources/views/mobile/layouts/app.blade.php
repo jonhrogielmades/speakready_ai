@@ -3137,7 +3137,7 @@
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
-      <script src="{{ asset('js/user-ui.js') }}?v=13" defer></script>
+      <script src="{{ asset('js/user-ui.js') }}?v=16" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {

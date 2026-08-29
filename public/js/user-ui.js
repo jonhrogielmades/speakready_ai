@@ -654,6 +654,7 @@
 
     onReady(function () {
         setupUserFullscreen();
+        setupDesktopPageSearch();
         setupUserPartialNavigation();
     });
 
@@ -1582,6 +1583,243 @@
 
         closeOpenUserMenus();
         updateFullscreenButtons();
+        if (window.SpeakReadyPageSearch && typeof window.SpeakReadyPageSearch.refresh === 'function') {
+            window.SpeakReadyPageSearch.refresh();
+        }
+    }
+
+    function setupDesktopPageSearch() {
+        if (userApp.pageSearchInitialized) return;
+
+        var form = document.querySelector('[data-page-search-form]');
+        var input = document.querySelector('[data-page-search-input]');
+        var clearButton = document.querySelector('[data-page-search-clear]');
+        var count = document.querySelector('[data-page-search-count]');
+
+        if (!form || !input) return;
+
+        userApp.pageSearchInitialized = true;
+
+        var state = {
+            query: '',
+            matches: [],
+            activeIndex: -1,
+            timer: 0,
+            applying: false
+        };
+
+        function getContentRoot() {
+            return document.getElementById('userAppContent') || document.querySelector('[data-user-ajax-content]');
+        }
+
+        function escapeRegExp(value) {
+            return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function getTerms(query) {
+            var seen = Object.create(null);
+            return (String(query || '').trim().match(/\S+/g) || [])
+                .map(function (term) { return term.trim(); })
+                .filter(function (term) {
+                    var key = term.toLocaleLowerCase();
+                    if (!key || seen[key]) return false;
+                    seen[key] = true;
+                    return true;
+                })
+                .sort(function (a, b) { return b.length - a.length; });
+        }
+
+        function restoreHighlights(root) {
+            var scope = root || getContentRoot() || document;
+            Array.from(scope.querySelectorAll('[data-page-search-highlight]')).forEach(function (mark) {
+                var parent = mark.parentNode;
+                if (!parent) return;
+                parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+                parent.normalize();
+            });
+        }
+
+        function isSearchableTextNode(node, root) {
+            var parent = node.parentElement;
+            if (!parent || !node.nodeValue || !node.nodeValue.trim()) return false;
+            if (parent.closest('script, style, noscript, template, textarea, input, select, option, [hidden], [aria-hidden="true"], [data-page-search-skip]')) return false;
+
+            var element = parent;
+            while (element && element !== root) {
+                var styles = window.getComputedStyle(element);
+                if (styles.display === 'none' || styles.visibility === 'hidden') return false;
+                element = element.parentElement;
+            }
+
+            return true;
+        }
+
+        function highlightTextNode(node, pattern) {
+            var value = node.nodeValue || '';
+            var fragment = document.createDocumentFragment();
+            var lastIndex = 0;
+            var hasMatch = false;
+
+            value.replace(pattern, function (match, _term, offset) {
+                hasMatch = true;
+                if (offset > lastIndex) {
+                    fragment.appendChild(document.createTextNode(value.slice(lastIndex, offset)));
+                }
+
+                var mark = document.createElement('mark');
+                mark.className = 'sr-search-highlight';
+                mark.dataset.pageSearchHighlight = 'true';
+                mark.textContent = match;
+                fragment.appendChild(mark);
+                lastIndex = offset + match.length;
+                return match;
+            });
+
+            if (!hasMatch) return;
+
+            if (lastIndex < value.length) {
+                fragment.appendChild(document.createTextNode(value.slice(lastIndex)));
+            }
+
+            node.parentNode.replaceChild(fragment, node);
+        }
+
+        function updateCount() {
+            if (!count) return;
+
+            if (!state.query) {
+                count.textContent = '';
+                return;
+            }
+
+            count.textContent = state.matches.length > 0
+                ? (state.activeIndex + 1) + '/' + state.matches.length
+                : '0';
+        }
+
+        function setActiveMatch(index, shouldScroll) {
+            state.matches.forEach(function (match) {
+                match.classList.remove('is-current');
+            });
+
+            if (!state.matches.length) {
+                state.activeIndex = -1;
+                updateCount();
+                return;
+            }
+
+            state.activeIndex = (index + state.matches.length) % state.matches.length;
+            var activeMatch = state.matches[state.activeIndex];
+            activeMatch.classList.add('is-current');
+            updateCount();
+
+            if (shouldScroll) {
+                activeMatch.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+            }
+        }
+
+        function applySearch(query, options) {
+            var root = getContentRoot();
+            state.query = String(query || '').trim();
+            state.applying = true;
+            restoreHighlights(root);
+
+            if (!root || !state.query) {
+                state.matches = [];
+                state.activeIndex = -1;
+                if (clearButton) clearButton.hidden = true;
+                updateCount();
+                state.applying = false;
+                return;
+            }
+
+            var terms = getTerms(state.query);
+            if (!terms.length) {
+                state.matches = [];
+                state.activeIndex = -1;
+                if (clearButton) clearButton.hidden = true;
+                updateCount();
+                state.applying = false;
+                return;
+            }
+
+            var pattern = new RegExp('(' + terms.map(escapeRegExp).join('|') + ')', 'gi');
+            var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode: function (node) {
+                    pattern.lastIndex = 0;
+                    return isSearchableTextNode(node, root) && pattern.test(node.nodeValue)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                }
+            });
+            var nodes = [];
+
+            while (walker.nextNode()) {
+                nodes.push(walker.currentNode);
+            }
+
+            nodes.forEach(function (node) {
+                pattern.lastIndex = 0;
+                highlightTextNode(node, pattern);
+            });
+
+            state.matches = Array.from(root.querySelectorAll('[data-page-search-highlight]'));
+            if (clearButton) clearButton.hidden = false;
+            setActiveMatch(0, Boolean(options && options.scroll));
+            state.applying = false;
+        }
+
+        function scheduleSearch() {
+            window.clearTimeout(state.timer);
+            state.timer = window.setTimeout(function () {
+                applySearch(input.value);
+            }, 120);
+        }
+
+        function clearSearch() {
+            window.clearTimeout(state.timer);
+            input.value = '';
+            applySearch('');
+            input.focus({ preventScroll: true });
+        }
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            window.clearTimeout(state.timer);
+            if (String(input.value || '').trim() !== state.query) {
+                applySearch(input.value, { scroll: true });
+                return;
+            }
+            setActiveMatch(state.activeIndex + 1, true);
+        });
+
+        input.addEventListener('input', scheduleSearch);
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && input.value) {
+                event.preventDefault();
+                clearSearch();
+            }
+        });
+
+        clearButton?.addEventListener('click', clearSearch);
+
+        document.addEventListener('keydown', function (event) {
+            var tagName = document.activeElement ? document.activeElement.tagName : '';
+            var isTyping = /^(INPUT|TEXTAREA|SELECT)$/.test(tagName) || document.activeElement?.isContentEditable;
+
+            if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !isTyping) {
+                event.preventDefault();
+                input.focus({ preventScroll: true });
+            }
+        });
+
+        window.SpeakReadyPageSearch = {
+            refresh: function () {
+                if (state.applying || !input.value.trim()) return;
+                applySearch(input.value);
+            },
+            clear: clearSearch
+        };
     }
 
     function closeOpenUserMenus() {

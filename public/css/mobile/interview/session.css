@@ -480,6 +480,27 @@
         max-width: min(100%, 420px);
         overflow-wrap: anywhere;
     }
+    .finish-failure-alert {
+        margin-top: 14px;
+        max-width: min(100%, 500px);
+        border: 1px solid rgba(239, 68, 68, 0.34);
+        border-radius: 12px;
+        background: rgba(254, 242, 242, 0.96);
+        color: #b91c1c;
+        padding: 12px 14px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.42;
+        overflow-wrap: anywhere;
+    }
+    .finish-failure-alert[hidden] {
+        display: none !important;
+    }
+    :root:not(.lm) .finish-failure-alert {
+        border-color: rgba(248, 113, 113, 0.42);
+        background: rgba(127, 29, 29, 0.34);
+        color: #fecaca;
+    }
     .interview-start-modal {
         position: fixed;
         inset: 0;
@@ -649,6 +670,67 @@
         background: var(--bg3);
         color: var(--tx);
         font-weight: 800;
+    }
+    .finish-transition-overlay.finish-transition-error {
+        background:
+            radial-gradient(circle at 50% 18%, rgba(248, 113, 113, 0.12), transparent 34%),
+            rgba(248, 250, 252, 0.96);
+    }
+    .finish-transition-overlay.finish-transition-error .finish-loading-wrapper {
+        display: none;
+    }
+    .finish-transition-overlay.finish-transition-error h4 {
+        color: #0f172a;
+        font-size: 1.06rem;
+        font-weight: 900;
+        max-width: min(100%, 320px);
+    }
+    .finish-transition-overlay.finish-transition-error p {
+        color: #475569;
+        max-width: min(100%, 320px);
+    }
+    .finish-transition-overlay.finish-transition-error .finish-failure-alert {
+        max-width: min(100%, 320px);
+        border-color: rgba(248, 113, 113, 0.34);
+        background: #ffffff;
+        color: #991b1b;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+        padding: 12px 14px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .finish-transition-overlay.finish-transition-error .finish-recovery-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: min(100%, 320px);
+        gap: 10px;
+    }
+    .finish-transition-overlay.finish-transition-error :is(.finish-retry-button, .finish-secondary-button) {
+        min-height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 0.86rem;
+        line-height: 1.15;
+        text-align: center;
+    }
+    :root:not(.lm) .finish-transition-overlay.finish-transition-error {
+        background:
+            radial-gradient(circle at 50% 18%, rgba(248, 113, 113, 0.12), transparent 34%),
+            rgba(2, 6, 23, 0.92);
+    }
+    :root:not(.lm) .finish-transition-overlay.finish-transition-error h4 {
+        color: #f8fafc;
+    }
+    :root:not(.lm) .finish-transition-overlay.finish-transition-error p {
+        color: #cbd5e1;
+    }
+    :root:not(.lm) .finish-transition-overlay.finish-transition-error .finish-failure-alert {
+        border-color: rgba(248, 113, 113, 0.42);
+        background: rgba(127, 29, 29, 0.34);
+        color: #fecaca;
+        box-shadow: 0 20px 54px rgba(0, 0, 0, 0.28);
     }
     .session-inline-alert {
         display: flex;
@@ -1187,6 +1269,11 @@
         .finish-transition-overlay p {
             max-width: 300px;
             font-size: 0.82rem;
+        }
+        .finish-failure-alert {
+            max-width: 300px;
+            font-size: 0.76rem;
+            padding: 10px 12px;
         }
         .interview-start-dialog {
             width: min(calc(100vw - 28px), 420px);

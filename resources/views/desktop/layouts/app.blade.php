@@ -137,6 +137,14 @@
                <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-expanded="true" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
+               <form class="db-top-search db-top-command-search" role="search" data-page-search-form>
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input id="dbPageSearch" type="search" placeholder="Search this page..." autocomplete="off" aria-label="Search and highlight text on this page" data-page-search-input>
+                  <span class="db-search-count" aria-live="polite" data-page-search-count></span>
+                  <button class="db-search-clear" type="button" aria-label="Clear search" title="Clear search" data-page-search-clear hidden>
+                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+               </form>
                <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <span class="db-top-upgrade-card is-locked" title="Locked pro features" aria-disabled="true">
                      <span class="db-top-upgrade-icon"><i class="fa-solid fa-lock"></i></span>

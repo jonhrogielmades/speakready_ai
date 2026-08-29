@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Helpers\ActivityLogger;
 use App\Models\Category;
 use App\Models\Feedback;
@@ -798,6 +799,7 @@ class InterviewController extends Controller
         }
 
         $session->refresh()->load('gameLevel');
+        $reportTransactionStarted = false;
 
         try {
             $answers = InterviewAnswer::with('question')
@@ -850,6 +852,7 @@ class InterviewController extends Controller
             $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
             $assessment = app(TrustworthyAssessmentService::class);
             DB::beginTransaction();
+            $reportTransactionStarted = true;
 
             $totalClarity = 0;
             $totalRelevance = 0;
@@ -902,15 +905,8 @@ class InterviewController extends Controller
                         'final_answer_coaching'
                     );
                     $answer->update([
-                        'ai_feedback' => $qFeedback['ai_feedback'] ?? 'Your answer was clear.',
-                        'better_sample_answer' => $this->safeGroundedRevisionTemplate(
-                            $assessment,
-                            $session,
-                            $answer,
-                            $evidence,
-                            'final_answer_revision',
-                            $qFeedback['better_sample_answer'] ?? null
-                        ),
+                        'ai_feedback' => trim((string) ($qFeedback['ai_feedback'] ?? '')),
+                        'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer'] ?? '')),
                         'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
                         'clarity_score' => $c,
                         'relevance_score' => $r,
@@ -924,46 +920,7 @@ class InterviewController extends Controller
                         'coaching_feedback' => $coachingFeedback,
                     ]);
                 } else {
-                    // Do not invent positive scores when AI scoring fails.
-                    $c = 0;
-                    $r = 0;
-                    $g = 0;
-                    $p = 0;
-                    $qScore = 0;
-
-                    $totalClarity += $c;
-                    $totalRelevance += $r;
-                    $totalGrammar += $g;
-                    $totalProf += $p;
-
-                    $coachingFeedback = $this->safeCoachingFeedback(
-                        $session,
-                        $answer->question,
-                        (string) ($answer->answer_text ?? ''),
-                        $this->coachingMetricsFromAnswer($answer, 0, $session),
-                        is_array($answer->observation_data) ? $answer->observation_data : [],
-                        'final_answer_coaching_fallback'
-                    );
-                    $answer->update([
-                        'ai_feedback' => 'We could not make a useful AI note for this answer. Please try again or ask an admin to check it before you trust this score.',
-                        'better_sample_answer' => '',
-                        'follow_up_question' => '',
-                        'clarity_score' => 0,
-                        'relevance_score' => 0,
-                        'grammar_score' => 0,
-                        'score' => $qScore,
-                        'scoring_confidence' => 0,
-                        'evidence_map' => $this->safeAssessmentAnswerEvidence(
-                            $assessment,
-                            $session,
-                            $answer,
-                            null,
-                            'final_answer_evidence_fallback'
-                        ),
-                        'rubric_level' => 'Unscored',
-                        'improved_answer_source' => 'unavailable',
-                        'coaching_feedback' => $coachingFeedback,
-                    ]);
+                    throw new \RuntimeException("Missing validated AI feedback for answer {$answer->id}.");
                 }
             }
 
@@ -1026,9 +983,9 @@ class InterviewController extends Controller
             $feedbackRecord = Feedback::updateOrCreate([
                 'interview_session_id' => $session->id,
             ], [
-                'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
-                'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
-                'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
+                'strengths' => trim((string) ($sFeedback['strengths'] ?? '')),
+                'weaknesses' => trim((string) ($sFeedback['weaknesses'] ?? '')),
+                'improvement_suggestions' => trim((string) ($sFeedback['improvement_suggestions'] ?? '')),
                 'coaching_summary' => $coachingSummary,
             ]);
 
@@ -1174,6 +1131,7 @@ class InterviewController extends Controller
             }
 
             DB::commit();
+            $reportTransactionStarted = false;
             $this->forgetCompletedSessionState($session, $gameLevel);
 
             $redirect = $this->completedSessionRedirect($session, $gameLevel, $gameStatus, $gameResultScore, [
@@ -1187,7 +1145,7 @@ class InterviewController extends Controller
                 ? response()->json(['redirect_url' => $redirect->getTargetUrl()])
                 : $redirect;
         } catch (\Throwable $error) {
-            if (DB::transactionLevel() > 0) {
+            if ($reportTransactionStarted && DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
 
@@ -1195,19 +1153,27 @@ class InterviewController extends Controller
                 ->where('status', 'processing')
                 ->update(['status' => 'in_progress']);
 
+            $providerFailure = $error instanceof AiFeedbackProviderFailureException;
             Log::error('Interview feedback finalization failed.', [
                 'session_id' => $session->id,
                 'error_type' => $error::class,
                 'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
+                'provider_count' => $providerFailure ? $error->providerCount() : null,
+                'providers_attempted' => $providerFailure ? $error->attemptedProviders() : null,
             ]);
 
-            $message = 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.';
+            $message = $providerFailure
+                ? $error->userMessage()
+                : 'Your answers were saved, but the feedback report could not be finalized. Please retry the report generation in a moment.';
 
             return $request->expectsJson()
-                ? response()->json([
+                ? response()->json(array_filter([
                     'message' => $message,
+                    'error_code' => $providerFailure ? 'ai_feedback_providers_failed' : null,
+                    'provider_count' => $providerFailure ? $error->providerCount() : null,
+                    'providers_attempted' => $providerFailure ? $error->attemptedProviders() : null,
                     'retry_after_ms' => 1500,
-                ], 503)
+                ], fn ($value) => $value !== null), 503)
                 : back()->with('error', $message);
         }
     }
@@ -1326,6 +1292,7 @@ class InterviewController extends Controller
         $qFeedback = $feedback['per_question_feedback'][0] ?? null;
         if ($qFeedback) {
             $retryScore = $this->scoreValue($qFeedback['score'] ?? 0);
+            $betterAnswer = trim((string) ($qFeedback['better_sample_answer'] ?? ''));
             try {
                 $assessment = app(TrustworthyAssessmentService::class);
                 $evidence = $assessment->answerEvidence(
@@ -1334,7 +1301,6 @@ class InterviewController extends Controller
                     $answer->question
                 );
                 $rubric = $assessment->rubricLevel($retryScore);
-                $betterAnswer = $assessment->groundedRevisionTemplate($retry->answer_text ?? '', $evidence);
             } catch (\Throwable $error) {
                 Log::warning('Retry answer evidence assessment failed after answer save.', [
                     'answer_id' => $retry->id,
@@ -1346,7 +1312,6 @@ class InterviewController extends Controller
                     'level' => 'Not scored',
                     'next_level' => 'Retry the evaluation when feedback services are available.',
                 ];
-                $betterAnswer = '';
             }
             $coachingFeedback = $this->safeCoachingFeedback(
                 $session,
@@ -1514,6 +1479,9 @@ class InterviewController extends Controller
             foreach ($answers as $answer) {
                 $qFeedback = collect($aiFeedback['per_question_feedback'] ?? [])
                     ->first(fn ($pf) => isset($pf['id']) && (int) $pf['id'] === (int) $answer->id);
+                if (! $qFeedback) {
+                    throw new \RuntimeException("Missing validated AI feedback for answer {$answer->id}.");
+                }
 
                 $c = $this->scoreValue($qFeedback['clarity_score'] ?? 0);
                 $r = $this->scoreValue($qFeedback['relevance_score'] ?? 0);
@@ -1549,17 +1517,8 @@ class InterviewController extends Controller
                 );
 
                 $answer->update([
-                    'ai_feedback' => $qFeedback['ai_feedback'] ?? 'We could not make a useful AI note for this answer. Please try again or ask an admin to check it before you trust this score.',
-                    'better_sample_answer' => $qFeedback
-                        ? $this->safeGroundedRevisionTemplate(
-                            $assessment,
-                            $session,
-                            $answer,
-                            $evidence,
-                            'refresh_answer_revision',
-                            $qFeedback['better_sample_answer'] ?? null
-                        )
-                        : '',
+                    'ai_feedback' => trim((string) ($qFeedback['ai_feedback'] ?? '')),
+                    'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer'] ?? '')),
                     'follow_up_question' => $qFeedback['follow_up_question'] ?? '',
                     'clarity_score' => $c,
                     'relevance_score' => $r,
@@ -1567,9 +1526,9 @@ class InterviewController extends Controller
                     'score' => $qScore,
                     'scoring_confidence' => $this->scoreValue($qFeedback['scoring_confidence'] ?? ($qFeedback ? 80 : 0)),
                     'evidence_map' => $evidence,
-                    'rubric_level' => $qFeedback ? $rubric['level'] : 'Unscored',
-                    'recommendation_text' => $qFeedback ? $rubric['next_level'] : null,
-                    'improved_answer_source' => $qFeedback ? 'candidate_facts' : 'unavailable',
+                    'rubric_level' => $rubric['level'],
+                    'recommendation_text' => $rubric['next_level'],
+                    'improved_answer_source' => 'candidate_facts',
                     'coaching_feedback' => $coachingFeedback,
                 ]);
             }
@@ -1621,9 +1580,9 @@ class InterviewController extends Controller
             $feedbackRecord = Feedback::updateOrCreate([
                 'interview_session_id' => $session->id,
             ], [
-                'strengths' => $sFeedback['strengths'] ?? 'AI feedback was unavailable, so no strengths were inferred.',
-                'weaknesses' => $sFeedback['weaknesses'] ?? 'AI feedback was unavailable, so this session needs a retry or manual review.',
-                'improvement_suggestions' => $sFeedback['improvement_suggestions'] ?? 'Retry the evaluation when the AI provider is available, or request an admin review before relying on this score.',
+                'strengths' => trim((string) ($sFeedback['strengths'] ?? '')),
+                'weaknesses' => trim((string) ($sFeedback['weaknesses'] ?? '')),
+                'improvement_suggestions' => trim((string) ($sFeedback['improvement_suggestions'] ?? '')),
                 'coaching_summary' => $this->safeSessionCoachingSummary($evaluatedAnswers, $session),
             ]);
 
@@ -3643,8 +3602,18 @@ class InterviewController extends Controller
     ): array {
         try {
             return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+        } catch (AiFeedbackProviderFailureException $error) {
+            Log::warning('AI feedback providers failed; using local evidence report fallback.', [
+                'session_id' => $session->id,
+                'user_id' => $session->user_id,
+                'provider' => $feedbackProvider,
+                'provider_count' => $error->providerCount(),
+                'providers_attempted' => $error->attemptedProviders(),
+            ]);
+
+            return AIService::generateLocalFeedback($sessionData, $answersData);
         } catch (\Throwable $error) {
-            Log::warning('Interview feedback generation failed; using local fallback.', [
+            Log::warning('Interview feedback generation failed; AI-only report was not finalized.', [
                 'session_id' => $session->id,
                 'user_id' => $session->user_id,
                 'provider' => $feedbackProvider,
@@ -3652,7 +3621,7 @@ class InterviewController extends Controller
                 'message' => Str::limit($error->getMessage(), 300),
             ]);
 
-            return $this->localInterviewFeedback($session, $sessionData, $answersData);
+            throw $error;
         }
     }
 
@@ -3669,53 +3638,6 @@ class InterviewController extends Controller
 
         return AIService::generateFeedback($sessionData, $answersData, $feedbackProvider ?: AIService::defaultProviderKey());
     }
-
-    private function localInterviewFeedback(InterviewSession $session, array $sessionData, array $answersData): array
-    {
-        try {
-            return AIService::generateFeedback($sessionData, $answersData, 'local');
-        } catch (\Throwable $fallbackError) {
-            Log::error('Interview local feedback fallback failed; using minimal report shell.', [
-                'session_id' => $session->id,
-                'user_id' => $session->user_id,
-                'error_type' => $fallbackError::class,
-                'message' => Str::limit($fallbackError->getMessage(), 300),
-            ]);
-
-            return $this->minimalInterviewFeedback($answersData);
-        }
-    }
-
-    private function minimalInterviewFeedback(array $answersData): array
-    {
-        $perQuestion = collect($answersData)
-            ->map(fn (array $answer): array => [
-                'id' => $answer['id'] ?? null,
-                'score' => 0,
-                'clarity_score' => 0,
-                'relevance_score' => 0,
-                'grammar_score' => 0,
-                'professionalism_score' => 0,
-                'scoring_confidence' => 0,
-                'ai_feedback' => 'Your answer was saved, but the AI note was not available. Please try again or ask an admin to check it before you trust this score.',
-                'better_sample_answer' => '',
-                'follow_up_question' => '',
-            ])
-            ->values()
-            ->all();
-
-        return [
-            'per_question_feedback' => $perQuestion,
-            'session_feedback' => [
-                'overall_readiness_score' => 0,
-                'star_method_score' => 0,
-                'strengths' => 'Your interview responses were saved successfully.',
-                'weaknesses' => 'The AI note was not available for this report.',
-                'improvement_suggestions' => 'Try to make the feedback report again, or ask for a manual review before using this score.',
-            ],
-        ];
-    }
-
     private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array
     {
         $perQuestion = collect($answersData)
@@ -4080,7 +4002,19 @@ class InterviewController extends Controller
             ])
             ->firstOrFail();
 
-        if ($this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel)) {
+        $feedbackRefreshed = false;
+        try {
+            $feedbackRefreshed = $this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
+        } catch (\Throwable $exception) {
+            Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
+                'session_id' => $sessionRecord->id,
+                'user_id' => Auth::id(),
+                'error_type' => $exception::class,
+                'message' => Str::limit($exception->getMessage(), 300),
+            ]);
+        }
+
+        if ($feedbackRefreshed) {
             $sessionRecord->refresh()->load([
                 'category',
                 'answers' => function ($query) {
@@ -4178,7 +4112,18 @@ class InterviewController extends Controller
             return $this->mobileView('shared.unlock', compact('sessionRecord'));
         }
 
-        if ($this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel)) {
+        $feedbackRefreshed = false;
+        try {
+            $feedbackRefreshed = $this->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
+        } catch (\Throwable $exception) {
+            Log::warning('Shared detailed feedback refresh failed; rendering saved report data.', [
+                'session_id' => $sessionRecord->id,
+                'error_type' => $exception::class,
+                'message' => Str::limit($exception->getMessage(), 300),
+            ]);
+        }
+
+        if ($feedbackRefreshed) {
             $sessionRecord->refresh()->load([
                 'category',
                 'answers' => function ($query) {

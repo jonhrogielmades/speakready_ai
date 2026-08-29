@@ -832,17 +832,50 @@ class UserSideHardeningTest extends TestCase
         $session = $this->sessionFor($user, $category);
         $question = $this->question($category, ['interview_session_id' => $session->id]);
 
-        InterviewAnswer::create([
+        $answer = InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
             'answer_text' => 'I built a deployment checklist and improved release quality with clearer ownership.',
             'response_mode' => 'text',
         ]);
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => [
+                        'content' => json_encode([
+                            'per_question_feedback' => [[
+                                'id' => $answer->id,
+                                'score' => 82,
+                                'clarity_score' => 82,
+                                'relevance_score' => 82,
+                                'grammar_score' => 82,
+                                'professionalism_score' => 82,
+                                'star_applicable' => true,
+                                'star_method_score' => 75,
+                                'evidence_quotes' => ['I built a deployment checklist and improved release quality with clearer ownership'],
+                                'question_focus' => 'Describe a difficult project.',
+                                'answer_alignment' => 'directly_addressed',
+                                'missing_criteria' => [],
+                                'ai_feedback' => 'For "Describe a difficult project.", you stated "I built a deployment checklist and improved release quality with clearer ownership", which gives project detail. The review is tied to deployment and checklist from this answer.',
+                                'better_sample_answer' => 'I would answer: I built a deployment checklist and improved release quality with clearer ownership.',
+                                'follow_up_question' => 'What final result or detail from this project would make it stronger?',
+                            ]],
+                            'session_feedback' => [
+                                'strengths' => 'The AI review used saved project details to identify what worked.',
+                                'weaknesses' => 'The answer could add the final result from the same project.',
+                                'improvement_suggestions' => 'Keep the project action and add the outcome only if it is true.',
+                            ],
+                        ]),
+                    ],
+                ]],
+            ], 200),
+        ]);
 
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'unsupported',
+                'active_interview_provider' => 'openai',
                 'game_level_id' => $level->id,
                 'active_interview_context' => 'learning_game',
             ])

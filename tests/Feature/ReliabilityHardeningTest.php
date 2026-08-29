@@ -17,6 +17,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\QuestionIntentService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\TrustworthyAssessmentService;
 use Illuminate\Database\Schema\Blueprint;
@@ -30,6 +31,24 @@ use Tests\TestCase;
 class ReliabilityHardeningTest extends TestCase
 {
     use RefreshDatabase;
+
+    private array $originalEnvValues = [];
+
+    protected function tearDown(): void
+    {
+        foreach ($this->originalEnvValues as $key => $value) {
+            if ($value === false) {
+                putenv($key);
+                unset($_ENV[$key], $_SERVER[$key]);
+            } else {
+                putenv("{$key}={$value}");
+                $_ENV[$key] = $value;
+                $_SERVER[$key] = $value;
+            }
+        }
+
+        parent::tearDown();
+    }
 
     public function test_openai_feedback_uses_strict_evidence_linked_structured_output(): void
     {
@@ -54,7 +73,14 @@ class ReliabilityHardeningTest extends TestCase
                                 'answer_alignment' => 'directly_addressed',
                                 'missing_criteria' => [],
                                 'ai_feedback' => 'For "How would you diagnose a slow database query?", you stated "I inspected the query plan, compared row estimates, and verified index usage", which directly supports a relevant diagnostic approach.',
+                                'better_sample_answer' => 'I would answer: I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+                                'follow_up_question' => 'What final result or detail from this answer would make it stronger?',
                             ]],
+                            'session_feedback' => [
+                                'strengths' => 'The AI review used saved answer details such as "I inspected the query plan, compared row estimates, and verified index usage" to identify what worked.',
+                                'weaknesses' => 'The answer could add the final result from the same database work.',
+                                'improvement_suggestions' => 'Keep the diagnostic steps and add the outcome only if it is true.',
+                            ],
                         ]),
                     ],
                 ]],
@@ -741,9 +767,9 @@ class ReliabilityHardeningTest extends TestCase
             ->assertSee('sessionTargetPosition', false);
     }
 
-    public function test_interview_finish_is_fast_idempotent_and_creates_complete_local_feedback(): void
+    public function test_interview_finish_is_fast_idempotent_and_creates_complete_ai_feedback(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category);
@@ -834,7 +860,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_interview_finish_completes_with_fallback_when_report_coaching_analysis_fails(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         $this->app->instance(EvidenceBasedCoachingService::class, new class
         {
             public function forAnswer(string $answerText, Question|array|null $question, array $metrics, array $observationData = []): array
@@ -862,7 +888,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'local',
+                'active_interview_provider' => 'openai',
             ])
             ->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertOk()
@@ -880,7 +906,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_interview_finish_completes_with_fallback_when_assessment_helpers_fail(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         $this->app->instance(TrustworthyAssessmentService::class, new class extends TrustworthyAssessmentService
         {
             public function answerEvidence(string $answer, ?string $feedback = null, Question|array|null $question = null): array
@@ -916,7 +942,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'local',
+                'active_interview_provider' => 'openai',
             ])
             ->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertOk()
@@ -926,7 +952,7 @@ class ReliabilityHardeningTest extends TestCase
         $savedAnswer = $answer->fresh();
         $score = Score::where('interview_session_id', $session->id)->firstOrFail();
 
-        $this->assertStringContainsString('Answer draft based on your facts', $savedAnswer->better_sample_answer);
+        $this->assertStringContainsString('I would answer:', $savedAnswer->better_sample_answer);
         $this->assertSame(
             'A dependable automatic answer check was unavailable for this retry.',
             data_get($savedAnswer->evidence_map, 'missing_evidence.0')
@@ -937,7 +963,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_stale_feedback_processing_state_can_recover_without_duplicate_records(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category, ['status' => 'processing']);
@@ -953,6 +979,10 @@ class ReliabilityHardeningTest extends TestCase
         $session->save();
 
         $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'openai',
+            ])
             ->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertOk()
             ->assertJsonPath('redirect_url', route('user.review', $session));
@@ -964,7 +994,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_interview_finish_repairs_missing_optional_session_columns_before_processing(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category);
@@ -987,7 +1017,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'local',
+                'active_interview_provider' => 'openai',
             ])
             ->postJson(route('interview.finish'), [
                 'session_id' => $session->id,
@@ -1005,7 +1035,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
     }
 
-    public function test_interview_finish_uses_local_feedback_when_feedback_generation_crashes(): void
+    public function test_interview_finish_does_not_complete_when_ai_feedback_generation_crashes(): void
     {
         Http::preventStrayRequests();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -1038,18 +1068,74 @@ class ReliabilityHardeningTest extends TestCase
                 'active_interview_provider' => 'openai',
             ])
             ->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(503)
+            ->assertJsonPath('retry_after_ms', 1500);
+
+        $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
+        $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+        $this->assertEmpty(InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->ai_feedback);
+    }
+
+    public function test_interview_finish_uses_local_feedback_when_six_ai_feedback_providers_fail(): void
+    {
+        foreach ([
+            'HUGGINGFACE_API_KEY' => 'hf_test_token',
+            'GEMINI_API_KEY' => 'gemini_test_token',
+            'GROQ_API_KEY' => 'groq_test_token',
+            'OPENROUTER_API_KEY' => 'openrouter_test_token',
+            'COHERE_API_KEY' => 'cohere_test_token',
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'ANTHROPIC_API_KEY' => '',
+            'WISDOMGATE_API_KEY' => '',
+            'AI_FEEDBACK_PROVIDER_PRIORITY' => 'huggingface,gemini,groq,openrouter,cohere,openai',
+            'AI_FEEDBACK_MAX_PROVIDERS' => '6',
+            'AI_FEEDBACK_ATTEMPTS' => '1',
+            'AI_FEEDBACK_HTTP_ATTEMPTS' => '1',
+            'AI_FEEDBACK_DEADLINE_SECONDS' => '30',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        Http::fake([
+            '*' => Http::response(['error' => 'provider unavailable'], 500),
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->question($category, [
+            'interview_session_id' => $session->id,
+            'question_text' => 'Tell me about a time you improved a support handoff.',
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.',
+            'response_mode' => 'text',
+        ]);
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => $session->id,
+                'active_interview_provider' => 'huggingface',
+            ])
+            ->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertOk()
             ->assertJsonPath('redirect_url', route('user.review', $session));
 
         $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
         $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
         $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
-        $this->assertNotEmpty(InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->ai_feedback);
+        $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
+        $this->assertNotEmpty($savedAnswer->ai_feedback);
+        $this->assertSame('local_evidence', data_get($savedAnswer->coaching_feedback, 'content_alignment.evaluation_source'));
+        Http::assertSentCount(6);
     }
 
     public function test_interview_finish_tolerates_missing_feedback_coaching_summary_column(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         if (Schema::hasColumn('feedback', 'coaching_summary')) {
             Schema::table('feedback', function (Blueprint $table): void {
                 $table->dropColumn('coaching_summary');
@@ -1070,7 +1156,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'local',
+                'active_interview_provider' => 'openai',
             ])
             ->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertOk()
@@ -1089,7 +1175,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_interview_finish_repairs_missing_report_tables(): void
     {
-        Http::preventStrayRequests();
+        $this->fakeOpenAiFeedback();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category);
@@ -1107,7 +1193,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->withSession([
                 'active_interview_id' => $session->id,
-                'active_interview_provider' => 'local',
+                'active_interview_provider' => 'openai',
             ])
             ->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertOk()
@@ -1284,6 +1370,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_retry_answer_returns_server_rendered_evidence_based_coaching(): void
     {
+        $this->fakeOpenAiFeedback();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category, ['status' => 'completed']);
@@ -1296,20 +1383,19 @@ class ReliabilityHardeningTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->withSession(['active_interview_provider' => 'local'])
+            ->withSession(['active_interview_provider' => 'openai'])
             ->postJson(route('interview.answer.retry', $answer), [
                 'answer_text' => 'During a difficult project, I diagnosed the release issue, coordinated the rollback, and completed the recovery within ten minutes.',
                 'response_mode' => 'text',
             ]);
 
         $response->assertOk()
-            ->assertJsonPath('scoring_confidence', 50)
             ->assertJsonStructure([
                 'coaching_feedback' => ['content_alignment'],
                 'coaching_html',
             ]);
         $retry = InterviewAnswer::where('retry_of_answer_id', $answer->id)->firstOrFail();
-        $this->assertSame(50, (int) $retry->scoring_confidence);
+        $this->assertGreaterThanOrEqual(80, (int) $retry->scoring_confidence);
         $this->assertSame('candidate_facts', $retry->improved_answer_source);
         $this->assertSame($retry->id, data_get($retry->coaching_feedback, 'content_alignment.answer_id'));
         $this->assertSame($question->id, data_get($retry->coaching_feedback, 'content_alignment.question_id'));
@@ -1440,6 +1526,7 @@ class ReliabilityHardeningTest extends TestCase
 
     public function test_user_review_refreshes_stale_rubric_score_metadata_on_open(): void
     {
+        $this->fakeOpenAiFeedback();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
         $session = $this->sessionFor($user, $category, ['status' => 'completed']);
@@ -1473,6 +1560,7 @@ class ReliabilityHardeningTest extends TestCase
         ]);
 
         $this->actingAs($user)
+            ->withSession(['active_interview_provider' => 'openai'])
             ->get(route('user.review', $session))
             ->assertOk()
             ->assertSee('Score version '.TrustworthyAssessmentService::SCORE_VERSION);
@@ -1527,7 +1615,8 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertSee('feedback-report-meta', false)
-            ->assertSee('feedback-hero-content', false)
+            ->assertSee('feedback-hero-panel', false)
+            ->assertSee('feedback-hero-grid', false)
             ->assertSee('answer-review-body', false);
     }
 
@@ -1657,6 +1746,154 @@ class ReliabilityHardeningTest extends TestCase
         ], $overrides));
     }
 
+    private function fakeOpenAiFeedback(array $answers = []): void
+    {
+        Http::fake([
+            'api.openai.com/*' => function ($request) use ($answers) {
+                $transcript = $answers !== []
+                    ? $this->feedbackTranscriptFromAnswers($answers)
+                    : $this->feedbackTranscriptFromPrompt((string) collect(data_get($request->data(), 'messages', []))
+                        ->pluck('content')
+                        ->filter()
+                        ->implode("\n"));
+                $items = array_map(fn (array $answer): array => $this->fakeFeedbackItem($answer), $transcript);
+                $firstQuote = collect($items)
+                    ->flatMap(fn (array $item): array => $item['evidence_quotes'] ?? [])
+                    ->filter()
+                    ->first();
+
+                return Http::response([
+                    'choices' => [[
+                        'finish_reason' => 'stop',
+                        'message' => [
+                            'content' => json_encode([
+                                'per_question_feedback' => $items,
+                                'session_feedback' => [
+                                    'strengths' => $firstQuote
+                                        ? 'The AI review used saved answer details such as "'.$firstQuote.'" to identify what worked.'
+                                        : 'The AI review found too little answer detail to name a clear strength.',
+                                    'weaknesses' => 'Some responses need a clearer result or missing detail from the same saved answer.',
+                                    'improvement_suggestions' => 'Keep each answer direct, remove repeated wording, and add the final result only when it is true.',
+                                ],
+                            ]),
+                        ],
+                    ]],
+                ], 200);
+            },
+        ]);
+    }
+
+    private function feedbackTranscriptFromAnswers(array $answers): array
+    {
+        return array_values(array_map(function ($answer): array {
+            if ($answer instanceof InterviewAnswer) {
+                $answer->loadMissing('question');
+
+                return [
+                    'id' => $answer->id,
+                    'question' => $answer->question->question_text ?? '',
+                    'question_type' => $answer->question->type ?? null,
+                    'expected_answer_guide' => $answer->question->expected_guide ?? null,
+                    'mapped_skills' => $answer->question->mapped_skills ?? [],
+                    'candidate_answer' => $answer->is_skipped ? '(Skipped or no answer)' : ($answer->answer_text ?? ''),
+                    'star_applicable' => QuestionIntentService::starApplicable($answer->question),
+                ];
+            }
+
+            return is_array($answer) ? $answer : [];
+        }, $answers));
+    }
+
+    private function feedbackTranscriptFromPrompt(string $prompt): array
+    {
+        $marker = 'UNTRUSTED TRANSCRIPT DATA JSON:';
+        $start = strpos($prompt, $marker);
+        if ($start === false) {
+            return [];
+        }
+
+        $afterMarker = substr($prompt, $start + strlen($marker));
+        $jsonStart = strpos($afterMarker, '[');
+        $jsonEnd = strpos($afterMarker, "\nProvide your evaluation STRICTLY", $jsonStart === false ? 0 : $jsonStart);
+        if ($jsonStart === false || $jsonEnd === false || $jsonEnd <= $jsonStart) {
+            return [];
+        }
+
+        $decoded = json_decode(substr($afterMarker, $jsonStart, $jsonEnd - $jsonStart), true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    private function fakeFeedbackItem(array $answer): array
+    {
+        $answerText = trim((string) ($answer['candidate_answer'] ?? $answer['answer'] ?? ''));
+        $questionText = trim((string) ($answer['question'] ?? $answer['question_text'] ?? ''));
+        $isSkipped = $answerText === '' || strcasecmp($answerText, '(Skipped or no answer)') === 0;
+        $wordCount = str_word_count($answerText);
+        $isTooShort = ! $isSkipped && $wordCount < 10;
+        $quote = $isSkipped ? '' : $this->feedbackEvidenceQuote($answerText);
+        $starApplicable = array_key_exists('star_applicable', $answer)
+            ? (bool) $answer['star_applicable']
+            : QuestionIntentService::starApplicable([
+                'question' => $questionText,
+                'question_type' => $answer['question_type'] ?? null,
+                'expected_guide' => $answer['expected_answer_guide'] ?? $answer['expected_guide'] ?? null,
+                'mapped_skills' => $answer['mapped_skills'] ?? [],
+            ]);
+        $score = $isSkipped ? 0 : ($isTooShort ? 8 : 82);
+        $specificTerms = $this->feedbackSpecificTerms($answerText, $questionText);
+        $alignment = match (true) {
+            $isSkipped => 'skipped',
+            $isTooShort => 'insufficient_evidence',
+            default => 'directly_addressed',
+        };
+
+        return [
+            'id' => (int) ($answer['id'] ?? 0),
+            'score' => $score,
+            'clarity_score' => $score,
+            'relevance_score' => $score,
+            'grammar_score' => $score,
+            'professionalism_score' => $score,
+            'star_applicable' => $starApplicable,
+            'star_method_score' => $starApplicable && ! $isSkipped && ! $isTooShort ? 75 : 0,
+            'evidence_quotes' => $quote !== '' ? [$quote] : [],
+            'question_focus' => $questionText,
+            'answer_alignment' => $alignment,
+            'missing_criteria' => [],
+            'ai_feedback' => $isSkipped
+                ? 'For "'.$questionText.'", this answer was skipped, so AI could not check saved answer evidence for this question.'
+                : 'For "'.$questionText.'", you stated "'.$quote.'", which directly addressed this answer with specific saved details. The review is tied to '.$specificTerms.' from this answer.',
+            'better_sample_answer' => $isSkipped ? '' : 'I would answer: '.$answerText,
+            'follow_up_question' => 'What final result or detail from this answer would make it stronger?',
+        ];
+    }
+
+    private function feedbackSpecificTerms(string $answerText, string $questionText): string
+    {
+        preg_match_all('/[a-z][a-z0-9]+/i', $answerText.' '.$questionText, $matches);
+        $stopWords = [
+            'about', 'after', 'answer', 'before', 'could', 'detail', 'during', 'every',
+            'final', 'from', 'question', 'result', 'same', 'that', 'their', 'this',
+            'what', 'when', 'where', 'which', 'with', 'would', 'your',
+        ];
+        $terms = array_values(array_unique(array_filter(
+            array_map('strtolower', $matches[0] ?? []),
+            fn (string $term): bool => strlen($term) > 4 && ! in_array($term, $stopWords, true)
+        )));
+
+        return $terms === []
+            ? 'the saved details'
+            : implode(' and ', array_slice($terms, 0, 2));
+    }
+
+    private function feedbackEvidenceQuote(string $answerText): string
+    {
+        $clean = trim((string) preg_replace('/\s+/', ' ', $answerText));
+
+        return mb_strlen($clean) > 260 ? mb_substr($clean, 0, 260) : $clean;
+    }
+
     private function aiProvider(string $name, array $overrides = []): AiProvider
     {
         return AiProvider::create(array_merge([
@@ -1667,5 +1904,16 @@ class ReliabilityHardeningTest extends TestCase
             'is_primary' => false,
             'is_fallback' => false,
         ], $overrides));
+    }
+
+    private function setEnvValue(string $key, string $value): void
+    {
+        if (! array_key_exists($key, $this->originalEnvValues)) {
+            $this->originalEnvValues[$key] = getenv($key);
+        }
+
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
     }
 }

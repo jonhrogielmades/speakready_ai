@@ -5,16 +5,9 @@
 <div class="db-section active">
     @php
         $feedback = $sessionRecord->feedback;
-        $strengths = trim($feedback->strengths ?? '');
-        $weaknesses = trim($feedback->weaknesses ?? '');
-        $suggestions = trim($feedback->improvement_suggestions ?? '');
-        $feedbackSummaryParts = array_filter([
-            $strengths !== '' ? 'Strengths: '.$strengths : null,
-            $weaknesses !== '' ? 'Needs work: '.$weaknesses : null,
-        ]);
-        $feedbackSummary = ! empty($feedbackSummaryParts)
-            ? implode("\n\n", $feedbackSummaryParts)
-            : ($suggestions !== '' ? 'Review what to do next for the next practice step.' : 'AI feedback was unavailable for this session.');
+        $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
+        $strengthItems = $report['strength_items'];
+        $weaknessItems = $report['weakness_items'];
         $comparisonRows = $comparisonRows ?? [];
         $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
         $sessionFeedbackQuality = is_array(data_get($feedback->coaching_summary ?? [], 'feedback_quality'))
@@ -82,30 +75,7 @@
         @if(!$sessionRecord->score_eligible) This is coached-practice feedback and is not used for the readiness score. @endif
     </div>
 
-    <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)); border:1px solid rgba(59, 130, 246, 0.2); border-radius:18px; padding:32px;">
-                <div class="d-flex align-items-start gap-4">
-                    <div style="background:#3b82f6; width:60px; height:60px; border-radius:50%; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-                        <i class="fa-solid fa-robot text-white fs-3"></i>
-                    </div>
-                    <div class="row w-100">
-                        <div class="col-md-7">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">AI Feedback</h5>
-                            <p style="color:var(--tx);font-size:1rem;line-height:1.6;">
-                                {!! nl2br(e($feedbackSummary)) !!}
-                            </p>
-                        </div>
-                        <div class="col-md-5" style="border-left: 1px solid rgba(59, 130, 246, 0.2);">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-location-arrow me-2 text-primary"></i>What to Do Next</h5>
-                            <p style="color:var(--tx);font-size:0.95rem;line-height:1.8;margin:0;">{!! nl2br(e($suggestions ?: 'No next steps were made for this session.')) !!}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('shared.partials.report-overview', ['report' => $report])
 
     @include('desktop.partials.interview-coaching-summary', ['feedback' => $feedback, 'sessionRecord' => $sessionRecord])
 
@@ -114,13 +84,13 @@
         <div class="col-md-6">
             <div style="background:rgba(16, 185, 129, 0.05);border:1px solid rgba(16, 185, 129, 0.2);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:#10b981;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-thumbs-up me-2"></i>Strengths</h5>
-                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($strengths ?: 'No strengths were generated for this session.')) !!}</p>
+                @include('shared.partials.report-bullet-list', ['items' => $strengthItems, 'icon' => 'fa-circle-check', 'color' => '#10b981'])
             </div>
         </div>
         <div class="col-md-6">
             <div style="background:rgba(239, 68, 68, 0.05);border:1px solid rgba(239, 68, 68, 0.2);border-radius:18px;padding:24px;height:100%">
                 <h5 style="color:#ef4444;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-triangle-exclamation me-2"></i>Needs Work</h5>
-                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($weaknesses ?: 'No weak points were made for this session.')) !!}</p>
+                @include('shared.partials.report-bullet-list', ['items' => $weaknessItems, 'icon' => 'fa-arrow-trend-up', 'color' => '#ef4444'])
                 {{-- <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Add more real examples</li>
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Practice steady speaking</li>
@@ -129,6 +99,8 @@
             </div>
         </div>
     </div>
+
+    @include('shared.partials.report-conciseness-check', ['report' => $report])
 
     <!-- Feature 4, 12, 13: Skills, Breakdown, and Comparison -->
     <div class="row g-4 mb-4">

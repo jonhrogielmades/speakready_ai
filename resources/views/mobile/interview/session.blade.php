@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Philippines Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=3') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=4') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -161,7 +161,7 @@
 
                     </div>
                 </div>
-                <div id="sessionNotice" class="session-inline-alert" role="alert" aria-live="assertive" hidden></div>
+                <div id="sessionNotice" class="session-inline-alert" role="alert" aria-live="assertive" tabindex="-1" hidden></div>
 
                 <!-- Answer Response System -->
                 <div class="panel response-panel mb-4 animate-fade-up delay-200">
@@ -259,8 +259,9 @@
                 <div class="finish-loading-circle"></div>
                 <img src="{{ asset('img/logo.png') }}" alt="Loading feedback">
             </div>
-            <h4>Analyzing your response...</h4>
+            <h4 id="finishTransitionTitle">Analyzing your response...</h4>
             <p id="finishTransitionMessage">Please wait while we finalize your interview report.</p>
+            <div id="finishFailureAlert" class="finish-failure-alert" role="alert" aria-live="assertive" hidden></div>
             <div class="finish-recovery-actions">
                 <button type="button" id="finishRetryButton" class="finish-retry-button" style="display:none;" onclick="retryFinishInterview()"><i class="fa-solid fa-rotate-right me-1"></i>Retry report</button>
                 <button type="button" id="finishBackButton" class="finish-secondary-button" style="display:none;" onclick="returnToInterviewAfterFinishError()"><i class="fa-solid fa-arrow-left me-1"></i>Back to answer</button>
@@ -3580,6 +3581,9 @@
                 if (visible && overlay.parentElement !== document.body) {
                     document.body.appendChild(overlay);
                 }
+                if (!visible) {
+                    overlay.classList.remove('finish-transition-error');
+                }
                 overlay.classList.toggle('active', visible);
                 document.body.classList.toggle('finish-transition-active', visible);
             }
@@ -3592,9 +3596,20 @@
                 document.getElementById('formDuration').value = timerSeconds;
                 document.getElementById('formNotes').value = '';
                 const transitionMessage = document.getElementById('finishTransitionMessage');
+                const transitionTitle = document.getElementById('finishTransitionTitle');
+                const failureAlert = document.getElementById('finishFailureAlert');
                 const retryButton = document.getElementById('finishRetryButton');
                 const backButton = document.getElementById('finishBackButton');
+                const overlay = document.getElementById('finishTransitionOverlay');
+                overlay?.classList.remove('finish-transition-error');
+                if (transitionTitle) transitionTitle.textContent = 'Analyzing your response...';
                 if (transitionMessage) transitionMessage.textContent = 'Please wait while we finalize your interview report.';
+                if (failureAlert) {
+                    failureAlert.textContent = '';
+                    failureAlert.hidden = true;
+                }
+                overlay?.setAttribute('role', 'status');
+                overlay?.setAttribute('aria-live', 'polite');
                 if (retryButton) retryButton.style.display = 'none';
                 if (backButton) backButton.style.display = 'none';
                 setFinishTransitionVisible(true);
@@ -3633,19 +3648,35 @@
                 } catch (error) {
                     console.error('Interview feedback analysis failed:', error);
                     feedbackSubmissionInFlight = false;
+                    const alertMessage = error.message || 'We could not finish the report. Your final answer is saved.';
+                    const title = document.getElementById('finishTransitionTitle');
                     const message = document.getElementById('finishTransitionMessage');
+                    const failureAlert = document.getElementById('finishFailureAlert');
                     const retryButton = document.getElementById('finishRetryButton');
                     const backButton = document.getElementById('finishBackButton');
-                    if (message) message.textContent = error.message || 'We could not finish the report. Your final answer is saved.';
+                    const overlay = document.getElementById('finishTransitionOverlay');
+                    overlay?.classList.add('finish-transition-error');
+                    if (title) title.textContent = 'Report not finished';
+                    if (message) message.textContent = 'Your answers are saved. Retry the report or return to your answer.';
+                    if (failureAlert) {
+                        failureAlert.textContent = alertMessage;
+                        failureAlert.hidden = false;
+                    }
+                    overlay?.setAttribute('role', 'alert');
+                    overlay?.setAttribute('aria-live', 'assertive');
                     if (retryButton) retryButton.style.display = 'inline-flex';
                     if (backButton) backButton.style.display = 'inline-flex';
                     setFinishTransitionVisible(true);
+                    showSessionNotice(alertMessage, 'error', true);
                     return false;
                 }
             }
 
             function finishResponseErrorMessage(response, payload) {
                 const data = payload?.data || {};
+                if (data.error_code === 'ai_feedback_providers_failed') {
+                    return 'AI feedback providers are unavailable right now. Your answers are saved.';
+                }
                 const explicitMessage = data.error || data.message || validationErrorMessage(data.errors);
                 if (explicitMessage) return String(explicitMessage);
 

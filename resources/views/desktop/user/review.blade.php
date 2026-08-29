@@ -10,16 +10,9 @@
 <div class="db-section active animate-fade-up">
     @php
         $feedback = $sessionRecord->feedback;
-        $strengths = trim($feedback->strengths ?? '');
-        $weaknesses = trim($feedback->weaknesses ?? '');
-        $suggestions = trim($feedback->improvement_suggestions ?? '');
-        $feedbackSummaryParts = array_filter([
-            $strengths !== '' ? 'Strengths: ' . $strengths : null,
-            $weaknesses !== '' ? 'Needs work: ' . $weaknesses : null,
-        ]);
-        $feedbackSummary = !empty($feedbackSummaryParts)
-            ? implode("\n\n", $feedbackSummaryParts)
-            : ($suggestions !== '' ? 'Review the next steps for your next practice session.' : 'AI feedback was unavailable for this session.');
+        $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
+        $strengthItems = $report['strength_items'];
+        $weaknessItems = $report['weakness_items'];
         $comparisonRows = $comparisonRows ?? [];
         $actionPlan = is_array($sessionRecord->action_plan ?? null) ? $sessionRecord->action_plan : [];
         $actionPlanHeadline = is_scalar($actionPlan['headline'] ?? null)
@@ -33,10 +26,12 @@
             : [];
         $actionPriorities = collect($actionPlan['priorities'] ?? [])
             ->filter(fn ($item) => is_array($item))
+            ->take(3)
             ->values()
             ->all();
         $recommendedPaths = collect($actionPlan['recommended_paths'] ?? [])
             ->filter(fn ($item) => is_array($item))
+            ->take(3)
             ->values()
             ->all();
         $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
@@ -117,27 +112,7 @@
         </div>
     @endif
 
-    <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
-    <div class="row mb-4">
-        <div class="col-12 animate-fade-up" style="animation-delay: 0.1s;">
-            <div class="premium-panel feedback-hero-panel" style="background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1)) !important; border:1px solid rgba(59, 130, 246, 0.2) !important; padding:32px;">
-                <div class="d-flex align-items-start gap-4 feedback-hero-content">
-                    <div class="row w-100 feedback-hero-grid">
-                        <div class="col-md-7">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-robot me-2 text-primary"></i>AI Feedback</h5>
-                            <p style="color:var(--tx);font-size:1rem;line-height:1.6;">
-                                {!! nl2br(e($feedbackSummary)) !!}
-                            </p>
-                        </div>
-                        <div class="col-md-5 feedback-hero-actions" style="border-left: 1px solid rgba(59, 130, 246, 0.2);">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-location-arrow me-2 text-primary"></i>What to Do Next</h5>
-                            <p style="color:var(--tx);font-size:0.95rem;line-height:1.8;margin:0;">{!! nl2br(e($suggestions ?: 'No next steps were made for this session.')) !!}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('shared.partials.report-overview', ['report' => $report, 'panelClass' => 'premium-panel', 'animationDelay' => '0.1s'])
 
     @include('desktop.partials.interview-coaching-summary', ['feedback' => $feedback, 'sessionRecord' => $sessionRecord])
 
@@ -229,13 +204,13 @@
         <div class="col-md-6 animate-fade-up" style="animation-delay: 0.2s;">
             <div class="premium-panel" style="background:rgba(16, 185, 129, 0.05) !important;border:1px solid rgba(16, 185, 129, 0.2) !important;padding:24px;height:100%">
                 <h5 style="color:#10b981;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-thumbs-up me-2"></i>Strengths</h5>
-                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($strengths ?: 'No strengths were generated for this session.')) !!}</p>
+                @include('shared.partials.report-bullet-list', ['items' => $strengthItems, 'icon' => 'fa-circle-check', 'color' => '#10b981'])
             </div>
         </div>
         <div class="col-md-6 animate-fade-up" style="animation-delay: 0.3s;">
             <div class="premium-panel" style="background:rgba(239, 68, 68, 0.05) !important;border:1px solid rgba(239, 68, 68, 0.2) !important;padding:24px;height:100%">
                 <h5 style="color:#ef4444;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-triangle-exclamation me-2"></i>Needs Work</h5>
-                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($weaknesses ?: 'No weak points were made for this session.')) !!}</p>
+                @include('shared.partials.report-bullet-list', ['items' => $weaknessItems, 'icon' => 'fa-arrow-trend-up', 'color' => '#ef4444'])
                 {{-- <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Add more real examples</li>
                     <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Practice steady speaking</li>
@@ -244,6 +219,8 @@
             </div>
         </div>
     </div>
+
+    @include('shared.partials.report-conciseness-check', ['report' => $report, 'panelClass' => 'premium-panel', 'animationDelay' => '0.35s'])
 
     <!-- Feature 4, 12, 13: Skills, Breakdown, and Comparison -->
     <div class="row g-4 mb-4">

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
@@ -658,8 +659,8 @@ class AIService
         return [
             'type' => 'json_schema',
             'json_schema' => [
-                'name' => 'interview_feedback_v5',
-                'description' => 'Question-linked, evidence-linked interview scores and per-answer coaching feedback.',
+                'name' => 'interview_feedback_v6',
+                'description' => 'Question-linked, evidence-linked interview scores and AI-generated coaching feedback.',
                 'strict' => true,
                 'schema' => [
                     'type' => 'object',
@@ -699,6 +700,8 @@ class AIService
                                         'items' => ['type' => 'string'],
                                     ],
                                     'ai_feedback' => ['type' => 'string'],
+                                    'better_sample_answer' => ['type' => 'string'],
+                                    'follow_up_question' => ['type' => 'string'],
                                 ]),
                                 'required' => array_merge(
                                     ['id'],
@@ -706,12 +709,23 @@ class AIService
                                     [
                                         'star_applicable', 'star_method_score', 'evidence_quotes',
                                         'question_focus', 'answer_alignment', 'missing_criteria', 'ai_feedback',
+                                        'better_sample_answer', 'follow_up_question',
                                     ]
                                 ),
                             ],
                         ],
+                        'session_feedback' => [
+                            'type' => 'object',
+                            'additionalProperties' => false,
+                            'properties' => [
+                                'strengths' => ['type' => 'string'],
+                                'weaknesses' => ['type' => 'string'],
+                                'improvement_suggestions' => ['type' => 'string'],
+                            ],
+                            'required' => ['strengths', 'weaknesses', 'improvement_suggestions'],
+                        ],
                     ],
-                    'required' => ['per_question_feedback'],
+                    'required' => ['per_question_feedback', 'session_feedback'],
                 ],
             ],
         ];
@@ -719,17 +733,14 @@ class AIService
 
     public static function generateFeedback($sessionData, $answersData, $provider)
     {
-        if (
-            $answersData === []
-            || self::externalAiDisabledForTests()
-        ) {
-            return self::normalizeFeedbackResponse([], $answersData, $sessionData);
+        if ($answersData === []) {
+            throw new \RuntimeException('No saved answers were available for AI feedback.');
         }
 
         $prompt = "You are an expert interview coach. Apply the score guide consistently and check only details in each candidate answer.\n";
         $prompt .= self::languageOutputInstruction(
             $sessionData['target_language'] ?? null,
-            'ai_feedback while preserving evidence_quotes, question_focus, and missing_criteria exactly as written in their source text'
+            'ai_feedback, better_sample_answer, follow_up_question, and session_feedback text while preserving evidence_quotes, question_focus, and missing_criteria exactly as written in their source text'
         )."\n";
         $contextText = strtolower(
             (string) ($sessionData['interview_focus'] ?? '').' '.
@@ -796,6 +807,7 @@ You MUST NOT invent information, assumptions, achievements, skills, experiences,
 
 PLAIN LANGUAGE REQUIREMENTS:
 Write user-facing text in short, simple sentences.
+Keep ai_feedback to 2-3 short sentences. Avoid repeated wording and do not restate the same advice twice.
 If the report is in English, use simple English words that students and job seekers can understand.
 If another target language is selected, use simple everyday words in that language.
 Avoid hard words or jargon such as "evidence-grounded", "calibrated", "rubric", "infer", "observable", "assessment", "professionalism", "relevance", and "criteria" in ai_feedback unless the question, answer, or score label already uses them.
@@ -812,6 +824,14 @@ Use the supplied question_intent, star_applicable, requires_personal_action, and
 Every feedback statement MUST be supported by evidence found in the candidate's exact answer.
 
 If the candidate did not mention something, explicitly state that it was missing instead of assuming it existed.
+
+AI-ONLY VISIBLE FEEDBACK REQUIREMENTS:
+You MUST return the visible coaching text for every answer. The app will not create local substitute feedback when your response is missing, generic, duplicated, or unsupported.
+For each item, return:
+
+* ai_feedback: 2-3 short sentences tied to the exact question and exact answer evidence.
+* better_sample_answer: 1-3 short first-person sentences that improve the answer using only facts already found in candidate_answer. Do not add invented achievements, employers, tools, numbers, or results. If the answer is skipped, use an empty string.
+* follow_up_question: one short interviewer question for the same answer that asks for a missing detail or clearer result.
 
 FORBIDDEN GENERIC FEEDBACK:
 Do NOT use generic comments such as:
@@ -1016,7 +1036,16 @@ Good:
 Bad:
 "You appear to have strong problem-solving skills."
 
-The application calculates the final weighted score, revisions, follow-up questions, and session summary itself. Do not return those fields.
+SESSION FEEDBACK REQUIREMENTS:
+
+Return session_feedback with strengths, weaknesses, and improvement_suggestions.
+Base session_feedback only on the candidate answers and the per_question_feedback you returned.
+Mention patterns from the actual answers without copying the same sentence repeatedly.
+Each field must be 1-2 short sentences.
+Do not include score numbers in session_feedback.
+If every answer was skipped or too short, say there was not enough answer detail to name a clear strength.
+
+The application calculates final weighted scores itself. Do not return extra fields outside the schema.
 
 OUTPUT SCHEMA:
 
@@ -1035,9 +1064,16 @@ OUTPUT SCHEMA:
 "question_focus": "exact full question text from this item",
 "answer_alignment": "directly_addressed",
 "missing_criteria": [],
-"ai_feedback": ""
+"ai_feedback": "",
+"better_sample_answer": "",
+"follow_up_question": ""
 }
-]
+],
+"session_feedback": {
+"strengths": "",
+"weaknesses": "",
+"improvement_suggestions": ""
+}
 }
 
 Return ONLY the JSON object.
@@ -1048,6 +1084,9 @@ EOT;
 
         $maxAttempts = max(1, min(2, (int) env('AI_FEEDBACK_ATTEMPTS', 1)));
         $providers = self::feedbackProviderPriority($provider);
+        if ($providers === []) {
+            throw new AiFeedbackProviderFailureException([]);
+        }
         $requestOptions = [
             'timeout_seconds' => max(5, min(30, (int) env('AI_FEEDBACK_TIMEOUT', 15))),
             'attempts' => max(1, min(2, (int) env('AI_FEEDBACK_HTTP_ATTEMPTS', 1))),
@@ -1056,25 +1095,17 @@ EOT;
         ];
         $deadlineSeconds = max(8, min(45, (int) env('AI_FEEDBACK_DEADLINE_SECONDS', 25)));
         $deadlineAt = microtime(true) + $deadlineSeconds;
-        $bestPartialItemsById = [];
-        $partialCommentaryFingerprints = [];
-        $partialTemplateFingerprints = [];
-        $answersById = [];
-        foreach ($answersData as $answer) {
-            $answerId = (string) ($answer['id'] ?? '');
-            if ($answerId !== '') {
-                $answersById[$answerId] = $answer;
-            }
-        }
+        $attemptedProviders = [];
+        $repairableProviderResponse = null;
+        $repairableProvider = null;
 
         foreach ($providers as $currentProvider) {
             for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
                 $remainingSeconds = $deadlineAt - microtime(true);
                 if ($remainingSeconds < 3) {
-                    Log::warning('AI feedback deadline reached; using local fallback for remaining feedback.', [
+                    Log::warning('AI feedback deadline reached before every answer received valid AI feedback.', [
                         'deadline_seconds' => $deadlineSeconds,
                         'providers_attempted' => $providers,
-                        'valid_provider_items_preserved' => count($bestPartialItemsById),
                     ]);
 
                     break 2;
@@ -1090,9 +1121,11 @@ EOT;
                 );
 
                 try {
-                    $response = $currentProvider === 'localmodel'
-                        ? app(LocalFeedbackModelService::class)->generateFeedback($sessionData, $answersData)
-                        : self::callStructuredProvider($currentProvider, $prompt, $currentRequestOptions);
+                    if (! in_array($currentProvider, $attemptedProviders, true)) {
+                        $attemptedProviders[] = $currentProvider;
+                    }
+
+                    $response = self::callStructuredProvider($currentProvider, $prompt, $currentRequestOptions);
 
                     if ($response === []) {
                         throw new \RuntimeException("Feedback provider {$currentProvider} returned an empty response.");
@@ -1100,39 +1133,17 @@ EOT;
 
                     $validationErrors = self::feedbackResponseValidationErrors($response, $answersData);
                     if ($validationErrors === []) {
-                        return self::normalizeFeedbackResponse($response, $answersData, $sessionData);
-                    }
-
-                    $partialItems = self::validFeedbackSubset($response, $answersData);
-                    foreach ($partialItems as $partialItem) {
-                        $partialId = (string) ($partialItem['id'] ?? '');
-                        $fingerprint = mb_strtolower(self::normalizeEvidenceText((string) ($partialItem['ai_feedback'] ?? '')));
-                        $templateFingerprint = isset($answersById[$partialId])
-                            ? self::feedbackTemplateFingerprint(
-                                (string) ($partialItem['ai_feedback'] ?? ''),
-                                $partialItem,
-                                $answersById[$partialId]
-                            )
-                            : '';
-                        if ($partialId === ''
-                            || isset($bestPartialItemsById[$partialId])
-                            || ($fingerprint !== '' && isset($partialCommentaryFingerprints[$fingerprint]))
-                            || ($templateFingerprint !== '' && isset($partialTemplateFingerprints[$templateFingerprint]))) {
-                            continue;
-                        }
-
-                        $bestPartialItemsById[$partialId] = $partialItem;
-                        if ($fingerprint !== '') {
-                            $partialCommentaryFingerprints[$fingerprint] = true;
-                        }
-                        if ($templateFingerprint !== '') {
-                            $partialTemplateFingerprints[$templateFingerprint] = true;
-                        }
+                        return self::normalizeFeedbackResponse($response, $answersData, $sessionData, true);
                     }
 
                     Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
                         'validation_errors' => array_slice($validationErrors, 0, 10),
                     ]);
+
+                    if ($repairableProviderResponse === null) {
+                        $repairableProviderResponse = $response;
+                        $repairableProvider = $currentProvider;
+                    }
                 } catch (\Throwable $e) {
                     Log::warning("AI Feedback Generation Error ({$currentProvider}, attempt {$attempt}): ".self::safeProviderErrorMessage($e));
                 }
@@ -1143,16 +1154,42 @@ EOT;
             }
         }
 
-        Log::warning('AI feedback providers were unavailable or incomplete; using local scoring from the saved answers.', [
+        if (is_array($repairableProviderResponse)) {
+            try {
+                Log::warning('AI feedback provider response was repaired with local evidence safeguards.', [
+                    'provider' => $repairableProvider,
+                    'providers_attempted' => $providers,
+                    'providers_reached' => $attemptedProviders,
+                ]);
+
+                return self::normalizeFeedbackResponse($repairableProviderResponse, $answersData, $sessionData, false);
+            } catch (\Throwable $repairError) {
+                Log::warning('Repairing provider feedback response failed; falling back to local report path.', [
+                    'provider' => $repairableProvider,
+                    'error_type' => $repairError::class,
+                    'message' => self::safeProviderErrorMessage($repairError),
+                ]);
+            }
+        }
+
+        Log::warning('AI feedback providers were unavailable or incomplete; report was not finalized.', [
             'providers_attempted' => $providers,
-            'valid_provider_items_preserved' => count($bestPartialItemsById),
+            'providers_reached' => $attemptedProviders,
         ]);
 
-        return self::normalizeFeedbackResponse(
-            $bestPartialItemsById !== [] ? ['per_question_feedback' => array_values($bestPartialItemsById)] : [],
-            $answersData,
-            $sessionData
-        );
+        throw new AiFeedbackProviderFailureException($providers, $attemptedProviders);
+    }
+
+    public static function generateLocalFeedback(array $sessionData, array $answersData): array
+    {
+        if ($answersData === []) {
+            throw new \RuntimeException('No saved answers were available for feedback.');
+        }
+
+        return self::normalizeFeedbackResponse([
+            'per_question_feedback' => [],
+            'session_feedback' => [],
+        ], $answersData, $sessionData, false);
     }
 
     public static function generateGame($topic, $provider = 'openai')
@@ -2352,25 +2389,24 @@ PROMPT;
             'AI_FEEDBACK_PROVIDER_PRIORITY',
             env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', self::DEFAULT_PROVIDER_PRIORITY)
         );
-
-        if (self::normalizeProviderName($provider) === 'local') {
-            return app(LocalFeedbackModelService::class)->available() ? ['localmodel'] : [];
+        $requestedProvider = self::normalizeProviderName($provider);
+        if (in_array($requestedProvider, ['local', 'localmodel'], true)) {
+            $requestedProvider = '';
         }
 
         $providers = array_merge(
-            [$provider],
+            [$requestedProvider],
             array_map('trim', explode(',', (string) $priorityString)),
-            ['localmodel'],
             self::activeProviderKeys()
         );
         $providers = array_values(array_filter(
             array_unique(array_filter(
                 array_map(fn ($name) => self::normalizeProviderName($name), $providers)
             )),
-            fn (string $name): bool => $name === 'localmodel' || self::providerIsSupported($name)
+            fn (string $name): bool => self::providerIsSupported($name)
         ));
         $providers = array_values(array_filter($providers, fn (string $name) => self::feedbackProviderCanRun($name)));
-        $maxProviders = max(1, min(count(self::activeProviderKeys()) + 1, (int) env('AI_FEEDBACK_MAX_PROVIDERS', 5)));
+        $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_FEEDBACK_MAX_PROVIDERS', 6)));
 
         return array_slice($providers, 0, $maxProviders);
     }
@@ -2502,11 +2538,11 @@ PROMPT;
 
     private static function feedbackProviderCanRun(string $provider): bool
     {
-        if ($provider === 'localmodel') {
-            return app(LocalFeedbackModelService::class)->available();
+        if (! self::providerIsSupported($provider)) {
+            return false;
         }
 
-        return self::providerHasCredentials($provider);
+        return self::providerHasCredentials($provider) || self::externalAiDisabledForTests();
     }
 
     private static function providerHasCredentials($provider): bool
@@ -2765,7 +2801,8 @@ PROMPT;
             $item = $itemsById[$id][0];
             if (self::feedbackResponseValidationErrors(
                 ['per_question_feedback' => [$item]],
-                [$answer]
+                [$answer],
+                false
             ) !== []) {
                 continue;
             }
@@ -2788,13 +2825,18 @@ PROMPT;
         return $valid;
     }
 
-    private static function feedbackResponseValidationErrors($response, array $answersData): array
+    private static function feedbackResponseValidationErrors($response, array $answersData, bool $requireSessionFeedback = true): array
     {
         if (! is_array($response) || ! isset($response['per_question_feedback']) || ! is_array($response['per_question_feedback'])) {
             return ['per_question_feedback must be an array.'];
         }
 
         $errors = [];
+        if ($requireSessionFeedback) {
+            $sessionFeedback = $response['session_feedback'] ?? null;
+            $errors = array_merge($errors, self::sessionFeedbackValidationErrors($sessionFeedback, $answersData));
+        }
+
         $expectedAnswers = [];
         foreach ($answersData as $answer) {
             $id = (string) ($answer['id'] ?? '');
@@ -2928,6 +2970,12 @@ PROMPT;
             )) {
                 $errors[] = "Feedback ID {$id} contains unsupported commentary.";
             }
+            if (! self::providerBetterSampleAnswerIsValid((string) ($item['better_sample_answer'] ?? ''), $answer)) {
+                $errors[] = "Feedback ID {$id} has an invalid better_sample_answer.";
+            }
+            if (! self::providerFollowUpQuestionIsValid((string) ($item['follow_up_question'] ?? ''), $answer)) {
+                $errors[] = "Feedback ID {$id} has an invalid follow_up_question.";
+            }
             if (! $isSkipped && $aiFeedback !== '') {
                 $fingerprint = mb_strtolower(self::normalizeEvidenceText($aiFeedback));
                 if (isset($commentaryOwners[$fingerprint]) && $commentaryOwners[$fingerprint] !== $id) {
@@ -2950,7 +2998,83 @@ PROMPT;
         return array_values(array_unique($errors));
     }
 
-    private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData): array
+    private static function sessionFeedbackValidationErrors(mixed $sessionFeedback, array $answersData): array
+    {
+        if (! is_array($sessionFeedback)) {
+            return ['session_feedback must be an object.'];
+        }
+
+        $errors = [];
+        $seen = [];
+        $answerText = self::normalizeEvidenceText(implode(' ', array_map(
+            fn (array $answer): string => self::candidateAnswerText($answer),
+            $answersData
+        )));
+
+        foreach (['strengths', 'weaknesses', 'improvement_suggestions'] as $field) {
+            if (! array_key_exists($field, $sessionFeedback) || ! is_string($sessionFeedback[$field])) {
+                $errors[] = "session_feedback.{$field} must be a string.";
+
+                continue;
+            }
+
+            $text = self::normalizeEvidenceText($sessionFeedback[$field]);
+            if ($text === '' || self::wordCount($text) < 4) {
+                $errors[] = "session_feedback.{$field} must contain a useful AI-written note.";
+            }
+            if (mb_strlen($text) > 700) {
+                $errors[] = "session_feedback.{$field} is too long.";
+            }
+            if (self::isGenericFeedback($text)) {
+                $errors[] = "session_feedback.{$field} is too generic.";
+            }
+            if (self::feedbackInfersForbiddenTrait($text)) {
+                $errors[] = "session_feedback.{$field} infers a personal trait from unsupported evidence.";
+            }
+            if ($answerText !== '' && self::feedbackHasUnsupportedNumbers($text, $answerText)) {
+                $errors[] = "session_feedback.{$field} contains unsupported numbers.";
+            }
+
+            $fingerprint = mb_strtolower(self::normalizeEvidenceText($text));
+            if ($fingerprint !== '' && isset($seen[$fingerprint])) {
+                $errors[] = "session_feedback.{$field} duplicates another session note.";
+            }
+            $seen[$fingerprint] = true;
+        }
+
+        return $errors;
+    }
+
+    private static function providerBetterSampleAnswerIsValid(string $text, array $answer): bool
+    {
+        $text = self::normalizeEvidenceText($text);
+        if (self::isSkippedAnswer($answer)) {
+            return $text === '';
+        }
+
+        $answerText = self::candidateAnswerText($answer);
+
+        return $text !== ''
+            && self::wordCount($text) >= 5
+            && mb_strlen($text) <= 900
+            && ! self::feedbackInfersForbiddenTrait($text)
+            && ! self::feedbackHasUnsupportedNumbers($text, $answerText);
+    }
+
+    private static function providerFollowUpQuestionIsValid(string $text, array $answer): bool
+    {
+        $text = self::normalizeEvidenceText($text);
+        $answerText = self::candidateAnswerText($answer);
+
+        return $text !== ''
+            && self::wordCount($text) >= 3
+            && mb_strlen($text) <= 300
+            && str_contains($text, '?')
+            && ! self::feedbackInfersForbiddenTrait($text)
+            && (self::isSkippedAnswer($answer) || ! self::feedbackHasUnsupportedNumbers($text, $answerText));
+    }
+
+    private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData, bool $requireAiGenerated = false): array
     {
         $feedbackById = [];
         $duplicatedTemplateIds = self::duplicatedFeedbackTemplateIds(
@@ -2966,12 +3090,29 @@ PROMPT;
         $normalizedItems = [];
         foreach ($answersData as $answer) {
             $id = (string) ($answer['id'] ?? '');
-            $normalizedItems[] = self::normalizeQuestionFeedback($feedbackById[$id] ?? [], $answer, $sessionData);
+            $normalizedItems[] = self::normalizeQuestionFeedback(
+                $feedbackById[$id] ?? [],
+                $answer,
+                $sessionData,
+                $requireAiGenerated
+            );
+        }
+
+        if ($requireAiGenerated) {
+            foreach ($normalizedItems as $item) {
+                if (($item['evaluation_source'] ?? null) !== 'ai_evidence_validated') {
+                    throw new \RuntimeException('AI feedback was incomplete after validation.');
+                }
+            }
         }
 
         return [
             'per_question_feedback' => $normalizedItems,
-            'session_feedback' => self::normalizeSessionFeedback($response['session_feedback'] ?? [], $normalizedItems),
+            'session_feedback' => self::normalizeSessionFeedback(
+                $response['session_feedback'] ?? [],
+                $normalizedItems,
+                $requireAiGenerated
+            ),
             'feedback_quality' => self::aggregateFeedbackQuality($normalizedItems),
         ];
     }
@@ -3132,7 +3273,7 @@ PROMPT;
         return trim($plain);
     }
 
-    private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData): array
+    private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData, bool $requireAiGenerated = false): array
     {
         $id = (int) ($answer['id'] ?? ($feedback['id'] ?? 0));
         $answerText = self::candidateAnswerText($answer);
@@ -3141,6 +3282,10 @@ PROMPT;
         $isTooShort = ! $isSkipped && self::isTooShortAnswer($answerText);
         $starApplicable = self::questionUsesStar($answer);
         $providerFeedback = trim((string) ($feedback['ai_feedback'] ?? ''));
+        $providerBetterAnswer = trim((string) ($feedback['better_sample_answer'] ?? ''));
+        $providerFollowUpQuestion = trim((string) ($feedback['follow_up_question'] ?? ''));
+        $providerBetterAnswerIsValid = self::providerBetterSampleAnswerIsValid($providerBetterAnswer, $answer);
+        $providerFollowUpQuestionIsValid = self::providerFollowUpQuestionIsValid($providerFollowUpQuestion, $answer);
         $evidenceQuotes = self::validatedEvidenceQuotes($feedback, $answer);
         $feedbackContext = self::feedbackQuestionContext($answer);
         $questionFocus = self::validatedQuestionFocus($feedback, $answer);
@@ -3172,9 +3317,12 @@ PROMPT;
             && self::providerRelevanceIsPlausible($feedback, $answer, $evidenceProfile)
             && self::missingCriteriaAreValid($feedback, $answer)
             && ! self::isGenericFeedback($providerFeedback)
-            && self::feedbackHasAnswerSpecificCommentary($providerFeedback, $feedback, $answer)
+            && ($isSkipped || $isTooShort || self::feedbackHasAnswerSpecificCommentary($providerFeedback, $feedback, $answer))
             && ! self::feedbackInfersForbiddenTrait($providerFeedback)
             && ($isSkipped || ! self::feedbackHasUnsupportedNumbers($providerFeedback, $answerText));
+        if ($requireAiGenerated && (! $hasProviderScores || ! $providerBetterAnswerIsValid || ! $providerFollowUpQuestionIsValid)) {
+            throw new \RuntimeException("AI feedback for answer {$id} did not pass evidence validation.");
+        }
 
         $scores = $hasProviderScores
             ? []
@@ -3259,9 +3407,9 @@ PROMPT;
 
         $aiFeedback = $providerFeedback;
         $questionExcerpt = self::excerpt($questionText !== '' ? $questionText : 'this interview question', 160);
-        if ($isSkipped) {
+        if ($isSkipped && ! $hasProviderScores) {
             $aiFeedback = 'The question "'.$questionExcerpt.'" was skipped, so there is no answer to check for that question. Skipping makes it hard for the interviewer to judge the skill or experience. Next attempt: answer the question first, then add one true detail.';
-        } elseif ($isTooShort) {
+        } elseif ($isTooShort && ! $hasProviderScores) {
             $required = 'The answer was too short to check your communication skills, knowledge, and interview readiness.';
             $shortEvidence = $evidenceQuotes[0] ?? self::excerpt($answerText, 220);
             $evidenceExplanation = $shortEvidence !== ''
@@ -3281,13 +3429,17 @@ PROMPT;
             }
         }
 
-        $betterAnswer = self::fallbackBetterAnswer($answerText, $questionText, $starApplicable);
-        $followUpQuestion = self::fallbackFeedbackFollowUp(
-            $evidenceProfile,
-            $starApplicable,
-            $questionText,
-            $hasProviderScores ? $providerMissingCriteria : []
-        );
+        $betterAnswer = $providerBetterAnswerIsValid
+            ? self::plainUserFeedbackText($providerBetterAnswer, [$questionText, $answerText])
+            : self::fallbackBetterAnswer($answerText, $questionText, $starApplicable);
+        $followUpQuestion = $providerFollowUpQuestionIsValid
+            ? self::plainUserFeedbackText($providerFollowUpQuestion, [$questionText, $answerText])
+            : self::fallbackFeedbackFollowUp(
+                $evidenceProfile,
+                $starApplicable,
+                $questionText,
+                $hasProviderScores ? $providerMissingCriteria : []
+            );
         if (! $isSkipped && $evidenceQuotes === []) {
             $fallbackQuote = trim((string) ($evidenceProfile['supporting_excerpt'] ?? ''));
             $evidenceQuotes = $fallbackQuote !== '' ? [$fallbackQuote] : [];
@@ -4592,7 +4744,7 @@ PROMPT;
         return array_values(array_unique($keywords));
     }
 
-    private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback): array
+    private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback, bool $requireAiGenerated = false): array
     {
         $clarityScore = self::averageQuestionMetric($questionFeedback, 'clarity_score');
         $relevanceScore = self::averageQuestionMetric($questionFeedback, 'relevance_score');
@@ -4610,14 +4762,42 @@ PROMPT;
         // from uncapped component averages can produce a session score higher
         // than every individual answer.
         $readinessScore = self::averageQuestionMetric($questionFeedback, 'score');
+        $providerStrengths = self::providerSessionFeedbackText($sessionFeedback['strengths'] ?? null);
+        $providerWeaknesses = self::providerSessionFeedbackText($sessionFeedback['weaknesses'] ?? null);
+        $providerSuggestions = self::providerSessionFeedbackText($sessionFeedback['improvement_suggestions'] ?? null);
+
+        if ($requireAiGenerated && (
+            $providerStrengths === null
+            || $providerWeaknesses === null
+            || $providerSuggestions === null
+        )) {
+            throw new \RuntimeException('AI session feedback is incomplete.');
+        }
 
         return [
             'overall_readiness_score' => $readinessScore,
             'star_method_score' => $starMethodScore,
-            'strengths' => self::sessionStrengthsFromEvidence($questionFeedback),
-            'weaknesses' => self::sessionWeaknessesFromEvidence($questionFeedback),
-            'improvement_suggestions' => self::sessionSuggestionsFromEvidence($questionFeedback),
+            'strengths' => $providerStrengths ?? self::sessionStrengthsFromEvidence($questionFeedback),
+            'weaknesses' => $providerWeaknesses ?? self::sessionWeaknessesFromEvidence($questionFeedback),
+            'improvement_suggestions' => $providerSuggestions ?? self::sessionSuggestionsFromEvidence($questionFeedback),
         ];
+    }
+
+    private static function providerSessionFeedbackText(mixed $text): ?string
+    {
+        if (! is_string($text)) {
+            return null;
+        }
+
+        $plain = self::plainUserFeedbackText($text);
+
+        return $plain !== ''
+            && self::wordCount($plain) >= 4
+            && mb_strlen($plain) <= 700
+            && ! self::isGenericFeedback($plain)
+            && ! self::feedbackInfersForbiddenTrait($plain)
+                ? $plain
+                : null;
     }
 
     private static function averageQuestionMetric(array $questionFeedback, string $field): int
@@ -4661,9 +4841,9 @@ PROMPT;
         $label = self::normalizeScore($best['score'] ?? 0) >= 70
             ? 'Best proof from your answer'
             : 'Most useful answer detail';
-        $quote = self::excerpt((string) $best['evidence_quotes'][0], 220);
+        $quote = self::excerpt((string) $best['evidence_quotes'][0], 150);
 
-        return $label.': "'.$quote.'". This helped show '.implode(', ', $qualities).'.';
+        return $label.': "'.$quote.'". Shows '.implode(', ', array_slice($qualities, 0, 3)).'.';
     }
 
     private static function sessionWeaknessesFromEvidence(array $questionFeedback): string
@@ -4694,10 +4874,10 @@ PROMPT;
         }
 
         if ($weaknesses === []) {
-            return 'No repeated gap was found. Next time, add true limits, tradeoffs, or results when they fit.';
+            return 'No repeated gap found. Add a true limit, tradeoff, or result when it fits.';
         }
 
-        return 'Seen in your answers: '.implode('; ', $weaknesses).'.';
+        return 'Top gaps: '.implode('; ', array_slice($weaknesses, 0, 3)).'.';
     }
 
     private static function sessionSuggestionsFromEvidence(array $questionFeedback): string
@@ -5092,11 +5272,7 @@ PROMPT;
     private static function cohereResponseFormat(?array $responseFormat = null): array
     {
         if (($responseFormat['type'] ?? null) === 'json_schema') {
-            $schema = $responseFormat['json_schema']['schema'] ?? null;
-
-            return is_array($schema)
-                ? ['type' => 'json_object', 'schema' => $schema]
-                : ['type' => 'json_object'];
+            return ['type' => 'json_object'];
         }
 
         return is_array($responseFormat) && $responseFormat !== []

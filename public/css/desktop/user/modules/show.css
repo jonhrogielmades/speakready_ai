@@ -577,3 +577,245 @@
             width: 100%;
         }
     }
+
+    /* Module detail hero readability repair. */
+    #module-detail-page {
+        --module-detail-hero-bg:
+            radial-gradient(circle at 94% 8%, rgba(14, 165, 233, 0.14), transparent 30%),
+            linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #eef7ff 100%);
+        --module-detail-hero-border: rgba(37, 99, 235, 0.16);
+        --module-detail-hero-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+        --module-detail-title: #0f172a;
+        --module-detail-copy: #334155;
+        --module-detail-panel-bg: rgba(255, 255, 255, 0.92);
+        --module-detail-panel-border: rgba(148, 163, 184, 0.26);
+        --module-detail-track-bg: rgba(148, 163, 184, 0.22);
+    }
+
+    :root:not(.lm) #module-detail-page,
+    html.dm #module-detail-page,
+    html[data-theme="dark"] #module-detail-page {
+        --module-detail-hero-bg:
+            radial-gradient(circle at 94% 8%, rgba(56, 189, 248, 0.13), transparent 30%),
+            linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.96) 58%, rgba(12, 25, 48, 0.96) 100%);
+        --module-detail-hero-border: rgba(125, 211, 252, 0.18);
+        --module-detail-hero-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+        --module-detail-title: #f8fafc;
+        --module-detail-copy: #cbd5e1;
+        --module-detail-panel-bg: rgba(15, 23, 42, 0.72);
+        --module-detail-panel-border: rgba(148, 163, 184, 0.22);
+        --module-detail-track-bg: rgba(148, 163, 184, 0.24);
+    }
+
+    html body.user-desktop-shell #dashboard #userAppContent #module-detail-page .mod-hero,
+    html body.user-mobile-shell #mob-content #userAppContent #module-detail-page .mod-hero {
+        background: var(--module-detail-hero-bg) !important;
+        border-color: var(--module-detail-hero-border) !important;
+        box-shadow: var(--module-detail-hero-shadow) !important;
+        color: var(--module-detail-title) !important;
+    }
+
+    html body.user-desktop-shell #dashboard #userAppContent #module-detail-page .mod-hero::before,
+    html body.user-mobile-shell #mob-content #userAppContent #module-detail-page .mod-hero::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    #module-detail-page .module-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    html body #module-detail-page .mod-hero .module-badge {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 6px;
+        min-height: 28px;
+        padding: 5px 10px !important;
+        border: 1px solid transparent !important;
+        border-radius: 999px !important;
+        font-size: 0.74rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1;
+        white-space: nowrap;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    html body #module-detail-page .mod-hero .module-badge i {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        font-size: 0.76rem;
+        line-height: 1;
+    }
+
+    html body #module-detail-page .mod-hero .module-badge-type {
+        background: rgba(239, 246, 255, 0.96) !important;
+        border-color: rgba(147, 197, 253, 0.72) !important;
+        color: #1d4ed8 !important;
+    }
+
+    html body #module-detail-page .mod-hero .module-badge-difficulty {
+        background: rgba(236, 253, 245, 0.96) !important;
+        border-color: rgba(167, 243, 208, 0.8) !important;
+        color: #047857 !important;
+    }
+
+    html body #module-detail-page .mod-hero .module-badge-views {
+        background: rgba(255, 251, 235, 0.96) !important;
+        border-color: rgba(253, 230, 138, 0.88) !important;
+        color: #b45309 !important;
+    }
+
+    :root:not(.lm) #module-detail-page .mod-hero .module-badge-type,
+    html.dm #module-detail-page .mod-hero .module-badge-type,
+    html[data-theme="dark"] #module-detail-page .mod-hero .module-badge-type {
+        background: rgba(37, 99, 235, 0.16) !important;
+        border-color: rgba(147, 197, 253, 0.34) !important;
+        color: #bfdbfe !important;
+    }
+
+    :root:not(.lm) #module-detail-page .mod-hero .module-badge-difficulty,
+    html.dm #module-detail-page .mod-hero .module-badge-difficulty,
+    html[data-theme="dark"] #module-detail-page .mod-hero .module-badge-difficulty {
+        background: rgba(16, 185, 129, 0.14) !important;
+        border-color: rgba(110, 231, 183, 0.32) !important;
+        color: #6ee7b7 !important;
+    }
+
+    :root:not(.lm) #module-detail-page .mod-hero .module-badge-views,
+    html.dm #module-detail-page .mod-hero .module-badge-views,
+    html[data-theme="dark"] #module-detail-page .mod-hero .module-badge-views {
+        background: rgba(245, 158, 11, 0.14) !important;
+        border-color: rgba(251, 191, 36, 0.34) !important;
+        color: #fbbf24 !important;
+    }
+
+    html body #module-detail-page .mod-hero .module-detail-title {
+        margin: 0 0 10px !important;
+        color: var(--module-detail-title) !important;
+        -webkit-text-fill-color: var(--module-detail-title) !important;
+        background: none !important;
+        font-family: "Poppins", sans-serif;
+        font-size: clamp(1.25rem, 2vw, 1.7rem);
+        font-weight: 800;
+        line-height: 1.2;
+        text-transform: none !important;
+        text-shadow: none !important;
+    }
+
+    html body #module-detail-page .mod-hero .module-detail-description {
+        max-width: 800px;
+        margin: 0;
+        color: var(--module-detail-copy) !important;
+        -webkit-text-fill-color: var(--module-detail-copy) !important;
+        font-size: 0.98rem;
+        line-height: 1.55;
+        text-shadow: none !important;
+    }
+
+    html body #module-detail-page .module-progress-panel {
+        background: var(--module-detail-panel-bg) !important;
+        border-color: var(--module-detail-panel-border) !important;
+        box-shadow: none !important;
+    }
+
+    #module-detail-page .module-progress-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--module-detail-title);
+        font-size: 0.9rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    #module-detail-page .module-progress-track {
+        background: var(--module-detail-track-bg) !important;
+    }
+
+    #module-detail-page .module-progress-track span {
+        background: linear-gradient(90deg, #06b6d4, #14b8a6) !important;
+    }
+
+    #module-detail-page .module-action-row:empty {
+        display: none;
+    }
+
+    html body #module-detail-page .module-progress-button {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 8px 13px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+        font-weight: 800 !important;
+        line-height: 1.1;
+        white-space: nowrap;
+        box-shadow: none !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    html body #module-detail-page .module-progress-button-start {
+        background: rgba(37, 99, 235, 0.1) !important;
+        border: 1px solid rgba(37, 99, 235, 0.24) !important;
+        color: #1d4ed8 !important;
+    }
+
+    html body #module-detail-page .module-progress-button-complete {
+        background: rgba(16, 185, 129, 0.13) !important;
+        border: 1px solid rgba(16, 185, 129, 0.28) !important;
+        color: #059669 !important;
+    }
+
+    :root:not(.lm) #module-detail-page .module-progress-button-start,
+    html.dm #module-detail-page .module-progress-button-start,
+    html[data-theme="dark"] #module-detail-page .module-progress-button-start {
+        background: rgba(59, 130, 246, 0.16) !important;
+        border-color: rgba(147, 197, 253, 0.3) !important;
+        color: #bfdbfe !important;
+    }
+
+    :root:not(.lm) #module-detail-page .module-progress-button-complete,
+    html.dm #module-detail-page .module-progress-button-complete,
+    html[data-theme="dark"] #module-detail-page .module-progress-button-complete {
+        background: rgba(16, 185, 129, 0.15) !important;
+        border-color: rgba(110, 231, 183, 0.32) !important;
+        color: #6ee7b7 !important;
+    }
+
+    @media (max-width: 767px) {
+        #module-detail-page .module-meta-row {
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        html body #module-detail-page .mod-hero .module-badge {
+            min-height: 24px;
+            padding: 4px 8px !important;
+            font-size: 0.62rem !important;
+        }
+
+        html body #module-detail-page .mod-hero .module-detail-title {
+            margin-bottom: 7px !important;
+            font-size: 1rem !important;
+            line-height: 1.18 !important;
+        }
+
+        html body #module-detail-page .mod-hero .module-detail-description {
+            font-size: 0.72rem !important;
+            line-height: 1.38 !important;
+        }
+
+        #module-detail-page .module-progress-summary {
+            font-size: 0.72rem !important;
+        }
+
+        html body #module-detail-page .module-progress-button {
+            min-height: 36px;
+            font-size: 0.7rem !important;
+        }
+    }

@@ -349,6 +349,66 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ]);
     }
 
+    public function test_detailed_feedback_report_uses_concise_non_repeated_sections(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('BPO / Customer Support');
+        $session = $this->completedSessionFor($user, $category, 74, now(), [
+            'target_position' => 'Customer Support Representative',
+        ]);
+
+        Score::where('interview_session_id', $session->id)->update([
+            'score_version' => \App\Services\TrustworthyAssessmentService::SCORE_VERSION,
+            'rubric' => ['version' => \App\Services\TrustworthyAssessmentService::SCORE_VERSION],
+            'clarity_score' => 45,
+            'relevance_score' => 72,
+            'grammar_score' => 88,
+            'professionalism_score' => 80,
+            'overall_readiness_score' => 74,
+        ]);
+
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'Strong empathy with customers and polite tone. Clear greeting.',
+            'weaknesses' => 'Answers need clearer structure and more direct opening lines. Repeated words made the response longer.',
+            'improvement_suggestions' => 'Use STAR structure and add one measurable result.',
+            'coaching_summary' => [
+                'version' => \App\Services\EvidenceBasedCoachingService::VERSION,
+                'coverage' => ['answers' => 'complete'],
+            ],
+        ]);
+
+        $question = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Explain a time you helped a customer.',
+            'difficulty' => 'medium',
+            'type' => 'Situational',
+            'status' => 'active',
+        ]);
+
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I improved improved improved the customer process and explained the action clearly.',
+            'ai_feedback' => 'The answer gives an action but needs a result.',
+            'better_sample_answer' => 'I improved the process, explained the action, and confirmed the customer result.',
+            'score' => 68,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Overall Summary')
+            ->assertSee('Key Focus')
+            ->assertSee('Conciseness Check')
+            ->assertSee('Repeated Words')
+            ->assertSee('improved x3')
+            ->assertSee('Strong empathy with customers')
+            ->assertSee('Use STAR structure')
+            ->assertDontSee('Strengths: Strong empathy with customers and polite tone.', false)
+            ->assertDontSee('Needs work: Answers need clearer structure and more direct opening lines.', false);
+    }
+
     public function test_feedback_center_guides_first_time_users_without_history(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -373,7 +433,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.feedback'))
             ->assertOk()
-            ->assertSee('css/desktop/user/feedback.css?v=1', false)
+            ->assertSee('css/desktop/user/feedback.css?v=6', false)
             ->assertSee('data-page-style="user-feedback"', false);
 
         foreach (['desktop', 'mobile'] as $device) {

@@ -2,7 +2,7 @@
 @section('title', 'Module Details')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/show.css?v=1') }}" data-page-style="user-modules-show">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/modules/show.css?v=2') }}" data-page-style="user-modules-show">
 @endpush
 
 @section('content')
@@ -17,22 +17,22 @@
     <div class="mod-hero mb-4">
         <i class="fa-solid fa-book-open-reader mod-hero-bg"></i>
         <div style="position:relative; z-index:2;">
-            <div class="d-flex gap-2 mb-3">
-                <span class="badge" style="background:rgba(59,130,246,0.15); color:var(--pur); font-weight:700;">{{ ucfirst($module->type) }}</span>
+            <div class="module-meta-row">
+                <span class="badge module-badge module-badge-type">{{ ucfirst($module->type) }}</span>
                 @if($module->difficulty)
-                    <span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981; font-weight:700;">{{ ucfirst($module->difficulty) }}</span>
+                    <span class="badge module-badge module-badge-difficulty">{{ ucfirst($module->difficulty) }}</span>
                 @endif
-                <span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; font-weight:700;"><i class="fa-solid fa-eye me-1"></i>{{ $module->views }} views</span>
+                <span class="badge module-badge module-badge-views"><i class="fa-solid fa-eye"></i>{{ $module->views }} views</span>
             </div>
-            <h2 style="font-weight:800; color:var(--tx); margin-bottom:15px; font-family:'Poppins', sans-serif;">{{ $module->title }}</h2>
-            <p style="color:var(--tx2); font-size:1.05rem; max-width:800px; line-height:1.6;">{{ $module->description }}</p>
+            <h2 class="module-detail-title">{{ $module->title }}</h2>
+            <p class="module-detail-description">{{ $module->description }}</p>
             @php
                 $currentProgress = max(0, min(100, (int) ($moduleProgress->progress_percentage ?? 0)));
                 $progressLabel = $currentProgress >= 100 ? 'Completed' : ($currentProgress > 0 ? 'In progress' : 'Not started');
             @endphp
             <div class="module-progress-panel">
                 <div>
-                    <div class="d-flex justify-content-between gap-3" style="font-size:0.9rem;font-weight:800;color:var(--tx);">
+                    <div class="module-progress-summary">
                         <span>{{ $progressLabel }}</span>
                         <span>{{ $currentProgress }}%</span>
                     </div>
@@ -43,7 +43,7 @@
                         <form action="{{ route('user.modules.progress', $module->id) }}" method="POST">
                             @csrf
                             <input type="hidden" name="progress_percentage" value="25">
-                            <button type="submit" class="btn btn-sm" style="background:rgba(59,130,246,0.12);color:var(--pur);border:1px solid rgba(59,130,246,0.22);font-weight:800;border-radius:10px;">
+                            <button type="submit" class="btn btn-sm module-progress-button module-progress-button-start">
                                 <i class="fa-solid fa-play me-1"></i> Mark Started
                             </button>
                         </form>
@@ -52,7 +52,7 @@
                         <form action="{{ route('user.modules.progress', $module->id) }}" method="POST">
                             @csrf
                             <input type="hidden" name="progress_percentage" value="100">
-                            <button type="submit" class="btn btn-sm" style="background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.25);font-weight:800;border-radius:10px;">
+                            <button type="submit" class="btn btn-sm module-progress-button module-progress-button-complete">
                                 <i class="fa-solid fa-circle-check me-1"></i> Mark Completed
                             </button>
                         </form>

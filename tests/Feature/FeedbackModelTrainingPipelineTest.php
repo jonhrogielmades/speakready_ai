@@ -93,7 +93,7 @@ class FeedbackModelTrainingPipelineTest extends TestCase
         $this->assertSame(100, data_get($row, 'output.star_method_score'));
     }
 
-    public function test_trained_local_model_can_be_first_feedback_provider(): void
+    public function test_trained_local_model_is_not_used_for_ai_only_feedback_provider(): void
     {
         foreach ([
             'AI_FEEDBACK_PROVIDER_PRIORITY' => 'localmodel,openai',
@@ -127,7 +127,10 @@ class FeedbackModelTrainingPipelineTest extends TestCase
         $method = new \ReflectionMethod(AIService::class, 'feedbackProviderPriority');
         $method->setAccessible(true);
 
-        $this->assertSame(['localmodel'], $method->invoke(null, 'openai'));
+        $providers = $method->invoke(null, 'openai');
+
+        $this->assertSame('openai', $providers[0] ?? null);
+        $this->assertNotContains('localmodel', $providers);
     }
 
     public function test_auto_train_command_exports_and_detects_pending_training(): void

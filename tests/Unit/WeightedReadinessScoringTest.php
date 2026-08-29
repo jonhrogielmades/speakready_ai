@@ -278,7 +278,13 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertContains('answer_alignment', $item['required']);
         $this->assertContains('missing_criteria', $item['required']);
         $this->assertContains('ai_feedback', $item['required']);
-        $this->assertArrayNotHasKey('session_feedback', $schema['properties']);
+        $this->assertContains('better_sample_answer', $item['required']);
+        $this->assertContains('follow_up_question', $item['required']);
+        $this->assertArrayHasKey('session_feedback', $schema['properties']);
+        $this->assertContains('session_feedback', $schema['required']);
+        $this->assertContains('strengths', $schema['properties']['session_feedback']['required']);
+        $this->assertContains('weaknesses', $schema['properties']['session_feedback']['required']);
+        $this->assertContains('improvement_suggestions', $schema['properties']['session_feedback']['required']);
     }
 
     public function test_openai_base_urls_are_normalized_to_the_chat_completions_endpoint(): void
@@ -322,6 +328,7 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$item],
+            'session_feedback' => $this->sessionFeedback(80, 0),
         ], $answers]));
     }
 
@@ -563,6 +570,7 @@ class WeightedReadinessScoringTest extends TestCase
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$feedback],
+            'session_feedback' => $this->sessionFeedback(88, 0),
         ], [$answer]]));
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
         $this->assertFalse($normalized['star_applicable']);
