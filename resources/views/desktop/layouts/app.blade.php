@@ -138,6 +138,11 @@
                <i class="fa-solid fa-bars"></i>
                </button>
                <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
+                  <span class="db-top-upgrade-card is-locked" title="Locked pro features" aria-disabled="true">
+                     <span class="db-top-upgrade-icon"><i class="fa-solid fa-lock"></i></span>
+                     <span class="db-top-upgrade-copy">Pro Locked</span>
+                     <span class="db-top-upgrade-action">Upgrade <i class="fa-solid fa-lock"></i></span>
+                  </span>
                   <button class="boc d-flex align-items-center justify-content-center" id="dbFullscreenBtn" type="button" aria-label="Enter fullscreen" title="Enter fullscreen" data-user-fullscreen-toggle>
                      <i class="fa-solid fa-expand" id="dbFullscreenIcon" aria-hidden="true"></i>
                   </button>
@@ -157,23 +162,23 @@
                      <span id="notifBadge" style="position:absolute;top:5px;right:5px;width:9px;height:9px;border-radius:50%;background:#f87171;border:2px solid var(--bg);display:none;"></span>
                      
                      <!-- Notification Dropdown -->
-                     <div class="db-dropdown" id="notifDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="notifDropdownTitle" style="right:0;width:360px;max-width:calc(100vw - 30px);">
-                        <div class="dd-header d-flex flex-wrap align-items-center justify-content-between gap-2" style="border-bottom:1px solid var(--bd);padding-bottom:12px;margin-bottom:12px;">
-                           <div class="dd-header-title d-flex align-items-center mb-0" id="notifDropdownTitle">
+                     <div class="db-dropdown user-notif-dropdown mob-notif-dropdown" id="notifDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="notifDropdownTitle" style="right:0;">
+                        <div class="dd-header user-notif-header mob-notif-header">
+                           <div class="dd-header-title user-notif-title mob-notif-title" id="notifDropdownTitle">
                               <i class="fa-regular fa-bell me-2" style="color:var(--pur)"></i>Notifications 
-                              <span id="unreadCountBadge" style="background:rgba(248,113,113,.15);color:#f87171;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;display:none;">0 new</span>
+                              <span class="mob-notif-count" id="unreadCountBadge" style="display:none;">0 new</span>
                            </div>
-                           <div class="d-flex align-items-center gap-1 flex-wrap">
-                              <button type="button" class="dd-close" onclick="markAllNotificationsRead()" title="Mark all read" style="width:auto;padding:4px 8px;font-size:.7rem;color:var(--pur);border-color:rgba(59,130,246,.3)"><i class="fa-solid fa-check me-1"></i><span class="d-none d-sm-inline">Read All</span></button>
-                              <button type="button" class="dd-close text-danger" onclick="clearAllNotificationsDD()" title="Clear all" style="width:auto;padding:4px 8px;font-size:.7rem;border-color:rgba(248,113,113,.3)"><i class="fa-solid fa-trash me-1"></i><span class="d-none d-sm-inline">Clear All</span></button>
-                              <button type="button" class="dd-close" onclick="toggleNotif(event)" aria-label="Close notifications" style="padding:4px 8px;width:auto;"><i class="fa-solid fa-xmark"></i></button>
+                           <div class="user-notif-actions mob-notif-actions">
+                              <button type="button" class="user-notif-action mob-notif-action" onclick="markAllNotificationsRead()" title="Mark all read"><i class="fa-solid fa-check"></i><span>Read</span></button>
+                              <button type="button" class="user-notif-action mob-notif-action danger" onclick="clearAllNotificationsDD()" title="Clear all"><i class="fa-solid fa-trash"></i><span>Clear</span></button>
+                              <button type="button" class="user-notif-action user-notif-action-icon mob-notif-action" onclick="toggleNotif(event)" aria-label="Close notifications"><i class="fa-solid fa-xmark"></i></button>
                            </div>
                         </div>
-                        <div class="dd-body" id="notifListContainer" style="max-height: 350px; overflow-y: auto;">
+                        <div class="dd-body user-notif-list mob-notif-list" id="notifListContainer">
                            <div class="text-center py-4" style="color:var(--tx3);font-size:0.85rem;" id="noNotifMsg">Loading notifications...</div>
                         </div>
-                        <div style="padding:12px 14px;border-top:1px solid var(--bd);text-align:center">
-                           <a href="{{ route('user.notifications') }}" class="boc btn w-100 py-2" style="font-size:.82rem;border-radius:10px;text-decoration:none;"><i class="fa-solid fa-list me-1"></i>View All Notifications</a>
+                        <div class="user-notif-footer mob-notif-footer">
+                           <a href="{{ route('user.notifications') }}" class="user-notif-view-all mob-notif-view-all"><i class="fa-solid fa-list me-1"></i>View All Notifications</a>
                         </div>
                      </div>
                   </div>
@@ -216,11 +221,6 @@
                                  @endforeach
                               </select>
                               <small style="display:block;color:var(--tx3);font-size:.68rem;margin-top:6px;line-height:1.35;">AI translates the app and interview experience.</small>
-                           </form>
-                           <div style="border-top:1px solid var(--bd);margin:8px 0"></div>
-                           <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                              @csrf
-                              <button type="submit" class="profile-menu-item danger" style="width:100%;text-align:left;"><i class="fa-solid fa-right-from-bracket me-2" style="color:#f87171"></i>Log Out</button>
                            </form>
                         </div>
                      </div>
@@ -752,6 +752,52 @@
             ) {
                color: var(--tx) !important;
                -webkit-text-fill-color: var(--tx) !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #sec-interview-setup .setup-hero :is(.setup-hero-title, .setup-hero-title.text-gradient-primary) {
+               background: none !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #sec-interview-setup .setup-hero :is(.setup-hero-subtitle, .setup-hero-icon, .setup-hero-icon svg) {
+               color: rgba(248, 251, 255, 0.92) !important;
+               -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #sec-interview-setup .setup-hero .setup-hero-icon {
+               background: rgba(255, 255, 255, 0.94) !important;
+               border-color: rgba(255, 255, 255, 0.62) !important;
+               color: #1d4ed8 !important;
+               -webkit-text-fill-color: #1d4ed8 !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #sec-interview-setup .setup-hero .setup-hero-icon svg {
+               color: #1d4ed8 !important;
+               -webkit-text-fill-color: #1d4ed8 !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #interview-modules-page .modules-page-hero :is(.sr-page-hero-title, .sr-page-hero-title.text-gradient-primary) {
+               background: none !important;
+               color: #ffffff !important;
+               -webkit-text-fill-color: #ffffff !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #interview-modules-page .modules-page-hero .sr-page-hero-subtitle {
+               color: rgba(248, 251, 255, 0.92) !important;
+               -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #interview-modules-page .modules-page-hero .modules-page-hero-icon {
+               background: rgba(255, 255, 255, 0.94) !important;
+               border-color: rgba(255, 255, 255, 0.62) !important;
+               color: #1d4ed8 !important;
+               -webkit-text-fill-color: #1d4ed8 !important;
+            }
+
+            body.user-desktop-shell #dashboard .db-content #interview-modules-page .modules-page-hero .modules-page-hero-icon svg {
+               color: #1d4ed8 !important;
+               -webkit-text-fill-color: #1d4ed8 !important;
             }
 
          }

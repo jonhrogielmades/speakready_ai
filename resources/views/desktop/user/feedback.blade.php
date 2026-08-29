@@ -2,7 +2,7 @@
 @section('title', 'Philippines Interview Feedback')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=1') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=6') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -11,16 +11,53 @@
 @endphp
 
 <div class="db-section active animate-fade-up feedback-shell">
-    <div class="feedback-hero" id="feedbackModulesLikeHero">
+    <style>
+        @media (min-width: 992px) {
+            html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero {
+                background: linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+            }
+
+            html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero,
+            html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero,
+            body.dm.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero {
+                background: linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+            }
+
+            html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-title {
+                background: none !important;
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+            }
+
+            html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-subtitle {
+                color: rgba(248, 251, 255, 0.92) !important;
+                -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+            }
+
+            html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-chat-mark {
+                background: rgba(255, 255, 255, 0.94) !important;
+                border-color: rgba(255, 255, 255, 0.62) !important;
+                color: #1d4ed8 !important;
+                -webkit-text-fill-color: #1d4ed8 !important;
+            }
+
+            html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-chat-mark :is(path, circle) {
+                color: #1d4ed8 !important;
+                -webkit-text-fill-color: #1d4ed8 !important;
+                stroke: currentColor !important;
+            }
+        }
+    </style>
+    <div class="feedback-hero" id="feedbackModulesLikeHero" style="background:linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;">
         <div class="feedback-hero-copy">
-            <svg class="feedback-chat-mark" viewBox="0 0 64 64" aria-hidden="true">
+            <svg class="feedback-chat-mark" viewBox="0 0 64 64" aria-hidden="true" style="background:rgba(255,255,255,.94) !important;border-color:rgba(255,255,255,.62) !important;color:#1d4ed8 !important;-webkit-text-fill-color:#1d4ed8 !important;">
                 <path d="M13 46.5 8 56l12.6-3.8c3.4 1.6 7.3 2.4 11.4 2.4 14.4 0 26-9.8 26-22S46.4 10.5 32 10.5 6 20.3 6 32.4c0 5.5 2.4 10.5 7 14.1Z" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M20 25h24M20 35h16" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/>
                 <circle cx="45" cy="42" r="4.5" fill="currentColor" opacity=".72"/>
             </svg>
             <div>
-                <h4 class="feedback-title">Feedback Center</h4>
-                <p class="feedback-subtitle">Review scores and AI feedback from Philippines interview practice.</p>
+                <h4 class="feedback-title" style="background:none !important;color:#ffffff !important;-webkit-text-fill-color:#ffffff !important;">Feedback Center</h4>
+                <p class="feedback-subtitle" style="color:rgba(248,251,255,.92) !important;-webkit-text-fill-color:rgba(248,251,255,.92) !important;">Review scores and AI feedback from Philippines interview practice.</p>
             </div>
         </div>
         <svg class="feedback-hero-art" viewBox="0 0 270 190" aria-hidden="true">

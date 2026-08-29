@@ -1909,3 +1909,42 @@
             transform: translate3d(0, -50%, 0) !important;
         }
     }
+
+/* Final desktop notifications hero background and contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #notifications-page .notif-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #notifications-page .notif-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #notifications-page .notif-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) #notifications-page .notif-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notif-hero .notif-hero-title {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notif-hero .notif-hero-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notif-hero .notif-hero-icon {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #notifications-page .notif-hero .notif-hero-icon :is(i, svg, svg *) {
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        stroke: currentColor !important;
+    }
+}

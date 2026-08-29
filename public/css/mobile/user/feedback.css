@@ -85,8 +85,45 @@
         .feedback-hero-art,
         .feedback-hero-art :is(circle, rect, path) {
             animation: none !important;
-        }
     }
+}
+
+/* Final Feedback search input clipping fix */
+html body .feedback-shell #feedback-filters .feedback-search-wrap {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 10px 0 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--tx, #0f172a) !important;
+    box-shadow: none !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
+    color: var(--tx3, #64748b) !important;
+    opacity: 1 !important;
+}
     .premium-panel {
         background: rgba(255, 255, 255, 0.92);
         border: 1px solid rgba(203, 213, 225, 0.74);
@@ -2980,3 +3017,226 @@
             }
         }
     }
+
+/* Final mobile Feedback search input clipping fix */
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 10px 0 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--feedback-mobile-title, var(--tx, #0f172a)) !important;
+    box-shadow: none !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
+    color: var(--feedback-mobile-muted, var(--tx3, #64748b)) !important;
+    opacity: 1 !important;
+}
+
+/* Final Feedback History theme visibility */
+#mob-content .feedback-shell,
+html body .feedback-shell {
+    --feedback-history-panel-bg: rgba(255, 255, 255, 0.97);
+    --feedback-history-panel-border: rgba(191, 219, 254, 0.86);
+    --feedback-history-title: #0f172a;
+    --feedback-history-text: #334155;
+    --feedback-history-muted: #64748b;
+    --feedback-history-field-bg: #f8fafc;
+    --feedback-history-field-border: #cbd5e1;
+    --feedback-history-row-bg: #f8fafc;
+    --feedback-history-row-border: #dbe4f0;
+    --feedback-history-danger: #ef233c;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell,
+:root:not(.lm) body #mob-content .feedback-shell,
+body.dm #mob-content .feedback-shell,
+.dm #mob-content .feedback-shell,
+html[data-theme="dark"] body .feedback-shell,
+:root:not(.lm) body .feedback-shell,
+body.dm .feedback-shell,
+.dm .feedback-shell {
+    --feedback-history-panel-bg: rgba(15, 23, 42, 0.96);
+    --feedback-history-panel-border: rgba(148, 163, 184, 0.32);
+    --feedback-history-title: #f8fafc;
+    --feedback-history-text: #e2e8f0;
+    --feedback-history-muted: #cbd5e1;
+    --feedback-history-field-bg: rgba(30, 41, 59, 0.92);
+    --feedback-history-field-border: rgba(148, 163, 184, 0.38);
+    --feedback-history-row-bg: rgba(15, 23, 42, 0.88);
+    --feedback-history-row-border: rgba(148, 163, 184, 0.28);
+    --feedback-history-danger: #fb7185;
+}
+
+#mob-content .feedback-shell > .premium-panel,
+html body .feedback-shell > .premium-panel {
+    background: var(--feedback-history-panel-bg) !important;
+    border-color: var(--feedback-history-panel-border) !important;
+    color: var(--feedback-history-text) !important;
+}
+
+#mob-content .feedback-shell .feedback-history-title,
+html body .feedback-shell .feedback-history-title {
+    background: none !important;
+    color: var(--feedback-history-title) !important;
+    -webkit-text-fill-color: var(--feedback-history-title) !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .db-filter-input,
+#mob-content .feedback-shell #feedback-filters .form-select,
+#mob-content .feedback-shell #feedback-filters .btn,
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap,
+html body .feedback-shell #feedback-filters .db-filter-input,
+html body .feedback-shell #feedback-filters .form-select,
+html body .feedback-shell #feedback-filters .btn,
+html body .feedback-shell #feedback-filters .feedback-search-wrap {
+    background: var(--feedback-history-field-bg) !important;
+    border-color: var(--feedback-history-field-border) !important;
+    color: var(--feedback-history-text) !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .form-control,
+html body .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+    color: var(--feedback-history-text) !important;
+    -webkit-text-fill-color: var(--feedback-history-text) !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+#mob-content .feedback-shell #feedback-filters .form-select,
+#mob-content .feedback-shell #feedback-filters .btn-outline-secondary,
+html body .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+html body .feedback-shell #feedback-filters .form-select,
+html body .feedback-shell #feedback-filters .btn-outline-secondary {
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .form-select option,
+html body .feedback-shell #feedback-filters .form-select option {
+    background: var(--feedback-history-panel-bg) !important;
+    color: var(--feedback-history-title) !important;
+}
+
+#mob-content .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder,
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+    opacity: 1 !important;
+}
+
+#mob-content .feedback-shell .feedback-table-wrap,
+#mob-content .feedback-shell #feedbackTable,
+html body .feedback-shell .feedback-table-wrap,
+html body .feedback-shell #feedbackTable {
+    background: transparent !important;
+    color: var(--feedback-history-text) !important;
+    --bs-table-color: var(--feedback-history-text);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--feedback-history-row-border);
+}
+
+#mob-content .feedback-shell #feedbackTable thead th,
+html body .feedback-shell #feedbackTable thead th {
+    background: transparent !important;
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+    border-color: var(--feedback-history-row-border) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row),
+html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+    background: var(--feedback-history-row-bg) !important;
+    border-color: var(--feedback-history-row-border) !important;
+    color: var(--feedback-history-text) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable tbody td,
+#mob-content .feedback-shell #feedbackTable tbody td.fw-bold,
+#mob-content .feedback-shell #feedbackTable tbody td strong,
+#mob-content .feedback-shell .feedback-mobile-history-stat,
+#mob-content .feedback-shell .feedback-mobile-history-stat strong,
+html body .feedback-shell #feedbackTable tbody td,
+html body .feedback-shell #feedbackTable tbody td.fw-bold,
+html body .feedback-shell #feedbackTable tbody td strong {
+    background: transparent !important;
+    color: var(--feedback-history-text) !important;
+    -webkit-text-fill-color: var(--feedback-history-text) !important;
+    border-color: var(--feedback-history-row-border) !important;
+}
+
+#mob-content .feedback-shell .feedback-mobile-history-stat > span:first-child {
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable .badge,
+html body .feedback-shell #feedbackTable .badge {
+    color: #ef233c !important;
+    -webkit-text-fill-color: #ef233c !important;
+    background: rgba(255, 214, 220, 0.95) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .badge,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .badge,
+body.dm #mob-content .feedback-shell #feedbackTable .badge,
+.dm #mob-content .feedback-shell #feedbackTable .badge,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .badge,
+:root:not(.lm) body .feedback-shell #feedbackTable .badge,
+body.dm .feedback-shell #feedbackTable .badge,
+.dm .feedback-shell #feedbackTable .badge {
+    color: #fecdd3 !important;
+    -webkit-text-fill-color: #fecdd3 !important;
+    background: rgba(127, 29, 29, 0.62) !important;
+}
+
+#mob-content .feedback-shell .feedback-history-actions .btn-primary,
+html body .feedback-shell .feedback-history-actions .btn-primary {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+#mob-content .feedback-shell .feedback-history-actions .btn-outline-danger,
+#mob-content .feedback-shell #feedback-filters .feedback-clear-form .btn,
+#mob-content .feedback-shell #feedback-filters .btn-outline-danger,
+html body .feedback-shell .feedback-history-actions .btn-outline-danger,
+html body .feedback-shell #feedback-filters .feedback-clear-form .btn,
+html body .feedback-shell #feedback-filters .btn-outline-danger {
+    background: rgba(239, 35, 60, 0.08) !important;
+    border-color: var(--feedback-history-danger) !important;
+    color: var(--feedback-history-danger) !important;
+    -webkit-text-fill-color: var(--feedback-history-danger) !important;
+}
+
+#mob-content .feedback-shell .feedback-history-actions .btn i,
+#mob-content .feedback-shell #feedback-filters .btn i,
+html body .feedback-shell .feedback-history-actions .btn i,
+html body .feedback-shell #feedback-filters .btn i {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+}

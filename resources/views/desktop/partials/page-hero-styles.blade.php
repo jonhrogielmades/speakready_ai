@@ -173,4 +173,61 @@
             70% { transform: translate3d(-2px, calc(-50% - 1px), 0) rotate(-0.75deg) scale(1.005); }
         }
     }
+
+    @media (min-width: 992px) {
+        body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero {
+            background: linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+        }
+
+        html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero,
+        html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero,
+        body.dm.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero {
+            background: linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+        }
+
+        body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero :is(h1, h2, h3, h4, .sr-page-hero-title, .text-gradient-primary) {
+            background: none !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero :is(p, .sr-page-hero-subtitle) {
+            color: rgba(248, 251, 255, 0.92) !important;
+            -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+        }
+
+        body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero :is(
+            .reports-hero-icon,
+            .account-hero-icon,
+            .modules-page-hero-icon,
+            .modules-hero-icon,
+            .vr-hero-icon,
+            .mission-hero-icon,
+            .learning-hero-icon,
+            .coach-hero-icon,
+            .skill-tree-hero-icon
+        ) {
+            background: rgba(255, 255, 255, 0.94) !important;
+            border-color: rgba(255, 255, 255, 0.62) !important;
+            color: #1d4ed8 !important;
+            -webkit-text-fill-color: #1d4ed8 !important;
+        }
+
+        body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero :is(
+            .reports-hero-icon,
+            .account-hero-icon,
+            .modules-page-hero-icon,
+            .modules-hero-icon,
+            .vr-hero-icon,
+            .mission-hero-icon,
+            .learning-hero-icon,
+            .coach-hero-icon,
+            .skill-tree-hero-icon
+        ) :is(i, svg, svg *),
+        body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .sr-page-hero .sr-page-hero-title :is(svg, svg *) {
+            color: currentColor !important;
+            -webkit-text-fill-color: currentColor !important;
+            stroke: currentColor !important;
+        }
+    }
 </style>

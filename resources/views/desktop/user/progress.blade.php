@@ -2,7 +2,7 @@
 @section('title', 'Philippines Interview Progress')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/progress.css?v=2') }}" data-page-style="user-progress">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/progress.css?v=19') }}" data-page-style="user-progress">
 @endpush
 
 @section('content')
@@ -51,6 +51,7 @@
     </div>
     <div class="progress-export-status" id="progressExportStatus" role="status" aria-live="polite" hidden></div>
 
+    <div class="progress-summary-strip">
     <!-- Feature 9, 14: Top Stats (Streaks, Comparison) -->
     <div id="progress-stats" class="row g-4">
         <div class="col-md-3 col-sm-6 animate-fade-up" style="animation-delay: 0.1s;">
@@ -83,87 +84,6 @@
         </div>
     </div>
 
-    <!-- Feature 13: AI Progress Insights -->
-    @if($readinessMovement)
-        <div id="ai-insights" class="alert border-0 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
-            <div class="progress-ai-content">
-                <div class="progress-ai-icon"><i class="fa-solid fa-robot"></i></div>
-                <div>
-                    <h6 class="progress-ai-title">AI Progress Insights</h6>
-                    <p class="progress-ai-text">Your overall readiness score {!! $readinessMovement->trend_html !!} recently. <br>
-                    <strong>Recommended Next Step:</strong> Review your latest Philippines interview feedback and rehearse the weakest answer again.</p>
-                </div>
-                <div class="progress-ai-art"><i class="fa-solid fa-brain"></i></div>
-            </div>
-        </div>
-    @elseif($scoredSessions->count() === 1)
-        <div id="ai-insights" class="alert border-0 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
-            <div class="progress-ai-content">
-                <div class="progress-ai-icon"><i class="fa-solid fa-robot"></i></div>
-                <div>
-                    <h6 class="progress-ai-title">AI Progress Insights</h6>
-                    <p class="progress-ai-text">Complete one more scored Philippines practice interview to compare readiness movement accurately.</p>
-                </div>
-                <div class="progress-ai-art"><i class="fa-solid fa-brain"></i></div>
-            </div>
-        </div>
-    @else
-        <div id="ai-insights" class="alert border-0 animate-fade-up progress-ai-insight" style="animation-delay: 0.5s;">
-            <div class="progress-ai-content">
-                <div class="progress-ai-icon"><i class="fa-solid fa-robot"></i></div>
-                <div>
-                    <h6 class="progress-ai-title">AI Progress Insights</h6>
-                    <p class="progress-ai-text">Complete at least 2 Philippines practice interviews to generate personalized progress insights.</p>
-                </div>
-                <div class="progress-ai-art"><i class="fa-solid fa-brain"></i></div>
-            </div>
-        </div>
-    @endif
-
-    <div class="row animate-fade-up" id="personalized-practice-plan" style="animation-delay: 0.55s;">
-        <div class="col-12">
-            <div class="premium-panel practice-plan-panel">
-                <div class="practice-plan-heading">
-                    <div class="practice-plan-heading-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div>
-                        <h5 class="practice-plan-heading-title">Personalized Practice Plan</h5>
-                        <p class="practice-plan-heading-text">Daily actions based on your latest scores, voice rehearsal, and module progress.</p>
-                        <span class="practice-plan-pill mt-2"><i class="fa-solid fa-clock"></i> {{ isset($practicePlan) ? $practicePlan->sum('minutes') : 0 }} min total</span>
-                    </div>
-                </div>
-                @if(isset($practicePlan) && $practicePlan->count() > 0)
-                    <div class="practice-plan-list">
-                        @foreach($practicePlan as $item)
-                            <a href="{{ $item->url }}" class="practice-plan-row" style="--plan-color: {{ $item->color }};">
-                                <div class="practice-plan-icon"><i class="fa-solid {{ $item->icon }}"></i></div>
-                                <div class="practice-plan-copy">
-                                    <div class="practice-plan-top">
-                                        <span class="practice-plan-step">{{ $item->day }}</span>
-                                        <span class="practice-plan-title">{{ $item->title }}</span>
-                                    </div>
-                                    <div class="practice-plan-text">{{ $item->action }}</div>
-                                    <div class="practice-plan-text mt-1">{{ $item->reason }}</div>
-                                    <ul class="practice-plan-tasks">
-                                        @foreach(array_slice((array) ($item->tasks ?? []), 0, 2) as $task)
-                                            <li><i class="fa-solid fa-check" style="color:#10b981;margin-top:2px;"></i><span>{{ $task }}</span></li>
-                                        @endforeach
-                                    </ul>
-                                    <div class="practice-plan-footer">
-                                        <span class="practice-plan-pill"><i class="fa-regular fa-clock"></i> {{ $item->minutes }} min</span>
-                                        <span class="practice-plan-link">{{ $item->cta }} <i class="fa-solid fa-arrow-right ms-1"></i></span>
-                                    </div>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-4" style="color:var(--tx3);">
-                        <i class="fa-solid fa-calendar-check fs-2 mb-3" style="color:var(--bd);"></i>
-                        <p>Complete a Philippines practice interview or voice rehearsal to generate your plan.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
     </div>
 
     <div class="row g-4 mb-4">
@@ -457,136 +377,6 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-4">
-        <!-- Feature 5: Learning Progress Tracking -->
-        <div class="col-12" id="learning-progress">
-            <div class="learning-panel" style="--panel-accent:#6d5dfc;">
-                <div class="learning-heading">
-                    <div class="learning-heading-icon"><i class="fa-solid fa-book-open"></i></div>
-                    <div>
-                        <h5 class="learning-title">Learning Progress</h5>
-                        <p class="learning-subtitle">Track your module progress and keep learning.</p>
-                    </div>
-                </div>
-                <div class="learning-list">
-                @forelse($learningProgress as $lp)
-                @php
-                    $moduleColor = ($lp->progress_percentage >= 100) ? '#10b981' : '#6d5dfc';
-                    $moduleIcon = ($lp->progress_percentage >= 100) ? 'fa-bullhorn' : 'fa-book-open';
-                @endphp
-                <div class="learning-module" style="--module-color: {{ $moduleColor }};">
-                    <div class="learning-module-icon"><i class="fa-solid {{ $moduleIcon }}"></i></div>
-                    <div>
-                        <div class="learning-module-top">
-                            <div class="learning-module-title">{{ $lp->learningModule ? $lp->learningModule->title : 'Module' }}</div>
-                            <div class="learning-percent">{{ $lp->progress_percentage }}%</div>
-                        </div>
-                        <div class="learning-track">
-                            <div class="learning-fill" style="--learning-progress: {{ max(0, min(100, (int) $lp->progress_percentage)) }}%;"></div>
-                        </div>
-                    </div>
-                </div>
-                @empty
-                    <div class="skill-empty-state">
-                        <div>
-                            <div class="skill-empty-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-                            <p class="skill-empty-text">No learning progress recorded yet.</p>
-                        </div>
-                    </div>
-                @endforelse
-                </div>
-                
-                @if($learningProgress->count() > 0)
-                <div class="learning-summary">
-                    <div class="learning-summary-icon"><i class="fa-solid fa-graduation-cap"></i></div>
-                    <div>
-                        <div class="learning-summary-value">{{ round($learningProgress->avg('progress_percentage') ?? 0) }}%</div>
-                        <div class="learning-summary-label">Overall Learning Completion Rate</div>
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        @if(isset($moduleRecommendations) && $moduleRecommendations->count() > 0)
-        <div class="col-12" id="recommended-next">
-            <div class="recommend-panel" style="--panel-accent:#f59e0b;">
-                <div class="recommend-heading">
-                    <div class="recommend-heading-icon"><i class="fa-solid fa-lightbulb"></i></div>
-                    <div>
-                        <h5 class="recommend-title">Recommended Next</h5>
-                        <p class="recommend-subtitle">Based on your performance and progress.</p>
-                    </div>
-                </div>
-                <div class="recommend-list">
-                @foreach($moduleRecommendations as $recommendation)
-                    <a href="{{ $recommendation->url }}" class="recommend-item" style="--panel-accent: {{ $recommendation->color }};">
-                        <div class="recommend-item-icon"><i class="fa-solid {{ $recommendation->icon }}"></i></div>
-                        <div>
-                            <div class="recommend-item-title">{{ $recommendation->module->title }}</div>
-                            <div class="recommend-item-text">{{ $recommendation->reason }}</div>
-                        </div>
-                        <div class="recommend-arrow"><i class="fa-solid fa-chevron-right"></i></div>
-                    </a>
-                @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Feature 6: Voice Rehearsal Progress -->
-        <div class="col-12" id="voice-progress">
-            <div class="voice-panel" style="--panel-accent:#ec407a;">
-                <div class="voice-heading">
-                    <div class="voice-heading-icon"><i class="fa-solid fa-microphone"></i></div>
-                    <div>
-                        <h5 class="voice-title">Voice Rehearsal Progress</h5>
-                        <p class="voice-subtitle">Improvements start with practice.</p>
-                    </div>
-                </div>
-                @if($voiceSummary->latest)
-                    @php $latestVoice = $voiceSummary->latest; $prevVoice = $voiceSummary->previous; @endphp
-                    <div class="row text-center mb-4">
-                        <div class="col-4 border-end" style="border-color:var(--bd) !important;">
-                            <h3 style="color:var(--tx);font-weight:bold;">{{ $latestVoice->speaking_pace ?? $latestVoice->wpm ?? 'N/A' }}</h3>
-                            <small style="color:var(--tx3)">Pace (wpm)</small>
-                        </div>
-                        <div class="col-4 border-end" style="border-color:var(--bd) !important;">
-                            <h3 style="color:var(--tx);font-weight:bold;">{{ is_numeric($latestVoice->clarity_score) ? $latestVoice->clarity_score . '%' : 'N/A' }}</h3>
-                            <small style="color:var(--tx3)">Clarity</small>
-                        </div>
-                        <div class="col-4">
-                            <h3 style="color:var(--tx);font-weight:bold;">{{ is_numeric($latestVoice->confidence_score) ? $latestVoice->confidence_score . '%' : 'N/A' }}</h3>
-                            <small style="color:var(--tx3)">Speaking Steadiness</small>
-                        </div>
-                    </div>
-                    
-                    <div class="p-3" style="background: rgba(16, 185, 129, 0.1); border-radius: 12px;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-success mb-1 fw-bold">Filler Word Change</h6>
-                                @if($prevVoice)
-                                    <small style="color:var(--tx)">Previous: <strong>{{ $prevVoice->filler_words ?? 0 }}</strong> | Current: <strong>{{ $latestVoice->filler_words ?? 0 }}</strong></small>
-                                @else
-                                    <small style="color:var(--tx)">Complete another voice rehearsal to compare filler word movement.</small>
-                                @endif
-                            </div>
-                            <h2 class="text-success mb-0 fw-bold">{{ $voiceSummary->filler_reduction === null ? 'N/A' : (($voiceSummary->filler_reduction > 0 ? '+' : '') . $voiceSummary->filler_reduction . '%') }}</h2>
-                        </div>
-                    </div>
-                @else
-                    <div class="voice-empty">
-                        <div>
-                            <div class="voice-empty-icon"><i class="fa-solid fa-microphone"></i></div>
-                            <h6 class="voice-empty-title">No voice rehearsal data available yet.</h6>
-                            <p class="voice-empty-text">Start a voice rehearsal to track your clarity, pace, and delivery over time.</p>
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -1144,14 +934,11 @@
 
         const stepsMobile = [
             { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
-            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Use trend-based coaching notes to decide what to practice next.', side: 'bottom', align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
             { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare Philippines practice scenarios to find strengths and weak spots.', side: 'top', align: 'start' }},
             { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'top', align: 'start' }},
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
-            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See how much of your module work is complete.', side: 'top', align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and speaking steadiness from voice drills.', side: 'top', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
@@ -1159,14 +946,11 @@
 
         const stepsDesktop = [
             { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
-            { element: '#ai-insights', popover: { title: 'AI Insights', description: 'Use trend-based coaching notes to decide what to practice next.', side: 'bottom', align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
             { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare Philippines practice scenarios to find strengths and weak spots.', side: 'bottom', align: 'start' }},
             { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'right', align: 'start' }},
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
-            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See how much of your module work is complete.', side: 'right', align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and speaking steadiness from voice drills.', side: 'left', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}

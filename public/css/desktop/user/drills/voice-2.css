@@ -2397,3 +2397,302 @@ body.dm #voice-rehearsal-page .vr-notice-danger {
     filter: saturate(0.7);
     box-shadow: none !important;
 }
+
+/* Compact desktop Voice Rehearsal UI. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page {
+        font-size: 0.86rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-shell {
+        gap: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .sr-page-hero.vr-hero {
+        min-height: 78px !important;
+        margin-bottom: 12px !important;
+        border-radius: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-hero .sr-page-hero-inner {
+        min-height: 78px !important;
+        padding: 10px 132px 10px 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-hero .sr-page-hero-copy {
+        grid-template-columns: 32px minmax(0, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-hero-icon {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-hero .sr-page-hero-title {
+        margin-bottom: 3px !important;
+        font-size: 0.98rem !important;
+        line-height: 1.14 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+        font-size: 0.68rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-hero .sr-page-hero-art {
+        right: 12px !important;
+        width: 104px !important;
+        max-height: calc(100% - 12px) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .sr-page-actions.vr-tabs-wrap {
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #moduleTabs.vr-tabs {
+        gap: 6px !important;
+        padding: 6px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link {
+        min-height: 34px !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-size: 0.72rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #moduleTabs.vr-tabs .nav-link i {
+        font-size: 0.72rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-practice-flow {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 0.42fr) !important;
+        gap: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(
+        .vr-option-panel,
+        .vr-prompt-card,
+        .vr-transcript-wrap,
+        .instant-feedback-panel,
+        .intention-coach-panel,
+        .vr-assessment-card,
+        .vr-progress-panel,
+        .vr-suggestion-card
+    ) {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-option-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-option-row {
+        min-height: 42px !important;
+        padding: 8px 10px !important;
+        gap: 8px !important;
+        border-radius: 9px !important;
+        font-size: 0.74rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-option-icon {
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        border-radius: 7px !important;
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-option-row > .fa-chevron-right {
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-prompt-kicker {
+        margin-bottom: 7px !important;
+        font-size: 0.62rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #promptText.vr-prompt-text {
+        max-width: 780px !important;
+        font-size: 1.05rem !important;
+        line-height: 1.35 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-mic-stage {
+        min-height: 112px !important;
+        height: 112px !important;
+        margin: 12px 0 !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #statusText {
+        font-size: 0.76rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .voice-recorder-controls {
+        gap: 8px !important;
+        margin-bottom: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .voice-recorder-controls .btn,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #btnSave {
+        min-height: 34px !important;
+        padding: 8px 14px !important;
+        border-radius: 9px !important;
+        font-size: 0.74rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .voice-recorder-controls .btn i,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #btnSave i {
+        font-size: 0.72rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-start-note,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #micPermissionHelp {
+        font-size: 0.7rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .voice-live-stats {
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .voice-live-stats .stat-box {
+        min-height: 78px !important;
+        padding: 10px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .stat-ico,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-signal-ico, .intention-metric-ico) {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .stat-val {
+        font-size: 1rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .stat-lbl {
+        font-size: 0.62rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-transcript-label,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-feedback-title, .intention-coach-title, .vr-assessment-title, .vr-progress-title) {
+        font-size: 0.82rem !important;
+        line-height: 1.18 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-transcript-label i,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-feedback-title, .intention-coach-title, .vr-assessment-title, .vr-progress-title) i {
+        font-size: 0.76rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page #transcriptView {
+        min-height: 92px !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.45 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .instant-feedback-summary,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .intention-coach-summary,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .instant-feedback-note,
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-suggestion-text {
+        font-size: 0.7rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-feedback-grid, .intention-coach-grid) {
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-feedback-signal, .intention-coach-metric) {
+        min-height: 66px !important;
+        padding: 9px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-feedback-kicker, .intention-coach-kicker, .vr-assessment-kicker) {
+        font-size: 0.62rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.instant-feedback-value, .intention-coach-value) {
+        font-size: 0.94rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-score-ring {
+        width: 70px !important;
+        height: 70px !important;
+        font-size: 1rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .vr-score-label {
+        font-size: 0.64rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page :is(.vr-pace-card, .vr-keywords-card, .vr-ai-card) {
+        padding: 10px !important;
+        border-radius: 9px !important;
+    }
+}
+
+/* Final desktop voice hero background and contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .sr-page-hero.vr-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .sr-page-hero.vr-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .sr-page-hero.vr-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) #voice-rehearsal-page .sr-page-hero.vr-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .sr-page-hero-title,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .sr-page-hero-title.text-gradient-primary {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .sr-page-hero-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .vr-hero-icon {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .vr-hero-icon :is(i, svg, svg *),
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .sr-page-hero-title svg,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #voice-rehearsal-page .vr-hero .sr-page-hero-title svg * {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        stroke: currentColor !important;
+    }
+}

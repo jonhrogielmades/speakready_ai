@@ -2552,7 +2552,9 @@ body.dm #nbar .boc {
 
 /* PROFILE DROPDOWN */
 .profile-dd {
-  min-width: 260px;
+  width: 300px;
+  min-width: 300px;
+  max-width: calc(100vw - 32px);
 }
 
 .profile-dd-top {
@@ -2564,7 +2566,7 @@ body.dm #nbar .boc {
 }
 
 .profile-menu-item {
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
@@ -2579,12 +2581,170 @@ body.dm #nbar .boc {
   width: calc(100% - 16px);
   font-family: "Poppins", sans-serif;
   text-align: left;
+  white-space: nowrap;
 }
 
 .profile-menu-item i {
+  flex: 0 0 18px;
   width: 18px;
   text-align: center;
   font-size: 0.9rem;
+}
+
+.profile-menu-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-dd form {
+  margin: 0;
+}
+
+.profile-dd label {
+  white-space: nowrap;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown.user-notif-dropdown {
+  --user-notif-panel: rgba(255, 255, 255, 0.98);
+  --user-notif-card: #ffffff;
+  --user-notif-soft: #f8fafc;
+  --user-notif-border: rgba(148, 163, 184, 0.28);
+  --user-notif-title: #0f172a;
+  --user-notif-text: #334155;
+  --user-notif-muted: #64748b;
+  --user-notif-accent: #2563eb;
+  --user-notif-danger: #ef4444;
+  --user-notif-danger-bg: #fff1f2;
+  --user-notif-danger-border: rgba(248, 113, 113, 0.28);
+  width: min(430px, calc(100vw - 32px)) !important;
+  min-width: 430px !important;
+  max-width: calc(100vw - 32px) !important;
+  border-radius: 14px !important;
+  background: var(--user-notif-panel) !important;
+  border-color: var(--user-notif-border) !important;
+  color: var(--user-notif-title) !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #notifDropdown.user-notif-dropdown {
+  --user-notif-panel: rgba(15, 23, 42, 0.96);
+  --user-notif-card: rgba(30, 41, 59, 0.72);
+  --user-notif-soft: rgba(30, 41, 59, 0.82);
+  --user-notif-border: rgba(148, 163, 184, 0.24);
+  --user-notif-title: #f8fafc;
+  --user-notif-text: #e2e8f0;
+  --user-notif-muted: #cbd5e1;
+  --user-notif-accent: #93c5fd;
+  --user-notif-danger: #fca5a5;
+  --user-notif-danger-bg: rgba(239, 68, 68, 0.14);
+  --user-notif-danger-border: rgba(248, 113, 113, 0.34);
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-header {
+  min-height: 56px !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  padding: 10px 10px 10px 12px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid var(--user-notif-border) !important;
+  background: var(--user-notif-panel) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  color: var(--user-notif-title) !important;
+  font-size: 0.9rem !important;
+  font-weight: 900 !important;
+  line-height: 1.12 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown #unreadCountBadge {
+  margin-left: 0 !important;
+  border-radius: 999px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-action {
+  width: auto !important;
+  min-width: 44px !important;
+  min-height: 34px !important;
+  padding: 8px 10px !important;
+  border: 1px solid var(--user-notif-border) !important;
+  border-radius: 9px !important;
+  background: var(--user-notif-soft) !important;
+  color: var(--user-notif-title) !important;
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  gap: 5px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-action.danger {
+  border-color: var(--user-notif-danger-border) !important;
+  background: var(--user-notif-danger-bg) !important;
+  color: var(--user-notif-danger) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-list {
+  min-height: 72px !important;
+  max-height: min(58vh, 390px) !important;
+  padding: 10px !important;
+  background: var(--user-notif-panel) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-item {
+  grid-template-columns: 44px minmax(0, 1fr) !important;
+  gap: 9px !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  background: var(--user-notif-card) !important;
+  box-shadow: 0 1px 0 rgba(148, 163, 184, 0.08) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-ico {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  font-size: 0.84rem !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-row-actions {
+  justify-content: flex-end !important;
+  gap: 6px !important;
+  margin-top: 7px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-link-btn {
+  min-height: 30px !important;
+  padding: 6px 9px !important;
+  border: 1px solid rgba(37, 99, 235, 0.2) !important;
+  border-radius: 8px !important;
+  background: rgba(37, 99, 235, 0.1) !important;
+  font-size: 0.6rem !important;
+  line-height: 1.12 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-footer {
+  padding: 10px !important;
+  border-top: 1px solid var(--user-notif-border) !important;
+  background: var(--user-notif-panel) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #notifDropdown .user-notif-view-all {
+  min-height: 44px !important;
+  border-radius: 8px !important;
+  font-size: 0.7rem !important;
 }
 
 .profile-menu-item:hover {
@@ -11585,4 +11745,217 @@ html.dm #lofc.auth-modal .auth-wave span,
 html[data-theme="dark"] #lofc.auth-modal .auth-wave span,
 body.dm #lofc.auth-modal .auth-wave span {
   background: rgba(30, 64, 175, 0.34);
+}
+
+/* Final desktop user topbar polish. */
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top {
+  height: 64px !important;
+  min-height: 64px !important;
+  padding: 0 18px !important;
+  gap: 10px !important;
+  background: rgba(248, 250, 252, 0.92) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05) !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-top {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top::after {
+  content: none !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-actions {
+  gap: 8px !important;
+  height: 40px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-bottom .db-upgrade-card {
+  display: none !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-card {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: 40px !important;
+  min-width: 0 !important;
+  padding: 4px 6px 4px 5px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(129, 140, 248, 0.35) !important;
+  background: linear-gradient(135deg, rgba(30, 41, 120, 0.96), rgba(49, 46, 129, 0.94)) !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  box-shadow: 0 8px 20px rgba(30, 41, 120, 0.16) !important;
+  cursor: default !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border-radius: 9px !important;
+  background: linear-gradient(135deg, #3b82f6, #7c3aed) !important;
+  color: #ffffff !important;
+  font-size: 0.76rem !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-copy {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 9px !important;
+  background: linear-gradient(135deg, #38bdf8, #8b5cf6) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-action i {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-size: 0.68rem !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-card:hover,
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-card:focus-visible {
+  transform: none !important;
+  box-shadow: 0 8px 20px rgba(30, 41, 120, 0.16) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top > .boc,
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-actions > .boc,
+body.user-desktop-shell:not(.admin-shell) #dashboard #notifWrap,
+body.user-desktop-shell:not(.admin-shell) #dashboard #bellBtn {
+  width: 40px !important;
+  height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  flex-basis: 40px !important;
+  flex: 0 0 40px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top > .boc,
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-actions > .boc,
+body.user-desktop-shell:not(.admin-shell) #dashboard #bellBtn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border-radius: 11px !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  color: #334155 !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-top > .boc,
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-actions > .boc,
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard #bellBtn {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  background: rgba(30, 41, 59, 0.78) !important;
+  color: #cbd5e1 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top > .boc i,
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-actions > .boc i,
+body.user-desktop-shell:not(.admin-shell) #dashboard #bellBtn i {
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  font-size: 0.88rem !important;
+  line-height: 16px !important;
+  text-align: center !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #dbThBtn i[style*="display:none"],
+body.user-desktop-shell:not(.admin-shell) #dashboard #dbThBtn i[style*="display: none"] {
+  display: none !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #dbThBtn {
+  overflow: hidden !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #notifBadge {
+  top: 5px !important;
+  right: 5px !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill {
+  min-height: 40px !important;
+  height: 40px !important;
+  max-width: 190px !important;
+  padding: 4px 10px 4px 5px !important;
+  gap: 8px !important;
+  border-radius: 11px !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+
+html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill {
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  background: rgba(30, 41, 59, 0.78) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .user-avatar-presence::after {
+  right: -1px !important;
+  bottom: -1px !important;
+  width: 9px !important;
+  height: 9px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard .db-user-pill > .d-none.d-md-block,
+body.user-desktop-shell:not(.admin-shell) #dashboard #userName,
+body.user-desktop-shell:not(.admin-shell) #dashboard #userPlan {
+  max-width: 96px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #userName {
+  font-size: 0.76rem !important;
+  line-height: 1.08 !important;
+  font-weight: 850 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #userPlan {
+  font-size: 0.62rem !important;
+  line-height: 1 !important;
+  font-weight: 800 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #dashboard #profileChevron {
+  margin-left: 0 !important;
+  font-size: 0.68rem !important;
 }

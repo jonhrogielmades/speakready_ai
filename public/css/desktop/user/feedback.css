@@ -3410,3 +3410,366 @@
         font-size: 0.56rem !important;
     }
 }
+
+/* Final desktop Feedback History compact correction */
+@media (min-width: 992px) {
+    html body.user-desktop-shell .feedback-shell > .premium-panel {
+        padding: 12px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-head {
+        display: grid !important;
+        grid-template-columns: 170px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+        margin: 0 0 8px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-title {
+        margin: 0 !important;
+        font-size: 0.92rem !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters {
+        display: grid !important;
+        grid-template-columns: minmax(190px, 0.82fr) 128px minmax(260px, 1.3fr) 108px !important;
+        gap: 8px !important;
+        align-items: center !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        width: 100% !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 10px !important;
+        border-radius: 8px !important;
+        font-size: 0.68rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters #sortDateBtn,
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-clear-form .btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters #sortDateBtn i,
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-clear-form .btn i {
+        margin: 0 !important;
+        font-size: 0.7rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        display: grid !important;
+        grid-template-columns: 20px minmax(0, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+        height: 100% !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-table-wrap {
+        border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable {
+        margin: 0 !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        font-size: 0.7rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable thead th {
+        height: 30px !important;
+        padding: 6px 10px !important;
+        font-size: 0.54rem !important;
+        line-height: 1 !important;
+        vertical-align: middle !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable tbody td {
+        height: 52px !important;
+        padding: 8px 10px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.15 !important;
+        vertical-align: middle !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable .badge {
+        min-height: 20px !important;
+        padding: 5px 9px !important;
+        border-radius: 999px !important;
+        font-size: 0.56rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-actions {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 7px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-actions .btn {
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 10px !important;
+        border-radius: 8px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        font-size: 0.62rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-actions .btn i {
+        margin: 0 !important;
+        font-size: 0.66rem !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1180px) {
+    html body.user-desktop-shell .feedback-shell .feedback-history-head {
+        grid-template-columns: 1fr !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters {
+        grid-template-columns: minmax(0, 1fr) 128px minmax(0, 1.2fr) 108px !important;
+    }
+}
+
+/* Final Feedback search input clipping fix */
+html body .feedback-shell #feedback-filters .feedback-search-wrap {
+    display: grid !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 10px 0 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--tx, #0f172a) !important;
+    box-shadow: none !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
+    color: var(--tx3, #64748b) !important;
+    opacity: 1 !important;
+}
+
+/* Final Feedback History theme visibility */
+html body .feedback-shell {
+    --feedback-history-panel-bg: rgba(255, 255, 255, 0.97);
+    --feedback-history-panel-border: rgba(191, 219, 254, 0.86);
+    --feedback-history-title: #0f172a;
+    --feedback-history-text: #334155;
+    --feedback-history-muted: #64748b;
+    --feedback-history-field-bg: #f8fafc;
+    --feedback-history-field-border: #cbd5e1;
+    --feedback-history-row-bg: #f8fafc;
+    --feedback-history-row-border: #dbe4f0;
+    --feedback-history-danger: #ef233c;
+}
+
+html[data-theme="dark"] body .feedback-shell,
+:root:not(.lm) body .feedback-shell,
+body.dm .feedback-shell,
+.dm .feedback-shell {
+    --feedback-history-panel-bg: rgba(15, 23, 42, 0.96);
+    --feedback-history-panel-border: rgba(148, 163, 184, 0.32);
+    --feedback-history-title: #f8fafc;
+    --feedback-history-text: #e2e8f0;
+    --feedback-history-muted: #cbd5e1;
+    --feedback-history-field-bg: rgba(30, 41, 59, 0.92);
+    --feedback-history-field-border: rgba(148, 163, 184, 0.38);
+    --feedback-history-row-bg: rgba(15, 23, 42, 0.88);
+    --feedback-history-row-border: rgba(148, 163, 184, 0.28);
+    --feedback-history-danger: #fb7185;
+}
+
+html body .feedback-shell > .premium-panel {
+    background: var(--feedback-history-panel-bg) !important;
+    border-color: var(--feedback-history-panel-border) !important;
+    color: var(--feedback-history-text) !important;
+}
+
+html body .feedback-shell .feedback-history-title {
+    background: none !important;
+    color: var(--feedback-history-title) !important;
+    -webkit-text-fill-color: var(--feedback-history-title) !important;
+}
+
+html body .feedback-shell #feedback-filters .db-filter-input,
+html body .feedback-shell #feedback-filters .form-select,
+html body .feedback-shell #feedback-filters .btn,
+html body .feedback-shell #feedback-filters .feedback-search-wrap {
+    background: var(--feedback-history-field-bg) !important;
+    border-color: var(--feedback-history-field-border) !important;
+    color: var(--feedback-history-text) !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+    color: var(--feedback-history-text) !important;
+    -webkit-text-fill-color: var(--feedback-history-text) !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+html body .feedback-shell #feedback-filters .form-select,
+html body .feedback-shell #feedback-filters .btn-outline-secondary {
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+}
+
+html body .feedback-shell #feedback-filters .form-select option {
+    background: var(--feedback-history-panel-bg) !important;
+    color: var(--feedback-history-title) !important;
+}
+
+html body .feedback-shell #feedback-filters .feedback-search-wrap .form-control::placeholder {
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+    opacity: 1 !important;
+}
+
+html body .feedback-shell .feedback-table-wrap,
+html body .feedback-shell #feedbackTable {
+    background: transparent !important;
+    color: var(--feedback-history-text) !important;
+    --bs-table-color: var(--feedback-history-text);
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--feedback-history-row-border);
+}
+
+html body .feedback-shell #feedbackTable thead th {
+    background: transparent !important;
+    color: var(--feedback-history-muted) !important;
+    -webkit-text-fill-color: var(--feedback-history-muted) !important;
+    border-color: var(--feedback-history-row-border) !important;
+}
+
+html body .feedback-shell #feedbackTable tbody tr:not(.feedback-empty-row) {
+    background: var(--feedback-history-row-bg) !important;
+    border-color: var(--feedback-history-row-border) !important;
+    color: var(--feedback-history-text) !important;
+}
+
+html body .feedback-shell #feedbackTable tbody td,
+html body .feedback-shell #feedbackTable tbody td.fw-bold,
+html body .feedback-shell #feedbackTable tbody td strong {
+    background: transparent !important;
+    color: var(--feedback-history-text) !important;
+    -webkit-text-fill-color: var(--feedback-history-text) !important;
+    border-color: var(--feedback-history-row-border) !important;
+}
+
+html body .feedback-shell #feedbackTable .badge {
+    color: #ef233c !important;
+    -webkit-text-fill-color: #ef233c !important;
+    background: rgba(255, 214, 220, 0.95) !important;
+}
+
+html[data-theme="dark"] body .feedback-shell #feedbackTable .badge,
+:root:not(.lm) body .feedback-shell #feedbackTable .badge,
+body.dm .feedback-shell #feedbackTable .badge,
+.dm .feedback-shell #feedbackTable .badge {
+    color: #fecdd3 !important;
+    -webkit-text-fill-color: #fecdd3 !important;
+    background: rgba(127, 29, 29, 0.62) !important;
+}
+
+html body .feedback-shell .feedback-history-actions .btn-primary {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .feedback-shell .feedback-history-actions .btn-outline-danger,
+html body .feedback-shell #feedback-filters .feedback-clear-form .btn,
+html body .feedback-shell #feedback-filters .btn-outline-danger {
+    background: rgba(239, 35, 60, 0.08) !important;
+    border-color: var(--feedback-history-danger) !important;
+    color: var(--feedback-history-danger) !important;
+    -webkit-text-fill-color: var(--feedback-history-danger) !important;
+}
+
+html body .feedback-shell .feedback-history-actions .btn i,
+html body .feedback-shell #feedback-filters .btn i {
+    color: currentColor !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Final desktop feedback hero background and contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) .feedback-shell .feedback-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-title {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-chat-mark {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content .feedback-shell .feedback-hero .feedback-chat-mark :is(path, circle) {
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        stroke: currentColor !important;
+    }
+}

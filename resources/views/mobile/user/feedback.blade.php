@@ -2,7 +2,7 @@
 @section('title', 'Philippines Interview Feedback')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=1') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/feedback.css?v=3') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')

@@ -849,3 +849,44 @@
             padding-inline: 8px !important;
         }
     }
+
+/* Final desktop skill trees hero contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #skill-trees-page .sr-page-hero.skill-tree-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #skill-trees-page .sr-page-hero.skill-tree-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #skill-trees-page .sr-page-hero.skill-tree-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) #skill-trees-page .sr-page-hero.skill-tree-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #skill-trees-page .skill-tree-hero .sr-page-hero-title,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #skill-trees-page .skill-tree-hero .sr-page-hero-title.text-gradient-primary {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #skill-trees-page .skill-tree-hero .sr-page-hero-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #skill-trees-page .skill-tree-hero .skill-hero-icon {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #skill-trees-page .skill-tree-hero .skill-hero-icon :is(i, svg, svg *),
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #skill-trees-page .skill-tree-hero .sr-page-hero-title :is(svg, svg *) {
+        color: currentColor !important;
+        -webkit-text-fill-color: currentColor !important;
+        stroke: currentColor !important;
+    }
+}

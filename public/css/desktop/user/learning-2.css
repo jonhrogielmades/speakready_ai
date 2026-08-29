@@ -5,6 +5,64 @@
         --challenge-muted: #52617a;
         --challenge-line: #dbe7fb;
     }
+
+/* Final desktop challenge filter row alignment. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-actions.learning-actions {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search {
+        height: 42px !important;
+        min-height: 42px !important;
+        max-width: none !important;
+        padding: 0 13px !important;
+        border-radius: 11px !important;
+        align-items: center !important;
+        background: var(--bg3) !important;
+        border: 1px solid var(--bd) !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search input {
+        height: 100% !important;
+        font-size: 0.82rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #nav-pills-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ll-nav-pill {
+        height: 42px !important;
+        min-height: 42px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 14px !important;
+        margin: 0 !important;
+        border-radius: 9px !important;
+        font-size: 0.78rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+}
     #learning-games-page .sr-learning-hero {
         --learning-hero-title-color: #1d4ed8;
         --learning-hero-text-color: #334155;
@@ -2495,3 +2553,93 @@
             padding-right: 12px !important;
         }
     }
+
+/* Final desktop challenge filter row alignment. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-actions.learning-actions {
+        display: grid !important;
+        grid-template-columns: minmax(280px, 1fr) auto !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search {
+        height: 44px !important;
+        min-height: 44px !important;
+        max-width: none !important;
+        padding: 0 14px !important;
+        border-radius: 12px !important;
+        align-items: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #tour-search input {
+        height: 100% !important;
+        font-size: 0.84rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page #nav-pills-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .ll-nav-pill {
+        height: 44px !important;
+        min-height: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 14px !important;
+        margin: 0 !important;
+        border-radius: 9px !important;
+        font-size: 0.78rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* Final desktop challenges hero background and contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-hero.sr-learning-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-hero.sr-learning-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-hero.sr-learning-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) #learning-games-page .sr-page-hero.sr-learning-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #learning-games-page .sr-learning-hero .sr-page-hero-title,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #learning-games-page .sr-learning-hero .sr-page-hero-title.text-gradient-primary {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #learning-games-page .sr-learning-hero .sr-page-hero-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #learning-games-page .sr-learning-hero .learning-hero-icon {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #learning-games-page .sr-learning-hero .learning-hero-icon :is(i, svg, svg *) {
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        stroke: currentColor !important;
+    }
+}

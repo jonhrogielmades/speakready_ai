@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Philippines Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=1') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=4') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -232,7 +232,6 @@
                         </div>
                         <div>
                             <h5 class="setup-details-card-title">Philippines Interview Details</h5>
-                            <p class="setup-details-card-subtitle">Configure your practice scenario to get tailored questions and feedback.</p>
                         </div>
                     </div>
 
@@ -260,7 +259,6 @@
                             </div>
                             <input type="hidden" name="source_pack_key" id="valSourcePack" value="{{ $selectedScenario['key'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
-                            <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
                             @unless($hasScenarioOptions)
                                 <div class="setup-inline-error setup-inline-error-visible" id="scenarioEmptyState" role="alert">No active interview scenarios are available. Ask an admin to activate at least one core category before starting.</div>
                             @endunless
@@ -274,6 +272,7 @@
                             <div class="setup-search-wrap">
                                 <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ $targetPositionDefault }}" required aria-describedby="targetPositionError">
                             </div>
+                            <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
                             <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>Enter the target position before continuing.</div>
                         </div>
 
@@ -586,6 +585,23 @@
         <h4>Philippines Interview Ready</h4>
         <p>Please wait while we begin or resume your customized interview session.</p>
     </div>
+
+    <div class="modal fade setup-alert-modal" id="targetPositionAlertModal" tabindex="-1" aria-labelledby="targetPositionAlertTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="targetPositionAlertTitle">Target position required</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Enter the target position before continuing.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn setup-alert-btn" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -609,6 +625,7 @@
     const setupFieldErrorIds = {
         valPosition: 'targetPositionError',
     };
+    let targetPositionAlertVisible = false;
 
     function ensureCompanyPersonaFallback() {
         const personaInput = document.getElementById('valPersona');
@@ -625,10 +642,36 @@
     }
 
     function setSetupFieldError(fieldId, visible) {
+        if (fieldId === 'valPosition') {
+            visible = false;
+        }
         const error = document.getElementById(setupFieldErrorIds[fieldId]);
         if (!error) return;
         error.hidden = !visible;
         error.classList.toggle('setup-inline-error-visible', visible);
+    }
+
+    function showTargetPositionAlert() {
+        const modalElement = document.getElementById('targetPositionAlertModal');
+        if (!modalElement || targetPositionAlertVisible) return;
+
+        if (modalElement.parentElement !== document.body) {
+            document.body.appendChild(modalElement);
+        }
+
+        targetPositionAlertVisible = true;
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            targetPositionAlertVisible = false;
+            document.getElementById('valPosition')?.focus();
+        }, { once: true });
+
+        if (window.bootstrap?.Modal) {
+            window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            return;
+        }
+
+        alert('Enter the target position before continuing.');
+        targetPositionAlertVisible = false;
     }
 
     function hasCheckedSetupInput(name) {
@@ -714,7 +757,11 @@
         if (reveal) {
             setupValidationVisible = true;
             markSetupValidation(missing);
-            focusSetupItem(missing[0]);
+            if (missing[0]?.type === 'field' && missing[0]?.id === 'valPosition') {
+                showTargetPositionAlert();
+            } else {
+                focusSetupItem(missing[0]);
+            }
         }
         return missing.length === 0;
     }
@@ -725,7 +772,11 @@
         if (reveal || setupValidationVisible) {
             setupValidationVisible = true;
             markSetupValidation(missing);
-            focusSetupItem(missing[0]);
+            if (missing[0]?.type === 'field' && missing[0]?.id === 'valPosition') {
+                showTargetPositionAlert();
+            } else {
+                focusSetupItem(missing[0]);
+            }
         }
         return missing.length === 0;
     }

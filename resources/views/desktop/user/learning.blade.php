@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/learning.css?v=1') }}" data-page-style="user-learning">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=2') }}" data-page-style="user-learning-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/learning-2.css?v=5') }}" data-page-style="user-learning-2">
 @endpush
 
 @section('content')
@@ -33,9 +33,10 @@
         </svg>
     </div>
     <div class="sr-page-actions learning-actions">
-        <div id="tour-search" class="db-top-search" style="width:100%; max-width:300px; background:var(--bg3);border:1px solid var(--bd); margin:0; border-radius:12px; padding:10px 16px;">
-            <i class="fa-solid fa-magnifying-glass" style="color:var(--tx3)"></i>
-            <input type="text" id="learningSearchInput" placeholder="Search challenges, skills, scenarios..." style="width:100%; background:transparent; border:none; color:var(--tx); outline:none;">
+        <div id="nav-pills-container" class="d-flex flex-wrap gap-2">
+            @foreach($categories as $category)
+                <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
+            @endforeach
         </div>
         <div class="learning-mobile-control-row">
             <div class="learning-category-select-wrap">
@@ -46,13 +47,6 @@
                 </select>
             </div>
         </div>
-    </div>
-
-    <!-- Sub-Navigation -->
-    <div id="nav-pills-container" class="mb-4 pb-2 d-flex flex-wrap gap-2">
-        @foreach($categories as $category)
-            <a href="{{ route('user.learning', ['category_id' => $category->id]) }}" class="ll-nav-pill {{ request('category_id') == $category->id ? 'active' : '' }}" style="margin:0;"><i class="fa-solid fa-folder"></i> {{ $category->title }}</a>
-        @endforeach
     </div>
 
     <!-- Gamified HUD Stats -->

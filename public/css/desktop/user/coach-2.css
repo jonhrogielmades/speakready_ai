@@ -1431,3 +1431,119 @@ html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea {
         -webkit-text-fill-color: #ffffff !important;
     }
 }
+
+/* Desktop coach: remove the old left conversation rail. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-sidebar,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page #coach-sidebar {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        flex: 0 0 0 !important;
+        border: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-container {
+        grid-template-columns: minmax(0, 1fr) !important;
+        display: flex !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-main {
+        width: 100% !important;
+        max-width: none !important;
+        flex: 1 1 auto !important;
+    }
+}
+
+/* Desktop coach input bar polish. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .coach-chat-title {
+        display: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-area {
+        padding: 8px 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-input-wrapper {
+        min-height: 44px !important;
+        padding: 5px !important;
+        gap: 7px !important;
+        border-radius: 12px !important;
+        align-items: center !important;
+        box-shadow: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        margin: 0 !important;
+        border-radius: 9px !important;
+        font-size: 0.8rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-attachment-btn i,
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-send-btn i {
+        font-size: 0.82rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .chat-textarea {
+        min-height: 20px !important;
+        height: 20px !important;
+        max-height: 76px !important;
+        padding: 1px 0 !important;
+        margin: 0 !important;
+        align-self: center !important;
+        border: 0 !important;
+        outline: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        resize: none !important;
+        font-size: 0.78rem !important;
+        line-height: 1.25 !important;
+    }
+}
+
+/* Final desktop coach hero background and contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) #ai-coach-page .sr-page-hero.coach-progress-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #ai-coach-page .coach-progress-hero .sr-page-hero-title,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #ai-coach-page .coach-progress-hero .sr-page-hero-title.text-gradient-primary {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #ai-coach-page .coach-progress-hero .sr-page-hero-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #ai-coach-page .coach-progress-hero .coach-hero-icon {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #ai-coach-page .coach-progress-hero .coach-hero-icon :is(i, svg, svg *) {
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        stroke: currentColor !important;
+    }
+}

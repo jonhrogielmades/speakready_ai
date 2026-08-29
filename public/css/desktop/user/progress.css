@@ -6813,6 +6813,206 @@
     line-height: 1.35;
 }
 
+/* Final desktop Skill and Strengths panels equal natural row height. */
+@media (min-width: 1181px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker {
+        display: flex !important;
+        align-items: stretch !important;
+        align-self: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .skill-empty-state {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        height: auto !important;
+    }
+}
+
+/* Final desktop lower Progress panels compact layout. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-panel {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-top,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-heading,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-heading {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        margin: 0 0 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-heading,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-heading {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        justify-content: start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.history-icon, .learning-heading-icon, .recommend-heading-icon, .learning-module-icon, .recommend-item-icon) {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.history-title, .learning-title, .recommend-title) {
+        margin: 0 0 3px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking :is(.learning-subtitle, .recommend-subtitle) {
+        margin: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .history-clear-btn {
+        min-height: 34px !important;
+        padding: 7px 10px !important;
+        border-radius: 9px !important;
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .history-search {
+        height: 38px !important;
+        min-height: 38px !important;
+        margin: 0 0 8px !important;
+        padding: 0 12px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .history-search input {
+        height: 100% !important;
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        max-height: 190px !important;
+        overflow-y: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card {
+        min-height: 92px !important;
+        padding: 10px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-date,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-meta {
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-scenario {
+        margin: 6px 0 2px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-rating-badge {
+        min-height: 22px !important;
+        padding: 5px 8px !important;
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card-actions {
+        gap: 6px !important;
+        margin-top: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table :is(.history-feedback-btn, .history-delete-btn) {
+        min-height: 30px !important;
+        height: 30px !important;
+        padding: 6px 9px !important;
+        border-radius: 8px !important;
+        font-size: 0.64rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-delete-btn {
+        width: 34px !important;
+        min-width: 34px !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-list,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-list {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-state,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-list,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-item {
+        min-height: 150px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-state {
+        height: 150px !important;
+        padding: 14px !important;
+        display: grid !important;
+        place-items: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-icon i,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-icon {
+        font-size: 2.6rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-text {
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-item {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) 20px !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-item-title {
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+        margin-bottom: 4px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-item-text {
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+    }
+}
+
 #sec-progress-tracking .progress-export-status[hidden] {
     display: none !important;
 }
@@ -6903,6 +7103,238 @@ body.dm #sec-progress-tracking .progress-export-status[data-type="error"] {
 
     html body #sec-progress-tracking #history-table .history-list {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Final desktop Personalized Practice Plan compact layout. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan {
+        margin-bottom: 12px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-panel {
+        padding: 10px !important;
+        border-radius: 10px !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-heading {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: center !important;
+        margin: 0 0 8px !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-heading-icon,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-heading-title {
+        margin: 0 0 3px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-heading-text {
+        margin: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-heading .practice-plan-pill {
+        margin-top: 5px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-row {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        min-height: 104px !important;
+        padding: 9px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-top,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-footer {
+        gap: 6px !important;
+        margin: 0 0 4px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-title {
+        font-size: 0.82rem !important;
+        line-height: 1.15 !important;
+        font-weight: 900 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-text {
+        margin: 0 !important;
+        font-size: 0.66rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-tasks {
+        display: grid !important;
+        gap: 4px !important;
+        margin: 6px 0 5px !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-tasks li {
+        gap: 6px !important;
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-tasks li i {
+        width: 16px !important;
+        height: 16px !important;
+        min-width: 16px !important;
+        font-size: 0.56rem !important;
+        margin-top: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-pill,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-step,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #personalized-practice-plan .practice-plan-link {
+        min-height: 20px !important;
+        padding: 4px 7px !important;
+        font-size: 0.6rem !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+}
+
+/* Final desktop chart panels compact height. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf {
+        display: flex !important;
+        align-self: flex-start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-panel {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 12px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-panel-heading,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-panel-heading {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: center !important;
+        margin: 0 0 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-panel-icon,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-panel-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-panel-title,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-panel-title {
+        margin: 0 0 3px !important;
+        font-size: 0.94rem !important;
+        line-height: 1.16 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-panel-subtitle,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-panel-subtitle {
+        margin: 0 !important;
+        font-size: 0.68rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-frame,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-frame {
+        height: 142px !important;
+        min-height: 142px !important;
+        max-height: 142px !important;
+        padding: 14px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-empty {
+        min-height: 100% !important;
+        gap: 8px !important;
+        padding: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty i,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-empty i {
+        font-size: 1rem !important;
+        margin-bottom: 6px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty h6,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-empty h6 {
+        margin: 0 0 6px !important;
+        font-size: 0.86rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #readiness-trend .progress-chart-empty p,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #category-perf .progress-chart-empty p {
+        max-width: 330px !important;
+        margin: 0 auto !important;
+        font-size: 0.68rem !important;
+        line-height: 1.3 !important;
+    }
+}
+
+/* Final desktop Skill panel content-height fix. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker {
+        height: auto !important;
+        min-height: 0 !important;
+        align-self: flex-start !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .progress-chart-panel {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .skill-empty-state {
+        height: 160px !important;
+        min-height: 160px !important;
+        max-height: 160px !important;
+        padding: 18px !important;
+        display: grid !important;
+        place-items: center !important;
     }
 }
 
@@ -7605,5 +8037,595 @@ body.dm #sec-progress-tracking .progress-export-status[data-type="error"] {
         width: 100% !important;
         max-width: 100% !important;
         flex-basis: 100% !important;
+    }
+}
+
+/* Final desktop Strengths/STAR panel height fix. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        padding: 12px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-overview,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-overview {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: start !important;
+        margin: 0 0 8px !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-text,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-text {
+        margin: 0 0 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-summary {
+        display: grid !important;
+        grid-template-columns: 82px minmax(0, 1fr) !important;
+        gap: 10px !important;
+        align-items: center !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score {
+        width: 78px !important;
+        height: 78px !important;
+        min-width: 78px !important;
+        margin: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score span {
+        font-size: 0.92rem !important;
+        line-height: 1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-progress-score small {
+        font-size: 0.48rem !important;
+        line-height: 1.05 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-list {
+        gap: 7px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-row {
+        padding: 0 !important;
+        gap: 4px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-top {
+        margin-bottom: 4px !important;
+        font-size: 0.7rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-part-track {
+        height: 5px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-note {
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        align-items: center !important;
+        margin: 8px 0 0 !important;
+        padding: 8px 10px !important;
+        border-radius: 10px !important;
+    }
+}
+
+/* Final desktop lower Progress panels compact layout. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-panel {
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 12px !important;
+        border-radius: 12px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-top,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .learning-heading,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-heading {
+        margin: 0 0 8px !important;
+        gap: 8px !important;
+        align-items: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .history-search {
+        height: 38px !important;
+        min-height: 38px !important;
+        margin: 0 0 8px !important;
+        padding: 0 12px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .history-search input {
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        max-height: 190px !important;
+        overflow-y: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-card {
+        min-height: 92px !important;
+        padding: 10px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table :is(.history-date, .history-meta) {
+        font-size: 0.64rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-scenario {
+        margin: 6px 0 2px !important;
+        font-size: 0.78rem !important;
+        line-height: 1.2 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table :is(.history-feedback-btn, .history-delete-btn, .history-clear-btn) {
+        min-height: 30px !important;
+        height: 30px !important;
+        padding: 6px 9px !important;
+        border-radius: 8px !important;
+        font-size: 0.64rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #history-table .history-delete-btn {
+        width: 34px !important;
+        min-width: 34px !important;
+        padding: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-state {
+        height: 150px !important;
+        min-height: 150px !important;
+        padding: 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #learning-progress .skill-empty-icon {
+        font-size: 2.4rem !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #recommended-next .recommend-item {
+        min-height: 150px !important;
+        padding: 12px !important;
+        border-radius: 10px !important;
+        display: grid !important;
+        grid-template-columns: 34px minmax(0, 1fr) 20px !important;
+        align-items: center !important;
+        gap: 10px !important;
+    }
+}
+
+/* Final top summary compact pass */
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > #progress-stats {
+    --bs-gutter-x: 10px !important;
+    --bs-gutter-y: 10px !important;
+    margin-bottom: 10px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > #progress-stats > [class*="col-"] {
+    display: flex !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-card {
+    width: 100% !important;
+    min-height: 84px !important;
+    height: 84px !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+    display: grid !important;
+    grid-template-rows: 30px auto auto !important;
+    place-items: center !important;
+    align-content: center !important;
+    gap: 3px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+    font-size: 0.76rem !important;
+    margin: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-value {
+    margin: 2px 0 0 !important;
+    font-size: 1.08rem !important;
+    line-height: 1.05 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-stat-label {
+    margin: 0 !important;
+    font-size: 0.55rem !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-insight {
+    min-height: 76px !important;
+    margin: 0 0 10px !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-content {
+    min-height: 52px !important;
+    display: grid !important;
+    grid-template-columns: 38px minmax(0, 1fr) 44px !important;
+    gap: 10px !important;
+    align-items: center !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-icon {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-title {
+    margin: 0 0 3px !important;
+    font-size: 0.92rem !important;
+    line-height: 1.15 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-text {
+    margin: 0 !important;
+    font-size: 0.72rem !important;
+    line-height: 1.25 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-art {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 1.15rem !important;
+    opacity: 0.35 !important;
+}
+
+/* Final one-row Progress summary layout */
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 1.02fr) minmax(0, 1.02fr) minmax(0, 1.02fr) minmax(280px, 1.35fr) !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    margin: 0 0 10px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip > #progress-stats {
+    display: contents !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip > #progress-stats > [class*="col-"] {
+    width: auto !important;
+    max-width: none !important;
+    flex: none !important;
+    padding: 0 !important;
+    display: flex !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-stat-card,
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-insight {
+    height: 88px !important;
+    min-height: 88px !important;
+    margin: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-insight {
+    padding: 10px 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-content {
+    height: 100% !important;
+    min-height: 0 !important;
+    grid-template-columns: 34px minmax(0, 1fr) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-icon {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    font-size: 0.8rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-title {
+    font-size: 0.8rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-text {
+    font-size: 0.62rem !important;
+    line-height: 1.2 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-art {
+    display: none !important;
+}
+
+/* Final AI insight card matches stat cards */
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-insight {
+    display: grid !important;
+    place-items: center !important;
+    padding: 10px 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-content {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 30px auto auto !important;
+    place-items: center !important;
+    align-content: center !important;
+    gap: 3px !important;
+    text-align: center !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    margin: 0 !important;
+    font-size: 0.76rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-title {
+    margin: 2px 0 0 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.05 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip .progress-ai-text {
+    max-width: 21ch !important;
+    margin: 0 auto !important;
+    font-size: 0.55rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    text-transform: uppercase !important;
+}
+
+/* Final floating AI insights control */
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 48px !important;
+    overflow: visible !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-float {
+    position: relative !important;
+    z-index: 8 !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 48px !important;
+    height: 88px !important;
+    min-height: 88px !important;
+    margin: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-float-btn {
+    width: 42px !important;
+    height: 42px !important;
+    border: 1px solid rgba(37, 99, 235, 0.24) !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
+    color: #1d4ed8 !important;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18) !important;
+    display: grid !important;
+    place-items: center !important;
+    font-size: 1rem !important;
+    cursor: pointer !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-float-btn[aria-expanded="true"] {
+    background: #2563eb !important;
+    color: #ffffff !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-popover {
+    position: absolute !important;
+    top: calc(100% + 8px) !important;
+    right: 0 !important;
+    width: min(330px, 78vw) !important;
+    padding: 14px !important;
+    border: 1px solid rgba(191, 219, 254, 0.95) !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.18) !important;
+    text-align: left !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-popover[hidden] {
+    display: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-popover .progress-ai-content {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    text-align: left !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-popover .progress-ai-title {
+    margin: 0 0 5px !important;
+    font-size: 0.95rem !important;
+    line-height: 1.2 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-popover .progress-ai-text {
+    max-width: none !important;
+    margin: 0 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    line-height: 1.35 !important;
+    text-transform: none !important;
+}
+
+/* Final page-floating AI insights button */
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-summary-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    overflow: visible !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-float {
+    position: fixed !important;
+    right: 24px !important;
+    bottom: 24px !important;
+    z-index: 1060 !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-float-btn {
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 16px !important;
+    font-size: 1.08rem !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-ai-popover {
+    position: absolute !important;
+    top: auto !important;
+    right: 0 !important;
+    bottom: calc(100% + 10px) !important;
+    width: min(340px, calc(100vw - 32px)) !important;
+}
+
+/* Final desktop equal height for Skill and Strengths pair */
+@media (min-width: 1181px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .row {
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker {
+        display: flex !important;
+        align-self: stretch !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        flex: 0 0 50% !important;
+        height: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 350px !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .skill-empty-state {
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        display: grid !important;
+        place-items: center !important;
+    }
+}
+
+/* Final desktop Skill and Strengths whitespace trim */
+@media (min-width: 1181px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker {
+        display: flex !important;
+        align-self: stretch !important;
+        width: 50% !important;
+        max-width: 50% !important;
+        flex: 0 0 50% !important;
+        height: auto !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .progress-chart-panel,
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .strengths-star-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        padding: 12px !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #skill-tracker .skill-empty-state {
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 178px !important;
+        margin-top: 8px !important;
+        padding: 14px !important;
+        display: grid !important;
+        place-items: center !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking #strengths-tracker .star-note {
+        margin-top: 8px !important;
+    }
+}
+
+/* Final desktop progress hero background and contrast. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero {
+        background:
+            linear-gradient(105deg, rgba(29, 78, 216, 0.95) 0%, rgba(15, 95, 232, 0.94) 50%, rgba(31, 182, 213, 0.92) 100%) !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero,
+    html[data-theme="dark"] body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero,
+    body.dm.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-hero {
+        background:
+            linear-gradient(105deg, rgba(30, 64, 175, 0.96) 0%, rgba(15, 82, 217, 0.95) 52%, rgba(18, 158, 192, 0.93) 100%) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking .progress-hero .progress-hero-title,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking .progress-hero .progress-hero-title.text-gradient-primary {
+        background: none !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking .progress-hero .progress-hero-subtitle {
+        color: rgba(248, 251, 255, 0.92) !important;
+        -webkit-text-fill-color: rgba(248, 251, 255, 0.92) !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking .progress-hero .progress-hero-icon {
+        background: rgba(255, 255, 255, 0.94) !important;
+        border-color: rgba(255, 255, 255, 0.62) !important;
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard .db-content #sec-progress-tracking .progress-hero .progress-hero-icon :is(i, svg, svg *) {
+        color: #1d4ed8 !important;
+        -webkit-text-fill-color: #1d4ed8 !important;
+        stroke: currentColor !important;
     }
 }
