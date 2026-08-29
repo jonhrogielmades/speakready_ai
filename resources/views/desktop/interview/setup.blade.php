@@ -8,7 +8,28 @@
 @section('content')
 @php
     $sourcePacks = $sourcePacks ?? [];
-    $interviewCategories = ($categories ?? collect())->values();
+    $interviewCategories = ($categories ?? collect())
+        ->filter(function ($category): bool {
+            $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
+
+            if (
+                str_contains($title, 'bpo')
+                || str_contains($title, 'customer')
+                || str_contains($title, 'programming')
+                || str_contains($title, 'technical')
+                || str_contains($title, 'scholar')
+                || preg_match('/\bit\b/', $title)
+            ) {
+                return false;
+            }
+
+            return str_contains($title, 'job interview')
+                || str_contains($title, 'general job')
+                || str_contains($title, 'school admission')
+                || str_contains($title, 'college admission')
+                || str_contains($title, 'admission interview');
+        })
+        ->values();
     $selectedApplication = $selectedApplication ?? null;
     $selectedPack = $selectedPack ?? null;
     $packQuestionTypes = collect($selectedPack?->question_types ?? [])
@@ -21,20 +42,12 @@
         $displayTitle = trim(preg_replace('/\s*\/\s*/', ' / ', $title) ?? $title);
         $key = strtolower(trim(preg_replace('/\s+/', ' ', $displayTitle) ?? $displayTitle));
         $knownLabels = [
-            'job interview' => 'Philippines General Job Interview',
-            'general job interview' => 'Philippines General Job Interview',
-            'bpo' => 'Philippines BPO / Customer Support Interview',
-            'bpo / customer support' => 'Philippines BPO / Customer Support Interview',
-            'bpo / customer support interview' => 'Philippines BPO / Customer Support Interview',
-            'customer support' => 'Philippines BPO / Customer Support Interview',
-            'customer support interview' => 'Philippines BPO / Customer Support Interview',
-            'it / programming' => 'Philippines IT / Programming Interview',
-            'it / programming interview' => 'Philippines IT / Programming Interview',
-            'it/programming' => 'Philippines IT / Programming Interview',
-            'it/programming interview' => 'Philippines IT / Programming Interview',
-            'scholarship interview' => 'Philippines Scholarship Interview',
-            'college admission' => 'Philippines College Admission Interview',
-            'college admission interview' => 'Philippines College Admission Interview',
+            'job interview' => 'Philippines Job Interviews',
+            'general job interview' => 'Philippines Job Interviews',
+            'college admission' => 'Philippines School Admission Interviews',
+            'college admission interview' => 'Philippines School Admission Interviews',
+            'school admission' => 'Philippines School Admission Interviews',
+            'school admission interview' => 'Philippines School Admission Interviews',
         ];
 
         if (isset($knownLabels[$key])) {
@@ -42,7 +55,7 @@
         }
 
         if ($displayTitle === '') {
-            return 'Philippines General Job Interview';
+            return 'Philippines Job Interviews';
         }
 
         if (! str_contains($key, 'interview')) {
@@ -93,11 +106,8 @@
     $packScenario = null;
     if ($packText !== '') {
         $packScenarioNeedles = match (true) {
-            str_contains($packText, 'technical') || str_contains($packText, 'software') || str_contains($packText, 'programming') => ['it / programming', 'programming', 'technical'],
-            str_contains($packText, 'customer') || str_contains($packText, 'bpo') || str_contains($packText, 'contact center') => ['bpo', 'customer'],
-            str_contains($packText, 'scholarship') => ['scholarship'],
-            str_contains($packText, 'college') || str_contains($packText, 'admission') => ['college', 'admission'],
-            default => ['general job', 'job interview'],
+            str_contains($packText, 'college') || str_contains($packText, 'school') || str_contains($packText, 'admission') => ['school admission', 'college', 'admission'],
+            default => ['job interview', 'job interviews'],
         };
 
         $packScenario = $scenarioOptions->first(function ($scenario) use ($packScenarioNeedles) {
@@ -250,7 +260,7 @@
                             </div>
                             <input type="hidden" name="source_pack_key" id="valSourcePack" value="{{ $selectedScenario['key'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
-                            <div class="desc-text" id="scenarioHelp">Active core categories from admin appear here with the matching Philippines source pack.</div>
+                            <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
                             @unless($hasScenarioOptions)
                                 <div class="setup-inline-error setup-inline-error-visible" id="scenarioEmptyState" role="alert">No active interview scenarios are available. Ask an admin to activate at least one core category before starting.</div>
                             @endunless

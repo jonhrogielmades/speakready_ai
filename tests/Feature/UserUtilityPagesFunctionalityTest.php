@@ -398,7 +398,7 @@ class UserUtilityPagesFunctionalityTest extends TestCase
         $content = $this->actingAs($user)
             ->get(route('user.leaderboard'))
             ->assertOk()
-            ->assertSee('BPO / Customer Service')
+            ->assertSee('Job Interviews')
             ->assertSee('88%')
             ->assertDontSee('Other user story')
             ->getContent();

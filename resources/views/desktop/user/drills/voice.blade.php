@@ -44,7 +44,7 @@
                     <div class="vr-option-list">
                         <button id="voiceCategoryButton" type="button" class="vr-option-row" onclick="cycleVoiceCategory()">
                             <span class="vr-option-icon"><i class="fa-solid fa-briefcase"></i></span>
-                            <span id="categoryDisplay">General Job Interview</span>
+                            <span id="categoryDisplay">Job Interviews</span>
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                         <button id="voiceIntentionButton" type="button" class="vr-option-row" onclick="cycleVoiceIntention()">
@@ -62,13 +62,8 @@
                     <div class="d-flex justify-content-between align-items-center mb-4 vr-hidden-selects" aria-hidden="true" hidden>
                         <div class="d-flex flex-wrap gap-2">
                             <select id="categorySelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;" tabindex="-1">
-                                <option value="Tell Me About Yourself">General Job Interview</option>
-                                <option value="Strengths and Weaknesses">Strengths & Weaknesses</option>
-                                <option value="Leadership">Leadership / Teamwork</option>
-                                <option value="Problem Solving">Problem Solving</option>
-                                <option value="Customer Service">Customer Service</option>
-                                <option value="Technical">IT / Technical Interview</option>
-                                <option value="Scholarship">Scholarship / Admission</option>
+                                <option value="Tell Me About Yourself">Job Interviews</option>
+                                <option value="School Admission">School Admission Interviews</option>
                             </select>
                             <select id="intentionSelect" class="form-select w-auto" style="background:var(--bg3);color:var(--tx);border-color:var(--bd);border-radius:10px;" tabindex="-1">
                                 <option value="Confident">Confident</option>
@@ -83,7 +78,7 @@
 
                     <div class="vr-prompt-card">
                         <div class="vr-prompt-kicker">PHILIPPINES PROMPT</div>
-                        <h3 id="promptText" class="vr-prompt-text">"Tell me about a time you showed leadership."</h3>
+                        <h3 id="promptText" class="vr-prompt-text">"Walk me through your background and connect it to the role you are preparing for."</h3>
                         <div id="voiceStatusNotice" class="vr-notice" role="status" aria-live="polite" hidden></div>
 
                     <!-- Mic Visualization -->
@@ -285,7 +280,7 @@
                 </div>
             </aside>
         
-        <!-- Fact-grounded revision comparison -->
+        <!-- Answer draft comparison -->
         <div id="comparisonPanel" class="premium-card mt-4" style="display:none;">
             <h5 class="fw-bold mb-4"><i class="fa-solid fa-code-compare me-2" style="color:#60a5fa;"></i> Fact-Grounded Revision</h5>
             <div class="row g-4">
@@ -379,8 +374,8 @@
                         <div class="vr-suggestion-content">
                             <span class="vr-suggestion-icon"><i class="fa-solid fa-briefcase"></i></span>
                             <div>
-                                <div class="vr-suggestion-title">Practice IT / Technical</div>
-                                <div class="vr-suggestion-text">Your clarity can drop on technical explanations. Practice the IT / Technical scenario next.</div>
+                                <div class="vr-suggestion-title">Practice School Admission</div>
+                                <div class="vr-suggestion-text">Practice a school admission answer that connects your goals, program fit, and readiness.</div>
                             </div>
                         </div>
                     </div>
@@ -407,13 +402,8 @@ document.querySelectorAll('#moduleTabs .nav-link').forEach(link => {
 
 // AI-backed practice prompt bank with a local fallback for provider outages.
 const fallbackPrompts = {
-    "Tell Me About Yourself": ["Walk me through your background and connect it to the Philippines role or program you are preparing for.", "What should a Philippine interviewer remember about you after your first two minutes?", "How would you summarize your strengths, experience, and next career goal in the Philippine context?"],
-    "Strengths and Weaknesses": ["What is one strength you can prove with a specific school, internship, freelance, or work example?", "Tell me about a weakness you are actively improving and what changed because of that work.", "Describe feedback you received from a teacher, supervisor, client, or team lead and how you used it to improve."],
-    "Leadership": ["Tell me about a time you led a team through uncertainty in school, work, internship, or community work.", "Describe a situation where you had to resolve conflict while keeping the work moving.", "Give an example of how you motivated others toward a shared goal in a Philippine team setting."],
-    "Problem Solving": ["Tell me about a complex problem you solved with limited information in school, work, or training.", "Describe a time you had competing deadlines and how you chose what to do first.", "How would you handle a Philippine interviewer asking about salary expectations, schedule, or work setup?"],
-    "Customer Service": ["Explain a customer concern politely, acknowledge the issue, and offer the next action.", "How would you calm a frustrated customer while still being honest about what you can do?", "Describe a time you handled a service issue and protected the relationship."],
-    "Technical": ["Explain a technical concept from your experience to a non-technical Philippine interviewer.", "Walk me through your debugging process when the cause is unclear.", "Describe a technical tradeoff you made for a class, client, employer, or startup project and how you evaluated it."],
-    "Scholarship": ["Why does this Philippine scholarship or admission program fit your academic and career plan?", "Tell me about a challenge that shaped your goals and how you responded.", "Describe how you will contribute to your school, community, or the Philippines if selected."]
+    "Tell Me About Yourself": ["Walk me through your background and connect it to the Philippines role you are preparing for.", "What should a Philippine job interviewer remember about you after your first two minutes?", "How would you summarize your strengths, experience, and next career goal in the Philippine context?"],
+    "School Admission": ["Why does this school or program fit your academic and career plan?", "Tell me about a challenge that shaped your readiness for school and how you responded.", "Describe how you will contribute to your school, community, or the Philippines if admitted."]
 };
 
 const voiceMissionPreset = {
@@ -460,25 +450,19 @@ function setAnalysisPanelActive(isActive) {
 
 function voiceScenarioLabel(category) {
     const labels = {
-        "Tell Me About Yourself": "General Job Interview",
-        "Strengths and Weaknesses": "Strengths & Weaknesses",
-        "Leadership": "Leadership / Teamwork",
-        "Problem Solving": "Problem Solving",
-        "Customer Service": "Customer Service",
-        "Technical": "IT / Technical Interview",
-        "Scholarship": "Scholarship / Admission"
+        "Tell Me About Yourself": "Job Interviews",
+        "School Admission": "School Admission Interviews"
     };
 
-    return labels[category] || category || 'General Job Interview';
+    return labels[category] || 'Job Interviews';
 }
 
 function categoryValueForPreset(category) {
     const labels = {
+        "Job Interviews": "Tell Me About Yourself",
         "General Job Interview": "Tell Me About Yourself",
-        "Strengths & Weaknesses": "Strengths and Weaknesses",
-        "Leadership / Teamwork": "Leadership",
-        "IT / Technical Interview": "Technical",
-        "Scholarship / Admission": "Scholarship"
+        "School Admission Interviews": "School Admission",
+        "Scholarship / Admission": "School Admission"
     };
 
     return labels[category] || category || "Tell Me About Yourself";
@@ -1900,7 +1884,7 @@ let voiceHistoryData = {!! json_encode($history->map(function($session) {
     return [
         'd' => $session->created_at->format('M d'),
         'ts' => $session->created_at->timestamp,
-        'c' => $session->practice_scenario ?? 'General Job Interview',
+        'c' => $session->practice_scenario ?? 'Job Interviews',
         'cl' => ($session->clarity_score ?? 0) . '%',
         'w' => $session->wpm ?? 0,
         'f' => $session->filler_words ?? 0,

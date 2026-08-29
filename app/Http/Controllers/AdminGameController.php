@@ -31,7 +31,7 @@ class AdminGameController extends Controller
         }
 
         $allLevels = GameLevel::orderBy('level_number', 'asc')->get(); // For prerequisite dropdown
-        $categories = Category::where('status', 'active')->where('type', 'game')->get(); // For category dropdown
+        $categories = $this->gameAdminCategories();
 
         return $this->mobileView('admin.game', compact('levels', 'allLevels', 'categories'));
     }
@@ -71,7 +71,7 @@ class AdminGameController extends Controller
             'topic' => 'required|string|max:255',
             'level_number' => 'required|integer|min:1|max:'.self::MAX_LEVEL_NUMBER,
             'num_levels' => 'required|integer|min:1|max:'.self::MAX_LEVELS_PER_GENERATION,
-            'category_id' => ['required', Rule::exists('categories', 'id')->where('type', 'game')],
+            'category_id' => ['required', $this->activeGameCategoryRule()],
         ]);
 
         $startLevel = (int) $validated['level_number'];
@@ -206,7 +206,7 @@ class AdminGameController extends Controller
 
         return [
             'level_number' => ['required', 'integer', 'min:1', 'max:'.self::MAX_LEVEL_NUMBER, $uniqueRule],
-            'category_id' => ['required', Rule::exists('categories', 'id')->where('type', 'game')],
+            'category_id' => ['required', $this->activeGameCategoryRule()],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'mission_text' => 'nullable|string',
@@ -258,6 +258,22 @@ class AdminGameController extends Controller
         $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount'] ?? $fallback['skill_xp_amount']));
 
         return $gameData;
+    }
+
+    private function gameAdminCategories()
+    {
+        return Category::where('status', 'active')
+            ->where('type', 'game')
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get();
+    }
+
+    private function activeGameCategoryRule()
+    {
+        return Rule::exists('categories', 'id')
+            ->where('status', 'active')
+            ->where('type', 'game');
     }
 
     private function nextLevelNumber(int $currentLevelNumber): int

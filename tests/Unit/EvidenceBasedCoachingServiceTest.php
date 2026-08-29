@@ -54,7 +54,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
             (string) ($coaching['delivery_feedback']['tip'] ?? ''),
         ]));
 
-        $this->assertStringContainsString('transcript-detected', $deliveryText);
+        $this->assertStringContainsString('saved voice text', $deliveryText);
         $this->assertStringContainsString('silent pause', $deliveryText);
     }
 
@@ -178,9 +178,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $cameraFeedback = strtolower(json_encode($coaching['camera_feedback'], JSON_THROW_ON_ERROR));
         $this->assertStringContainsString('hands were visible', $cameraFeedback);
-        $this->assertStringContainsString('gesture movement', $cameraFeedback);
+        $this->assertStringContainsString('hand movement', $cameraFeedback);
         $this->assertStringContainsString('movement score', $cameraFeedback);
-        $this->assertStringContainsString('infer confidence', strtolower($coaching['transparency_note']));
+        $this->assertStringContainsString('guess confidence', strtolower($coaching['transparency_note']));
         $this->assertSame('verified', $coaching['feedback_quality']['status']);
         $this->assertSame(100, $coaching['feedback_quality']['completeness_percent']);
         $this->assertSame(
@@ -188,7 +188,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
             $coaching['feedback_quality']['checks_passed']
         );
         $this->assertTrue(collect($coaching['priority_actions'])->contains(
-            fn (array $priority): bool => $priority['area'] === 'Optional body-language framing'
+            fn (array $priority): bool => $priority['area'] === 'Camera frame'
         ));
     }
 
@@ -208,7 +208,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame(1, data_get($coaching, 'delivery.evidence.filler_total'));
         $this->assertSame(0, data_get($coaching, 'delivery.evidence.actionable_filler_total'));
         $this->assertFalse(collect($coaching['priority_actions'])->contains(
-            fn (array $priority): bool => $priority['area'] === 'Transcript-detected filler phrases'
+            fn (array $priority): bool => $priority['area'] === 'Filler words'
         ));
     }
 
@@ -238,9 +238,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $this->assertSame('partial', $coaching['analysis_status']['pronunciation']);
         $this->assertSame(58, $coaching['pronunciation_feedback']['evidence']['score']);
-        $this->assertStringContainsString('pronunciation/GOP coaching score', $coaching['pronunciation_feedback']['observation']);
+        $this->assertStringContainsString('pronunciation score', $coaching['pronunciation_feedback']['observation']);
         $this->assertTrue(collect($coaching['priority_actions'])->contains(
-            fn (array $priority): bool => $priority['area'] === 'Pronunciation and phoneme clarity'
+            fn (array $priority): bool => $priority['area'] === 'Pronunciation'
         ));
     }
 
@@ -270,7 +270,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $this->assertNull($coaching['pronunciation_feedback']['evidence']['score']);
         $this->assertSame(82, $coaching['pronunciation_feedback']['evidence']['reliability_score']);
-        $this->assertStringContainsString('no calibrated pronunciation score', $coaching['pronunciation_feedback']['observation']);
+        $this->assertStringContainsString('did not give a pronunciation score', $coaching['pronunciation_feedback']['observation']);
     }
 
     public function test_weakness_and_strength_questions_receive_specific_truthful_frameworks(): void
@@ -289,9 +289,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $weaknessTip = strtolower((string) ($weakness['question_tip']['guidance'] ?? ''));
 
         $this->assertSame('weakness', $weakness['question_tip']['framework']);
-        $this->assertStringContainsString('genuine', $weaknessTip);
+        $this->assertStringContainsString('real weakness', $weaknessTip);
         $this->assertStringContainsString('improv', $weaknessTip);
-        $this->assertStringContainsString('evidence', $weaknessTip);
+        $this->assertStringContainsString('true sign of progress', $weaknessTip);
         $this->assertStringNotContainsString('public speaking', $weaknessTip);
 
         $strength = $service->forAnswer(
@@ -305,7 +305,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $strengthTip = strtolower((string) ($strength['question_tip']['guidance'] ?? ''));
 
         $this->assertSame('strength', $strength['question_tip']['framework']);
-        $this->assertStringContainsString('job-relevant', $strengthTip);
+        $this->assertStringContainsString('job strength', $strengthTip);
         $this->assertMatchesRegularExpression('/evidence|example/', $strengthTip);
         $this->assertMatchesRegularExpression('/result|impact/', $strengthTip);
         $this->assertStringNotContainsString('increased revenue', $strengthTip);
@@ -426,10 +426,10 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame('insufficient_evidence', $alignment['status']);
         $this->assertNull($alignment['relevance_score']);
         $this->assertSame(['okay'], $alignment['evidence_quotes']);
-        $this->assertStringContainsString('Only limited answer evidence', $alignment['what_worked']);
+        $this->assertStringContainsString('Only limited answer detail', $alignment['what_worked']);
         $this->assertStringNotContainsString('The response started with', $alignment['what_worked']);
-        $this->assertContains('The response did not explain the specific steps you personally took.', $alignment['missing_points']);
-        $this->assertContains('The response did not name the tools, supplies, equipment, or cleaning agents used.', $alignment['missing_points']);
+        $this->assertContains('The answer did not explain the specific steps you took.', $alignment['missing_points']);
+        $this->assertContains('The answer did not name the tools, supplies, equipment, or cleaning agents used.', $alignment['missing_points']);
         $this->assertStringContainsString('cleanup situation', $alignment['action']);
         $this->assertStringContainsString('cleaning agents used', $alignment['action']);
         $this->assertStringNotContainsString('Expand your response to "', $alignment['action']);
@@ -448,7 +448,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $this->assertSame($alignment['action'], data_get($summary, 'question_improvements.0.next_attempt'));
         $this->assertStringNotContainsString('Expand your response to "', data_get($summary, 'question_improvements.0.next_attempt'));
-        $this->assertContains('The response did not name the tools, supplies, equipment, or cleaning agents used.', data_get($summary, 'question_improvements.0.missing_points'));
+        $this->assertContains('The answer did not name the tools, supplies, equipment, or cleaning agents used.', data_get($summary, 'question_improvements.0.missing_points'));
     }
 
     public function test_the_same_answer_receives_question_bound_alignment_for_each_different_question(): void
@@ -509,7 +509,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         );
 
         $this->assertSame('role_fit', data_get($coaching, 'question_tip.framework'));
-        $this->assertSame('Role-fit strategy', data_get($coaching, 'question_tip.title'));
+        $this->assertSame('Role-fit plan', data_get($coaching, 'question_tip.title'));
     }
 
     public function test_experiential_handoff_question_uses_behavioral_strategy(): void
@@ -755,7 +755,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame(1, data_get($summary, 'content_overview.directly_answered'));
         $this->assertSame('missing_criteria', data_get($summary, 'priority_actions.0.issue_code'));
         $this->assertSame(1, data_get($summary, 'priority_actions.0.affected_count'));
-        $this->assertStringContainsString('remaining required point', data_get($summary, 'priority_actions.0.action'));
+        $this->assertStringContainsString('missing point', data_get($summary, 'priority_actions.0.action'));
     }
 
     private function voiceAnswer(string $answerText, string $questionText): InterviewAnswer

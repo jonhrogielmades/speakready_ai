@@ -5886,6 +5886,7 @@
         font-size: 0.52rem;
         font-weight: 900;
         line-height: 1;
+        white-space: nowrap;
         box-shadow: 0 8px 18px rgba(13, 55, 130, 0.18);
         animation: srImageChipRocket var(--sr-chip-duration) cubic-bezier(0.37, 0, 0.18, 1) infinite both;
         transform-origin: 50% 56%;
@@ -6681,7 +6682,6 @@
         body.user-desktop-shell .sr-polished-card.sr-card-pad,
         body.user-desktop-shell .sr-side-feature.sr-card-pad,
         body.user-desktop-shell #card-progress-chart.sr-card-pad,
-        body.user-desktop-shell #card-practice-plan.sr-card-pad,
         body.user-desktop-shell #card-skill-radar,
         body.user-desktop-shell #card-daily-challenge {
             padding: var(--dash-card-pad) !important;
@@ -7806,3 +7806,140 @@
             min-height: 166px;
         }
     }
+/* Skill radar locked state */
+#card-skill-radar .sr-radar-locked {
+    min-height: 180px;
+    display: grid;
+    place-items: center;
+    gap: 10px;
+    padding: 16px;
+    border: 1px dashed rgba(37, 99, 235, 0.28);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.88));
+    color: #334155;
+    text-align: center;
+}
+
+#card-skill-radar .sr-radar-locked-icon {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+    font-size: 1rem;
+}
+
+#card-skill-radar .sr-radar-locked p {
+    max-width: 240px;
+    margin: 0;
+    color: inherit;
+    font-size: 0.84rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+html[data-theme="dark"] #card-skill-radar .sr-radar-locked,
+html:not([data-theme="light"]):not(.lm) #card-skill-radar .sr-radar-locked,
+body.dm #card-skill-radar .sr-radar-locked {
+    border-color: rgba(147, 197, 253, 0.36);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(30, 41, 59, 0.78));
+    color: #e2e8f0;
+}
+
+html[data-theme="dark"] #card-skill-radar .sr-radar-locked-icon,
+html:not([data-theme="light"]):not(.lm) #card-skill-radar .sr-radar-locked-icon,
+body.dm #card-skill-radar .sr-radar-locked-icon {
+    background: rgba(147, 197, 253, 0.16);
+    color: #bfdbfe;
+}
+
+#card-ai-recommendations .sr-recommendation-card {
+    grid-template-columns: 30px minmax(0, 1fr) 30px !important;
+    gap: 10px !important;
+    min-height: 78px !important;
+    padding: 12px 10px 12px 14px !important;
+    border-radius: 8px !important;
+}
+
+#card-ai-recommendations .sr-recommendation-card::before {
+    width: 3px !important;
+}
+
+#card-ai-recommendations .sr-recommendation-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
+    font-size: 0.72rem !important;
+    box-shadow: none !important;
+}
+
+#card-ai-recommendations .sr-recommendation-title {
+    font-size: 0.76rem !important;
+    line-height: 1.24 !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+}
+
+#card-ai-recommendations .sr-recommendation-reason {
+    margin-top: 5px !important;
+    font-size: 0.64rem !important;
+    line-height: 1.28 !important;
+    font-weight: 650 !important;
+}
+
+#card-ai-recommendations .sr-recommendation-next {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
+}
+
+.sr-two-col.sr-inline-panels {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--dash-section-gap) !important;
+}
+
+.sr-two-col.sr-inline-panels > * + * {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 575px) {
+    .sr-two-col.sr-inline-panels {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .sr-two-col.sr-inline-panels > .sr-card {
+        padding: 14px !important;
+    }
+
+    .sr-two-col.sr-inline-panels .sr-polished-header {
+        gap: 8px !important;
+    }
+
+    .sr-two-col.sr-inline-panels .sr-polished-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 0.85rem !important;
+    }
+
+    #card-ai-recommendations .d-flex.align-items-start.justify-content-between {
+        align-items: flex-start !important;
+        flex-wrap: wrap !important;
+    }
+
+    #card-ai-recommendations .sr-recommendation-card {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        padding-right: 12px !important;
+    }
+
+    #card-ai-recommendations .sr-recommendation-next {
+        display: none !important;
+    }
+}

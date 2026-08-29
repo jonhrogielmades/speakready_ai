@@ -4668,10 +4668,10 @@
     }
     #progressModulesLikeHero .progress-hero-title {
         margin: 0 0 3px !important;
-        font-size: 0.72rem !important;
-        line-height: 1.15 !important;
+        font-size: clamp(0.94rem, 5.2vw, 1.08rem) !important;
+        line-height: 1.14 !important;
         font-weight: 900 !important;
-        text-transform: uppercase !important;
+        text-transform: none !important;
         white-space: nowrap !important;
         color: var(--progress-hero-title-color) !important;
         -webkit-text-fill-color: var(--progress-hero-title-color) !important;
@@ -5644,8 +5644,8 @@
             color: var(--progress-desktop-title) !important;
             -webkit-text-fill-color: var(--progress-desktop-title) !important;
             background: none !important;
-            font-size: clamp(1.12rem, 1.08vw, 1.45rem) !important;
-            line-height: 1.12 !important;
+            font-size: clamp(0.94rem, 5.2vw, 1.08rem) !important;
+            line-height: 1.14 !important;
             font-weight: 900 !important;
             text-transform: none !important;
             white-space: normal !important;

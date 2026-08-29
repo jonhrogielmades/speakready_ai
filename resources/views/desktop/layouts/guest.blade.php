@@ -360,8 +360,7 @@
                                      </ul>
                                      <div class="ui-mobile-wire-chips" aria-hidden="true">
                                         <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Job</span>
-                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>OJT</span>
-                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>Scholarship</span>
+                                        <span class="ui-mobile-wire-chip"><span class="ui-mobile-wire-dot"></span>School Admission</span>
                                      </div>
                                      <div class="ui-mobile-wire-speech" aria-hidden="true">
                                         <span class="ui-mobile-wire-line" style="width:44px"></span>
@@ -558,10 +557,7 @@
                                                 </ul>
                                                 <div class="ui-desktop-wire-chips">
                                                    <span class="ui-desktop-wire-chip">Job</span>
-                                                   <span class="ui-desktop-wire-chip">BPO</span>
-                                                   <span class="ui-desktop-wire-chip">IT</span>
-                                                   <span class="ui-desktop-wire-chip">Scholarship</span>
-                                                   <span class="ui-desktop-wire-chip">Admission</span>
+                                                   <span class="ui-desktop-wire-chip">School Admission</span>
                                                 </div>
                                              </div>
                                              <div class="ui-desktop-wire-welcome-visual" aria-hidden="true">
@@ -711,7 +707,7 @@
                                                 </div>
                                                 <div class="ui-desktop-wire-progress-list">
                                                    <div class="ui-desktop-wire-progress-row"><span>Job Interview</span><strong>88%</strong><div class="ui-desktop-wire-progress-track"><span style="width:88%"></span></div></div>
-                                                   <div class="ui-desktop-wire-progress-row"><span>BPO Interview</span><strong>82%</strong><div class="ui-desktop-wire-progress-track"><span style="width:82%"></span></div></div>
+                                                   <div class="ui-desktop-wire-progress-row"><span>School Admission</span><strong>82%</strong><div class="ui-desktop-wire-progress-track"><span style="width:82%"></span></div></div>
                                                 </div>
                                              </section>
 
@@ -773,7 +769,7 @@
                                                 </div>
                                                 <div class="ui-desktop-wire-table-row">
                                                    <span class="ui-desktop-wire-icon"><i class="fa-solid fa-headset"></i></span>
-                                                   <div><strong>BPO Interview</strong><span>Customer scenario</span></div>
+                                                   <div><strong>School Admission</strong><span>Program-fit scenario</span></div>
                                                    <span class="ui-desktop-wire-score">84</span>
                                                 </div>
                                              </div>
@@ -799,14 +795,14 @@
                </div>
                <div class="row align-items-center g-5">
                   <div class="col-lg-6 rv">
-                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine interview scenarios, including job, BPO, IT, fresh graduate, scholarship, and college admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
+                     <p class="about-system-copy" style="font-size:1.05rem;color:var(--tx2);margin-bottom:20px;">SpeakReady AI is an advanced, intelligent platform designed to help you prepare for Philippine job and school admission interviews. It provides immediate, evidence-linked feedback on answer quality and optional, non-scoring delivery coaching to reduce interview anxiety and make practice more focused.</p>
 
                      <h4 class="fs-5 mb-3 mt-4">Target Users</h4>
                      <div class="target-users-grid d-flex flex-wrap gap-2 mb-4">
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-user-graduate me-2"></i>Students</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-graduation-cap me-2"></i>Fresh Graduates</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-briefcase me-2"></i>Job Seekers</span>
-                        <span class="ftag px-3 py-2"><i class="fa-solid fa-award me-2"></i>Scholarship Applicants</span>
+                        <span class="ftag px-3 py-2"><i class="fa-solid fa-building-columns me-2"></i>Admission Applicants</span>
                         <span class="ftag px-3 py-2"><i class="fa-solid fa-university me-2"></i>College Applicants</span>
                      </div>
                   </div>
@@ -1012,47 +1008,19 @@
                         <span class="slbl">Interview Categories</span>
                         <h2 class="stitle">Tailored to your <span class="gt">goals</span></h2>
                      </div>
-                     <div class="row g-3">
-                        <div class="col-lg-4 col-sm-6">
+                     <div class="row g-3 justify-content-center">
+                        <div class="col-md-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
                               <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
-                              <h4 class="fs-5 fw-bold">Job Interview</h4>
+                              <h4 class="fs-5 fw-bold">Job Interviews</h4>
                               <p style="font-size:.85rem;color:var(--tx2)">Practice HR, behavioral, role-fit, and salary expectation questions for local hiring.</p>
                            </div>
                         </div>
-                        <div class="col-lg-4 col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #06b6d4;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#06b6d4"><i class="fa-solid fa-headset"></i></div>
-                              <h4 class="fs-5 fw-bold">BPO Interview</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Prepare for customer service, call handling, shifting schedule, and empathy scenarios.</p>
-                           </div>
-                        </div>
-                        <div class="col-lg-4 col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-laptop-code"></i></div>
-                              <h4 class="fs-5 fw-bold">IT / Technical</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Rehearse technical explanations, project walkthroughs, debugging, and system design answers.</p>
-                           </div>
-                        </div>
-                        <div class="col-lg-4 col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #8b5cf6;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#8b5cf6"><i class="fa-solid fa-user-graduate"></i></div>
-                              <h4 class="fs-5 fw-bold">Fresh Graduate</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Turn school, internship, capstone, and organization experience into interview-ready proof.</p>
-                           </div>
-                        </div>
-                        <div class="col-lg-4 col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #34d399;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#34d399"><i class="fa-solid fa-award"></i></div>
-                              <h4 class="fs-5 fw-bold">Scholarship Interview</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Shape academic goals, leadership stories, financial need, and community impact answers.</p>
-                           </div>
-                        </div>
-                        <div class="col-lg-4 col-sm-6">
+                        <div class="col-md-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-university"></i></div>
-                              <h4 class="fs-5 fw-bold">College Admission</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for admissions.</p>
+                              <h4 class="fs-5 fw-bold">School Admission Interviews</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for school admissions.</p>
                            </div>
                         </div>
                      </div>
@@ -1128,7 +1096,7 @@
                         <div class="accordion-item">
                            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#f4" aria-expanded="false" aria-controls="f4">Can I practice multiple interview types?</button></h2>
                            <div id="f4" class="accordion-collapse collapse" data-bs-parent="#faqAcc">
-                              <div class="accordion-body">Yes. You can practice Job, BPO, IT and technical, Fresh Graduate, Scholarship, and College Admission interviews, then adjust difficulty, focus area, timer, resume context, and job details.</div>
+                              <div class="accordion-body">Yes. You can practice Job and School Admission interviews, then adjust difficulty, focus area, timer, resume context, and role or program details.</div>
                            </div>
                         </div>
                         <div class="accordion-item">

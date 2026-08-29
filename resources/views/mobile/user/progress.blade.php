@@ -561,7 +561,7 @@
                         </div>
                         <div class="col-4">
                             <h3 style="color:var(--tx);font-weight:bold;">{{ is_numeric($latestVoice->confidence_score) ? $latestVoice->confidence_score . '%' : 'N/A' }}</h3>
-                            <small style="color:var(--tx3)">Delivery Stability</small>
+                            <small style="color:var(--tx3)">Speaking Steadiness</small>
                         </div>
                     </div>
                     
@@ -848,7 +848,7 @@
             
             const readinessCanvas = document.getElementById('readinessChart');
             if (readinessCanvas) {
-                if (window.Chart) {
+                if (window.Chart && document.getElementById('readinessChart')) {
                     try {
                         const readinessGradient = readinessCanvas.getContext('2d').createLinearGradient(0, 0, 0, 340);
                         readinessGradient.addColorStop(0, 'rgba(37, 99, 235, 0.18)');
@@ -907,7 +907,7 @@
             // Feature 3: Scenario Performance
             const categoryCanvas = document.getElementById('categoryChart');
             if (categoryCanvas) {
-                if (window.Chart) {
+                if (window.Chart && document.getElementById('categoryChart')) {
                     try {
                         const scenarioLabels = Object.keys(scenarioPerformance);
                         const scenarioData = Object.values(scenarioPerformance);
@@ -1144,7 +1144,7 @@
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
             { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See how much of your module work is complete.', side: 'top', align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and delivery stability from voice drills.', side: 'top', align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and speaking steadiness from voice drills.', side: 'top', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
@@ -1159,7 +1159,7 @@
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
             { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'See how much of your module work is complete.', side: 'right', align: 'start' }},
-            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and delivery stability from voice drills.', side: 'left', align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Rehearsal', description: 'Check speaking pace, clarity, and speaking steadiness from voice drills.', side: 'left', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}

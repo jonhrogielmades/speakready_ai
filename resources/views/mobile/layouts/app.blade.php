@@ -3134,7 +3134,7 @@
       <script src="{{ asset('js/aos.js') }}"></script>
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
-      <script src="{{ asset('js/main.js?v=8') }}"></script>
+      <script src="{{ asset('js/main.js?v=7') }}"></script>
       @include('mobile.partials.onboarding-script')
       @include('mobile.partials.language-translation')
       <script src="{{ asset('js/user-ui.js') }}?v=13" defer></script>

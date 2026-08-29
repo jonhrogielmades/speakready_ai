@@ -50,11 +50,11 @@
                 $sourcePack = \App\Services\QuestionDatasetProvider::find($sourcePackKey)
                     ?? ($sessionRecord->category ? \App\Services\QuestionDatasetProvider::forCategory($sessionRecord->category) : null);
                 $scenarioLabels = [
-                    'ph_job_interview' => 'General Job Interview',
-                    'ph_bpo_communication' => 'BPO / Customer Support Interview',
-                    'ph_it_programming' => 'IT / Programming Interview',
-                    'ph_scholarship' => 'Scholarship Interview',
-                    'ph_college_admission' => 'College Admission Interview',
+                    'ph_job_interview' => 'Job Interviews',
+                    'ph_bpo_communication' => 'Job Interviews',
+                    'ph_it_programming' => 'Job Interviews',
+                    'ph_scholarship' => 'School Admission Interviews',
+                    'ph_college_admission' => 'School Admission Interviews',
                 ];
                 $scenarioLabel = $scenarioLabels[$sourcePack['key'] ?? $sourcePackKey] ?? 'Philippines Interview';
                 $sourceNames = collect($sourcePack['sources'] ?? [])->pluck('name')->filter()->take(3)->implode(', ');
@@ -82,7 +82,7 @@
             <div class="{{ $showCameraPanel ? 'col-lg-8' : 'col-lg-12' }}">
                 <!-- Progress Tracker Removed by User -->
 
-                <!-- Simulated AI Video Avatar Panel -->
+                <!-- Interviewer Avatar Panel -->
                 <div class="panel p-0 ai-avatar-panel animate-fade-up delay-100" style="overflow:hidden;border:1px solid var(--bd);background:#000;position:relative;height:280px;border-radius:24px;margin-bottom:24px;box-shadow:0 15px 40px rgba(0,0,0,0.15);">
                     <div style="position:absolute; inset:0; background: radial-gradient(circle at top right, rgba(139,92,246,0.3), transparent 60%), radial-gradient(circle at bottom left, rgba(59,130,246,0.3), transparent 60%); z-index:1; pointer-events:none;"></div>
                     @if($showCameraPanel)
@@ -321,7 +321,10 @@
             const cameraCoachingEnabled = @json((bool) data_get($sessionRecord->accommodation_profile, 'camera_coaching', false));
             const cameraPreviewEnabled = cameraCoachingEnabled;
             let cameraUnavailableReason = null;
-            const serverAiVoiceEnabled = @json(filter_var(config('services.openai.tts_enabled', false), FILTER_VALIDATE_BOOLEAN));
+            @php
+                $serverAiVoiceEnabledForUi = filter_var(config('services.ai_tts.enabled', config('services.openai.tts_enabled', false)), FILTER_VALIDATE_BOOLEAN);
+            @endphp
+            const serverAiVoiceEnabled = @json($serverAiVoiceEnabledForUi);
             let currentQIdx = Number(savedSessionState.currentQIdx ?? {{ (int) ($sessionRecord->current_question_index ?? 0) }}) || 0;
             currentQIdx = Math.max(0, Math.min(currentQIdx, Math.max(0, questions.length - 1)));
             let timerSeconds = Number(savedSessionState.timerSeconds ?? {{ (int) ($sessionRecord->duration_seconds ?? 0) }}) || 0;

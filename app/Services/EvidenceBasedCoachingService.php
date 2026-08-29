@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 final class EvidenceBasedCoachingService
 {
-    public const VERSION = 6;
+    public const VERSION = 7;
 
     private const VOICE_MODES = ['voice', 'hybrid', 'voice_and_text'];
 
@@ -46,8 +46,8 @@ final class EvidenceBasedCoachingService
             'filler_rate_per_100' => null,
             'filler_events' => [],
             'caveat' => $deliveryMeasured
-                ? 'Words and filler candidates come from the saved browser speech transcript. Duration and pause counts are browser-reported estimates. Speech recognition may omit hesitation sounds, and context-sensitive matches can be meaningful words.'
-                : 'Delivery was not measured because this answer does not contain both a recorded duration and a usable voice transcript.',
+                ? 'Words and possible filler words come from the saved voice text. Time and pause counts are browser estimates. Voice text may miss hesitation sounds, and some matched words may still make sense.'
+                : 'Speaking was not measured because this answer does not have both a recorded time and usable voice text.',
         ];
 
         if ($deliveryMeasured) {
@@ -166,7 +166,7 @@ final class EvidenceBasedCoachingService
                 'mapped_skills' => $questionTip['mapped_skills'],
             ],
             'priority_actions' => $priorityActions,
-            'transparency_note' => 'Question alignment is tied to this answer, its exact question, and cited answer excerpts. Content feedback cannot verify facts beyond the submitted response. Delivery uses transcript and timing evidence. Local pronunciation, phoneme alignment, and GOP are coaching signals only when configured and measured. Optional body-language coaching is a browser estimate, is never used to infer confidence, honesty, personality, employability, or intent, and does not affect readiness scoring.',
+            'transparency_note' => 'The question match is based on this answer, its exact question, and quoted parts of the answer. The feedback cannot prove facts outside the answer. Speaking notes use saved voice text and time data. Pronunciation notes are only coaching notes when they are turned on and checked. Optional camera coaching is only a browser estimate. It is never used to guess confidence, honesty, personality, job fit, or intent, and it does not change the readiness score.',
         ];
     }
 
@@ -366,8 +366,9 @@ final class EvidenceBasedCoachingService
             }
 
             foreach ((array) ($coaching['priority_actions'] ?? []) as $priority) {
+                $priorityArea = strtolower(trim((string) ($priority['area'] ?? '')));
                 if (! is_array($priority)
-                    || strtolower(trim((string) ($priority['area'] ?? ''))) === 'answer-to-question relevance') {
+                    || in_array($priorityArea, ['answer-to-question relevance', 'answer match'], true)) {
                     continue;
                 }
 
@@ -375,7 +376,7 @@ final class EvidenceBasedCoachingService
                 $priority['severity'] = is_numeric($priority['severity'] ?? null)
                     ? max(0, min(100, (int) round($priority['severity'])))
                     : $this->prioritySeverity($area);
-                $priority['issue_code'] = $priority['issue_code'] ?? 'answer_'.strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $area));
+                $priority['issue_code'] = $priority['issue_code'] ?? $this->priorityIssueCode($area);
                 $priority['affected_count'] = max(1, (int) ($priority['affected_count'] ?? 1));
                 $priority['eligible_count'] = max(1, $coverage['answers']);
                 $priority['questions'] = array_values(array_unique(array_filter(array_merge(
@@ -393,13 +394,13 @@ final class EvidenceBasedCoachingService
 
         arsort($fillerBreakdown);
         $fillerTotal = array_sum($fillerBreakdown);
-        $observations[] = "Question coverage across {$coverage['answers']} answers: {$contentOverview['directly_answered']} directly answered, {$contentOverview['partially_answered']} partially answered, {$contentOverview['low_relevance']} low relevance, {$contentOverview['insufficient_evidence']} without enough evidence, {$contentOverview['skipped']} skipped, and {$contentOverview['not_evaluated']} not evaluated.";
+        $observations[] = "Question results across {$coverage['answers']} answers: {$contentOverview['directly_answered']} directly answered, {$contentOverview['partially_answered']} partly answered, {$contentOverview['low_relevance']} had low match, {$contentOverview['insufficient_evidence']} needed more detail, {$contentOverview['skipped']} skipped, and {$contentOverview['not_evaluated']} not checked.";
         if ($coverage['delivery_measured'] > 0) {
             $observations[] = $fillerTotal > 0
-                ? "Across {$coverage['delivery_measured']} recorded answers, the browser transcripts detected {$fillerTotal} possible filler phrases in {$deliveryWords} transcribed words."
-                : "Across {$coverage['delivery_measured']} recorded answers, no configured filler phrases were detected in the saved browser transcripts.";
+                ? "Across {$coverage['delivery_measured']} recorded answers, the saved voice text found {$fillerTotal} possible filler words in {$deliveryWords} words."
+                : "Across {$coverage['delivery_measured']} recorded answers, no saved filler words were found in the voice text.";
         } else {
-            $observations[] = 'No answer had enough recorded voice evidence for a delivery measurement; no filler or pace conclusion was made.';
+            $observations[] = 'No answer had enough recorded voice details for speaking notes, so no filler or pace note was made.';
         }
 
         if ($coverage['camera_measured'] > 0) {
@@ -410,42 +411,42 @@ final class EvidenceBasedCoachingService
             $shoulders = (int) round(($cameraShouldersLevel / max(1, $cameraShouldersMeasured)) * 100);
             $upright = (int) round(($cameraUpright / max(1, $cameraUprightMeasured)) * 100);
             $highMovement = (int) round(($cameraHighMovement / max(1, $cameraMovementMeasured)) * 100);
-            $observations[] = "Optional body-language coaching had usable samples for {$coverage['camera_measured']} answers: a face was detectable in {$visibility}% of samples, head alignment appeared camera-facing in {$facing}% of detected samples, hands were visible in {$hands}% of samples, and pose landmarks were detected in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of samples.';
+            $observations[] = "Optional camera coaching had enough checks for {$coverage['camera_measured']} answers: a face was seen in {$visibility}% of checks, the head looked camera-facing in {$facing}% of face checks, hands were visible in {$hands}% of checks, and body position was seen in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of checks.';
             if ($cameraShouldersMeasured > 0 || $cameraUprightMeasured > 0 || $cameraMovementMeasured > 0) {
-                $observations[] = "Body-language descriptors across measured samples: shoulder balance appeared level in {$shoulders}% of measured pose samples, upper-body posture appeared upright in {$upright}% of measured pose samples, gesture movement appeared in {$gesture}% of hand-visible samples, and higher movement appeared in {$highMovement}% of movement-measured samples.";
+                $observations[] = "Camera notes across checked parts: shoulders looked level in {$shoulders}% of body checks, upper body looked upright in {$upright}% of body checks, hand movement appeared in {$gesture}% of checks where hands were seen, and higher movement appeared in {$highMovement}% of movement checks.";
             }
         } elseif ($coverage['camera_insufficient'] > 0) {
-            $observations[] = 'Optional camera sampling was attempted, but the available samples were insufficient for a dependable observation.';
+            $observations[] = 'Optional camera sampling was tried, but there were not enough samples for a good note.';
         } else {
-            $observations[] = 'Optional camera coaching was not measured, so no camera-based conclusion was made.';
+            $observations[] = 'Optional camera coaching was not measured, so no camera note was made.';
         }
 
         foreach ($alignmentIssueBuckets as $issueCode => $bucket) {
             $area = match ($issueCode) {
                 'skipped' => 'Skipped questions',
-                'low_relevance' => 'Answer-to-question relevance',
-                'insufficient_evidence' => 'Answer depth',
-                'partially_answered' => 'Incomplete question coverage',
-                'not_evaluated' => 'Unavailable content evaluation',
-                'missing_criteria' => 'Remaining required coverage',
-                default => 'Question-specific improvement',
+                'low_relevance' => 'Answer match',
+                'insufficient_evidence' => 'Answer detail',
+                'partially_answered' => 'Partly answered question',
+                'not_evaluated' => 'Answer not checked',
+                'missing_criteria' => 'Missing point',
+                default => 'Question next step',
             };
             $action = match ($issueCode) {
-                'skipped' => 'Answer each skipped question directly, then add one truthful supporting detail so it can be assessed.',
-                'low_relevance' => 'Re-answer each affected question in the first sentence, then keep only evidence that supports that exact focus.',
-                'insufficient_evidence' => 'Expand each affected response with enough specific, relevant detail to support a dependable assessment.',
+                'skipped' => 'Answer each skipped question directly, then add one true detail so it can be checked.',
+                'low_relevance' => 'Answer each marked question in the first sentence, then keep only details that support that focus.',
+                'insufficient_evidence' => 'Make each marked answer longer with clear detail that fits the question.',
                 'partially_answered' => 'Keep the relevant part of each answer, then add the missing required point shown in the question map below.',
-                'not_evaluated' => 'Retry the unavailable evaluation before treating these answers as strengths or weaknesses.',
-                'missing_criteria' => 'Preserve the direct answer and add the remaining required point shown for each affected question.',
-                default => $bucket['actions'][0] ?? 'Practice the affected questions again using the question-specific guidance.',
+                'not_evaluated' => 'Try the review again before treating these answers as strengths or weak spots.',
+                'missing_criteria' => 'Keep the direct answer and add the missing point shown for each marked question.',
+                default => $bucket['actions'][0] ?? 'Practice the marked questions again using the question guide.',
             };
             $successCheck = match ($issueCode) {
-                'skipped' => 'Every interview question has a complete response with truthful support.',
+                'skipped' => 'Every interview question has a complete answer with one true detail.',
                 'low_relevance' => 'The first sentence answers the exact question and every supporting detail clearly connects to it.',
-                'insufficient_evidence' => 'Each retry contains enough specific detail to explain the answer and why it is relevant.',
-                'partially_answered', 'missing_criteria' => 'Each affected answer covers every listed missing point without inventing facts.',
-                'not_evaluated' => 'Each affected answer has a completed, evidence-backed relevance verdict.',
-                default => $bucket['success_checks'][0] ?? 'The next transcript shows the targeted change consistently.',
+                'insufficient_evidence' => 'Each retry gives enough clear detail to explain the answer and why it fits the question.',
+                'partially_answered', 'missing_criteria' => 'Each marked answer covers every listed missing point without inventing facts.',
+                'not_evaluated' => 'Each marked answer has a completed answer-match review.',
+                default => $bucket['success_checks'][0] ?? 'The next answer text shows the planned change clearly.',
             };
 
             $priorityCandidates[] = [
@@ -468,13 +469,13 @@ final class EvidenceBasedCoachingService
         if ($actionableFillerTotal >= 2) {
             $priorityCandidates[] = [
                 'issue_code' => 'filler_phrases',
-                'area' => 'Transcript-detected filler phrases',
+                'area' => 'Filler words',
                 'severity' => 65,
                 'affected_count' => $fillerAffectedAnswers,
                 'eligible_count' => max(1, $coverage['delivery_measured']),
-                'observation' => "{$fillerTotal} possible filler matches were found, including {$actionableFillerTotal} repeated or high-confidence hesitation candidates across recorded answers.",
-                'action' => 'When gathering your next thought, use a brief silent pause instead of a filler phrase, then compare the next transcript count.',
-                'success_check' => 'The next recorded transcript contains fewer repeated or high-confidence filler candidates without reducing answer completeness.',
+                'observation' => "{$fillerTotal} possible filler words were found, including {$actionableFillerTotal} repeated or likely pause words across recorded answers.",
+                'action' => 'When gathering your next thought, use a brief silent pause instead of a filler word, then compare the next count.',
+                'success_check' => 'The next recorded answer has fewer repeated filler words while still giving a complete answer.',
                 'questions' => [],
                 'question_ids' => [],
                 'evidence_quotes' => [],
@@ -522,8 +523,8 @@ final class EvidenceBasedCoachingService
         }
 
         $focusHeadline = $priorityActions !== []
-            ? 'Highest-impact focus: '.trim((string) ($priorityActions[0]['area'] ?? 'targeted answer practice')).'.'
-            : 'No repeated evidence gap was detected; keep strengthening truthful, question-relevant support.';
+            ? 'Top focus: '.trim((string) ($priorityActions[0]['area'] ?? 'answer practice')).'.'
+            : 'No repeated gap was found. Keep adding true details that answer the question.';
         $feedbackQualityPercent = $feedbackChecksTotal > 0
             ? (int) round(($feedbackChecksPassed / $feedbackChecksTotal) * 100)
             : 0;
@@ -545,10 +546,10 @@ final class EvidenceBasedCoachingService
                 'checks_passed' => $feedbackChecksPassed,
                 'checks_total' => $feedbackChecksTotal,
                 'completeness_percent' => $feedbackQualityPercent,
-                'scope' => 'Required evidence, uncertainty, action, and safety checks across the session feedback.',
-                'limitation' => 'A 100% result means every required feedback safeguard passed. It is not a guarantee that the assessment is perfectly accurate.',
+                'scope' => 'Required proof, risk, next step, and safety checks across the session feedback.',
+                'limitation' => 'A 100% result means every required feedback check passed. It does not mean the review is perfect.',
             ],
-            'transparency_note' => 'This overall summary is based on the original submitted answers in this session. Measured delivery and optional body-language observations are coaching aids only. Unavailable signals are reported as not measured, and camera estimates do not affect readiness scores or infer personal traits.',
+            'transparency_note' => 'This summary is based on the original answers in this session. Speaking notes and optional camera notes are only for coaching. Missing signals are shown as not measured. Camera estimates do not change readiness scores or guess personal traits.',
         ];
     }
 
@@ -558,11 +559,11 @@ final class EvidenceBasedCoachingService
         if ($status !== 'measured') {
             return [
                 'status' => 'not_measured',
-                'observation' => 'Delivery was not measured for this answer; no filler, pace, or pause conclusion was made.',
-                'tip' => 'Record a voice answer to receive transcript-based delivery coaching.',
-                'tips' => ['Record a voice answer to receive transcript-based delivery coaching.'],
+                'observation' => 'Speaking was not measured for this answer, so no filler, pace, or pause note was made.',
+                'tip' => 'Record a voice answer to get speaking tips based on the saved voice text.',
+                'tips' => ['Record a voice answer to get speaking tips based on the saved voice text.'],
                 'evidence' => [],
-                'limitation' => (string) ($delivery['caveat'] ?? 'No recorded voice evidence was available.'),
+                'limitation' => (string) ($delivery['caveat'] ?? 'No recorded voice details were available.'),
             ];
         }
 
@@ -577,10 +578,10 @@ final class EvidenceBasedCoachingService
             array_values($breakdown)
         ));
         $observation = $total > 0
-            ? "The browser transcript contained {$total} transcript-detected possible filler phrases in {$wordCount} words ({$rate} per 100 words)".($breakdownText !== '' ? ": {$breakdownText}." : '.')
-            : "No configured filler phrases were transcript-detected in the {$wordCount}-word browser transcript.";
+            ? "The saved voice text found {$total} possible filler words in {$wordCount} words ({$rate} per 100 words)".($breakdownText !== '' ? ": {$breakdownText}." : '.')
+            : "No saved filler words were found in the {$wordCount}-word voice text.";
         if (($delivery['wpm'] ?? null) !== null) {
-            $observation .= ' The transcript and recorded duration produce an estimated pace of '.(int) $delivery['wpm'].' WPM.';
+            $observation .= ' Your estimated speaking pace was '.(int) $delivery['wpm'].' WPM.';
         }
 
         $tips = [];
@@ -591,10 +592,10 @@ final class EvidenceBasedCoachingService
         if ($wpm > 0 && $wpm < 90) {
             $tips[] = 'Practice the answer once more with shorter pauses between ideas while keeping each sentence complete.';
         } elseif ($wpm > 180) {
-            $tips[] = 'Slow the next attempt slightly and separate the main point, evidence, and result with brief pauses.';
+            $tips[] = 'Slow the next try a little and separate the main point, detail, and result with brief pauses.';
         }
         if ($tips === []) {
-            $tips[] = 'Keep the natural pacing and use intentional pauses to separate your main ideas.';
+            $tips[] = 'Keep the natural pace and use short pauses to separate your main ideas.';
         }
 
         return [
@@ -628,11 +629,11 @@ final class EvidenceBasedCoachingService
         if (! is_array($analysis)) {
             return [
                 'status' => 'not_measured',
-                'observation' => 'Local pronunciation analysis was not measured for this answer.',
-                'tip' => 'Use server audio transcription with LOCAL_SPEECH_ENABLED=true to collect local ASR, phoneme alignment, and GOP evidence.',
-                'tips' => ['Use server audio transcription with LOCAL_SPEECH_ENABLED=true to collect local ASR, phoneme alignment, and GOP evidence.'],
+                'observation' => 'Pronunciation was not checked for this answer.',
+                'tip' => 'Ask an admin to turn on local speech checks if you want pronunciation tips.',
+                'tips' => ['Ask an admin to turn on local speech checks if you want pronunciation tips.'],
                 'evidence' => [],
-                'limitation' => 'No local speech analysis payload was saved with this answer.',
+                'limitation' => 'No local speech check was saved with this answer.',
             ];
         }
 
@@ -661,9 +662,9 @@ final class EvidenceBasedCoachingService
 
             return [
                 'status' => 'not_measured',
-                'observation' => 'Local pronunciation analysis was not measured for this answer.',
-                'tip' => 'Install and configure the local ASR/pronunciation/alignment backends before relying on pronunciation scoring.',
-                'tips' => ['Install and configure the local ASR/pronunciation/alignment backends before relying on pronunciation scoring.'],
+                'observation' => 'Pronunciation was not checked for this answer.',
+                'tip' => 'Ask an admin to set up local speech checks before trusting pronunciation scores.',
+                'tips' => ['Ask an admin to set up local speech checks before trusting pronunciation scores.'],
                 'evidence' => [
                     'asr_status' => data_get($analysis, 'asr.status'),
                     'pronunciation_status' => data_get($analysis, 'pronunciation.status'),
@@ -675,28 +676,28 @@ final class EvidenceBasedCoachingService
         }
 
         $componentText = $measuredComponents !== []
-            ? ' Measured local components: '.implode(', ', array_map(fn ($item): string => (string) $item, $measuredComponents)).'.'
+            ? ' Local checks used: '.implode(', ', array_map(fn ($item): string => (string) $item, $measuredComponents)).'.'
             : '';
         $observation = $score !== null
-            ? "Local speech analysis produced a pronunciation/GOP coaching score of {$score}%."
-            : 'Local speech analysis ran, but no calibrated pronunciation score was produced.';
+            ? "A local speech check gave a pronunciation score of {$score}%."
+            : 'A local speech check ran, but it did not give a pronunciation score.';
         if ($phonemeCount > 0 || $wordAlignmentCount > 0) {
-            $observation .= " It included {$wordAlignmentCount} word alignments and {$phonemeCount} phoneme alignments.";
+            $observation .= " It included {$wordAlignmentCount} word timing checks and {$phonemeCount} sound timing checks.";
         }
         $observation .= $componentText;
 
         $tips = [];
         if ($score !== null && $score < 70) {
-            $tips[] = 'Repeat the answer more slowly and focus on crisp word endings before comparing the next local pronunciation score.';
+            $tips[] = 'Say the answer more slowly and make word endings clearer before checking the next pronunciation score.';
         }
         if ($phonemeCount === 0) {
-            $tips[] = 'Enable Montreal Forced Aligner with a matching dictionary and acoustic model to receive phoneme-level timing.';
+            $tips[] = 'Ask an admin to turn on sound timing checks for more detailed pronunciation tips.';
         }
         if (data_get($analysis, 'gop.status') !== 'measured') {
-            $tips[] = 'Configure LOCAL_GOP_COMMAND for true Goodness of Pronunciation scoring.';
+            $tips[] = 'Ask an admin to turn on full pronunciation scoring.';
         }
         if ($tips === []) {
-            $tips[] = 'Keep the same pacing and articulation, then retry with a harder prompt to confirm consistency.';
+            $tips[] = 'Keep the same pace and clear words, then try a harder prompt.';
         }
 
         return [
@@ -752,18 +753,18 @@ final class EvidenceBasedCoachingService
                 $bodyObservations[] = "Hands were visible in {$handsVisible}% of samples.";
             }
             if ($gestureActivity !== null) {
-                $bodyObservations[] = "Gesture movement appeared in {$gestureActivity}% of hand-visible samples.";
+                $bodyObservations[] = "Hand movement appeared in {$gestureActivity}% of hand-visible samples.";
             }
             if ($shouldersLevel !== null) {
-                $bodyObservations[] = "Shoulder balance appeared level in {$shouldersLevel}% of measured pose samples.";
+                $bodyObservations[] = "Shoulders looked level in {$shouldersLevel}% of pose samples.";
             }
             if ($uprightPosture !== null) {
-                $bodyObservations[] = "Upper-body posture appeared upright in {$uprightPosture}% of measured pose samples.";
+                $bodyObservations[] = "Upper body looked upright in {$uprightPosture}% of pose samples.";
             }
             if ($averageMovement !== null) {
-                $bodyObservations[] = "Average movement score was {$averageMovement}/100, with higher movement in ".($highMovement ?? 0).'% of measured movement samples.';
+                $bodyObservations[] = "Average movement score was {$averageMovement}/100, with higher movement in ".($highMovement ?? 0).'% of movement samples.';
             }
-            $observation = "A face was detectable in {$visibility}% of optional camera samples. In detected samples, head alignment appeared camera-facing {$facing}% of the time."
+            $observation = "A face was seen in {$visibility}% of optional camera samples. In face samples, the head looked camera-facing {$facing}% of the time."
                 .($bodyObservations !== [] ? ' '.implode(' ', $bodyObservations) : '');
             $tips = [];
             if ($visibility < 80) {
@@ -773,10 +774,10 @@ final class EvidenceBasedCoachingService
                 $tips[] = 'Place notes near the camera and practice returning your head toward it after checking a prompt.';
             }
             if ($shouldersLevel !== null && $shouldersLevel < 70) {
-                $tips[] = 'Square your shoulders toward the camera and keep the webcam close to eye level for a balanced frame.';
+                $tips[] = 'Face your shoulders toward the camera and keep the webcam close to eye level.';
             }
             if ($uprightPosture !== null && $uprightPosture < 70) {
-                $tips[] = 'Sit or stand with your upper body stacked over your hips, then lean forward only briefly for emphasis.';
+                $tips[] = 'Sit or stand tall, then lean forward only briefly for emphasis.';
             }
             if (($highMovement !== null && $highMovement > 30) || ($averageMovement !== null && $averageMovement >= 55)) {
                 $tips[] = 'Use one planned gesture per main point and let your hands return to a resting position between points.';
@@ -784,7 +785,7 @@ final class EvidenceBasedCoachingService
                 $tips[] = 'Keep gestures purposeful by matching each visible hand movement to a specific idea in the answer.';
             }
             if ($tips === []) {
-                $tips[] = 'Keep the current framing, posture, and camera placement consistent in the next practice attempt.';
+                $tips[] = 'Keep the current camera frame, posture, and camera place in the next practice try.';
             }
 
             return [
@@ -832,7 +833,7 @@ final class EvidenceBasedCoachingService
         ];
         $unavailableReason = (string) ($camera['unavailable_reason'] ?? '');
         $observation = $status === 'insufficient_data'
-            ? 'Optional browser camera samples did not cover enough of the answer for dependable framing, pose, gesture, or movement observations.'
+            ? 'Optional browser camera samples did not cover enough of the answer for a clear camera note.'
             : (isset($reasonLabels[$unavailableReason])
                 ? 'Optional camera coaching was not measured because '.$reasonLabels[$unavailableReason].'.'
                 : 'Optional camera coaching was not measured for this answer.');
@@ -840,8 +841,8 @@ final class EvidenceBasedCoachingService
         return [
             'status' => $status === 'insufficient_data' ? 'insufficient_data' : 'not_measured',
             'observation' => $observation,
-            'tip' => 'For body-language coaching, use steady front lighting and keep your face, shoulders, and hands within the preview when possible.',
-            'tips' => ['For body-language coaching, use steady front lighting and keep your face, shoulders, and hands within the preview when possible.'],
+            'tip' => 'For camera coaching, use steady front light and keep your face, shoulders, and hands in the preview when possible.',
+            'tips' => ['For camera coaching, use steady front light and keep your face, shoulders, and hands in the preview when possible.'],
             'evidence' => $status === 'insufficient_data' ? [
                 'source' => $camera['source'] ?? 'browser_reported_landmark_estimate',
                 'sample_count' => (int) ($camera['sample_count'] ?? 0),
@@ -877,158 +878,158 @@ final class EvidenceBasedCoachingService
 
         if ($intent === 'strength_and_weakness') {
             $framework = 'strength_and_weakness';
-            $title = 'Strengths and weaknesses strategy';
-            $whatItTests = 'Self-awareness, role fit, evidence, and a credible improvement habit.';
+            $title = 'Strength and weakness plan';
+            $whatItTests = 'How well you know your strengths, fit for the role, and growth habit.';
             $steps = [
-                'Choose one genuine, job-relevant strength.',
-                'Prove it with one truthful example and result or impact.',
-                'Name one real, manageable development area.',
-                'Explain the concrete improvement action and truthful evidence of progress.',
+                'Choose one real strength that fits the job.',
+                'Prove it with one true example and result.',
+                'Name one real area to improve.',
+                'Explain what you are doing to improve and one true sign of progress.',
             ];
-            $guidance = 'Give each point its own evidence: connect the strength to the role, then present a genuine weakness with a concrete improvement action and truthful evidence of progress.';
+            $guidance = 'Give each point its own true detail: connect the strength to the role, then share a real weakness with your improvement action and one sign of progress.';
         } elseif ($intent === 'weakness') {
             $framework = 'weakness';
-            $title = 'Weakness question strategy';
-            $whatItTests = 'Self-awareness, accountability, and whether improvement is active and credible.';
+            $title = 'Weakness question plan';
+            $whatItTests = 'How well you know what to improve and what you are doing about it.';
             $steps = [
-                'Name one genuine, manageable development area relevant to the role.',
+                'Name one real area to improve that matters for the role.',
                 'Briefly explain its real effect on your work or study.',
-                'Describe the concrete action you are taking to improve it.',
-                'Close with truthful evidence of progress without inventing a result.',
+                'Describe the action you are taking to improve it.',
+                'Close with one true sign of progress without making up a result.',
             ];
-            $guidance = 'Choose a genuine, manageable weakness; explain its effect, your concrete improvement action, and truthful evidence of progress.';
+            $guidance = 'Choose a real weakness, explain its effect, say what you are doing to improve, and add one true sign of progress.';
         } elseif ($intent === 'strength') {
             $framework = 'strength';
-            $title = 'Strength question strategy';
-            $whatItTests = 'Role fit and whether the claimed strength is supported by evidence.';
+            $title = 'Strength question plan';
+            $whatItTests = 'How well your strength fits the role and is backed by a true example.';
             $steps = [
-                'Name one job-relevant strength.',
-                'Give one specific, truthful example that demonstrates it.',
-                'State the verified result or impact.',
+                'Name one strength that fits the job.',
+                'Give one specific, true example that shows it.',
+                'State the true result.',
                 'Connect the strength to the target role.',
             ];
-            $guidance = 'Name one job-relevant strength, prove it with a specific example or evidence, state the verified result or impact, and connect it to the role.';
+            $guidance = 'Name one job strength, prove it with a specific example, state the true result, and connect it to the role.';
         } elseif ($intent === 'self_introduction') {
             $framework = 'self_introduction';
-            $title = 'Self-introduction strategy';
-            $whatItTests = 'Whether the candidate can give a concise, role-relevant professional summary.';
+            $title = 'Self-introduction plan';
+            $whatItTests = 'Whether you can give a short summary that fits the role.';
             $steps = [
-                'Start with your current professional or educational focus.',
-                'Select one or two relevant past experiences.',
-                'Support them with a truthful result or lesson.',
+                'Start with your current work or school focus.',
+                'Choose one or two past experiences that fit the role.',
+                'Support them with a true result or lesson.',
                 'Close with why this role is the logical next step.',
             ];
-            $guidance = 'Use a present-past-future structure and keep every detail relevant to the role.';
+            $guidance = 'Use a now-before-next structure and keep every detail tied to the role.';
         } elseif ($intent === 'role_fit') {
             $framework = 'role_fit';
-            $title = 'Role-fit strategy';
-            $whatItTests = 'Understanding of the role and evidence that the candidate can meet its needs.';
+            $title = 'Role-fit plan';
+            $whatItTests = 'How well you understand the role and can show you meet its needs.';
             $steps = [
-                'Name the role need you can address.',
-                'Connect it to one verified skill or experience.',
+                'Name the job need you can help with.',
+                'Connect it to one true skill or experience.',
                 'Give a specific example and result.',
-                'State how that evidence would help in this role.',
+                'State how that detail would help in this role.',
             ];
-            $guidance = 'Match one or two role requirements to verified evidence instead of listing unsupported qualities.';
+            $guidance = 'Match one or two job needs to true details instead of only listing good traits.';
         } elseif ($intent === 'motivation') {
             $framework = 'motivation';
-            $title = 'Motivation question strategy';
-            $whatItTests = 'Whether the candidate understands the opportunity and has a credible, role-relevant reason for applying.';
+            $title = 'Motivation question plan';
+            $whatItTests = 'Whether you understand the job and have a clear reason for applying.';
             $steps = [
-                'Name one specific part of the role, organization, or work that genuinely interests you.',
+                'Name one specific part of the role, company, or work that truly interests you.',
                 'Connect that interest to relevant experience, skills, or a realistic career goal.',
-                'Explain the contribution or growth you are seeking without inventing company facts.',
+                'Explain how you want to help or grow without making up company facts.',
                 'Close with why this opportunity is a sensible next step.',
             ];
-            $guidance = 'Give a specific, truthful reason for wanting this opportunity and connect it to your evidence and realistic next step.';
+            $guidance = 'Give a specific, true reason for wanting this job and connect it to your experience and next step.';
         } elseif ($intent === 'career_transition') {
             $framework = 'career_transition';
-            $title = 'Career-transition strategy';
-            $whatItTests = 'Professional judgment, honesty, and whether the next move has a constructive rationale.';
+            $title = 'Job-change plan';
+            $whatItTests = 'Whether your reason is honest, clear, and focused on your next step.';
             $steps = [
-                'State the reason briefly and truthfully without attacking a previous employer.',
-                'Keep confidential or personal details appropriately bounded.',
+                'State the reason briefly and truthfully without attacking a past employer.',
+                'Keep private or personal details brief.',
                 'Shift to what you learned or what fit you now need.',
-                'Connect that forward-looking reason to the opportunity being discussed.',
+                'Connect that next-step reason to the job being discussed.',
             ];
-            $guidance = 'Keep the reason factual and professional, then focus on what you learned and what you are seeking next.';
+            $guidance = 'Keep the reason factual and respectful, then focus on what you learned and what you want next.';
         } elseif ($intent === 'career_goal') {
             $framework = 'career_goal';
-            $title = 'Career-goal strategy';
-            $whatItTests = 'Whether the candidate has a realistic direction that fits the opportunity without making unsupported promises.';
+            $title = 'Career-goal plan';
+            $whatItTests = 'Whether your goal is realistic and fits the role without making promises you cannot support.';
             $steps = [
-                'State a realistic near- or medium-term direction.',
-                'Name the skills, responsibilities, or impact you want to develop.',
-                'Connect that direction to what this role can genuinely offer.',
-                'Explain the concrete actions you are already taking or will take.',
+                'State a realistic short-term or medium-term goal.',
+                'Name the skills, duties, or impact you want to build.',
+                'Connect that goal to what this role can truly offer.',
+                'Explain the actions you are already taking or will take.',
             ];
-            $guidance = 'Describe a realistic direction, connect it to this role, and support it with concrete development actions.';
+            $guidance = 'Describe a realistic goal, connect it to this role, and support it with clear growth actions.';
         } elseif ($intent === 'work_setup') {
             $framework = 'work_setup';
-            $title = 'Work-setup strategy';
-            $whatItTests = 'Practical availability, constraints, and whether expectations match the role.';
+            $title = 'Work-setup plan';
+            $whatItTests = 'Your schedule, limits, and whether the setup fits the role.';
             $steps = [
-                'Answer the availability or setup question directly.',
-                'State any genuine constraint clearly and professionally.',
-                'Explain relevant flexibility without agreeing to something you cannot do.',
-                'Confirm any schedule or location detail that still needs clarification.',
+                'Answer the schedule or setup question directly.',
+                'State any real limit clearly and respectfully.',
+                'Explain real flexibility without agreeing to something you cannot do.',
+                'Ask about any schedule or location detail that is still unclear.',
             ];
-            $guidance = 'Be direct about availability and constraints, show only genuine flexibility, and clarify unresolved schedule or location details.';
+            $guidance = 'Be direct about your schedule and limits, show only real flexibility, and ask about unclear schedule or location details.';
         } elseif ($intent === 'salary_expectation') {
             $framework = 'salary_expectation';
-            $title = 'Salary-expectation strategy';
-            $whatItTests = 'Preparation, realism, and ability to discuss compensation professionally.';
+            $title = 'Salary question plan';
+            $whatItTests = 'How prepared and realistic you are when talking about pay.';
             $steps = [
                 'State that the range depends on the full role and benefits.',
                 'Give a researched range only if you can support it.',
-                'Connect the range to experience and responsibilities.',
+                'Connect the range to experience and job duties.',
                 'Show reasonable openness to discussion.',
             ];
-            $guidance = 'Use a researched, supportable range and avoid inventing market figures.';
+            $guidance = 'Use a researched range you can support, and do not make up market numbers.';
         } elseif ($intent === 'behavioral') {
             $framework = 'star';
-            $title = 'Behavioral question strategy';
-            $whatItTests = 'Past behavior, personal ownership, judgment, and results.';
+            $title = 'Past-example question plan';
+            $whatItTests = 'What you did in the past, what you owned, and what happened.';
             $steps = [
                 'Situation: give only the context needed.',
                 'Task: state your responsibility or goal.',
-                'Action: explain what you personally did and why.',
-                'Result: give the verified outcome, impact, or lesson.',
+                'Action: explain what you did and why.',
+                'Result: give the true result or lesson.',
             ];
-            $guidance = 'Use STAR and spend most of the answer on your specific action and verified result.';
+            $guidance = 'Use STAR and spend most of the answer on your action and true result.';
         } elseif ($intent === 'situational') {
             $framework = 'situational';
-            $title = 'Situational question strategy';
-            $whatItTests = 'Decision-making, priorities, and practical judgment.';
+            $title = 'Situation question plan';
+            $whatItTests = 'How you make choices, set priorities, and solve the problem.';
             $steps = [
-                'Clarify the goal and important constraints.',
+                'Clarify the goal and important limits.',
                 'State the steps you would take in order.',
-                'Explain the reason or tradeoff behind key decisions.',
-                'Describe how you would verify the outcome.',
+                'Explain the reason or tradeoff behind key choices.',
+                'Describe how you would check the result.',
             ];
-            $guidance = 'Give an ordered approach, explain the decision logic, and include how you would check that it worked.';
+            $guidance = 'Give steps in order, explain your reason, and include how you would check that it worked.';
         } elseif ($intent === 'technical') {
             $framework = 'technical';
-            $title = 'Technical question strategy';
-            $whatItTests = 'Relevant knowledge, reasoning, tradeoffs, and verification.';
+            $title = 'Technical question plan';
+            $whatItTests = 'Job knowledge, reasoning, tradeoffs, and how you check your work.';
             $steps = [
                 'Answer the technical question directly.',
-                'Explain the reasoning or diagnostic sequence.',
-                'Name a relevant constraint or tradeoff.',
-                'Describe how you would test or verify the result.',
+                'Explain your reason or step-by-step check.',
+                'Name a useful limit or tradeoff.',
+                'Describe how you would test or check the result.',
             ];
-            $guidance = 'Lead with the direct answer, then explain reasoning, tradeoffs, and verification without inventing experience.';
+            $guidance = 'Start with the direct answer, then explain your reason, tradeoff, and check without making up experience.';
         } else {
             $framework = 'direct_evidence';
-            $title = 'Direct-answer strategy';
-            $whatItTests = 'Relevance, clarity, and support for the main claim.';
+            $title = 'Direct-answer plan';
+            $whatItTests = 'How well the answer matches the question and supports the main point.';
             $steps = [
                 'Answer the exact question in the first sentence.',
-                'Add one relevant, truthful example or reason.',
-                'Explain your personal contribution or judgment.',
-                'Close with a verified result, implication, or lesson when relevant.',
+                'Add one useful, true example or reason.',
+                'Explain what you did or decided.',
+                'Close with a true result or lesson when it fits.',
             ];
-            $guidance = 'Answer directly, support the claim with truthful evidence, and avoid details that do not help answer the question.';
+            $guidance = 'Answer directly, support the point with true detail, and avoid details that do not help answer the question.';
         }
 
         return [
@@ -1120,33 +1121,33 @@ final class EvidenceBasedCoachingService
         $coverageTargets = $this->questionCoverageTargets($questionText, $questionTip);
 
         if ($status === 'skipped' && $missingPoints === []) {
-            $missingPoints[] = 'No response was submitted, so required coverage is still missing.';
+            $missingPoints[] = 'No answer was sent, so the needed points are still missing.';
         } elseif ($status === 'insufficient_evidence' && $missingPoints === []) {
             $missingPoints = $coverageTargets['missing_points'] !== []
                 ? $coverageTargets['missing_points']
-                : ['The response did not contain enough relevant detail for a dependable assessment.'];
+                : ['The answer did not give enough clear detail to check it well.'];
         } elseif ($status === 'not_evaluated' && $missingPoints === []) {
-            $missingPoints[] = 'The content gap could not be determined because a dependable evaluation was unavailable.';
+            $missingPoints[] = 'The app could not find the missing point because a full review was not available.';
         } elseif ($status === 'partially_answered' && $missingPoints === []) {
-            $missingPoints[] = 'The answer addressed part of the question but did not fully support its main point.';
+            $missingPoints[] = 'The answer covered part of the question but did not fully support its main point.';
         } elseif ($status === 'low_relevance' && $missingPoints === []) {
             $missingPoints[] = 'The answer did not clearly connect its main point to the question asked.';
         }
 
         $questionExcerpt = $this->textExcerpt($questionText, 180);
         $questionLabel = $questionExcerpt !== '' ? '"'.$questionExcerpt.'"' : 'this question';
-        $evidenceLabel = $evidenceQuotes !== [] ? ' Evidence used from this answer: "'.$evidenceQuotes[0].'".' : '';
+        $evidenceLabel = $evidenceQuotes !== [] ? ' Answer detail used: "'.$evidenceQuotes[0].'".' : '';
         $observation = match ($status) {
-            'skipped' => "No response was submitted for {$questionLabel}, so answer relevance could not be evaluated.",
-            'insufficient_evidence' => "The response to {$questionLabel} was too short for a dependable relevance judgment.".$evidenceLabel,
-            'not_evaluated' => "The response is saved for {$questionLabel}, but a dependable per-question relevance evaluation is not available yet.".$evidenceLabel,
-            'directly_answered' => "For {$questionLabel}, the per-question evaluation found that the response directly addressed the main focus.".$evidenceLabel,
-            'partially_answered' => "For {$questionLabel}, the per-question evaluation found that the response addressed only part of the main focus.".$evidenceLabel,
-            default => "For {$questionLabel}, the per-question evaluation found limited connection to the main focus.".$evidenceLabel,
+            'skipped' => "No answer was sent for {$questionLabel}, so the answer match could not be checked.",
+            'insufficient_evidence' => "The answer to {$questionLabel} was too short to check well.".$evidenceLabel,
+            'not_evaluated' => "The answer is saved for {$questionLabel}, but a full question check is not available yet.".$evidenceLabel,
+            'directly_answered' => "For {$questionLabel}, the answer directly covered the main focus.".$evidenceLabel,
+            'partially_answered' => "For {$questionLabel}, the answer answered only part of the main focus.".$evidenceLabel,
+            default => "For {$questionLabel}, the answer had only a small link to the main focus.".$evidenceLabel,
         };
 
         $gap = $missingPoints[0] ?? null;
-        $guidance = trim((string) ($questionTip['guidance'] ?? 'Answer the exact question first, then support it with truthful evidence.'));
+        $guidance = trim((string) ($questionTip['guidance'] ?? 'Answer the exact question first, then support it with a true detail.'));
         $insufficientAction = $coverageTargets['action'] !== ''
             ? $coverageTargets['action']
             : 'Expand the answer with enough specific, question-relevant detail to assess it.';
@@ -1154,28 +1155,28 @@ final class EvidenceBasedCoachingService
             'skipped' => "Practice a direct response to {$questionLabel}. {$guidance}",
             'insufficient_evidence' => trim($insufficientAction.' '.$guidance),
             'directly_answered' => $gap
-                ? "Keep the direct response to {$questionLabel}, then address this remaining gap: {$gap}"
-                : "Keep the direct opening for {$questionLabel}, then strengthen it with the most relevant truthful evidence or result.",
-            'partially_answered', 'low_relevance' => "Re-answer {$questionLabel} in the first sentence, then address this gap: ".($gap ?: $guidance),
+                ? "Keep the direct answer to {$questionLabel}, then cover this missing point: {$gap}"
+                : "Keep the direct opening for {$questionLabel}, then strengthen it with the most useful true detail or result.",
+            'partially_answered', 'low_relevance' => "Answer {$questionLabel} again in the first sentence, then cover this gap: ".($gap ?: $guidance),
             default => "For {$questionLabel}, {$guidance}",
         };
 
         $evidenceExcerpt = $evidenceQuotes[0] ?? null;
         $whatWorked = match ($status) {
             'directly_answered' => $evidenceExcerpt
-                ? 'The answer addressed the main focus and provided this usable evidence: "'.$evidenceExcerpt.'".'
-                : 'The answer addressed the main focus directly.',
+                ? 'The answer covered the main focus and gave this useful detail: "'.$evidenceExcerpt.'".'
+                : 'The answer covered the main focus directly.',
             'partially_answered' => $evidenceExcerpt
-                ? 'The answer made a relevant start with: "'.$evidenceExcerpt.'".'
-                : 'The answer contained a relevant starting point.',
+                ? 'The answer made a useful start with: "'.$evidenceExcerpt.'".'
+                : 'The answer had a useful starting point.',
             'low_relevance' => $evidenceExcerpt
-                ? 'A complete response was submitted, and this excerpt gives you concrete material to revise: "'.$evidenceExcerpt.'".'
-                : 'A response was submitted, giving you concrete material to revise.',
+                ? 'A complete answer was sent, and this part gives you useful text to improve: "'.$evidenceExcerpt.'".'
+                : 'An answer was sent, giving you useful text to improve.',
             'insufficient_evidence' => $evidenceExcerpt
-                ? 'Only limited answer evidence was available: "'.$evidenceExcerpt.'". Add the missing details before relying on this assessment.'
-                : 'A response was started, but it needs more relevant detail before it can be assessed dependably.',
-            'skipped' => 'No answer evidence is available yet; the next attempt should begin with a direct response to the exact question.',
-            default => 'The response is saved, but no dependable content verdict is available yet.',
+                ? 'Only limited answer detail was available: "'.$evidenceExcerpt.'". Add the missing details before trusting this review.'
+                : 'An answer was started, but it needs more useful detail before it can be checked well.',
+            'skipped' => 'No answer detail is available yet; the next try should begin with a direct answer to the exact question.',
+            default => 'The answer is saved, but no full content check is available yet.',
         };
         $improvementFocus = match ($status) {
             'directly_answered' => $gap
@@ -1184,8 +1185,8 @@ final class EvidenceBasedCoachingService
             'partially_answered', 'low_relevance' => $gap ?: $guidance,
             'insufficient_evidence' => $coverageTargets['improvement_focus'] !== ''
                 ? $coverageTargets['improvement_focus']
-                : 'Add enough specific, question-relevant detail to support a dependable assessment.',
-            'skipped' => 'Submit a direct, truthful response that follows the question-specific strategy below.',
+                : 'Add enough clear detail that fits the question.',
+            'skipped' => 'Send a direct, true answer that follows the question guide below.',
             default => $guidance,
         };
         $frameworkSteps = array_values(array_filter(array_map(
@@ -1217,13 +1218,13 @@ final class EvidenceBasedCoachingService
         };
         $nextAttemptSteps = array_slice(array_values(array_unique(array_filter($nextAttemptSteps))), 0, 4);
         $successCheck = match ($status) {
-            'directly_answered' => 'The revised answer still addresses '.$questionLabel.' immediately, and every added detail clearly supports that focus.',
-            'partially_answered', 'low_relevance' => 'A reviewer can identify the direct answer in the first sentence and find relevant evidence for each required point.',
+            'directly_answered' => 'The new answer still covers '.$questionLabel.' right away, and every added detail supports that focus.',
+            'partially_answered', 'low_relevance' => 'A reviewer can find the direct answer in the first sentence and find a useful detail for each needed point.',
             'insufficient_evidence' => $coverageTargets['success_check'] !== ''
                 ? $coverageTargets['success_check']
-                : 'The retry contains enough specific, relevant detail to explain the answer and support a dependable assessment.',
-            'skipped' => 'A complete response to '.$questionLabel.' is submitted and supported with truthful detail.',
-            default => 'The response follows the question-specific strategy and stays focused on '.$questionLabel.'.',
+                : 'The retry has enough clear detail to explain the answer.',
+            'skipped' => 'A complete answer to '.$questionLabel.' is sent with one true detail.',
+            default => 'The answer follows the question guide and stays focused on '.$questionLabel.'.',
         };
 
         return [
@@ -1232,12 +1233,12 @@ final class EvidenceBasedCoachingService
             'question' => $questionText,
             'status' => $status,
             'status_label' => match ($status) {
-                'directly_answered' => 'Directly answered',
-                'partially_answered' => 'Partially answered',
-                'low_relevance' => 'Low relevance',
-                'insufficient_evidence' => 'Not enough evidence',
-                'skipped' => 'Skipped',
-                default => 'Not evaluated',
+                'directly_answered' => 'Answered directly',
+                'partially_answered' => 'Answered partly',
+            'low_relevance' => 'Low match',
+            'insufficient_evidence' => 'Not enough detail',
+            'skipped' => 'Skipped',
+            default => 'Not checked',
             },
             'relevance_score' => in_array($status, ['directly_answered', 'partially_answered', 'low_relevance'], true)
                 ? $score
@@ -1308,8 +1309,8 @@ final class EvidenceBasedCoachingService
             'checks_total' => $total,
             'completeness_percent' => $percent,
             'checks' => $checks,
-            'scope' => 'Required evidence, uncertainty, action, success, and safety fields for this coaching report.',
-            'limitation' => 'A 100% result means every required feedback safeguard passed. It is not a guarantee that the assessment is perfectly accurate.',
+            'scope' => 'Required proof, risk, next step, success, and safety fields for this coaching report.',
+            'limitation' => 'A 100% result means every required feedback check passed. It does not mean the review is perfect.',
         ];
     }
 
@@ -1326,7 +1327,8 @@ final class EvidenceBasedCoachingService
             'skipped', 'insufficient_evidence', 'partially_answered', 'low_relevance',
         ], true)) {
             $priorities[] = [
-                'area' => 'Answer-to-question relevance',
+                'issue_code' => (string) ($contentAlignment['status'] ?? 'answer_match'),
+                'area' => 'Answer match',
                 'observation' => (string) ($contentAlignment['observation'] ?? ''),
                 'action' => (string) ($contentAlignment['action'] ?? ''),
                 'question' => (string) ($contentAlignment['question'] ?? ''),
@@ -1340,7 +1342,8 @@ final class EvidenceBasedCoachingService
         if (($delivery['status'] ?? null) === 'measured'
             && (int) ($delivery['evidence']['actionable_filler_total'] ?? 0) >= 2) {
             $priorities[] = [
-                'area' => 'Transcript-detected filler phrases',
+                'issue_code' => 'filler_phrases',
+                'area' => 'Filler words',
                 'observation' => $delivery['observation'],
                 'action' => $delivery['tip'],
                 'severity' => 65,
@@ -1351,7 +1354,8 @@ final class EvidenceBasedCoachingService
             && is_numeric($pronunciation['evidence']['score'] ?? null)
             && (int) $pronunciation['evidence']['score'] < 70) {
             $priorities[] = [
-                'area' => 'Pronunciation and phoneme clarity',
+                'issue_code' => 'pronunciation',
+                'area' => 'Pronunciation',
                 'observation' => $pronunciation['observation'],
                 'action' => $pronunciation['tip'],
                 'severity' => 60,
@@ -1375,7 +1379,8 @@ final class EvidenceBasedCoachingService
                 || (int) ($cameraEvidence['camera_facing_percent'] ?? 100) < 70
                 || $bodyLanguageNeedsAttention)) {
             $priorities[] = [
-                'area' => 'Optional body-language framing',
+                'issue_code' => 'camera_frame',
+                'area' => 'Camera frame',
                 'observation' => $camera['observation'],
                 'action' => $camera['tip'],
                 'severity' => 45,
@@ -1386,15 +1391,17 @@ final class EvidenceBasedCoachingService
             && ($contentAlignment['status'] ?? null) === 'directly_answered'
             && empty($contentAlignment['missing_points'])) {
             $priorities[] = [
-                'area' => 'Answer evidence',
-                'observation' => 'The response was short, so there was limited material for a dependable content assessment.',
-                'action' => 'Add one truthful example, your specific contribution, and a verified result or lesson where relevant.',
+                'issue_code' => 'answer_detail',
+                'area' => 'Answer detail',
+                'observation' => 'The answer was short, so there was limited detail to check.',
+                'action' => 'Add one true example, what you did, and a true result or lesson where it fits.',
                 'severity' => 85,
             ];
         }
 
         if ($priorities === [] || ($contentAlignment['status'] ?? null) === 'not_evaluated') {
             $priorities[] = [
+                'issue_code' => 'question_tip',
                 'area' => $questionTip['title'],
                 'observation' => $questionTip['what_it_tests'],
                 'action' => $questionTip['guidance'],
@@ -1423,12 +1430,26 @@ final class EvidenceBasedCoachingService
         $area = mb_strtolower(trim($area));
 
         return match (true) {
-            str_contains($area, 'answer evidence') => 85,
-            str_contains($area, 'relevance') => 80,
+            str_contains($area, 'answer detail') || str_contains($area, 'answer evidence') => 85,
+            str_contains($area, 'answer match') || str_contains($area, 'relevance') => 80,
             str_contains($area, 'pronunciation') || str_contains($area, 'phoneme') => 60,
             str_contains($area, 'filler') || str_contains($area, 'delivery') => 65,
             str_contains($area, 'camera') || str_contains($area, 'body-language') => 45,
             default => 25,
+        };
+    }
+
+    private function priorityIssueCode(string $area): string
+    {
+        $area = mb_strtolower(trim($area));
+
+        return match (true) {
+            str_contains($area, 'answer detail') || str_contains($area, 'answer evidence') => 'answer_detail',
+            str_contains($area, 'answer match') || str_contains($area, 'relevance') => 'low_relevance',
+            str_contains($area, 'filler') || str_contains($area, 'delivery') => 'filler_phrases',
+            str_contains($area, 'pronunciation') || str_contains($area, 'phoneme') => 'pronunciation',
+            str_contains($area, 'camera') || str_contains($area, 'body-language') => 'camera_frame',
+            default => 'answer_'.strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $area)),
         };
     }
 
@@ -1457,23 +1478,23 @@ final class EvidenceBasedCoachingService
         $successParts = [];
 
         if ($mentionsCleanup) {
-            $missingPoints[] = 'The response did not identify the cleanup situation or difficult mess.';
+            $missingPoints[] = 'The answer did not name the cleanup situation or difficult mess.';
             $nextSteps[] = 'Briefly name the cleanup situation and your responsibility.';
             $actionParts[] = 'describe the cleanup situation';
             $successParts[] = 'cleanup context';
         }
 
         if ($asksForSteps || $mentionsCleanup || $framework === 'star') {
-            $missingPoints[] = 'The response did not explain the specific steps you personally took.';
+            $missingPoints[] = 'The answer did not explain the specific steps you took.';
             $nextSteps[] = $mentionsCleanup
                 ? 'List the cleanup steps you personally took in order.'
-                : 'Describe the specific steps you personally took.';
-            $actionParts[] = 'list the steps you personally took';
+                : 'Describe the specific steps you took.';
+            $actionParts[] = 'list the steps you took';
             $successParts[] = 'specific actions';
         }
 
         if ($asksForTools) {
-            $missingPoints[] = 'The response did not name the tools, supplies, equipment, or cleaning agents used.';
+            $missingPoints[] = 'The answer did not name the tools, supplies, equipment, or cleaning agents used.';
             $nextSteps[] = $mentionsCleanup
                 ? 'Name the cleaning tools, supplies, PPE, or agents used.'
                 : 'Name the tools, supplies, equipment, or materials involved.';
@@ -1482,13 +1503,13 @@ final class EvidenceBasedCoachingService
         }
 
         if ($asksForResult || $mentionsCleanup || $framework === 'star') {
-            $missingPoints[] = 'The response did not state the finished result, safety check, impact, or lesson.';
+            $missingPoints[] = 'The answer did not state the finished result, safety check, impact, or lesson.';
             $nextSteps[] = $mentionsCleanup
                 ? 'Close with the finished result, safety check, or lesson learned.'
-                : 'Close with the verified result, impact, or lesson.';
+                : 'Close with the true result, impact, or lesson.';
             $actionParts[] = $mentionsCleanup
                 ? 'state the finished result or safety check'
-                : 'state the verified result or lesson';
+                : 'state the true result or lesson';
             $successParts[] = $mentionsCleanup ? 'result or safety check' : 'result or lesson';
         }
 
@@ -1502,13 +1523,13 @@ final class EvidenceBasedCoachingService
 
         $action = $actionParts === []
             ? ''
-            : 'Expand the answer with specific, truthful details: '.$this->readableList($actionParts).'.';
+            : 'Make the answer longer with specific, true details: '.$this->readableList($actionParts).'.';
         $improvementFocus = $successParts === []
             ? ''
-            : 'Add '.$this->readableList($successParts).' so the answer can be assessed dependably.';
+            : 'Add '.$this->readableList($successParts).' so the answer can be checked well.';
         $successCheck = $successParts === []
             ? ''
-            : 'The retry names '.$this->readableList($successParts).' clearly enough for a dependable assessment.';
+            : 'The retry names '.$this->readableList($successParts).' clearly enough to check.';
 
         return [
             'missing_points' => array_slice($missingPoints, 0, 4),
@@ -1553,7 +1574,7 @@ final class EvidenceBasedCoachingService
 
     private function normalizeCameraObservation(array $clientData, bool $enabled, int $duration): array
     {
-        $caveat = 'This client-reported browser estimate describes visible framing, head alignment, hand presence, shoulder balance, posture pose, and movement steadiness only. Lighting, camera angle, framing, clothing, eyewear, device performance, and detector limitations can change the result; no image, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, employability, or intent, and it is not used in readiness scoring.';
+        $caveat = 'This browser estimate only describes what was seen in frame: face, head, hands, shoulders, body position, and movement. Lighting, camera angle, clothes, glasses, and device speed can change the result. No image or video is stored. It does not guess confidence, honesty, personality, job fit, or intent, and it is not used in the readiness score.';
         if (! $enabled) {
             return [
                 'status' => 'not_measured',

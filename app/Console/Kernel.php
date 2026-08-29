@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        if (filter_var(config('services.local_feedback_model.auto_train_enabled', false), FILTER_VALIDATE_BOOLEAN)) {
+            $schedule->command('ai:auto-train-feedback-model')
+                ->dailyAt((string) config('services.local_feedback_model.auto_train_time', '02:30'))
+                ->withoutOverlapping(120);
+        }
     }
 
     /**

@@ -183,7 +183,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertGreaterThan(0, $item['clarity_score']);
         $this->assertGreaterThan(0, $item['relevance_score']);
         $this->assertSame(50, $item['scoring_confidence']);
-        $this->assertStringContainsString('uses only evidence available in the submitted answer', $item['ai_feedback']);
+        $this->assertStringContainsString('uses only what you wrote in the answer', $item['ai_feedback']);
         $this->assertSame('verified', $item['feedback_quality']['status']);
         $this->assertSame(100, $item['feedback_quality']['completeness_percent']);
         $this->assertSame(
@@ -242,8 +242,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertLessThanOrEqual(78, $normalized['score']);
         $this->assertLessThan(100, $normalized['star_method_score']);
         $this->assertStringNotContainsString('50%', $normalized['ai_feedback']);
-        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
-        $this->assertStringContainsString('did not explain the final result', $normalized['ai_feedback']);
+        $this->assertStringContainsString('did not clearly match the answer', $normalized['ai_feedback']);
+        $this->assertStringContainsString('final result or lesson learned', $normalized['ai_feedback']);
     }
 
     public function test_it_rejects_negative_feedback_about_unmentioned_technology(): void
@@ -260,7 +260,7 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
         $this->assertStringNotContainsString('Kubernetes', $normalized['ai_feedback']);
-        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
+        $this->assertStringContainsString('did not clearly match the answer', $normalized['ai_feedback']);
     }
 
     public function test_strict_feedback_schema_requires_evidence_linked_items(): void
@@ -346,7 +346,7 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[], $answers, []]);
 
         $this->assertStringContainsString($strongAnswer, $normalized['session_feedback']['strengths']);
-        $this->assertStringContainsString('1 of 2 responses that required personal ownership did not clearly identify the candidate\'s action', $normalized['session_feedback']['weaknesses']);
+        $this->assertStringContainsString('1 of 2 responses that needed your own action did not clearly say what you did', $normalized['session_feedback']['weaknesses']);
         $this->assertStringNotContainsString('appears to have', $normalized['session_feedback']['strengths']);
     }
 
@@ -490,8 +490,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('local_evidence', $first['evaluation_source']);
         $this->assertSame('local_evidence', $second['evaluation_source']);
         $this->assertNotSame($first['ai_feedback'], $second['ai_feedback']);
-        $this->assertStringContainsString('Question-specific focus: this strength prompt', $first['ai_feedback']);
-        $this->assertStringContainsString('Question-specific focus: this salary-expectation prompt', $second['ai_feedback']);
+        $this->assertStringContainsString('Question focus: this strength question', $first['ai_feedback']);
+        $this->assertStringContainsString('Question focus: this salary question', $second['ai_feedback']);
     }
 
     public function test_valid_items_are_preserved_when_another_question_item_is_invalid(): void
@@ -597,8 +597,8 @@ class WeightedReadinessScoringTest extends TestCase
 
         $session = $this->invokePrivate('normalizeSessionFeedback', [[], $feedback]);
 
-        $this->assertStringContainsString('covered only part', strtolower($session['weaknesses']));
-        $this->assertStringContainsString('partially answered', strtolower($session['improvement_suggestions']));
+        $this->assertStringContainsString('answered only part', strtolower($session['weaknesses']));
+        $this->assertStringContainsString('partly answered', strtolower($session['improvement_suggestions']));
         $this->assertStringNotContainsString('personal action', strtolower($session['weaknesses']));
     }
 
@@ -622,7 +622,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('local_evidence', $normalized['evaluation_source']);
         $this->assertLessThan(50, $normalized['relevance_score']);
         $this->assertSame('not_addressed', $normalized['answer_alignment']);
-        $this->assertStringContainsString('not sufficiently evidence-grounded', $normalized['ai_feedback']);
+        $this->assertStringContainsString('did not clearly match the answer', $normalized['ai_feedback']);
         $this->assertSame('Limited', $normalized['feedback_quality']['reliability_band']);
     }
 
@@ -645,6 +645,85 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertFalse($normalized['score_calibration']['adjustment_applied']);
         $this->assertGreaterThanOrEqual(95, $normalized['feedback_quality']['reliability_percent']);
         $this->assertSame('High', $normalized['feedback_quality']['reliability_band']);
+    }
+
+    public function test_provider_ai_feedback_is_saved_in_plain_words(): void
+    {
+        $answer = [
+            'id' => 703,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare row estimates with actual rows, check indexes, and verify any change against the same workload.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $feedback['ai_feedback'] = 'For "'.$answer['question'].'", the exact answer evidence "'.$answer['answer'].'" is relevant evidence for the assessment rubric. The calibrated evaluation uses query plan and row estimates to explain relevance and professionalism.';
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+        $savedFeedback = $normalized['ai_feedback'];
+        $plainFeedback = strtolower($savedFeedback);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertStringContainsString($answer['answer'], $savedFeedback);
+        foreach (['assessment', 'rubric', 'calibrated', 'evaluation', 'criteria', 'professionalism', 'relevance'] as $hardWord) {
+            $this->assertStringNotContainsString($hardWord, $plainFeedback);
+        }
+        $this->assertStringContainsString('score guide', $plainFeedback);
+        $this->assertStringContainsString('answer match', $plainFeedback);
+        $this->assertStringContainsString('tone', $plainFeedback);
+    }
+
+    public function test_fixed_provider_feedback_is_rejected_and_replaced_with_answer_specific_guidance(): void
+    {
+        $answer = [
+            'id' => 704,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare row estimates with actual rows, check indexes, and verify any change against the same workload.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $feedback['ai_feedback'] = 'For "'.$answer['question'].'", the exact answer evidence "'.$answer['answer'].'" supports the score. The same feedback template explains the answer quality.';
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$feedback],
+        ], [$answer]]));
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('local_evidence', $normalized['evaluation_source']);
+        $this->assertStringNotContainsString('same feedback template', strtolower($normalized['ai_feedback']));
+        $this->assertStringContainsString('query plan', $normalized['ai_feedback']);
+        $this->assertStringContainsString('Answer detail:', $normalized['ai_feedback']);
+        $this->assertStringContainsString('Next step:', $normalized['ai_feedback']);
+    }
+
+    public function test_local_feedback_changes_with_the_users_actual_answer_details(): void
+    {
+        $question = 'Tell me about a time you improved a support process.';
+        $answers = [
+            [
+                'id' => 705,
+                'question_type' => 'Behavioral',
+                'question' => $question,
+                'answer' => 'I reviewed the ticket queue, found repeated login issues, updated the help guide, trained two teammates, and reduced repeat tickets by 30%.',
+            ],
+            [
+                'id' => 706,
+                'question_type' => 'Behavioral',
+                'question' => $question,
+                'answer' => 'We coordinated on the support process and tried to make it better for customers.',
+            ],
+        ];
+
+        $normalized = $this->invokePrivate('normalizeFeedbackResponse', [[], $answers, []]);
+        $strong = $normalized['per_question_feedback'][0]['ai_feedback'];
+        $weak = $normalized['per_question_feedback'][1]['ai_feedback'];
+
+        $this->assertNotSame($strong, $weak);
+        $this->assertStringContainsString('reduced repeat tickets by 30%', $strong);
+        $this->assertStringContainsString('what you did yourself', $strong);
+        $this->assertStringContainsString('a number', $strong);
+        $this->assertStringContainsString('team action', $weak);
+        $this->assertStringContainsString('did not clearly say what you did', $weak);
     }
 
     private function feedbackItem(

@@ -10,11 +10,11 @@
         $suggestions = trim($feedback->improvement_suggestions ?? '');
         $feedbackSummaryParts = array_filter([
             $strengths !== '' ? 'Strengths: '.$strengths : null,
-            $weaknesses !== '' ? 'Areas to improve: '.$weaknesses : null,
+            $weaknesses !== '' ? 'Needs work: '.$weaknesses : null,
         ]);
         $feedbackSummary = ! empty($feedbackSummaryParts)
             ? implode("\n\n", $feedbackSummaryParts)
-            : ($suggestions !== '' ? 'Review the recommended actions for the next practice step.' : 'AI feedback was unavailable for this session.');
+            : ($suggestions !== '' ? 'Review what to do next for the next practice step.' : 'AI feedback was unavailable for this session.');
         $comparisonRows = $comparisonRows ?? [];
         $mentorComments = $sessionRecord->mentorReviewComments ?? collect();
         $sessionFeedbackQuality = is_array(data_get($feedback->coaching_summary ?? [], 'feedback_quality'))
@@ -27,6 +27,10 @@
             ? max(0, min(100, (int) round($sessionFeedbackQuality['reliability_percent'])))
             : null;
         $sessionFeedbackReliabilityBand = trim((string) ($sessionFeedbackQuality['reliability_band'] ?? ''));
+        $sessionFeedbackReliabilityBand = match (strtolower($sessionFeedbackReliabilityBand)) {
+            'moderate' => 'Medium',
+            default => $sessionFeedbackReliabilityBand,
+        };
     @endphp
     @if(session('success'))
         <div class="alert alert-success" style="border-radius:12px;">{{ session('success') }}</div>
@@ -55,7 +59,7 @@
                     <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
                     <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
                     @if(($sessionRecord->score->score_version ?? 1) >= 2)
-                        <div style="font-size:.72rem;color:var(--tx3);margin-top:4px;">Rubric v{{ $sessionRecord->score->score_version }} · score confidence {{ $sessionRecord->score->scoring_confidence ?? 0 }}%</div>
+                        <div style="font-size:.72rem;color:var(--tx3);margin-top:4px;">Score version {{ $sessionRecord->score->score_version }} - score trust {{ $sessionRecord->score->scoring_confidence ?? 0 }}%</div>
                     @endif
                     @if($sessionFeedbackQualityPercent !== null)
                         <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackQualityPercent === 100 ? '#10b981' : '#f59e0b' }};margin-top:3px;">
@@ -64,7 +68,7 @@
                     @endif
                     @if($sessionFeedbackReliabilityPercent !== null)
                         <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackReliabilityPercent >= 95 ? '#10b981' : ($sessionFeedbackReliabilityPercent >= 85 ? '#3b82f6' : '#f59e0b') }};margin-top:3px;">
-                            <i class="fa-solid fa-gauge-high me-1"></i>Reliability {{ $sessionFeedbackReliabilityPercent }}%{{ $sessionFeedbackReliabilityBand !== '' ? ' '.$sessionFeedbackReliabilityBand : '' }}
+                            <i class="fa-solid fa-gauge-high me-1"></i>Trust {{ $sessionFeedbackReliabilityPercent }}%{{ $sessionFeedbackReliabilityBand !== '' ? ' '.$sessionFeedbackReliabilityBand : '' }}
                         </div>
                     @endif
                 </div>
@@ -74,8 +78,8 @@
 
     <div class="alert mb-4" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:var(--tx);border-radius:14px;">
         <i class="fa-solid fa-shield-halved me-2 text-primary"></i>
-        Private review link{{ $sessionRecord->share_expires_at ? ' · expires '.$sessionRecord->share_expires_at->format('M d, Y g:i A') : '' }}.
-        @if(!$sessionRecord->score_eligible) This is coached-practice feedback and is not readiness evidence. @endif
+        Private review link{{ $sessionRecord->share_expires_at ? ' - ends '.$sessionRecord->share_expires_at->format('M d, Y g:i A') : '' }}.
+        @if(!$sessionRecord->score_eligible) This is coached-practice feedback and is not used for the readiness score. @endif
     </div>
 
     <!-- Feature 7 & 14: AI Personalized Feedback & Recommendations -->
@@ -88,14 +92,14 @@
                     </div>
                     <div class="row w-100">
                         <div class="col-md-7">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">AI Personalized Feedback</h5>
+                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">AI Feedback</h5>
                             <p style="color:var(--tx);font-size:1rem;line-height:1.6;">
                                 {!! nl2br(e($feedbackSummary)) !!}
                             </p>
                         </div>
                         <div class="col-md-5" style="border-left: 1px solid rgba(59, 130, 246, 0.2);">
-                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-location-arrow me-2 text-primary"></i>Recommended Actions</h5>
-                            <p style="color:var(--tx);font-size:0.95rem;line-height:1.8;margin:0;">{!! nl2br(e($suggestions ?: 'No recommendations were generated for this session.')) !!}</p>
+                            <h5 style="color:var(--tx);font-weight:bold;margin-bottom:12px;"><i class="fa-solid fa-location-arrow me-2 text-primary"></i>What to Do Next</h5>
+                            <p style="color:var(--tx);font-size:0.95rem;line-height:1.8;margin:0;">{!! nl2br(e($suggestions ?: 'No next steps were made for this session.')) !!}</p>
                         </div>
                     </div>
                 </div>
@@ -115,12 +119,12 @@
         </div>
         <div class="col-md-6">
             <div style="background:rgba(239, 68, 68, 0.05);border:1px solid rgba(239, 68, 68, 0.2);border-radius:18px;padding:24px;height:100%">
-                <h5 style="color:#ef4444;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-triangle-exclamation me-2"></i>Needs Improvement</h5>
-                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($weaknesses ?: 'No weaknesses were generated for this session.')) !!}</p>
+                <h5 style="color:#ef4444;font-weight:bold;margin-bottom:20px;"><i class="fa-solid fa-triangle-exclamation me-2"></i>Needs Work</h5>
+                <p style="color:var(--tx);line-height:1.8;margin:0;">{!! nl2br(e($weaknesses ?: 'No weak points were made for this session.')) !!}</p>
                 {{-- <ul class="list-unstyled" style="color:var(--tx);line-height:2;">
-                    <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Add more real-world examples</li>
-                    <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Improve confidence in delivery</li>
-                    <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Use the STAR Method more effectively</li>
+                    <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Add more real examples</li>
+                    <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Practice steady speaking</li>
+                    <li><span class="text-danger me-3" style="font-size:1.2rem;line-height:0;">•</span>Make the story easier to follow</li>
                 </ul> --}}
             </div>
         </div>
@@ -130,19 +134,19 @@
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
-                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Skill Performance Summary</h5>
+                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Skill Scores</h5>
                 @php
                     $skills = [
                         ['name' => 'Clarity', 'score' => $sessionRecord->score->clarity_score ?? 0, 'color' => '#3b82f6'],
-                        ['name' => 'Relevance', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
+                        ['name' => 'Answer Match', 'score' => $sessionRecord->score->relevance_score ?? 0, 'color' => '#10b981'],
                         ['name' => 'Grammar', 'score' => $sessionRecord->score->grammar_score ?? 0, 'color' => '#8b5cf6'],
-                        ['name' => 'Professionalism', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
-                        ['name' => 'Job Evidence Match', 'score' => $sessionRecord->score->job_evidence_match_score ?? 0, 'color' => '#ec4899']
+                        ['name' => 'Tone', 'score' => $sessionRecord->score->professionalism_score ?? 0, 'color' => '#f59e0b'],
+                        ['name' => 'Job Detail Match', 'score' => $sessionRecord->score->job_evidence_match_score ?? 0, 'color' => '#ec4899']
                     ];
                     $deliveryMeasured = (int) data_get($feedback->coaching_summary ?? [], 'coverage.delivery_measured', 0) > 0
                         || $sessionRecord->answers->contains(fn ($item) => data_get($item->coaching_feedback ?? [], 'delivery.status') === 'measured');
                     if ($deliveryMeasured) {
-                        $skills[] = ['name' => 'Delivery Stability', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'];
+                        $skills[] = ['name' => 'Speaking Steadiness', 'score' => $sessionRecord->score->delivery_stability_score ?? 0, 'color' => '#ef4444'];
                     }
                 @endphp
                 <div class="row g-4">
@@ -162,16 +166,16 @@
         </div>
         <div class="col-lg-4">
             <div style="background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:24px;height:100%;">
-                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Feedback Comparison</h5>
+                <h5 style="color:var(--tx);font-weight:bold;margin-bottom:24px;">Compare with Last Score</h5>
                 @if(count($comparisonRows) > 0)
-                    <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Comparing to the previous completed scored session.</p>
+                    <p style="color:var(--tx3);font-size:0.85rem;margin-bottom:16px;">Compared with the last completed scored session.</p>
                     <table class="table table-borderless table-sm mb-0" style="color:var(--tx);font-size:0.95rem;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--bd);color:var(--tx3);">
-                                <th>Metric</th>
-                                <th class="text-center">Prev</th>
-                                <th class="text-center">Cur</th>
-                                <th class="text-end">Trend</th>
+                                <th>Skill</th>
+                                <th class="text-center">Last</th>
+                                <th class="text-center">Now</th>
+                                <th class="text-end">Change</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -194,7 +198,7 @@
                         </tbody>
                     </table>
                 @else
-                    <p style="color:var(--tx3);font-size:0.9rem;line-height:1.6;margin:0;">No previous scored session is available for comparison.</p>
+                    <p style="color:var(--tx3);font-size:0.9rem;line-height:1.6;margin:0;">No earlier scored session yet.</p>
                 @endif
             </div>
         </div>
@@ -252,20 +256,28 @@
     </div>
 
     <!-- Question Breakdown -->
-    <h4 style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Detailed Answers Review</h4>
+    <h4 style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Answer Review</h4>
     <div class="accordion" id="answersAccordion">
         @foreach($sessionRecord->answers as $index => $answer)
         @php
             $headerAlignmentStatus = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.status', ''));
             $headerAlignmentLabel = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.status_label', ''));
             $headerAlignmentLabel = $headerAlignmentLabel !== '' ? $headerAlignmentLabel : match ($headerAlignmentStatus) {
-                'directly_answered' => 'Directly answered',
-                'partially_answered' => 'Partially answered',
-                'low_relevance' => 'Low relevance',
-                'insufficient_evidence' => 'Not enough evidence',
-                'not_evaluated' => 'Not evaluated',
+                'directly_answered' => 'Answered directly',
+                'partially_answered' => 'Answered partly',
+                'low_relevance' => 'Low match',
+                'insufficient_evidence' => 'Not enough detail',
+                'not_evaluated' => 'Not checked',
                 'skipped' => 'Skipped',
                 default => '',
+            };
+            $headerAlignmentLabel = match (strtolower($headerAlignmentLabel)) {
+                'directly answered' => 'Answered directly',
+                'partially answered' => 'Answered partly',
+                'low relevance' => 'Low match',
+                'not enough evidence' => 'Not enough detail',
+                'not evaluated' => 'Not checked',
+                default => $headerAlignmentLabel,
             };
             $headerAlignmentColor = match ($headerAlignmentStatus) {
                 'directly_answered' => '#10b981',
@@ -337,7 +349,7 @@
                             </div>
                             <div class="col-md-3 col-6">
                                 <div class="p-3 text-center" style="background:var(--bg);border-radius:12px;border:1px solid var(--bd);">
-                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Delivery Stability</div>
+                                    <div style="font-size:0.8rem;color:var(--tx3);text-transform:uppercase;font-weight:600;margin-bottom:4px;">Speaking Steadiness</div>
                                     <div style="color:{{ ($answer->delivery_stability_score ?? 0) >= 80 ? '#10b981' : '#f59e0b' }};font-weight:bold;font-size:1.1rem;">{{ $answer->delivery_stability_score ?? 0 }}%</div>
                                 </div>
                             </div>
@@ -352,7 +364,7 @@
                         @endif
 
                         @if($hasLegacyBodyLanguageMetrics)
-                        <div class="mb-2" style="color:var(--tx3);font-size:.8rem;">Legacy camera estimates — excluded from current readiness scoring.</div>
+                        <div class="mb-2" style="color:var(--tx3);font-size:.8rem;">Old camera estimates - not used in the current readiness score.</div>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <div class="p-3 d-flex justify-content-between align-items-center" style="background:rgba(236,72,153,0.05);border-radius:12px;border:1px solid rgba(236,72,153,0.2);">
@@ -383,12 +395,12 @@
                         @endphp
                         @if($hasIntegritySignals)
                             <div class="mb-4 p-4" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);border-radius:12px;">
-                                <h6 style="color:#f59e0b;font-weight:bold;margin-bottom:10px;"><i class="fa-solid fa-shield-halved me-2"></i>Answer Integrity Signals</h6>
-                                <p style="color:var(--tx3);font-size:.86rem;line-height:1.55;margin-bottom:12px;">These are review signals, not proof of misconduct. Use them to decide whether the answer needs closer human review.</p>
+                                <h6 style="color:#f59e0b;font-weight:bold;margin-bottom:10px;"><i class="fa-solid fa-shield-halved me-2"></i>Answer Check Notes</h6>
+                                <p style="color:var(--tx3);font-size:.86rem;line-height:1.55;margin-bottom:12px;">These are review notes, not proof of cheating. Use them to decide if the answer needs a closer human check.</p>
                                 <div class="row g-2 mb-2">
                                     <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">Paste events: <strong>{{ $pasteEventCount }}</strong></div></div>
-                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">Pasted chars: <strong>{{ $pastedCharacterCount }}</strong></div></div>
-                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">AI-template likelihood: <strong>{{ $aiGeneratedLikelihood }}%</strong></div></div>
+                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">Pasted letters: <strong>{{ $pastedCharacterCount }}</strong></div></div>
+                                    <div class="col-md-4"><div class="p-2" style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;color:var(--tx);font-size:.86rem;">AI-like pattern: <strong>{{ $aiGeneratedLikelihood }}%</strong></div></div>
                                 </div>
                                 @if(!empty($integritySignals))
                                     <div class="d-flex flex-wrap gap-2 mt-2">
@@ -415,13 +427,13 @@
                                     @if($answer->rubric_level)<span class="badge bg-success">{{ $answer->rubric_level }}</span>@endif
                                 </div>
                                 @if(!empty($evidenceMap['supporting_excerpts']))
-                                    <strong style="color:var(--tx);font-size:.85rem;">Supporting evidence</strong>
+                                    <strong style="color:var(--tx);font-size:.85rem;">Proof found</strong>
                                     <ul style="color:var(--tx);line-height:1.6;margin-top:8px;">
                                         @foreach($evidenceMap['supporting_excerpts'] as $excerpt)<li>“{{ $excerpt }}”</li>@endforeach
                                     </ul>
                                 @endif
                                 @if(!empty($evidenceMap['missing_evidence']))
-                                    <strong style="color:var(--tx);font-size:.85rem;">Evidence to add</strong>
+                                    <strong style="color:var(--tx);font-size:.85rem;">Details to add</strong>
                                     <ul style="color:var(--tx);line-height:1.6;margin:8px 0 0;">
                                         @foreach($evidenceMap['missing_evidence'] as $missing)<li>{{ $missing }}</li>@endforeach
                                     </ul>
@@ -440,7 +452,7 @@
                         @endphp
                         @if(!empty($starAnalysis))
                             <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
-                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">STAR Framework Analysis</h6>
+                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:16px;">STAR Check</h6>
                                 <div class="d-flex flex-wrap gap-4 align-items-center">
                                     @foreach($starLabels as $key => $label)
                                         @php $present = (bool) ($starAnalysis[$key] ?? false); @endphp
@@ -460,8 +472,8 @@
                             </div>
                         @elseif(($sessionRecord->score->star_method_score ?? 0) > 0)
                             <div class="mb-4 p-4" style="background:var(--bg);border:1px solid var(--bd);border-radius:12px;">
-                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">STAR Method Score</h6>
-                                <p style="color:var(--tx3);font-size:0.9rem;margin:0;">Session-level STAR score: {{ $sessionRecord->score->star_method_score }}%.</p>
+                                <h6 style="color:var(--tx);font-weight:bold;margin-bottom:12px;">STAR Score</h6>
+                                <p style="color:var(--tx3);font-size:0.9rem;margin:0;">Session STAR score: {{ $sessionRecord->score->star_method_score }}%.</p>
                             </div>
                         @endif
 
@@ -474,18 +486,18 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Fact-Grounded Revision Template</label>
+                                <label style="font-size:0.85rem;color:#10b981;font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-shield-halved me-2"></i>Answer Draft Based on Your Facts</label>
                                 <div style="color:var(--tx);background:rgba(16, 185, 129, 0.05);padding:16px;border-radius:12px;border:1px solid rgba(16, 185, 129, 0.2);height:100%;font-size:0.95rem;line-height:1.6;">
-                                    {{ $answer->better_sample_answer ?: 'No improved answer was generated for this response.' }}
+                                    {{ $answer->better_sample_answer ?: 'No better answer was made for this response.' }}
                                 </div>
-                                <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Built only from the candidate's supplied answer; placeholders require verified facts.</div>
+                                <div style="color:var(--tx3);font-size:.78rem;margin-top:8px;">Built only from the candidate's answer. Any placeholder needs true facts.</div>
                             </div>
                         </div>
 
                         <!-- Feature 10: Follow-Up Questions -->
                         <div class="mt-4 p-4" style="background:rgba(59, 130, 246, 0.05);border:1px solid rgba(59, 130, 246, 0.2);border-radius:12px;">
-                            <label style="font-size:0.9rem;color:#3b82f6;font-weight:700;text-transform:uppercase;margin-bottom:12px;"><i class="fa-solid fa-clipboard-question me-2"></i>Follow-Up Questions to Consider</label>
-                            <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:12px;">Think about these questions to encourage deeper practice:</p>
+                            <label style="font-size:0.9rem;color:#3b82f6;font-weight:700;text-transform:uppercase;margin-bottom:12px;"><i class="fa-solid fa-clipboard-question me-2"></i>Follow-Up Questions</label>
+                            <p style="color:var(--tx3);font-size:0.9rem;margin-bottom:12px;">Think about these questions for deeper practice:</p>
                             <ul class="mb-0" style="color:var(--tx);line-height:1.8;">
                                 @if($answer->follow_up_question)
                                     <li>{{ $answer->follow_up_question }}</li>
@@ -501,7 +513,7 @@
                     @endphp
                     @if($retryAttempts->count() > 0)
                         <div class="mt-4 p-4" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.2);border-radius:12px;">
-                            <h6 style="color:#10b981;font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-rotate me-2"></i>Retry Attempts</h6>
+                            <h6 style="color:#10b981;font-weight:800;margin-bottom:12px;"><i class="fa-solid fa-rotate me-2"></i>Retry Tries</h6>
                             <div class="d-flex flex-column gap-2">
                                 @foreach($retryAttempts as $retry)
                                     <div class="d-flex flex-column flex-md-row justify-content-between gap-2" style="color:var(--tx);border-bottom:1px solid var(--bd);padding-bottom:10px;">
@@ -512,7 +524,7 @@
                                         <div class="retry-meta d-flex gap-2 flex-wrap align-items-center">
                                             <span class="retry-chip" style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700;">Score {{ $retry->score ?? 0 }}%</span>
                                             @if(in_array(strtolower((string) $retry->response_mode), ['voice', 'hybrid', 'voice_and_text'], true) && ($retry->voice_duration ?? 0) > 0 && $retry->delivery_stability_score !== null)
-                                                <span class="retry-chip" style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700;">Delivery Stability {{ $retry->delivery_stability_score }}%</span>
+                                                <span class="retry-chip" style="display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;background:rgba(59,130,246,.12);color:#3b82f6;font-size:.78rem;font-weight:700;">Speaking Steadiness {{ $retry->delivery_stability_score }}%</span>
                                             @endif
                                         </div>
                                     </div>

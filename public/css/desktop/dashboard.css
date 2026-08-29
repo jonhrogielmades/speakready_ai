@@ -5871,6 +5871,7 @@
         font-size: 0.52rem;
         font-weight: 900;
         line-height: 1;
+        white-space: nowrap;
         box-shadow: 0 8px 18px rgba(13, 55, 130, 0.18);
         animation: srImageChipRocket var(--sr-chip-duration) cubic-bezier(0.37, 0, 0.18, 1) infinite both;
         transform-origin: 50% 56%;
@@ -7751,7 +7752,6 @@
     body.user-desktop-shell:not(.admin-shell) .sr-polished-card.sr-card-pad,
     body.user-desktop-shell:not(.admin-shell) .sr-side-feature.sr-card-pad,
     body.user-desktop-shell:not(.admin-shell) #card-progress-chart.sr-card-pad,
-    body.user-desktop-shell:not(.admin-shell) #card-practice-plan.sr-card-pad,
     body.user-desktop-shell:not(.admin-shell) #card-skill-radar,
     body.user-desktop-shell:not(.admin-shell) #card-daily-challenge {
         padding: var(--dash-card-pad) !important;
@@ -7855,7 +7855,6 @@
     }
 
     body.user-desktop-shell:not(.admin-shell) #card-progress-chart,
-    body.user-desktop-shell:not(.admin-shell) #card-practice-plan,
     body.user-desktop-shell:not(.admin-shell) .sr-main-stack > .sr-two-col {
         grid-column: 1;
     }
@@ -7892,5 +7891,251 @@
 @media (min-width: 1600px) {
     body.user-desktop-shell:not(.admin-shell) .sr-dashboard {
         --dash-rail-width: clamp(324px, 20vw, 388px);
+    }
+}
+/* Skill radar locked state */
+#card-skill-radar .sr-radar-locked {
+    min-height: 166px;
+    display: grid;
+    place-items: center;
+    gap: 10px;
+    padding: 18px;
+    border: 1px dashed rgba(37, 99, 235, 0.28);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.88));
+    color: #334155;
+    text-align: center;
+}
+
+#card-skill-radar .sr-radar-locked-icon {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, 0.1);
+    color: #1d4ed8;
+    font-size: 1rem;
+}
+
+#card-skill-radar .sr-radar-locked p {
+    max-width: 240px;
+    margin: 0;
+    color: inherit;
+    font-size: 0.84rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+html[data-theme="dark"] #card-skill-radar .sr-radar-locked,
+html:not([data-theme="light"]):not(.lm) #card-skill-radar .sr-radar-locked,
+body.dm #card-skill-radar .sr-radar-locked {
+    border-color: rgba(147, 197, 253, 0.36);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(30, 41, 59, 0.78));
+    color: #e2e8f0;
+}
+
+html[data-theme="dark"] #card-skill-radar .sr-radar-locked-icon,
+html:not([data-theme="light"]):not(.lm) #card-skill-radar .sr-radar-locked-icon,
+body.dm #card-skill-radar .sr-radar-locked-icon {
+    background: rgba(147, 197, 253, 0.16);
+    color: #bfdbfe;
+}
+
+@media (max-width: 575px) {
+    #card-skill-radar .sr-radar-locked {
+        min-height: 180px;
+        padding: 16px;
+    }
+}
+
+@media (min-width: 992px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard {
+        --dash-rail-width: clamp(300px, 22vw, 360px);
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-summary-grid,
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard-shell {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, var(--dash-rail-width)) !important;
+        align-items: start !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-welcome-stack,
+    body.user-desktop-shell:not(.admin-shell) .sr-main-stack,
+    body.user-desktop-shell:not(.admin-shell) .sr-side-stack,
+    body.user-desktop-shell:not(.admin-shell) .sr-mobile-readiness-row,
+    body.user-desktop-shell:not(.admin-shell) .sr-two-col {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard :where(.sr-card, .sr-stat-card, .sr-polished-card, .sr-side-feature, .sr-score-panel) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-two-col {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements {
+        align-self: start !important;
+        flex: 0 0 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        padding: 12px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-side-stack > #card-achievements:last-child {
+        flex: 0 0 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-side-feature-header {
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-side-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-side-title {
+        font-size: 0.94rem;
+        line-height: 1.12;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-side-subtitle {
+        max-width: 170px;
+        margin-top: 3px;
+        font-size: 0.7rem;
+        line-height: 1.22;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-side-detail-btn {
+        min-height: 34px;
+        padding: 7px 10px;
+        font-size: 0.68rem;
+        white-space: nowrap;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-achievement-showcase {
+        gap: 8px;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-achievement-tile {
+        min-height: 72px !important;
+        padding: 8px 6px !important;
+        gap: 5px !important;
+        border-radius: 8px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-achievement-tile-icon {
+        min-height: 22px !important;
+        font-size: 1.18rem !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-achievement-tile-title {
+        font-size: 0.56rem !important;
+        line-height: 1.15;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) #card-achievements .sr-achievement-status {
+        padding: 4px 7px;
+        font-size: 0.54rem;
+        line-height: 1;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard {
+        --dash-rail-width: clamp(300px, 23vw, 320px);
+    }
+}
+
+@media (min-width: 1600px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-dashboard {
+        --dash-rail-width: clamp(340px, 20vw, 388px);
+    }
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-ai-recommendations .sr-recommendation-card {
+    grid-template-columns: 30px minmax(0, 1fr) 30px !important;
+    gap: 10px !important;
+    min-height: 78px !important;
+    padding: 12px 10px 12px 14px !important;
+    border-radius: 8px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-ai-recommendations .sr-recommendation-card::before {
+    width: 3px !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-ai-recommendations .sr-recommendation-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
+    font-size: 0.72rem !important;
+    box-shadow: none !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-ai-recommendations .sr-recommendation-title {
+    font-size: 0.76rem !important;
+    line-height: 1.24 !important;
+    font-weight: 850 !important;
+    letter-spacing: 0 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-ai-recommendations .sr-recommendation-reason {
+    margin-top: 5px !important;
+    font-size: 0.64rem !important;
+    line-height: 1.28 !important;
+    font-weight: 650 !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) #card-ai-recommendations .sr-recommendation-next {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 999px !important;
+    font-size: 0.72rem !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: var(--dash-section-gap) !important;
+}
+
+body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > * + * {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 575px) {
+    body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels {
+        gap: 8px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels > .sr-card {
+        padding: 10px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels .sr-polished-header {
+        gap: 8px !important;
+    }
+
+    body.user-desktop-shell:not(.admin-shell) .sr-two-col.sr-inline-panels .sr-polished-icon {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 0.85rem !important;
     }
 }

@@ -383,7 +383,7 @@
 
                     <div class="mb-3">
                         <label class="olbl">Philippines Interview Challenge Focus</label>
-                        <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. BPO empathy answer, salary expectations, fresh graduate confidence">
+                        <input class="oinp w-100" type="text" name="topic" required placeholder="e.g. job interview salary expectations or school admission program fit">
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--bd)">
@@ -422,11 +422,11 @@
                         </div>
                         <div class="col-md-4">
                             <label class="olbl">Title</label>
-                            <input class="oinp w-100" type="text" name="title" required placeholder="e.g. BPO Interview Confidence Drill">
+                            <input class="oinp w-100" type="text" name="title" required placeholder="e.g. Job Interview Confidence Drill">
                         </div>
                         <div class="col-md-3">
                             <label class="olbl">PH Interview Goal</label>
-                            <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. BPO Customer Service Interview">
+                            <input class="oinp w-100" type="text" name="target_position" required placeholder="e.g. School Admission Interview">
                         </div>
                     </div>
 

@@ -31,13 +31,14 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('mobilePreviewSwiper', false)
                 ->assertSee('mobile-preview-image-swiper', false)
                 ->assertSee('id="mbtog"', false)
-                ->assertSee('aria-controls="mbmenu"', false)
-                ->assertSee('id="mbmenu"', false)
-                ->assertSee('id="barIcon"', false)
-                ->assertSee('id="xIcon"', false)
-                ->assertDontSee('id="userCommandPalette"', false)
-                ->assertDontSee('data-ucp-open', false)
-                ->assertDontSee('id="guestHeaderClock"', false)
+                ->assertSee('aria-controls="userCommandPalette"', false)
+                ->assertSee('id="userCommandPalette"', false)
+                ->assertSee('data-ucp-open', false)
+                ->assertSee('id="guestHeaderClock"', false)
+                ->assertDontSee('aria-controls="mbmenu"', false)
+                ->assertDontSee('id="mbmenu"', false)
+                ->assertDontSee('id="barIcon"', false)
+                ->assertDontSee('id="xIcon"', false)
                 ->assertDontSee('css/desktop/style.css?v=7', false);
         }
     }

@@ -68,11 +68,34 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
+        $isSupportedInterviewCategory = function ($category): bool {
+            $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
+
+            if (
+                str_contains($title, 'bpo')
+                || str_contains($title, 'customer')
+                || str_contains($title, 'programming')
+                || str_contains($title, 'technical')
+                || str_contains($title, 'scholar')
+                || preg_match('/\bit\b/', $title)
+            ) {
+                return false;
+            }
+
+            return str_contains($title, 'job interview')
+                || str_contains($title, 'general job')
+                || str_contains($title, 'school admission')
+                || str_contains($title, 'college admission')
+                || str_contains($title, 'admission interview');
+        };
+
         $categories = \App\Models\Category::where('status', 'active')
             ->where('type', 'core')
             ->orderBy('sort_order')
             ->orderBy('title')
-            ->get();
+            ->get()
+            ->filter($isSupportedInterviewCategory)
+            ->values();
         $sourcePacks = \App\Services\QuestionDatasetProvider::all();
         $selectedApplication = null;
         $selectedPack = null;

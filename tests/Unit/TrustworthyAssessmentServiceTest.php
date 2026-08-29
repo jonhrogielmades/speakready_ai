@@ -59,7 +59,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $map = $service->answerEvidence('I led the migration and coordinated five teammates.');
 
         $this->assertNotEmpty($map['supporting_excerpts']);
-        $this->assertContains('A specific result, outcome, or measurable impact', $map['missing_evidence']);
+        $this->assertContains('A clear result, effect, or lesson', $map['missing_evidence']);
     }
 
     public function test_revision_template_preserves_candidate_text_and_marks_missing_facts(): void
@@ -70,7 +70,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $revision = $service->groundedRevisionTemplate($answer);
 
         $this->assertStringContainsString($answer, $revision);
-        $this->assertStringContainsString('Add only a truthful, verified result', $revision);
+        $this->assertStringContainsString('Add only a true result', $revision);
         $this->assertStringNotContainsString('increased revenue', $revision);
     }
 
@@ -87,7 +87,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $revision = $service->groundedRevisionTemplate($answer, $evidence);
 
         $this->assertFalse($evidence['result_required']);
-        $this->assertNotContains('A specific result, outcome, or measurable impact', $evidence['missing_evidence']);
+        $this->assertNotContains('A clear result, effect, or lesson', $evidence['missing_evidence']);
         $this->assertStringContainsString('Direct response:', $revision);
         $this->assertStringNotContainsString('Situation/Task:', $revision);
     }
@@ -119,7 +119,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
 
         $this->assertTrue($map['has_personal_action']);
         $this->assertNotEmpty($map['supporting_excerpts']);
-        $this->assertNotContains('A clear statement of your personal action or ownership', $map['missing_evidence']);
+        $this->assertNotContains('Your own action', $map['missing_evidence']);
     }
 
     public function test_session_confidence_respects_answer_scoring_confidence(): void
@@ -131,7 +131,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $answer->setRawAttributes([
             'id' => 10,
             'answer_text' => 'I coordinated a checklist update and shared it with the support team.',
-            'ai_feedback' => 'Evidence-grounded feedback.',
+            'ai_feedback' => 'Answer-based feedback.',
             'scoring_confidence' => 45,
             'is_skipped' => false,
         ], true);

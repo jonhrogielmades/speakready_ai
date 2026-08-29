@@ -77,10 +77,10 @@ class TrustworthyAssessmentService
 
         $missing = [];
         if ($resultRequired && ! $hasResult) {
-            $missing[] = 'A specific result, outcome, or measurable impact';
+            $missing[] = 'A clear result, effect, or lesson';
         }
         if ($personalActionRequired && ! $hasPersonalAction) {
-            $missing[] = 'A clear statement of your personal action or ownership';
+            $missing[] = 'Your own action';
         }
 
         return [
@@ -107,14 +107,14 @@ class TrustworthyAssessmentService
         $evidence ??= $this->answerEvidence($clean);
         $excerpt = mb_substr($clean, 0, 700);
         $missing = $evidence['missing_evidence'] ?? [];
-        $resultPrompt = in_array('A specific result, outcome, or measurable impact', $missing, true)
-            ? '[Add only a truthful, verified result, or state that no metric was recorded.]'
+        $resultPrompt = in_array('A clear result, effect, or lesson', $missing, true)
+            ? '[Add only a true result, or say that no number was recorded.]'
             : '[Restate only the result already present in your answer.]';
 
         if ($evidence['star_applicable'] ?? false) {
-            return "Fact-grounded revision template - preserve only details you can verify:\n"
-                ."Verified source answer: {$excerpt}\n"
-                ."Situation/Task: [Briefly identify the context and your responsibility using only verified facts.]\n"
+            return "Answer draft based on your facts - keep only details you can check:\n"
+                ."Source answer: {$excerpt}\n"
+                ."Situation/Task: [Briefly identify the context and your responsibility using only facts in your answer.]\n"
                 ."Action: [Restate the specific action you personally took from the source answer.]\n"
                 ."Result: {$resultPrompt}";
         }
@@ -125,36 +125,36 @@ class TrustworthyAssessmentService
         $intentScaffold = match ($intent) {
             'strength' => [
                 'Direct response: [Name only the strength supported by your source answer.]',
-                'Proof: [Use the most relevant truthful example already present.]',
+                'Proof: [Use the best true example already present.]',
                 'Role connection: [Explain the role connection without adding an unsupported result.]',
             ],
             'strength_and_weakness' => [
-                'Strength: [Name and support one truthful, job-relevant strength.]',
-                'Development area: [Name only the genuine weakness stated in the source answer.]',
-                'Improvement: [Restate the improvement action and evidence of progress already present.]',
+                'Strength: [Name and support one true job strength.]',
+                'Development area: [Name only the real weakness stated in the source answer.]',
+                'Improvement: [Restate the improvement action and sign of progress already present.]',
             ],
             'weakness' => [
-                'Development area: [State the genuine, manageable weakness from the source answer.]',
+                'Development area: [State the real, manageable weakness from the source answer.]',
                 'Effect: [Explain only the real effect already described.]',
-                'Improvement: [Restate the concrete improvement habit and verified progress.]',
+                'Improvement: [Restate the clear improvement habit and progress already shown.]',
             ],
             'salary_expectation' => [
                 'Direct response: [State only the range or flexibility actually supported by your source answer.]',
-                'Basis: [Connect it to verified experience, responsibilities, or conditions without inventing market data.]',
-                'Close: [State only the professional openness already expressed.]',
+                'Basis: [Connect it to experience, responsibilities, or conditions without inventing market data.]',
+                'Close: [State only the work-friendly openness already expressed.]',
             ],
             'motivation', 'role_fit' => [
                 'Direct response: [State the specific reason or role fit supported by your source answer.]',
-                'Evidence: [Connect one verified skill, experience, or goal already present.]',
+                'Proof: [Connect one skill, experience, or goal already present.]',
                 'Contribution/next step: [Use only the contribution or career direction already stated.]',
             ],
             'self_introduction' => [
                 'Present: [State the current professional or educational focus already provided.]',
-                'Relevant past: [Select only the most role-relevant verified experience.]',
+                'Past: [Select only the experience that best fits the role.]',
                 'Next step: [Restate the truthful role connection already present.]',
             ],
             'career_transition' => [
-                'Reason: [State the verified reason briefly and professionally.]',
+                'Reason: [State the reason briefly and clearly.]',
                 'Learning: [Use only the lesson or need already described.]',
                 'Next step: [Connect it to what you truthfully seek next.]',
             ],
@@ -166,35 +166,35 @@ class TrustworthyAssessmentService
             'situational' => [
                 'Goal and constraints: [Use only the goal or constraint stated in the source.]',
                 'Ordered action: [Organize the steps already proposed.]',
-                'Verification: [Restate only how the answer says success would be checked.]',
+                'Success check: [Restate only how the answer says success would be checked.]',
             ],
             default => [
-                'Direct response: [Answer the exact question in one sentence using only verified facts.]',
+                'Direct response: [Answer the exact question in one sentence using only facts in your answer.]',
                 'Supporting detail: [Organize the reasoning or actions already present in the source answer.]',
-                'Evidence/verification: '.$resultPrompt,
+                'Result or lesson: '.$resultPrompt,
             ],
         };
 
         $evidencePrompt = ($evidence['result_required'] ?? true)
             ? $resultPrompt
-            : '[Restate only the reasoning, verification step, or outcome already present; do not invent one.]';
+            : '[Restate only the reasoning, check step, or result already present; do not invent one.]';
 
         if ($intent === 'direct_evidence') {
-            $intentScaffold[2] = 'Evidence/verification: '.$evidencePrompt;
+            $intentScaffold[2] = 'Result or lesson: '.$evidencePrompt;
         }
 
-        return "Fact-grounded revision template{$questionLabel} - preserve only details you can verify:\n"
-            ."Verified source answer: {$excerpt}\n"
+        return "Answer draft based on your facts{$questionLabel} - keep only details you can check:\n"
+            ."Source answer: {$excerpt}\n"
             .implode("\n", $intentScaffold);
     }
 
     public function rubricLevel(int $score): array
     {
         return match (true) {
-            $score >= 85 => ['level' => '4 - Strong evidence', 'next_level' => 'Maintain evidence quality under harder follow-ups.'],
-            $score >= 70 => ['level' => '3 - Competent', 'next_level' => 'Add clearer ownership, constraints, tradeoffs, and measurable impact.'],
-            $score >= 50 => ['level' => '2 - Partial evidence', 'next_level' => 'Answer the question directly and provide one complete, specific example.'],
-            default => ['level' => '1 - Insufficient evidence', 'next_level' => 'Provide enough relevant detail for a job-related assessment.'],
+            $score >= 85 => ['level' => '4 - Strong detail', 'next_level' => 'Keep this level of detail under harder follow-ups.'],
+            $score >= 70 => ['level' => '3 - Good', 'next_level' => 'Add clearer ownership, limits, tradeoffs, and result.'],
+            $score >= 50 => ['level' => '2 - Some detail', 'next_level' => 'Answer the question directly and provide one complete, specific example.'],
+            default => ['level' => '1 - Not enough detail', 'next_level' => 'Provide enough clear detail for a job answer.'],
         };
     }
 
@@ -233,10 +233,10 @@ class TrustworthyAssessmentService
             'rubric' => [
                 'version' => self::SCORE_VERSION,
                 'scale' => [
-                    '1' => 'Insufficient evidence',
-                    '2' => 'Partial evidence',
-                    '3' => 'Competent job-related evidence',
-                    '4' => 'Strong evidence with ownership and impact',
+                    '1' => 'Not enough detail',
+                    '2' => 'Some detail',
+                    '3' => 'Good job detail',
+                    '4' => 'Strong detail with your action and result',
                 ],
                 'weights' => [
                     'clarity' => 25,

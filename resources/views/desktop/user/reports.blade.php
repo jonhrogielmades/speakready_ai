@@ -373,7 +373,7 @@
                                 <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">PDF Report</h6>
                                 <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Save the full interview report view.</p>
                             </div>
-                            <button type="button" class="btn btn-primary btn-sm js-export-pdf"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button>
+                            <button type="button" class="btn btn-primary btn-sm js-export-pdf" id="exportPdfBtn"><i class="fa-solid fa-file-pdf me-1"></i>PDF</button>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -382,7 +382,7 @@
                                 <h6 style="color:var(--tx);font-weight:800;margin:0 0 5px;">Score Sheet</h6>
                                 <p style="color:var(--tx3);font-size:.86rem;line-height:1.45;margin:0;">Export comparison rows to Excel.</p>
                             </div>
-                            <button type="button" class="btn btn-success btn-sm js-export-excel"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
+                            <button type="button" class="btn btn-success btn-sm js-export-excel" id="exportExcelBtn"><i class="fa-solid fa-file-excel me-1"></i>Excel</button>
                         </div>
                     </div>
                     <div class="col-md-4">
@@ -468,7 +468,7 @@
                     </div>
                     <div class="col-4 border-end px-1 px-sm-3" style="border-color:var(--bd)!important;">
                         <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:var(--tx);">{{ $voiceData->confidence === null ? 'N/A' : $voiceData->confidence . '%' }}</div>
-                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Delivery Stability</div>
+                        <div style="font-size:clamp(0.55rem, 2.2vw, 0.75rem);color:var(--tx3);text-transform:uppercase;font-weight:600;">Speaking Steadiness</div>
                     </div>
                     <div class="col-4 px-1 px-sm-3">
                         <div style="font-size:clamp(1.2rem, 5vw, 1.8rem);font-weight:bold;color:#ef4444;">{{ $voiceData->filler_words ?? 'N/A' }}</div>
@@ -545,9 +545,7 @@
 </div>
 
 <!-- Scripts for Charts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="{{ asset('js/chart.umd.min.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const showChartFallback = function(canvas, message) {

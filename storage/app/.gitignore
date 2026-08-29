@@ -3,4 +3,6 @@
 !private/
 !private/datasets/
 !private/datasets/**
+!private/models/
+!private/models/.gitignore
 !.gitignore

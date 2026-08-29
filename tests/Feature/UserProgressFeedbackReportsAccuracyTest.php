@@ -167,56 +167,53 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $response = $this->actingAs($user)->get(route('user.feedback'));
 
         $response->assertOk()
-            ->assertSee('General Job Interview')
+            ->assertSee('Job Interviews')
             ->assertSee('Score pending')
             ->assertSee('Not scored')
-            ->assertDontSee('Needs Improvement', false)
+            ->assertDontSee('Needs Work', false)
             ->assertViewHas('feedbackCategories', function ($categories) {
-                return $categories->all() === ['General Job Interview'];
+                return $categories->all() === ['Job Interviews'];
             });
     }
 
     public function test_feedback_filters_search_and_sort_use_server_side_results(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $behavioral = $this->category('Behavioral');
-        $technical = $this->category('IT Interview');
-        $bpo = $this->category('Communication');
+        $job = $this->category('Job Interview');
+        $admission = $this->category('College Admission');
 
-        $this->completedSessionFor($user, $behavioral, 70, now()->subDays(3), [
+        $this->completedSessionFor($user, $job, 70, now()->subDays(3), [
             'target_position' => 'Office Associate',
         ]);
-        $itSession = $this->completedSessionFor($user, $technical, 88, now()->subDay(), [
-            'target_position' => 'Junior Software Developer',
-            'interview_focus' => 'software technical screening',
+        $admissionSession = $this->completedSessionFor($user, $admission, 88, now()->subDay(), [
+            'target_position' => 'Admission Applicant',
+            'interview_focus' => 'college admission program fit',
         ]);
-        $this->completedSessionFor($user, $bpo, 92, now()->subDays(2), [
+        $this->completedSessionFor($user, $job, 92, now()->subDays(2), [
             'target_position' => 'Customer Success Agent',
-            'interview_focus' => 'customer support contact center',
+            'interview_focus' => 'job interview role fit',
         ]);
 
         $response = $this->actingAs($user)->get(route('user.feedback', [
-            'scenario' => 'IT / Programming Interview',
-            'search' => 'software',
+            'scenario' => 'School Admission Interviews',
+            'search' => 'admission',
             'sort' => 'asc',
         ]));
 
         $response->assertOk()
             ->assertSee('name="scenario"', false)
-            ->assertSee('value="IT / Programming Interview" selected', false)
+            ->assertSee('value="School Admission Interviews" selected', false)
             ->assertSee('name="search"', false)
-            ->assertSee('value="software"', false)
+            ->assertSee('value="admission"', false)
             ->assertSee('Oldest First')
-            ->assertSee('data-scenario="IT / Programming Interview"', false)
-            ->assertDontSee('data-scenario="General Job Interview"', false)
-            ->assertDontSee('data-scenario="BPO / Customer Support Interview"', false)
+            ->assertSee('data-scenario="School Admission Interviews"', false)
+            ->assertDontSee('data-scenario="Job Interviews"', false)
             ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
-                && $sessions->getCollection()->first()?->id === $itSession->id)
+                && $sessions->getCollection()->first()?->id === $admissionSession->id)
             ->assertViewHas('feedbackCategories', function ($categories) {
                 return $categories->all() === [
-                    'BPO / Customer Support Interview',
-                    'General Job Interview',
-                    'IT / Programming Interview',
+                    'Job Interviews',
+                    'School Admission Interviews',
                 ];
             });
     }
@@ -463,8 +460,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ->assertViewHas('latestPerformanceMetrics', function ($metrics) {
                 $labels = collect($metrics)->pluck('name');
 
-                return ! $labels->contains('Delivery Stability')
-                    && ! $labels->contains('Job Evidence Match');
+                return ! $labels->contains('Speaking Steadiness')
+                    && ! $labels->contains('Job Detail Match');
             })
             ->assertViewHas('learningData', function ($learningData) {
                 return $learningData->lessons_total === 2
@@ -557,7 +554,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ->assertSee('Question-by-Question Analysis')
             ->assertSee('Mistakes &amp; Improvement Areas', false)
             ->assertSee('Download / Export Report')
-            ->assertSee('IT / Programming Interview')
+            ->assertSee('Job Interviews')
             ->assertSee('Frontend Developer')
             ->assertSee('6m 5s')
             ->assertSee('Tell me about a project you built.')

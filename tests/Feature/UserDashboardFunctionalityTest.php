@@ -63,18 +63,18 @@ class UserDashboardFunctionalityTest extends TestCase
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
-        $category = $this->category(['title' => 'IT/Programming', 'sort_order' => 2]);
+        $category = $this->category(['title' => 'College Admission', 'sort_order' => 2]);
         $pack = InterviewPack::create([
-            'name' => 'Google Product/Technical Screen',
-            'slug' => 'google-product-technical-screen-regression',
-            'company' => 'Google',
-            'role_family' => 'Technical',
+            'name' => 'School Admission Panel Practice',
+            'slug' => 'school-admission-panel-regression',
+            'company' => 'State University',
+            'role_family' => 'School Admission Applicant',
             'difficulty' => 'hard',
-            'interview_focus' => 'Problem Solving',
-            'company_persona' => 'Google',
-            'question_types' => ['Technical', 'Situational'],
-            'sample_questions' => ['Walk me through a debugging process.'],
-            'description' => 'Technical screen practice.',
+            'interview_focus' => 'School Admission',
+            'company_persona' => 'University admissions panel',
+            'question_types' => ['Personal', 'Situational'],
+            'sample_questions' => ['Why did you choose this program?'],
+            'description' => 'Admissions panel practice.',
             'pressure_mode' => true,
             'status' => 'active',
         ]);
@@ -88,19 +88,19 @@ class UserDashboardFunctionalityTest extends TestCase
             ->assertOk()
             ->assertSee('name="interview_pack_id" value="'.$pack->id.'"', false)
             ->assertSee('value="'.$category->id.'"', false)
-            ->assertSee('value="Technical Role"', false)
+            ->assertSee('value="School Admission Applicant Role"', false)
             ->assertSee('value="hard"', false)
             ->assertSee('value="real_interview" selected', false)
-            ->assertSee('value="Technical" checked', false);
+            ->assertSee('value="Personal" checked', false);
 
         $this->actingAs($user)
             ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
                 'interview_pack_id' => $pack->id,
                 'difficulty' => 'hard',
-                'target_position' => 'Technical Role',
-                'question_types' => ['Technical', 'Situational'],
-                'interview_focus' => 'Problem Solving',
-                'company_persona' => 'Google',
+                'target_position' => 'School Admission Applicant Role',
+                'question_types' => ['Personal', 'Situational'],
+                'interview_focus' => 'School Admission',
+                'company_persona' => 'University admissions panel',
                 'live_feedback_mode' => 'real_interview',
                 'time_limit' => 2,
             ]))
@@ -110,15 +110,15 @@ class UserDashboardFunctionalityTest extends TestCase
             'user_id' => $user->id,
             'interview_pack_id' => $pack->id,
             'difficulty' => 'hard',
-            'target_position' => 'Technical Role',
+            'target_position' => 'School Admission Applicant Role',
             'pressure_mode' => true,
             'live_feedback_mode' => 'real_interview',
-            'company_persona' => 'Philippines hiring context - Google',
+            'company_persona' => 'Philippines hiring context - University admissions panel',
             'status' => 'in_progress',
         ]);
 
         $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
-        $this->assertSame(['Technical', 'Situational'], json_decode($session->question_types, true));
+        $this->assertSame(['Personal', 'Situational'], json_decode($session->question_types, true));
     }
 
     public function test_application_tracker_crud_and_plan_toggle_are_authorized(): void

@@ -187,25 +187,37 @@ class UserSideHardeningTest extends TestCase
         $this->assertDatabaseCount('interview_sessions', 0);
     }
 
-    public function test_interview_setup_uses_active_core_admin_categories(): void
+    public function test_interview_setup_only_uses_job_and_school_admission_categories(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $bpoCategory = $this->category([
-            'title' => 'BPO / Customer Support',
-            'description' => 'Customer support interview practice',
+        $jobCategory = $this->category([
+            'title' => 'Job Interview',
+            'description' => 'Job interview practice',
             'sort_order' => 1,
         ]);
-        $this->category(['title' => 'Inactive Interview', 'status' => 'inactive']);
+        $admissionCategory = $this->category([
+            'title' => 'College Admission',
+            'description' => 'School admission practice',
+            'sort_order' => 2,
+        ]);
+        $this->category(['title' => 'BPO / Customer Support', 'sort_order' => 3]);
+        $this->category(['title' => 'IT/Programming', 'sort_order' => 4]);
+        $this->category(['title' => 'Scholarship Interview', 'sort_order' => 5]);
         $this->category(['title' => 'Game Category', 'type' => 'game']);
 
         $this->actingAs($user)
             ->get(route('interview.setup'))
             ->assertOk()
             ->assertSee('name="category_id"', false)
-            ->assertSee('value="'.$bpoCategory->id.'"', false)
-            ->assertSee('Philippines BPO / Customer Support Interview')
-            ->assertSee('data-source-pack-key="ph_bpo_communication"', false)
-            ->assertDontSee('Inactive Interview')
+            ->assertSee('value="'.$jobCategory->id.'"', false)
+            ->assertSee('value="'.$admissionCategory->id.'"', false)
+            ->assertSee('Philippines Job Interviews')
+            ->assertSee('Philippines School Admission Interviews')
+            ->assertSee('data-source-pack-key="ph_job_interview"', false)
+            ->assertSee('data-source-pack-key="ph_college_admission"', false)
+            ->assertDontSee('Philippines BPO / Customer Support Interview')
+            ->assertDontSee('Philippines IT / Programming Interview')
+            ->assertDontSee('Philippines Scholarship Interview')
             ->assertDontSee('Game Category');
     }
 
@@ -259,6 +271,20 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
+    public function test_interview_start_rejects_unsupported_core_categories(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category(['title' => 'BPO / Customer Support']);
+
+        $this->actingAs($user)
+            ->from(route('interview.setup'))
+            ->post(route('interview.start'), $this->interviewPayload($category))
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHasErrors('category_id');
+
+        $this->assertDatabaseCount('interview_sessions', 0);
+    }
+
     public function test_interview_start_accepts_added_question_counts(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -280,22 +306,27 @@ class UserSideHardeningTest extends TestCase
     public function test_interview_start_uses_category_source_pack_when_posted_pack_mismatches(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $category = $this->category(['title' => 'BPO / Customer Support']);
+        $category = $this->category(['title' => 'College Admission']);
 
         $this->actingAs($user)
             ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
-                'source_pack_key' => 'ph_scholarship',
+                'source_pack_key' => 'ph_bpo_communication',
                 'question_types' => ['Situational'],
             ]))
             ->assertRedirect(route('interview.session'));
 
         $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
 
-        $this->assertDatabaseHas('questions', [
-            'interview_session_id' => $session->id,
-            'category_id' => $category->id,
-            'source_type' => 'philippines_competency_source',
-        ]);
+        $sourceTypes = Question::where('interview_session_id', $session->id)
+            ->where('category_id', $category->id)
+            ->where('source_type', '!=', 'real_interview_opening')
+            ->pluck('source_type');
+
+        $this->assertNotContains('philippines_competency_source', $sourceTypes->all());
+        $this->assertTrue($sourceTypes->contains(fn ($type) => in_array($type, [
+            'philippines_official_admission_source',
+            'speakready_reliable_question_bank',
+        ], true)));
     }
 
     public function test_interview_start_creates_questions_when_bank_is_empty(): void
@@ -448,7 +479,7 @@ class UserSideHardeningTest extends TestCase
                 'weaknesses',
                 'improved_answer',
             ])
-            ->assertJsonPath('improved_answer', 'Service error occurred while trying to generate an improved answer.');
+            ->assertJsonPath('improved_answer', 'We could not make a better answer draft because the service had an error.');
     }
 
     public function test_interview_answer_recomputes_delivery_metrics_from_server_evidence(): void
@@ -1032,8 +1063,8 @@ class UserSideHardeningTest extends TestCase
     private function category(array $overrides = []): Category
     {
         return Category::create(array_merge([
-            'title' => 'Behavioral',
-            'description' => 'Behavioral questions',
+            'title' => 'Job Interview',
+            'description' => 'Job interview questions',
             'status' => 'active',
             'type' => 'core',
         ], $overrides));

@@ -156,7 +156,11 @@ class InterviewSecurityTest extends TestCase
 
     public function test_user_can_request_speech_for_their_active_question(): void
     {
-        config(['services.openai.tts_enabled' => true]);
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai',
+            'services.openai.tts_enabled' => true,
+        ]);
 
         Http::fake([
             'https://api.openai.com/v1/audio/speech' => Http::response('fake-audio', 200, [
@@ -193,7 +197,11 @@ class InterviewSecurityTest extends TestCase
 
     public function test_user_can_request_speech_for_active_session_closing_text(): void
     {
-        config(['services.openai.tts_enabled' => true]);
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai',
+            'services.openai.tts_enabled' => true,
+        ]);
 
         Http::fake([
             'https://api.openai.com/v1/audio/speech' => Http::response('closing-audio', 200, [
@@ -228,9 +236,65 @@ class InterviewSecurityTest extends TestCase
             && $request['input'] === $closingText);
     }
 
+    public function test_user_can_request_speech_with_gemini_tts_provider(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'gemini',
+            'services.gemini.tts_model' => 'gemini-3.1-flash-tts-preview',
+            'services.gemini.tts_voice' => 'Kore',
+            'services.gemini.tts_style' => 'Say clearly',
+        ]);
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/v1beta/interactions' => Http::response([
+                'interaction' => [
+                    'output_audio' => [
+                        'data' => base64_encode(str_repeat("\0", 480)),
+                    ],
+                ],
+            ], 200, [
+                'Content-Type' => 'application/json',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'Gemini',
+            'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ]);
+
+        $response
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/wav');
+
+        $this->assertStringStartsWith('RIFF', $response->getContent());
+
+        Http::assertSent(fn ($request) => $request->url() === 'https://generativelanguage.googleapis.com/v1beta/interactions'
+            && $request['model'] === 'gemini-3.1-flash-tts-preview'
+            && data_get($request->data(), 'generation_config.speech_config.0.voice') === 'Kore'
+            && str_contains((string) $request['input'], $question->question_text));
+    }
+
     public function test_speech_endpoint_does_not_call_paid_tts_when_disabled(): void
     {
-        config(['services.openai.tts_enabled' => false]);
+        config([
+            'services.ai_tts.enabled' => false,
+            'services.openai.tts_enabled' => false,
+        ]);
         Http::fake();
 
         AiProvider::create([

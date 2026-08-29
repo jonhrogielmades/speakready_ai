@@ -3,7 +3,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/user/coach.css?v=1') }}" data-page-style="user-coach">
-<link rel="stylesheet" href="{{ asset('css/desktop/user/coach-2.css?v=2') }}" data-page-style="user-coach-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/coach-2.css?v=6') }}" data-page-style="user-coach-2">
 @endpush
 
 @section('content')
@@ -53,9 +53,9 @@
                 <div style="padding:16px 16px 8px; font-size:.75rem; font-weight:700; color:var(--tx3); text-transform:uppercase; letter-spacing:1px">Recent</div>
                 @forelse($recentConversations as $conv)
                     <div class="history-item" id="conv-{{ $conv->id }}">
-                        <div class="d-flex align-items-center flex-grow-1" onclick="loadConversation({{ $conv->id }})">
+                        <div class="history-item-content d-flex align-items-center flex-grow-1" onclick="loadConversation({{ $conv->id }})">
                             <i class="fa-regular fa-message"></i> 
-                            <span class="text-truncate" style="max-width: 150px;">{{ $conv->title ?: 'New Conversation' }}</span>
+                            <span class="history-item-title text-truncate">{{ $conv->title ?: 'New Conversation' }}</span>
                         </div>
                         <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation({{ $conv->id }})">
                             <i class="fa-solid fa-trash-can" style="margin:0;"></i>
@@ -63,21 +63,6 @@
                     </div>
                 @empty
                     <div style="padding:0 16px; font-size:.8rem; color:var(--tx3);">No recent conversations</div>
-                @endforelse
-                
-                <div style="padding:16px 16px 8px; font-size:.75rem; font-weight:700; color:var(--tx3); text-transform:uppercase; letter-spacing:1px; margin-top: 10px;">Older</div>
-                @forelse($olderConversations as $conv)
-                    <div class="history-item" id="conv-{{ $conv->id }}">
-                        <div class="d-flex align-items-center flex-grow-1" onclick="loadConversation({{ $conv->id }})">
-                            <i class="fa-regular fa-message"></i> 
-                            <span class="text-truncate" style="max-width: 150px;">{{ $conv->title ?: 'New Conversation' }}</span>
-                        </div>
-                        <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation({{ $conv->id }})">
-                            <i class="fa-solid fa-trash-can" style="margin:0;"></i>
-                        </button>
-                    </div>
-                @empty
-                    <div style="padding:0 16px; font-size:.8rem; color:var(--tx3);">No older conversations</div>
                 @endforelse
             </div>
         </div>
@@ -485,9 +470,9 @@
                     newItem.className = 'history-item active';
                     newItem.id = 'conv-' + data.conversation_id;
                     newItem.innerHTML = `
-                        <div class="d-flex align-items-center flex-grow-1" onclick="loadConversation(${data.conversation_id})">
+                        <div class="history-item-content d-flex align-items-center flex-grow-1" onclick="loadConversation(${data.conversation_id})">
                             <i class="fa-regular fa-message"></i> 
-                            <span class="text-truncate" style="max-width: 150px;">${escapeHtml(data.title || 'New Conversation')}</span>
+                            <span class="history-item-title text-truncate">${escapeHtml(data.title || 'New Conversation')}</span>
                         </div>
                         <button class="btn btn-link text-danger p-0 ms-2" onclick="deleteConversation(${data.conversation_id})">
                             <i class="fa-solid fa-trash-can" style="margin:0;"></i>
@@ -768,20 +753,12 @@
                 const list = document.getElementById('conversationsList');
                 if (list) {
                     const recentHeading = list.querySelector('div:first-child');
-                    const olderHeading = Array.from(list.children).find(child => child.textContent.trim() === 'Older');
                     const recentEmpty = document.createElement('div');
                     recentEmpty.style.cssText = 'padding:0 16px; font-size:.8rem; color:var(--tx3);';
                     recentEmpty.textContent = 'No recent conversations';
 
-                    const olderEmpty = document.createElement('div');
-                    olderEmpty.style.cssText = 'padding:0 16px; font-size:.8rem; color:var(--tx3);';
-                    olderEmpty.textContent = 'No older conversations';
-
                     if (recentHeading && !recentHeading.nextElementSibling?.textContent.includes('No recent')) {
                         recentHeading.insertAdjacentElement('afterend', recentEmpty);
-                    }
-                    if (olderHeading && !olderHeading.nextElementSibling?.textContent.includes('No older')) {
-                        olderHeading.insertAdjacentElement('afterend', olderEmpty);
                     }
                 }
                 newConversation();

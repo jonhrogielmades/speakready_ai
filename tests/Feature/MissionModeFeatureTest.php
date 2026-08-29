@@ -84,19 +84,19 @@ class MissionModeFeatureTest extends TestCase
     public function test_voice_rehearsal_supports_mission_preset_and_intention_coach(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $prompt = 'Explain a customer or team problem politely, acknowledge the concern, and propose the next action.';
+        $prompt = 'Explain why this school or program fits your goals and readiness.';
 
         $this->actingAs($user)
             ->get(route('user.drills.voice', [
                 'mission' => 'polite-problem',
-                'category' => 'Customer Service',
+                'category' => 'School Admission',
                 'intent' => 'Calm',
                 'prompt' => $prompt,
             ]))
             ->assertOk()
             ->assertSee('<meta name="csrf-token"', false)
             ->assertSee('Emotion & Intention Coach', false)
-            ->assertSee('<option value="Customer Service">Customer Service</option>', false)
+            ->assertSee('<option value="School Admission">School Admission Interviews</option>', false)
             ->assertSee('voiceMissionPreset', false)
             ->assertSee($prompt);
     }

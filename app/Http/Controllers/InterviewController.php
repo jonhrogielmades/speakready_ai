@@ -93,14 +93,17 @@ class InterviewController extends Controller
             ? InterviewPack::where('status', 'active')->findOrFail($validated['interview_pack_id'])
             : null;
 
+        $activeCoreCategories = Category::where('status', 'active')->where('type', 'core');
         $category = ! empty($validated['category_id'])
             ? Category::where('status', 'active')->where('type', 'core')->findOrFail($validated['category_id'])
-            : Category::where('status', 'active')->where('type', 'core')->where('title', 'Job Interview')->first();
-        $category ??= Category::where('status', 'active')->where('type', 'core')->first();
+            : (clone $activeCoreCategories)->where('title', 'Job Interview')->first();
+        $category ??= (clone $activeCoreCategories)
+            ->get()
+            ->first(fn (Category $candidate) => $this->isSupportedInterviewCategory($candidate));
 
-        if (! $category) {
+        if (! $category || ! $this->isSupportedInterviewCategory($category)) {
             return back()
-                ->withErrors(['category_id' => 'No active interview category is available.'])
+                ->withErrors(['category_id' => 'Only job interview and school admission interview practice is available.'])
                 ->withInput();
         }
 
@@ -942,7 +945,7 @@ class InterviewController extends Controller
                         'final_answer_coaching_fallback'
                     );
                     $answer->update([
-                        'ai_feedback' => 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
+                        'ai_feedback' => 'We could not make a useful AI note for this answer. Please try again or ask an admin to check it before you trust this score.',
                         'better_sample_answer' => '',
                         'follow_up_question' => '',
                         'clarity_score' => 0,
@@ -1408,7 +1411,7 @@ class InterviewController extends Controller
             'scoring_confidence' => $retry->scoring_confidence,
             'rubric_level' => $retry->rubric_level,
             'evidence_map' => $retry->evidence_map,
-            'ai_feedback' => $retry->ai_feedback ?: 'Retry saved. Feedback was not available.',
+            'ai_feedback' => $retry->ai_feedback ?: 'Retry saved. The AI note was not available.',
             'better_sample_answer' => $retry->better_sample_answer ?: '',
             'follow_up_question' => $retry->follow_up_question ?: '',
             'coaching_feedback' => $retry->coaching_feedback ?? [],
@@ -1546,7 +1549,7 @@ class InterviewController extends Controller
                 );
 
                 $answer->update([
-                    'ai_feedback' => $qFeedback['ai_feedback'] ?? 'We could not generate reliable AI feedback for this answer. Please retry the session or ask an admin to review the failed AI evaluation.',
+                    'ai_feedback' => $qFeedback['ai_feedback'] ?? 'We could not make a useful AI note for this answer. Please try again or ask an admin to check it before you trust this score.',
                     'better_sample_answer' => $qFeedback
                         ? $this->safeGroundedRevisionTemplate(
                             $assessment,
@@ -1834,11 +1837,11 @@ class InterviewController extends Controller
                 'status_label' => Str::headline(str_replace('_', ' ', $status)),
                 'relevance_score' => $this->scoreValue($answer->relevance_score ?? 0),
                 'what_worked' => $excerpt !== ''
-                    ? 'The saved answer included this reviewable evidence: "'.$excerpt.'".'
+                    ? 'The saved answer included this useful detail: "'.$excerpt.'".'
                     : 'The answer was saved and remains available for manual review.',
-                'improvement_focus' => $answerMissingPoints[0] ?? 'Generate a fuller answer-to-question relevance review.',
+                'improvement_focus' => $answerMissingPoints[0] ?? 'Give a fuller answer check.',
                 'next_attempt' => 'Re-answer "'.$questionText.'" directly, then add one specific supporting detail.',
-                'success_check' => 'A reviewer can identify the sentence that answers the question and the evidence that supports it.',
+                'success_check' => 'A reviewer can identify the sentence that answers the question and the detail that supports it.',
                 'evidence_quote' => $excerpt,
                 'missing_points' => $answerMissingPoints,
             ];
@@ -1848,22 +1851,22 @@ class InterviewController extends Controller
 
         return [
             'version' => EvidenceBasedCoachingService::VERSION,
-            'focus_headline' => 'Fallback coaching summary generated from saved answer evidence.',
+            'focus_headline' => 'Backup coaching summary made from saved answers.',
             'filler_total' => 0,
             'filler_breakdown' => [],
             'observations' => [
-                "Question coverage across {$answerCount} answers used saved answer feedback because detailed summary generation was unavailable.",
-                'No new delivery or optional camera conclusions were added during fallback summary generation.',
+                "Question results for {$answerCount} answers used saved answer feedback because the full summary was not available.",
+                'No new speaking or camera notes were added in this backup summary.',
             ],
             'priority_actions' => $answerCount > 0 ? [[
                 'issue_code' => 'fallback_summary_review',
-                'area' => 'Answer-to-question relevance',
+                'area' => 'Answer match',
                 'severity' => 50,
                 'affected_count' => $answerCount,
                 'eligible_count' => $answerCount,
-                'observation' => 'The report was completed with fallback summary generation.',
-                'action' => 'Review each question map and add the missing direct-answer detail in the next attempt.',
-                'success_check' => 'Each answer starts by addressing its exact question and cites truthful supporting evidence.',
+                'observation' => 'The report was finished with a backup summary.',
+                'action' => 'Review each question note and add the missing direct-answer detail in the next try.',
+                'success_check' => 'Each answer starts by answering its question and adds one true supporting detail.',
                 'questions' => array_values(array_unique($questionTexts)),
                 'question_ids' => array_values(array_unique($questionIds)),
                 'evidence_quotes' => array_slice(array_values(array_unique($evidenceQuotes)), 0, 3),
@@ -1883,10 +1886,10 @@ class InterviewController extends Controller
                 'checks_passed' => 2,
                 'checks_total' => 4,
                 'completeness_percent' => 50,
-                'scope' => 'Fallback session summary based on saved answers and per-answer coaching.',
-                'limitation' => 'The full automated session summary was unavailable, so this report should be treated as a limited review.',
+                'scope' => 'Backup session summary based on saved answers and answer coaching.',
+                'limitation' => 'The full session summary was not available, so treat this as a limited review.',
             ],
-            'transparency_note' => 'This report used fallback summary generation after optional coaching analysis failed. Scores and answer text were still saved; no unavailable delivery or camera signal was inferred.',
+            'transparency_note' => 'This report used a backup summary after optional coaching failed. Scores and answer text were still saved. No missing speaking or camera signal was guessed.',
         ];
     }
 
@@ -1989,7 +1992,7 @@ class InterviewController extends Controller
             'samples' => [],
             'source' => null,
             'unavailable_reason' => $cameraEnabled ? 'analysis_unavailable' : null,
-            'caveat' => 'Optional camera coaching was not measured. It is never used to infer confidence, honesty, personality, employability, or intent.',
+            'caveat' => 'Optional camera coaching was not measured. It is never used to guess confidence, honesty, personality, job fit, or intent.',
         ];
     }
 
@@ -2012,10 +2015,10 @@ class InterviewController extends Controller
         $deliveryFeedback = [
             'status' => $deliveryStatus === 'measured' ? 'measured' : 'not_measured',
             'observation' => $deliveryStatus === 'measured'
-                ? 'Voice delivery evidence was saved, but detailed delivery coaching could not complete for this request.'
-                : 'Delivery was not measured for this answer; no filler, pace, or pause conclusion was made.',
-            'tip' => 'Record a voice answer again if you want transcript-based delivery coaching.',
-            'tips' => ['Record a voice answer again if you want transcript-based delivery coaching.'],
+                ? 'Voice details were saved, but detailed speaking coaching could not finish for this request.'
+                : 'Speaking was not measured for this answer, so no filler, pace, or pause note was made.',
+            'tip' => 'Record a voice answer again if you want speaking coaching based on the transcript.',
+            'tips' => ['Record a voice answer again if you want speaking coaching based on the transcript.'],
             'evidence' => $deliveryStatus === 'measured' ? [
                 'duration_seconds' => data_get($observationData, 'delivery.duration_seconds'),
                 'wpm' => data_get($observationData, 'delivery.wpm'),
@@ -2026,7 +2029,7 @@ class InterviewController extends Controller
                 'filler_breakdown' => [],
                 'filler_events' => [],
             ] : [],
-            'limitation' => 'Automatic delivery coaching was unavailable, so the saved evidence is shown without a detailed interpretation.',
+            'limitation' => 'Automatic speaking coaching was not available, so the saved details are shown without a full review.',
         ];
         $cameraFeedback = [
             'status' => $cameraStatus === 'insufficient_data' ? 'insufficient_data' : 'not_measured',
@@ -2034,7 +2037,7 @@ class InterviewController extends Controller
             'tip' => 'Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.',
             'tips' => ['Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.'],
             'evidence' => [],
-            'limitation' => 'Camera coaching was unavailable or not usable for this request.',
+            'limitation' => 'Camera coaching was not available or could not be used for this request.',
         ];
         $contentAlignment = [
             'answer_id' => $metrics['answer_id'] ?? null,
@@ -2043,8 +2046,8 @@ class InterviewController extends Controller
             'status' => $alignmentStatus,
             'evidence_quotes' => $answerExcerpt !== '' ? [$answerExcerpt] : [],
             'missing_points' => $isSkipped
-                ? ['No response was submitted, so required coverage is still missing.']
-                : ['A dependable automatic relevance evaluation was unavailable for this saved answer.'],
+                ? ['No answer was sent, so the needed points are still missing.']
+                : ['The app could not check how well this saved answer matched the question.'],
             'what_worked' => $answerExcerpt !== ''
                 ? 'Your answer was saved and can still be reviewed from the submitted text.'
                 : 'The response was saved as submitted.',
@@ -2075,8 +2078,8 @@ class InterviewController extends Controller
                 'checks_passed' => 0,
                 'checks_total' => 4,
                 'completeness_percent' => 0,
-                'scope' => 'Fallback feedback used because automatic coaching analysis was unavailable.',
-                'limitation' => 'This confirms the answer was saved but does not provide a full automated assessment.',
+                'scope' => 'Backup feedback used because automatic coaching was not available.',
+                'limitation' => 'This confirms the answer was saved but does not give a full automatic review.',
             ],
             'delivery' => $deliveryFeedback,
             'camera' => $cameraFeedback,
@@ -2091,20 +2094,20 @@ class InterviewController extends Controller
             ],
             'priority_actions' => [[
                 'issue_code' => 'fallback_relevance_review',
-                'area' => 'Answer-to-question relevance',
+                'area' => 'Answer match',
                 'severity' => 50,
                 'affected_count' => 1,
                 'eligible_count' => 1,
-                'observation' => 'The answer was saved, but automatic coaching analysis was unavailable.',
+                'observation' => 'The answer was saved, but automatic coaching was not available.',
                 'action' => 'Check that the first sentence directly answers the question and add one specific supporting detail.',
-                'success_check' => 'The next attempt clearly answers the question and includes truthful evidence.',
+                'success_check' => 'The next try clearly answers the question and includes one true detail.',
                 'questions' => [$questionText],
                 'question_ids' => $questionId !== null ? [$questionId] : [],
                 'evidence_quotes' => $answerExcerpt !== '' ? [$answerExcerpt] : [],
                 'missing_points' => $contentAlignment['missing_points'],
                 'rank' => 1,
             ]],
-            'transparency_note' => 'The answer was saved with fallback coaching because automated analysis was unavailable. Treat this as a limited review, not a full score.',
+            'transparency_note' => 'The answer was saved with backup coaching because automatic review was not available. Treat this as a limited review, not a full score.',
         ];
     }
 
@@ -2119,15 +2122,15 @@ class InterviewController extends Controller
 
         return [
             'framework' => 'direct_evidence',
-            'title' => 'Direct-answer strategy',
-            'what_it_tests' => 'Relevance, clarity, and support for the main claim.',
+            'title' => 'Direct-answer plan',
+            'what_it_tests' => 'Whether the answer is clear and supports the main claim.',
             'steps' => [
                 'Answer the exact question in the first sentence.',
-                'Add one relevant, truthful example or reason.',
+                'Add one true example or reason that fits the question.',
                 'Explain your personal contribution or judgment.',
-                'Close with a verified result, implication, or lesson when relevant.',
+                'Close with a true result, effect, or lesson when it fits.',
             ],
-            'guidance' => 'Answer directly, support the claim with truthful evidence, and avoid details that do not help answer the question.',
+            'guidance' => 'Answer directly, support the claim with true detail, and avoid details that do not help answer the question.',
             'expected_guide' => filled($expectedGuide)
                 ? mb_substr((string) $expectedGuide, 0, 800)
                 : null,
@@ -2189,11 +2192,11 @@ class InterviewController extends Controller
         $questionText = $this->questionTextFrom($question);
         $questionLabel = $questionText !== '' ? ' for "'.mb_substr($questionText, 0, 180).'"' : '';
 
-        return "Fact-grounded revision template{$questionLabel} - preserve only details you can verify:\n"
-            .'Verified source answer: '.mb_substr($clean, 0, 700)."\n"
+        return "Answer draft based on your facts{$questionLabel} - keep only details you can check:\n"
+            .'Source answer: '.mb_substr($clean, 0, 700)."\n"
             ."Direct response: [Answer the exact question using only facts already present in your answer.]\n"
-            ."Supporting detail: [Organize your verified action, reasoning, or responsibility.]\n"
-            .'Evidence/verification: [Add only a truthful result, lesson, or placeholder until you can verify one.]';
+            ."Supporting detail: [Organize your action, reasoning, or responsibility.]\n"
+            .'Result or lesson: [Add only a true result, lesson, or placeholder until you can check one.]';
     }
 
     private function safeSessionMetadata(
@@ -2271,10 +2274,10 @@ class InterviewController extends Controller
             'rubric' => [
                 'version' => TrustworthyAssessmentService::SCORE_VERSION,
                 'scale' => [
-                    '1' => 'Insufficient evidence',
-                    '2' => 'Partial evidence',
-                    '3' => 'Competent job-related evidence',
-                    '4' => 'Strong evidence with ownership and impact',
+                    '1' => 'Not enough detail',
+                    '2' => 'Some detail',
+                    '3' => 'Good job detail',
+                    '4' => 'Strong detail with your action and result',
                 ],
                 'weights' => [
                     'clarity' => 25,
@@ -2321,11 +2324,11 @@ class InterviewController extends Controller
                 'priorities' => [[
                     'skill' => 'Clarity',
                     'score' => (int) ($score->clarity_score ?? 0),
-                    'task' => 'Retry one answer and organize it into context, action, and verified result.',
+                    'task' => 'Retry one answer and organize it into context, action, and true result.',
                 ]],
                 'recommended_paths' => [],
                 'summary' => trim($feedback->improvement_suggestions ?? '')
-                    ?: 'Repeat your weakest answer and add only truthful evidence you can verify.',
+                    ?: 'Repeat your weakest answer and add only true details you can check.',
                 'generated_at' => now()->toIso8601String(),
                 'fallback' => true,
             ];
@@ -2338,7 +2341,7 @@ class InterviewController extends Controller
 
         return [
             'supporting_excerpts' => $excerpt !== '' ? [$excerpt] : [],
-            'missing_evidence' => ['A dependable automatic evidence assessment was unavailable for this retry.'],
+            'missing_evidence' => ['A dependable automatic answer check was unavailable for this retry.'],
             'feedback_basis' => null,
             'question_text' => $this->questionTextFrom($question) ?: null,
             'question_intent' => 'direct_evidence',
@@ -2982,7 +2985,7 @@ class InterviewController extends Controller
     {
         return match (strtolower(trim($questionType))) {
             'behavioral' => [
-                'expected_guide' => 'Use STAR: concise situation and task, your specific action and reasoning, then a verified result, impact, or lesson.',
+                'expected_guide' => 'Use STAR: concise situation and task, your specific action and reasoning, then a true result, effect, or lesson.',
                 'mapped_skills' => ['STAR Method', 'Ownership', 'Evidence'],
             ],
             'situational' => [
@@ -2994,7 +2997,7 @@ class InterviewController extends Controller
                 'mapped_skills' => ['Technical Reasoning', 'Tradeoffs', 'Verification'],
             ],
             default => [
-                'expected_guide' => 'Answer the exact question directly, support the main claim with truthful evidence, and connect the response to the interview goal.',
+                'expected_guide' => 'Answer the exact question directly, support the main claim with true detail, and connect the response to the interview goal.',
                 'mapped_skills' => ['Communication', 'Relevance', 'Evidence'],
             ],
         };
@@ -3035,6 +3038,23 @@ class InterviewController extends Controller
             ?? ($session->category ? QuestionDatasetProvider::forCategory($session->category) : null);
     }
 
+    private function isSupportedInterviewCategory(Category $category): bool
+    {
+        $title = Str::lower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
+
+        if (Str::contains($title, ['bpo', 'customer', 'programming', 'technical', 'scholar']) || preg_match('/\bit\b/', $title)) {
+            return false;
+        }
+
+        return Str::contains($title, [
+            'job interview',
+            'general job',
+            'school admission',
+            'college admission',
+            'admission interview',
+        ]);
+    }
+
     private function builtInFallbackQuestionTexts(InterviewSession $session, array $selectedQuestionTypes, int $limit): array
     {
         $position = trim((string) ($session->target_position ?: 'this role'));
@@ -3047,7 +3067,7 @@ class InterviewController extends Controller
 
         $templates = [
             'Behavioral' => [
-                "Tell me about a school, internship, BPO, freelance, or work project that best shows your readiness for a {$position} role in the Philippines.",
+                "Tell me about a school, internship, freelance, or work project that best shows your readiness for a {$position} role in the Philippines.",
                 "Describe a time you received difficult feedback that could affect your performance as {$position}, and how you used it to improve.",
                 "Tell me about a time you worked with a Filipino teammate, customer, or stakeholder who had a different point of view, and why that matters for a {$position} role.",
                 "Describe a situation where you took ownership of a task relevant to {$position} even though it was not fully explained to you.",
@@ -3269,21 +3289,21 @@ class InterviewController extends Controller
     {
         $metrics = [
             'Clarity' => (int) ($score->clarity_score ?? 0),
-            'Relevance' => (int) ($score->relevance_score ?? 0),
-            'Professionalism' => (int) ($score->professionalism_score ?? 0),
+            'Answer Match' => (int) ($score->relevance_score ?? 0),
+            'Tone' => (int) ($score->professionalism_score ?? 0),
         ];
 
         if (! (bool) data_get($session->accommodation_profile, 'separate_language_scoring', false)) {
             $metrics['Grammar'] = (int) ($score->grammar_score ?? 0);
         }
         if ($answers->contains(fn (InterviewAnswer $answer): bool => $answer->delivery_stability_score !== null)) {
-            $metrics['Delivery Stability'] = (int) ($score->delivery_stability_score ?? 0);
+            $metrics['Speaking Steadiness'] = (int) ($score->delivery_stability_score ?? 0);
         }
         if ($answers->contains(fn (InterviewAnswer $answer): bool => QuestionIntentService::starApplicable($answer->question))) {
             $metrics['STAR Method'] = (int) ($score->star_method_score ?? 0);
         }
         if ((int) ($score->job_evidence_match_score ?? 0) > 0) {
-            $metrics['Job Evidence Match'] = (int) $score->job_evidence_match_score;
+            $metrics['Job Detail Match'] = (int) $score->job_evidence_match_score;
         }
 
         asort($metrics);
@@ -3333,37 +3353,37 @@ class InterviewController extends Controller
     private function practiceTaskForSkill(string $skill): string
     {
         return match ($skill) {
-            'Clarity' => 'Rewrite one weak answer into a 60-90 second structure: context, point, evidence, result.',
-            'Relevance' => 'Before answering, restate the question goal in one sentence and connect every example to that goal.',
-            'Grammar' => 'Practice slower delivery and shorter sentences, then review the transcript for awkward phrasing.',
-            'Professionalism' => 'Replace casual phrases with concise interview language and emphasize ownership.',
-            'Delivery Stability' => 'Record the same answer twice, then compare pace, fillers, pauses, and completion without treating them as personality or confidence.',
-            'STAR Method' => 'Retry a behavioral answer and explicitly include Situation, Task, Action, and Result.',
-            'Job Evidence Match' => 'Add a verified story that proves one required competency from the job description.',
-            default => 'Retry the lowest-scoring answer and make the improvement measurable.',
+            'Clarity' => 'Rewrite one weak answer in 60-90 seconds: context, main point, example, result.',
+            'Answer Match' => 'Before answering, say the question goal in one sentence and link each example to that goal.',
+            'Grammar' => 'Speak more slowly and use shorter sentences, then read the answer text for unclear phrasing.',
+            'Tone' => 'Replace casual words with clear interview words and show what you did.',
+            'Speaking Steadiness' => 'Record the same answer twice, then compare speed, filler words, pauses, and ending.',
+            'STAR Method' => 'Retry a past-example answer and include Situation, Task, Action, and Result.',
+            'Job Detail Match' => 'Add a true work or school story that shows one skill needed in the job.',
+            default => 'Retry the lowest-score answer and make the next version easier to check.',
         };
     }
 
     private function recommendedQuestionTypes(string $weakestSkill, InterviewSession $session): array
     {
         return match ($weakestSkill) {
-            'STAR Method', 'Clarity', 'Delivery Stability' => ['Behavioral', 'Situational'],
-            'Job Evidence Match', 'Relevance' => ['Technical', 'Situational'],
-            'Professionalism', 'Grammar' => ['Personal', 'Behavioral'],
+            'STAR Method', 'Clarity', 'Speaking Steadiness' => ['Behavioral', 'Situational'],
+            'Job Detail Match', 'Answer Match' => ['Technical', 'Situational'],
+            'Tone', 'Grammar' => ['Personal', 'Behavioral'],
             default => $this->decodeQuestionTypes($session->question_types) ?: ['Behavioral', 'Situational'],
         };
     }
 
     private function recommendedPathsFor(string $weakestSkill): array
     {
-        if (in_array($weakestSkill, ['Delivery Stability', 'Grammar'], true)) {
+        if (in_array($weakestSkill, ['Speaking Steadiness', 'Grammar'], true)) {
             return [
                 ['label' => 'Voice Drill', 'url' => route('user.drills.voice')],
                 ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
             ];
         }
 
-        if (in_array($weakestSkill, ['STAR Method', 'Clarity', 'Relevance'], true)) {
+        if (in_array($weakestSkill, ['STAR Method', 'Clarity', 'Answer Match'], true)) {
             return [
                 ['label' => 'Interview Modules', 'url' => route('user.modules.index')],
                 ['label' => 'PH Mock Interview', 'url' => route('interview.setup')],
@@ -3677,7 +3697,7 @@ class InterviewController extends Controller
                 'grammar_score' => 0,
                 'professionalism_score' => 0,
                 'scoring_confidence' => 0,
-                'ai_feedback' => 'Your response was saved, but automatic AI analysis was unavailable. Please retry feedback generation or request a manual review before relying on this score.',
+                'ai_feedback' => 'Your answer was saved, but the AI note was not available. Please try again or ask an admin to check it before you trust this score.',
                 'better_sample_answer' => '',
                 'follow_up_question' => '',
             ])
@@ -3690,8 +3710,8 @@ class InterviewController extends Controller
                 'overall_readiness_score' => 0,
                 'star_method_score' => 0,
                 'strengths' => 'Your interview responses were saved successfully.',
-                'weaknesses' => 'Automatic AI analysis was unavailable for this report.',
-                'improvement_suggestions' => 'Retry feedback generation or ask for a manual review before using this score for readiness decisions.',
+                'weaknesses' => 'The AI note was not available for this report.',
+                'improvement_suggestions' => 'Try to make the feedback report again, or ask for a manual review before using this score.',
             ],
         ];
     }
@@ -3713,11 +3733,11 @@ class InterviewController extends Controller
                 'overall_readiness_score' => $overall,
                 'star_method_score' => $starScore,
                 'strengths' => $overall >= 70
-                    ? 'Your challenge responses included enough structure and relevant detail to show progress.'
-                    : 'You submitted responses for the challenge, giving the scorer material to review.',
+                    ? 'Your challenge answers had enough structure and useful detail to show progress.'
+                    : 'You sent answers for the challenge, so there was material to review.',
                 'weaknesses' => 'The main area to improve is '.$lowestArea.'.',
                 'improvement_suggestions' => $gameLevel->retry_hint
-                    ?: 'Answer each prompt directly, add your specific action, and close with a clear result or lesson learned.',
+                    ?: 'Answer each prompt directly, add your own action, and end with a clear result or lesson.',
             ],
         ];
     }
@@ -3740,11 +3760,11 @@ class InterviewController extends Controller
                 'professionalism_score' => 0,
                 'star_applicable' => $starApplicable,
                 'star_method_score' => 0,
-                'ai_feedback' => 'The challenge question "'.$questionExcerpt.'" was skipped, so no answer evidence was available for that prompt.',
+                'ai_feedback' => 'The challenge question "'.$questionExcerpt.'" was skipped, so there was no answer to check.',
                 'better_sample_answer' => '',
-                'follow_up_question' => 'What truthful example or direct response could you use for "'.$questionExcerpt.'"?',
+                'follow_up_question' => 'What true example or direct answer could you use for "'.$questionExcerpt.'"?',
                 'evidence_quotes' => [],
-                'missing_evidence' => ['No response was submitted for the question "'.$questionExcerpt.'".'],
+                'missing_evidence' => ['No answer was sent for the question "'.$questionExcerpt.'".'],
                 'evaluation_source' => 'deterministic_game_rubric',
                 'answer_alignment' => 'skipped',
                 'is_skipped' => true,
@@ -3824,23 +3844,23 @@ class InterviewController extends Controller
             $relevance >= 50 => 'partially_addressed',
             default => 'not_addressed',
         };
-        $alignmentLabel = match ($alignment) {
-            'directly_addressed' => 'directly addressed',
-            'partially_addressed' => 'partially addressed',
-            'not_addressed' => 'did not clearly address',
-            default => 'was too short to assess against',
+        $alignmentSentence = match ($alignment) {
+            'directly_addressed' => 'answered the question directly',
+            'partially_addressed' => 'answered part of the question',
+            'not_addressed' => 'did not clearly answer the question',
+            default => 'was too short to check',
         };
         $feedbackParts = [
-            'For the challenge question "'.$questionExcerpt.'", the response '.$alignmentLabel.' the prompt. The answer evidence reviewed was: "'.$answerExcerpt.'".',
+            'For the challenge question "'.$questionExcerpt.'", the answer '.$alignmentSentence.'. The answer text checked was: "'.$answerExcerpt.'".',
         ];
         $missingEvidence = [];
         if ($criteriaScore < 70) {
-            $feedbackParts[] = 'The response did not yet demonstrate enough of this level\'s checklist.';
-            $missingEvidence[] = 'The response did not yet demonstrate enough of the level checklist for "'.$questionExcerpt.'".';
+            $feedbackParts[] = 'The answer did not show enough of this level\'s checklist yet.';
+            $missingEvidence[] = 'The answer did not show enough of the level checklist for "'.$questionExcerpt.'".';
         }
         if ($starScore < 70 && $starApplicable) {
             $feedbackParts[] = 'Use Situation, Task, Action, and Result more completely.';
-            $missingEvidence[] = 'The answer did not include complete Situation, Task, Action, and Result evidence for this prompt.';
+            $missingEvidence[] = 'The answer did not include complete Situation, Task, Action, and Result details for this prompt.';
         }
         if ($relevance < 75) {
             $missingEvidence[] = 'The answer did not fully address the main focus of "'.$questionExcerpt.'".';
@@ -3858,7 +3878,10 @@ class InterviewController extends Controller
             'professionalism_score' => $professionalism,
             'star_applicable' => $starApplicable,
             'star_method_score' => $starScore,
-            'ai_feedback' => implode(' ', $feedbackParts),
+            'ai_feedback' => AIService::plainUserFeedbackText(
+                implode(' ', $feedbackParts),
+                [$questionExcerpt, $answerExcerpt]
+            ),
             'better_sample_answer' => (function () use ($answerText, $answer, $questionText, $gameLevel): string {
                 $assessment = app(TrustworthyAssessmentService::class);
                 $questionContext = [
@@ -3877,8 +3900,8 @@ class InterviewController extends Controller
                 );
             })(),
             'follow_up_question' => $starApplicable && $starScore < 70
-                ? 'For "'.$questionExcerpt.'", which missing STAR detail can you add using only truthful facts?'
-                : 'What additional truthful evidence would make your response to "'.$questionExcerpt.'" more direct and complete?',
+                ? 'For "'.$questionExcerpt.'", which missing STAR detail can you add using only true facts?'
+                : 'What true detail would make your response to "'.$questionExcerpt.'" more direct and complete?',
             'evidence_quotes' => [$answerExcerpt],
             'missing_evidence' => array_values(array_unique($missingEvidence)),
             'evaluation_source' => 'deterministic_game_rubric',
@@ -4209,11 +4232,11 @@ class InterviewController extends Controller
 
         $metrics = [
             'Clarity' => 'clarity_score',
-            'Relevance' => 'relevance_score',
+            'Answer Match' => 'relevance_score',
             'Grammar' => 'grammar_score',
-            'Professionalism' => 'professionalism_score',
-            'Delivery Stability' => 'delivery_stability_score',
-            'Job Evidence Match' => 'job_evidence_match_score',
+            'Tone' => 'professionalism_score',
+            'Speaking Steadiness' => 'delivery_stability_score',
+            'Job Detail Match' => 'job_evidence_match_score',
             'Overall' => 'overall_readiness_score',
         ];
 

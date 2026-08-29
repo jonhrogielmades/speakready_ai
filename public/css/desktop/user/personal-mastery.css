@@ -1661,3 +1661,340 @@
             transform: translate3d(0, -50%, 0) !important;
         }
     }
+
+/* Final desktop compact pass for Personal Mastery. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell #personal-mastery-page {
+        gap: 8px !important;
+        font-size: 0.76rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-hero-card {
+        min-height: 82px !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-copy {
+        grid-template-columns: 32px minmax(0, 1fr) !important;
+        gap: 9px !important;
+        min-height: 82px !important;
+        padding: 11px 142px 11px 14px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-badge {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-title {
+        margin-bottom: 3px !important;
+        font-size: 1rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-subtitle {
+        font-size: 0.7rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-visual {
+        right: 10px !important;
+        width: 108px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-action-row {
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-progress-btn,
+    html body.user-desktop-shell #personal-mastery-page .mastery-pill-link,
+    html body.user-desktop-shell #personal-mastery-page .mastery-mini-link {
+        min-height: 28px !important;
+        padding: 5px 8px !important;
+        border-radius: 7px !important;
+        gap: 5px !important;
+        font-size: 0.58rem !important;
+        line-height: 1.1 !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stats-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        margin-top: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stat-card {
+        min-height: 70px !important;
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+        gap: 7px !important;
+        padding: 8px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stat-icon,
+    html body.user-desktop-shell #personal-mastery-page .mastery-info-icon,
+    html body.user-desktop-shell #personal-mastery-page .mastery-row-icon,
+    html body.user-desktop-shell #personal-mastery-page .mastery-track-icon,
+    html body.user-desktop-shell #personal-mastery-page .mastery-badge-icon,
+    html body.user-desktop-shell #personal-mastery-page .mastery-check-button,
+    html body.user-desktop-shell #personal-mastery-page .mastery-icon-button {
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 8px !important;
+        font-size: 0.7rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stat-value {
+        margin-bottom: 2px !important;
+        font-size: 0.9rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stat-label {
+        font-size: 0.5rem !important;
+        line-height: 1.12 !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stat-watermark {
+        right: 6px !important;
+        font-size: 1.45rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-next-action,
+    html body.user-desktop-shell #personal-mastery-page .mastery-section-grid,
+    html body.user-desktop-shell #personal-mastery-page .mastery-stack {
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-next-action,
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel,
+    html body.user-desktop-shell #personal-mastery-page .mastery-info-card {
+        padding: 10px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-next-action {
+        grid-template-columns: 32px minmax(0, 1fr) auto !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-next-icon {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 9px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-section-grid {
+        grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr) !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel-head {
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-kicker {
+        margin-bottom: 3px !important;
+        font-size: 0.5rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel h6,
+    html body.user-desktop-shell #personal-mastery-page .mastery-next-action h6,
+    html body.user-desktop-shell #personal-mastery-page .mastery-info-card h5 {
+        font-size: 0.78rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-next-action p,
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel p,
+    html body.user-desktop-shell #personal-mastery-page .mastery-info-card p,
+    html body.user-desktop-shell #personal-mastery-page .mastery-shortcut {
+        font-size: 0.6rem !important;
+        line-height: 1.3 !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-list,
+    html body.user-desktop-shell #personal-mastery-page .mastery-form-grid,
+    html body.user-desktop-shell #personal-mastery-page .mastery-review-grid,
+    html body.user-desktop-shell #personal-mastery-page .mastery-badge-grid,
+    html body.user-desktop-shell #personal-mastery-page .mastery-shortcut-grid {
+        gap: 6px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-list-row,
+    html body.user-desktop-shell #personal-mastery-page .mastery-track-row,
+    html body.user-desktop-shell #personal-mastery-page .mastery-story-row,
+    html body.user-desktop-shell #personal-mastery-page .mastery-check-row,
+    html body.user-desktop-shell #personal-mastery-page .mastery-review-stat,
+    html body.user-desktop-shell #personal-mastery-page .mastery-shortcut,
+    html body.user-desktop-shell #personal-mastery-page .mastery-badge-item {
+        grid-template-columns: 28px minmax(0, 1fr) auto !important;
+        gap: 7px !important;
+        padding: 7px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-story-row {
+        grid-template-columns: minmax(0, 1fr) auto !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-check-row,
+    html body.user-desktop-shell #personal-mastery-page .mastery-badge-item {
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-row-title,
+    html body.user-desktop-shell #personal-mastery-page .mastery-track-title,
+    html body.user-desktop-shell #personal-mastery-page .mastery-story-row strong {
+        margin-bottom: 2px !important;
+        font-size: 0.66rem !important;
+        line-height: 1.16 !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-track-meta,
+    html body.user-desktop-shell #personal-mastery-page .mastery-story-meta,
+    html body.user-desktop-shell #personal-mastery-page .mastery-field span {
+        font-size: 0.5rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-score-chip {
+        min-width: 36px !important;
+        min-height: 22px !important;
+        padding: 3px 6px !important;
+        font-size: 0.56rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-track-progress {
+        height: 5px !important;
+        margin-top: 5px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-input,
+    html body.user-desktop-shell #personal-mastery-page .mastery-select {
+        min-height: 30px !important;
+        padding: 6px 8px !important;
+        border-radius: 7px !important;
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-textarea {
+        min-height: 54px !important;
+        padding: 7px 8px !important;
+        border-radius: 7px !important;
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-review-value {
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-info-heading {
+        grid-template-columns: 28px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 6px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page > :is(
+        .mastery-hero-card,
+        .mastery-action-row,
+        .mastery-stats-grid,
+        .mastery-next-action,
+        .mastery-section-grid,
+        .mastery-info-card
+    ) {
+        width: min(100%, 1180px) !important;
+        max-width: 1180px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-section-grid {
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel,
+    html body.user-desktop-shell #personal-mastery-page .mastery-stack {
+        min-width: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stack {
+        grid-auto-rows: minmax(0, 1fr) !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-section-grid > .mastery-panel,
+    html body.user-desktop-shell #personal-mastery-page .mastery-stack > .mastery-panel {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-section-grid > .mastery-panel {
+        min-height: 232px !important;
+        max-height: 360px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-story-bank {
+        max-height: 430px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-stack > .mastery-panel {
+        min-height: 0 !important;
+        max-height: 211px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel > .mastery-list,
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel > form + .mastery-list,
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel > .mastery-review-grid,
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel > .mastery-shortcut-grid,
+    html body.user-desktop-shell #personal-mastery-page .mastery-panel > .mastery-badge-grid {
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        padding-right: 2px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-story-bank > form {
+        flex: 0 0 auto !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-story-bank > .mastery-list {
+        flex: 1 1 auto !important;
+        max-height: 128px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-drills > .mastery-list,
+    html body.user-desktop-shell #personal-mastery-page #mastery-tracks > .mastery-list,
+    html body.user-desktop-shell #personal-mastery-page #mastery-checklist > .mastery-list,
+    html body.user-desktop-shell #personal-mastery-page #mastery-badges > .mastery-badge-grid,
+    html body.user-desktop-shell #personal-mastery-page #mastery-coach-shortcuts > .mastery-shortcut-grid {
+        flex: 1 1 auto !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page .mastery-info-card {
+        min-height: 72px !important;
+        max-height: 96px !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-drills {
+        min-height: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-drills > .mastery-list {
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+    }
+
+    html body.user-desktop-shell #personal-mastery-page #mastery-drills .mastery-list-row {
+        min-height: 0 !important;
+        align-items: center !important;
+    }
+}

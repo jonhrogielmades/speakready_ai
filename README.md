@@ -385,6 +385,62 @@ OPENAI_API_KEY=
 
 Provider URLs and model names are already listed in `.env.example`. Configure at least one provider key for AI generation, coaching, and feedback features.
 
+### Local Feedback Model Training
+
+SpeakReady can train a private local feedback scoring model from reviewed interview answers. This is meant for answer scoring and coaching support, not question generation or general chat.
+
+Export approved/archived admin-reviewed feedback into JSONL:
+
+```bash
+php artisan ai:export-feedback-training
+```
+
+Train the model inside the app:
+
+```bash
+php artisan ai:train-feedback-model
+```
+
+The default model artifact is stored privately at:
+
+```text
+storage/app/private/models/feedback/latest/model.json
+```
+
+After training, enable it for final interview feedback:
+
+```env
+LOCAL_FEEDBACK_MODEL_ENABLED=true
+AI_FEEDBACK_PROVIDER_PRIORITY=localmodel,huggingface,gemini,groq,openrouter,cohere
+```
+
+Automatic retraining can run through Laravel's scheduler. It exports reviewed labels first, compares the dataset checksum with the current model, and trains only when the labels changed:
+
+```env
+LOCAL_FEEDBACK_MODEL_AUTO_TRAIN=true
+LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_TIME=02:30
+LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_MIN_EXAMPLES=100
+LOCAL_FEEDBACK_MODEL_AUTO_TRAIN_EPOCHS=80
+```
+
+Run the automatic check manually:
+
+```bash
+php artisan ai:auto-train-feedback-model
+```
+
+For production auto training, make sure Laravel's scheduler runs every minute through cron or a worker process:
+
+```bash
+php artisan schedule:run
+```
+
+Use at least 100 reviewed answers before trusting the model for real scoring. With fewer examples, pass `--force` to train a smoke-test model only:
+
+```bash
+php artisan ai:train-feedback-model --force
+```
+
 ### Speech, Transcription, And Voice Analysis
 
 OpenAI transcription and optional TTS:
@@ -471,6 +527,9 @@ php artisan app:ensure-feedback-schema --force --create-missing
 php artisan app:ensure-game-schema --force
 php artisan app:normalize-id-sequences --force
 php artisan app:repair-feedback-coaching --limit=250
+php artisan ai:export-feedback-training
+php artisan ai:train-feedback-model
+php artisan ai:auto-train-feedback-model
 ```
 
 ## Testing

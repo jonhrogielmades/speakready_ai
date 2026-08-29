@@ -45,43 +45,15 @@
                         <div class="col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid var(--pur);">
                               <div style="font-size:2rem; margin-bottom:15px; color:var(--pur)"><i class="fa-solid fa-briefcase"></i></div>
-                              <h4 class="fs-5 fw-bold">Job Interview</h4>
+                              <h4 class="fs-5 fw-bold">Job Interviews</h4>
                               <p style="font-size:.85rem;color:var(--tx2)">Practice HR, behavioral, role-fit, and salary expectation questions for local hiring.</p>
-                           </div>
-                        </div>
-                        <div class="col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #06b6d4;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#06b6d4"><i class="fa-solid fa-headset"></i></div>
-                              <h4 class="fs-5 fw-bold">BPO Interview</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Prepare for customer service, call handling, shifting schedule, and empathy scenarios.</p>
-                           </div>
-                        </div>
-                        <div class="col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #3b82f6;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#3b82f6"><i class="fa-solid fa-laptop-code"></i></div>
-                              <h4 class="fs-5 fw-bold">IT / Technical</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Rehearse technical explanations, project walkthroughs, debugging, and system design answers.</p>
-                           </div>
-                        </div>
-                        <div class="col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #8b5cf6;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#8b5cf6"><i class="fa-solid fa-user-graduate"></i></div>
-                              <h4 class="fs-5 fw-bold">Fresh Graduate</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Turn school, internship, capstone, and organization experience into interview-ready proof.</p>
-                           </div>
-                        </div>
-                        <div class="col-sm-6">
-                           <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #34d399;">
-                              <div style="font-size:2rem; margin-bottom:15px; color:#34d399"><i class="fa-solid fa-award"></i></div>
-                              <h4 class="fs-5 fw-bold">Scholarship Interview</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Shape academic goals, leadership stories, financial need, and community impact answers.</p>
                            </div>
                         </div>
                         <div class="col-sm-6">
                            <div class="gc p-4 h-100 text-center" style="border-top: 4px solid #f59e0b;">
                               <div style="font-size:2rem; margin-bottom:15px; color:#f59e0b"><i class="fa-solid fa-university"></i></div>
-                              <h4 class="fs-5 fw-bold">College Admission</h4>
-                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for admissions.</p>
+                              <h4 class="fs-5 fw-bold">School Admission Interviews</h4>
+                              <p style="font-size:.85rem;color:var(--tx2)">Practice program-fit, motivation, strengths, and future plan questions for school admissions.</p>
                            </div>
                         </div>
                      </div>

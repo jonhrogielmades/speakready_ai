@@ -3,6 +3,468 @@
         max-width: none;
         margin: 0;
     }
+
+    /* Final desktop compact pass for Feedback Center. */
+    @media (min-width: 992px) {
+        html body.user-desktop-shell .feedback-shell .feedback-insight-grid {
+            grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr) !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-insight-panel {
+            padding: 12px !important;
+            border-radius: 10px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-insight-head {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 9px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-insight-icon,
+        html body.user-desktop-shell .feedback-shell .feedback-recommend-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+            font-size: 0.78rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-insight-title {
+            font-size: 0.88rem !important;
+            line-height: 1.15 !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-insight-subtitle {
+            margin-top: 2px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.28 !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-layout {
+            grid-template-columns: minmax(108px, 0.32fr) minmax(0, 1fr) !important;
+            gap: 10px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-score {
+            min-height: 122px !important;
+            gap: 4px !important;
+            padding: 10px !important;
+            border-radius: 10px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-score strong {
+            font-size: 2rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-score span {
+            font-size: 0.68rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-score small,
+        html body.user-desktop-shell .feedback-shell .feedback-summary-note b,
+        html body.user-desktop-shell .feedback-shell .feedback-metric-chip span {
+            font-size: 0.58rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-headline {
+            font-size: 0.78rem !important;
+            line-height: 1.32 !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-note-grid,
+        html body.user-desktop-shell .feedback-shell .feedback-metric-grid {
+            gap: 6px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-note,
+        html body.user-desktop-shell .feedback-shell .feedback-answer-user {
+            padding: 7px !important;
+            border-radius: 8px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-summary-note p,
+        html body.user-desktop-shell .feedback-shell .feedback-metric-chip strong,
+        html body.user-desktop-shell .feedback-shell .feedback-answer-item p,
+        html body.user-desktop-shell .feedback-shell .feedback-recommend-copy span {
+            font-size: 0.66rem !important;
+            line-height: 1.35 !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-metric-chip {
+            grid-template-columns: 20px minmax(0, 1fr) auto !important;
+            min-height: 30px !important;
+            gap: 5px !important;
+            padding: 5px 7px !important;
+            border-radius: 8px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-metric-chip i {
+            font-size: 0.66rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-recommend-list {
+            gap: 7px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-recommend-item {
+            grid-template-columns: 30px minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            padding: 8px !important;
+            border-radius: 9px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-recommend-copy strong,
+        html body.user-desktop-shell .feedback-shell .feedback-answer-top strong {
+            font-size: 0.76rem !important;
+            line-height: 1.25 !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-recommend-cta,
+        html body.user-desktop-shell .feedback-shell .feedback-answer-action {
+            font-size: 0.62rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-answer-panel {
+            margin-bottom: 10px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-answer-grid {
+            gap: 8px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-answer-item {
+            gap: 7px !important;
+            padding: 9px !important;
+            border-radius: 9px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-answer-score {
+            min-height: 22px !important;
+            padding: 4px 7px !important;
+            font-size: 0.58rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-answer-user b {
+            font-size: 0.56rem !important;
+            margin-bottom: 3px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-feature-empty {
+            padding: 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.7rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .premium-panel {
+            padding: 12px !important;
+            border-radius: 10px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-history-head {
+            grid-template-columns: minmax(0, 150px) minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 8px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-history-title {
+            font-size: 0.82rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedback-filters {
+            grid-template-columns: minmax(135px, 0.9fr) 104px minmax(190px, 1.3fr) auto !important;
+            gap: 6px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+        html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+            min-height: 30px !important;
+            height: 30px !important;
+            padding: 5px 8px !important;
+            border-radius: 7px !important;
+            font-size: 0.62rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+        html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+            font-size: 0.62rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedbackTable {
+            border-spacing: 0 4px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedbackTable thead th {
+            padding: 5px 7px !important;
+            font-size: 0.52rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedbackTable tbody td {
+            padding: 7px !important;
+            font-size: 0.66rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell #feedbackTable .badge {
+            padding: 4px 6px !important;
+            font-size: 0.52rem !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-history-actions {
+            gap: 6px !important;
+        }
+
+        html body.user-desktop-shell .feedback-shell .feedback-history-actions .btn {
+            min-height: 26px !important;
+            padding: 5px 7px !important;
+            border-radius: 7px !important;
+            gap: 5px !important;
+            font-size: 0.56rem !important;
+        }
+    }
+
+    /* Compact desktop feedback UI */
+    @media (min-width: 992px) {
+        body.user-desktop-shell .feedback-shell {
+            gap: 10px !important;
+            font-size: 0.78rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-insight-grid {
+            grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr) !important;
+            gap: 10px !important;
+            margin-bottom: 10px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-insight-panel {
+            padding: 12px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06) !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-insight-head {
+            grid-template-columns: 30px minmax(0, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 9px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-insight-icon,
+        body.user-desktop-shell .feedback-shell .feedback-recommend-icon {
+            width: 30px !important;
+            height: 30px !important;
+            border-radius: 8px !important;
+            font-size: 0.78rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-insight-title {
+            font-size: 0.88rem !important;
+            line-height: 1.15 !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-insight-subtitle {
+            margin-top: 2px !important;
+            font-size: 0.68rem !important;
+            line-height: 1.28 !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-layout {
+            grid-template-columns: minmax(108px, 0.32fr) minmax(0, 1fr) !important;
+            gap: 10px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-score {
+            min-height: 122px !important;
+            gap: 4px !important;
+            border-radius: 10px !important;
+            padding: 10px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-score strong {
+            font-size: 2rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-score span {
+            font-size: 0.68rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-score small {
+            font-size: 0.58rem !important;
+            line-height: 1.25 !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-copy {
+            gap: 7px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-headline {
+            font-size: 0.78rem !important;
+            line-height: 1.32 !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-metric-grid {
+            gap: 6px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-metric-chip {
+            grid-template-columns: 20px minmax(0, 1fr) auto !important;
+            min-height: 30px !important;
+            gap: 5px !important;
+            padding: 5px 7px !important;
+            border-radius: 8px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-metric-chip i {
+            font-size: 0.66rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-metric-chip span,
+        body.user-desktop-shell .feedback-shell .feedback-summary-note b {
+            font-size: 0.58rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-metric-chip strong,
+        body.user-desktop-shell .feedback-shell .feedback-summary-note p {
+            font-size: 0.68rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-note-grid {
+            gap: 6px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-summary-note,
+        body.user-desktop-shell .feedback-shell .feedback-answer-user {
+            padding: 7px !important;
+            border-radius: 8px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-recommend-list {
+            gap: 7px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-recommend-item {
+            grid-template-columns: 30px minmax(0, 1fr) auto !important;
+            gap: 8px !important;
+            padding: 8px !important;
+            border-radius: 9px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-recommend-copy strong,
+        body.user-desktop-shell .feedback-shell .feedback-answer-top strong {
+            font-size: 0.76rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-recommend-copy span,
+        body.user-desktop-shell .feedback-shell .feedback-answer-item p {
+            font-size: 0.66rem !important;
+            line-height: 1.35 !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-recommend-cta,
+        body.user-desktop-shell .feedback-shell .feedback-answer-action {
+            font-size: 0.62rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-answer-panel {
+            margin-bottom: 10px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-answer-grid {
+            gap: 8px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-answer-item {
+            gap: 7px !important;
+            padding: 9px !important;
+            border-radius: 9px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-answer-score {
+            min-height: 22px !important;
+            padding: 4px 7px !important;
+            font-size: 0.58rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-answer-user b {
+            font-size: 0.56rem !important;
+            margin-bottom: 3px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-feature-empty {
+            padding: 10px !important;
+            border-radius: 9px !important;
+            font-size: 0.7rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .premium-panel {
+            padding: 12px !important;
+            border-radius: 10px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-history-head {
+            grid-template-columns: minmax(0, 150px) minmax(0, 1fr) !important;
+            gap: 8px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-history-title {
+            font-size: 0.82rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedback-filters {
+            grid-template-columns: minmax(135px, 0.9fr) 104px minmax(190px, 1.3fr) auto !important;
+            gap: 6px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+        body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+            min-height: 30px !important;
+            height: 30px !important;
+            padding: 5px 8px !important;
+            border-radius: 7px !important;
+            font-size: 0.62rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text {
+            font-size: 0.64rem !important;
+            padding-right: 6px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+            font-size: 0.62rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedbackTable {
+            border-spacing: 0 4px !important;
+            font-size: 0.66rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedbackTable thead th {
+            padding: 5px 7px !important;
+            font-size: 0.52rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedbackTable tbody td {
+            padding: 7px !important;
+            font-size: 0.66rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell #feedbackTable .badge {
+            padding: 4px 6px !important;
+            font-size: 0.52rem !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-history-actions {
+            gap: 6px !important;
+        }
+
+        body.user-desktop-shell .feedback-shell .feedback-history-actions .btn {
+            min-height: 26px !important;
+            padding: 5px 7px !important;
+            border-radius: 7px !important;
+            gap: 5px !important;
+            font-size: 0.56rem !important;
+        }
+    }
     .feedback-shell .feedback-hero {
         min-height: 236px;
         margin-bottom: 24px;
@@ -2728,3 +3190,223 @@
             display: none !important;
         }
     }
+
+/* Final desktop compact pass for Feedback Center. */
+@media (min-width: 992px) {
+    html body.user-desktop-shell .feedback-shell .feedback-insight-grid {
+        grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr) !important;
+        gap: 10px !important;
+        margin-bottom: 10px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-insight-panel {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-insight-head {
+        grid-template-columns: 30px minmax(0, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 9px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-insight-icon,
+    html body.user-desktop-shell .feedback-shell .feedback-recommend-icon {
+        width: 30px !important;
+        height: 30px !important;
+        border-radius: 8px !important;
+        font-size: 0.78rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-insight-title {
+        font-size: 0.88rem !important;
+        line-height: 1.15 !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-insight-subtitle {
+        margin-top: 2px !important;
+        font-size: 0.68rem !important;
+        line-height: 1.28 !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-layout {
+        grid-template-columns: minmax(108px, 0.32fr) minmax(0, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-score {
+        min-height: 122px !important;
+        gap: 4px !important;
+        padding: 10px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-score strong {
+        font-size: 2rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-score span {
+        font-size: 0.68rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-score small,
+    html body.user-desktop-shell .feedback-shell .feedback-summary-note b,
+    html body.user-desktop-shell .feedback-shell .feedback-metric-chip span {
+        font-size: 0.58rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-headline {
+        font-size: 0.78rem !important;
+        line-height: 1.32 !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-note-grid,
+    html body.user-desktop-shell .feedback-shell .feedback-metric-grid {
+        gap: 6px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-note,
+    html body.user-desktop-shell .feedback-shell .feedback-answer-user {
+        padding: 7px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-summary-note p,
+    html body.user-desktop-shell .feedback-shell .feedback-metric-chip strong,
+    html body.user-desktop-shell .feedback-shell .feedback-answer-item p,
+    html body.user-desktop-shell .feedback-shell .feedback-recommend-copy span {
+        font-size: 0.66rem !important;
+        line-height: 1.35 !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-metric-chip {
+        grid-template-columns: 20px minmax(0, 1fr) auto !important;
+        min-height: 30px !important;
+        gap: 5px !important;
+        padding: 5px 7px !important;
+        border-radius: 8px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-metric-chip i {
+        font-size: 0.66rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-recommend-list {
+        gap: 7px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-recommend-item {
+        grid-template-columns: 30px minmax(0, 1fr) auto !important;
+        gap: 8px !important;
+        padding: 8px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-recommend-copy strong,
+    html body.user-desktop-shell .feedback-shell .feedback-answer-top strong {
+        font-size: 0.76rem !important;
+        line-height: 1.25 !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-recommend-cta,
+    html body.user-desktop-shell .feedback-shell .feedback-answer-action {
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-answer-panel {
+        margin-bottom: 10px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-answer-grid {
+        gap: 8px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-answer-item {
+        gap: 7px !important;
+        padding: 9px !important;
+        border-radius: 9px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-answer-score {
+        min-height: 22px !important;
+        padding: 4px 7px !important;
+        font-size: 0.58rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-answer-user b {
+        font-size: 0.56rem !important;
+        margin-bottom: 3px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-feature-empty {
+        padding: 10px !important;
+        border-radius: 9px !important;
+        font-size: 0.7rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .premium-panel {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-head {
+        grid-template-columns: minmax(0, 150px) minmax(0, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-title {
+        font-size: 0.82rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters {
+        grid-template-columns: minmax(135px, 0.9fr) 104px minmax(190px, 1.3fr) auto !important;
+        gap: 6px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters :is(.db-filter-input, .btn, .form-select),
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap {
+        min-height: 30px !important;
+        height: 30px !important;
+        padding: 5px 8px !important;
+        border-radius: 7px !important;
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .input-group-text,
+    html body.user-desktop-shell .feedback-shell #feedback-filters .feedback-search-wrap .form-control {
+        font-size: 0.62rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable {
+        border-spacing: 0 4px !important;
+        font-size: 0.66rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable thead th {
+        padding: 5px 7px !important;
+        font-size: 0.52rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable tbody td {
+        padding: 7px !important;
+        font-size: 0.66rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell #feedbackTable .badge {
+        padding: 4px 6px !important;
+        font-size: 0.52rem !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-actions {
+        gap: 6px !important;
+    }
+
+    html body.user-desktop-shell .feedback-shell .feedback-history-actions .btn {
+        min-height: 26px !important;
+        padding: 5px 7px !important;
+        border-radius: 7px !important;
+        gap: 5px !important;
+        font-size: 0.56rem !important;
+    }
+}

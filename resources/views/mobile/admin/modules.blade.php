@@ -200,7 +200,7 @@
                         Enter a Philippine interview topic or prompt, and the AI will generate an action-focused module about what users need to prepare, rehearse, revise, and check.
                     </p>
                     <label class="olbl">Philippines Interview Topic Prompt</label>
-                    <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. BPO customer service interview answers for fresh graduates." required></textarea>
+                    <textarea class="oinp mb-3" name="prompt" rows="3" placeholder="e.g. job interview answers or school admission program-fit answers." required></textarea>
                     
                     <div id="aiLoadingIndicator" style="display:none; text-align:center; padding:15px; border-radius:10px; background:rgba(59,130,246,0.1);">
                         <i class="fa-solid fa-circle-notch fa-spin text-primary" style="font-size:1.5rem; margin-bottom:10px;"></i>

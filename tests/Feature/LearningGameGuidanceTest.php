@@ -46,11 +46,36 @@ class LearningGameGuidanceTest extends TestCase
             ->assertRedirect(route('admin.game'));
 
         $this->assertDatabaseHas('game_levels', [
+            'category_id' => $category->id,
             'title' => 'STAR Evidence Sprint',
             'skill_focus' => 'STAR Method',
             'learning_objective' => 'Give a behavioral answer with clear context, ownership, action, and result.',
             'retry_hint' => 'Make the action and result more specific before retrying.',
         ]);
+    }
+
+    public function test_admin_game_category_controls_only_use_active_game_categories(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $gameCategory = $this->category([
+            'title' => 'PH Interview Games',
+            'type' => 'game',
+            'sort_order' => 1,
+        ]);
+        $this->category(['title' => 'Core Interview Category', 'type' => 'core']);
+        $this->category(['title' => 'Learning Only Category', 'type' => 'learning']);
+        $this->category(['title' => 'Inactive Interview Category', 'status' => 'inactive']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.game'))
+            ->assertOk()
+            ->assertSee('PH Interview Category')
+            ->assertSee('value="#cat-pane-'.$gameCategory->id.'"', false)
+            ->assertSee('value="'.$gameCategory->id.'"', false)
+            ->assertSee('PH Interview Games')
+            ->assertDontSee('Core Interview Category')
+            ->assertDontSee('Learning Only Category')
+            ->assertDontSee('Inactive Interview Category');
     }
 
     public function test_learning_guidance_renders_for_learners_and_live_game_sessions(): void
@@ -90,6 +115,87 @@ class LearningGameGuidanceTest extends TestCase
             ->assertSee('STAR Method')
             ->assertSee('Include a measurable result.')
             ->assertSee('Make the action and result more specific before retrying.');
+    }
+
+    public function test_admin_game_store_rejects_core_and_learning_categories(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $coreCategory = $this->category(['type' => 'core']);
+        $learningCategory = $this->category(['title' => 'Learning Category', 'type' => 'learning']);
+
+        foreach ([$coreCategory, $learningCategory] as $category) {
+            $this->actingAs($admin)
+                ->post(route('admin.game.store'), [
+                    'category_id' => $category->id,
+                    'level_number' => 1,
+                    'title' => 'Rejected Game',
+                    'target_position' => 'Customer Support',
+                    'difficulty' => 'beginner',
+                    'required_score' => 80,
+                    'xp_reward' => 500,
+                    'energy_cost' => 1,
+                ])
+                ->assertSessionHasErrors('category_id');
+        }
+
+        $this->assertDatabaseMissing('game_levels', [
+            'title' => 'Rejected Game',
+        ]);
+    }
+
+    public function test_admin_game_generate_rejects_core_and_learning_categories(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $coreCategory = $this->category(['type' => 'core']);
+        $learningCategory = $this->category(['title' => 'Learning Category', 'type' => 'learning']);
+
+        foreach ([$coreCategory, $learningCategory] as $category) {
+            $this->actingAs($admin)
+                ->post(route('admin.game.generate'), [
+                    'topic' => 'Interview Confidence',
+                    'level_number' => 1,
+                    'num_levels' => 1,
+                    'category_id' => $category->id,
+                ])
+                ->assertSessionHasErrors('category_id');
+        }
+
+        $this->assertDatabaseCount('game_levels', 0);
+    }
+
+    public function test_core_category_game_levels_are_not_visible_or_playable_to_learners(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+        $gameCategory = $this->category(['title' => 'PH Interview Games', 'type' => 'game']);
+        $coreCategory = $this->category([
+            'title' => 'BPO / Customer Support',
+            'type' => 'core',
+        ]);
+        $this->gameLevel($gameCategory, [
+            'title' => 'Visible Game Challenge',
+            'level_number' => 1,
+        ]);
+        $coreLevel = $this->gameLevel($coreCategory, [
+            'title' => 'Hidden Core Challenge',
+            'level_number' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.learning', ['category_id' => $gameCategory->id]))
+            ->assertOk()
+            ->assertSee('Visible Game Challenge')
+            ->assertDontSee('BPO / Customer Support')
+            ->assertDontSee('Hidden Core Challenge');
+
+        $this->actingAs($user)
+            ->get(route('user.learning', ['category_id' => $coreCategory->id]))
+            ->assertRedirect(route('user.learning'))
+            ->assertSessionHas('error', 'That learning category is no longer available.');
+
+        $this->actingAs($user)
+            ->post(route('user.game.start', $coreLevel))
+            ->assertNotFound();
     }
 
     public function test_learning_guidance_falls_back_when_success_criteria_are_missing(): void

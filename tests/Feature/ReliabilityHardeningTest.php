@@ -299,7 +299,7 @@ class ReliabilityHardeningTest extends TestCase
     public function test_user_ai_generated_start_question_is_saved_to_admin_question_bank(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $category = $this->category(['title' => 'Behavioral']);
+        $category = $this->category(['title' => 'Job Interview']);
         $questionText = 'Tell me about a production issue you diagnosed and resolved.';
         $roleAlignedQuestionText = 'For your target position of Backend Developer, tell me about a production issue you diagnosed and resolved.';
         $this->aiProvider('OpenAI', [
@@ -795,27 +795,27 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Answer-to-Question Relevance')
+            ->assertSee('Answer Match')
             ->assertSee($question->question_text)
-            ->assertSee('Useful starting point')
-            ->assertSee('Improve next')
-            ->assertSee('Next-attempt checklist')
+            ->assertSee('Good start')
+            ->assertSee('Improve')
+            ->assertSee('Next try checklist')
             ->assertSee('Done when')
-            ->assertSee('Question-by-question improvement map')
-            ->assertSee('Question coverage')
+            ->assertSee('Question next steps')
+            ->assertSee('Question results')
             ->assertDontSee('â€œ', false);
 
         $session->update(['is_public' => true, 'share_token' => 'alignment-review-token']);
         $this->get(route('shared.review', 'alignment-review-token'))
             ->assertOk()
-            ->assertSee('Answer-to-Question Relevance')
+            ->assertSee('Answer Match')
             ->assertSee($question->question_text)
-            ->assertSee('Useful starting point')
-            ->assertSee('Improve next')
-            ->assertSee('Next-attempt checklist')
+            ->assertSee('Good start')
+            ->assertSee('Improve')
+            ->assertSee('Next try checklist')
             ->assertSee('Done when')
-            ->assertSee('Question-by-question improvement map')
-            ->assertSee('Question coverage')
+            ->assertSee('Question next steps')
+            ->assertSee('Question results')
             ->assertDontSee('â€œ', false);
 
         $profileAfterFirstFinish = Profile::where('user_id', $user->id)->firstOrFail();
@@ -926,9 +926,9 @@ class ReliabilityHardeningTest extends TestCase
         $savedAnswer = $answer->fresh();
         $score = Score::where('interview_session_id', $session->id)->firstOrFail();
 
-        $this->assertStringContainsString('Fact-grounded revision template', $savedAnswer->better_sample_answer);
+        $this->assertStringContainsString('Answer draft based on your facts', $savedAnswer->better_sample_answer);
         $this->assertSame(
-            'A dependable automatic evidence assessment was unavailable for this retry.',
+            'A dependable automatic answer check was unavailable for this retry.',
             data_get($savedAnswer->evidence_map, 'missing_evidence.0')
         );
         $this->assertTrue((bool) data_get($score->rubric, 'fallback_metadata'));
@@ -1082,8 +1082,8 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Evidence-Based Coaching Summary')
-            ->assertSee('Question coverage')
+            ->assertSee('Answer Coaching Summary')
+            ->assertSee('Question results')
             ->assertSee($question->question_text);
     }
 
@@ -1160,9 +1160,9 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Evidence-Based Coaching Summary')
-            ->assertSee('Answer-to-Question Relevance')
-            ->assertSee('Question coverage')
+            ->assertSee('Answer Coaching Summary')
+            ->assertSee('Answer Match')
+            ->assertSee('Question results')
             ->assertSee($question->question_text);
 
         $this->assertSame(
@@ -1223,7 +1223,7 @@ class ReliabilityHardeningTest extends TestCase
             ->assertOk()
             ->assertSee('Detailed Feedback Report')
             ->assertSee('Saved feedback remains visible.')
-            ->assertSee('Targeted practice plan')
+            ->assertSee('Practice plan')
             ->assertSee('Clarity');
 
         Log::shouldHaveReceived('warning')
@@ -1314,8 +1314,8 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame($retry->id, data_get($retry->coaching_feedback, 'content_alignment.answer_id'));
         $this->assertSame($question->id, data_get($retry->coaching_feedback, 'content_alignment.question_id'));
         $this->assertNotEmpty(data_get($retry->coaching_feedback, 'content_alignment.evidence_quotes'));
-        $this->assertStringContainsString('Evidence-Based Coaching', (string) $response->json('coaching_html'));
-        $this->assertStringContainsString('Answer-to-Question Relevance', (string) $response->json('coaching_html'));
+        $this->assertStringContainsString('Answer Coaching', (string) $response->json('coaching_html'));
+        $this->assertStringContainsString('Answer Match', (string) $response->json('coaching_html'));
         $this->assertStringContainsString($question->question_text, (string) $response->json('coaching_html'));
 
         $this->actingAs($user)
@@ -1406,7 +1406,7 @@ class ReliabilityHardeningTest extends TestCase
         Feedback::create([
             'interview_session_id' => $session->id,
             'strengths' => 'The retries became more specific.',
-            'weaknesses' => 'The original answer lacked a verified result.',
+            'weaknesses' => 'The original answer lacked a true result.',
             'improvement_suggestions' => 'Keep the action and verification sequence.',
             'coaching_summary' => [
                 'version' => EvidenceBasedCoachingService::VERSION,
@@ -1423,10 +1423,10 @@ class ReliabilityHardeningTest extends TestCase
 
         $this->get(route('shared.review', 'shared-retry-coaching-token'))
             ->assertOk()
-            ->assertSee('Evidence-Based Coaching Summary')
+            ->assertSee('Answer Coaching Summary')
             ->assertSee('Shared summary observation: both retries added relevant evidence.')
             ->assertSee('Shared summary action: keep the verified outcome in the final answer.')
-            ->assertSee('Retry Attempts')
+            ->assertSee('Retry Tries')
             ->assertSeeInOrder(['Attempt 1', 'Attempt 2'])
             ->assertSee('First retry feedback: the response explained the diagnosis but not the verified outcome.')
             ->assertSee('First retry alignment: diagnosis and rollback were relevant, but the result was missing.')
@@ -1475,7 +1475,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Rubric v'.TrustworthyAssessmentService::SCORE_VERSION);
+            ->assertSee('Score version '.TrustworthyAssessmentService::SCORE_VERSION);
 
         $score = Score::where('interview_session_id', $session->id)->firstOrFail();
         $answer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
@@ -1520,7 +1520,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('No previous scored session is available for comparison yet.')
+            ->assertSee('No earlier scored session yet.')
             ->assertDontSee('Speaking Pace')
             ->assertDontSee('135 WPM')
             ->assertDontSee('STAR Framework Analysis');
@@ -1549,7 +1549,7 @@ class ReliabilityHardeningTest extends TestCase
                 'analysis_status' => ['content' => 'limited_evidence', 'alignment' => 'insufficient_evidence'],
                 'content_alignment' => [
                     'status' => 'insufficient_evidence',
-                    'status_label' => 'Not enough evidence',
+                    'status_label' => 'Not enough detail',
                     'question' => $question->question_text,
                     'relevance_score' => 0,
                     'observation' => 'The response was too short for a dependable relevance judgment.',
@@ -1580,7 +1580,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Not enough evidence')
+            ->assertSee('Not enough detail')
             ->assertSee('Not scored')
             ->assertDontSee('Score: 0')
             ->assertDontSee('0% relevance');

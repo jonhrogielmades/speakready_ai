@@ -54,37 +54,58 @@
         return match ($status) {
             'directly_answered' => 'Direct',
             'partially_answered' => 'Partial',
-            'low_relevance' => 'Low relevance',
-            'insufficient_evidence' => 'Not enough evidence',
+            'low_relevance' => 'Low match',
+            'insufficient_evidence' => 'Not enough detail',
             'skipped' => 'Skipped',
-            'not_evaluated' => 'Not evaluated',
+            'not_evaluated' => 'Not checked',
             default => ucwords(str_replace(['_', '-'], ' ', $status)),
+        };
+    };
+    $summaryAreaLabel = static function (string $area): string {
+        $normalized = strtolower(str_replace(['_', '-'], ' ', trim($area)));
+
+        return match ($normalized) {
+            'answer to question relevance' => 'Answer match',
+            'transcript detected filler phrases' => 'Filler words',
+            'pronunciation and phoneme clarity' => 'Pronunciation',
+            'optional body language framing' => 'Camera frame',
+            'answer evidence' => 'Answer detail',
+            default => $area,
+        };
+    };
+    $summaryCoverageLabel = static function (string $area): string {
+        return match ($area) {
+            'answers' => 'Answers',
+            'delivery_measured' => 'Speaking checked',
+            'camera_measured' => 'Camera checked',
+            'camera_insufficient' => 'Camera too limited',
+            default => ucwords(str_replace(['_', '-'], ' ', $area)),
         };
     };
 @endphp
 
 @if($hasCoachingSummary)
-    <section class="row mb-4" aria-label="Overall evidence-based coaching summary">
+    <section class="row mb-4" aria-label="Overall answer coaching summary">
         <div class="col-12 animate-fade-up" style="animation-delay:.13s;">
             <div class="premium-panel" style="padding:24px;border:1px solid rgba(14,165,233,.22) !important;background:rgba(14,165,233,.04) !important;">
                 <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
                     <div>
-                        <h5 style="color:var(--tx);font-weight:800;margin:0 0 6px;"><i class="fa-solid fa-magnifying-glass-chart me-2" style="color:#0ea5e9;"></i>Evidence-Based Coaching Summary</h5>
-                        <p style="color:var(--tx3);font-size:.88rem;margin:0;">{{ $summaryHeadline !== '' ? $summaryHeadline : 'Prioritized from the observations and measurable evidence available in this session.' }}</p>
+                        <h5 style="color:var(--tx);font-weight:800;margin:0 0 6px;"><i class="fa-solid fa-magnifying-glass-chart me-2" style="color:#0ea5e9;"></i>Answer Coaching Summary</h5>
+                        <p style="color:var(--tx3);font-size:.88rem;margin:0;">{{ $summaryHeadline !== '' ? $summaryHeadline : 'Built from the notes and measured details available in this session.' }}</p>
                     </div>
                     @if(is_scalar($summaryCoverage) && trim((string) $summaryCoverage) !== '')
-                        <span class="badge align-self-start" style="background:rgba(59,130,246,.10);color:#3b82f6;border:1px solid rgba(59,130,246,.22);padding:7px 10px;">Coverage: {{ $summaryCoverage }}</span>
+                        <span class="badge align-self-start" style="background:rgba(59,130,246,.10);color:#3b82f6;border:1px solid rgba(59,130,246,.22);padding:7px 10px;">Checked: {{ $summaryCoverage }}</span>
                     @elseif(is_array($summaryCoverage) && !empty($summaryCoverage))
-                        <div class="d-flex flex-wrap gap-2 align-items-start" aria-label="Summary coverage">
+                        <div class="d-flex flex-wrap gap-2 align-items-start" aria-label="Summary details">
                             @foreach($summaryCoverage as $coverageArea => $coverageStatus)
                                 @php
-                                    $coverageLabel = is_string($coverageArea) ? ucwords(str_replace(['_', '-'], ' ', $coverageArea)) : 'Coverage';
+                                    $coverageLabel = is_string($coverageArea) ? $summaryCoverageLabel($coverageArea) : 'Checked';
                                     $coverageValue = is_array($coverageStatus) ? ($coverageStatus['status'] ?? $coverageStatus['label'] ?? '') : $coverageStatus;
                                     $coverageValue = is_scalar($coverageValue) ? trim((string) $coverageValue) : '';
                                     $coverageColors = $summaryStatusColors($coverageValue);
                                 @endphp
                                 @if($coverageValue !== '')
-                                    <span class="badge" style="color:{{ $coverageColors[0] }};background:{{ $coverageColors[1] }};border:1px solid {{ $coverageColors[2] }};padding:7px 10px;">{{ $coverageLabel }}: {{ ucwords(str_replace(['_', '-'], ' ', $coverageValue)) }}</span>
+                                    <span class="badge" style="color:{{ $coverageColors[0] }};background:{{ $coverageColors[1] }};border:1px solid {{ $coverageColors[2] }};padding:7px 10px;">{{ $coverageLabel }}: {{ $summaryStatusLabel($coverageValue) }}</span>
                                 @endif
                             @endforeach
                         </div>
@@ -93,7 +114,7 @@
 
                 @if(!empty($summaryContentOverview))
                     <div class="mb-3 p-3" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;">
-                        <div style="color:var(--tx3);font-size:.76rem;font-weight:800;text-transform:uppercase;margin-bottom:9px;"><i class="fa-solid fa-list-check me-2"></i>Question coverage</div>
+                        <div style="color:var(--tx3);font-size:.76rem;font-weight:800;text-transform:uppercase;margin-bottom:9px;"><i class="fa-solid fa-list-check me-2"></i>Question results</div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach(['directly_answered', 'partially_answered', 'low_relevance', 'insufficient_evidence', 'skipped', 'not_evaluated'] as $overviewStatus)
                                 @php
@@ -112,11 +133,12 @@
                     @if(!empty($summaryObservations))
                         <div class="col-lg-5">
                             <div class="h-100 p-3" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;">
-                                <div style="color:#0ea5e9;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-eye me-2"></i>What was observed</div>
+                                <div style="color:#0ea5e9;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-eye me-2"></i>What we saw</div>
                                 <div class="d-flex flex-column gap-2">
                                     @foreach($summaryObservations as $observation)
                                         @php
                                             $observationArea = is_array($observation) ? trim((string) ($observation['area'] ?? '')) : '';
+                                            $observationArea = $observationArea !== '' ? $summaryAreaLabel($observationArea) : '';
                                             $observationText = is_array($observation) ? trim((string) ($observation['observation'] ?? $observation['text'] ?? '')) : trim((string) $observation);
                                         @endphp
                                         @if($observationText !== '')
@@ -136,11 +158,12 @@
                     @if(!empty($summaryActions))
                         <div class="{{ !empty($summaryObservations) ? 'col-lg-7' : 'col-12' }}">
                             <div class="h-100 p-3" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;">
-                                <div style="color:#8b5cf6;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-list-ol me-2"></i>Top priorities</div>
+                                <div style="color:#8b5cf6;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-list-ol me-2"></i>Top next steps</div>
                                 <div class="row g-2">
                                     @foreach($summaryActions as $priority)
                                         @php
                                             $priorityArea = is_array($priority) ? trim((string) ($priority['area'] ?? 'Priority')) : 'Priority';
+                                            $priorityArea = $priorityArea !== '' ? $summaryAreaLabel($priorityArea) : 'Priority';
                                             $priorityRank = is_array($priority) && is_numeric($priority['rank'] ?? null) ? max(1, (int) $priority['rank']) : $loop->iteration;
                                             $priorityObservation = is_array($priority) ? trim((string) ($priority['observation'] ?? '')) : '';
                                             $priorityAction = is_array($priority) ? trim((string) ($priority['action'] ?? '')) : trim((string) $priority);
@@ -167,11 +190,11 @@
                                                         <p style="color:var(--tx3);font-size:.82rem;line-height:1.48;margin:0 0 6px;">{{ $priorityObservation }}</p>
                                                     @endif
                                                     @if(!empty($priorityQuestions))
-                                                        <div style="color:var(--tx3);font-size:.78rem;line-height:1.45;margin:0 0 7px;"><strong>Questions:</strong> {{ implode(' • ', $priorityQuestions) }}</div>
+                                                        <div style="color:var(--tx3);font-size:.78rem;line-height:1.45;margin:0 0 7px;"><strong>Questions:</strong> {{ implode(' | ', $priorityQuestions) }}</div>
                                                     @endif
                                                     <p style="color:var(--tx);font-size:.88rem;line-height:1.55;margin:0;"><strong style="color:#8b5cf6;">Practice next:</strong> {{ $priorityAction }}</p>
                                                     @if($prioritySuccessCheck !== '')
-                                                        <p style="color:var(--tx2);font-size:.8rem;line-height:1.5;margin:7px 0 0;"><strong style="color:#3b82f6;">How to check progress:</strong> {{ $prioritySuccessCheck }}</p>
+                                                        <p style="color:var(--tx2);font-size:.8rem;line-height:1.5;margin:7px 0 0;"><strong style="color:#3b82f6;">How to know it worked:</strong> {{ $prioritySuccessCheck }}</p>
                                                     @endif
                                                 </div>
                                             </div>
@@ -185,7 +208,7 @@
 
                 @if(!empty($summaryQuestionImprovements))
                     <div class="mt-3 p-3" style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;">
-                        <div style="color:#0ea5e9;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-map me-2"></i>Question-by-question improvement map</div>
+                        <div style="color:#0ea5e9;font-size:.78rem;font-weight:800;text-transform:uppercase;margin-bottom:10px;"><i class="fa-solid fa-map me-2"></i>Question next steps</div>
                         <div class="d-flex flex-column gap-2">
                             @foreach($summaryQuestionImprovements as $questionImprovement)
                                 @php
@@ -215,7 +238,7 @@
                                         @endif
                                     </div>
                                     @if($mapNext !== '')
-                                        <div style="color:var(--tx);font-size:.82rem;line-height:1.5;margin-top:7px;"><strong style="color:#8b5cf6;">Next attempt:</strong> {{ $mapNext }}</div>
+                                        <div style="color:var(--tx);font-size:.82rem;line-height:1.5;margin-top:7px;"><strong style="color:#8b5cf6;">Next try:</strong> {{ $mapNext }}</div>
                                     @endif
                                     @if($mapSuccess !== '')
                                         <div style="color:var(--tx3);font-size:.78rem;line-height:1.48;margin-top:5px;"><strong style="color:#3b82f6;">Done when:</strong> {{ $mapSuccess }}</div>

@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=6') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=14') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -26,6 +26,7 @@
     $playerLevel = max(1, (int) ($profile->player_level ?? (floor($xpValue / 1000) + 1)));
     $xpMeter = max(0, min(100, (int) round((($xpValue % 1000) / 1000) * 100)));
     $streakMeter = max(0, min(100, (int) round((($currentStreak ?? 0) / 7) * 100)));
+    $hasRadarScores = collect($radarData ?? [])->contains(fn ($score) => is_numeric($score) && (int) $score > 0);
     $trendScores = collect($scoreTrend ?? [])->pluck('score')->filter(fn ($score) => is_numeric($score))->map(fn ($score) => (int) round($score))->values();
     $trendAverage = $trendScores->isNotEmpty() ? (int) round($trendScores->avg()) : $scoreVal;
     $trendFirst = $trendScores->first();
@@ -143,11 +144,8 @@
                             <li>Progress</li>
                         </ul>
                         <div class="sr-image-chip-row" aria-label="Practice focus areas">
-                            <span class="sr-image-chip"><i class="fa-solid fa-briefcase"></i> Job</span>
-                            <span class="sr-image-chip"><i class="fa-solid fa-headset"></i> BPO</span>
-                            <span class="sr-image-chip"><i class="fa-solid fa-code"></i> IT</span>
-                            <span class="sr-image-chip"><i class="fa-solid fa-graduation-cap"></i> Scholarship</span>
-                            <span class="sr-image-chip"><i class="fa-solid fa-building-columns"></i> Admission</span>
+                            <span class="sr-image-chip"><i class="fa-solid fa-briefcase"></i> Job Interviews</span>
+                            <span class="sr-image-chip"><i class="fa-solid fa-building-columns"></i> School Admission Interviews</span>
                         </div>
                     </div>
                     <div class="sr-image-speech" aria-hidden="true">
@@ -340,53 +338,7 @@
                 </div>
             </section>
 
-            <section id="card-practice-plan" class="sr-card sr-card-pad">
-                <div class="sr-plan-header">
-                    <div class="sr-plan-header-icon"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div class="sr-plan-header-copy">
-                        <h5 class="sr-plan-title">Personalized Practice Plan</h5>
-                        <p class="sr-plan-subtitle">A plan built just for you based on your latest scores, voice work, and learning progress.</p>
-                    </div>
-                </div>
-                <a href="{{ route('user.progress') }}#personalized-practice-plan" class="sr-plan-full-link">
-                    <i class="fa-regular fa-rectangle-list"></i>
-                    <span>View Full Plan</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
-                @if(isset($practicePlan) && $practicePlan->count() > 0)
-                    <div class="sr-rec-list">
-                        @foreach($practicePlan as $item)
-                            @php
-                                $itemAccent = $safeAccent($item->color ?? null, '#3b82f6');
-                                $itemIcon = $safeFaIcon($item->icon ?? null, 'fa-clipboard-list');
-                            @endphp
-                            <a href="{{ $item->url }}" class="sr-rec-item" style="--accent: {{ $itemAccent }}; text-decoration:none;color:inherit;">
-                                <div class="sr-rec-icon" style="--accent: {{ $itemAccent }}"><i class="fa-solid {{ $itemIcon }}"></i></div>
-                                <div class="sr-plan-copy">
-                                    <div class="sr-plan-top">
-                                        <span class="sr-plan-step">{{ $item->day }}</span>
-                                        <span class="sr-plan-task-title">{{ $item->title }}</span>
-                                    </div>
-                                    <div class="sr-plan-action">{{ $item->action }}</div>
-                                    <div class="sr-plan-meta">
-                                        <span class="sr-tag" style="background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.18);color:#10b981">{{ $item->minutes }} min</span>
-                                        <span class="sr-tag sr-tag-accent" style="--accent: {{ $itemAccent }}">{{ $item->focus }}</span>
-                                    </div>
-                                    <span class="sr-plan-cta">{{ $item->cta }} <i class="fa-solid fa-arrow-right"></i></span>
-                                </div>
-                                <i class="fa-solid fa-chevron-right sr-plan-card-chevron"></i>
-                            </a>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="sr-empty">
-                        <i class="fa-solid fa-calendar-check"></i>
-                        <div>Complete a Philippine interview or voice rehearsal to generate a practice plan.</div>
-                    </div>
-                @endif
-            </section>
-
-            <div class="sr-two-col">
+            <div class="sr-two-col sr-inline-panels">
                 <section class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#10b981">
                     <div class="sr-polished-header">
                         <div class="sr-polished-icon"><i class="fa-solid fa-layer-group"></i></div>
@@ -415,87 +367,6 @@
                             <div class="sr-polished-empty-inner">
                                 <div class="sr-empty-visual"><i class="fa-solid fa-folder-open"></i></div>
                                 <p class="sr-polished-empty-text">Complete a Philippine interview session to unlock category performance.</p>
-                            </div>
-                        </div>
-                    @endif
-                </section>
-
-                <section class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#8b5cf6">
-                    <div class="sr-polished-header">
-                        <div class="sr-polished-icon"><i class="fa-solid fa-book-open-reader"></i></div>
-                        <div>
-                            <h5 class="sr-polished-title">Learning Progress</h5>
-                            <p class="sr-polished-subtitle">Latest modules you are working through.</p>
-                        </div>
-                    </div>
-                    @if($moduleCount > 0)
-                        <div class="sr-learning-list">
-                            @foreach($learningLabProgress as $prog)
-                                @php
-                                    $progVal = max(0, min(100, (int) $prog->progress));
-                                    $progAccent = $safeAccent($prog->color ?? null, '#3b82f6');
-                                    $progIcon = $safeFaIcon($prog->icon ?? null, 'fa-book-open');
-                                @endphp
-                                <div class="sr-learning-item" style="--accent: {{ $progAccent }}">
-                                    <div class="sr-learning-icon"><i class="fa-solid {{ $progIcon }}"></i></div>
-                                    <div class="min-w-0">
-                                        <div class="sr-learning-top">
-                                            <div class="sr-learning-title">{{ $prog->title }}</div>
-                                            <div class="sr-learning-score">{{ $progVal }}%</div>
-                                        </div>
-                                        <div class="sr-learning-bar"><span style="--value: {{ $progVal }}%"></span></div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="sr-polished-empty">
-                            <div class="sr-polished-empty-inner">
-                                <div class="sr-empty-visual"><i class="fa-solid fa-book-open"></i></div>
-                                <p class="sr-polished-empty-text">Start a module to track your learning progress.</p>
-                            </div>
-                        </div>
-                    @endif
-                </section>
-            </div>
-
-            <div class="sr-two-col">
-                <section id="card-ai-feedback" class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#3b82f6">
-                    <div class="sr-polished-header">
-                        <div class="sr-polished-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-                        <div>
-                            <h5 class="sr-polished-title">AI Feedback Summary</h5>
-                            <p class="sr-polished-subtitle">A quick view of strengths and coaching priorities.</p>
-                        </div>
-                    </div>
-                    @if(!empty($aiFeedback['strengths']) || !empty($aiFeedback['improvements']))
-                        <div class="d-flex flex-column gap-3">
-                            @if(!empty($aiFeedback['strengths']))
-                                <div class="sr-insight-box">
-                                    <div class="sr-insight-title"><i class="fa-solid fa-circle-check" style="color:#22c55e"></i> Top Strengths</div>
-                                    <div class="sr-tag-list">
-                                        @foreach($aiFeedback['strengths'] as $strength)
-                                            <span class="sr-tag" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.18);color:#22c55e">{{ $strength }}</span>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-                            @if(!empty($aiFeedback['improvements']))
-                                <div class="sr-feedback-panel">
-                                    <div class="sr-insight-title"><i class="fa-solid fa-arrow-trend-up" style="color:#f59e0b"></i> Improve Next</div>
-                                    <div class="sr-feedback-chip-list">
-                                        @foreach($aiFeedback['improvements'] as $improvement)
-                                            <span class="sr-feedback-chip"><i class="fa-solid fa-circle-dot"></i>{{ $improvement }}</span>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    @else
-                        <div class="sr-polished-empty">
-                            <div class="sr-polished-empty-inner">
-                                <div class="sr-empty-visual"><i class="fa-solid fa-robot"></i></div>
-                                <p class="sr-polished-empty-text">Complete a Philippine interview to generate AI feedback.</p>
                             </div>
                         </div>
                     @endif
@@ -657,9 +528,16 @@
                     </div>
                     <a href="{{ route('user.progress') }}" class="sr-side-detail-btn"><i class="fa-solid fa-chart-line"></i> View Details</a>
                 </div>
-                <div class="chart-container-mobile sr-radar-box">
-                    <canvas id="radarChart"></canvas>
-                </div>
+                @if($hasRadarScores)
+                    <div class="chart-container-mobile sr-radar-box">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                @else
+                    <div class="sr-radar-locked" role="status">
+                        <div class="sr-radar-locked-icon"><i class="fa-solid fa-lock"></i></div>
+                        <p>Complete a scored interview to unlock your skill radar.</p>
+                    </div>
+                @endif
             </section>
 
             <section id="card-daily-challenge" class="sr-card sr-card-pad sr-side-feature sr-challenge-feature">
@@ -715,7 +593,7 @@
                 @endif
             </section>
 
-            <section class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#f59e0b">
+            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#f59e0b">
                 <div class="sr-side-feature-header">
                     <div class="sr-side-title-row">
                         <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>
@@ -741,43 +619,6 @@
                 </div>
             </section>
 
-            <section class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#6366f1">
-                <div class="sr-side-feature-header">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-solid fa-bell"></i></div>
-                        <div>
-                            <h5 class="sr-side-title">Notifications</h5>
-                            <p class="sr-side-subtitle">Recent updates and reminders.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('user.notifications') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
-                </div>
-                @if(isset($recentNotifications) && count($recentNotifications) > 0)
-                    <div class="sr-notification-list-polished">
-                        @foreach($recentNotifications as $notif)
-                            @php $notifIcon = $safeFaIcon($notif->data['icon'] ?? null, 'fa-bell'); @endphp
-                            <div class="sr-notification-card">
-                                <div class="sr-notification-card-icon"><i class="fa-solid {{ $notifIcon }}"></i></div>
-                                <div class="min-w-0">
-                                    <div class="sr-notification-title">{{ $notif->data['title'] ?? 'Notification' }}</div>
-                                    <div class="sr-notification-message">{{ $notif->data['message'] ?? '' }}</div>
-                                </div>
-                                <div class="sr-notification-meta">
-                                    <span>{{ $notif->created_at ? $notif->created_at->diffForHumans(null, true, true) : '' }}</span>
-                                    <span class="sr-notification-dot"></span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="sr-polished-empty">
-                        <div class="sr-polished-empty-inner">
-                            <div class="sr-empty-visual"><i class="fa-solid fa-bell-slash"></i></div>
-                            <p class="sr-polished-empty-text">No new notifications.</p>
-                        </div>
-                    </div>
-                @endif
-            </section>
         </aside>
     </div>
 </div>
@@ -1179,12 +1020,10 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your current readiness score, status, average rating, and next target live here.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed sessions, rating, XP, and active practice days at a glance.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-ai-feedback', popover: { title: 'AI Feedback Summary', description: 'Review your strongest patterns and the next skills to tighten up.', side: 'top', align: 'start' }},
             { element: '#card-ai-recommendations', popover: { title: 'AI Recommendations', description: 'Use these next actions to decide what to practice first.', side: 'bottom', align: 'start' }},
             { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records.', side: 'top', align: 'start' }},
             { element: '#card-daily-challenge', popover: { title: 'Daily Challenge', description: 'Start a focused practice task for extra XP and streak progress.', side: 'left', align: 'start' }},
             { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},
-            { element: '#notifWrap', popover: { title: 'Notifications', description: 'Stay updated with interview feedback and platform announcements.', side: 'bottom', align: 'center' }},
             { element: '#profileWrap', popover: { title: 'Your Profile', description: 'Manage account settings, notifications, and sign-out options.', side: 'bottom', align: 'end' }}
         ];
 
