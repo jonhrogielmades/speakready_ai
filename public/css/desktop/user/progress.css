@@ -8629,3 +8629,66 @@ html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking .progress-
         stroke: currentColor !important;
     }
 }
+
+/* Final live progress grid balance. */
+@media (min-width: 1321px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid {
+        --bs-gutter-x: 10px !important;
+        --bs-gutter-y: 10px !important;
+        align-items: stretch !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #recommended-next, #voice-progress) {
+        width: 33.333333% !important;
+        max-width: 33.333333% !important;
+        flex: 0 0 33.333333% !important;
+        display: flex !important;
+        align-self: stretch !important;
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :first-child {
+        padding-left: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :last-child {
+        padding-right: 0 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid :is(.learning-panel, .recommend-panel, .voice-panel) {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 238px !important;
+        max-height: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: visible !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1320px) {
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #recommended-next) {
+        width: 50% !important;
+        max-width: 50% !important;
+        flex: 0 0 50% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid > #voice-progress {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid #voice-progress .voice-panel {
+        flex: 1 1 auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-progress-tracking > .progress-live-grid #voice-progress .voice-empty {
+    flex: 1 1 auto !important;
+}

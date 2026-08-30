@@ -1999,6 +1999,34 @@
     }
 }
 
+/* Final Personal Mastery form validation state. */
+#personal-mastery-page .mastery-form-alert {
+    display: grid;
+    gap: 4px;
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+    font-size: 0.74rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+#personal-mastery-page .mastery-form-alert p {
+    margin: 0;
+    color: inherit;
+}
+
+:root:not(.lm) #personal-mastery-page .mastery-form-alert,
+body.dm #personal-mastery-page .mastery-form-alert,
+.dm #personal-mastery-page .mastery-form-alert {
+    border-color: rgba(248, 113, 113, 0.32);
+    background: rgba(127, 29, 29, 0.34);
+    color: #fecaca;
+}
+
 /* Final desktop personal mastery hero background, contrast, and icon spacing. */
 @media (min-width: 992px) {
     html body.user-desktop-shell:not(.admin-shell) #personal-mastery-page .mastery-hero-card {

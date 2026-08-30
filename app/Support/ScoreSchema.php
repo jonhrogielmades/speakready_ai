@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Score;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -22,6 +23,7 @@ class ScoreSchema
             }
 
             self::$checked = true;
+            self::flushModelColumnCache();
 
             return;
         }
@@ -106,6 +108,7 @@ class ScoreSchema
         }
 
         self::$checked = true;
+        self::flushModelColumnCache();
     }
 
     public static function hasRequiredColumns(): bool
@@ -201,5 +204,12 @@ class ScoreSchema
     private static function isMissing(array $missing, string $column): bool
     {
         return in_array($column, $missing, true);
+    }
+
+    private static function flushModelColumnCache(): void
+    {
+        if (method_exists(Score::class, 'flushColumnCache')) {
+            Score::flushColumnCache();
+        }
     }
 }

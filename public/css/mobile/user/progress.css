@@ -7449,3 +7449,21 @@ html body #sec-progress-tracking .progress-ai-popover {
         font-size: 0.64rem !important;
     }
 }
+
+/* Live progress cards should stack cleanly in the mobile shell. */
+@media (max-width: 991.98px) {
+    html body #sec-progress-tracking > .progress-live-grid {
+        --bs-gutter-x: 0 !important;
+        --bs-gutter-y: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    html body #sec-progress-tracking > .progress-live-grid > :is(#learning-progress, #recommended-next, #voice-progress) {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}

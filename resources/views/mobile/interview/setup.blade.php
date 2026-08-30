@@ -259,6 +259,7 @@
                             </div>
                             <input type="hidden" name="source_pack_key" id="valSourcePack" value="{{ $selectedScenario['key'] ?? '' }}">
                             <input type="hidden" name="interview_focus" id="valFocus" value="{{ $setupDefaults['interview_focus'] }}" class="setup-input">
+                            <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
                             @unless($hasScenarioOptions)
                                 <div class="setup-inline-error setup-inline-error-visible" id="scenarioEmptyState" role="alert">No active interview scenarios are available. Ask an admin to activate at least one core category before starting.</div>
                             @endunless
@@ -272,7 +273,6 @@
                             <div class="setup-search-wrap">
                                 <input class="oinp setup-input" type="text" name="target_position" id="valPosition" placeholder="e.g. Call Center Agent, Teacher, Software Developer" value="{{ $targetPositionDefault }}" required aria-describedby="targetPositionError">
                             </div>
-                            <div class="desc-text" id="scenarioHelp">Choose either job interviews or school admission interviews.</div>
                             <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>Enter the target position before continuing.</div>
                         </div>
 
@@ -567,8 +567,8 @@
                         </div>
                         
                         <div class="setup-start-action" style="margin-top:30px;">
-                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine">
-                                Start Philippine Interview <i class="fa-solid fa-play ms-2"></i>
+                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine" data-default-label='Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>'>
+                                Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
                         </div>
                     </div>
@@ -1057,7 +1057,7 @@
 
             if (startInterviewButton) {
                 startInterviewButton.disabled = true;
-                startInterviewButton.innerHTML = 'Begin / Resume Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
+                startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
             }
         });
 
@@ -1066,7 +1066,7 @@
             document.body.classList.remove('finish-transition-active');
 
             if (startInterviewButton) {
-                startInterviewButton.innerHTML = 'Start Philippine Interview <i class="fa-solid fa-play ms-2"></i>';
+                startInterviewButton.innerHTML = startInterviewButton.dataset.defaultLabel || 'Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>';
                 updateStartInterviewState();
             }
         });
@@ -1168,7 +1168,7 @@
             { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick the Philippines scenario, assistance level, and question types.', side: 'top', align: 'center' }},
             { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose typed, voice, or hybrid answers depending on how you want to practice.', side: 'top', align: 'center' }},
             { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm your interview setup before generating the practice session.', side: 'top', align: 'center' }},
-            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate your customized Philippine interview when the setup looks right.', side: 'top', align: 'center' }}
+            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate your customized Philippines interview when the setup looks right.', side: 'top', align: 'center' }}
         ];
 
         window.createSpeakReadyTour({

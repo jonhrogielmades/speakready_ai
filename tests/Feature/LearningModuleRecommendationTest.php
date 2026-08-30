@@ -129,6 +129,32 @@ class LearningModuleRecommendationTest extends TestCase
         $this->assertSame(100, (int) $progress->progress_percentage);
     }
 
+    public function test_module_progress_update_does_not_regress_completed_module(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $module = $this->module('Completed STAR Module', 'Keep completed progress intact.', ['star_method']);
+        LearningProgress::create([
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+            'status' => 'completed',
+            'progress_percentage' => 100,
+            'learning_hours' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('user.modules.progress', $module->id), [
+                'progress_percentage' => 25,
+            ])
+            ->assertRedirect(route('user.modules.show', $module->id));
+
+        $this->assertDatabaseHas('learning_progress', [
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+            'status' => 'completed',
+            'progress_percentage' => 100,
+        ]);
+    }
+
     public function test_personalized_practice_plan_prioritizes_weak_scores(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

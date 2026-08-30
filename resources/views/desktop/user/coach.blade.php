@@ -175,6 +175,31 @@
             feedback.classList.toggle('show', Boolean(message));
         }
 
+        function coachCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @json(csrf_token());
+        }
+
+        function coachFetch(url, options = {}) {
+            return fetch(url, {
+                ...options,
+                credentials: options.credentials || 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': coachCsrfToken(),
+                    ...(options.headers || {})
+                }
+            });
+        }
+
+        async function coachJson(response, fallbackMessage) {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || data.response || fallbackMessage);
+            }
+
+            return data;
+        }
+
         function resizeCoachTextarea(textarea) {
             if (!textarea) return;
 
@@ -197,6 +222,14 @@
             if (input) {
                 input.setAttribute('aria-busy', isSending ? 'true' : 'false');
             }
+        }
+
+        async function confirmCoachAction(options) {
+            if (window.SpeakReadyMobileConfirm?.show) {
+                return window.SpeakReadyMobileConfirm.show(options);
+            }
+
+            return confirm(options?.message || 'Are you sure you want to continue?');
         }
 
         function coachHistoryButtonMarkup(id, title, iconClass) {
@@ -418,21 +451,11 @@
                 }
                 files.forEach(file => formData.append('coach_attachments[]', file));
 
-                // Call AI Backend
-                const response = await fetch(coachEndpoint('chatUrl', @json(route('user.coach.chat'))), {
+                const response = await coachFetch(coachEndpoint('chatUrl', @json(route('user.coach.chat'))), {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
                     body: formData
                 });
-
-                if (!response.ok) {
-                    const errorPayload = await response.json().catch(() => null);
-                    throw new Error(errorPayload?.message || 'Network response was not ok');
-                }
-
-                const data = await response.json();
+                const data = await coachJson(response, 'Could not send your message. Please try again.');
                 const aiResponse = data.response;
                 
                 if (data.conversation_id && !currentConversationId) {
@@ -501,6 +524,14 @@
                 `;
                 box.insertBefore(errorMsgDiv, typing);
                 box.scrollTop = box.scrollHeight;
+                if (!ta.value.trim()) {
+                    ta.value = text;
+                    resizeCoachTextarea(ta);
+                }
+                if (files.length) {
+                    coachSelectedFiles = files.slice(0, coachMaxFiles);
+                    renderCoachAttachments();
+                }
             } finally {
                 setCoachSending(false);
                 resizeCoachTextarea(ta);
@@ -608,19 +639,13 @@
 
         async function loadConversation(id) {
             try {
-                const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Failed to load conversation');
-                
-                const data = await response.json();
+                const response = await coachFetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id));
+                const data = await coachJson(response, 'Failed to load conversation');
                 
                 // Update State
                 currentConversationId = data.conversation.id;
                 setCoachTitle(data.conversation.title || 'New Conversation');
+                showCoachFeedback('');
                 coachChatHistory = [];
                 
                 // Update UI active state
@@ -668,23 +693,25 @@
 
             } catch (error) {
                 console.error(error);
-                alert('Could not load conversation');
+                showCoachFeedback('Could not load conversation. Please try again.', 'error');
             }
         }
 
         async function deleteConversation(id) {
             closeCoachActions();
-            if (!confirm('Are you sure you want to delete this conversation?')) return;
+            const confirmed = await confirmCoachAction({
+                title: 'Delete conversation?',
+                message: 'This conversation will be permanently removed.',
+                action: 'Delete',
+                variant: 'danger'
+            });
+            if (!confirmed) return;
             
             try {
-                const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
+                const response = await coachFetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
+                    method: 'DELETE'
                 });
-                
-                if (!response.ok) throw new Error('Failed to delete conversation');
+                await coachJson(response, 'Failed to delete conversation');
                 
                 // Remove from UI
                 const item = document.getElementById('conv-' + id);
@@ -692,19 +719,19 @@
                 syncCoachActionsMenu('delete', { id });
                 
                 // If it was the active conversation, start a new one
-                if (currentConversationId === id) {
+                if (String(currentConversationId) === String(id)) {
                     newConversation();
                 }
             } catch (error) {
                 console.error(error);
-                alert('Could not delete conversation');
+                showCoachFeedback('Could not delete conversation. Please try again.', 'error');
             }
         }
 
         function deleteCurrentConversation() {
             if (!currentConversationId) {
                 closeCoachActions();
-                alert('No active conversation to delete.');
+                showCoachFeedback('No active conversation to delete.', 'info');
                 return;
             }
 
@@ -714,17 +741,19 @@
         async function clearCoachHistory() {
             closeCoachActions();
 
-            if (!confirm('Are you sure you want to clear all AI Coach conversation history?')) return;
+            const confirmed = await confirmCoachAction({
+                title: 'Clear coach history?',
+                message: 'This will permanently remove all AI Coach conversations.',
+                action: 'Clear All',
+                variant: 'danger'
+            });
+            if (!confirmed) return;
 
             try {
-                const response = await fetch(coachEndpoint('clearUrl', @json(route('user.coach.clear'))), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
+                const response = await coachFetch(coachEndpoint('clearUrl', @json(route('user.coach.clear'))), {
+                    method: 'DELETE'
                 });
-
-                if (!response.ok) throw new Error('Failed to clear conversations');
+                await coachJson(response, 'Failed to clear conversations');
 
                 document.querySelectorAll('.history-item').forEach(item => item.remove());
                 syncCoachActionsMenu('clear');
@@ -742,7 +771,7 @@
                 newConversation();
             } catch (error) {
                 console.error(error);
-                alert('Could not clear conversation history');
+                showCoachFeedback('Could not clear conversation history. Please try again.', 'error');
             }
         }
 

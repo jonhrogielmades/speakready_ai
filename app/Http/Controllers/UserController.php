@@ -28,6 +28,11 @@ use App\Services\PersonalizedPracticePlanService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\CareerPlanningSchema;
+use App\Support\AccountNotificationSchema;
+use App\Support\ChatbotSchema;
+use App\Support\GameSchema;
+use App\Support\LearningModuleSchema;
+use App\Support\ScoreSchema;
 use App\Support\VoiceSessionSchema;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -117,6 +122,7 @@ class UserController extends Controller
     public function dashboard()
     {
         $user_id = Auth::id();
+        AccountNotificationSchema::ensure();
         $profile = Profile::firstOrCreate(['user_id' => $user_id]);
 
         // Base query for completed sessions
@@ -330,14 +336,13 @@ class UserController extends Controller
         $moduleRecommendations = app(LearningRecommendationService::class)->forUser($userId, 3);
         $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($userId, 4);
 
-        $currentStreak = $profile->current_streak ?? 0;
-        $longestStreak = max((int) ($profile->longest_streak ?? 0), (int) $currentStreak);
-        $totalPracticeDays = InterviewSession::where('user_id', $userId)
-            ->where('status', 'completed')
-            ->selectRaw('DATE(created_at) as date')
-            ->distinct()
-            ->get()
-            ->count();
+        $currentStreak = (int) ($activityCalendar->current_streak ?? 0);
+        $longestStreak = max(
+            (int) ($profile->longest_streak ?? 0),
+            (int) ($activityCalendar->longest_streak ?? 0),
+            $currentStreak
+        );
+        $totalPracticeDays = (int) ($activityCalendar->active_days ?? 0);
 
         $badgesEarned = is_array($profile->badges_earned) ? $profile->badges_earned : json_decode($profile->badges_earned, true) ?? [];
         $badges = $this->progressBadgesFor(
@@ -445,17 +450,31 @@ class UserController extends Controller
             ->with(['category', 'score', 'feedback'])
             ->when($selectedScenario !== '', fn ($query) => $query->whereIn('id', $matchingScenarioIds))
             ->when($search !== '', function ($query) use ($search, $matchingSearchScenarioIds) {
-                $like = '%'.$search.'%';
+                $like = $this->escapedFeedbackSearchPattern($search);
 
                 $query->where(function ($query) use ($like, $matchingSearchScenarioIds) {
-                    $query->where('target_position', 'like', $like)
-                        ->orWhere('interview_focus', 'like', $like)
-                        ->orWhere('difficulty', 'like', $like)
-                        ->orWhereHas('category', fn ($categoryQuery) => $categoryQuery->where('title', 'like', $like))
+                    $this->whereEscapedFeedbackLike($query, 'target_position', $like);
+                    $this->whereEscapedFeedbackLike($query, 'interview_focus', $like, 'or');
+                    $this->whereEscapedFeedbackLike($query, 'difficulty', $like, 'or');
+
+                    $query->orWhereHas('category', fn ($categoryQuery) => $this->whereEscapedFeedbackLike($categoryQuery, 'title', $like))
                         ->orWhereHas('feedback', function ($feedbackQuery) use ($like) {
-                            $feedbackQuery->where('strengths', 'like', $like)
-                                ->orWhere('weaknesses', 'like', $like)
-                                ->orWhere('improvement_suggestions', 'like', $like);
+                            $feedbackQuery->where(function ($feedbackQuery) use ($like) {
+                                $this->whereEscapedFeedbackLike($feedbackQuery, 'strengths', $like);
+                                $this->whereEscapedFeedbackLike($feedbackQuery, 'weaknesses', $like, 'or');
+                                $this->whereEscapedFeedbackLike($feedbackQuery, 'improvement_suggestions', $like, 'or');
+                            });
+                        })
+                        ->orWhereHas('answers', function ($answerQuery) use ($like) {
+                            $answerQuery
+                                ->whereNull('retry_of_answer_id')
+                                ->where(function ($answerQuery) use ($like) {
+                                    $this->whereEscapedFeedbackLike($answerQuery, 'answer_text', $like);
+                                    $this->whereEscapedFeedbackLike($answerQuery, 'ai_feedback', $like, 'or');
+                                    $this->whereEscapedFeedbackLike($answerQuery, 'better_sample_answer', $like, 'or');
+                                    $this->whereEscapedFeedbackLike($answerQuery, 'recommendation_text', $like, 'or');
+                                    $answerQuery->orWhereHas('question', fn ($questionQuery) => $this->whereEscapedFeedbackLike($questionQuery, 'question_text', $like));
+                                });
                         });
 
                     if ($matchingSearchScenarioIds->isNotEmpty()) {
@@ -750,6 +769,23 @@ class UserController extends Controller
         $clean = trim(preg_replace('/\s+/', ' ', (string) $text) ?? '');
 
         return $clean !== '' ? Str::limit($clean, 145) : $fallback;
+    }
+
+    private function escapedFeedbackSearchPattern(string $search): string
+    {
+        return '%'.strtr($search, [
+            '!' => '!!',
+            '%' => '!%',
+            '_' => '!_',
+        ]).'%';
+    }
+
+    private function whereEscapedFeedbackLike($query, string $column, string $pattern, string $boolean = 'and'): void
+    {
+        $wrappedColumn = $query->getQuery()->getGrammar()->wrap($column);
+        $method = $boolean === 'or' ? 'orWhereRaw' : 'whereRaw';
+
+        $query->{$method}("{$wrappedColumn} LIKE ? ESCAPE '!'", [$pattern]);
     }
 
     public function review($id)
@@ -1107,26 +1143,63 @@ class UserController extends Controller
         return $metrics;
     }
 
-    private function skillSummaryFor(?Score $score): object
+    private function skillSummaryFor(?Score $score, ?Feedback $feedback = null): object
     {
         $metrics = $this->scoreBreakdownFor($score);
-        $strengths = [];
-        $weaknesses = [];
+        $metricStrengths = [];
+        $metricWeaknesses = [];
 
         foreach ($metrics as $metric) {
             if ($metric['score'] >= 80) {
-                $strengths[] = $metric['name'];
+                $metricStrengths[] = $metric['name'];
             } else {
-                $weaknesses[] = $metric['name'];
+                $metricWeaknesses[] = $metric['name'];
             }
         }
 
+        $feedbackStrengths = $this->reportFeedbackItems($feedback?->strengths);
+        $feedbackWeaknesses = $this->reportFeedbackItems($feedback?->weaknesses);
+        $suggestions = $this->reportFeedbackItems($feedback?->improvement_suggestions, 3, 150);
+
         return (object) [
-            'has_data' => ! empty($metrics),
+            'has_data' => ! empty($metrics) || ! empty($feedbackStrengths) || ! empty($feedbackWeaknesses) || ! empty($suggestions),
             'metrics' => $metrics,
-            'strengths' => $strengths,
-            'weaknesses' => $weaknesses,
+            'strengths' => ! empty($feedbackStrengths) ? $feedbackStrengths : $metricStrengths,
+            'weaknesses' => ! empty($feedbackWeaknesses) ? $feedbackWeaknesses : $metricWeaknesses,
+            'suggestions' => $suggestions,
         ];
+    }
+
+    private function reportFeedbackItems(?string $text, int $limit = 3, int $characterLimit = 145): array
+    {
+        $clean = trim((string) preg_replace('/\s+/', ' ', (string) $text));
+        if ($clean === '') {
+            return [];
+        }
+
+        $parts = preg_split('/(?:;\s+|(?<=[.!?])\s+)/u', $clean, -1, PREG_SPLIT_NO_EMPTY) ?: [$clean];
+        $items = [];
+        $seen = [];
+
+        foreach ($parts as $part) {
+            $item = trim((string) preg_replace('/^\s*[-*]\s*/', '', trim((string) $part)));
+            if ($item === '') {
+                continue;
+            }
+
+            $key = Str::lower(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $item) ?? $item);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $items[] = Str::limit($item, $characterLimit);
+            if (count($items) >= $limit) {
+                break;
+            }
+        }
+
+        return $items;
     }
 
     private function interviewReportSummaryFor(?InterviewSession $session, ?object $readinessSummary, string $scenario): object
@@ -1920,6 +1993,8 @@ class UserController extends Controller
             return redirect()->route('dashboard')->with('error', 'The AI coach is currently disabled by the administrator.');
         }
 
+        ChatbotSchema::ensure();
+
         $recentConversations = ChatbotConversation::where('user_id', Auth::id())
             ->where('updated_at', '>=', now()->subDays(7))
             ->orderBy('updated_at', 'desc')
@@ -1941,6 +2016,8 @@ class UserController extends Controller
                 'error' => 'coach_disabled',
             ], 403);
         }
+
+        ChatbotSchema::ensure();
 
         if (is_string($request->input('history'))) {
             $decodedHistory = json_decode((string) $request->input('history'), true);
@@ -1966,7 +2043,7 @@ class UserController extends Controller
             $message = 'Please review the attached interview file(s).';
         }
 
-        $history = $validated['history'] ?? [];
+        $history = $this->normalizedCoachHistory($validated['history'] ?? []);
         $conversation_id = $validated['conversation_id'] ?? null;
         $isNewConversation = false;
         $visibleMessage = $this->coachVisibleUserMessage($message, $attachmentContexts);
@@ -2007,6 +2084,9 @@ class UserController extends Controller
             $systemPrompt .= ' '.$coachLanguages->promptInstruction($responseLanguage);
 
             $response = AIService::chatMessage($aiMessage, $history, $provider, $systemPrompt);
+            if ($this->coachReplyNeedsLocalFallback($response)) {
+                $response = $this->coachLocalFallbackResponse($message, $attachmentContexts, $responseLanguage);
+            }
         }
 
         ChatbotMessage::create([
@@ -2032,6 +2112,41 @@ class UserController extends Controller
             'conversation_id' => $conversation_id,
             'title' => $conversation->title,
         ]);
+    }
+
+    private function normalizedCoachHistory(array $history): array
+    {
+        $normalized = [];
+
+        foreach (array_slice($history, -12) as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $role = Str::lower(trim((string) ($item['role'] ?? '')));
+            $content = trim((string) ($item['content'] ?? ''));
+
+            if ($content === '') {
+                continue;
+            }
+
+            $role = match ($role) {
+                'assistant', 'ai', 'coach' => 'ai',
+                'user' => 'user',
+                default => null,
+            };
+
+            if ($role === null) {
+                continue;
+            }
+
+            $normalized[] = [
+                'role' => $role,
+                'content' => Str::limit($content, 2000, ''),
+            ];
+        }
+
+        return $normalized;
     }
 
     private function coachRequestIsInterviewRelated(string $message, array $attachmentContexts, array $history = []): bool
@@ -2293,6 +2408,35 @@ class UserController extends Controller
             CoachLanguageService::CEBUANO => 'Para magpabiling tukma ug mapuslanon, motabang lang ko sa Philippines interview preparation, resume o CV, job applications, skill certificates, ug career coaching. Ipadala ang interview question, tubag, role, resume, certificate, o job description nga gusto nimong praktisan.',
             CoachLanguageService::TAGLISH => 'Para accurate at useful, interview-related lang ang kaya kong tulungan: Philippines interview prep, resume/CV, job applications, skill certificates, and career coaching. Send an interview question, answer, target role, resume, certificate, or job description para ma-coach kita properly.',
             default => 'I can only help with Philippines interview preparation, resumes/CVs, job applications, skill certificates, and career coaching. Send an interview question, answer, target role, resume, certificate, or job description and I will help you from there.',
+        };
+    }
+
+    private function coachReplyNeedsLocalFallback(string $response): bool
+    {
+        $normalized = Str::lower(trim($response));
+
+        return $normalized === ''
+            || str_contains($normalized, 'having trouble connecting to my brain')
+            || str_contains($normalized, 'encountered an error processing your request');
+    }
+
+    private function coachLocalFallbackResponse(string $message, array $attachmentContexts, string $language): string
+    {
+        $hasAttachments = ! empty($attachmentContexts);
+
+        return match ($language) {
+            CoachLanguageService::FILIPINO => $hasAttachments
+                ? "Hindi ko makuha ngayon ang live AI response, pero puwede pa rin tayong magpatuloy.\n\nSusunod na gawin:\n1. Sabihin ang target role at exact interview question.\n2. I-highlight kung aling bahagi ng uploaded file ang gusto mong gamitin bilang ebidensya.\n3. Gumawa ng sagot sa format: direktang sagot, totoong halimbawa, action mo, result o lesson, at link pabalik sa role.\n\nIwasan munang magdagdag ng claim, employer, certificate, date, o metric na hindi malinaw sa file o sa sarili mong message."
+                : "Hindi ko makuha ngayon ang live AI response, pero puwede pa rin tayong magpatuloy.\n\nGamitin muna ito:\n1. I-paste ang exact interview question.\n2. Isulat ang draft answer mo.\n3. Idagdag ang isang totoong school, OJT, project, o work example.\n4. Tapusin sa result o lesson learned.\n\nKapag bumalik ang AI provider, irerewrite ko ito para maging mas diretso, truthful, at role-focused.",
+            CoachLanguageService::CEBUANO => $hasAttachments
+                ? "Dili nako makuha karon ang live AI response, pero makapadayon gihapon ta.\n\nSunod buhata:\n1. Isulti ang target role ug exact interview question.\n2. Itudlo kung unsang bahin sa uploaded file ang gamiton nga ebidensya.\n3. Ihan-ay ang tubag: diretso nga tubag, tinuod nga example, imong action, result o lesson, ug link balik sa role.\n\nAyaw una pagdugang og claim, employer, certificate, date, o metric nga dili klaro sa file o sa imong message."
+                : "Dili nako makuha karon ang live AI response, pero makapadayon gihapon ta.\n\nGamita usa kini:\n1. I-paste ang exact interview question.\n2. Isulat ang draft answer nimo.\n3. Idugang ang usa ka tinuod nga school, OJT, project, o work example.\n4. Tapusa sa result o lesson learned.\n\nKung mobalik na ang AI provider, tabangan tika nga mahimong mas diretso, tinood, ug role-focused ang tubag.",
+            CoachLanguageService::TAGLISH => $hasAttachments
+                ? "Hindi ko makuha ngayon ang live AI response, pero we can still keep going.\n\nNext steps:\n1. Send the target role and exact interview question.\n2. Point out which part of the uploaded file you want to use as evidence.\n3. Build the answer as: direct answer, real example, your action, result or lesson, then connect back to the role.\n\nFor now, avoid adding claims, employers, certificates, dates, or metrics that are not clear from the file or your own message."
+                : "Hindi ko makuha ngayon ang live AI response, pero we can still keep going.\n\nUse this structure:\n1. Paste the exact interview question.\n2. Write your draft answer.\n3. Add one real school, OJT, project, or work example.\n4. End with a result or lesson learned.\n\nWhen the AI provider is available again, I can help rewrite it so it sounds direct, truthful, and role-focused.",
+            default => $hasAttachments
+                ? "I cannot reach the live AI provider right now, but we can still keep your interview prep moving.\n\nNext steps:\n1. Send the target role and exact interview question.\n2. Point out which part of the uploaded file you want to use as evidence.\n3. Build the answer as: direct answer, real example, your action, result or lesson, then connect back to the role.\n\nFor now, avoid adding claims, employers, certificates, dates, or metrics that are not clear from the file or your own message."
+                : "I cannot reach the live AI provider right now, but we can still keep your interview prep moving.\n\nUse this structure:\n1. Paste the exact interview question.\n2. Write your draft answer.\n3. Add one real school, OJT, project, or work example.\n4. End with a result or lesson learned.\n\nWhen the AI provider is available again, I can help rewrite it so it sounds direct, truthful, and role-focused.",
         };
     }
 
@@ -3124,6 +3268,8 @@ class UserController extends Controller
 
     public function loadCoachConversation($id)
     {
+        ChatbotSchema::ensure();
+
         $conversation = ChatbotConversation::where('user_id', Auth::id())
             ->with('messages')
             ->findOrFail($id);
@@ -3133,6 +3279,8 @@ class UserController extends Controller
 
     public function deleteCoachConversation($id)
     {
+        ChatbotSchema::ensure();
+
         $user = Auth::user();
         $conversation = ChatbotConversation::where('user_id', Auth::id())->findOrFail($id);
         $title = $conversation->title;
@@ -3152,6 +3300,8 @@ class UserController extends Controller
 
     public function clearCoachConversations()
     {
+        ChatbotSchema::ensure();
+
         $user = Auth::user();
         $conversationIds = ChatbotConversation::where('user_id', $user->id)->pluck('id');
         $conversationCount = $conversationIds->count();
@@ -3175,6 +3325,8 @@ class UserController extends Controller
 
     public function learning(Request $request)
     {
+        GameSchema::ensure();
+
         $user = Auth::user();
         $profile = $user->profile()->firstOrCreate([]);
         $this->refreshChallengeEnergyIfNeeded($profile);
@@ -3184,26 +3336,33 @@ class UserController extends Controller
             ->orderBy('sort_order')
             ->orderBy('title')
             ->get();
+        $availableCategoryIds = $categories->pluck('id')->map(fn ($id) => (int) $id);
+        $requestedCategoryId = $request->has('category_id')
+            ? (int) $request->query('category_id')
+            : null;
 
-        if (! $request->has('category_id') && $categories->count() > 0) {
+        if ($requestedCategoryId === null && $categories->count() > 0) {
             return redirect()->route('user.learning', ['category_id' => $categories->first()->id]);
         }
 
-        if ($request->has('category_id') && ! $categories->contains('id', (int) $request->category_id)) {
+        if ($requestedCategoryId !== null && ! $availableCategoryIds->contains($requestedCategoryId)) {
             return redirect()
                 ->route('user.learning')
                 ->with('error', 'That learning category is no longer available.');
         }
 
-        $query = GameLevel::where('is_hidden', false)->orderBy('level_number', 'asc');
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
+        $query = GameLevel::where('is_hidden', false)
+            ->whereIn('category_id', $availableCategoryIds->all())
+            ->orderBy('level_number', 'asc')
+            ->orderBy('id', 'asc');
+        if ($requestedCategoryId !== null) {
+            $query->where('category_id', $requestedCategoryId);
         }
         $gameLevels = $query->get();
 
         $gameProgress = GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
-        $selectedCategory = $request->has('category_id')
-            ? $categories->firstWhere('id', (int) $request->category_id)
+        $selectedCategory = $requestedCategoryId !== null
+            ? $categories->firstWhere('id', $requestedCategoryId)
             : null;
 
         return $this->mobileView('user.learning', compact('profile', 'gameLevels', 'gameProgress', 'categories', 'selectedCategory'));
@@ -3232,6 +3391,8 @@ class UserController extends Controller
 
     public function missions()
     {
+        VoiceSessionSchema::ensure();
+
         $missions = $this->fallbackMissions();
 
         $recentVoiceSessions = VoiceSession::where('user_id', Auth::id())
@@ -3256,6 +3417,13 @@ class UserController extends Controller
         ]);
 
         $goal = trim($validated['goal']);
+        if (! $this->missionGoalIsWithinScope($goal)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mission Mode can generate tasks for interview, school admission, career, or Philippine workplace communication practice.',
+            ], 422);
+        }
+
         $prompt = <<<PROMPT
 Generate exactly 4 customized real-life interview practice missions for a SpeakReady AI user in the Philippines.
 
@@ -3301,6 +3469,7 @@ PROMPT;
             ->map(fn ($mission, $index) => $this->normalizeMission($mission, $index, $goal))
             ->filter()
             ->values();
+        $missions = $this->uniqueMissions($missions);
 
         if ($missions->isEmpty()) {
             $missions = $this->fallbackMissions($goal);
@@ -3313,6 +3482,7 @@ PROMPT;
 
             $missions = $missions->concat($supplements)->take(4)->values();
         }
+        $missions = $this->uniqueMissions($missions);
 
         return response()->json([
             'success' => true,
@@ -3478,38 +3648,144 @@ PROMPT;
 
         $icons = ['fa-handshake-angle', 'fa-headset', 'fa-bullhorn', 'fa-seedling', 'fa-briefcase', 'fa-comments'];
         $colors = ['#2563eb', '#0f766e', '#b45309', '#16a34a', '#7c3aed', '#0891b2'];
-        $difficulty = in_array($mission['difficulty'] ?? '', ['Starter', 'Focused', 'Challenge'], true) ? $mission['difficulty'] : 'Focused';
-        $intent = in_array($mission['intent'] ?? '', ['Confident', 'Friendly', 'Calm', 'Persuasive', 'Accountable'], true) ? $mission['intent'] : 'Confident';
+        $difficulty = $this->missionChoice($mission['difficulty'] ?? '', ['Starter', 'Focused', 'Challenge'], 'Focused');
+        $intent = $this->missionChoice($mission['intent'] ?? '', ['Confident', 'Friendly', 'Calm', 'Persuasive', 'Accountable'], 'Confident');
         $criteria = array_values(array_filter(array_map(
-            fn ($item) => trim((string) $item),
+            fn ($item) => $this->missionString($item),
             (array) ($mission['success_criteria'] ?? [])
         )));
         $criteria = array_values(array_filter(
             $criteria,
             fn ($item) => str_word_count($item) >= 4 && ! preg_match('/\b(good|better|nice|great|improve)\b/i', $item)
         ));
-        $prompt = trim((string) ($mission['prompt'] ?? $goal));
+        $prompt = $this->missionString($mission['prompt'] ?? '', $goal);
         if (str_word_count($prompt) < 8) {
             $prompt = "Answer this interview practice goal with one specific example, your action, and the result: {$goal}.";
         }
 
+        $id = $this->missionString($mission['id'] ?? ($mission['title'] ?? 'custom-mission-'.$index), 'custom-mission-'.$index);
+        $title = $this->missionString($mission['title'] ?? '', 'Custom Mission');
+        $duration = is_numeric($mission['duration'] ?? null) ? (int) $mission['duration'] : 60;
+        $icon = $this->missionString($mission['icon'] ?? '');
+        $color = $this->missionString($mission['color'] ?? '');
+        $coachTip = $this->missionString(
+            $mission['coach_tip'] ?? '',
+            'Use this in interview sessions by answering directly, proving one point with evidence, and closing with the result.'
+        );
+
         return (object) [
-            'id' => Str::slug((string) ($mission['id'] ?? $mission['title'] ?? 'custom-mission-'.$index)) ?: 'custom-mission-'.$index,
-            'title' => Str::limit(trim((string) ($mission['title'] ?? 'Custom Mission')), 42, ''),
-            'category' => Str::limit(trim((string) ($mission['category'] ?? 'Custom Practice')), 42, ''),
+            'id' => Str::limit(Str::slug($id) ?: 'custom-mission-'.$index, 64, ''),
+            'title' => Str::limit($title, 42, ''),
+            'category' => $this->normalizeMissionCategory($mission['category'] ?? null, $goal),
             'difficulty' => $difficulty,
-            'duration' => max(45, min(120, (int) ($mission['duration'] ?? 60))),
+            'duration' => max(45, min(120, $duration)),
             'intent' => $intent,
-            'icon' => preg_match('/^fa-[a-z0-9-]+$/', (string) ($mission['icon'] ?? '')) ? $mission['icon'] : $icons[$index % count($icons)],
-            'color' => preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($mission['color'] ?? '')) ? $mission['color'] : $colors[$index % count($colors)],
+            'icon' => preg_match('/^fa-[a-z0-9-]+$/', $icon) ? $icon : $icons[$index % count($icons)],
+            'color' => preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? $color : $colors[$index % count($colors)],
             'prompt' => Str::limit($prompt, 260, ''),
             'success_criteria' => array_slice($criteria ?: [
                 'Answers the requested goal in the first sentence',
                 'Includes one specific example and your personal action',
                 'Ends with a result, lesson, or next interview-ready action',
             ], 0, 3),
-            'coach_tip' => Str::limit(trim((string) ($mission['coach_tip'] ?? 'Use this in interview sessions by answering directly, proving one point with evidence, and closing with the result.')), 180, ''),
+            'coach_tip' => Str::limit($coachTip, 180, ''),
         ];
+    }
+
+    private function missionGoalIsWithinScope(string $goal): bool
+    {
+        $goal = Str::lower($goal);
+
+        return Str::contains($goal, [
+            'interview', 'job', 'role', 'recruiter', 'hiring', 'human resources', 'resume', 'application',
+            'career', 'work', 'workplace', 'company', 'manager', 'supervisor', 'teammate',
+            'team', 'customer', 'client', 'bpo', 'call center', 'support', 'salary', 'schedule',
+            'school', 'college', 'university', 'admission', 'scholarship', 'program', 'panel',
+            'ojt', 'internship', 'fresh graduate', 'technical', 'debug', 'network',
+            'communication', 'speaking', 'presentation', 'self intro', 'tell me about yourself',
+            'strength', 'weakness', 'mistake', 'conflict', 'leadership', 'project', 'evidence',
+            'answer', 'taglish', 'english',
+        ]);
+    }
+
+    private function missionChoice($value, array $choices, string $fallback): string
+    {
+        $normalized = Str::lower($this->missionString($value));
+
+        foreach ($choices as $choice) {
+            if ($normalized === Str::lower($choice)) {
+                return $choice;
+            }
+        }
+
+        return $fallback;
+    }
+
+    private function normalizeMissionCategory($category, string $goal): string
+    {
+        $category = $this->missionString($category);
+        $haystack = Str::lower($goal.' '.$category);
+
+        if (Str::contains($haystack, ['school', 'college', 'university', 'admission', 'scholarship', 'program'])) {
+            return 'School Admission Interviews';
+        }
+
+        if (Str::contains($haystack, ['workplace', 'supervisor', 'teammate', 'manager', 'customer', 'client', 'team communication'])) {
+            return 'Philippine Workplace Communication';
+        }
+
+        if (Str::contains($haystack, ['job', 'role', 'recruiter', 'hiring', 'human resources', 'resume', 'career', 'bpo', 'call center', 'support', 'technical', 'debug', 'network'])) {
+            return 'Job Interviews';
+        }
+
+        $allowed = [
+            'Job Interviews',
+            'School Admission Interviews',
+            'Career Communication',
+            'Philippine Workplace Communication',
+            'Custom Practice',
+            'Personal Goal',
+        ];
+
+        return in_array($category, $allowed, true)
+            ? $category
+            : 'Career Communication';
+    }
+
+    private function uniqueMissions($missions)
+    {
+        $seen = [];
+
+        return collect($missions)
+            ->map(function ($mission, int $index) use (&$seen) {
+                $base = trim((string) ($mission->id ?? ''));
+                if ($base === '') {
+                    $base = 'mission-'.($index + 1);
+                }
+
+                $base = Str::limit(Str::slug($base) ?: 'mission-'.($index + 1), 64, '');
+                $id = $base;
+                $suffix = 2;
+                while (isset($seen[$id])) {
+                    $suffixText = '-'.$suffix++;
+                    $id = Str::limit($base, max(1, 64 - strlen($suffixText)), '').$suffixText;
+                }
+
+                $seen[$id] = true;
+                $mission->id = $id;
+
+                return $mission;
+            })
+            ->values();
+    }
+
+    private function missionString($value, string $fallback = ''): string
+    {
+        if (is_string($value) || is_numeric($value) || is_bool($value)) {
+            return trim((string) $value);
+        }
+
+        return $fallback;
     }
 
     public function voiceRehearsal()
@@ -3517,6 +3793,8 @@ PROMPT;
         if (! Setting::enabled('vr_recording')) {
             return redirect()->route('dashboard')->with('error', 'Voice rehearsal is currently disabled by the administrator.');
         }
+
+        VoiceSessionSchema::ensure();
 
         $history = VoiceSession::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
@@ -3536,6 +3814,8 @@ PROMPT;
             return response()->json(['error' => 'Voice rehearsal is currently disabled by the administrator.'], 403);
         }
 
+        VoiceSessionSchema::ensure();
+
         $validated = $request->validate([
             'category' => 'required|string|max:120',
         ]);
@@ -3544,30 +3824,43 @@ PROMPT;
         $provider = AIService::defaultProviderKey();
         $targetLanguage = Setting::languageConfig(Setting::preferredLanguageFor(Auth::user()));
 
-        $questions = AIService::generateQuestions(
-            1,
-            $this->voicePromptPositionFor($category),
-            'Medium',
-            $this->voicePromptFocusFor($category),
-            $provider,
-            null,
-            null,
-            null,
-            $this->voicePromptQuestionTypesFor($category),
-            'standard',
-            'neutral',
-            null,
-            $targetLanguage,
-            'standard',
-            false
-        );
+        $prompt = '';
+        $source = 'fallback';
 
-        $prompt = trim((string) ($questions[0] ?? ''));
-        $source = 'ai';
+        if (AIService::providerIsConfigured($provider)) {
+            try {
+                $questions = AIService::generateQuestions(
+                    1,
+                    $this->voicePromptPositionFor($category),
+                    'Medium',
+                    $this->voicePromptFocusFor($category),
+                    $provider,
+                    null,
+                    null,
+                    null,
+                    $this->voicePromptQuestionTypesFor($category),
+                    'standard',
+                    'neutral',
+                    null,
+                    $targetLanguage,
+                    'standard',
+                    false
+                );
+
+                $prompt = trim((string) ($questions[0] ?? ''));
+                $source = $prompt !== '' ? 'ai' : 'fallback';
+            } catch (\Throwable $error) {
+                Log::warning('Voice prompt generation failed; using fallback.', [
+                    'user_id' => Auth::id(),
+                    'provider' => $provider,
+                    'error_type' => $error::class,
+                    'message' => Str::limit($error->getMessage(), 300),
+                ]);
+            }
+        }
 
         if ($prompt === '') {
             $prompt = $this->fallbackVoicePrompt($category);
-            $source = 'fallback';
         }
 
         return response()->json([
@@ -3582,6 +3875,8 @@ PROMPT;
         if (! Setting::enabled('vr_recording')) {
             return response()->json(['error' => 'Voice rehearsal is currently disabled by the administrator.'], 403);
         }
+
+        VoiceSessionSchema::ensure();
 
         $validated = $request->validate([
             'prompt' => 'required|string|max:5000',
@@ -3690,6 +3985,8 @@ PROMPT;
             return response()->json(['error' => 'Voice rehearsal is currently disabled by the administrator.'], 403);
         }
 
+        VoiceSessionSchema::ensure();
+
         $validated = $request->validate([
             'category' => 'nullable|string|max:120',
             'prompt' => 'nullable|string|max:5000',
@@ -3762,6 +4059,12 @@ PROMPT;
 
     public function clearVoiceSessions(Request $request)
     {
+        if (! Setting::enabled('vr_recording')) {
+            return redirect()->route('dashboard')->with('error', 'Voice rehearsal is currently disabled by the administrator.');
+        }
+
+        VoiceSessionSchema::ensure();
+
         $user = Auth::user();
         $sessionCount = VoiceSession::where('user_id', $user->id)->count();
 
@@ -3819,7 +4122,7 @@ PROMPT;
         $readinessSummary = $this->readinessSummaryFor($latestSession, $previousSession);
         $latestPerformanceMetrics = $this->scoreBreakdownFor($latestSession?->score);
         $comparisonRows = $this->scoreComparisonRowsFor($firstSession, $latestSession);
-        $feedbackSummary = $this->skillSummaryFor($latestSession?->score);
+        $feedbackSummary = $this->skillSummaryFor($latestSession?->score, $latestSession?->feedback);
         $latestScenarioLabel = $this->practiceScenarioLabel($latestSession);
         $reportSummary = $this->interviewReportSummaryFor($latestSession, $readinessSummary, $latestScenarioLabel);
         $questionReviews = $this->interviewReportQuestionReviewsFor($latestSession);
@@ -3897,6 +4200,8 @@ PROMPT;
 
     public function notifications()
     {
+        AccountNotificationSchema::ensure();
+
         $notifications = Auth::user()
             ->notifications()
             ->paginate(15, ['*'], 'notifications_page')
@@ -3914,6 +4219,8 @@ PROMPT;
 
     public function fetchNotifications()
     {
+        AccountNotificationSchema::ensure();
+
         $user = Auth::user();
         $unreadCount = $user->unreadNotifications->count();
         $notifications = $user->notifications()->take(5)->get();
@@ -3926,6 +4233,8 @@ PROMPT;
 
     public function markNotificationAsRead($id)
     {
+        AccountNotificationSchema::ensure();
+
         $notification = Auth::user()->notifications()->where('id', $id)->first();
         if ($notification) {
             $notification->markAsRead();
@@ -3938,6 +4247,8 @@ PROMPT;
 
     public function markAllNotificationsAsRead()
     {
+        AccountNotificationSchema::ensure();
+
         Auth::user()->unreadNotifications->markAsRead();
 
         return response()->json(['success' => true]);
@@ -3945,6 +4256,8 @@ PROMPT;
 
     public function clearAllNotifications()
     {
+        AccountNotificationSchema::ensure();
+
         Auth::user()->notifications()->delete();
 
         return response()->json(['success' => true]);
@@ -3952,6 +4265,8 @@ PROMPT;
 
     public function deleteNotification($id)
     {
+        AccountNotificationSchema::ensure();
+
         $notification = Auth::user()->notifications()->where('id', $id)->first();
         if ($notification) {
             $notification->delete();
@@ -3964,6 +4279,8 @@ PROMPT;
 
     public function clearAllActivities()
     {
+        AccountNotificationSchema::ensure();
+
         ActivityLog::where('user_id', Auth::id())->delete();
 
         return response()->json(['success' => true]);
@@ -3971,6 +4288,8 @@ PROMPT;
 
     public function deleteActivity($id)
     {
+        AccountNotificationSchema::ensure();
+
         $activity = ActivityLog::where('user_id', Auth::id())->where('id', $id)->first();
         if ($activity) {
             $activity->delete();
@@ -3983,6 +4302,8 @@ PROMPT;
 
     public function account()
     {
+        AccountNotificationSchema::ensure();
+
         return $this->mobileView('user.account');
     }
 
@@ -4073,6 +4394,8 @@ PROMPT;
 
     public function updateProfile(Request $request)
     {
+        AccountNotificationSchema::ensure();
+
         $user = Auth::user();
 
         $request->validate([
@@ -4114,6 +4437,8 @@ PROMPT;
 
     public function updatePassword(Request $request)
     {
+        AccountNotificationSchema::ensure();
+
         $request->validate([
             'current_password' => 'required|current_password',
             'new_password' => 'required|string|min:8',
@@ -4143,6 +4468,8 @@ PROMPT;
 
     public function deleteAccount(Request $request)
     {
+        AccountNotificationSchema::ensure();
+
         $user = Auth::user();
         ActivityLogger::log(
             $user,
@@ -4405,17 +4732,27 @@ PROMPT;
         $userId = (int) Auth::id();
 
         CareerPlanningSchema::ensure();
+        ScoreSchema::ensure();
         VoiceSessionSchema::ensure();
 
         $profile = Profile::firstOrCreate(['user_id' => $userId]);
-        $eligibleScores = Score::with('session.category')
-            ->whereHas('session', fn ($query) => $query->where('user_id', $userId))
+        $eligibleScores = Score::query()
+            ->select('scores.*')
+            ->join('interview_sessions as mastery_sessions', 'mastery_sessions.id', '=', 'scores.interview_session_id')
+            ->with('session.category')
+            ->where('mastery_sessions.user_id', $userId)
+            ->where('mastery_sessions.status', 'completed')
+            ->whereNotNull('scores.overall_readiness_score')
             ->readinessEligible()
-            ->latest()
+            ->orderByDesc('mastery_sessions.created_at')
+            ->orderByDesc('mastery_sessions.id')
             ->get();
-        $personalBest = (int) ($eligibleScores->max('overall_readiness_score') ?? 0);
-        $latest = (int) ($eligibleScores->first()?->overall_readiness_score ?? 0);
-        $baseline = (int) ($eligibleScores->last()?->overall_readiness_score ?? 0);
+        $personalBest = $eligibleScores
+            ->map(fn ($score) => $this->masteryScoreValue($score, 'overall_readiness_score'))
+            ->filter(fn ($score) => $score !== null)
+            ->max();
+        $latest = $this->masteryScoreValue($eligibleScores->first(), 'overall_readiness_score');
+        $baseline = $this->masteryScoreValue($eligibleScores->last(), 'overall_readiness_score');
 
         $voiceSessions = VoiceSession::where('user_id', $userId)
             ->latest()
@@ -4573,6 +4910,24 @@ PROMPT;
 
         foreach ($definitions as $index => $definition) {
             if ($existing->has($definition['key'])) {
+                $item = $existing->get($definition['key']);
+                $metadata = array_merge($item->metadata ?? [], [
+                    'key' => $definition['key'],
+                    'icon' => $definition['icon'],
+                    'order' => $index,
+                    'source' => 'personal_mastery',
+                ]);
+
+                $item->fill([
+                    'day_number' => $index + 1,
+                    'title' => $definition['title'],
+                    'task' => $definition['task'],
+                    'metadata' => $metadata,
+                ]);
+                if ($item->isDirty()) {
+                    $item->save();
+                }
+
                 continue;
             }
 
@@ -4702,14 +5057,14 @@ PROMPT;
                     continue;
                 }
 
-                $value = $latestScore->{$column};
-                if (! is_numeric($value)) {
+                $value = $this->masteryScoreValue($latestScore, $column);
+                if ($value === null) {
                     continue;
                 }
 
                 $recommendations[] = array_merge($config, [
-                    'score' => (int) $value,
-                    'reason' => $config['label'].' is currently '.(int) $value.'%.',
+                    'score' => $value,
+                    'reason' => $config['label'].' is currently '.$value.'%.',
                 ]);
             }
         }
@@ -4805,8 +5160,11 @@ PROMPT;
                 return Str::contains($haystack, $track['needles']);
             });
 
-            $best = (int) ($matches->max('overall_readiness_score') ?? 0);
-            $latest = (int) ($matches->first()?->overall_readiness_score ?? 0);
+            $trackScores = $matches
+                ->map(fn ($score) => $this->masteryScoreValue($score, 'overall_readiness_score'))
+                ->filter(fn ($score) => $score !== null);
+            $best = (int) ($trackScores->max() ?? 0);
+            $latest = (int) ($this->masteryScoreValue($matches->first(), 'overall_readiness_score') ?? 0);
             $attempts = $matches->count();
 
             return array_merge($track, [
@@ -4845,7 +5203,8 @@ PROMPT;
             ];
         }
 
-        if ((int) $latestScore->overall_readiness_score < 72 && ! empty($weaknessDrills)) {
+        $latestOverall = $this->masteryScoreValue($latestScore, 'overall_readiness_score');
+        if ($latestOverall !== null && $latestOverall < 72 && ! empty($weaknessDrills)) {
             $drill = $weaknessDrills[0];
 
             return [
@@ -4910,9 +5269,11 @@ PROMPT;
 
         return [
             'label' => $weekStart->format('M j').' - '.$weekEnd->format('M j'),
-            'assessments' => Score::whereHas('session', fn ($query) => $query->where('user_id', $userId))
+            'assessments' => Score::whereHas('session', fn ($query) => $query
+                    ->where('user_id', $userId)
+                    ->where('status', 'completed')
+                    ->where('created_at', '>=', $weekStart))
                 ->readinessEligible()
-                ->where('created_at', '>=', $weekStart)
                 ->count(),
             'voice_drills' => VoiceSession::where('user_id', $userId)
                 ->where('created_at', '>=', $weekStart)
@@ -4937,7 +5298,16 @@ PROMPT;
     private function masteryBadges(Profile $profile, $eligibleScores, ?Score $latestScore, ?Score $baselineScore, int $voiceSessionCount, int $storyCount, array $careerTracks): array
     {
         $trackByKey = collect($careerTracks)->keyBy('key');
-        $previousBest = (int) ($eligibleScores->skip(1)->max('overall_readiness_score') ?? 0);
+        $previousBest = (int) ($eligibleScores
+            ->skip(1)
+            ->map(fn ($score) => $this->masteryScoreValue($score, 'overall_readiness_score'))
+            ->filter(fn ($score) => $score !== null)
+            ->max() ?? 0);
+        $latestOverall = $this->masteryScoreValue($latestScore, 'overall_readiness_score');
+        $latestClarity = $this->masteryScoreValue($latestScore, 'clarity_score');
+        $baselineClarity = $this->masteryScoreValue($baselineScore, 'clarity_score');
+        $latestConfidence = $this->masteryScoreValue($latestScore, 'confidence_score');
+        $baselineConfidence = $this->masteryScoreValue($baselineScore, 'confidence_score');
 
         return [
             [
@@ -4948,24 +5318,22 @@ PROMPT;
             [
                 'label' => 'New Personal Best',
                 'icon' => 'fa-trophy',
-                'earned' => $latestScore && (int) $latestScore->overall_readiness_score > 0
-                    && (int) $latestScore->overall_readiness_score > $previousBest,
+                'earned' => $latestOverall !== null && $latestOverall > 0
+                    && $latestOverall > $previousBest,
             ],
             [
                 'label' => 'Clarity Improved',
                 'icon' => 'fa-volume-high',
-                'earned' => $latestScore && $baselineScore
-                    && is_numeric($latestScore->clarity_score)
-                    && is_numeric($baselineScore->clarity_score)
-                    && ((int) $latestScore->clarity_score - (int) $baselineScore->clarity_score) >= 5,
+                'earned' => $latestClarity !== null
+                    && $baselineClarity !== null
+                    && ($latestClarity - $baselineClarity) >= 5,
             ],
             [
                 'label' => 'Confidence Up',
                 'icon' => 'fa-bolt',
-                'earned' => $latestScore && $baselineScore
-                    && is_numeric($latestScore->confidence_score)
-                    && is_numeric($baselineScore->confidence_score)
-                    && ((int) $latestScore->confidence_score - (int) $baselineScore->confidence_score) >= 5,
+                'earned' => $latestConfidence !== null
+                    && $baselineConfidence !== null
+                    && ($latestConfidence - $baselineConfidence) >= 5,
             ],
             [
                 'label' => 'Sipag Streak',
@@ -5023,29 +5391,66 @@ PROMPT;
         return $track !== '' ? Str::limit($track, 80, '') : 'general';
     }
 
+    private function masteryScoreValue(?Score $score, string $field): ?int
+    {
+        if (! $score || ! Score::hasColumn($field)) {
+            return null;
+        }
+
+        $value = $score->{$field} ?? null;
+        if (! is_numeric($value)) {
+            return null;
+        }
+
+        $value = (int) round((float) $value);
+        if ($value === 0
+            && (int) ($score->score_version ?? 1) < 2
+            && in_array($field, ['delivery_stability_score', 'job_evidence_match_score', 'star_method_score'], true)) {
+            return null;
+        }
+
+        return $this->clampInt($value, 0, 100);
+    }
+
     public function modules(Request $request)
     {
         if (! Setting::enabled('ll_modules')) {
             return redirect()->route('dashboard')->with('error', 'Learning modules are currently disabled by the administrator.');
         }
 
+        LearningModuleSchema::ensure();
+        ScoreSchema::ensure();
+
+        $selectedCategory = (string) Str::of((string) $request->query('category', ''))
+            ->squish()
+            ->limit(120, '');
+        $search = (string) Str::of((string) $request->query('search', ''))
+            ->squish()
+            ->limit(120, '');
+
         $categories = LearningModule::where('status', 'published')
             ->select('category')
             ->distinct()
             ->whereNotNull('category')
             ->where('category', '!=', '')
+            ->orderBy('category')
             ->pluck('category');
 
         $query = LearningModule::where('status', 'published');
 
-        if ($request->has('category') && $request->category != '') {
-            $query->where('category', $request->category);
+        if ($selectedCategory !== '') {
+            $query->where('category', $selectedCategory);
         }
 
-        if ($request->has('search') && $request->search != '') {
-            $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%'.$request->search.'%')
-                    ->orWhere('description', 'like', '%'.$request->search.'%');
+        if ($search !== '') {
+            $searchPattern = $this->escapedModuleSearchPattern($search);
+            $query->where(function ($q) use ($searchPattern) {
+                $this->whereEscapedModuleLike($q, 'title', $searchPattern);
+                $this->whereEscapedModuleLike($q, 'description', $searchPattern, 'or');
+                $this->whereEscapedModuleLike($q, 'category', $searchPattern, 'or');
+                $this->whereEscapedModuleLike($q, 'difficulty', $searchPattern, 'or');
+                $this->whereEscapedModuleLike($q, 'type', $searchPattern, 'or');
+                $this->whereEscapedModuleLike($q, 'career_path', $searchPattern, 'or');
             });
         }
 
@@ -5056,6 +5461,8 @@ PROMPT;
         return $this->mobileView('user.modules.index', compact(
             'modules',
             'categories',
+            'selectedCategory',
+            'search',
             'moduleRecommendations',
             'learningPaths'
         ));
@@ -5064,8 +5471,11 @@ PROMPT;
     public function moduleShow($id)
     {
         if (! Setting::enabled('ll_modules')) {
-            abort(404);
+            return redirect()->route('dashboard')->with('error', 'Learning modules are currently disabled by the administrator.');
         }
+
+        LearningModuleSchema::ensure();
+        ScoreSchema::ensure();
 
         $module = LearningModule::with(['chapters', 'resources', 'quizzes.questions', 'activities'])->where('status', 'published')->findOrFail($id);
 
@@ -5091,8 +5501,10 @@ PROMPT;
     public function updateModuleProgress(Request $request, $id)
     {
         if (! Setting::enabled('ll_modules')) {
-            abort(404);
+            return redirect()->route('dashboard')->with('error', 'Learning modules are currently disabled by the administrator.');
         }
+
+        LearningModuleSchema::ensure();
 
         $module = LearningModule::where('status', 'published')->findOrFail($id);
 
@@ -5102,15 +5514,15 @@ PROMPT;
             'learning_hours' => 'nullable|numeric|min:0|max:1000',
         ]);
 
-        $progressPercentage = (int) $validated['progress_percentage'];
-        $status = $progressPercentage >= 100
-            ? 'completed'
-            : ($progressPercentage > 0 ? 'in_progress' : 'enrolled');
-
         $progress = LearningProgress::firstOrNew([
             'user_id' => Auth::id(),
             'learning_module_id' => $module->id,
         ]);
+        $previousPercentage = max(0, min(100, (int) ($progress->progress_percentage ?? 0)));
+        $progressPercentage = max($previousPercentage, (int) $validated['progress_percentage']);
+        $status = $progressPercentage >= 100
+            ? 'completed'
+            : ($progressPercentage > 0 ? 'in_progress' : 'enrolled');
 
         $progress->status = $status;
         $progress->progress_percentage = $progressPercentage;
@@ -5141,5 +5553,26 @@ PROMPT;
             : 'Module progress updated.';
 
         return redirect()->route('user.modules.show', $module->id)->with('success', $message);
+    }
+
+    private function escapedModuleSearchPattern(string $search): string
+    {
+        return '%'.strtr($search, [
+            '!' => '!!',
+            '%' => '!%',
+            '_' => '!_',
+        ]).'%';
+    }
+
+    private function whereEscapedModuleLike($query, string $column, string $pattern, string $boolean = 'and'): void
+    {
+        $columns = ['title', 'description', 'category', 'difficulty', 'type', 'career_path'];
+
+        if (! in_array($column, $columns, true)) {
+            throw new \InvalidArgumentException("Unsupported module search column [{$column}].");
+        }
+
+        $method = $boolean === 'or' ? 'orWhereRaw' : 'whereRaw';
+        $query->{$method}("{$column} LIKE ? ESCAPE '!'", [$pattern]);
     }
 }

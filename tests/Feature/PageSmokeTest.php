@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\ChatbotConversation;
 use App\Models\ChatbotMessage;
@@ -185,6 +186,11 @@ class PageSmokeTest extends TestCase
         ]);
         $user->notify(new \App\Notifications\UserActivityNotification('Route Test', 'Verify notification actions.'));
         $notification = $user->notifications()->firstOrFail();
+        $activity = ActivityLog::create([
+            'user_id' => $user->id,
+            'action' => 'route_smoke_activity',
+            'description' => 'Verify activity history actions.',
+        ]);
         $level = GameLevel::where('category_id', $gameCategory->id)->firstOrFail();
 
         $this->actingAs($user)
@@ -220,6 +226,9 @@ class PageSmokeTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.modules.index'))
             ->assertOk()
+            ->assertSee('id="moduleFiltersForm"', false)
+            ->assertSee('id="moduleSearchInput"', false)
+            ->assertSee('name="search"', false)
             ->assertSee('id="moduleTopicSelect"', false)
             ->assertSee(route('user.modules.show', $module->id), false)
             ->assertSee(route('user.progress'), false);
@@ -228,6 +237,7 @@ class PageSmokeTest extends TestCase
             ->get(route('user.modules.show', $module->id))
             ->assertOk()
             ->assertSee(route('user.modules.progress', $module->id), false)
+            ->assertSee('data-module-progress-form', false)
             ->assertSee('id="chapters-tab"', false)
             ->assertSee(route('interview.setup'), false);
 
@@ -237,6 +247,9 @@ class PageSmokeTest extends TestCase
             ->assertSee(route('user.drills.voice.prompt'), false)
             ->assertSee(route('user.drills.voice.analyze'), false)
             ->assertSee(route('user.drills.voice.save'), false)
+            ->assertSee('function voiceJson', false)
+            ->assertSee("credentials: 'same-origin'", false)
+            ->assertSee("'Accept': 'application/json'", false)
             ->assertSee('onclick="startRec()"', false)
             ->assertSee('onclick="saveSession()"', false);
 
@@ -260,6 +273,9 @@ class PageSmokeTest extends TestCase
             ->assertOk()
             ->assertSee(route('user.skills.unlock'), false)
             ->assertSee('class="btn btn-unlock btn-shine"', false)
+            ->assertSee('const skillJson = async', false)
+            ->assertSee('credentials: "same-origin"', false)
+            ->assertSee('Unlock Failed', false)
             ->assertSee(route('user.learning'), false);
 
         $this->actingAs($user)
@@ -268,7 +284,12 @@ class PageSmokeTest extends TestCase
             ->assertSee(route('user.coach.chat'), false)
             ->assertSee(url('/coach/conversation'), false)
             ->assertSee(route('user.coach.clear'), false)
-            ->assertSee('onclick="sendMsg()"', false);
+            ->assertSee('onclick="sendMsg()"', false)
+            ->assertSee('function coachFetch', false)
+            ->assertSee("credentials: options.credentials || 'same-origin'", false)
+            ->assertSee('async function coachJson', false)
+            ->assertSee('async function confirmCoachAction', false)
+            ->assertSee('showCoachFeedback(\'Could not load conversation. Please try again.\'', false);
 
         $this->actingAs($user)
             ->get(route('user.reports'))
@@ -290,17 +311,27 @@ class PageSmokeTest extends TestCase
             ->assertOk()
             ->assertSee(route('user.notifications.readAll'), false)
             ->assertSee(route('user.notifications.clearAll'), false)
+            ->assertSee(route('user.activities.clearAll'), false)
+            ->assertSee(route('user.activities.delete', $activity), false)
             ->assertSee(url('/notifications'), false)
+            ->assertSee('id="notificationActionStatus"', false)
+            ->assertSee('function notificationJsonRequest', false)
             ->assertSee("markRead('".$notification->id."')", false)
-            ->assertSee("deleteNotification('".$notification->id."')", false);
+            ->assertSee("deleteNotification('".$notification->id."')", false)
+            ->assertSee("deleteActivityLog('".$activity->id."')", false);
 
         $this->actingAs($user)
             ->get(route('user.account'))
             ->assertOk()
+            ->assertSee('id="accountProfileForm"', false)
+            ->assertSee('id="accountPasswordForm"', false)
+            ->assertSee('id="accountDeleteForm"', false)
+            ->assertSee('data-sr-confirm-form', false)
             ->assertSee(route('user.account.profile'), false)
             ->assertSee(route('user.account.password'), false)
             ->assertSee(route('user.account.delete'), false)
-            ->assertSee('onclick="applyProfileCrop()"', false);
+            ->assertSee('onclick="applyProfileCrop()"', false)
+            ->assertDontSee('onsubmit="return confirm', false);
     }
 
     public function test_main_admin_pages_render_successfully(): void

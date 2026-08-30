@@ -75,6 +75,16 @@ class ReliabilityHardeningTest extends TestCase
                                 'ai_feedback' => 'For "How would you diagnose a slow database query?", you stated "I inspected the query plan, compared row estimates, and verified index usage", which directly supports a relevant diagnostic approach.',
                                 'better_sample_answer' => 'I would answer: I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
                                 'follow_up_question' => 'What final result or detail from this answer would make it stronger?',
+                                'coaching' => [
+                                    'keep' => 'Keep the query plan and row-estimate detail for "How would you diagnose a slow database query?".',
+                                    'improve' => 'Add the final query result or check for "How would you diagnose a slow database query?".',
+                                    'next_try' => 'Answer "How would you diagnose a slow database query?" by linking the diagnostic steps to the verified result.',
+                                    'next_attempt_steps' => [
+                                        'Start with the database symptom you would check first.',
+                                        'Use "I inspected the query plan, compared row estimates, and verified index usage" as support.',
+                                    ],
+                                    'success_check' => 'The retry links the database diagnosis to a verified query result.',
+                                ],
                             ]],
                             'session_feedback' => [
                                 'strengths' => 'The AI review used saved answer details such as "I inspected the query plan, compared row estimates, and verified index usage" to identify what worked.',
@@ -1866,6 +1876,23 @@ class ReliabilityHardeningTest extends TestCase
                 : 'For "'.$questionText.'", you stated "'.$quote.'", which directly addressed this answer with specific saved details. The review is tied to '.$specificTerms.' from this answer.',
             'better_sample_answer' => $isSkipped ? '' : 'I would answer: '.$answerText,
             'follow_up_question' => 'What final result or detail from this answer would make it stronger?',
+            'coaching' => [
+                'keep' => $isSkipped
+                    ? 'For "'.$questionText.'", there is no saved answer detail to keep yet.'
+                    : 'Keep "'.$quote.'" as the saved detail for "'.$questionText.'".',
+                'improve' => 'Add the missing '.$specificTerms.' result or detail for "'.$questionText.'".',
+                'next_try' => 'Answer "'.$questionText.'" by connecting '.$specificTerms.' to one true result.',
+                'next_attempt_steps' => $isSkipped
+                    ? [
+                        'Start with a direct answer to "'.$questionText.'".',
+                        'Add one true detail about '.$specificTerms.'.',
+                    ]
+                    : [
+                        'Start with a direct answer to "'.$questionText.'".',
+                        'Use "'.$quote.'" as the support.',
+                    ],
+                'success_check' => 'The retry clearly links '.$specificTerms.' to "'.$questionText.'".',
+            ],
         ];
     }
 

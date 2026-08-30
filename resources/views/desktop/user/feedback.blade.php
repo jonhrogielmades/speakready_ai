@@ -1,8 +1,8 @@
 @extends('desktop.layouts.app')
-@section('title', 'Philippines Interview Feedback')
+@section('title', 'Feedback Center')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=6') }}" data-page-style="user-feedback">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/feedback.css?v=7') }}" data-page-style="user-feedback">
 @endpush
 
 @section('content')
@@ -271,16 +271,16 @@
                             @if($session->score)
                                 {{ $session->score->overall_readiness_score }}%
                             @else
-                                <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Score pending</span>
+                                <span class="badge feedback-score-badge feedback-score-badge-pending" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Score pending</span>
                             @endif
                         </td>
                         <td class="border-0 py-3">
                             @php $sc = $session->score ? $session->score->overall_readiness_score : null; @endphp
-                            @if($sc === null) <span class="badge" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
-                            @elseif($sc >= 90) <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
-                            @elseif($sc >= 70) <span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
-                            @elseif($sc >= 50) <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
-                            @else <span class="badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Work</span>
+                            @if($sc === null) <span class="badge feedback-score-badge feedback-score-badge-pending" style="background: rgba(100, 116, 139, 0.15); color: var(--tx3);">Not scored</span>
+                            @elseif($sc >= 90) <span class="badge feedback-score-badge feedback-score-badge-excellent" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">Excellent</span>
+                            @elseif($sc >= 70) <span class="badge feedback-score-badge feedback-score-badge-good" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">Good</span>
+                            @elseif($sc >= 50) <span class="badge feedback-score-badge feedback-score-badge-fair" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">Fair</span>
+                            @else <span class="badge feedback-score-badge feedback-score-badge-needs-work" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">Needs Work</span>
                             @endif
                         </td>
                         <td class="border-0 py-3 text-end">

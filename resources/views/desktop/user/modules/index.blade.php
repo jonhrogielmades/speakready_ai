@@ -37,17 +37,29 @@
             <path d="M14 154l24 24M20 184l30 10" fill="none" stroke="#60A5FA" stroke-width="8" stroke-linecap="round" opacity=".8"/>
         </svg>
     </div>
-    <!-- Sub-Navigation -->
-    <div class="module-topic-select-wrap">
+    @php
+        $currentCategory = $selectedCategory ?? request('category', '');
+        $currentSearch = $search ?? request('search', '');
+        $hasModuleFilters = trim((string) $currentCategory) !== '' || trim((string) $currentSearch) !== '';
+    @endphp
+    <form id="moduleFiltersForm" class="module-filter-bar" action="{{ route('user.modules.index') }}" method="GET" role="search">
+        <div class="module-search-shell">
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            <input id="moduleSearchInput" class="module-search-input" type="search" name="search" value="{{ $currentSearch }}" placeholder="Search modules, skills, or topics" autocomplete="off" aria-label="Search interview modules">
+        </div>
         <div class="module-topic-select-shell">
-            <select id="moduleTopicSelect" class="module-topic-select" aria-label="Select module topic">
-                <option value="{{ route('user.modules.index', array_filter(['search' => request('search')])) }}" {{ !request('category') ? 'selected' : '' }}>All Topics</option>
+            <select id="moduleTopicSelect" name="category" class="module-topic-select" aria-label="Select module topic">
+                <option value="" {{ $currentCategory === '' ? 'selected' : '' }}>All Topics</option>
                 @foreach($categories as $category)
-                    <option value="{{ route('user.modules.index', array_filter(['category' => $category, 'search' => request('search')])) }}" {{ request('category') == $category ? 'selected' : '' }}>{{ $category }}</option>
+                    <option value="{{ $category }}" {{ $currentCategory === $category ? 'selected' : '' }}>{{ $category }}</option>
                 @endforeach
             </select>
         </div>
-    </div>
+        <button type="submit" class="module-filter-submit"><i class="fa-solid fa-filter" aria-hidden="true"></i><span>Search</span></button>
+        @if($hasModuleFilters)
+            <a id="moduleClearFilters" href="{{ route('user.modules.index') }}" class="module-filter-clear">Clear</a>
+        @endif
+    </form>
 
     @if((isset($moduleRecommendations) && $moduleRecommendations->count() > 0) || (isset($learningPaths) && $learningPaths->count() > 0))
         <div class="module-smart-row">
@@ -154,11 +166,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const topicSelect = document.getElementById('moduleTopicSelect');
-        if (topicSelect) {
+        const filtersForm = document.getElementById('moduleFiltersForm');
+        if (topicSelect && filtersForm) {
             topicSelect.addEventListener('change', function () {
-                if (this.value) {
-                    window.location.href = this.value;
-                }
+                filtersForm.submit();
             });
         }
     });

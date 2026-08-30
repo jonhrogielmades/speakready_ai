@@ -2,7 +2,7 @@
 @section('title', 'Notifications')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/notifications.css?v=3') }}" data-page-style="user-notifications">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/notifications.css?v=4') }}" data-page-style="user-notifications">
 @endpush
 
 @section('content')
@@ -30,6 +30,8 @@
             <path d="M43 38l-8-12M31 54l-13-4M44 67l-11 7" fill="none" stroke="#60A5FA" stroke-width="5" stroke-linecap="round" opacity=".7"/>
         </svg>
     </div>
+    <div class="notif-page-alert" id="notificationActionStatus" role="status" aria-live="polite" hidden></div>
+
     @if(count($notifications) > 0)
     <div class="notif-bulk-actions">
         <button class="notif-bulk-btn" type="button" data-read-all-url="{{ route('user.notifications.readAll') }}" onclick="markAllReadPage()"><i class="fa-solid fa-check"></i><span>Mark all as read</span></button>
@@ -40,9 +42,10 @@
     <div class="premium-panel notifications-list-panel animate-fade-up" style="animation-delay: 0.2s; width: 100% !important; min-width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; box-sizing: border-box !important;" id="notificationsPageList">
         @forelse($notifications as $notification)
         @php
+            $notificationData = is_array($notification->data) ? $notification->data : [];
             $isRead = !is_null($notification->read_at);
-            $icon = $notification->data['icon'] ?? 'fa-bell';
-            $typeClass = $notification->data['type'] ?? 'info';
+            $icon = $notificationData['icon'] ?? 'fa-bell';
+            $typeClass = $notificationData['type'] ?? 'info';
             // Map types to colors
             $colors = [
                 'info' => ['bg' => 'rgba(59,130,246,.15)', 'text' => '#60a5fa'],
@@ -60,7 +63,7 @@
                 <div class="notification-head">
                     <div class="notification-head-copy">
                         <h6 class="notification-title" style="font-weight:{{ $isRead ? '700' : '800' }};">
-                            {{ $notification->data['title'] ?? 'Notification' }}
+                            {{ $notificationData['title'] ?? 'Notification' }}
                         </h6>
                         @if(!$isRead)
                         <span class="badge notification-status-badge">NEW</span>
@@ -74,7 +77,7 @@
                         <button class="notification-action-btn delete" data-notification-id="{{ $notification->id }}" data-delete-url="{{ route('user.notifications.delete', $notification->id) }}" onclick="deleteNotification('{{ $notification->id }}')"><i class="fa-solid fa-trash"></i>Delete</button>
                     </div>
                 </div>
-                <p class="notification-message">{{ $notification->data['message'] ?? '' }}</p>
+                <p class="notification-message">{{ $notificationData['message'] ?? '' }}</p>
             </div>
         </div>
         @empty
@@ -165,15 +168,49 @@ function activityRowActionUrl(id, attribute, fallback) {
     return button?.getAttribute(attribute) || fallback;
 }
 
-function markAllReadPage() {
-    fetch(notificationPageActionUrl('data-read-all-url', @json(route('user.notifications.readAll'))), {
-        method: 'POST',
+function showNotificationPageError(message) {
+    const status = document.getElementById('notificationActionStatus');
+    if (!status) return;
+    status.hidden = false;
+    status.classList.add('is-error');
+    status.textContent = message || 'Action failed. Please try again.';
+}
+
+function clearNotificationPageError() {
+    const status = document.getElementById('notificationActionStatus');
+    if (!status) return;
+    status.hidden = true;
+    status.classList.remove('is-error');
+    status.textContent = '';
+}
+
+function notificationJsonRequest(url, method) {
+    clearNotificationPageError();
+
+    return fetch(url, {
+        method,
         headers: {
             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         }
     })
-    .then(res => res.json())
+    .then(async res => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) {
+            throw new Error(data.message || 'Action failed. Please try again.');
+        }
+
+        return data;
+    })
+    .catch(error => {
+        showNotificationPageError(error.message);
+        throw error;
+    });
+}
+
+function markAllReadPage() {
+    notificationJsonRequest(notificationPageActionUrl('data-read-all-url', @json(route('user.notifications.readAll'))), 'POST')
     .then(data => {
         if(data.success) {
             window.location.reload();
@@ -183,14 +220,7 @@ function markAllReadPage() {
 
 function clearAllNotificationsPage() {
     if(confirm('Are you sure you want to clear all notifications?')) {
-        fetch(notificationPageActionUrl('data-clear-all-url', @json(route('user.notifications.clearAll'))), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
+        notificationJsonRequest(notificationPageActionUrl('data-clear-all-url', @json(route('user.notifications.clearAll'))), 'DELETE')
         .then(data => {
             if(data.success) {
                 window.location.reload();
@@ -200,14 +230,7 @@ function clearAllNotificationsPage() {
 }
 
 function markRead(id) {
-    fetch(notificationRowActionUrl(id, 'data-read-url', '/read'), {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
+    notificationJsonRequest(notificationRowActionUrl(id, 'data-read-url', '/read'), 'POST')
     .then(data => {
         if(data.success) {
             window.location.reload(); // simple reload for consistency
@@ -217,14 +240,7 @@ function markRead(id) {
 
 function deleteNotification(id) {
     if(confirm('Are you sure you want to delete this notification?')) {
-        fetch(notificationRowActionUrl(id, 'data-delete-url', ''), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
+        notificationJsonRequest(notificationRowActionUrl(id, 'data-delete-url', ''), 'DELETE')
         .then(data => {
             if(data.success) {
                 window.location.reload();
@@ -235,14 +251,7 @@ function deleteNotification(id) {
 
 function clearAllActivitiesPage() {
     if(confirm('Are you sure you want to clear all activity history?')) {
-        fetch(notificationPageActionUrl('data-clear-activities-url', @json(route('user.activities.clearAll'))), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
+        notificationJsonRequest(notificationPageActionUrl('data-clear-activities-url', @json(route('user.activities.clearAll'))), 'DELETE')
         .then(data => {
             if(data.success) {
                 window.location.reload();
@@ -253,14 +262,7 @@ function clearAllActivitiesPage() {
 
 function deleteActivityLog(id) {
     if(confirm('Are you sure you want to delete this activity?')) {
-        fetch(activityRowActionUrl(id, 'data-delete-activity-url', @json(url('/notifications/activities')).replace(/\/$/, '') + `/${encodeURIComponent(id)}`), {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
+        notificationJsonRequest(activityRowActionUrl(id, 'data-delete-activity-url', @json(url('/notifications/activities')).replace(/\/$/, '') + `/${encodeURIComponent(id)}`), 'DELETE')
         .then(data => {
             if(data.success) {
                 window.location.reload();

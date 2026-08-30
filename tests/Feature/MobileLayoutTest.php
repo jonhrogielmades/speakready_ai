@@ -278,7 +278,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('height: var(--sr-visual-vh) !important', false)
             ->assertSee('js/main.js?v=7', false)
             ->assertSee('js/user-ui.js', false)
-            ->assertSee('v=13', false);
+            ->assertSee('v=16', false);
     }
 
     public function test_user_mobile_shell_does_not_render_quick_navigation_launcher(): void
@@ -343,7 +343,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'))
             ->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=3', false)
+            ->assertSee('css/mobile/interview/session.css?v=4', false)
             ->assertSee('class="mobile-camera-pip d-lg-none"', false)
             ->assertSee('id="userCameraMobile"', false)
             ->assertSee('const cameraPreviewEnabled = Boolean(document.getElementById(\'userCameraMobile\'))', false)

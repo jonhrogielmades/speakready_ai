@@ -27,6 +27,8 @@ class GameController extends Controller
             abort(404);
         }
 
+        GameSchema::ensure();
+
         $user = Auth::user();
         $alreadyIssued = \App\Models\GameCertificate::where('user_id', $user->id)
             ->where('category_id', $category->id)
@@ -54,6 +56,8 @@ class GameController extends Controller
 
     public function startLevel(Request $request, $id)
     {
+        GameSchema::ensure();
+
         $level = GameLevel::with('category')->findOrFail($id);
         $user = Auth::user();
         $profile = Profile::firstOrCreate(['user_id' => $user->id]);
@@ -72,8 +76,6 @@ class GameController extends Controller
                 abort(404);
             }
         }
-
-        GameSchema::ensure();
 
         $this->refreshEnergyIfNeeded($profile);
 
@@ -228,7 +230,7 @@ class GameController extends Controller
         }
 
         $gameLevel = GameLevel::find($level_id);
-        $gameSession = GameSession::with('level')
+        $gameSession = GameSession::with(['level', 'answers'])
             ->where('user_id', Auth::id())
             ->find($session_id);
 
@@ -339,6 +341,20 @@ class GameController extends Controller
             return response()->json(['error' => 'No active Learning Game session'], 403);
         }
 
+        $currentQuestionIndex = $validated['current_question_index'] ?? null;
+        if ($currentQuestionIndex !== null) {
+            $questionCount = count(array_values($gameSession->questions ?? []));
+            $isOutOfRange = $questionCount === 0
+                ? (int) $currentQuestionIndex !== 0
+                : (int) $currentQuestionIndex >= $questionCount;
+
+            if ($isOutOfRange) {
+                return response()->json([
+                    'error' => 'Saved question position is outside this Learning Game session.',
+                ], 422);
+            }
+        }
+
         $state = null;
         if (! empty($validated['session_state'])) {
             $decoded = json_decode($validated['session_state'], true);
@@ -348,7 +364,7 @@ class GameController extends Controller
         $gameSession->update([
             'notes' => $validated['notes'] ?? $gameSession->notes,
             'duration_seconds' => $validated['duration_seconds'] ?? $gameSession->duration_seconds,
-            'current_question_index' => $validated['current_question_index'] ?? $gameSession->current_question_index,
+            'current_question_index' => $currentQuestionIndex ?? $gameSession->current_question_index,
             'session_state' => $state ?? $gameSession->session_state,
         ]);
 

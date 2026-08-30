@@ -413,6 +413,54 @@
                 </section>
             </div>
 
+            <section id="card-practice-plan" class="sr-card sr-card-pad" aria-labelledby="dashboard-practice-plan-title">
+                <div class="sr-plan-header">
+                    <div class="sr-plan-header-icon"><i class="fa-solid fa-list-check"></i></div>
+                    <div class="sr-plan-header-copy">
+                        <h5 id="dashboard-practice-plan-title" class="sr-plan-title">Personalized Practice Plan</h5>
+                        <p class="sr-plan-subtitle">Follow a short sequence built from your latest readiness signals.</p>
+                    </div>
+                </div>
+                <a href="{{ route('user.progress') }}" class="sr-plan-full-link">
+                    <i class="fa-solid fa-chart-line"></i>
+                    View complete progress plan
+                    <i class="fa-solid fa-chevron-right"></i>
+                </a>
+                @if(isset($practicePlan) && count($practicePlan) > 0)
+                    <div class="sr-rec-list">
+                        @foreach($practicePlan as $plan)
+                            @php
+                                $planAccent = $safeAccent($plan->color ?? null, '#10b981');
+                                $planIcon = $safeFaIcon($plan->icon ?? null, 'fa-list-check');
+                            @endphp
+                            <a href="{{ $plan->url ?? route('interview.setup') }}" class="sr-rec-item" style="--accent: {{ $planAccent }}">
+                                <div class="sr-rec-icon"><i class="fa-solid {{ $planIcon }}"></i></div>
+                                <div class="sr-plan-copy">
+                                    <div class="sr-plan-top">
+                                        <span class="sr-plan-step">{{ $plan->day ?? 'Today' }}</span>
+                                        <span class="sr-tag sr-tag-accent">{{ $plan->minutes ?? 10 }} min</span>
+                                    </div>
+                                    <div class="sr-plan-task-title">{{ $plan->title ?? 'Practice next step' }}</div>
+                                    <div class="sr-plan-action">{{ $plan->action ?? 'Complete one focused interview practice task.' }}</div>
+                                    <div class="sr-plan-meta">
+                                        <span class="sr-tag">{{ $plan->focus ?? 'Readiness' }}</span>
+                                    </div>
+                                    <span class="sr-plan-cta">{{ $plan->cta ?? 'Start Practice' }} <i class="fa-solid fa-chevron-right"></i></span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right sr-plan-card-chevron" aria-hidden="true"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="sr-polished-empty">
+                        <div class="sr-polished-empty-inner">
+                            <div class="sr-empty-visual"><i class="fa-solid fa-clipboard-list"></i></div>
+                            <p class="sr-polished-empty-text">Complete a scored interview to generate your practice plan.</p>
+                        </div>
+                    </div>
+                @endif
+            </section>
+
             <section id="card-recent-sessions" class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#06b6d4">
                 <div class="sr-polished-header">
                     <div class="sr-polished-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>

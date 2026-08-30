@@ -1,10 +1,20 @@
 @extends('mobile.layouts.app')
-@section('title', 'Philippines Interview Personal Mastery')
+@section('title', 'Philippines Personal Mastery')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/personal-mastery.css?v=2') }}" data-page-style="user-personal-mastery">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/personal-mastery.css?v=3') }}" data-page-style="user-personal-mastery">
 @endpush
 
 @section('content')
+@php
+    $hasMasteryScores = $latest !== null && $baseline !== null;
+    $growth = $hasMasteryScores ? $latest - $baseline : null;
+    $masteryStatRows = [
+        ['Personal best', $personalBest === null ? 'N/A' : $personalBest.'%', 'fa-trophy', '#f59e0b'],
+        ['Latest assessed', $latest === null ? 'N/A' : $latest.'%', 'fa-bullseye', '#3b82f6'],
+        ['Growth from baseline', $growth === null ? 'N/A' : (($growth >= 0 ? '+' : '').$growth.' pts'), $growth === null || $growth >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down', $growth === null ? '#64748b' : ($growth >= 0 ? '#10b981' : '#ef4444')],
+        ['Practice streak', ($profile->current_streak ?? 0).' days', 'fa-fire', '#ef4444'],
+    ];
+@endphp
 
 <div class="db-section active" id="personal-mastery-page">
     <div class="mastery-hero-card">
@@ -54,12 +64,7 @@
         </a>
     </div>
     <div class="mastery-stats-grid">
-        @foreach([
-            ['Personal best', $personalBest.'%', 'fa-trophy', '#f59e0b'],
-            ['Latest assessed', $latest.'%', 'fa-bullseye', '#3b82f6'],
-            ['Growth from baseline', (($latest-$baseline) >= 0 ? '+' : '').($latest-$baseline).' pts', 'fa-arrow-trend-up', '#10b981'],
-            ['Practice streak', ($profile->current_streak ?? 0).' days', 'fa-fire', '#ef4444'],
-        ] as [$label,$value,$icon,$color])
+        @foreach($masteryStatRows as [$label,$value,$icon,$color])
             <div>
                 <div class="mastery-stat-card" style="--mastery-stat-color: {{ $color }}">
                     <div class="mastery-stat-icon">
@@ -157,8 +162,15 @@
             @if($errors->has('star_story'))
                 <p class="text-danger mb-2" style="font-size:0.72rem;font-weight:800;">{{ $errors->first('star_story') }}</p>
             @endif
+            @if($errors->any() && ! $errors->has('star_story'))
+                <div class="mastery-form-alert" role="alert">
+                    @foreach($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
 
-            <form method="POST" action="{{ route('user.mastery.stories.store') }}" class="mb-3">
+            <form method="POST" action="{{ route('user.mastery.stories.store') }}" class="mb-3" id="masteryStoryForm">
                 @csrf
                 <div class="mastery-form-grid">
                     <label class="mastery-field">
@@ -207,7 +219,7 @@
                                 {{ \Illuminate\Support\Str::limit(data_get($storyMeta, 'result') ?: data_get($storyMeta, 'action') ?: $story->task, 150) }}
                             </p>
                         </div>
-                        <form method="POST" action="{{ route('user.mastery.stories.destroy', $story) }}" onsubmit="return confirm('Remove this STAR story?');">
+                        <form method="POST" action="{{ route('user.mastery.stories.destroy', $story) }}" data-sr-confirm-form data-sr-confirm-title="Remove STAR story" data-sr-confirm-message="This will delete this saved proof story from Personal Mastery." data-sr-confirm-action="Remove Story" data-sr-confirm-variant="danger">
                             @csrf
                             @method('DELETE')
                             <button class="mastery-icon-button" type="submit" aria-label="Delete story">

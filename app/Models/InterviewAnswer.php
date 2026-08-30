@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 
 class InterviewAnswer extends Model
 {
+    private static ?array $columnCache = null;
+
     protected $fillable = [
         'interview_session_id',
         'retry_of_answer_id',
@@ -67,13 +69,16 @@ class InterviewAnswer extends Model
 
     public static function hasColumn(string $column): bool
     {
-        static $columns = null;
-
-        $columns ??= Schema::hasTable('interview_answers')
+        self::$columnCache ??= Schema::hasTable('interview_answers')
             ? array_flip(Schema::getColumnListing('interview_answers'))
             : [];
 
-        return isset($columns[$column]);
+        return isset(self::$columnCache[$column]);
+    }
+
+    public static function flushColumnCache(): void
+    {
+        self::$columnCache = null;
     }
 
     public function setAttribute($key, $value)

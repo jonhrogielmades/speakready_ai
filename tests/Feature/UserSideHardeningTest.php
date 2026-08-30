@@ -41,6 +41,39 @@ class UserSideHardeningTest extends TestCase
             ->assertOk();
     }
 
+    public function test_learning_page_repairs_game_tables_and_hides_unavailable_challenge_levels(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+        $inactiveCategory = $this->category([
+            'title' => 'Inactive PH Games',
+            'type' => 'game',
+            'status' => 'inactive',
+        ]);
+        $coreCategory = $this->category([
+            'title' => 'Core Interview Questions',
+            'type' => 'core',
+        ]);
+        $this->gameLevel($inactiveCategory, ['title' => 'Unavailable Inactive Challenge']);
+        $this->gameLevel($coreCategory, ['title' => 'Unavailable Core Challenge']);
+
+        Schema::dropIfExists('game_answers');
+        Schema::dropIfExists('game_sessions');
+        Schema::dropIfExists('game_certificates');
+        Schema::dropIfExists('game_progress');
+
+        $this->actingAs($user)
+            ->get(route('user.learning'))
+            ->assertOk()
+            ->assertSee('No challenge levels loaded yet.')
+            ->assertDontSee('Unavailable Inactive Challenge')
+            ->assertDontSee('Unavailable Core Challenge');
+
+        foreach (['game_progress', 'game_sessions', 'game_answers', 'game_certificates'] as $table) {
+            $this->assertTrue(Schema::hasTable($table), "Expected {$table} to be repaired.");
+        }
+    }
+
     public function test_mobile_learning_page_includes_mobile_challenge_controls(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -156,6 +189,15 @@ class UserSideHardeningTest extends TestCase
         $this->assertSame(0, $profile->leadership_xp);
         $this->assertSame(999, $profile->technical_xp);
         $this->assertTrue($profile->hasPerk('energy_efficiency'));
+
+        $this->actingAs($user)
+            ->postJson(route('user.skills.unlock'), [
+                'perk_id' => 'energy_efficiency',
+            ])
+            ->assertStatus(400)
+            ->assertJsonPath('message', 'Perk already unlocked.');
+
+        $this->assertSame(0, Profile::where('user_id', $user->id)->first()->leadership_xp);
     }
 
     public function test_perk_unlock_rejects_unknown_perks(): void
@@ -168,6 +210,21 @@ class UserSideHardeningTest extends TestCase
             ->assertUnprocessable();
 
         $this->assertFalse(Profile::where('user_id', $user->id)->first()->hasPerk('free_everything'));
+    }
+
+    public function test_perk_unlock_rejects_when_skill_xp_is_insufficient(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'leadership_xp' => 499]);
+
+        $this->actingAs($user)
+            ->postJson(route('user.skills.unlock'), ['perk_id' => 'energy_efficiency'])
+            ->assertStatus(400)
+            ->assertJsonPath('message', 'Not enough Skill XP.');
+
+        $profile = Profile::where('user_id', $user->id)->first();
+        $this->assertSame(499, $profile->leadership_xp);
+        $this->assertFalse($profile->hasPerk('energy_efficiency'));
     }
 
     public function test_interview_start_requires_active_core_category(): void
@@ -243,6 +300,82 @@ class UserSideHardeningTest extends TestCase
             $desktopResponse->assertSee($option, false);
             $mobileResponse->assertSee($option, false);
         }
+    }
+
+    public function test_interview_setup_repairs_missing_runtime_tables(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category([
+            'title' => 'Job Interview',
+            'sort_order' => 1,
+        ]);
+
+        $this->dropInterviewRuntimeTables();
+
+        $this->actingAs($user)
+            ->get(route('interview.setup'))
+            ->assertOk()
+            ->assertSee('name="category_id"', false)
+            ->assertSee('value="'.$category->id.'"', false)
+            ->assertSee('id="scenarioHelp"', false)
+            ->assertSee('Start Philippines Interview');
+
+        $this->assertInterviewRuntimeTablesReady();
+    }
+
+    public function test_interview_start_repairs_missing_runtime_tables_and_opens_session(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        $this->dropInterviewRuntimeTables();
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), $this->interviewPayload($category))
+            ->assertRedirect(route('interview.session'))
+            ->assertSessionHas('active_interview_id')
+            ->assertSessionHas('active_interview_context', 'interview');
+
+        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertDatabaseHas('interview_sessions', [
+            'id' => $session->id,
+            'category_id' => $category->id,
+            'target_position' => 'Developer',
+            'status' => 'in_progress',
+        ]);
+        $this->assertGreaterThanOrEqual(2, Question::where('interview_session_id', $session->id)->count());
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->get(route('interview.session'))
+            ->assertOk()
+            ->assertSee('Developer');
+
+        $this->assertInterviewRuntimeTablesReady();
+    }
+
+    public function test_interview_session_repairs_missing_runtime_tables_and_clears_stale_session(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category();
+
+        $this->dropInterviewRuntimeTables();
+
+        $this->actingAs($user)
+            ->withSession([
+                'active_interview_id' => 99999,
+                'active_interview_provider' => 'openai',
+                'active_interview_context' => 'interview',
+            ])
+            ->get(route('interview.session'))
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHas('message', 'Your interview session is no longer active.')
+            ->assertSessionMissing('active_interview_id')
+            ->assertSessionMissing('active_interview_provider')
+            ->assertSessionMissing('active_interview_context');
+
+        $this->assertInterviewRuntimeTablesReady();
     }
 
     public function test_interview_start_accepts_active_core_category(): void
@@ -482,6 +615,26 @@ class UserSideHardeningTest extends TestCase
             ->assertJsonPath('improved_answer', 'We could not make a better answer draft because the service had an error.');
     }
 
+    public function test_voice_prompt_returns_local_fallback_when_ai_prompt_is_unavailable(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        Http::fake([
+            '*' => Http::response(['error' => 'provider unavailable'], 500),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('user.drills.voice.prompt'), [
+                'category' => 'School Admission',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('source', 'fallback')
+            ->assertJson(fn ($json) => $json
+                ->where('prompt', fn ($prompt) => is_string($prompt) && trim($prompt) !== '')
+                ->etc());
+    }
+
     public function test_interview_answer_recomputes_delivery_metrics_from_server_evidence(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -689,6 +842,8 @@ class UserSideHardeningTest extends TestCase
     {
         Schema::dropIfExists('game_answers');
         Schema::dropIfExists('game_sessions');
+        Schema::dropIfExists('game_certificates');
+        Schema::dropIfExists('game_progress');
 
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
@@ -701,11 +856,43 @@ class UserSideHardeningTest extends TestCase
 
         $this->assertTrue(Schema::hasTable('game_sessions'));
         $this->assertTrue(Schema::hasTable('game_answers'));
+        $this->assertTrue(Schema::hasTable('game_progress'));
+        $this->assertTrue(Schema::hasTable('game_certificates'));
         $this->assertDatabaseHas('game_sessions', [
             'user_id' => $user->id,
             'game_level_id' => $level->id,
             'status' => 'in_progress',
         ]);
+    }
+
+    public function test_game_save_state_rejects_question_index_outside_session_questions(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        Profile::create(['user_id' => $user->id, 'energy' => Profile::MAX_ENERGY]);
+        $category = $this->category(['type' => 'game']);
+        $level = $this->gameLevel($category);
+        $session = GameSession::create([
+            'user_id' => $user->id,
+            'game_level_id' => $level->id,
+            'status' => 'in_progress',
+            'num_questions' => 2,
+            'questions' => ['First question?', 'Second question?'],
+            'response_mode' => 'hybrid',
+            'current_question_index' => 0,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('user.game.saveState'), [
+                'game_session_id' => $session->id,
+                'current_question_index' => 2,
+                'duration_seconds' => 90,
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('error', 'Saved question position is outside this Learning Game session.');
+
+        $session->refresh();
+        $this->assertSame(0, $session->current_question_index);
+        $this->assertNull($session->duration_seconds);
     }
 
     public function test_game_answer_and_finish_use_separate_game_session_flow(): void
@@ -860,6 +1047,16 @@ class UserSideHardeningTest extends TestCase
                                 'ai_feedback' => 'For "Describe a difficult project.", you stated "I built a deployment checklist and improved release quality with clearer ownership", which gives project detail. The review is tied to deployment and checklist from this answer.',
                                 'better_sample_answer' => 'I would answer: I built a deployment checklist and improved release quality with clearer ownership.',
                                 'follow_up_question' => 'What final result or detail from this project would make it stronger?',
+                                'coaching' => [
+                                    'keep' => 'Keep the deployment checklist detail for "Describe a difficult project.".',
+                                    'improve' => 'Add the final project result for "Describe a difficult project.".',
+                                    'next_try' => 'Answer "Describe a difficult project." by connecting the checklist work to the project result.',
+                                    'next_attempt_steps' => [
+                                        'Start with the difficult project context.',
+                                        'Use "I built a deployment checklist and improved release quality with clearer ownership" as support.',
+                                    ],
+                                    'success_check' => 'The retry links the deployment checklist to a clear project result.',
+                                ],
                             ]],
                             'session_feedback' => [
                                 'strengths' => 'The AI review used saved project details to identify what worked.',
@@ -1050,9 +1247,18 @@ class UserSideHardeningTest extends TestCase
             'user_id' => $user->id,
             'game_level_id' => $level->id,
             'status' => 'in_progress',
-            'num_questions' => 1,
-            'questions' => ['Describe a goal answer.'],
+            'num_questions' => 2,
+            'questions' => ['Describe a goal answer.', 'Close with your strongest proof.'],
             'response_mode' => 'hybrid',
+            'current_question_index' => 1,
+        ]);
+        GameAnswer::create([
+            'game_session_id' => $session->id,
+            'question_index' => 1,
+            'question_text' => 'Close with your strongest proof.',
+            'answer_text' => 'Saved answer about a customer escalation result.',
+            'response_mode' => 'text',
+            'elapsed_seconds' => 12,
         ]);
 
         $this->actingAs($user)
@@ -1063,6 +1269,8 @@ class UserSideHardeningTest extends TestCase
             ->get(route('user.game.match'))
             ->assertOk()
             ->assertSee('Finish Challenge')
+            ->assertSee('let currentQIdx = 1;', false)
+            ->assertSee('Saved answer about a customer escalation result.')
             ->assertSee('id="challengeFinishModal"', false)
             ->assertSee('Scoring Challenge')
             ->assertDontSee('Finish Interview');
@@ -1156,5 +1364,90 @@ class UserSideHardeningTest extends TestCase
             'time_limit' => 0,
             'ai_provider' => 'local',
         ];
+    }
+
+    private function dropInterviewRuntimeTables(): void
+    {
+        Schema::disableForeignKeyConstraints();
+
+        try {
+            foreach ([
+                'feedback_audit_logs',
+                'feedback_complaints',
+                'mentor_review_comments',
+                'practice_plan_items',
+                'feedback',
+                'scores',
+                'interview_answers',
+                'questions',
+                'interview_sessions',
+                'job_applications',
+                'interview_packs',
+            ] as $table) {
+                Schema::dropIfExists($table);
+            }
+        } finally {
+            Schema::enableForeignKeyConstraints();
+        }
+    }
+
+    private function assertInterviewRuntimeTablesReady(): void
+    {
+        foreach ([
+            'job_applications',
+            'interview_packs',
+            'practice_plan_items',
+            'interview_sessions',
+            'questions',
+            'interview_answers',
+            'scores',
+        ] as $table) {
+            $this->assertTrue(Schema::hasTable($table), "Expected {$table} to be repaired.");
+        }
+
+        foreach ([
+            'user_id',
+            'game_level_id',
+            'job_application_id',
+            'interview_pack_id',
+            'category_id',
+            'difficulty',
+            'target_position',
+            'resume_text',
+            'job_description',
+            'num_questions',
+            'coach_focus_mode',
+            'response_mode',
+            'interview_focus',
+            'company_persona',
+            'interviewer_strictness',
+            'time_limit',
+            'question_types',
+            'ai_assistance_level',
+            'live_feedback_mode',
+            'pressure_mode',
+            'assessment_mode',
+            'interview_format',
+            'accommodation_profile',
+            'score_eligible',
+            'status',
+            'notes',
+            'duration_seconds',
+            'current_question_index',
+            'session_state',
+            'action_plan',
+            'is_archived',
+            'flag_reason',
+            'share_token',
+            'share_expires_at',
+            'share_password_hash',
+            'share_permissions',
+            'share_hide_sensitive',
+            'is_public',
+            'created_at',
+            'updated_at',
+        ] as $column) {
+            $this->assertTrue(Schema::hasColumn('interview_sessions', $column), "Expected interview_sessions.{$column} to be repaired.");
+        }
     }
 }

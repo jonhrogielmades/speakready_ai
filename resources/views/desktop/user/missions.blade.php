@@ -43,7 +43,7 @@
                         <div class="mission-kicker">Generate tasks from what you want to practice, then measure how ready your answer sounds.</div>
                     </div>
                 </div>
-                <span class="mission-pill" style="--pill-color:#16a34a"><i class="fa-solid fa-microphone-lines"></i>{{ $practiceSessionCount }} saved sessions</span>
+                <span class="mission-pill" style="--pill-color:#16a34a"><i class="fa-solid fa-microphone-lines"></i>{{ $practiceSessionCount }} saved {{ \Illuminate\Support\Str::plural('session', $practiceSessionCount) }}</span>
             </div>
 
             <div class="mission-generator">
@@ -118,7 +118,7 @@
                     <div class="mission-recent-item">
                         <div>
                             <div class="mission-recent-title">{{ $session->practice_scenario }}</div>
-                            <div class="mission-recent-meta">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }} · {{ $session->wpm ?? 0 }} WPM · {{ $session->filler_words ?? 0 }} fillers</div>
+                            <div class="mission-recent-meta">{{ $session->created_at ? $session->created_at->format('M d, Y') : '' }} &middot; {{ $session->wpm ?? 0 }} WPM &middot; {{ $session->filler_words ?? 0 }} fillers</div>
                         </div>
                         <span class="mission-pill" style="--pill-color:#16a34a">{{ $session->clarity_score ?? 0 }}%</span>
                     </div>
@@ -182,6 +182,44 @@ let missionVoiceTranscript = '';
 let missionVoiceInterim = '';
 let missionLastCommittedSpeech = '';
 let missionLastCommittedAt = 0;
+
+function missionElement(id) {
+    return document.getElementById(id);
+}
+
+function bindMissionElement(id, eventName, handler) {
+    missionElement(id)?.addEventListener(eventName, handler);
+}
+
+function setMissionText(id, value) {
+    const element = missionElement(id);
+    if (element) element.textContent = value;
+}
+
+function setMissionHtml(id, value) {
+    const element = missionElement(id);
+    if (element) element.innerHTML = value;
+}
+
+function setMissionStyle(id, property, value) {
+    missionElement(id)?.style.setProperty(property, value);
+}
+
+function removeMissionStyle(id, property) {
+    missionElement(id)?.style.removeProperty(property);
+}
+
+function missionCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+async function missionResponseJson(response) {
+    try {
+        return await response.json();
+    } catch (error) {
+        return {};
+    }
+}
 
 function escapeMissionHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -364,12 +402,23 @@ function setMissionGeneratorStatus(message, color = 'var(--tx3)') {
 }
 
 async function generateMissionTasks() {
-    const input = document.getElementById('missionGoalInput');
-    const button = document.getElementById('generateMissionBtn');
+    const input = missionElement('missionGoalInput');
+    const button = missionElement('generateMissionBtn');
     const goal = input ? input.value.trim() : '';
 
     if (goal.length < 3) {
         setMissionGeneratorStatus('Type what you want to practice first.', '#f59e0b');
+        return;
+    }
+
+    if (!button) {
+        setMissionGeneratorStatus('Mission generator is unavailable. Refresh the page and try again.', '#ef4444');
+        return;
+    }
+
+    const csrfToken = missionCsrfToken();
+    if (!csrfToken) {
+        setMissionGeneratorStatus('Mission generator could not verify this page session. Refresh the page and try again.', '#ef4444');
         return;
     }
 
@@ -384,12 +433,12 @@ async function generateMissionTasks() {
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'X-CSRF-TOKEN': csrfToken
             },
             body: JSON.stringify({ goal })
         });
 
-        const data = await response.json();
+        const data = await missionResponseJson(response);
         if (!response.ok || !data.success || !Array.isArray(data.missions) || data.missions.length === 0) {
             throw new Error(data.message || 'Mission generation failed.');
         }
@@ -401,7 +450,7 @@ async function generateMissionTasks() {
         setMissionGeneratorStatus('Generated fresh missions based on your request.', '#16a34a');
     } catch (error) {
         console.error('Mission generation failed:', error);
-        setMissionGeneratorStatus('Could not generate with AI right now. Try a simpler goal or use the current missions.', '#ef4444');
+        setMissionGeneratorStatus(error.message || 'Could not generate with AI right now. Try a simpler goal or use the current missions.', '#ef4444');
     } finally {
         button.disabled = false;
         button.innerHTML = originalHtml;
@@ -418,17 +467,17 @@ function stopMissionTimer() {
 function resetMissionTimer() {
     stopMissionTimer();
     remainingSeconds = activeMission ? Number(activeMission.duration) || 60 : 60;
-    document.getElementById('missionTimerText').textContent = `Start ${formatMissionTime(remainingSeconds)}`;
+    setMissionText('missionTimerText', `Start ${formatMissionTime(remainingSeconds)}`);
 }
 
 function resetMissionResult(summary = 'Score an answer to see mission-specific feedback.') {
-    document.getElementById('missionScoreRing').style.setProperty('--score', '0%');
-    document.getElementById('missionScoreRing').style.setProperty('--score-color', '#22c55e');
-    document.getElementById('missionScoreValue').textContent = '--';
-    document.getElementById('missionResultStatus').textContent = 'Waiting';
-    document.getElementById('missionResultStatus').style.setProperty('--pill-color', '#64748b');
-    document.getElementById('missionResultSummary').textContent = summary;
-    document.getElementById('missionFeedbackList').innerHTML = '<li><i class="fa-solid fa-circle-info"></i><span>Your result will check structure, evidence, tone fit, and next action.</span></li>';
+    setMissionStyle('missionScoreRing', '--score', '0%');
+    setMissionStyle('missionScoreRing', '--score-color', '#22c55e');
+    setMissionText('missionScoreValue', '--');
+    setMissionText('missionResultStatus', 'Waiting');
+    setMissionStyle('missionResultStatus', '--pill-color', '#64748b');
+    setMissionText('missionResultSummary', summary);
+    setMissionHtml('missionFeedbackList', '<li><i class="fa-solid fa-circle-info"></i><span>Your result will check structure, evidence, tone fit, and next action.</span></li>');
 }
 
 function setMissionControlsEnabled(enabled) {
@@ -447,9 +496,9 @@ function setMissionControlsEnabled(enabled) {
 
 function tickMissionTimer() {
     remainingSeconds = Math.max(0, remainingSeconds - 1);
-    document.getElementById('missionTimerText').textContent = remainingSeconds > 0
+    setMissionText('missionTimerText', remainingSeconds > 0
         ? `Stop ${formatMissionTime(remainingSeconds)}`
-        : 'Time Up';
+        : 'Time Up');
 
     if (remainingSeconds === 0) {
         stopMissionTimer();
@@ -471,15 +520,15 @@ function selectMission(id) {
     if (!mission) {
         activeMission = null;
         document.querySelectorAll('.mission-card').forEach(card => card.classList.remove('active'));
-        document.getElementById('detailIcon').style.removeProperty('--mission-color');
-        document.getElementById('detailIcon').innerHTML = '<i class="fa-solid fa-route"></i>';
-        document.getElementById('detailTitle').textContent = 'No mission selected';
-        document.getElementById('detailCategory').textContent = 'Scenario';
-        document.getElementById('detailDuration').textContent = '60s';
-        document.getElementById('detailIntent').textContent = 'Ready';
-        document.getElementById('detailPrompt').textContent = 'Generate tasks or select a mission card to begin.';
-        document.getElementById('detailTip').textContent = 'Mission tools unlock once a mission is selected.';
-        document.getElementById('detailCriteria').innerHTML = '<li><i class="fa-solid fa-circle-info"></i><span>Choose a mission to enable the timer, scoring, and voice practice.</span></li>';
+        removeMissionStyle('detailIcon', '--mission-color');
+        setMissionHtml('detailIcon', '<i class="fa-solid fa-route"></i>');
+        setMissionText('detailTitle', 'No mission selected');
+        setMissionText('detailCategory', 'Scenario');
+        setMissionText('detailDuration', '60s');
+        setMissionText('detailIntent', 'Ready');
+        setMissionText('detailPrompt', 'Generate tasks or select a mission card to begin.');
+        setMissionText('detailTip', 'Mission tools unlock once a mission is selected.');
+        setMissionHtml('detailCriteria', '<li><i class="fa-solid fa-circle-info"></i><span>Choose a mission to enable the timer, scoring, and voice practice.</span></li>');
         setMissionControlsEnabled(false);
         resetMissionTimer();
         resetMissionResult('Generate or select a mission before scoring an answer.');
@@ -492,17 +541,17 @@ function selectMission(id) {
         card.classList.toggle('active', card.dataset.missionId === mission.id);
     });
 
-    document.getElementById('detailIcon').style.setProperty('--mission-color', mission.color);
-    document.getElementById('detailIcon').innerHTML = `<i class="fa-solid ${escapeMissionHtml(mission.icon)}"></i>`;
-    document.getElementById('detailTitle').textContent = mission.title;
-    document.getElementById('detailCategory').textContent = mission.category;
-    document.getElementById('detailDuration').textContent = `${mission.duration}s`;
-    document.getElementById('detailIntent').textContent = mission.intent;
-    document.getElementById('detailPrompt').textContent = mission.prompt;
-    document.getElementById('detailTip').textContent = mission.coach_tip;
-    document.getElementById('detailCriteria').innerHTML = (Array.isArray(mission.success_criteria) ? mission.success_criteria : [])
+    setMissionStyle('detailIcon', '--mission-color', mission.color);
+    setMissionHtml('detailIcon', `<i class="fa-solid ${escapeMissionHtml(mission.icon)}"></i>`);
+    setMissionText('detailTitle', mission.title);
+    setMissionText('detailCategory', mission.category);
+    setMissionText('detailDuration', `${mission.duration}s`);
+    setMissionText('detailIntent', mission.intent);
+    setMissionText('detailPrompt', mission.prompt);
+    setMissionText('detailTip', mission.coach_tip);
+    setMissionHtml('detailCriteria', (Array.isArray(mission.success_criteria) ? mission.success_criteria : [])
         .map(item => `<li><i class="fa-solid fa-check"></i><span>${escapeMissionHtml(item)}</span></li>`)
-        .join('');
+        .join(''));
 
     setMissionControlsEnabled(true);
     resetMissionTimer();
@@ -529,13 +578,14 @@ function openMissionVoiceModal() {
         return;
     }
 
-    document.getElementById('missionVoiceModalTitle').textContent = `${activeMission.title} Voice Practice`;
-    document.getElementById('missionVoicePrompt').textContent = activeMission.prompt;
+    setMissionText('missionVoiceModalTitle', `${activeMission.title} Voice Practice`);
+    setMissionText('missionVoicePrompt', activeMission.prompt);
     setMissionVoiceStatus('Listen to the mission, then record your spoken answer.');
     updateMissionVoiceTranscript();
     setMissionVoiceButtonStates();
 
-    const modalElement = document.getElementById('missionVoiceModal');
+    const modalElement = missionElement('missionVoiceModal');
+    if (!modalElement) return;
     if (window.bootstrap?.Modal) {
         bootstrap.Modal.getOrCreateInstance(modalElement).show();
     } else {
@@ -578,7 +628,12 @@ function commitMissionSpeechSegment(segment) {
 }
 
 function updateMissionVoiceTranscript() {
-    const box = document.getElementById('missionVoiceTranscript');
+    const box = missionElement('missionVoiceTranscript');
+    if (!box) {
+        setMissionVoiceButtonStates();
+        return;
+    }
+
     const text = mergeMissionTranscriptParts(missionVoiceTranscript, missionVoiceInterim);
     box.textContent = text || missionTranscriptPlaceholder;
     setMissionVoiceButtonStates();
@@ -707,14 +762,14 @@ function clearMissionVoiceTranscript() {
     missionVoiceInterim = '';
     missionLastCommittedSpeech = '';
     missionLastCommittedAt = 0;
-    document.getElementById('missionVoiceTranscript').textContent = missionTranscriptPlaceholder;
+    setMissionText('missionVoiceTranscript', missionTranscriptPlaceholder);
     setMissionVoiceStatus('Transcript cleared. Start voice again when ready.');
     setMissionVoiceButtonStates();
 }
 
 function useMissionVoiceTranscript() {
     finalizeMissionVoiceInterim();
-    const box = document.getElementById('missionVoiceTranscript');
+    const box = missionElement('missionVoiceTranscript');
     const text = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
     if (!text) {
         setMissionVoiceStatus('Record or type a transcript before using it.', '#f59e0b');
@@ -723,13 +778,14 @@ function useMissionVoiceTranscript() {
 
     missionVoiceTranscript = text;
     missionVoiceInterim = '';
-    box.textContent = text;
-    document.getElementById('missionAnswer').value = text;
+    if (box) box.textContent = text;
+    const answerBox = missionElement('missionAnswer');
+    if (answerBox) answerBox.value = text;
     scoreMission(false);
     setMissionVoiceStatus('Transcript added to your mission answer.', '#16a34a');
 
-    const modalElement = document.getElementById('missionVoiceModal');
-    if (window.bootstrap?.Modal) {
+    const modalElement = missionElement('missionVoiceModal');
+    if (modalElement && window.bootstrap?.Modal) {
         bootstrap.Modal.getOrCreateInstance(modalElement).hide();
     }
 }
@@ -760,12 +816,14 @@ function scoreMission(showEmptyAlert = true) {
         return;
     }
 
-    const answer = document.getElementById('missionAnswer').value.trim();
+    const answerInput = missionElement('missionAnswer');
+    const answer = answerInput ? answerInput.value.trim() : '';
     const normalized = normalizeMissionText(answer);
     const words = missionWordCount(answer);
 
     if (!answer && showEmptyAlert) {
-        alert('Add an answer before scoring this mission.');
+        resetMissionResult('Add an answer before scoring this mission.');
+        setMissionGeneratorStatus('Add an answer before scoring this mission.', '#f59e0b');
         return;
     }
 
@@ -812,55 +870,56 @@ function scoreMission(showEmptyAlert = true) {
     const scoreColor = score >= 80 ? '#22c55e' : (score >= 60 ? '#f59e0b' : '#ef4444');
     const status = score >= 80 ? 'Mission Ready' : (score >= 60 ? 'Almost There' : 'Needs Practice');
 
-    document.getElementById('missionScoreRing').style.setProperty('--score', `${score}%`);
-    document.getElementById('missionScoreRing').style.setProperty('--score-color', scoreColor);
-    document.getElementById('missionScoreValue').textContent = answer ? score : '--';
-    document.getElementById('missionResultStatus').textContent = answer ? status : 'Waiting';
-    document.getElementById('missionResultStatus').style.setProperty('--pill-color', answer ? scoreColor : '#64748b');
-    document.getElementById('missionResultSummary').textContent = answer
+    setMissionStyle('missionScoreRing', '--score', `${score}%`);
+    setMissionStyle('missionScoreRing', '--score-color', scoreColor);
+    setMissionText('missionScoreValue', answer ? score : '--');
+    setMissionText('missionResultStatus', answer ? status : 'Waiting');
+    setMissionStyle('missionResultStatus', '--pill-color', answer ? scoreColor : '#64748b');
+    setMissionText('missionResultSummary', answer
         ? `${activeMission.title} checked ${words} words against interview-ready structure, evidence, result, tone, and next action.`
-        : 'Score an answer to see mission-specific feedback.';
-    document.getElementById('missionFeedbackList').innerHTML = (answer ? feedback : ['Your result will check interview structure, evidence, role fit, tone, and next action.'])
+        : 'Score an answer to see mission-specific feedback.');
+    setMissionHtml('missionFeedbackList', (answer ? feedback : ['Your result will check interview structure, evidence, role fit, tone, and next action.'])
         .map(item => `<li><i class="fa-solid fa-arrow-right"></i><span>${escapeMissionHtml(item)}</span></li>`)
-        .join('');
+        .join(''));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     renderMissionBoard();
-    document.getElementById('scoreMissionBtn').addEventListener('click', () => scoreMission(true));
-    document.getElementById('clearMissionBtn').addEventListener('click', () => {
-        document.getElementById('missionAnswer').value = '';
+    bindMissionElement('scoreMissionBtn', 'click', () => scoreMission(true));
+    bindMissionElement('clearMissionBtn', 'click', () => {
+        const answerBox = missionElement('missionAnswer');
+        if (answerBox) answerBox.value = '';
         scoreMission(false);
     });
-    document.getElementById('missionTimerBtn').addEventListener('click', toggleMissionTimer);
-    document.getElementById('voiceMissionBtn').addEventListener('click', openMissionVoiceModal);
-    document.getElementById('speakMissionBtn').addEventListener('click', speakMissionPrompt);
-    document.getElementById('startMissionVoiceBtn').addEventListener('click', startMissionVoice);
-    document.getElementById('stopMissionVoiceBtn').addEventListener('click', stopMissionVoice);
-    document.getElementById('clearMissionVoiceBtn').addEventListener('click', clearMissionVoiceTranscript);
-    document.getElementById('useMissionVoiceTranscriptBtn').addEventListener('click', useMissionVoiceTranscript);
-    document.getElementById('missionVoiceModal').addEventListener('shown.bs.modal', () => {
+    bindMissionElement('missionTimerBtn', 'click', toggleMissionTimer);
+    bindMissionElement('voiceMissionBtn', 'click', openMissionVoiceModal);
+    bindMissionElement('speakMissionBtn', 'click', speakMissionPrompt);
+    bindMissionElement('startMissionVoiceBtn', 'click', startMissionVoice);
+    bindMissionElement('stopMissionVoiceBtn', 'click', stopMissionVoice);
+    bindMissionElement('clearMissionVoiceBtn', 'click', clearMissionVoiceTranscript);
+    bindMissionElement('useMissionVoiceTranscriptBtn', 'click', useMissionVoiceTranscript);
+    bindMissionElement('missionVoiceModal', 'shown.bs.modal', () => {
         document.querySelector('.modal-backdrop:last-of-type')?.classList.add('mission-voice-backdrop');
         setMissionVoiceButtonStates();
     });
-    document.getElementById('missionVoiceModal').addEventListener('hidden.bs.modal', stopMissionVoice);
-    document.getElementById('generateMissionBtn').addEventListener('click', generateMissionTasks);
-    document.getElementById('missionGoalInput').addEventListener('keydown', event => {
+    bindMissionElement('missionVoiceModal', 'hidden.bs.modal', stopMissionVoice);
+    bindMissionElement('generateMissionBtn', 'click', generateMissionTasks);
+    bindMissionElement('missionGoalInput', 'keydown', event => {
         if (event.key === 'Enter') {
             event.preventDefault();
             generateMissionTasks();
         }
     });
-    const missionTranscriptBox = document.getElementById('missionVoiceTranscript');
-    missionTranscriptBox.addEventListener('focus', () => {
+    const missionTranscriptBox = missionElement('missionVoiceTranscript');
+    missionTranscriptBox?.addEventListener('focus', () => {
         if (!missionTranscriptEditorText()) missionTranscriptBox.textContent = '';
     });
-    missionTranscriptBox.addEventListener('input', () => {
+    missionTranscriptBox?.addEventListener('input', () => {
         missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
         missionVoiceInterim = '';
         setMissionVoiceButtonStates();
     });
-    missionTranscriptBox.addEventListener('blur', () => {
+    missionTranscriptBox?.addEventListener('blur', () => {
         missionVoiceTranscript = collapseRepeatedMissionSpeech(missionTranscriptEditorText());
         missionVoiceInterim = '';
         updateMissionVoiceTranscript();

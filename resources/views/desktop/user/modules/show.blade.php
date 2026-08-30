@@ -40,7 +40,7 @@
                 </div>
                 <div class="module-action-row">
                     @if($currentProgress < 25)
-                        <form action="{{ route('user.modules.progress', $module->id) }}" method="POST">
+                        <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" data-module-progress-form>
                             @csrf
                             <input type="hidden" name="progress_percentage" value="25">
                             <button type="submit" class="btn btn-sm module-progress-button module-progress-button-start">
@@ -49,7 +49,7 @@
                         </form>
                     @endif
                     @if($currentProgress < 100)
-                        <form action="{{ route('user.modules.progress', $module->id) }}" method="POST">
+                        <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" data-module-progress-form>
                             @csrf
                             <input type="hidden" name="progress_percentage" value="100">
                             <button type="submit" class="btn btn-sm module-progress-button module-progress-button-complete">
@@ -120,7 +120,7 @@
             <div class="row">
                 @foreach($module->resources as $resource)
                     <div class="col-12 col-md-6 mb-3">
-                        <a href="{{ asset('storage/' . $resource->file_path) }}" target="_blank" style="text-decoration:none;">
+                        <a href="{{ asset('storage/' . $resource->file_path) }}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
                             <div class="resource-item">
                                 <div class="resource-icon">
                                     <i class="fa-solid fa-file-pdf"></i>
@@ -165,10 +165,10 @@
                             @empty
                                 <div class="quiz-question-box" style="color:var(--tx3);">No quiz questions have been added yet.</div>
                             @endforelse
-                            <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" class="mt-3">
+                            <form action="{{ route('user.modules.progress', $module->id) }}" method="POST" class="mt-3" data-module-progress-form>
                                 @csrf
                                 <input type="hidden" name="progress_percentage" value="{{ max($currentProgress, 75) }}">
-                                <button class="btn w-100" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.2); font-weight:600; border-radius:8px;">Save Quiz Review Progress</button>
+                                <button type="submit" class="btn w-100" style="background:rgba(59,130,246,0.1); color:var(--pur); border:1px solid rgba(59,130,246,0.2); font-weight:600; border-radius:8px;">Save Quiz Review Progress</button>
                             </form>
                         </div>
                     </div>
@@ -213,4 +213,23 @@
         </section>
     @endif
 </div>
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-module-progress-form]').forEach(function (form) {
+            form.addEventListener('submit', function () {
+                const button = form.querySelector('button[type="submit"], button:not([type])');
+                if (! button || button.disabled) {
+                    return;
+                }
+
+                button.disabled = true;
+                button.setAttribute('aria-disabled', 'true');
+                button.dataset.originalLabel = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+            });
+        });
+    });
+</script>
+@endpush
 @endsection

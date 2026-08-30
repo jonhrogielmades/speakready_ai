@@ -414,6 +414,76 @@ const voiceMissionPreset = {
 };
 let promptRequestSequence = 0;
 let voiceNoticeTimer = null;
+let saveRequestInFlight = false;
+let savedVoiceSessionFingerprint = '';
+
+const voiceRoutes = {
+    prompt: "{{ route('user.drills.voice.prompt') }}",
+    analyze: "{{ route('user.drills.voice.analyze') }}",
+    save: "{{ route('user.drills.voice.save') }}"
+};
+
+function voiceCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : @json(csrf_token());
+}
+
+function voiceRequestMessage(data, status) {
+    if (data && typeof data.error === 'string' && data.error.trim()) return data.error;
+    if (data && typeof data.message === 'string' && data.message.trim()) return data.message;
+    if (data && data.errors && typeof data.errors === 'object') {
+        const first = Object.values(data.errors).flat().find(Boolean);
+        if (first) return String(first);
+    }
+
+    return status ? `Request failed with status ${status}.` : 'Request failed. Please try again.';
+}
+
+async function voiceJson(url, payload = {}, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(
+        () => controller.abort(),
+        Number(options.timeoutMs) || 12000
+    );
+
+    try {
+        const response = await fetch(url, {
+            method: options.method || 'POST',
+            credentials: 'same-origin',
+            signal: controller.signal,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': voiceCsrfToken()
+            },
+            body: JSON.stringify(payload)
+        });
+
+        let data = null;
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (error) {
+                data = null;
+            }
+        }
+
+        if (!response.ok) throw new Error(voiceRequestMessage(data, response.status));
+        if (!data) throw new Error('The server returned an empty response.');
+
+        return data;
+    } catch (error) {
+        if (error && error.name === 'AbortError') {
+            throw new Error('The request timed out. Please try again.');
+        }
+
+        throw error;
+    } finally {
+        window.clearTimeout(timeoutId);
+    }
+}
 
 function setVoiceNotice(message, variant = 'info', persist = false) {
     const notice = document.getElementById('voiceStatusNotice');
@@ -513,6 +583,15 @@ function localFallbackPrompt(category) {
     return list[Math.floor(Math.random() * list.length)];
 }
 
+function currentVoiceSessionFingerprint() {
+    const category = document.getElementById('categorySelect')?.value || '';
+    const prompt = document.getElementById('promptText')?.innerText || '';
+
+    return [category, prompt, transcript, seconds]
+        .map(value => cleanTranscriptText(value))
+        .join('|');
+}
+
 async function randomizePrompt(options = {}) {
     const cat = document.getElementById('categorySelect').value;
     const promptEl = document.getElementById('promptText');
@@ -520,8 +599,6 @@ async function randomizePrompt(options = {}) {
     const originalBtn = btn ? btn.innerHTML : '';
     const requestId = ++promptRequestSequence;
     const fallbackPrompt = localFallbackPrompt(cat);
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 5000);
 
     promptEl.innerText = `"${fallbackPrompt}"`;
 
@@ -531,18 +608,7 @@ async function randomizePrompt(options = {}) {
     }
 
     try {
-        const response = await fetch("{{ route('user.drills.voice.prompt') }}", {
-            method: 'POST',
-            signal: controller.signal,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ category: cat })
-        });
-        if (!response.ok) throw new Error(`Prompt generation failed with status ${response.status}`);
-
-        const data = await response.json();
+        const data = await voiceJson(voiceRoutes.prompt, { category: cat }, { timeoutMs: 7000 });
         const prompt = cleanTranscriptText(data.prompt || '');
         if (!prompt) throw new Error('AI returned an empty prompt');
 
@@ -556,7 +622,6 @@ async function randomizePrompt(options = {}) {
             setVoiceNotice('Using a local prompt because the AI prompt refresh is unavailable.', 'warning');
         }
     } finally {
-        window.clearTimeout(timeoutId);
         if (btn && requestId === promptRequestSequence) {
             btn.disabled = false;
             btn.innerHTML = originalBtn || '<span class="vr-option-icon"><i class="fa-solid fa-shuffle"></i></span><span>Randomize</span><i class="fa-solid fa-chevron-right"></i>';
@@ -1756,29 +1821,21 @@ async function generateAnalysis() {
     try {
         const promptText = document.getElementById('promptText').innerText.replace(/"/g, '');
         const transText = transcript;
-        
-        const response = await fetch("{{ route('user.drills.voice.analyze') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ prompt: promptText, transcript: transText })
-        });
-        if (!response.ok) throw new Error(`Analysis failed with status ${response.status}`);
-
-        const data = await response.json();
+        const data = await voiceJson(voiceRoutes.analyze, { prompt: promptText, transcript: transText }, { timeoutMs: 20000 });
+        const strengths = data.strengths || "AI strengths analysis was unavailable for this recording.";
+        const weaknesses = data.weaknesses || "AI improvement analysis was unavailable. Review the transcript, pace, and filler-word count before relying on this session.";
+        const improvedAnswer = data.improved_answer || "A grounded revision template was unavailable for this recording.";
         
         // Populate AI Feedback
-        document.getElementById('resStrengths').innerText = data.strengths || "AI strengths analysis was unavailable for this recording.";
-        document.getElementById('resWeak').innerText = data.weaknesses || "AI improvement analysis was unavailable. Review the transcript, pace, and filler-word count before relying on this session.";
-        document.getElementById('compAI').textContent = data.improved_answer || "A grounded revision template was unavailable for this recording.";
+        document.getElementById('resStrengths').innerText = strengths;
+        document.getElementById('resWeak').innerText = weaknesses;
+        document.getElementById('compAI').textContent = improvedAnswer;
         
         // Store for saving
         window.currentAnalysis = {
-            ai_feedback_strengths: data.strengths,
-            ai_feedback_weaknesses: data.weaknesses,
-            ai_improved_answer: data.improved_answer,
+            ai_feedback_strengths: strengths,
+            ai_feedback_weaknesses: weaknesses,
+            ai_improved_answer: improvedAnswer,
             clarity_score: clarity,
             confidence_score: confScore,
             speaking_pace: wpm,
@@ -1806,6 +1863,8 @@ async function generateAnalysis() {
 }
 
 async function saveSession() {
+    if (saveRequestInFlight) return;
+
     transcript = collapseRepeatedSpeech(transcriptEditorText());
     processTranscript(transcript);
 
@@ -1820,11 +1879,18 @@ async function saveSession() {
         if (!analyzed) return;
     }
 
+    const sessionFingerprint = currentVoiceSessionFingerprint();
+    if (savedVoiceSessionFingerprint === sessionFingerprint) {
+        setVoiceNotice('This rehearsal is already saved in your history.', 'info');
+        return;
+    }
+
     const btn = document.getElementById('btnSave');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
     btn.disabled = true;
     btn.setAttribute('aria-disabled', 'true');
+    saveRequestInFlight = true;
 
     try {
         const payload = {
@@ -1834,20 +1900,11 @@ async function saveSession() {
             prompt: document.getElementById('promptText').innerText.replace(/"/g, '')
         };
 
-        const response = await fetch("{{ route('user.drills.voice.save') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || `Save failed with status ${response.status}`);
+        const data = await voiceJson(voiceRoutes.save, payload, { timeoutMs: 15000 });
         
-        if (data.success) {
+        if (data.success && data.session) {
             setVoiceNotice('Session saved to your history.', 'success');
+            savedVoiceSessionFingerprint = sessionFingerprint;
 
             const clarityScore = Number(data.session.score) || parseInt(String(data.session.clarity || '').replace(/[^\d]/g, ''), 10) || 0;
             voiceHistoryData.unshift({
@@ -1862,12 +1919,13 @@ async function saveSession() {
             loadHistory();
             renderVoiceProgressChart();
         } else {
-            setVoiceNotice('Failed to save the session.', 'danger', true);
+            throw new Error('Failed to save the session.');
         }
     } catch (error) {
         console.error("Save Error:", error);
         setVoiceNotice(error.message || "An error occurred while saving.", 'danger', true);
     } finally {
+        saveRequestInFlight = false;
         btn.innerHTML = originalText;
         setVoiceSaveReady(Boolean(window.currentAnalysis && window.analysisTranscript === transcript));
     }

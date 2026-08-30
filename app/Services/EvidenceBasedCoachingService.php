@@ -547,7 +547,7 @@ final class EvidenceBasedCoachingService
                 'checks_total' => $feedbackChecksTotal,
                 'completeness_percent' => $feedbackQualityPercent,
                 'scope' => 'Required proof, risk, next step, and safety checks across the session feedback.',
-                'limitation' => 'A 100% result means every required feedback check passed. It does not mean the review is perfect.',
+                'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
             ],
             'transparency_note' => 'This summary is based on the original answers in this session. Speaking notes and optional camera notes are only for coaching. Missing signals are shown as not measured. Camera estimates do not change readiness scores or guess personal traits.',
         ];
@@ -1227,6 +1227,15 @@ final class EvidenceBasedCoachingService
             default => 'The answer follows the question guide and stays focused on '.$questionLabel.'.',
         };
 
+        $providerCoaching = $this->providerCoaching($metrics['provider_coaching'] ?? []);
+        if ($providerCoaching !== []) {
+            $whatWorked = $providerCoaching['keep'];
+            $improvementFocus = $providerCoaching['improve'];
+            $action = $providerCoaching['next_try'];
+            $nextAttemptSteps = $providerCoaching['next_attempt_steps'];
+            $successCheck = $providerCoaching['success_check'];
+        }
+
         return [
             'answer_id' => is_scalar($answerId) ? $answerId : null,
             'question_id' => is_scalar($questionId) ? $questionId : null,
@@ -1258,8 +1267,56 @@ final class EvidenceBasedCoachingService
                 && in_array($status, ['directly_answered', 'partially_answered', 'low_relevance'], true)
                 ? $this->boundedInt($metrics['scoring_confidence'], 0, 100)
                 : null,
-            'limitation' => 'This alignment verdict is a coaching aid based only on the submitted answer, its question, and the cited excerpt. It may not capture unstated context and does not verify whether a claim is true.',
+            'limitation' => 'This note checks only the saved answer, question, and quoted detail. It may miss unstated context and cannot prove every claim is true.',
         ];
+    }
+
+    private function providerCoaching(mixed $coaching): array
+    {
+        if (! is_array($coaching)) {
+            return [];
+        }
+
+        $validated = [];
+        foreach (['keep', 'improve', 'next_try', 'success_check'] as $field) {
+            $text = $this->providerCoachingText($coaching[$field] ?? null);
+            if ($text === '') {
+                return [];
+            }
+
+            $validated[$field] = $text;
+        }
+
+        $steps = [];
+        foreach ((array) ($coaching['next_attempt_steps'] ?? []) as $step) {
+            $text = $this->providerCoachingText($step, 260);
+            if ($text !== '' && ! in_array($text, $steps, true)) {
+                $steps[] = $text;
+            }
+
+            if (count($steps) >= 4) {
+                break;
+            }
+        }
+
+        if (count($steps) < 2) {
+            return [];
+        }
+
+        $validated['next_attempt_steps'] = $steps;
+
+        return $validated;
+    }
+
+    private function providerCoachingText(mixed $text, int $limit = 520): string
+    {
+        if (! is_scalar($text)) {
+            return '';
+        }
+
+        $text = trim((string) preg_replace('/\s+/u', ' ', (string) $text));
+
+        return $text !== '' && mb_strlen($text) <= $limit ? $text : '';
     }
 
     private function feedbackQuality(array $contentAlignment, array $priorityActions, array $normalizedQuality): array
@@ -1290,7 +1347,7 @@ final class EvidenceBasedCoachingService
             'next_attempt_actionable' => trim((string) ($contentAlignment['action'] ?? '')) !== ''
                 && ! empty($contentAlignment['next_attempt_steps'] ?? [])
                 && $hasPriorityAction,
-            'success_criteria_present' => trim((string) ($contentAlignment['success_check'] ?? '')) !== '',
+            'success_check_present' => trim((string) ($contentAlignment['success_check'] ?? '')) !== '',
             'limitations_and_trait_boundaries_disclosed' => trim((string) ($contentAlignment['limitation'] ?? '')) !== '',
         ];
 
@@ -1309,8 +1366,8 @@ final class EvidenceBasedCoachingService
             'checks_total' => $total,
             'completeness_percent' => $percent,
             'checks' => $checks,
-            'scope' => 'Required proof, risk, next step, success, and safety fields for this coaching report.',
-            'limitation' => 'A 100% result means every required feedback check passed. It does not mean the review is perfect.',
+            'scope' => 'Checks for answer proof, safe scoring, next steps, and safety notes.',
+            'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
         ];
     }
 
@@ -1467,7 +1524,7 @@ final class EvidenceBasedCoachingService
             ];
         }
 
-        $mentionsCleanup = preg_match('/\b(clean(?:up|ing)?|clean\s+up|mess|janitor|custodian|sanitiz\w*|spill|trash|waste|restroom|floor)\b/i', $questionText) === 1;
+        $mentionsCleanup = preg_match('/\b(clean(?:up|ing)?|clean\s+up|mess|sanitiz\w*|spill|trash|waste|restroom|floor)\b/i', $questionText) === 1;
         $asksForSteps = preg_match('/\b(specific steps|steps? (?:you )?(?:took|used)|walk me through|manage|managed|handle|handled|process|clean\s+up|cleanup)\b/i', $questionText) === 1;
         $asksForTools = preg_match('/\b(tools?|suppl(?:y|ies)|agents?|equipment|materials?|chemicals?|cleaning agents?|mop|bucket|gloves|ppe|disinfectant|detergent)\b/i', $questionText) === 1;
         $asksForResult = preg_match('/\b(result|outcome|impact|resolved|finished|verified|safe|safety|check|lesson)\b/i', $questionText) === 1;

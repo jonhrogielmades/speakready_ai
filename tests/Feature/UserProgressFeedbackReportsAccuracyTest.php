@@ -157,6 +157,63 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             ->assertViewHas('goalNote', fn ($note) => $note && $note->title === 'First milestone waiting');
     }
 
+    public function test_progress_page_renders_live_learning_plan_recommendation_and_voice_activity(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+        $module = LearningModule::create([
+            'title' => 'Answer Clarity Sprint',
+            'description' => 'Build clarity with concise, organized interview answers.',
+            'status' => 'published',
+            'mapped_skills' => ['clarity'],
+        ]);
+
+        LearningProgress::create([
+            'user_id' => $user->id,
+            'learning_module_id' => $module->id,
+            'progress_percentage' => 60,
+        ]);
+
+        $this->voiceSessionFor($user, now()->subDay(), [
+            'prompt' => 'Introduce yourself for a Philippines interview.',
+            'clarity_score' => 72,
+            'confidence_score' => 70,
+            'filler_words' => 4,
+            'speaking_pace' => 118,
+        ]);
+        $this->voiceSessionFor($user, now(), [
+            'prompt' => 'Explain your strongest role fit proof.',
+            'clarity_score' => 84,
+            'confidence_score' => 82,
+            'filler_words' => 2,
+            'speaking_pace' => 132,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('user.progress'));
+
+        $response->assertOk()
+            ->assertSee('Personalized Practice Plan')
+            ->assertSee('Learning Progress')
+            ->assertSee('Answer Clarity Sprint')
+            ->assertSee('Recommended Next')
+            ->assertSee('Voice Progress')
+            ->assertSee('Explain your strongest role fit proof.')
+            ->assertSee('Filler words are down 50%')
+            ->assertViewHas('currentStreak', 2)
+            ->assertViewHas('totalPracticeDays', 2)
+            ->assertViewHas('activityCalendar', fn ($calendar) => $calendar
+                && $calendar->active_days === 2
+                && $calendar->current_streak === 2
+                && $calendar->total_voice_sessions === 2);
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1')
+            ->get(route('user.progress'))
+            ->assertOk()
+            ->assertSee('Personalized Practice Plan')
+            ->assertSee('Voice Progress');
+    }
+
     public function test_feedback_marks_unscored_completed_sessions_as_pending(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -216,6 +273,67 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
                     'School Admission Interviews',
                 ];
             });
+    }
+
+    public function test_feedback_search_matches_answer_level_details_and_escapes_like_wildcards(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('BPO / Customer Support');
+        $matchingSession = $this->completedSessionFor($user, $category, 82, now()->subDays(2), [
+            'target_position' => 'Customer Support Specialist',
+            'interview_focus' => 'contact center escalation',
+        ]);
+        $otherSession = $this->completedSessionFor($user, $category, 76, now()->subDay(), [
+            'target_position' => 'Back Office Associate',
+            'interview_focus' => 'admin support',
+        ]);
+        $literalPercentSession = $this->completedSessionFor($user, $category, 91, now(), [
+            'target_position' => 'Quality Analyst 100% remote',
+            'interview_focus' => 'quality assurance',
+        ]);
+
+        $question = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'How do you calm an escalated customer?',
+            'difficulty' => 'medium',
+            'type' => 'Situational',
+            'status' => 'active',
+        ]);
+
+        InterviewAnswer::create([
+            'interview_session_id' => $matchingSession->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I used a ticket triage playbook before calling the customer back.',
+            'ai_feedback' => 'Keep the ticket triage playbook and add a measurable resolution result.',
+            'better_sample_answer' => 'I would acknowledge the concern, classify urgency, then confirm the next action.',
+            'recommendation_text' => 'Add one customer satisfaction outcome.',
+            'score' => 82,
+        ]);
+
+        Feedback::create([
+            'interview_session_id' => $otherSession->id,
+            'strengths' => 'Organized explanation.',
+            'weaknesses' => 'Needs clearer proof.',
+            'improvement_suggestions' => 'Add an example.',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.feedback', ['search' => 'ticket triage playbook']))
+            ->assertOk()
+            ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
+                && $sessions->getCollection()->first()?->id === $matchingSession->id);
+
+        $this->actingAs($user)
+            ->get(route('user.feedback', ['search' => 'escalated customer']))
+            ->assertOk()
+            ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
+                && $sessions->getCollection()->first()?->id === $matchingSession->id);
+
+        $this->actingAs($user)
+            ->get(route('user.feedback', ['search' => '%']))
+            ->assertOk()
+            ->assertViewHas('sessions', fn ($sessions) => $sessions->total() === 1
+                && $sessions->getCollection()->first()?->id === $literalPercentSession->id);
     }
 
     public function test_feedback_empty_state_distinguishes_filters_from_no_history(): void
@@ -433,8 +551,15 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.feedback'))
             ->assertOk()
-            ->assertSee('css/desktop/user/feedback.css?v=6', false)
+            ->assertSee('css/desktop/user/feedback.css?v=7', false)
             ->assertSee('data-page-style="user-feedback"', false);
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->get(route('user.feedback'))
+            ->assertOk()
+            ->assertSee('css/mobile/user/feedback.css?v=4', false)
+            ->assertSee('serverDetectedMobile: true', false);
 
         foreach (['desktop', 'mobile'] as $device) {
             $css = File::get(public_path("css/{$device}/user/feedback.css"));
@@ -444,7 +569,40 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
             $this->assertStringContainsString('html[data-theme="dark"] .feedback-shell', $css);
             $this->assertStringContainsString('overflow-wrap: anywhere', $css);
             $this->assertStringContainsString('word-break: normal', $css);
+            $this->assertStringContainsString('feedback-score-badge-excellent', $css);
         }
+    }
+
+    public function test_feedback_history_uses_distinct_rating_badge_classes_on_desktop_and_mobile(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('Behavioral');
+
+        $this->completedSessionFor($user, $category, 95, now()->subDays(4));
+        $this->completedSessionFor($user, $category, 78, now()->subDays(3));
+        $this->completedSessionFor($user, $category, 58, now()->subDays(2));
+        $this->completedSessionFor($user, $category, 34, now()->subDay());
+        $this->completedSessionFor($user, $category, null, now());
+
+        $this->actingAs($user)
+            ->get(route('user.feedback'))
+            ->assertOk()
+            ->assertSee('feedback-score-badge-pending', false)
+            ->assertSee('feedback-score-badge-excellent', false)
+            ->assertSee('feedback-score-badge-good', false)
+            ->assertSee('feedback-score-badge-fair', false)
+            ->assertSee('feedback-score-badge-needs-work', false);
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->get(route('user.feedback'))
+            ->assertOk()
+            ->assertSee('feedback-mobile-history-row', false)
+            ->assertSee('feedback-score-badge-pending', false)
+            ->assertSee('feedback-score-badge-excellent', false)
+            ->assertSee('feedback-score-badge-good', false)
+            ->assertSee('feedback-score-badge-fair', false)
+            ->assertSee('feedback-score-badge-needs-work', false);
     }
 
     public function test_reports_do_not_render_placeholder_scores_for_unscored_sessions(): void
@@ -459,6 +617,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
         $response->assertOk()
             ->assertSee('No Scored Interview Report Available')
             ->assertSee('none of them have score data yet')
+            ->assertSee('css/desktop/user/reports.css?v=2', false)
+            ->assertSee('Start Philippines Interview')
             ->assertDontSee('88%')
             ->assertDontSee('75%')
             ->assertDontSee('+13%')
@@ -634,6 +794,80 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
                 && $areas->contains(fn ($area) => $area->issue === 'Filler words detected'));
     }
 
+    public function test_reports_use_saved_feedback_text_assets_and_export_controls_on_desktop_and_mobile(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category('BPO / Customer Support');
+        $session = $this->completedSessionFor($user, $category, 88, now(), [
+            'target_position' => 'Customer Support Representative',
+            'interview_focus' => 'customer support contact center',
+        ]);
+
+        Feedback::create([
+            'interview_session_id' => $session->id,
+            'strengths' => 'Clear customer empathy. You used role-specific evidence.',
+            'weaknesses' => 'Needs tighter closing. Add one measurable customer result.',
+            'improvement_suggestions' => 'Close with one measurable result. Practice pacing before the final answer.',
+        ]);
+
+        $question = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'How do you recover a frustrated customer?',
+            'difficulty' => 'medium',
+            'type' => 'Situational',
+            'status' => 'active',
+        ]);
+
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I listened, confirmed the issue, and explained the next step.',
+            'ai_feedback' => 'Strong recovery structure.',
+            'score' => 86,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.reports'))
+            ->assertOk()
+            ->assertSee('css/desktop/user/reports.css?v=2', false)
+            ->assertSee('css/desktop/user/reports-2.css?v=5', false)
+            ->assertSee('data-page-style="user-reports"', false)
+            ->assertSee('Clear customer empathy')
+            ->assertSee('Needs tighter closing')
+            ->assertSee('Close with one measurable result')
+            ->assertSee('id="exportPdfBtn"', false)
+            ->assertSee('id="exportExcelBtn"', false)
+            ->assertSee('id="reportExportStatus"', false)
+            ->assertSee('const hasReportFinalScore', false)
+            ->assertSee(route('user.sessions.export', $session), false)
+            ->assertViewHas('feedbackSummary', fn ($summary) => $summary
+                && $summary->has_data === true
+                && in_array('Clear customer empathy.', $summary->strengths, true)
+                && in_array('Needs tighter closing.', $summary->weaknesses, true)
+                && in_array('Close with one measurable result.', $summary->suggestions, true));
+
+        $this->actingAs($user)
+            ->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->get(route('user.reports'))
+            ->assertOk()
+            ->assertSee('css/mobile/user/reports.css?v=2', false)
+            ->assertSee('css/mobile/user/reports-2.css?v=1', false)
+            ->assertSee('serverDetectedMobile: true', false)
+            ->assertSee('Clear customer empathy')
+            ->assertSee('Close with one measurable result');
+
+        $export = $this->actingAs($user)->get(route('user.sessions.export', $session));
+
+        $export->assertOk()
+            ->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+
+        $csv = $export->streamedContent();
+        $this->assertStringContainsString('Customer Support Representative', $csv);
+        $this->assertStringContainsString('How do you recover a frustrated customer?', $csv);
+        $this->assertStringContainsString('Strong recovery structure.', $csv);
+        $this->assertStringContainsString('88', $csv);
+    }
+
     public function test_progress_and_reports_exports_are_guarded_when_cdn_scripts_are_unavailable(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -695,6 +929,29 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
                 'overall_readiness_score' => $score,
             ]);
         }
+
+        return $session;
+    }
+
+    private function voiceSessionFor(User $user, $createdAt, array $overrides = []): VoiceSession
+    {
+        $session = VoiceSession::create(array_merge([
+            'user_id' => $user->id,
+            'category' => 'Behavioral',
+            'prompt' => 'Practice a concise answer.',
+            'transcript' => 'I practiced one concise answer with clear evidence.',
+            'speaking_pace' => 125,
+            'clarity_score' => 80,
+            'confidence_score' => 78,
+            'filler_words' => 1,
+            'duration_seconds' => 45,
+            'wpm' => 125,
+        ], $overrides));
+
+        $session->forceFill([
+            'created_at' => $createdAt,
+            'updated_at' => $createdAt,
+        ])->save();
 
         return $session;
     }

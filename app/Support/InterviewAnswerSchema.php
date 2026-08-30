@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\InterviewAnswer;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
@@ -21,6 +22,7 @@ class InterviewAnswerSchema
             }
 
             self::$checked = true;
+            self::flushModelColumnCache();
 
             return;
         }
@@ -167,6 +169,7 @@ class InterviewAnswerSchema
         }
 
         self::$checked = true;
+        self::flushModelColumnCache();
     }
 
     public static function hasRequiredColumns(): bool
@@ -310,5 +313,12 @@ class InterviewAnswerSchema
     private static function isMissing(array $missing, string $column): bool
     {
         return in_array($column, $missing, true);
+    }
+
+    private static function flushModelColumnCache(): void
+    {
+        if (method_exists(InterviewAnswer::class, 'flushColumnCache')) {
+            InterviewAnswer::flushColumnCache();
+        }
     }
 }

@@ -6,6 +6,8 @@ use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
 use App\Models\Score;
+use App\Support\LearningModuleSchema;
+use App\Support\ScoreSchema;
 use Illuminate\Support\Collection;
 
 class LearningRecommendationService
@@ -91,6 +93,9 @@ class LearningRecommendationService
 
     public function forUser(int $userId, int $limit = 4): Collection
     {
+        LearningModuleSchema::ensure();
+        ScoreSchema::ensure();
+
         $limit = max(1, $limit);
         $progressByModule = LearningProgress::where('user_id', $userId)
             ->get()
@@ -125,6 +130,8 @@ class LearningRecommendationService
 
     public function learningPathsForUser(int $userId): Collection
     {
+        LearningModuleSchema::ensure();
+
         $progressByModule = LearningProgress::where('user_id', $userId)
             ->get()
             ->keyBy('learning_module_id');
@@ -390,13 +397,15 @@ class LearningRecommendationService
         $skill = $item->signal?->skill ?? 'clarity';
         $rule = self::SKILL_RULES[$skill] ?? self::SKILL_RULES['clarity'];
         $module = $item->module;
+        $reason = trim((string) ($item->signal?->reason ?? $rule['reason']));
+        $reason = rtrim($reason, ". \t\n\r\0\x0B").'.';
 
         return (object) [
             'icon' => $rule['icon'],
             'color' => $rule['color'],
             'skill' => $rule['label'],
             'text' => "{$rule['action']}: {$module->title}",
-            'reason' => ucfirst($item->signal?->reason ?? $rule['reason']).'.',
+            'reason' => ucfirst($reason),
             'module' => $module,
             'progress' => $item->progress,
             'url' => route('user.modules.show', $module->id),

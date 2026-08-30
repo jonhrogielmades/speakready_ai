@@ -8,12 +8,15 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Models\Announcement;
 use App\Notifications\SystemNotification;
+use App\Support\AccountNotificationSchema;
 use Illuminate\Support\Facades\Auth;
 
 class AdminNotificationController extends Controller
 {
     public function index()
     {
+        AccountNotificationSchema::ensure();
+
         $announcements = Announcement::with('sender', 'user')
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'announcements_page')
@@ -46,6 +49,8 @@ class AdminNotificationController extends Controller
 
     public function store(Request $request)
     {
+        AccountNotificationSchema::ensure();
+
         if (! Setting::enabled('notif_sys')) {
             return redirect()
                 ->route('admin.notifications.index')

@@ -14,10 +14,10 @@ final class QuestionIntentService
 
         // Exact question wording takes priority over broad guides or coarse
         // stored type labels.
-        if (preg_match('/\btell me about yourself\b|\bwalk me through (?:your|the) background\b/i', $text)) {
+        if (preg_match('/\btell me about yourself\b|\bintroduce yourself\b|\bwalk me through (?:your|the) background\b/i', $text)) {
             return 'self_introduction';
         }
-        if (preg_match('/\bwhy should (?:we|an? .+ employer) hire you\b|\bwhy (?:are|would) you (?:be )?(?:a )?(?:good )?fit\b/i', $text)) {
+        if (preg_match('/\bwhy should (?:we|an? .+ employer) hire you\b|\bwhy (?:are|would) you (?:be )?(?:a )?(?:good |strong )?fit\b|\byou(?: are|\'re)? (?:a )?(?:good |strong )?fit\b/i', $text)) {
             return 'role_fit';
         }
         if (preg_match('/\bwhy (?:do|did|would) you (?:want|choose|apply|join)\b|\bwhat interests you\b/i', $text)) {

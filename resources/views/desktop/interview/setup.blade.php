@@ -567,8 +567,8 @@
                         </div>
                         
                         <div class="setup-start-action">
-                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine">
-                                Start Philippine Interview <i class="fa-solid fa-play ms-2"></i>
+                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine" data-default-label='Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>'>
+                                Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>
                             </button>
                         </div>
                     </div>
@@ -1057,7 +1057,7 @@
 
             if (startInterviewButton) {
                 startInterviewButton.disabled = true;
-                startInterviewButton.innerHTML = 'Begin / Resume Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
+                startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>';
             }
         });
 
@@ -1066,7 +1066,7 @@
             document.body.classList.remove('finish-transition-active');
 
             if (startInterviewButton) {
-                startInterviewButton.innerHTML = 'Start Philippine Interview <i class="fa-solid fa-play ms-2"></i>';
+                startInterviewButton.innerHTML = startInterviewButton.dataset.defaultLabel || 'Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>';
                 updateStartInterviewState();
             }
         });
@@ -1176,7 +1176,7 @@
             { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick the Philippines scenario, assistance level, and question types.', side: 'top', align: 'center' }},
             { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose typed, voice, or hybrid answers depending on how you want to practice.', side: 'top', align: 'center' }},
             { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm your interview setup before generating the practice session.', side: 'top', align: 'center' }},
-            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate your customized Philippine interview when the setup looks right.', side: 'top', align: 'center' }}
+            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate your customized Philippines interview when the setup looks right.', side: 'top', align: 'center' }}
         ];
 
         window.createSpeakReadyTour({

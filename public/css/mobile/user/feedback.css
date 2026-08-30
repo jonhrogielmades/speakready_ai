@@ -3240,3 +3240,104 @@ html body .feedback-shell #feedback-filters .btn i {
     color: currentColor !important;
     -webkit-text-fill-color: currentColor !important;
 }
+
+/* Final Feedback History score badge colors. */
+#mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+html body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    background: rgba(100, 116, 139, 0.15) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+html body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent {
+    color: #047857 !important;
+    -webkit-text-fill-color: #047857 !important;
+    background: rgba(16, 185, 129, 0.16) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+html body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good {
+    color: #2563eb !important;
+    -webkit-text-fill-color: #2563eb !important;
+    background: rgba(59, 130, 246, 0.16) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+html body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair {
+    color: #b45309 !important;
+    -webkit-text-fill-color: #b45309 !important;
+    background: rgba(245, 158, 11, 0.18) !important;
+}
+
+#mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+html body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work {
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626 !important;
+    background: rgba(239, 68, 68, 0.16) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+body.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+:root:not(.lm) body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending,
+.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-pending {
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
+    background: rgba(100, 116, 139, 0.24) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+body.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+:root:not(.lm) body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent,
+.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-excellent {
+    color: #86efac !important;
+    -webkit-text-fill-color: #86efac !important;
+    background: rgba(20, 83, 45, 0.55) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+body.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+:root:not(.lm) body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good,
+.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-good {
+    color: #bfdbfe !important;
+    -webkit-text-fill-color: #bfdbfe !important;
+    background: rgba(30, 64, 175, 0.48) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+body.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+:root:not(.lm) body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair,
+.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-fair {
+    color: #fde68a !important;
+    -webkit-text-fill-color: #fde68a !important;
+    background: rgba(146, 64, 14, 0.54) !important;
+}
+
+html[data-theme="dark"] body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+:root:not(.lm) body #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+body.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+.dm #mob-content .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+html[data-theme="dark"] body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+:root:not(.lm) body .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+body.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work,
+.dm .feedback-shell #feedbackTable .feedback-score-badge.feedback-score-badge-needs-work {
+    color: #fecaca !important;
+    -webkit-text-fill-color: #fecaca !important;
+    background: rgba(127, 29, 29, 0.62) !important;
+}

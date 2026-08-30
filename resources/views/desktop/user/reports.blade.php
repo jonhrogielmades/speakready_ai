@@ -1,8 +1,8 @@
 @extends('desktop.layouts.app')
-@section('title', 'Philippines Interview Reports')
+@section('title', 'Interview Reports')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=1') }}" data-page-style="user-reports">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/reports.css?v=2') }}" data-page-style="user-reports">
 <link rel="stylesheet" href="{{ asset('css/desktop/user/reports-2.css?v=5') }}" data-page-style="user-reports-2">
 @endpush
 
@@ -144,7 +144,7 @@
                 </div>
 
                 <div class="report-score-list">
-                    @foreach($latestPerformanceMetrics as $metric)
+                    @forelse($latestPerformanceMetrics as $metric)
                     <div class="report-score-row">
                         <div class="d-flex justify-content-between gap-3 mb-2">
                             <span style="color:var(--tx);font-weight:800;">{{ $metric['name'] }}</span>
@@ -154,7 +154,12 @@
                             <div class="progress-bar bg-primary" role="progressbar" aria-label="{{ $metric['name'] }} score" aria-valuenow="{{ $metric['bar'] }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ $metric['bar'] }}%;"></div>
                         </div>
                     </div>
-                    @endforeach
+                    @empty
+                    <div class="report-empty-inline">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>The final score is available, but detailed metric rows were not saved for this interview.</span>
+                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -208,9 +213,11 @@
                 @php
                     $strengths = $feedbackSummary->strengths ?: ['None identified yet'];
                     $weaknesses = $feedbackSummary->weaknesses ?: ['None identified yet'];
-                    $primaryRecommendation = ($feedbackSummary->weaknesses[0] ?? null)
+                    $suggestions = $feedbackSummary->suggestions ?? [];
+                    $primaryRecommendation = ($suggestions[0] ?? null)
+                        ?: (($feedbackSummary->weaknesses[0] ?? null)
                         ? 'Focus on your ' . strtolower($feedbackSummary->weaknesses[0])
-                        : 'Maintain your strongest interview skills';
+                        : 'Maintain your strongest interview skills');
                 @endphp
                 <div class="row g-4">
                     <div class="col-md-4">
@@ -238,8 +245,12 @@
                             <h6 style="color:#3b82f6;font-weight:bold;"><i class="fa-solid fa-lightbulb me-2"></i>Recommended Practice</h6>
                             <ul style="color:var(--tx);font-size:0.9rem;padding-left:20px;line-height:1.8;">
                                 <li>{{ $primaryRecommendation }}</li>
-                                <li>Review your latest Philippines interview feedback</li>
-                                <li>Complete one focused voice rehearsal</li>
+                                @forelse(array_slice($suggestions, 1, 2) as $suggestion)
+                                    <li>{{ $suggestion }}</li>
+                                @empty
+                                    <li>Review your latest Philippines interview feedback</li>
+                                    <li>Complete one focused voice rehearsal</li>
+                                @endforelse
                             </ul>
                         </div>
                     </div>
@@ -539,7 +550,7 @@
                 Your report is generated automatically from scored Philippines interview performance. Complete your first practice interview to unlock your report summary, score breakdown, question analysis, improvement areas, and export options.
             @endif
         </p>
-        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine report-start-btn" style="font-weight:700;"><i class="fa-solid fa-play"></i>Start Philippine Interview</a>
+        <a href="{{ route('interview.setup') }}" class="btn btn-primary btn-shine report-start-btn" style="font-weight:700;"><i class="fa-solid fa-play"></i>Start Philippines Interview</a>
     </div>
     @endif
 </div>
@@ -630,6 +641,7 @@
 
         const latestScoreRows = @json($latestPerformanceMetrics ?? []);
         const reportFinalScore = @json($reportSummary->final_score_label ?? 'N/A');
+        const hasReportFinalScore = reportFinalScore && reportFinalScore !== 'N/A';
         const exportStatus = document.getElementById('reportExportStatus');
         const setExportStatus = function(message, state = 'info') {
             if (!exportStatus) return;
@@ -672,7 +684,7 @@
             URL.revokeObjectURL(url);
         };
         const buildLatestScoreTable = function() {
-            if (!Array.isArray(latestScoreRows) || latestScoreRows.length === 0) {
+            if ((!Array.isArray(latestScoreRows) || latestScoreRows.length === 0) && !hasReportFinalScore) {
                 return null;
             }
 
@@ -687,7 +699,15 @@
             thead.appendChild(header);
 
             const tbody = document.createElement('tbody');
-            [['Final Score', reportFinalScore], ...latestScoreRows.map((row) => [row.name, `${row.score}%`])].forEach((row) => {
+            const rows = [];
+            if (hasReportFinalScore) {
+                rows.push(['Final Score', reportFinalScore]);
+            }
+            if (Array.isArray(latestScoreRows)) {
+                latestScoreRows.forEach((row) => rows.push([row.name, `${row.score}%`]));
+            }
+
+            rows.forEach((row) => {
                 const tr = document.createElement('tr');
                 row.forEach((value) => {
                     const td = document.createElement('td');

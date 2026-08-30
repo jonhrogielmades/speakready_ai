@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Schema;
 
 class Score extends Model
 {
+    private static ?array $columnCache = null;
+
     protected $fillable = [
         'interview_session_id',
         'score_version',
@@ -40,13 +42,16 @@ class Score extends Model
 
     public static function hasColumn(string $column): bool
     {
-        static $columns = null;
-
-        $columns ??= Schema::hasTable('scores')
+        self::$columnCache ??= Schema::hasTable('scores')
             ? array_flip(Schema::getColumnListing('scores'))
             : [];
 
-        return isset($columns[$column]);
+        return isset(self::$columnCache[$column]);
+    }
+
+    public static function flushColumnCache(): void
+    {
+        self::$columnCache = null;
     }
 
     public function scopeReadinessEligible($query)

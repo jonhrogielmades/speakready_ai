@@ -212,6 +212,31 @@
             feedback.classList.toggle('show', Boolean(message));
         }
 
+        function coachCsrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || @json(csrf_token());
+        }
+
+        function coachFetch(url, options = {}) {
+            return fetch(url, {
+                ...options,
+                credentials: options.credentials || 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                    'X-CSRF-TOKEN': coachCsrfToken(),
+                    ...(options.headers || {})
+                }
+            });
+        }
+
+        async function coachJson(response, fallbackMessage) {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || data.response || fallbackMessage);
+            }
+
+            return data;
+        }
+
         function resizeCoachTextarea(textarea) {
             if (!textarea) return;
 
@@ -466,21 +491,11 @@
                 }
                 files.forEach(file => formData.append('coach_attachments[]', file));
 
-                // Call AI Backend
-                const response = await fetch(coachEndpoint('chatUrl', @json(route('user.coach.chat'))), {
+                const response = await coachFetch(coachEndpoint('chatUrl', @json(route('user.coach.chat'))), {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
                     body: formData
                 });
-
-                if (!response.ok) {
-                    const errorPayload = await response.json().catch(() => null);
-                    throw new Error(errorPayload?.message || 'Network response was not ok');
-                }
-
-                const data = await response.json();
+                const data = await coachJson(response, 'Could not send your message. Please try again.');
                 const aiResponse = data.response;
                 
                 if (data.conversation_id && !currentConversationId) {
@@ -550,6 +565,14 @@
                 `;
                 box.insertBefore(errorMsgDiv, typing);
                 box.scrollTop = box.scrollHeight;
+                if (!ta.value.trim()) {
+                    ta.value = text;
+                    resizeCoachTextarea(ta);
+                }
+                if (files.length) {
+                    coachSelectedFiles = files.slice(0, coachMaxFiles);
+                    renderCoachAttachments();
+                }
             } finally {
                 setCoachSending(false);
                 resizeCoachTextarea(ta);
@@ -657,15 +680,8 @@
 
         async function loadConversation(id) {
             try {
-                const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Failed to load conversation');
-                
-                const data = await response.json();
+                const response = await coachFetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id));
+                const data = await coachJson(response, 'Failed to load conversation');
                 
                 // Update State
                 currentConversationId = data.conversation.id;
@@ -733,14 +749,10 @@
             if (!confirmed) return;
             
             try {
-                const response = await fetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
+                const response = await coachFetch(coachEndpoint('conversationUrl', @json(url('/coach/conversation'))) + '/' + encodeURIComponent(id), {
+                    method: 'DELETE'
                 });
-                
-                if (!response.ok) throw new Error('Failed to delete conversation');
+                await coachJson(response, 'Failed to delete conversation');
                 
                 // Remove from UI
                 const item = document.getElementById('conv-' + id);
@@ -779,14 +791,10 @@
             if (!confirmed) return;
 
             try {
-                const response = await fetch(coachEndpoint('clearUrl', @json(route('user.coach.clear'))), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    }
+                const response = await coachFetch(coachEndpoint('clearUrl', @json(route('user.coach.clear'))), {
+                    method: 'DELETE'
                 });
-
-                if (!response.ok) throw new Error('Failed to clear conversations');
+                await coachJson(response, 'Failed to clear conversations');
 
                 document.querySelectorAll('.history-item').forEach(item => item.remove());
                 syncCoachActionsMenu('clear');

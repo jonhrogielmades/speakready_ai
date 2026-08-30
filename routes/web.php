@@ -13,8 +13,14 @@ use App\Http\Controllers\MentorReviewController;
 use App\Http\Controllers\UserApplicationController;
 use App\Http\Controllers\UserController;
 use App\Services\LandingStatsService;
+use App\Support\CareerPlanningSchema;
+use App\Support\InterviewAnswerSchema;
+use App\Support\InterviewSessionSchema;
+use App\Support\QuestionSchema;
+use App\Support\ScoreSchema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 Route::get('/', function (LandingStatsService $landingStatsService) {
     if (Auth::check()) {
@@ -68,6 +74,12 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/interview/setup', function () {
+        CareerPlanningSchema::ensure();
+        InterviewSessionSchema::ensure();
+        QuestionSchema::ensure();
+        InterviewAnswerSchema::ensure();
+        ScoreSchema::ensure();
+
         $isSupportedInterviewCategory = function ($category): bool {
             $title = strtolower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
 
@@ -89,13 +101,15 @@ Route::middleware(['auth', 'user'])->group(function () {
                 || str_contains($title, 'admission interview');
         };
 
-        $categories = \App\Models\Category::where('status', 'active')
-            ->where('type', 'core')
-            ->orderBy('sort_order')
-            ->orderBy('title')
-            ->get()
-            ->filter($isSupportedInterviewCategory)
-            ->values();
+        $categories = Schema::hasTable('categories')
+            ? \App\Models\Category::where('status', 'active')
+                ->where('type', 'core')
+                ->orderBy('sort_order')
+                ->orderBy('title')
+                ->get()
+                ->filter($isSupportedInterviewCategory)
+                ->values()
+            : collect();
         $sourcePacks = \App\Services\QuestionDatasetProvider::all();
         $selectedApplication = null;
         $selectedPack = null;
@@ -114,6 +128,12 @@ Route::middleware(['auth', 'user'])->group(function () {
     })->name('interview.setup');
 
     Route::get('/interview/session', function () {
+        CareerPlanningSchema::ensure();
+        InterviewSessionSchema::ensure();
+        QuestionSchema::ensure();
+        InterviewAnswerSchema::ensure();
+        ScoreSchema::ensure();
+
         $activeInterviewId = session('active_interview_id');
 
         if (! $activeInterviewId) {

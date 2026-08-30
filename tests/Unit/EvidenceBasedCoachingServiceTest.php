@@ -451,6 +451,91 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertContains('The answer did not name the tools, supplies, equipment, or cleaning agents used.', data_get($summary, 'question_improvements.0.missing_points'));
     }
 
+    public function test_janitor_intro_question_does_not_receive_cleanup_specific_short_answer_guidance(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $coaching = $service->forAnswer('okay', [
+            'id' => 178,
+            'type' => 'Personal',
+            'question_text' => 'Before we get into the Janitor interview, please introduce yourself. What is your name, where are you currently based, and what background or experience would you like me to know first?',
+        ], [
+            'answer_id' => 73,
+            'response_mode' => 'text',
+            'scoring_confidence' => 50,
+            'relevance_score' => 0,
+            'answer_alignment' => 'insufficient_evidence',
+            'evidence_quotes' => ['okay'],
+        ]);
+
+        $alignment = data_get($coaching, 'content_alignment');
+        $this->assertSame('self_introduction', data_get($coaching, 'question_tip.framework'));
+        $this->assertStringNotContainsString('cleanup context', $alignment['improvement_focus']);
+        $this->assertStringNotContainsString('cleanup situation', $alignment['action']);
+        $this->assertStringNotContainsString('safety check', $alignment['success_check']);
+        $this->assertStringContainsString('now-before-next', $alignment['action']);
+    }
+
+    public function test_janitor_role_fit_question_does_not_receive_cleanup_specific_short_answer_guidance(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $coaching = $service->forAnswer('okay', [
+            'id' => 179,
+            'type' => 'Personal',
+            'question_text' => 'Since this is our last question, is there anything else you\'d like to share about why you\'re a strong fit for this janitor position that we haven\'t covered?',
+        ], [
+            'answer_id' => 74,
+            'response_mode' => 'text',
+            'scoring_confidence' => 50,
+            'relevance_score' => 0,
+            'answer_alignment' => 'insufficient_evidence',
+            'evidence_quotes' => ['okay'],
+        ]);
+
+        $alignment = data_get($coaching, 'content_alignment');
+        $this->assertSame('role_fit', data_get($coaching, 'question_tip.framework'));
+        $this->assertStringNotContainsString('cleanup context', $alignment['improvement_focus']);
+        $this->assertStringNotContainsString('cleanup situation', $alignment['action']);
+        $this->assertStringNotContainsString('safety check', $alignment['success_check']);
+        $this->assertStringContainsString('job needs', $alignment['action']);
+    }
+
+    public function test_provider_generated_coaching_text_drives_question_next_steps(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+        $providerCoaching = [
+            'keep' => 'Only "okay" is available, so keep it only as proof that a reply was started for the introduction question.',
+            'improve' => 'Add your name, current location, and the janitor background you want the interviewer to know first.',
+            'next_try' => 'Answer the introduction question with your name and location before adding one relevant janitor experience.',
+            'next_attempt_steps' => [
+                'Say your name and where you are based.',
+                'Add one janitor or cleaning-related background detail.',
+            ],
+            'success_check' => 'The retry clearly answers the name, location, and background parts of the introduction question.',
+        ];
+
+        $coaching = $service->forAnswer('okay', [
+            'id' => 180,
+            'type' => 'Personal',
+            'question_text' => 'Before we get into the Janitor interview, please introduce yourself. What is your name, where are you currently based, and what background or experience would you like me to know first?',
+        ], [
+            'answer_id' => 75,
+            'response_mode' => 'text',
+            'scoring_confidence' => 88,
+            'relevance_score' => 0,
+            'answer_alignment' => 'insufficient_evidence',
+            'evidence_quotes' => ['okay'],
+            'evaluation_source' => 'ai_evidence_validated',
+            'provider_coaching' => $providerCoaching,
+        ]);
+
+        $alignment = data_get($coaching, 'content_alignment');
+        $this->assertSame($providerCoaching['keep'], $alignment['what_worked']);
+        $this->assertSame($providerCoaching['improve'], $alignment['improvement_focus']);
+        $this->assertSame($providerCoaching['next_try'], $alignment['action']);
+        $this->assertSame($providerCoaching['next_attempt_steps'], $alignment['next_attempt_steps']);
+        $this->assertSame($providerCoaching['success_check'], $alignment['success_check']);
+    }
+
     public function test_the_same_answer_receives_question_bound_alignment_for_each_different_question(): void
     {
         $service = new EvidenceBasedCoachingService;

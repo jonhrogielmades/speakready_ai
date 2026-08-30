@@ -3008,3 +3008,108 @@
             width: 100% !important;
         }
     }
+
+/* Final modules filter controls. */
+#interview-modules-page .module-filter-bar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 0 14px !important;
+}
+
+#interview-modules-page .module-search-shell,
+#interview-modules-page .module-filter-bar .module-topic-select-shell {
+    position: relative !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+}
+
+#interview-modules-page .module-search-shell i {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    z-index: 2;
+    color: #2563eb;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+#interview-modules-page .module-search-input,
+#interview-modules-page .module-filter-bar .module-topic-select {
+    box-sizing: border-box;
+    width: 100% !important;
+    min-height: 42px !important;
+    padding: 9px 12px !important;
+    border: 1px solid rgba(147, 197, 253, 0.52) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #0f172a !important;
+    font-size: 0.86rem !important;
+    font-weight: 750 !important;
+    line-height: 1.2 !important;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+#interview-modules-page .module-search-input {
+    padding-left: 38px !important;
+}
+
+#interview-modules-page .module-search-input::placeholder {
+    color: #64748b;
+    font-weight: 500;
+}
+
+#interview-modules-page .module-filter-submit,
+#interview-modules-page .module-filter-clear {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 850;
+    line-height: 1.1;
+    text-align: center;
+    text-decoration: none;
+    white-space: normal;
+}
+
+#interview-modules-page .module-filter-submit {
+    border: 1px solid rgba(37, 99, 235, 0.24);
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.16);
+}
+
+#interview-modules-page .module-filter-clear {
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    background: rgba(255, 255, 255, 0.78);
+    color: #334155;
+}
+
+html[data-theme="dark"] #interview-modules-page .module-search-input,
+:root:not(.lm) #interview-modules-page .module-search-input,
+body.dm #interview-modules-page .module-search-input,
+.dm #interview-modules-page .module-search-input,
+html[data-theme="dark"] #interview-modules-page .module-filter-bar .module-topic-select,
+:root:not(.lm) #interview-modules-page .module-filter-bar .module-topic-select,
+body.dm #interview-modules-page .module-filter-bar .module-topic-select,
+.dm #interview-modules-page .module-filter-bar .module-topic-select {
+    background: rgba(15, 23, 42, 0.82) !important;
+    border-color: rgba(147, 197, 253, 0.28) !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme="dark"] #interview-modules-page .module-search-input::placeholder,
+:root:not(.lm) #interview-modules-page .module-search-input::placeholder,
+body.dm #interview-modules-page .module-search-input::placeholder,
+.dm #interview-modules-page .module-search-input::placeholder {
+    color: #94a3b8;
+}

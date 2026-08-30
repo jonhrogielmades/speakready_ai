@@ -145,6 +145,21 @@
             animation: none !important;
         }
     }
+    .notif-page-alert {
+        margin: 0 0 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--notif-danger-border);
+        border-radius: 12px;
+        background: var(--notif-danger-bg);
+        color: var(--notif-danger-text);
+        font-size: .72rem;
+        font-weight: 800;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+    }
+    .notif-page-alert[hidden] {
+        display: none !important;
+    }
     .notif-bulk-actions {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1681,6 +1696,15 @@
         min-width: 0;
     }
 
+    #notifications-page .activity-history-header-meta {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
     #notifications-page .activity-history-icon,
     #notifications-page .activity-history-row-icon {
         width: 36px;
@@ -1729,6 +1753,24 @@
         white-space: nowrap;
     }
 
+    #notifications-page .activity-history-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        width: fit-content;
+        min-height: 28px;
+        padding: 5px 8px;
+        border: 1px solid var(--notif-danger-border);
+        border-radius: 8px;
+        color: var(--notif-danger-text);
+        background: var(--notif-danger-bg);
+        font-size: 0.62rem;
+        line-height: 1;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
     #notifications-page .activity-history-list {
         gap: 8px;
     }
@@ -1741,6 +1783,10 @@
         border: 1px solid var(--notif-row-border);
         border-radius: 14px;
         background: var(--notif-row-bg);
+        min-width: 0;
+    }
+
+    #notifications-page .activity-history-row-content {
         min-width: 0;
     }
 
@@ -1767,6 +1813,14 @@
         font-size: 0.72rem;
         line-height: 1.42;
         overflow-wrap: anywhere;
+    }
+
+    #notifications-page .activity-history-row-foot {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 8px;
+        min-width: 0;
     }
 
     body.user-desktop-shell #notifications-page .activity-history-section {
@@ -1812,11 +1866,24 @@
         background: rgba(37, 99, 235, 0.1) !important;
     }
 
+    body.user-desktop-shell #notifications-page .activity-history-action-btn {
+        border-color: var(--notif-shell-border) !important;
+        color: var(--notif-shell-danger) !important;
+        background: rgba(239, 68, 68, 0.08) !important;
+    }
+
     @media (max-width: 575px) {
         #notifications-page .activity-history-header,
         #notifications-page .activity-history-row-head {
             align-items: flex-start;
             flex-direction: column;
+        }
+
+        #notifications-page .activity-history-header-meta,
+        #notifications-page .activity-history-row-foot {
+            align-items: flex-end;
+            justify-content: space-between;
+            width: 100%;
         }
 
         #notifications-page .activity-history-row {
@@ -1831,6 +1898,13 @@
             height: 32px;
             border-radius: 10px;
             font-size: 0.78rem;
+        }
+
+        #notifications-page .activity-history-action-btn {
+            min-height: 26px;
+            padding: 5px 7px;
+            border-radius: 8px;
+            font-size: 0.58rem;
         }
     }
 

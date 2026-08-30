@@ -53,7 +53,7 @@
             <div class="premium-panel account-card" style="padding:32px;margin-bottom:24px">
                 <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-regular fa-user"></i></span>Profile Details</h5>
                 
-                <form action="{{ route('user.account.profile') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('user.account.profile') }}" method="POST" enctype="multipart/form-data" id="accountProfileForm">
                     @csrf
                     
                     <div class="d-flex align-items-center mb-4 account-photo-row">
@@ -80,17 +80,17 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="account-field-label"><span class="account-label-icon"><i class="fa-regular fa-user"></i></span>Full Name</label>
-                            <input type="text" class="oinp" name="name" value="{{ old('name', Auth::user()->name) }}" required>
+                            <label class="account-field-label" for="accountName"><span class="account-label-icon"><i class="fa-regular fa-user"></i></span>Full Name</label>
+                            <input type="text" class="oinp" name="name" id="accountName" value="{{ old('name', Auth::user()->name) }}" autocomplete="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="account-field-label"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Email Address</label>
-                            <input type="email" class="oinp" name="email" value="{{ old('email', Auth::user()->email) }}" required>
+                            <label class="account-field-label" for="accountEmail"><span class="account-label-icon"><i class="fa-regular fa-envelope"></i></span>Email Address</label>
+                            <input type="email" class="oinp" name="email" id="accountEmail" value="{{ old('email', Auth::user()->email) }}" autocomplete="email" required>
                         </div>
                     </div>
                     <div class="account-field">
-                        <label class="account-field-label"><span class="account-label-icon"><i class="fa-solid fa-briefcase"></i></span>Target Job Position</label>
-                        <input type="text" class="oinp" name="target_position" value="{{ old('target_position', Auth::user()->target_position) }}" placeholder="e.g., Data Analyst">
+                        <label class="account-field-label" for="accountTargetPosition"><span class="account-label-icon"><i class="fa-solid fa-briefcase"></i></span>Target Job Position</label>
+                        <input type="text" class="oinp" name="target_position" id="accountTargetPosition" value="{{ old('target_position', Auth::user()->target_position) }}" placeholder="e.g., Data Analyst" autocomplete="organization-title">
                     </div>
                     <div class="text-end">
                         <button type="submit" class="btn account-submit-btn btn-shine"><i class="fa-regular fa-floppy-disk"></i>Save Changes</button>
@@ -102,33 +102,33 @@
         <div class="col-lg-5 animate-fade-up" style="animation-delay: 0.2s;">
             <div class="premium-panel account-card" style="padding:32px">
                 <h5 class="account-card-title"><span class="account-title-icon"><i class="fa-solid fa-lock"></i></span>Security & Password</h5>
-                <form action="{{ route('user.account.password') }}" method="POST">
+                <form action="{{ route('user.account.password') }}" method="POST" id="accountPasswordForm">
                     @csrf
                     <div class="account-field">
-                        <label class="account-field-label">Current Password</label>
+                        <label class="account-field-label" for="currentPassword">Current Password</label>
                         <div class="password-field">
                            <span class="password-prefix-icon"><i class="fa-solid fa-lock"></i></span>
-                           <input type="password" class="oinp" name="current_password" id="currentPassword" placeholder="••••••••" required>
+                           <input type="password" class="oinp" name="current_password" id="currentPassword" placeholder="********" autocomplete="current-password" required>
                            <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('currentPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
                            </button>
                         </div>
                     </div>
                     <div class="account-field">
-                        <label class="account-field-label">New Password</label>
+                        <label class="account-field-label" for="newPassword">New Password</label>
                         <div class="password-field">
                            <span class="password-prefix-icon"><i class="fa-solid fa-lock"></i></span>
-                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="••••••••" required minlength="8">
+                           <input type="password" class="oinp" name="new_password" id="newPassword" placeholder="********" autocomplete="new-password" required minlength="8">
                            <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('newPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
                            </button>
                         </div>
                     </div>
                     <div class="account-field">
-                        <label class="account-field-label">Confirm New Password</label>
+                        <label class="account-field-label" for="confirmPassword">Confirm New Password</label>
                         <div class="password-field">
                            <span class="password-prefix-icon"><i class="fa-solid fa-lock"></i></span>
-                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="••••••••" required minlength="8">
+                           <input type="password" class="oinp" name="confirm_password" id="confirmPassword" placeholder="********" autocomplete="new-password" required minlength="8">
                            <button type="button" class="password-toggle toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)" aria-label="Show password">
                               <i class="fa-solid fa-eye-slash"></i>
                            </button>
@@ -140,7 +140,7 @@
                 <div class="account-danger-section">
                     <h6 class="danger-title"><span class="danger-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>Danger Zone</h6>
                     <p class="danger-copy">Once you delete your account, there is no going back. Please be certain.</p>
-                    <form class="danger-action-form" action="{{ route('user.account.delete') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');">
+                    <form class="danger-action-form" action="{{ route('user.account.delete') }}" method="POST" id="accountDeleteForm" data-sr-confirm-form data-sr-confirm-title="Delete account" data-sr-confirm-message="This will permanently disable access to your account. This cannot be undone." data-sr-confirm-action="Delete Account" data-sr-confirm-variant="danger">
                         @csrf
                         <button type="submit" class="btn delete-account-btn"><i class="fa-regular fa-trash-can"></i>Delete Account</button>
                     </form>

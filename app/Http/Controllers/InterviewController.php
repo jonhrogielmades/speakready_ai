@@ -24,10 +24,12 @@ use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
-use App\Support\FeedbackSchema;
+use App\Support\CareerPlanningSchema;
 use App\Support\FeedbackCoachingRepair;
+use App\Support\FeedbackSchema;
 use App\Support\InterviewAnswerSchema;
 use App\Support\InterviewSessionSchema;
+use App\Support\GameSchema;
 use App\Support\QuestionSchema;
 use App\Support\ScoreSchema;
 use Illuminate\Http\Request;
@@ -35,6 +37,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -46,7 +49,13 @@ class InterviewController extends Controller
             abort(403);
         }
 
-        QuestionSchema::ensure();
+        $this->ensureInterviewRuntimeSchema();
+
+        if (! Schema::hasTable('categories')) {
+            return back()
+                ->withErrors(['category_id' => 'Interview setup is not ready yet. Ask an admin to run the category setup first.'])
+                ->withInput();
+        }
 
         $validated = $request->validate([
             'category_id' => [
@@ -346,6 +355,8 @@ class InterviewController extends Controller
 
     public function answer(Request $request)
     {
+        $this->ensureInterviewRuntimeSchema();
+
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
             'question_id' => 'required|exists:questions,id',
@@ -405,6 +416,8 @@ class InterviewController extends Controller
 
     public function saveSessionState(Request $request)
     {
+        $this->ensureInterviewRuntimeSchema();
+
         $session = $this->activeInterviewSession();
         if (! $session) {
             return response()->json(['error' => 'No active session'], session('active_interview_id') ? 403 : 400);
@@ -429,6 +442,8 @@ class InterviewController extends Controller
 
     public function chatReply(Request $request)
     {
+        $this->ensureInterviewRuntimeSchema();
+
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
             'answer_text' => 'required|string|max:20000',
@@ -632,6 +647,8 @@ class InterviewController extends Controller
             abort(403);
         }
 
+        $this->ensureInterviewRuntimeSchema();
+
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
             'question_id' => 'nullable|required_without:speech_text|exists:questions,id',
@@ -668,6 +685,8 @@ class InterviewController extends Controller
         if (! Auth::check()) {
             abort(403);
         }
+
+        $this->ensureInterviewRuntimeSchema();
 
         $validated = $request->validate([
             'session_id' => 'nullable|exists:interview_sessions,id',
@@ -716,6 +735,8 @@ class InterviewController extends Controller
             abort(403);
         }
 
+        $this->ensureInterviewRuntimeSchema();
+
         $validated = $request->validate([
             'session_id' => 'required|exists:interview_sessions,id',
             'duration_seconds' => 'nullable|integer|min:0|max:28800',
@@ -727,6 +748,9 @@ class InterviewController extends Controller
             abort(403);
         }
         $gameLevel = $this->gameLevelForSession($session);
+        if ($gameLevel) {
+            GameSchema::ensure();
+        }
 
         try {
             $this->ensureInterviewReportSchema();
@@ -1178,10 +1202,17 @@ class InterviewController extends Controller
         }
     }
 
+    private function ensureInterviewRuntimeSchema(): void
+    {
+        CareerPlanningSchema::ensure();
+        InterviewSessionSchema::ensure();
+        QuestionSchema::ensure();
+        InterviewAnswerSchema::ensure();
+    }
+
     private function ensureInterviewReportSchema(): void
     {
-        InterviewSessionSchema::ensure();
-        InterviewAnswerSchema::ensure();
+        $this->ensureInterviewRuntimeSchema();
         ScoreSchema::ensure();
         FeedbackSchema::ensure();
     }
@@ -1191,6 +1222,8 @@ class InterviewController extends Controller
         if (! Auth::check()) {
             abort(403);
         }
+
+        $this->ensureInterviewRuntimeSchema();
 
         $validated = $request->validate([
             'session_id' => 'nullable|integer',
@@ -2444,6 +2477,9 @@ class InterviewController extends Controller
                 : null,
             'feedback_quality' => is_array($feedback['feedback_quality'] ?? null)
                 ? $feedback['feedback_quality']
+                : [],
+            'provider_coaching' => is_array($feedback['provider_coaching'] ?? null)
+                ? $feedback['provider_coaching']
                 : [],
             'is_skipped' => (bool) ($feedback['is_skipped'] ?? false),
             'is_too_short' => (bool) ($feedback['is_too_short'] ?? false),

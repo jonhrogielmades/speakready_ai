@@ -659,7 +659,7 @@ class AIService
         return [
             'type' => 'json_schema',
             'json_schema' => [
-                'name' => 'interview_feedback_v6',
+                'name' => 'interview_feedback_v7',
                 'description' => 'Question-linked, evidence-linked interview scores and AI-generated coaching feedback.',
                 'strict' => true,
                 'schema' => [
@@ -702,6 +702,24 @@ class AIService
                                     'ai_feedback' => ['type' => 'string'],
                                     'better_sample_answer' => ['type' => 'string'],
                                     'follow_up_question' => ['type' => 'string'],
+                                    'coaching' => [
+                                        'type' => 'object',
+                                        'additionalProperties' => false,
+                                        'properties' => [
+                                            'keep' => ['type' => 'string'],
+                                            'improve' => ['type' => 'string'],
+                                            'next_try' => ['type' => 'string'],
+                                            'next_attempt_steps' => [
+                                                'type' => 'array',
+                                                'items' => ['type' => 'string'],
+                                            ],
+                                            'success_check' => ['type' => 'string'],
+                                        ],
+                                        'required' => [
+                                            'keep', 'improve', 'next_try',
+                                            'next_attempt_steps', 'success_check',
+                                        ],
+                                    ],
                                 ]),
                                 'required' => array_merge(
                                     ['id'],
@@ -709,7 +727,7 @@ class AIService
                                     [
                                         'star_applicable', 'star_method_score', 'evidence_quotes',
                                         'question_focus', 'answer_alignment', 'missing_criteria', 'ai_feedback',
-                                        'better_sample_answer', 'follow_up_question',
+                                        'better_sample_answer', 'follow_up_question', 'coaching',
                                     ]
                                 ),
                             ],
@@ -806,13 +824,14 @@ You MUST check ONLY the Candidate Answer provided.
 You MUST NOT invent information, assumptions, achievements, skills, experiences, results, or intentions that were not explicitly stated by the candidate.
 
 PLAIN LANGUAGE REQUIREMENTS:
-Write user-facing text in short, simple sentences.
+Write all user-facing text in short, simple sentences.
 Keep ai_feedback to 2-3 short sentences. Avoid repeated wording and do not restate the same advice twice.
 If the report is in English, use simple English words that students and job seekers can understand.
 If another target language is selected, use simple everyday words in that language.
-Avoid hard words or jargon such as "evidence-grounded", "calibrated", "rubric", "infer", "observable", "assessment", "professionalism", "relevance", and "criteria" in ai_feedback unless the question, answer, or score label already uses them.
+Avoid hard words or jargon such as "evidence-grounded", "calibrated", "rubric", "infer", "observable", "assessment", "professionalism", "relevance", and "criteria" in ai_feedback, coaching, better_sample_answer, follow_up_question, and session_feedback unless the question, answer, or score label already uses them.
 Use direct words like answer, question, detail, example, result, score, and next step.
 Keep exact quotes, question_focus, evidence_quotes, missing_criteria, JSON keys, names, company names, technical terms, acronyms, and numbers unchanged.
+Never say or imply the review is 100% accurate, perfectly reliable, guaranteed, or able to prove every claim. Say "based on this answer" when the note is about what the app can check.
 
 PER-QUESTION MATCHING REQUIREMENTS:
 Each feedback item is an isolated question-answer pair. Check candidate_answer only against the question, expected_answer_guide, and mapped_skills inside the same object and same id.
@@ -832,6 +851,17 @@ For each item, return:
 * ai_feedback: 2-3 short sentences tied to the exact question and exact answer evidence.
 * better_sample_answer: 1-3 short first-person sentences that improve the answer using only facts already found in candidate_answer. Do not add invented achievements, employers, tools, numbers, or results. If the answer is skipped, use an empty string.
 * follow_up_question: one short interviewer question for the same answer that asks for a missing detail or clearer result.
+* coaching: the exact visible text for the compact report sections. These fields replace local wording in the user report, so do not use canned or repeated sentences.
+
+For coaching:
+
+* keep: one short sentence naming what can be kept or what limited answer detail was available for this exact question.
+* improve: one short sentence naming the most important missing point for this exact question.
+* next_try: one direct instruction for the next attempt, tailored to this question and this answer.
+* next_attempt_steps: 2-4 short checklist items for retrying this exact question. Each item must be different and question-specific.
+* success_check: one short sentence describing how the user will know the retry answered this exact question well.
+
+Do not copy the same coaching.keep, coaching.improve, coaching.next_try, coaching.next_attempt_steps, or coaching.success_check across different answer ids.
 
 FORBIDDEN GENERIC FEEDBACK:
 Do NOT use generic comments such as:
@@ -933,7 +963,7 @@ Set:
 
 Feedback MUST clearly state:
 
-"The answer was too short to check your communication skills, knowledge, and interview readiness."
+The answer was too short to check the user's communication, knowledge, and readiness for that exact question. Use your own wording and tie it to that question.
 
 SKIPPED ANSWER RULE:
 
@@ -1066,7 +1096,14 @@ OUTPUT SCHEMA:
 "missing_criteria": [],
 "ai_feedback": "",
 "better_sample_answer": "",
-"follow_up_question": ""
+"follow_up_question": "",
+"coaching": {
+"keep": "",
+"improve": "",
+"next_try": "",
+"next_attempt_steps": [],
+"success_check": ""
+}
 }
 ],
 "session_feedback": {
@@ -2930,6 +2967,8 @@ PROMPT;
                 $errors[] = "Feedback ID {$id} contains fixed commentary that is not specific enough to the answer.";
             } elseif (self::feedbackInfersForbiddenTrait($aiFeedback)) {
                 $errors[] = "Feedback ID {$id} infers a personal trait from unsupported evidence.";
+            } elseif (self::feedbackClaimsPerfectCertainty($aiFeedback)) {
+                $errors[] = "Feedback ID {$id} claims perfect accuracy or certainty.";
             }
             $questionFocus = self::validatedQuestionFocus($item, $answer);
             if ($questionFocus === null) {
@@ -2976,6 +3015,10 @@ PROMPT;
             if (! self::providerFollowUpQuestionIsValid((string) ($item['follow_up_question'] ?? ''), $answer)) {
                 $errors[] = "Feedback ID {$id} has an invalid follow_up_question.";
             }
+            $providerCoaching = self::validatedProviderCoaching($item, $answer);
+            if ($providerCoaching === []) {
+                $errors[] = "Feedback ID {$id} has invalid visible coaching text.";
+            }
             if (! $isSkipped && $aiFeedback !== '') {
                 $fingerprint = mb_strtolower(self::normalizeEvidenceText($aiFeedback));
                 if (isset($commentaryOwners[$fingerprint]) && $commentaryOwners[$fingerprint] !== $id) {
@@ -2991,6 +3034,17 @@ PROMPT;
                     $errors[] = "Feedback IDs {$templateOwners[$templateFingerprint]} and {$id} reused the same feedback template.";
                 } elseif ($templateFingerprint !== '') {
                     $templateOwners[$templateFingerprint] = $id;
+                }
+            }
+            if (! $isSkipped && $providerCoaching !== []) {
+                $coachingText = self::providerCoachingRawText($providerCoaching);
+                $coachingTemplateFingerprint = self::feedbackTemplateFingerprint($coachingText, $item, $answer);
+                if ($coachingTemplateFingerprint !== ''
+                    && isset($templateOwners[$coachingTemplateFingerprint])
+                    && $templateOwners[$coachingTemplateFingerprint] !== $id) {
+                    $errors[] = "Feedback IDs {$templateOwners[$coachingTemplateFingerprint]} and {$id} reused the same visible coaching template.";
+                } elseif ($coachingTemplateFingerprint !== '') {
+                    $templateOwners[$coachingTemplateFingerprint] = $id;
                 }
             }
         }
@@ -3031,6 +3085,9 @@ PROMPT;
             if (self::feedbackInfersForbiddenTrait($text)) {
                 $errors[] = "session_feedback.{$field} infers a personal trait from unsupported evidence.";
             }
+            if (self::feedbackClaimsPerfectCertainty($text)) {
+                $errors[] = "session_feedback.{$field} claims perfect accuracy or certainty.";
+            }
             if ($answerText !== '' && self::feedbackHasUnsupportedNumbers($text, $answerText)) {
                 $errors[] = "session_feedback.{$field} contains unsupported numbers.";
             }
@@ -3058,6 +3115,7 @@ PROMPT;
             && self::wordCount($text) >= 5
             && mb_strlen($text) <= 900
             && ! self::feedbackInfersForbiddenTrait($text)
+            && ! self::feedbackClaimsPerfectCertainty($text)
             && ! self::feedbackHasUnsupportedNumbers($text, $answerText);
     }
 
@@ -3071,7 +3129,134 @@ PROMPT;
             && mb_strlen($text) <= 300
             && str_contains($text, '?')
             && ! self::feedbackInfersForbiddenTrait($text)
+            && ! self::feedbackClaimsPerfectCertainty($text)
             && (self::isSkippedAnswer($answer) || ! self::feedbackHasUnsupportedNumbers($text, $answerText));
+    }
+
+    private static function validatedProviderCoaching(array $feedback, array $answer): array
+    {
+        $coaching = $feedback['coaching'] ?? null;
+        if (! is_array($coaching)) {
+            return [];
+        }
+
+        $validated = [];
+        foreach (['keep', 'improve', 'next_try', 'success_check'] as $field) {
+            $text = self::validatedProviderCoachingText($coaching[$field] ?? null, $answer);
+            if ($text === null) {
+                return [];
+            }
+
+            $validated[$field] = $text;
+        }
+
+        $steps = $coaching['next_attempt_steps'] ?? null;
+        if (! is_array($steps) || ! array_is_list($steps)) {
+            return [];
+        }
+
+        $validatedSteps = [];
+        foreach ($steps as $step) {
+            $text = self::validatedProviderCoachingText($step, $answer, 260);
+            if ($text === null || in_array($text, $validatedSteps, true)) {
+                continue;
+            }
+
+            $validatedSteps[] = $text;
+            if (count($validatedSteps) >= 4) {
+                break;
+            }
+        }
+
+        if (count($validatedSteps) < 2) {
+            return [];
+        }
+
+        $validated['next_attempt_steps'] = $validatedSteps;
+
+        return $validated;
+    }
+
+    private static function validatedProviderCoachingText(mixed $text, array $answer, int $maxLength = 520): ?string
+    {
+        if (! is_string($text)) {
+            return null;
+        }
+
+        $answerText = self::candidateAnswerText($answer);
+        $questionText = trim((string) ($answer['question'] ?? $answer['question_text'] ?? ''));
+        $plain = self::plainUserFeedbackText($text, array_filter([$questionText, $answerText]));
+
+        return $plain !== ''
+            && self::wordCount($plain) >= 3
+            && mb_strlen($plain) <= $maxLength
+            && ! self::isGenericCoachingText($plain)
+            && ! self::feedbackInfersForbiddenTrait($plain)
+            && ! self::feedbackClaimsPerfectCertainty($plain)
+            && (self::isSkippedAnswer($answer) || ! self::feedbackHasUnsupportedNumbers($plain, $answerText))
+            && self::providerCoachingMentionsQuestionOrAnswer($plain, $answer)
+                ? $plain
+                : null;
+    }
+
+    private static function isGenericCoachingText(string $text): bool
+    {
+        $normalized = mb_strtolower(trim((string) preg_replace('/[^\pL\pN ]+/u', '', $text)));
+        $generic = [
+            'add more detail',
+            'add more details',
+            'answer directly',
+            'be more specific',
+            'give more detail',
+            'give more details',
+            'good answer',
+            'not enough detail',
+            'try again',
+            'try to be more specific',
+            'well explained',
+        ];
+
+        return in_array($normalized, $generic, true);
+    }
+
+    private static function providerCoachingMentionsQuestionOrAnswer(string $text, array $answer): bool
+    {
+        $contextKeywords = self::meaningfulKeywords(
+            self::feedbackQuestionContext($answer).' '.self::candidateAnswerText($answer)
+        );
+        $contextKeywords = array_values(array_diff($contextKeywords, [
+            'answer', 'answers', 'candidate', 'clear', 'detail', 'details', 'direct',
+            'directly', 'example', 'feedback', 'first', 'focus', 'keep', 'missing',
+            'next', 'point', 'ready', 'response', 'retry', 'sentence', 'specific',
+            'support', 'true',
+        ]));
+
+        if ($contextKeywords === []) {
+            return true;
+        }
+
+        return array_intersect($contextKeywords, self::meaningfulKeywords($text)) !== [];
+    }
+
+    private static function providerCoachingRawText(mixed $coaching): string
+    {
+        if (! is_array($coaching)) {
+            return '';
+        }
+
+        $parts = [];
+        foreach (['keep', 'improve', 'next_try', 'success_check'] as $field) {
+            if (is_scalar($coaching[$field] ?? null)) {
+                $parts[] = (string) $coaching[$field];
+            }
+        }
+        foreach ((array) ($coaching['next_attempt_steps'] ?? []) as $step) {
+            if (is_scalar($step)) {
+                $parts[] = (string) $step;
+            }
+        }
+
+        return self::normalizeEvidenceText(implode(' ', $parts));
     }
 
     private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData, bool $requireAiGenerated = false): array
@@ -3286,6 +3471,7 @@ PROMPT;
         $providerFollowUpQuestion = trim((string) ($feedback['follow_up_question'] ?? ''));
         $providerBetterAnswerIsValid = self::providerBetterSampleAnswerIsValid($providerBetterAnswer, $answer);
         $providerFollowUpQuestionIsValid = self::providerFollowUpQuestionIsValid($providerFollowUpQuestion, $answer);
+        $providerCoaching = self::validatedProviderCoaching($feedback, $answer);
         $evidenceQuotes = self::validatedEvidenceQuotes($feedback, $answer);
         $feedbackContext = self::feedbackQuestionContext($answer);
         $questionFocus = self::validatedQuestionFocus($feedback, $answer);
@@ -3319,8 +3505,9 @@ PROMPT;
             && ! self::isGenericFeedback($providerFeedback)
             && ($isSkipped || $isTooShort || self::feedbackHasAnswerSpecificCommentary($providerFeedback, $feedback, $answer))
             && ! self::feedbackInfersForbiddenTrait($providerFeedback)
+            && ! self::feedbackClaimsPerfectCertainty($providerFeedback)
             && ($isSkipped || ! self::feedbackHasUnsupportedNumbers($providerFeedback, $answerText));
-        if ($requireAiGenerated && (! $hasProviderScores || ! $providerBetterAnswerIsValid || ! $providerFollowUpQuestionIsValid)) {
+        if ($requireAiGenerated && (! $hasProviderScores || ! $providerBetterAnswerIsValid || ! $providerFollowUpQuestionIsValid || $providerCoaching === [])) {
             throw new \RuntimeException("AI feedback for answer {$id} did not pass evidence validation.");
         }
 
@@ -3468,6 +3655,7 @@ PROMPT;
             'ai_feedback' => $aiFeedback,
             'better_sample_answer' => $betterAnswer,
             'follow_up_question' => $followUpQuestion,
+            'provider_coaching' => $hasProviderScores ? $providerCoaching : [],
             'evidence_quotes' => $evidenceQuotes,
             'question_focus' => $questionFocus ?? self::excerpt($questionText, 160),
             'score_calibration' => $scoreCalibration,
@@ -3547,6 +3735,7 @@ PROMPT;
                 && trim((string) ($feedback['follow_up_question'] ?? '')) !== ''
                 && ($isSkipped || trim((string) ($feedback['better_sample_answer'] ?? '')) !== ''),
             'personal_trait_inference_excluded' => ! self::feedbackInfersForbiddenTrait((string) ($feedback['ai_feedback'] ?? '')),
+            'perfect_accuracy_not_claimed' => ! self::feedbackClaimsPerfectCertainty((string) ($feedback['ai_feedback'] ?? '')),
         ];
         $passed = count(array_filter($checks));
         $total = count($checks);
@@ -3561,8 +3750,8 @@ PROMPT;
             'reliability_percent' => $reliabilityPercent,
             'reliability_band' => self::feedbackReliabilityBand($reliabilityPercent),
             'checks' => $checks,
-            'scope' => 'Required proof, risk, next step, and coaching fields.',
-            'limitation' => 'A 100% result means every required feedback check passed. It does not mean the review is perfect.',
+            'scope' => 'Checks for answer proof, safe scoring, and useful next steps.',
+            'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
         ];
     }
 
@@ -3596,8 +3785,8 @@ PROMPT;
             'completeness_percent' => $percent,
             'reliability_percent' => $reliabilityPercent,
             'reliability_band' => self::feedbackReliabilityBand($reliabilityPercent),
-            'scope' => 'Required feedback checks across all answers.',
-            'limitation' => 'A 100% result means every required feedback check passed. It does not mean the review is perfect.',
+            'scope' => 'Checks for answer proof, safe scoring, and useful next steps across all answers.',
+            'limitation' => '100% checks passed means the required checks passed. It does not mean the review is perfect.',
         ];
     }
 
@@ -3773,7 +3962,11 @@ PROMPT;
                 continue;
             }
 
-            $fingerprint = self::feedbackTemplateFingerprint((string) ($item['ai_feedback'] ?? ''), $item, $answersById[$id]);
+            $fingerprint = self::feedbackTemplateFingerprint(
+                trim((string) ($item['ai_feedback'] ?? '').' '.self::providerCoachingRawText($item['coaching'] ?? null)),
+                $item,
+                $answersById[$id]
+            );
             if ($fingerprint === '') {
                 continue;
             }
@@ -4796,6 +4989,7 @@ PROMPT;
             && mb_strlen($plain) <= 700
             && ! self::isGenericFeedback($plain)
             && ! self::feedbackInfersForbiddenTrait($plain)
+            && ! self::feedbackClaimsPerfectCertainty($plain)
                 ? $plain
                 : null;
     }
@@ -5055,6 +5249,19 @@ PROMPT;
             || preg_match('/\b(?:shows?|demonstrates?|indicates?|suggests?|proves?|reveals?|signals?)\s+(?:a\s+)?'.$trait.'\b/iu', $feedback) === 1
             || preg_match('/\b(?:lacks?|has|possesses?)\s+(?:a\s+)?'.$trait.'\b/iu', $feedback) === 1
             || preg_match('/\b(?:body language|eye contact|posture|gestures?|facial expressions?|movement)\b.{0,80}\b(?:shows?|indicates?|suggests?|proves?|reveals?|signals?|means?)\b.{0,40}\b'.$trait.'\b/iu', $feedback) === 1;
+    }
+
+    private static function feedbackClaimsPerfectCertainty(string $feedback): bool
+    {
+        if (trim($feedback) === '') {
+            return false;
+        }
+
+        $target = '(?:review|feedback|score|scores?|report|result|results?|check|checks?|assessment|evaluation|analysis|app|system|ai)';
+        $perfectClaim = '(?:100\s*%\s*(?:accurate|reliable|correct|certain|trusted|trustworthy)|perfect(?:ly)?\s*(?:accurate|reliable|correct|certain|trusted|trustworthy)|guarantee[sd]?|prove[sd]?\s+everything|fully\s+prove[sd]?)';
+
+        return preg_match('/\b'.$target.'\b.{0,60}\b'.$perfectClaim.'\b/iu', $feedback) === 1
+            || preg_match('/\b'.$perfectClaim.'\b.{0,60}\b'.$target.'\b/iu', $feedback) === 1;
     }
 
     private static function wordCount(string $text): int

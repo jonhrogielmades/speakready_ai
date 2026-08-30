@@ -163,57 +163,76 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const unlockBtns = document.querySelectorAll('.btn-unlock');
+    const skillTheme = () => ({
+        background: document.documentElement.classList.contains('lm') ? '#fff' : '#1e1e1e',
+        color: document.documentElement.classList.contains('lm') ? '#000' : '#fff'
+    });
+    const skillAlert = (options) => {
+        const payload = { ...skillTheme(), ...options };
+        if (window.Swal && typeof Swal.fire === 'function') {
+            return Swal.fire(payload);
+        }
+
+        console[payload.icon === 'error' ? 'error' : 'log'](`${payload.title}: ${payload.text}`);
+        if (typeof window.alert === 'function') {
+            window.alert(`${payload.title}: ${payload.text}`);
+        }
+
+        return Promise.resolve();
+    };
+    const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const skillJson = async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'We could not unlock this perk. Please refresh and try again.');
+        }
+
+        return data;
+    };
     
     unlockBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const perkId = this.dataset.id;
-            const originalText = this.innerHTML;
+        btn.addEventListener('click', async function() {
+            const perkId = btn.dataset.id;
+            const originalText = btn.innerHTML;
             
-            this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            this.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
             
-            fetch("{{ route('user.skills.unlock') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    perk_id: perkId
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Perk Unlocked!',
-                        text: data.message,
-                        background: document.documentElement.classList.contains('lm') ? '#fff' : '#1e1e1e',
-                        color: document.documentElement.classList.contains('lm') ? '#000' : '#fff'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: data.message,
-                        background: document.documentElement.classList.contains('lm') ? '#fff' : '#1e1e1e',
-                        color: document.documentElement.classList.contains('lm') ? '#000' : '#fff'
-                    });
-                    this.innerHTML = originalText;
-                    this.disabled = false;
+            try {
+                const token = csrfToken();
+                if (!token) {
+                    throw new Error('Your secure session token is missing. Please refresh the page and try again.');
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                this.innerHTML = originalText;
-                this.disabled = false;
-            });
+
+                const data = await fetch("{{ route('user.skills.unlock') }}", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": token
+                    },
+                    body: JSON.stringify({ perk_id: perkId })
+                }).then(skillJson);
+
+                await skillAlert({
+                    icon: 'success',
+                    title: 'Perk Unlocked!',
+                    text: data.message
+                });
+                window.location.reload();
+            } catch (error) {
+                console.error(error);
+                await skillAlert({
+                    icon: 'error',
+                    title: 'Unlock Failed',
+                    text: error.message || 'We could not unlock this perk. Please refresh and try again.'
+                });
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         });
     });
 });
 </script>
 @endpush
-

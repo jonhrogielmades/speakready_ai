@@ -15,15 +15,72 @@ class GameSchema
             return;
         }
 
+        self::ensureGameProgressTable();
         self::ensureGameSessionsTable();
         self::ensureGameAnswersTable();
+        self::ensureGameCertificatesTable();
 
         self::$checked = true;
     }
 
     public static function hasRequiredTables(): bool
     {
-        return Schema::hasTable('game_sessions') && Schema::hasTable('game_answers');
+        return Schema::hasTable('game_progress')
+            && Schema::hasTable('game_sessions')
+            && Schema::hasTable('game_answers')
+            && Schema::hasTable('game_certificates');
+    }
+
+    private static function ensureGameProgressTable(): void
+    {
+        if (! Schema::hasTable('game_progress')) {
+            Schema::create('game_progress', function (Blueprint $table): void {
+                $table->id();
+                self::foreignId($table, 'user_id', 'users');
+                self::foreignId($table, 'game_level_id', 'game_levels');
+                $table->string('status')->default('locked');
+                $table->integer('best_score')->default(0);
+                $table->timestamps();
+
+                $table->unique(['user_id', 'game_level_id']);
+            });
+
+            return;
+        }
+
+        $missing = self::missingColumns('game_progress', [
+            'user_id',
+            'game_level_id',
+            'status',
+            'best_score',
+            'created_at',
+            'updated_at',
+        ]);
+
+        if ($missing === []) {
+            return;
+        }
+
+        Schema::table('game_progress', function (Blueprint $table) use ($missing): void {
+            if (self::isMissing($missing, 'user_id')) {
+                self::foreignId($table, 'user_id', 'users', true);
+            }
+            if (self::isMissing($missing, 'game_level_id')) {
+                self::foreignId($table, 'game_level_id', 'game_levels', true);
+            }
+            if (self::isMissing($missing, 'status')) {
+                $table->string('status')->default('locked');
+            }
+            if (self::isMissing($missing, 'best_score')) {
+                $table->integer('best_score')->default(0);
+            }
+            if (self::isMissing($missing, 'created_at')) {
+                $table->timestamp('created_at')->nullable();
+            }
+            if (self::isMissing($missing, 'updated_at')) {
+                $table->timestamp('updated_at')->nullable();
+            }
+        });
     }
 
     private static function ensureGameSessionsTable(): void
@@ -315,6 +372,63 @@ class GameSchema
             }
             if (self::isMissing($missing, 'goal_notes')) {
                 $table->text('goal_notes')->nullable();
+            }
+            if (self::isMissing($missing, 'created_at')) {
+                $table->timestamp('created_at')->nullable();
+            }
+            if (self::isMissing($missing, 'updated_at')) {
+                $table->timestamp('updated_at')->nullable();
+            }
+        });
+    }
+
+    private static function ensureGameCertificatesTable(): void
+    {
+        if (! Schema::hasTable('game_certificates')) {
+            Schema::create('game_certificates', function (Blueprint $table): void {
+                $table->id();
+                self::foreignId($table, 'user_id', 'users');
+                self::foreignId($table, 'category_id', 'categories');
+                self::foreignId($table, 'final_game_level_id', 'game_levels');
+                $table->string('certificate_code')->unique();
+                $table->timestamp('issued_at')->useCurrent();
+                $table->timestamps();
+
+                $table->unique(['user_id', 'category_id']);
+            });
+
+            return;
+        }
+
+        $missing = self::missingColumns('game_certificates', [
+            'user_id',
+            'category_id',
+            'final_game_level_id',
+            'certificate_code',
+            'issued_at',
+            'created_at',
+            'updated_at',
+        ]);
+
+        if ($missing === []) {
+            return;
+        }
+
+        Schema::table('game_certificates', function (Blueprint $table) use ($missing): void {
+            if (self::isMissing($missing, 'user_id')) {
+                self::foreignId($table, 'user_id', 'users', true);
+            }
+            if (self::isMissing($missing, 'category_id')) {
+                self::foreignId($table, 'category_id', 'categories', true);
+            }
+            if (self::isMissing($missing, 'final_game_level_id')) {
+                self::foreignId($table, 'final_game_level_id', 'game_levels', true);
+            }
+            if (self::isMissing($missing, 'certificate_code')) {
+                $table->string('certificate_code')->nullable();
+            }
+            if (self::isMissing($missing, 'issued_at')) {
+                $table->timestamp('issued_at')->nullable();
             }
             if (self::isMissing($missing, 'created_at')) {
                 $table->timestamp('created_at')->nullable();

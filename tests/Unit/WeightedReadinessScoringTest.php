@@ -120,6 +120,7 @@ class WeightedReadinessScoringTest extends TestCase
         $validItem['answer_alignment'] = 'directly_addressed';
         $validItem['missing_criteria'] = [];
         $validItem['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "An index can improve selective reads but adds storage and write overhead", which identifies a relevant indexing tradeoff.';
+        $validItem['coaching'] = $this->coachingFor($answers[0], 'An index can improve selective reads but adds storage and write overhead');
         $validResponse = [
             'per_question_feedback' => [$validItem],
             'session_feedback' => $this->sessionFeedback(80, 0),
@@ -280,6 +281,12 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertContains('ai_feedback', $item['required']);
         $this->assertContains('better_sample_answer', $item['required']);
         $this->assertContains('follow_up_question', $item['required']);
+        $this->assertContains('coaching', $item['required']);
+        $this->assertContains('keep', $item['properties']['coaching']['required']);
+        $this->assertContains('improve', $item['properties']['coaching']['required']);
+        $this->assertContains('next_try', $item['properties']['coaching']['required']);
+        $this->assertContains('next_attempt_steps', $item['properties']['coaching']['required']);
+        $this->assertContains('success_check', $item['properties']['coaching']['required']);
         $this->assertArrayHasKey('session_feedback', $schema['properties']);
         $this->assertContains('session_feedback', $schema['required']);
         $this->assertContains('strengths', $schema['properties']['session_feedback']['required']);
@@ -325,6 +332,7 @@ class WeightedReadinessScoringTest extends TestCase
 
         $item['evidence_quotes'] = ['I inspected the query plan and verified the index usage'];
         $item['ai_feedback'] = 'For "'.$answers[0]['question'].'", you stated "I inspected the query plan and verified the index usage", which supports the diagnostic score.';
+        $item['coaching'] = $this->coachingFor($answers[0], 'I inspected the query plan and verified the index usage');
 
         $this->assertTrue($this->invokePrivate('feedbackResponseIsComplete', [[
             'per_question_feedback' => [$item],
@@ -704,6 +712,57 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('Next step:', $normalized['ai_feedback']);
     }
 
+    public function test_provider_feedback_that_claims_perfect_accuracy_is_rejected(): void
+    {
+        $answer = [
+            'id' => 714,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare row estimates with actual rows, check indexes, and test the same workload again.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 90, 'directly_addressed');
+        $feedback['ai_feedback'] = 'For "'.$answer['question'].'", the exact answer evidence "'.$answer['answer'].'" supports the score. This report is 100% accurate and guaranteed.';
+
+        $this->assertFalse($this->invokePrivate('feedbackResponseIsComplete', [[
+            'per_question_feedback' => [$feedback],
+        ], [$answer]]));
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('local_evidence', $normalized['evaluation_source']);
+        $this->assertStringNotContainsString('100% accurate', strtolower($normalized['ai_feedback']));
+        $this->assertStringNotContainsString('guaranteed', strtolower($normalized['ai_feedback']));
+        $this->assertTrue($normalized['feedback_quality']['checks']['perfect_accuracy_not_claimed']);
+    }
+
+    public function test_provider_visible_coaching_is_saved_in_simple_words(): void
+    {
+        $answer = [
+            'id' => 715,
+            'question_type' => 'Personal',
+            'question' => 'What is your greatest strength?',
+            'answer' => 'My strength is organizing release checklists and confirming each handoff before launch.',
+        ];
+        $feedback = $this->v4FeedbackFor($answer, 88, 'directly_addressed');
+        $feedback['coaching'] = [
+            'keep' => 'Keep the checklist detail because it supports the strength assessment.',
+            'improve' => 'Add the result so the strength criteria are clearer.',
+            'next_try' => 'Use the checklist example and explain the launch result.',
+            'next_attempt_steps' => [
+                'Name organizing as the strength.',
+                'Connect the checklist to the launch result.',
+            ],
+            'success_check' => 'The retry meets the strength criteria when the result is clear.',
+        ];
+
+        $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
+
+        $this->assertSame('ai_evidence_validated', $normalized['evaluation_source']);
+        $this->assertSame('Keep the checklist detail because it supports the strength check.', $normalized['provider_coaching']['keep']);
+        $this->assertSame('Add the result so the strength points are clearer.', $normalized['provider_coaching']['improve']);
+        $this->assertSame('The retry meets the strength points when the result is clear.', $normalized['provider_coaching']['success_check']);
+    }
+
     public function test_local_feedback_changes_with_the_users_actual_answer_details(): void
     {
         $question = 'Tell me about a time you improved a support process.';
@@ -788,8 +847,41 @@ class WeightedReadinessScoringTest extends TestCase
         )), 0, 4));
         $focusTerms = $focusTerms !== '' ? $focusTerms : 'the exact prompt';
         $item['ai_feedback'] = 'For "'.$question.'", the exact answer evidence "'.$answerText.'" directly addressed this question. Question-specific focus terms: '.$focusTerms.'. This explains the score using only the evidence from this answer.';
+        $item['coaching'] = $this->coachingFor($answer, $answerText);
 
         return $item;
+    }
+
+    private function coachingFor(array $answer, ?string $quote = null): array
+    {
+        $question = (string) ($answer['question'] ?? 'this question');
+        $answerText = (string) ($answer['answer'] ?? '');
+        $quote = $quote ?: $answerText;
+        $term = $this->firstUsefulTerm($question.' '.$answerText);
+
+        return [
+            'keep' => 'Keep the '.$term.' detail that already supports "'.$question.'".',
+            'improve' => 'Add the missing '.$term.' result or limit for "'.$question.'".',
+            'next_try' => 'Answer "'.$question.'" by connecting '.$term.' to one clear next detail.',
+            'next_attempt_steps' => [
+                'Start by answering "'.$question.'" directly.',
+                'Use "'.$quote.'" as the supporting detail.',
+            ],
+            'success_check' => 'The retry clearly links '.$term.' to "'.$question.'".',
+        ];
+    }
+
+    private function firstUsefulTerm(string $text): string
+    {
+        preg_match_all('/[a-z][a-z0-9]+/i', $text, $matches);
+        foreach ($matches[0] ?? [] as $term) {
+            $term = strtolower($term);
+            if (strlen($term) > 4 && ! in_array($term, ['about', 'answer', 'question', 'would', 'could', 'their'], true)) {
+                return $term;
+            }
+        }
+
+        return 'answer';
     }
 
     private function sessionFeedback(int $readiness, int $starScore): array

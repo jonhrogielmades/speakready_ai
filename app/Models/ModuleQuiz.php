@@ -22,6 +22,6 @@ class ModuleQuiz extends Model
 
     public function questions()
     {
-        return $this->hasMany(ModuleQuizQuestion::class);
+        return $this->hasMany(ModuleQuizQuestion::class)->orderBy('id');
     }
 }

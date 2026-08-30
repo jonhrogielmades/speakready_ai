@@ -2,7 +2,7 @@
 @section('title', 'Philippines Interview Progress')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=9') }}" data-page-style="user-progress">
+<link rel="stylesheet" href="{{ asset('css/mobile/user/progress.css?v=10') }}" data-page-style="user-progress">
 @endpush
 
 @section('content')
@@ -169,7 +169,7 @@
                     <div class="skill-empty-state">
                         <div>
                             <div class="skill-empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
-                            <p class="skill-empty-text">Complete multiple Philippine practice interviews to track your specific skill improvements.</p>
+                            <p class="skill-empty-text">Complete multiple Philippines practice interviews to track your specific skill improvements.</p>
                         </div>
                     </div>
                 @endif
@@ -380,6 +380,8 @@
             </div>
         </div>
     </div>
+
+    @include('shared.partials.progress-live-sections')
 
     <div class="row g-4">
         <!-- Feature 8: Practice Activity Calendar -->
@@ -812,6 +814,10 @@
                 if (!table) return null;
 
                 const clonedTable = table.cloneNode(true);
+                Array.from(clonedTable.querySelectorAll('tbody tr[data-history-export-row]'))
+                    .filter(row => row.style.display === 'none')
+                    .forEach(row => row.remove());
+
                 const exportRows = clonedTable.querySelectorAll('tbody tr[data-history-export-row]');
                 if (!exportRows.length) return null;
 
@@ -900,7 +906,11 @@
                 exportExcelBtn.addEventListener('click', function() {
                     const table = cloneHistoryTableWithoutActions();
                     if (!table) {
-                        setProgressExportStatus('No interview history is available to export yet.', 'error');
+                        const hasHistory = document.querySelectorAll('#history-table [data-history-record]').length > 0;
+                        const hasSearch = searchInput && searchInput.value.trim() !== '';
+                        setProgressExportStatus(hasHistory && hasSearch
+                            ? 'No matching history records are visible to export.'
+                            : 'No interview history is available to export yet.', 'error');
                         return;
                     }
 
@@ -927,11 +937,15 @@
 
         const stepsMobile = [
             { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
+            { element: '#personalized-practice-plan', popover: { title: 'Practice Plan', description: 'Follow the next recommended practice steps generated from your progress data.', side: 'bottom', align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
             { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare Philippines practice scenarios to find strengths and weak spots.', side: 'top', align: 'start' }},
             { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'top', align: 'start' }},
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'top', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
+            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
+            { element: '#recommended-next', popover: { title: 'Recommended Next', description: 'Open suggested modules based on your latest practice signals.', side: 'top', align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Progress', description: 'Track saved voice-drill clarity, delivery, pace, and filler signals.', side: 'top', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'top', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
@@ -939,11 +953,15 @@
 
         const stepsDesktop = [
             { element: '#progress-stats', popover: { title: 'At A Glance', description: 'Review streak, practice days, and readiness movement without opening a report.', side: 'bottom', align: 'start' }},
+            { element: '#personalized-practice-plan', popover: { title: 'Practice Plan', description: 'Follow the next recommended practice steps generated from your progress data.', side: 'bottom', align: 'start' }},
             { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time.', side: 'bottom', align: 'start' }},
             { element: '#category-perf', popover: { title: 'Scenario Breakdown', description: 'Compare Philippines practice scenarios to find strengths and weak spots.', side: 'bottom', align: 'start' }},
             { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch the core interview skills that are improving across sessions.', side: 'right', align: 'start' }},
             { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, and STAR method progress.', side: 'left', align: 'start' }},
             { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
+            { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Review active module progress connected to your readiness growth.', side: 'top', align: 'start' }},
+            { element: '#recommended-next', popover: { title: 'Recommended Next', description: 'Open suggested modules based on your latest practice signals.', side: 'top', align: 'start' }},
+            { element: '#voice-progress', popover: { title: 'Voice Progress', description: 'Track saved voice-drill clarity, delivery, pace, and filler signals.', side: 'top', align: 'start' }},
             { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'Use the calendar to spot consistent practice days and gaps.', side: 'top', align: 'start' }},
             { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track progress toward platform goals and target outcomes.', side: 'right', align: 'start' }},
             { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}

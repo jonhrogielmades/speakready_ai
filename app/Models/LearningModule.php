@@ -11,6 +11,7 @@ class LearningModule extends Model
         'title', 
         'description', 
         'type', 
+        'career_path',
         'url',
         'category',
         'difficulty',
@@ -27,22 +28,22 @@ class LearningModule extends Model
 
     public function chapters()
     {
-        return $this->hasMany(ModuleChapter::class);
+        return $this->hasMany(ModuleChapter::class)->orderBy('order')->orderBy('id');
     }
 
     public function resources()
     {
-        return $this->hasMany(ModuleResource::class);
+        return $this->hasMany(ModuleResource::class)->orderBy('id');
     }
 
     public function quizzes()
     {
-        return $this->hasMany(ModuleQuiz::class);
+        return $this->hasMany(ModuleQuiz::class)->orderBy('id');
     }
 
     public function activities()
     {
-        return $this->hasMany(ModulePracticeActivity::class);
+        return $this->hasMany(ModulePracticeActivity::class)->orderBy('id');
     }
 
     public function gameLevels()

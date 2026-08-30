@@ -289,28 +289,40 @@
             </div>
         </div>
 
+        @php
+            $initialQuestionIndex = min(max(0, (int) ($sessionRecord->current_question_index ?? 0)), max(0, $questions->count() - 1));
+            $answersByIndex = $sessionRecord->relationLoaded('answers')
+                ? $sessionRecord->answers->keyBy('question_index')
+                : collect();
+            $initialAnswersData = $questions->map(function ($question) use ($answersByIndex) {
+                $answer = $answersByIndex->get($question->question_index);
+
+                return [
+                    'text' => $answer && ! $answer->is_skipped ? (string) ($answer->answer_text ?? '') : '',
+                    'is_skipped' => (bool) ($answer?->is_skipped ?? false),
+                    'wpm' => (int) ($answer?->wpm ?? 0),
+                    'voice_duration' => (int) ($answer?->voice_duration ?? 0),
+                    'filler_words' => (int) ($answer?->filler_words_count ?? 0),
+                    'pause_count' => (int) ($answer?->pause_count ?? 0),
+                    'confidence_score' => (int) ($answer?->confidence_score ?? 0),
+                    'eye_contact_score' => (int) ($answer?->eye_contact_score ?? 0),
+                    'posture_score' => (int) ($answer?->posture_score ?? 0),
+                ];
+            })->values();
+        @endphp
+
         <script>
             const questions = {!! json_encode($questions) !!};
             const gameSessionId = {{ (int) $sessionRecord->id }};
             const responseMode = "{{ $sessionRecord->response_mode }}";
             const cameraCoachingEnabled = @json($cameraCoachingEnabled);
-            let currentQIdx = 0;
+            let currentQIdx = {{ $initialQuestionIndex }};
             let timerSeconds = 0;
             let timerInterval;
             let isFinishingChallenge = false;
             
             // Answers state
-            let answersData = Array(questions.length).fill().map(() => ({
-                text: '',
-                is_skipped: false,
-                wpm: 0,
-                voice_duration: 0,
-                filler_words: 0,
-                pause_count: 0,
-                confidence_score: 0,
-                eye_contact_score: 0,
-                posture_score: 0
-            }));
+            let answersData = @json($initialAnswersData);
 
             // Voice state and optional, non-scoring body-language state
             let recognition = null;
@@ -820,7 +832,7 @@
                     holdBtn.addEventListener('touchcancel', (e) => { if(isRecording) endHold(e); });
                 }
 
-                loadQuestion(0);
+                loadQuestion(currentQIdx);
                 
                 document.getElementById('answerTextarea').addEventListener('input', triggerAnalysis);
                 document.getElementById('sessionNotes').addEventListener('change', autoSaveState);
@@ -1039,10 +1051,16 @@
                     method: 'POST',
                     body: formData,
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                }).then(() => {
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Auto-save failed with status ' + response.status);
+                    }
+
                     const ind = document.getElementById('autoSaveIndicator');
                     ind.style.display = 'inline';
                     setTimeout(() => ind.style.display = 'none', 2000);
+                }).catch(error => {
+                    console.error(error);
                 });
             }
 
