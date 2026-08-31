@@ -182,10 +182,10 @@ class LearningModuleRecommendationTest extends TestCase
         $this->assertTrue($plan->contains(fn ($item) => $item->cta === 'Start Interview'));
     }
 
-    public function test_dashboard_shows_personalized_practice_plan(): void
+    public function test_dashboard_hides_personalized_practice_plan_card(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
-        $category = $this->category('Communication');
+        $category = $this->category('Job Interview');
         $this->module('Clear Answer Structure', 'Build clarity with concise, organized interview answers.', ['clarity']);
 
         $session = $this->completedSessionFor($user, $category);
@@ -202,9 +202,24 @@ class LearningModuleRecommendationTest extends TestCase
         $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('Personalized Practice Plan')
+            ->assertDontSee('Personalized Practice Plan')
+            ->assertDontSee('id="card-practice-plan"', false)
             ->assertSee('Clear Answer Structure')
-            ->assertSee('Open Module');
+            ->assertSee('id="dashboardMockTrigger"', false)
+            ->assertSee('data-bs-target="#dashboardMockModal"', false)
+            ->assertSee('id="dashboardMockForm"', false)
+            ->assertSee(route('interview.start'), false)
+            ->assertSee('id="dashboardMockCategory"', false)
+            ->assertSee('name="target_position"', false)
+            ->assertSee('Philippines Job Interviews')
+            ->assertSee('initDashboardMockModal', false)
+            ->assertSee('id="dashboardCoachTrigger"', false)
+            ->assertSee('data-bs-target="#dashboardCoachModal"', false)
+            ->assertSee('id="dashboardCoachForm"', false)
+            ->assertSee('id="dashboardCoachClear"', false)
+            ->assertSee(route('user.coach.chat'), false)
+            ->assertSee(url('/coach/conversation'), false)
+            ->assertSee('initDashboardCoachModal', false);
     }
 
     public function test_personalized_practice_plan_avoids_disabled_feature_links(): void

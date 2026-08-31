@@ -25,6 +25,7 @@ use App\Services\CsvExportService;
 use App\Services\LearningRecommendationService;
 use App\Services\LocalSpeechAssessmentService;
 use App\Services\PersonalizedPracticePlanService;
+use App\Services\QuestionDatasetProvider;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\CareerPlanningSchema;
@@ -42,6 +43,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -267,6 +269,7 @@ class UserController extends Controller
 
         $aiRecommendations = app(LearningRecommendationService::class)->forUser($user_id, 3);
         $practicePlan = app(PersonalizedPracticePlanService::class)->forUser($user_id, 3);
+        $dashboardMockScenarios = $this->dashboardMockScenarios();
 
         // Get the latest scored sessions, then render them chronologically for the chart.
         $scoreTrend = (clone $completedSessions)
@@ -287,8 +290,94 @@ class UserController extends Controller
         return $this->mobileView('dashboard', compact(
             'profile', 'totalSessions', 'avgScore', 'recentSessions', 'scoreTrend',
             'radarData', 'categoryPerformance', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
-            'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations', 'practicePlan'
+            'learningLabProgress', 'recentNotifications', 'upcomingGoal', 'aiRecommendations', 'practicePlan', 'dashboardMockScenarios'
         ));
+    }
+
+    private function dashboardMockScenarios()
+    {
+        if (! Schema::hasTable('categories')) {
+            return collect();
+        }
+
+        $sourcePacks = QuestionDatasetProvider::all();
+        $fallbackSourceKey = array_key_first($sourcePacks);
+
+        return Category::where('status', 'active')
+            ->where('type', 'core')
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get()
+            ->filter(fn (Category $category) => $this->isDashboardMockCategory($category))
+            ->values()
+            ->map(function (Category $category) use ($sourcePacks, $fallbackSourceKey) {
+                $sourceKey = QuestionDatasetProvider::defaultKeyForCategory($category->title);
+                $label = $this->dashboardMockScenarioLabel($category->title);
+
+                return [
+                    'category_id' => $category->id,
+                    'label' => $label,
+                    'source_pack_key' => array_key_exists($sourceKey, $sourcePacks) ? $sourceKey : $fallbackSourceKey,
+                    'interview_focus' => $this->dashboardMockFocusForCategory($category->title, $label),
+                ];
+            });
+    }
+
+    private function isDashboardMockCategory(Category $category): bool
+    {
+        $title = Str::lower(trim(preg_replace('/\s+/', ' ', str_replace('/', ' / ', (string) $category->title)) ?? ''));
+
+        if (Str::contains($title, ['bpo', 'customer', 'programming', 'technical', 'scholar']) || preg_match('/\bit\b/', $title)) {
+            return false;
+        }
+
+        return Str::contains($title, [
+            'job interview',
+            'general job',
+            'school admission',
+            'college admission',
+            'admission interview',
+        ]);
+    }
+
+    private function dashboardMockScenarioLabel(?string $categoryTitle): string
+    {
+        $title = trim((string) $categoryTitle);
+        $displayTitle = trim(preg_replace('/\s*\/\s*/', ' / ', $title) ?? $title);
+        $key = Str::lower(trim(preg_replace('/\s+/', ' ', $displayTitle) ?? $displayTitle));
+        $knownLabels = [
+            'job interview' => 'Philippines Job Interviews',
+            'general job interview' => 'Philippines Job Interviews',
+            'college admission' => 'Philippines School Admission Interviews',
+            'college admission interview' => 'Philippines School Admission Interviews',
+            'school admission' => 'Philippines School Admission Interviews',
+            'school admission interview' => 'Philippines School Admission Interviews',
+        ];
+
+        if (isset($knownLabels[$key])) {
+            return $knownLabels[$key];
+        }
+
+        if ($displayTitle === '') {
+            return 'Philippines Job Interviews';
+        }
+
+        if (! Str::contains($key, 'interview')) {
+            $displayTitle .= ' Interview';
+        }
+
+        return Str::contains($key, 'philipp') ? $displayTitle : "Philippines {$displayTitle}";
+    }
+
+    private function dashboardMockFocusForCategory(?string $categoryTitle, string $label): string
+    {
+        $title = Str::lower((string) $categoryTitle);
+
+        if (Str::contains($title, 'job') && ! Str::contains($title, ['bpo', 'customer'])) {
+            return 'Philippines Job Interview';
+        }
+
+        return $label;
     }
 
     public function progress()

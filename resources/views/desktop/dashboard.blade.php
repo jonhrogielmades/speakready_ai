@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=15') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=27') }}" data-page-style="dashboard">
 @endpush
 
 @section('content')
@@ -69,6 +69,20 @@
         ? 'Polish role-fit stories, metrics, and confident closing answers.'
         : 'Practice structure, confidence, and local role-fit responses.';
     $challengeXp = $hasTrendScores ? 60 : 40;
+    $trendDirectionText = ! $hasTrendScores
+        ? 'No scores yet'
+        : ($trendImprovement > 0
+            ? 'Trending up'
+            : ($trendImprovement < 0 ? 'Needs focus' : 'Stable'));
+    $trendDirectionClass = ! $hasTrendScores
+        ? 'is-empty'
+        : ($trendImprovement > 0
+            ? 'is-up'
+            : ($trendImprovement < 0 ? 'is-down' : 'is-flat'));
+    $trendDirectionIcon = ! $hasTrendScores
+        ? 'fa-circle-dot'
+        : ($trendImprovement < 0 ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up');
+    $goalTarget = isset($upcomingGoal) ? max(0, min(100, (int) round($upcomingGoal->target ?? 100))) : 100;
     $dashboardAccentFallbacks = ['#3b82f6', '#22c55e', '#06b6d4', '#f59e0b', '#8b5cf6', '#ec4899', '#ef4444'];
     $safeAccent = static function ($value, string $fallback = '#3b82f6') use ($dashboardAccentFallbacks): string {
         $color = trim((string) $value);
@@ -120,6 +134,33 @@
 @endphp
 
 <div class="db-section active sr-dashboard" id="sec-overview">
+    <section class="sr-saas-command" aria-labelledby="srDashboardTitle">
+        <div class="sr-saas-command-copy">
+            <span class="sr-saas-eyebrow"><i class="fa-solid fa-circle-dot"></i> User Dashboard</span>
+            <h4 id="srDashboardTitle">Your readiness workspace</h4>
+            <p>Track interview readiness, practice momentum, and next actions in one focused view.</p>
+        </div>
+        <div class="sr-saas-command-metrics" role="group" aria-label="Dashboard state">
+            <div class="sr-saas-command-metric">
+                <span>Status</span>
+                <strong>{{ $scoreText }}</strong>
+            </div>
+            <div class="sr-saas-command-metric">
+                <span>Trend</span>
+                <strong>{{ $trendDirectionText }}</strong>
+            </div>
+            <div class="sr-saas-command-metric">
+                <span>Target</span>
+                <strong>{{ $goalTarget }}%</strong>
+            </div>
+        </div>
+        <div class="sr-saas-command-actions" aria-label="Dashboard actions">
+            <button type="button" class="sr-saas-action primary" id="dashboardMockTrigger" data-bs-toggle="modal" data-bs-target="#dashboardMockModal" aria-controls="dashboardMockModal"><i class="fa-solid fa-play"></i> Start Mock</button>
+            <a href="{{ route('user.coach') }}" class="sr-saas-action" id="dashboardCoachTrigger" data-bs-toggle="modal" data-bs-target="#dashboardCoachModal" aria-controls="dashboardCoachModal"><i class="fa-solid fa-robot"></i> Coach</a>
+            <a href="{{ route('user.progress') }}" class="sr-saas-action icon-only" aria-label="Open progress"><i class="fa-solid fa-chart-line"></i></a>
+        </div>
+    </section>
+
     <div class="sr-summary-grid">
         <div class="sr-welcome-stack">
             <section class="sr-card sr-hero-card sr-hero-image-panel p-0" aria-label="SpeakReady AI welcome hero">
@@ -176,6 +217,10 @@
                         <div class="sr-stat-label">Completed sessions</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
+                    <div class="sr-stat-foot">
+                        <span>10-session milestone</span>
+                        <strong>{{ $sessionsMeter }}%</strong>
+                    </div>
                 </div>
                 <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
                     <div class="sr-stat-head">
@@ -186,6 +231,10 @@
                         <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
                         <div class="sr-stat-label">Average rating</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
+                    </div>
+                    <div class="sr-stat-foot">
+                        <span>Quality meter</span>
+                        <strong>{{ $ratingMeter }}%</strong>
                     </div>
                 </div>
                 <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
@@ -198,6 +247,10 @@
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
+                    <div class="sr-stat-foot">
+                        <span>Next level</span>
+                        <strong>{{ $xpMeter }}%</strong>
+                    </div>
                 </div>
                 <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
                     <div class="sr-stat-head">
@@ -208,6 +261,10 @@
                         <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
                         <div class="sr-stat-label">Active practice days</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></div>
+                    </div>
+                    <div class="sr-stat-foot">
+                        <span>7-day streak</span>
+                        <strong>{{ $streakMeter }}%</strong>
                     </div>
                 </div>
             </div>
@@ -243,6 +300,20 @@
                         </div>
                     </div>
                 </div>
+                <div class="sr-score-brief" role="group" aria-label="Readiness details">
+                    <div>
+                        <span>Goal progress</span>
+                        <strong>{{ $goalPercent }}%</strong>
+                    </div>
+                    <div>
+                        <span>Trend sample</span>
+                        <strong>{{ $trendSessionCount }} {{ \Illuminate\Support\Str::plural('session', $trendSessionCount) }}</strong>
+                    </div>
+                    <div>
+                        <span>Next task</span>
+                        <strong>+{{ $challengeXp }} XP</strong>
+                    </div>
+                </div>
                 </section>
 
             <div class="sr-mobile-stat-grid" role="group" aria-label="Quick statistics">
@@ -256,6 +327,10 @@
                         <div class="sr-stat-label">Completed sessions</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     </div>
+                    <div class="sr-stat-foot">
+                        <span>10-session milestone</span>
+                        <strong>{{ $sessionsMeter }}%</strong>
+                    </div>
                 </div>
                 <div class="sr-stat-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;">
                     <div class="sr-stat-head">
@@ -266,6 +341,10 @@
                         <div class="sr-stat-value">{{ $rating }}<span style="font-size:.9rem;color:var(--tx3)">/5</span></div>
                         <div class="sr-stat-label">Average rating</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-award"></i></div>
+                    </div>
+                    <div class="sr-stat-foot">
+                        <span>Quality meter</span>
+                        <strong>{{ $ratingMeter }}%</strong>
                     </div>
                 </div>
                 <div class="sr-stat-card" style="--accent:#06b6d4;--meter-value:{{ $xpMeter }}%;">
@@ -278,6 +357,10 @@
                         <div class="sr-stat-label">Experience points</div>
                         <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
                     </div>
+                    <div class="sr-stat-foot">
+                        <span>Next level</span>
+                        <strong>{{ $xpMeter }}%</strong>
+                    </div>
                 </div>
                 <div class="sr-stat-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;">
                     <div class="sr-stat-head">
@@ -288,6 +371,10 @@
                         <div class="sr-stat-value">{{ $currentStreak ?? 0 }}</div>
                         <div class="sr-stat-label">Active practice days</div>
                         <div class="sr-stat-meter" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></div>
+                    </div>
+                    <div class="sr-stat-foot">
+                        <span>7-day streak</span>
+                        <strong>{{ $streakMeter }}%</strong>
                     </div>
                 </div>
             </div>
@@ -305,6 +392,7 @@
                         </div>
                         <p class="sr-trend-subtitle">Recent completed Philippine interview sessions, scored from 0 to 100.</p>
                     </div>
+                    <span class="sr-trend-state {{ $trendDirectionClass }}"><i class="fa-solid {{ $trendDirectionIcon }}"></i> {{ $trendDirectionText }}</span>
                 </div>
                 <div class="sr-trend-actions justify-content-between mb-2">
                     <a href="{{ route('user.progress') }}" class="sr-trend-detail-btn">View Details <i class="fa-solid fa-chevron-right"></i></a>
@@ -412,54 +500,6 @@
                     @endif
                 </section>
             </div>
-
-            <section id="card-practice-plan" class="sr-card sr-card-pad" aria-labelledby="dashboard-practice-plan-title">
-                <div class="sr-plan-header">
-                    <div class="sr-plan-header-icon"><i class="fa-solid fa-list-check"></i></div>
-                    <div class="sr-plan-header-copy">
-                        <h5 id="dashboard-practice-plan-title" class="sr-plan-title">Personalized Practice Plan</h5>
-                        <p class="sr-plan-subtitle">Follow a short sequence built from your latest readiness signals.</p>
-                    </div>
-                </div>
-                <a href="{{ route('user.progress') }}" class="sr-plan-full-link">
-                    <i class="fa-solid fa-chart-line"></i>
-                    View complete progress plan
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
-                @if(isset($practicePlan) && count($practicePlan) > 0)
-                    <div class="sr-rec-list">
-                        @foreach($practicePlan as $plan)
-                            @php
-                                $planAccent = $safeAccent($plan->color ?? null, '#10b981');
-                                $planIcon = $safeFaIcon($plan->icon ?? null, 'fa-list-check');
-                            @endphp
-                            <a href="{{ $plan->url ?? route('interview.setup') }}" class="sr-rec-item" style="--accent: {{ $planAccent }}">
-                                <div class="sr-rec-icon"><i class="fa-solid {{ $planIcon }}"></i></div>
-                                <div class="sr-plan-copy">
-                                    <div class="sr-plan-top">
-                                        <span class="sr-plan-step">{{ $plan->day ?? 'Today' }}</span>
-                                        <span class="sr-tag sr-tag-accent">{{ $plan->minutes ?? 10 }} min</span>
-                                    </div>
-                                    <div class="sr-plan-task-title">{{ $plan->title ?? 'Practice next step' }}</div>
-                                    <div class="sr-plan-action">{{ $plan->action ?? 'Complete one focused interview practice task.' }}</div>
-                                    <div class="sr-plan-meta">
-                                        <span class="sr-tag">{{ $plan->focus ?? 'Readiness' }}</span>
-                                    </div>
-                                    <span class="sr-plan-cta">{{ $plan->cta ?? 'Start Practice' }} <i class="fa-solid fa-chevron-right"></i></span>
-                                </div>
-                                <i class="fa-solid fa-chevron-right sr-plan-card-chevron" aria-hidden="true"></i>
-                            </a>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="sr-polished-empty">
-                        <div class="sr-polished-empty-inner">
-                            <div class="sr-empty-visual"><i class="fa-solid fa-clipboard-list"></i></div>
-                            <p class="sr-polished-empty-text">Complete a scored interview to generate your practice plan.</p>
-                        </div>
-                    </div>
-                @endif
-            </section>
 
             <section id="card-recent-sessions" class="sr-card sr-card-pad sr-polished-card" style="--polish-accent:#06b6d4">
                 <div class="sr-polished-header">
@@ -668,6 +708,183 @@
             </section>
 
         </aside>
+    </div>
+</div>
+
+@php
+    $dashboardMockScenarios = collect($dashboardMockScenarios ?? []);
+    $dashboardMockDefaultScenario = $dashboardMockScenarios->first();
+    $dashboardMockSelectedCategoryId = old('category_id', $dashboardMockDefaultScenario['category_id'] ?? '');
+    $dashboardMockSelectedScenario = $dashboardMockScenarios->first(fn ($scenario) => (string) $scenario['category_id'] === (string) $dashboardMockSelectedCategoryId)
+        ?? $dashboardMockDefaultScenario;
+    $dashboardMockQuestionTypes = collect(old('question_types', ['Behavioral', 'Situational']))->all();
+    $dashboardMockHasScenarios = $dashboardMockScenarios->isNotEmpty();
+@endphp
+
+<div class="modal fade sr-dashboard-coach-modal sr-dashboard-mock-modal" id="dashboardMockModal" tabindex="-1" aria-labelledby="dashboardMockModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="dashboardMockForm" action="{{ route('interview.start') }}" method="POST">
+                @csrf
+                <input type="hidden" name="source_pack_key" id="dashboardMockSourcePack" value="{{ $dashboardMockSelectedScenario['source_pack_key'] ?? '' }}">
+                <input type="hidden" name="interview_focus" id="dashboardMockFocus" value="{{ $dashboardMockSelectedScenario['interview_focus'] ?? 'Philippines Job Interview' }}">
+                <input type="hidden" name="coach_focus_mode" value="balanced">
+                <input type="hidden" name="company_persona" value="Philippines hiring context">
+                <input type="hidden" name="interviewer_strictness" value="neutral">
+                <input type="hidden" name="time_limit" value="0">
+                <input type="hidden" name="ai_assistance_level" value="standard">
+                <input type="hidden" name="interview_format" value="standard">
+                <div class="modal-header">
+                    <div class="sr-dashboard-coach-heading">
+                        <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-play"></i></span>
+                        <div>
+                            <h5 class="modal-title" id="dashboardMockModalTitle">Start Mock Interview</h5>
+                            <p>Set up a focused Philippines practice session.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="sr-dashboard-mock-grid">
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label" for="dashboardMockCategory">Practice scenario</label>
+                            <select class="sr-dashboard-mock-control" name="category_id" id="dashboardMockCategory" required {{ $dashboardMockHasScenarios ? '' : 'disabled' }}>
+                                @forelse($dashboardMockScenarios as $scenario)
+                                    <option value="{{ $scenario['category_id'] }}"
+                                        data-source-pack-key="{{ $scenario['source_pack_key'] }}"
+                                        data-focus="{{ $scenario['interview_focus'] }}"
+                                        {{ (string) $dashboardMockSelectedCategoryId === (string) $scenario['category_id'] ? 'selected' : '' }}>
+                                        {{ $scenario['label'] }}
+                                    </option>
+                                @empty
+                                    <option value="" selected>No active scenarios available</option>
+                                @endforelse
+                            </select>
+                        </div>
+
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label" for="dashboardMockPosition">Target position</label>
+                            <input class="sr-dashboard-mock-control" type="text" name="target_position" id="dashboardMockPosition" maxlength="255" value="{{ old('target_position') }}" placeholder="e.g. Teacher, HR Assistant, Developer" required>
+                        </div>
+
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label">Difficulty</label>
+                            <div class="sr-dashboard-mock-choice-grid">
+                                @foreach([
+                                    'easy' => ['label' => 'Easy', 'icon' => 'fa-signal'],
+                                    'medium' => ['label' => 'Medium', 'icon' => 'fa-star'],
+                                    'hard' => ['label' => 'Hard', 'icon' => 'fa-shield-alt'],
+                                ] as $difficultyValue => $difficultyMeta)
+                                    <label class="sr-dashboard-mock-choice">
+                                        <input type="radio" name="difficulty" value="{{ $difficultyValue }}" {{ old('difficulty', 'medium') === $difficultyValue ? 'checked' : '' }}>
+                                        <span class="sr-dashboard-mock-choice-icon" aria-hidden="true"><i class="fa-solid {{ $difficultyMeta['icon'] }}"></i></span>
+                                        <span>{{ $difficultyMeta['label'] }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label" for="dashboardMockQuestions">Questions</label>
+                            <select class="sr-dashboard-mock-control" name="num_questions" id="dashboardMockQuestions">
+                                @foreach([1, 3, 5, 10, 15, 20, 25, 30] as $questionCount)
+                                    <option value="{{ $questionCount }}" {{ (string) old('num_questions', 5) === (string) $questionCount ? 'selected' : '' }}>{{ $questionCount }} {{ $questionCount === 1 ? 'Question' : 'Questions' }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label">Response mode</label>
+                            <div class="sr-dashboard-mock-choice-grid">
+                                @foreach([
+                                    'text' => ['label' => 'Text', 'icon' => 'fa-keyboard'],
+                                    'voice' => ['label' => 'Voice', 'icon' => 'fa-microphone'],
+                                    'hybrid' => ['label' => 'Hybrid', 'icon' => 'fa-pen-to-square'],
+                                ] as $responseValue => $responseMeta)
+                                    <label class="sr-dashboard-mock-choice">
+                                        <input type="radio" name="response_mode" value="{{ $responseValue }}" {{ old('response_mode', 'voice') === $responseValue ? 'checked' : '' }}>
+                                        <span class="sr-dashboard-mock-choice-icon" aria-hidden="true"><i class="fa-solid {{ $responseMeta['icon'] }}"></i></span>
+                                        <span>{{ $responseMeta['label'] }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label" for="dashboardMockFeedbackMode">Feedback mode</label>
+                            <select class="sr-dashboard-mock-control" name="live_feedback_mode" id="dashboardMockFeedbackMode">
+                                <option value="coaching" {{ old('live_feedback_mode', 'coaching') === 'coaching' ? 'selected' : '' }}>Coaching On</option>
+                                <option value="real_interview" {{ old('live_feedback_mode', 'coaching') === 'real_interview' ? 'selected' : '' }}>Real Interview Mode</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="sr-dashboard-mock-field sr-dashboard-mock-field-full">
+                        <label class="sr-dashboard-coach-label" id="dashboardMockQuestionTypesLabel">Question types</label>
+                        <div class="sr-dashboard-mock-checks" role="group" aria-labelledby="dashboardMockQuestionTypesLabel">
+                            @foreach(['Behavioral', 'Situational', 'Technical', 'Personal'] as $questionType)
+                                <label class="sr-dashboard-mock-check">
+                                    <input type="checkbox" name="question_types[]" value="{{ $questionType }}" {{ in_array($questionType, $dashboardMockQuestionTypes, true) ? 'checked' : '' }}>
+                                    <strong>{{ $questionType }}</strong>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="sr-dashboard-mock-status" id="dashboardMockStatus" role="alert" hidden></div>
+                    @unless($dashboardMockHasScenarios)
+                        <div class="sr-dashboard-mock-empty" role="alert">No active interview scenarios are available. Ask an admin to activate a job interview or school admission category.</div>
+                    @endunless
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sr-dashboard-coach-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="sr-dashboard-coach-submit" id="dashboardMockSubmit" {{ $dashboardMockHasScenarios ? '' : 'disabled' }}><i class="fa-solid fa-play"></i> Start Interview</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade sr-dashboard-coach-modal" id="dashboardCoachModal" tabindex="-1" aria-labelledby="dashboardCoachModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="dashboardCoachForm" action="{{ route('user.coach.chat') }}" method="POST" data-full-coach-url="{{ route('user.coach') }}" data-conversation-url="{{ url('/coach/conversation') }}">
+                @csrf
+                <div class="modal-header">
+                    <div class="sr-dashboard-coach-heading">
+                        <span class="sr-dashboard-coach-icon"><i class="fa-solid fa-robot"></i></span>
+                        <div>
+                            <h5 class="modal-title" id="dashboardCoachModalTitle">Readiness Coach</h5>
+                            <p>Ask for focused interview guidance.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="sr-dashboard-coach-label" for="dashboardCoachMessage">Question or focus</label>
+                    <textarea class="sr-dashboard-coach-input" id="dashboardCoachMessage" name="message" rows="4" maxlength="10000" required placeholder="Example: Help me prepare a stronger answer for a customer service interview."></textarea>
+                    <div class="sr-dashboard-coach-prompts" role="group" aria-label="Quick coach prompts">
+                        <button type="button" data-dashboard-coach-prompt="Give me a quick plan for my next Philippines mock interview.">Quick plan</button>
+                        <button type="button" data-dashboard-coach-prompt="Help me improve one weak interview answer using the STAR method.">STAR help</button>
+                        <button type="button" data-dashboard-coach-prompt="Suggest role-fit points I can practice for a local HR screening.">HR screening</button>
+                    </div>
+                    <div class="sr-dashboard-coach-status" id="dashboardCoachStatus" role="status" aria-live="polite"></div>
+                    <div class="sr-dashboard-coach-response" id="dashboardCoachResponse" hidden>
+                        <div class="sr-dashboard-coach-response-head">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Coach reply</span>
+                        </div>
+                        <div class="sr-dashboard-coach-response-body" id="dashboardCoachResponseBody"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="sr-dashboard-coach-danger" id="dashboardCoachClear"><i class="fa-solid fa-broom"></i> Clear convo</button>
+                    <a href="{{ route('user.coach') }}" class="sr-dashboard-coach-link">Open full coach</a>
+                    <button type="button" class="sr-dashboard-coach-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="sr-dashboard-coach-submit" id="dashboardCoachSubmit"><i class="fa-solid fa-paper-plane"></i> Ask Coach</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -1049,6 +1266,307 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     };
 });
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    (function() {
+        function initDashboardMockModal() {
+            const form = document.getElementById('dashboardMockForm');
+            if (!form || form.dataset.bound === 'true') return;
+
+            form.dataset.bound = 'true';
+
+            const modal = document.getElementById('dashboardMockModal');
+            const scenarioSelect = document.getElementById('dashboardMockCategory');
+            const sourcePackInput = document.getElementById('dashboardMockSourcePack');
+            const focusInput = document.getElementById('dashboardMockFocus');
+            const positionInput = document.getElementById('dashboardMockPosition');
+            const submitButton = document.getElementById('dashboardMockSubmit');
+            const status = document.getElementById('dashboardMockStatus');
+            const defaultSubmitHtml = submitButton ? submitButton.innerHTML : '';
+
+            function syncScenarioFields() {
+                const selectedOption = scenarioSelect?.selectedOptions?.[0];
+                if (!selectedOption) return;
+
+                if (sourcePackInput) {
+                    sourcePackInput.value = selectedOption.dataset.sourcePackKey || '';
+                }
+                if (focusInput) {
+                    focusInput.value = selectedOption.dataset.focus || 'Philippines Job Interview';
+                }
+            }
+
+            function setStatus(message) {
+                if (!status) return;
+
+                status.textContent = message || '';
+                status.hidden = !message;
+            }
+
+            scenarioSelect?.addEventListener('change', () => {
+                syncScenarioFields();
+                setStatus('');
+            });
+
+            form.querySelectorAll('input[name="question_types[]"]').forEach((input) => {
+                input.addEventListener('change', () => setStatus(''));
+            });
+
+            modal?.addEventListener('shown.bs.modal', () => {
+                syncScenarioFields();
+                positionInput?.focus();
+            });
+
+            form.addEventListener('submit', (event) => {
+                syncScenarioFields();
+
+                if (!scenarioSelect?.value) {
+                    event.preventDefault();
+                    setStatus('Choose a practice scenario before starting.');
+                    scenarioSelect?.focus();
+                    return;
+                }
+
+                const hasQuestionType = form.querySelectorAll('input[name="question_types[]"]:checked').length > 0;
+                if (!hasQuestionType) {
+                    event.preventDefault();
+                    setStatus('Select at least one question type.');
+                    form.querySelector('input[name="question_types[]"]')?.focus();
+                    return;
+                }
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.setAttribute('aria-busy', 'true');
+                    submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Starting...';
+                }
+            });
+
+            modal?.addEventListener('hidden.bs.modal', () => {
+                setStatus('');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.setAttribute('aria-busy', 'false');
+                    submitButton.innerHTML = defaultSubmitHtml;
+                }
+            });
+
+            syncScenarioFields();
+        }
+
+        function initDashboardCoachModal() {
+            const form = document.getElementById('dashboardCoachForm');
+            if (!form || form.dataset.bound === 'true') return;
+
+            form.dataset.bound = 'true';
+
+            const modal = document.getElementById('dashboardCoachModal');
+            const textarea = document.getElementById('dashboardCoachMessage');
+            const submitButton = document.getElementById('dashboardCoachSubmit');
+            const clearButton = document.getElementById('dashboardCoachClear');
+            const status = document.getElementById('dashboardCoachStatus');
+            const responsePanel = document.getElementById('dashboardCoachResponse');
+            const responseBody = document.getElementById('dashboardCoachResponseBody');
+            const defaultSubmitHtml = submitButton ? submitButton.innerHTML : '';
+            const defaultClearHtml = clearButton ? clearButton.innerHTML : '';
+            let conversationId = null;
+            const chatHistory = [];
+
+            function csrfToken() {
+                return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                    || form.querySelector('input[name="_token"]')?.value
+                    || '';
+            }
+
+            function escapeHtml(value) {
+                return String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function formatCoachReply(value) {
+                const escaped = escapeHtml(value || 'The coach did not return a message.');
+                const withInline = escaped
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+                return '<p>' + withInline
+                    .replace(/\n{2,}/g, '</p><p>')
+                    .replace(/\n/g, '<br>') + '</p>';
+            }
+
+            function setStatus(message, type = 'info') {
+                if (!status) return;
+
+                status.textContent = message || '';
+                status.dataset.type = type;
+                status.classList.toggle('show', Boolean(message));
+            }
+
+            function setSending(isSending) {
+                if (!submitButton) return;
+
+                submitButton.disabled = isSending;
+                submitButton.setAttribute('aria-busy', isSending ? 'true' : 'false');
+                submitButton.innerHTML = isSending
+                    ? '<i class="fa-solid fa-spinner fa-spin"></i> Asking...'
+                    : defaultSubmitHtml;
+            }
+
+            function setClearing(isClearing) {
+                if (!clearButton) return;
+
+                clearButton.disabled = isClearing;
+                clearButton.setAttribute('aria-busy', isClearing ? 'true' : 'false');
+                clearButton.innerHTML = isClearing
+                    ? '<i class="fa-solid fa-spinner fa-spin"></i> Clearing...'
+                    : defaultClearHtml;
+            }
+
+            function resetConversationUi(message = 'Conversation cleared.') {
+                conversationId = null;
+                chatHistory.length = 0;
+                if (textarea) {
+                    textarea.value = '';
+                    resizeTextarea();
+                }
+                if (responseBody) responseBody.innerHTML = '';
+                if (responsePanel) responsePanel.hidden = true;
+                setStatus(message, 'success');
+            }
+
+            function resizeTextarea() {
+                if (!textarea) return;
+
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 220) + 'px';
+            }
+
+            document.querySelectorAll('[data-dashboard-coach-prompt]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    if (!textarea) return;
+
+                    textarea.value = button.dataset.dashboardCoachPrompt || '';
+                    resizeTextarea();
+                    textarea.focus();
+                });
+            });
+
+            textarea?.addEventListener('input', resizeTextarea);
+            modal?.addEventListener('shown.bs.modal', () => {
+                textarea?.focus();
+                resizeTextarea();
+            });
+
+            clearButton?.addEventListener('click', async () => {
+                if (!conversationId && !chatHistory.length && !(textarea?.value || '').trim()) {
+                    setStatus('No modal conversation to clear.', 'info');
+                    return;
+                }
+
+                const idToDelete = conversationId;
+                setClearing(true);
+
+                try {
+                    if (idToDelete) {
+                        const baseUrl = form.dataset.conversationUrl || '';
+                        const response = await fetch(baseUrl + '/' + encodeURIComponent(idToDelete), {
+                            method: 'DELETE',
+                            credentials: 'same-origin',
+                            headers: {
+                                Accept: 'application/json',
+                                'X-CSRF-TOKEN': csrfToken(),
+                            },
+                        });
+                        const data = await response.json().catch(() => ({}));
+
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Could not clear this conversation. Please try again.');
+                        }
+                    }
+
+                    resetConversationUi();
+                } catch (error) {
+                    setStatus(error.message || 'Could not clear this conversation. Please try again.', 'error');
+                } finally {
+                    setClearing(false);
+                }
+            });
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const message = textarea ? textarea.value.trim() : '';
+                if (!message) {
+                    setStatus('Add a question first.', 'warning');
+                    textarea?.focus();
+                    return;
+                }
+
+                setSending(true);
+                setStatus('Asking the coach...', 'info');
+                if (responsePanel) responsePanel.hidden = true;
+
+                try {
+                    const formData = new FormData(form);
+                    formData.set('message', message);
+                    formData.set('history', JSON.stringify(chatHistory));
+                    if (conversationId) {
+                        formData.set('conversation_id', conversationId);
+                    }
+
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin',
+                        headers: {
+                            Accept: 'application/json',
+                            'X-CSRF-TOKEN': csrfToken(),
+                        },
+                    });
+                    const data = await response.json().catch(() => ({}));
+
+                    if (!response.ok) {
+                        throw new Error(data.message || data.response || 'Could not reach the coach. Please try again.');
+                    }
+
+                    const reply = data.response || 'The coach did not return a message.';
+                    conversationId = data.conversation_id || conversationId;
+                    chatHistory.push({ role: 'user', content: message });
+                    chatHistory.push({ role: 'ai', content: reply });
+
+                    if (responseBody) responseBody.innerHTML = formatCoachReply(reply);
+                    if (responsePanel) responsePanel.hidden = false;
+                    if (textarea) {
+                        textarea.value = '';
+                        resizeTextarea();
+                    }
+                    setStatus('Coach replied.', 'success');
+                } catch (error) {
+                    setStatus(error.message || 'Could not reach the coach. Please try again.', 'error');
+                } finally {
+                    setSending(false);
+                }
+            });
+        }
+
+        function initDashboardModals() {
+            initDashboardMockModal();
+            initDashboardCoachModal();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDashboardModals);
+        } else {
+            initDashboardModals();
+        }
+    })();
 </script>
 @endpush
 
