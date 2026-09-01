@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Philippines Interview Setup')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=4') }}" data-page-style="interview-setup">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=9') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=1') }}" data-page-style="interview-setup-2">
 @endpush
 
@@ -149,6 +149,13 @@
         'company_persona' => old('company_persona', $companyPersonaDefault),
         'interview_format' => old('interview_format', 'standard'),
     ];
+    $interviewerStrictnessLabels = [
+        'friendly' => 'Friendly Interviewer',
+        'neutral' => 'Neutral HR Interviewer',
+        'strict' => 'Strict Technical Lead',
+        'executive' => 'Executive Panel',
+    ];
+    $interviewerStrictnessSummary = $interviewerStrictnessLabels[$setupDefaults['interviewer_strictness']] ?? 'Neutral HR Interviewer';
     $selectedQuestionTypes = old('question_types', $packQuestionTypes ?: ['Behavioral', 'Situational']);
     $hasScenarioOptions = $scenarioOptions->isNotEmpty();
 @endphp
@@ -220,6 +227,9 @@
                     <div class="setup-stepper-track" id="setupStepperTrack"></div>
                     <div class="setup-stepper-actions">
                         <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                        <button type="submit" id="btn-start-interview" class="setup-step-btn setup-start-button btn-shine" aria-label="Start Philippines Interview" title="Start Philippines Interview" data-default-label='Start <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting <i class="fa-solid fa-spinner fa-spin ms-2"></i>' hidden>
+                            Start <i class="fa-solid fa-play ms-2"></i>
+                        </button>
                         <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
                 </div>
@@ -352,57 +362,49 @@
                                 </select>
                             </div>
                         </div>
-                        <div>
-                            <label class="olbl" for="valInterviewFormat">Interview Format Laboratory</label>
-                            <div class="structure-select-wrap">
-                                <select class="oinp setup-input" name="interview_format" id="valInterviewFormat">
-                                @foreach([
-                                    'standard' => 'Standard live interview',
-                                    'hr_screen' => 'HR screening',
-                                    'hiring_manager' => 'Hiring manager',
-                                    'panel' => 'Multi-perspective panel',
-                                    'phone' => 'Telephone interview',
-                                    'asynchronous' => 'One-way recorded interview',
-                                    'technical' => 'Technical deep dive',
-                                    'case' => 'Case interview',
-                                    'presentation' => 'Presentation defense',
-                                ] as $formatValue => $formatLabel)
-                                    <option value="{{ $formatValue }}" {{ $setupDefaults['interview_format'] === $formatValue ? 'selected' : '' }}>{{ $formatLabel }}</option>
-                                @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="structure-info-note">
-                        <i class="fa-solid fa-info" aria-hidden="true"></i>
-                        <span>Feedback is adjusted to the selected format; camera behavior remains optional.</span>
+                        <input type="hidden" name="interview_format" id="valInterviewFormat" value="standard" class="setup-input">
                     </div>
                 </div>
 
                 <div class="setup-panel setup-inclusive-card animate-fade-up delay-300" id="panel-inclusive">
                     <div class="setup-inclusive-head">
                         <div class="setup-inclusive-head-icon" aria-hidden="true">
-                            <i class="fa-solid fa-universal-access"></i>
+                            <i class="fa-solid fa-video"></i>
                         </div>
-                        <h5 class="setup-inclusive-title">Inclusive Practice Conditions</h5>
+                        <h5 class="setup-inclusive-title">Camera Detection</h5>
                     </div>
-                    <p class="setup-inclusive-copy">Choose conditions that give you an accurate opportunity to demonstrate job-related ability. These settings are recorded with the assessment.</p>
-                    @php $inclusive = Auth::user()->profile?->inclusive_preferences ?? []; @endphp
-                    <div class="inclusive-option-list">
-                        @foreach([
-                            'camera_coaching' => 'Optional body-language coach',
-                            'separate_language_scoring' => 'Separate language mechanics',
-                            'extended_time' => 'Extended response time',
-                            'captions' => 'Captions / transcript controls',
-                            'reduced_distraction' => 'Reduced-distraction workspace',
-                            'simplified_questions' => 'Clearer question wording',
-                        ] as $preferenceKey => $preferenceLabel)
-                            <label class="inclusive-option"><input type="checkbox" name="{{ $preferenceKey }}" value="1" {{ old($preferenceKey, data_get($inclusive, $preferenceKey, false)) ? 'checked' : '' }}> <span>{{ $preferenceLabel }}</span></label>
-                        @endforeach
+                    <p class="setup-inclusive-copy">Turn camera-based body-language detection on or off for this interview.</p>
+                    @php
+                        $inclusive = Auth::user()->profile?->inclusive_preferences ?? [];
+                        $cameraDetectionOn = filter_var(
+                            old('camera_detection', old('camera_coaching', data_get($inclusive, 'camera_detection', data_get($inclusive, 'camera_coaching', false)))),
+                            FILTER_VALIDATE_BOOLEAN
+                        );
+                    @endphp
+                    <input type="hidden" name="separate_language_scoring" value="0">
+                    <input type="hidden" name="extended_time" value="0">
+                    <input type="hidden" name="captions" value="0">
+                    <input type="hidden" name="reduced_distraction" value="0">
+                    <input type="hidden" name="simplified_questions" value="0">
+                    <div class="inclusive-option-list camera-mode-list" role="radiogroup" aria-label="Camera body-language detection">
+                        <label class="inclusive-option camera-mode-option">
+                            <input type="radio" name="camera_detection" value="1" class="setup-input" {{ $cameraDetectionOn ? 'checked' : '' }}>
+                            <span class="camera-mode-copy">
+                                <strong>Camera On</strong>
+                                <small>Detects body language</small>
+                            </span>
+                        </label>
+                        <label class="inclusive-option camera-mode-option">
+                            <input type="radio" name="camera_detection" value="0" class="setup-input" {{ ! $cameraDetectionOn ? 'checked' : '' }}>
+                            <span class="camera-mode-copy">
+                                <strong>Camera Off</strong>
+                                <small>No body-language detection</small>
+                            </span>
+                        </label>
                     </div>
                     <div class="inclusive-note">
                         <i class="fa-solid fa-info" aria-hidden="true"></i>
-                        <span><strong>Important:</strong> body-language signals are never included in the readiness score. Camera coaching only reports visible framing, head alignment, hand/shoulder/posture cues, and movement steadiness. It does not infer confidence, honesty, personality, or employability.</span>
+                        <span><strong>Important:</strong> Camera On enables visible framing, head alignment, hand/shoulder/posture cues, and movement steadiness detection. Camera Off does not start body-language detection.</span>
                     </div>
                 </div>
 
@@ -416,7 +418,7 @@
                     </div>
 
                     <div class="assistance-stack">
-                        <div class="assistance-field">
+                        <div class="assistance-field assistance-level-field">
                             <label class="olbl" for="valAssistance">AI Assistance Level</label>
                             <div class="assistance-select-wrap">
                                 <select class="oinp setup-input" name="ai_assistance_level" id="valAssistance">
@@ -427,7 +429,7 @@
                             </div>
                         </div>
 
-                        <div class="assistance-field">
+                        <div class="assistance-field assistance-question-field">
                             <label class="olbl" id="questionTypesLabel">Question Types</label>
                             <div class="assistance-question-list" id="questionTypeGroup" role="group" aria-labelledby="questionTypesLabel" aria-describedby="questionTypeError" aria-invalid="false">
                                 @foreach([
@@ -446,19 +448,9 @@
                             <div class="setup-inline-error" id="questionTypeError" role="alert" hidden>Select at least one question type.</div>
                         </div>
 
-                        <div class="assistance-field">
-                            <label class="olbl" for="valStrictness">Interviewer Strictness</label>
-                            <div class="assistance-select-wrap">
-                                <select class="oinp setup-input" name="interviewer_strictness" id="valStrictness">
-                                    <option value="friendly" {{ $setupDefaults['interviewer_strictness'] === 'friendly' ? 'selected' : '' }}>Friendly Interviewer</option>
-                                    <option value="neutral" {{ $setupDefaults['interviewer_strictness'] === 'neutral' ? 'selected' : '' }}>Neutral HR Interviewer</option>
-                                    <option value="strict" {{ $setupDefaults['interviewer_strictness'] === 'strict' ? 'selected' : '' }}>Strict Technical Lead</option>
-                                    <option value="executive" {{ $setupDefaults['interviewer_strictness'] === 'executive' ? 'selected' : '' }}>Executive Panel</option>
-                                </select>
-                            </div>
-                        </div>
+                        <input type="hidden" name="interviewer_strictness" id="valStrictness" value="{{ $setupDefaults['interviewer_strictness'] }}" class="setup-input" data-summary-label="{{ $interviewerStrictnessSummary }}">
 
-                        <div class="assistance-field">
+                        <div class="assistance-field assistance-feedback-field">
                             <label class="olbl" for="valFeedbackMode">Live Feedback Mode</label>
                             <div class="assistance-select-wrap">
                                 <select class="oinp setup-input" name="live_feedback_mode" id="valFeedbackMode">
@@ -523,53 +515,47 @@
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
                             <span class="summary-label">Scenario:</span>
-                            <span class="summary-val" id="sumScenario">{{ $selectedScenario['context_label'] ?? 'Philippines Job Interview' }}</span>
+                            <span class="summary-val summary-val-pending" id="sumScenario">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-briefcase"></i></span>
                             <span class="summary-label">Position:</span>
-                            <span class="summary-val" id="sumPosition">{{ filled($targetPositionDefault) ? $targetPositionDefault : 'Not Specified' }}</span>
+                            <span class="summary-val summary-val-pending" id="sumPosition">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-signal"></i></span>
                             <span class="summary-label">Difficulty:</span>
-                            <span class="summary-val" id="sumDifficulty">Medium</span>
+                            <span class="summary-val summary-val-pending" id="sumDifficulty">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-circle-question"></i></span>
                             <span class="summary-label">Questions:</span>
-                            <span class="summary-val" id="sumQuestions">10</span>
+                            <span class="summary-val summary-val-pending" id="sumQuestions">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
                             <span class="summary-label">Response Mode:</span>
-                            <span class="summary-val" id="sumResponse">Voice</span>
+                            <span class="summary-val summary-val-pending" id="sumResponse">Not set yet</span>
                         </div>
                         <div class="summary-row">
-                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-shield-alt"></i></span>
-                            <span class="summary-label">Strictness:</span>
-                            <span class="summary-val" id="sumStrictness">Neutral HR Interviewer</span>
+                            <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-video"></i></span>
+                            <span class="summary-label">Camera Detection:</span>
+                            <span class="summary-val summary-val-pending" id="sumCameraDetection">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-message"></i></span>
                             <span class="summary-label">Live Feedback:</span>
-                            <span class="summary-val" id="sumFeedbackMode">Coaching On</span>
+                            <span class="summary-val summary-val-pending" id="sumFeedbackMode">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-building"></i></span>
                             <span class="summary-label">Hiring Context:</span>
-                            <span class="summary-val" id="sumPersona">Philippines hiring context</span>
+                            <span class="summary-val summary-val-pending" id="sumPersona">Not set yet</span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-icon" aria-hidden="true"><i class="fa-regular fa-clock"></i></span>
                             <span class="summary-label">Est. Duration:</span>
-                            <span class="summary-val text-success" id="sumDuration">15 Minutes</span>
-                        </div>
-                        
-                        <div class="setup-start-action" style="margin-top:30px;">
-                            <button type="submit" id="btn-start-interview" class="btn w-100 py-3 btn-shine" data-default-label='Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting Interview <i class="fa-solid fa-spinner fa-spin ms-2"></i>'>
-                                Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>
-                            </button>
+                            <span class="summary-val text-success summary-val-pending" id="sumDuration">Not set yet</span>
                         </div>
                     </div>
                 </div>
@@ -781,12 +767,40 @@
         return missing.length === 0;
     }
 
+    const setupSummaryPendingText = 'Not set yet';
+
+    function setSummaryValue(id, value, isReady = true) {
+        const element = document.getElementById(id);
+        if (!element) return;
+
+        const text = String(value || '').trim();
+        const hasValue = isReady && text.length > 0;
+        element.innerText = hasValue ? text : setupSummaryPendingText;
+        element.classList.toggle('summary-val-pending', !hasValue);
+
+        if (id === 'sumDuration') {
+            element.classList.toggle('text-success', hasValue);
+        }
+    }
+
+    function titleizeSetupValue(value) {
+        return String(value || '')
+            .replace(/[_-]+/g, ' ')
+            .replace(/\b\w/g, character => character.toUpperCase());
+    }
+
     function updateSummary() {
+        const detailsReady = visitedSetupStepIds.has('panel-basic');
+        const structureReady = visitedSetupStepIds.has('panel-structure');
+        const cameraReady = visitedSetupStepIds.has('panel-inclusive');
+        const contentReady = visitedSetupStepIds.has('panel-content');
+        const responseReady = visitedSetupStepIds.has('panel-response');
+
         ensureCompanyPersonaFallback();
         const scenarioSelect = document.getElementById('valScenario');
         if (scenarioSelect) {
             const selectedOption = scenarioSelect.options[scenarioSelect.selectedIndex];
-            document.getElementById('sumScenario').innerText = selectedOption?.dataset.contextLabel || selectedOption?.text || 'Philippines Job Interview';
+            setSummaryValue('sumScenario', selectedOption?.dataset.contextLabel || selectedOption?.text || '', detailsReady);
             document.getElementById('valSourcePack').value = selectedOption?.dataset.sourcePackKey || '';
             document.getElementById('valFocus').value = selectedOption?.dataset.focus || 'Philippines Job Interview';
             const sourceSummary = document.getElementById('sourceSummary');
@@ -796,39 +810,42 @@
         }
 
         const posVal = document.getElementById('valPosition').value;
-        document.getElementById('sumPosition').innerText = posVal || 'Not Specified';
-        updateStartInterviewState();
+        setSummaryValue('sumPosition', posVal, detailsReady);
 
         const diff = document.querySelector('input[name="difficulty"]:checked');
-        if(diff) document.getElementById('sumDifficulty').innerText = diff.value.charAt(0).toUpperCase() + diff.value.slice(1);
+        setSummaryValue('sumDifficulty', diff ? titleizeSetupValue(diff.value) : '', structureReady);
 
         const numQ = document.getElementById('valNumQuestions').value;
-        document.getElementById('sumQuestions').innerText = numQ;
+        setSummaryValue('sumQuestions', numQ, structureReady);
 
         const resp = document.querySelector('input[name="response_mode"]:checked');
-        if(resp) document.getElementById('sumResponse').innerText = resp.value.charAt(0).toUpperCase() + resp.value.slice(1);
+        setSummaryValue('sumResponse', resp ? titleizeSetupValue(resp.value) : '', responseReady);
+
+        const cameraDetection = document.querySelector('input[name="camera_detection"]:checked');
+        setSummaryValue('sumCameraDetection', cameraDetection?.value === '1' ? 'Camera On' : 'Camera Off', cameraReady && Boolean(cameraDetection));
 
         const strictness = document.getElementById('valStrictness');
         if (strictness) {
-            document.getElementById('sumStrictness').innerText = strictness.options[strictness.selectedIndex].text;
+            const strictnessLabel = strictness.dataset.summaryLabel
+                || strictness.options?.[strictness.selectedIndex]?.text
+                || titleizeSetupValue(strictness.value);
+            setSummaryValue('sumStrictness', strictnessLabel, contentReady);
         }
 
         const feedbackMode = document.getElementById('valFeedbackMode');
         if (feedbackMode) {
-            document.getElementById('sumFeedbackMode').innerText = feedbackMode.options[feedbackMode.selectedIndex].text;
+            setSummaryValue('sumFeedbackMode', feedbackMode.options[feedbackMode.selectedIndex]?.text || '', contentReady);
         }
 
         const personaValue = ensureCompanyPersonaFallback();
-        document.getElementById('sumPersona').innerText = personaValue || 'Philippines hiring context';
+        setSummaryValue('sumPersona', personaValue, contentReady);
 
         const timeLimit = parseInt(document.getElementById('valTimeLimit').value);
-        let durationStr = "Self-paced";
+        let durationStr = "No limit";
         if(timeLimit > 0) {
             durationStr = (numQ * timeLimit) + " Minutes";
-        } else {
-            durationStr = Math.round(numQ * 1.5) + " Minutes";
         }
-        document.getElementById('sumDuration').innerText = durationStr;
+        setSummaryValue('sumDuration', durationStr, structureReady && Boolean(numQ));
         updateStartInterviewState();
     }
 
@@ -849,11 +866,15 @@
         const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasResponseMode && hasQuestionType;
         const hasReviewedSetupSteps = getRequiredSetupReviewStepIds().every(stepId => visitedSetupStepIds.has(stepId));
         const canStart = hasCompleteSetupFields && hasReviewedSetupSteps;
+        const activeStepId = getSetupSteps()[setupStepState.index]?.id;
+        const shouldShowStart = activeStepId === 'panel-summary' && hasResponseMode;
 
         if (setupValidationVisible) {
             markSetupValidation(missingSetupItems());
         }
 
+        startButton.hidden = !shouldShowStart;
+        startButton.classList.toggle('setup-start-visible', shouldShowStart);
         startButton.disabled = !canStart;
         startButton.classList.toggle('setup-start-disabled', !canStart);
         startButton.setAttribute('aria-disabled', canStart ? 'false' : 'true');
@@ -877,19 +898,22 @@
         baseSteps: [
             { id: 'panel-basic', label: 'Details' },
             { id: 'panel-structure', label: 'Structure' },
-            { id: 'panel-inclusive', label: 'Access' },
+            { id: 'panel-inclusive', label: 'Camera' },
             { id: 'panel-content', label: 'Scenario' },
             { id: 'panel-response', label: 'Response' },
         ],
     };
     const visitedSetupStepIds = new Set();
 
+    document.querySelectorAll('input[name="camera_detection"]').forEach(el => {
+        el.addEventListener('change', () => {
+            visitedSetupStepIds.add('panel-inclusive');
+            updateSummary();
+        });
+    });
+
     function getSetupSteps() {
-        const steps = [...setupStepState.baseSteps];
-        if (!setupStepState.desktopQuery.matches) {
-            steps.push({ id: 'panel-summary', label: 'Summary' });
-        }
-        return steps;
+        return [...setupStepState.baseSteps, { id: 'panel-summary', label: 'Summary' }];
     }
 
     function getRequiredSetupReviewStepIds() {
@@ -972,7 +996,7 @@
             nextButton.hidden = isLast;
         }
 
-        updateStartInterviewState();
+        updateSummary();
 
     }
 
@@ -1033,7 +1057,6 @@
     });
 
     function initializeInterviewSetupPage() {
-        updateSummary();
         showSetupStep(0);
     }
 
@@ -1066,8 +1089,8 @@
             document.body.classList.remove('finish-transition-active');
 
             if (startInterviewButton) {
-                startInterviewButton.innerHTML = startInterviewButton.dataset.defaultLabel || 'Start Philippines Interview <i class="fa-solid fa-play ms-2"></i>';
-                updateStartInterviewState();
+                startInterviewButton.innerHTML = startInterviewButton.dataset.defaultLabel || 'Start <i class="fa-solid fa-play ms-2"></i>';
+                updateSummary();
             }
         });
     }
@@ -1162,13 +1185,13 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const setupTourSteps = [
-            { element: '#panel-basic', popover: { title: 'Philippines Interview', description: 'Choose an optional local category and enter the target position.', side: 'top', align: 'center' }},
-            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, and optional response timing before you start.', side: 'top', align: 'center' }},
-            { element: '#panel-inclusive', popover: { title: 'Inclusive Practice', description: 'Select practice conditions that make the interview setup match your needs.', side: 'top', align: 'center' }},
-            { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick the Philippines scenario, assistance level, and question types.', side: 'top', align: 'center' }},
+            { element: '#panel-basic', popover: { title: 'Interview Focus', description: 'Choose job or school practice, select an optional Philippines category, and enter the target role or program.', side: 'top', align: 'center' }},
+            { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, question count, timing, and the standard or challenge format before you start.', side: 'top', align: 'center' }},
+            { element: '#panel-inclusive', popover: { title: 'Optional Camera Coaching', description: 'Camera On can detect visible body-language signals for coaching. Camera Off skips it, and readiness scoring stays based on answer quality.', side: 'top', align: 'center' }},
+            { element: '#panel-content', popover: { title: 'Practice Scenario', description: 'Pick the Philippines scenario, assistance level, interviewer persona, and question types.', side: 'top', align: 'center' }},
             { element: '#panel-response', popover: { title: 'Response Mode', description: 'Choose typed, voice, or hybrid answers depending on how you want to practice.', side: 'top', align: 'center' }},
-            { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm your interview setup before generating the practice session.', side: 'top', align: 'center' }},
-            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate your customized Philippines interview when the setup looks right.', side: 'top', align: 'center' }}
+            { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Confirm the selected focus, structure, assistance, and response mode before generating the session.', side: 'top', align: 'center' }},
+            { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Generate the customized Philippines practice session when the setup looks right.', side: 'top', align: 'center' }}
         ];
 
         window.createSpeakReadyTour({

@@ -110,7 +110,8 @@ class FeedbackCoachingRepair
                 'question_focus' => $answer->question?->question_text,
                 'is_skipped' => $isSkipped,
                 'is_too_short' => $isTooShort,
-                'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_coaching', false),
+                'camera_detection_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
+                'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
             ],
             $observationData
         );

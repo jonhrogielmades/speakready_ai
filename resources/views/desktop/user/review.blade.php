@@ -2,13 +2,16 @@
 @section('title', 'Detailed Feedback Report')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/user/review.css?v=1') }}" data-page-style="user-review">
+<link rel="stylesheet" href="{{ asset('css/desktop/user/review.css?v=2') }}" data-page-style="user-review">
 @endpush
 
 @section('content')
 
 <div class="db-section active animate-fade-up">
     @php
+        $sessionEndedEarly = isset($sessionEndedEarly)
+            ? (bool) $sessionEndedEarly
+            : ($sessionRecord->status === 'ended' || (bool) data_get($sessionRecord->action_plan ?? [], 'ended_early', false));
         $feedback = $sessionRecord->feedback;
         $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
         $strengthItems = $report['strength_items'];
@@ -55,7 +58,7 @@
         <div>
             <a href="{{ route('user.feedback') }}" class="btn btn-link text-decoration-none p-0 mb-2" style="color:#3b82f6;"><i class="fa-solid fa-arrow-left me-2"></i>Back to Feedback Center</a>
             <h4 class="text-gradient-primary" style="font-size:1.4rem;font-weight:800;margin-bottom:4px;letter-spacing:-0.5px;text-transform:uppercase;">
-<i class="fa-solid fa-file-invoice me-2"></i>Detailed Feedback Report</h4>
+<i class="fa-solid fa-file-invoice me-2"></i>{{ $sessionEndedEarly ? 'Ended Session Review' : 'Detailed Feedback Report' }}</h4>
             <div class="d-flex gap-3 mt-2 feedback-report-meta" style="font-size:0.9rem;color:var(--tx3)">
                 <span><i class="fa-regular fa-calendar me-1"></i> {{ $sessionRecord->created_at->format('M d, Y') }}</span>
                 <span><i class="fa-solid fa-layer-group me-1"></i> {{ $sessionRecord->category->title ?? 'Job Interview' }}</span>
@@ -66,34 +69,43 @@
         <div class="text-md-end d-flex gap-4 align-items-center flex-wrap mt-3 mt-md-0 feedback-report-score-actions">
             <!-- Feature 3: Overall Performance Score & Rating -->
             <div class="text-start feedback-report-score">
-                @php 
-                    $overall = $sessionRecord->score->overall_readiness_score ?? 0;
-                    $rating = $sessionRecord->score?->readiness_band
-                        ?: ($overall >= 80 ? 'Ready for Simulation' : ($overall >= 60 ? 'Nearly Ready' : 'Developing'));
-                    $color = $overall >= 80 ? '#10b981' : ($overall >= 60 ? '#3b82f6' : '#f59e0b');
-                @endphp
-                <div class="d-flex align-items-center gap-2 d-md-block">
-                    <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
-                    <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
-                    @if(($sessionRecord->score->score_version ?? 1) >= 2)
-                        <div style="font-size:.72rem;color:var(--tx3);margin-top:4px;">Score version {{ $sessionRecord->score->score_version }} - score trust {{ $sessionRecord->score->scoring_confidence ?? 0 }}%</div>
-                    @endif
-                    @if($sessionFeedbackQualityPercent !== null)
-                        <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackQualityPercent === 100 ? '#10b981' : '#f59e0b' }};margin-top:3px;">
-                            <i class="fa-solid fa-shield-halved me-1"></i>Feedback checks {{ $sessionFeedbackQualityPercent }}%
-                        </div>
-                    @endif
-                    @if($sessionFeedbackReliabilityPercent !== null)
-                        <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackReliabilityPercent >= 95 ? '#10b981' : ($sessionFeedbackReliabilityPercent >= 85 ? '#3b82f6' : '#f59e0b') }};margin-top:3px;">
-                            <i class="fa-solid fa-gauge-high me-1"></i>Trust {{ $sessionFeedbackReliabilityPercent }}%{{ $sessionFeedbackReliabilityBand !== '' ? ' '.$sessionFeedbackReliabilityBand : '' }}
-                        </div>
-                    @endif
-                </div>
+                @if($sessionEndedEarly)
+                    <div class="d-flex align-items-center gap-2 d-md-block">
+                        <div style="font-size:2rem;font-weight:800;color:var(--tx);line-height:1">No score</div>
+                        <div style="font-size:0.9rem;font-weight:700;color:#ef4444">Ended early</div>
+                    </div>
+                @else
+                    @php
+                        $overall = $sessionRecord->score->overall_readiness_score ?? 0;
+                        $rating = $sessionRecord->score?->readiness_band
+                            ?: ($overall >= 80 ? 'Ready for Simulation' : ($overall >= 60 ? 'Nearly Ready' : 'Developing'));
+                        $color = $overall >= 80 ? '#10b981' : ($overall >= 60 ? '#3b82f6' : '#f59e0b');
+                    @endphp
+                    <div class="d-flex align-items-center gap-2 d-md-block">
+                        <div style="font-size:2.5rem;font-weight:800;color:{{ $color }};line-height:1">{{ $overall }}<span style="font-size:1.2rem;color:var(--tx3)">%</span></div>
+                        <div style="font-size:0.9rem;font-weight:600;color:{{ $color }}">{{ $rating }}</div>
+                        @if(($sessionRecord->score->score_version ?? 1) >= 2)
+                            <div style="font-size:.72rem;color:var(--tx3);margin-top:4px;">Score version {{ $sessionRecord->score->score_version }} - score trust {{ $sessionRecord->score->scoring_confidence ?? 0 }}%</div>
+                        @endif
+                        @if($sessionFeedbackQualityPercent !== null)
+                            <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackQualityPercent === 100 ? '#10b981' : '#f59e0b' }};margin-top:3px;">
+                                <i class="fa-solid fa-shield-halved me-1"></i>Feedback checks {{ $sessionFeedbackQualityPercent }}%
+                            </div>
+                        @endif
+                        @if($sessionFeedbackReliabilityPercent !== null)
+                            <div title="{{ $sessionFeedbackQuality['limitation'] ?? '' }}" style="font-size:.72rem;color:{{ $sessionFeedbackReliabilityPercent >= 95 ? '#10b981' : ($sessionFeedbackReliabilityPercent >= 85 ? '#3b82f6' : '#f59e0b') }};margin-top:3px;">
+                                <i class="fa-solid fa-gauge-high me-1"></i>Trust {{ $sessionFeedbackReliabilityPercent }}%{{ $sessionFeedbackReliabilityBand !== '' ? ' '.$sessionFeedbackReliabilityBand : '' }}
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
             <div class="dropdown mt-2 mt-md-0 d-flex w-100 w-md-auto feedback-report-actions">
-                <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0 btn-shine" id="btnShareSession" type="button" style="border-radius:12px;font-weight:600;" onclick="toggleShare()">
-                    <i class="fa-solid fa-share-nodes me-2"></i>{{ $sessionRecord->is_public ? 'Shared Link' : 'Share Session' }}
-                </button>
+                @if(!$sessionEndedEarly)
+                    <button class="btn btn-outline-primary me-2 flex-grow-1 flex-md-grow-0 btn-shine" id="btnShareSession" type="button" style="border-radius:12px;font-weight:600;" onclick="toggleShare()">
+                        <i class="fa-solid fa-share-nodes me-2"></i>{{ $sessionRecord->is_public ? 'Shared Link' : 'Share Session' }}
+                    </button>
+                @endif
                 <button class="btn btn-outline-secondary dropdown-toggle flex-grow-1 flex-md-grow-0 btn-shine" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-color:var(--bd);color:var(--tx);border-radius:12px;font-weight:600;">
                     <i class="fa-solid fa-download me-2"></i>Export
                 </button>
@@ -105,6 +117,17 @@
         </div>
     </div>
 
+    @if($sessionEndedEarly)
+        <div class="early-ended-review-alert mb-4" role="alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <div>
+                <strong>No feedback is available for this session.</strong>
+                <span>Your responses are shown below, but no AI feedback, score, or improved answer was generated because you ended the interview early.</span>
+            </div>
+        </div>
+    @endif
+
+    @if(!$sessionEndedEarly)
     @if(!$sessionRecord->score_eligible)
         <div class="alert mb-4" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);color:var(--tx);border-radius:14px;">
             <i class="fa-solid fa-circle-info me-2 text-primary"></i>
@@ -298,6 +321,8 @@
         </div>
     </div>
 
+    @endif
+
     <!-- Question Breakdown -->
     <h4 class="answer-review-heading" style="color:var(--tx);font-weight:700;margin-bottom:20px;margin-top:40px;">Answer Review</h4>
     <div class="accordion" id="answersAccordion">
@@ -336,7 +361,9 @@
                     <div class="d-flex justify-content-between align-items-center w-100 pe-3 flex-wrap gap-3 answer-review-header">
                         <span class="answer-review-title" style="font-size:1.1rem;"><strong>Q{{ $index + 1 }}:</strong> {{ $answer->question->question_text ?? 'Describe a time you faced a difficult challenge.' }}</span>
                         <div class="d-flex gap-2 align-items-center answer-review-score">
-                            @if($answer->is_skipped)
+                            @if($sessionEndedEarly)
+                                <span class="badge" style="background:rgba(239, 68, 68, 0.1);color:#ef4444;font-size:0.9rem;padding:8px 12px;">No feedback</span>
+                            @elseif($answer->is_skipped)
                                 <span class="badge" style="background:rgba(239, 68, 68, 0.1);color:#ef4444;font-size:0.9rem;padding:8px 12px;">Skipped</span>
                             @elseif($headerAlignmentStatus !== '')
                                 <span class="badge" style="background:color-mix(in srgb, {{ $headerAlignmentColor }} 12%, transparent);color:{{ $headerAlignmentColor }};border:1px solid color-mix(in srgb, {{ $headerAlignmentColor }} 28%, transparent);font-size:.82rem;padding:8px 12px;">{{ $headerAlignmentLabel }}</span>
@@ -353,7 +380,19 @@
             <div id="collapse{{ $index }}" class="accordion-collapse collapse" data-bs-parent="#answersAccordion">
                 <div class="accordion-body answer-review-body" style="border-top:1px solid var(--bd);padding:24px;">
                     
-                    @if($answer->is_skipped)
+                    @if($sessionEndedEarly)
+                        @php $savedAnswerText = trim((string) ($answer->answer_text ?? '')); @endphp
+                        <div class="early-ended-answer-note mb-4">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>No feedback was generated for this response because the session was ended early.</span>
+                        </div>
+                        <div class="mb-0 p-4 early-ended-response-card">
+                            <label style="font-size:0.85rem;color:var(--tx3);font-weight:700;text-transform:uppercase;margin-bottom:8px;"><i class="fa-solid fa-user me-2"></i>Saved Response</label>
+                            <div style="color:var(--tx);background:rgba(255,255,255,0.03);padding:16px;border-radius:12px;border:1px solid var(--bd);height:100%;font-size:0.95rem;line-height:1.6;">
+                                {{ $savedAnswerText !== '' ? $savedAnswerText : 'No response was saved for this question before the session ended.' }}
+                            </div>
+                        </div>
+                    @elseif($answer->is_skipped)
                         <div class="alert alert-warning border-0" style="background:rgba(245, 158, 11, 0.1);color:#f59e0b;">
                             <i class="fa-solid fa-forward-step me-2"></i> {{ $answer->ai_feedback ?: 'You skipped this question. No feedback available.' }}
                         </div>
@@ -537,6 +576,7 @@
                         </div>
                     @endif
 
+                    @if(!$sessionEndedEarly)
                     <div class="answer-retry-action">
                         <button type="button" class="btn btn-outline-primary btn-sm" style="border-radius:999px;font-weight:700;" onclick="toggleRetryPanel({{ $answer->id }})">
                             <i class="fa-solid fa-rotate-right me-1"></i>Try This Answer Again
@@ -564,10 +604,16 @@
                             <div class="mt-3" id="retry-result-{{ $answer->id }}" style="display:none;"></div>
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
         @endforeach
+        @if($sessionRecord->answers->isEmpty())
+            <div class="early-ended-response-card p-4" style="color:var(--tx2);">
+                No responses were saved before this session ended.
+            </div>
+        @endif
     </div>
 
 </div>

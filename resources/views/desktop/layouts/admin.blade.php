@@ -22,7 +22,7 @@
       <!-- magnific CSS -->
       <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=34') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=35') }}" />
       <style>
           .db-nl { text-decoration: none; display: flex; align-items: center; }
           .admin-brand { color: var(--tx) !important; font-weight: 700; }
@@ -191,14 +191,14 @@
                <button class="boc db-sidebar-toggle" type="button" aria-label="Toggle navigation" title="Toggle navigation" aria-expanded="true" onclick="toggleDashboardSidebar()">
                <i class="fa-solid fa-bars"></i>
                </button>
-               <div class="db-page-context d-none d-xl-flex">
-                  <span class="db-page-eyebrow">PH interview admin</span>
-                  <strong>{{ trim($__env->yieldContent('page-title')) ?: 'Dashboard' }}</strong>
-               </div>
-               <div class="db-top-search">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="text" aria-label="Search PH interview admin portal" placeholder="Search PH interview admin">
-               </div>
+               <form class="db-top-search db-top-admin-search" role="search" data-admin-page-search-form>
+                  <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                  <input id="adminPageSearch" type="search" autocomplete="off" aria-label="Search and highlight text on this admin page" placeholder="Search PH interview admin" data-admin-page-search-input>
+                  <span class="db-search-count" aria-live="polite" data-admin-page-search-count></span>
+                  <button class="db-search-clear" type="button" aria-label="Clear search" title="Clear search" data-admin-page-search-clear hidden>
+                     <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                  </button>
+               </form>
                <div class="db-top-actions ms-auto d-flex align-items-center gap-3 flex-shrink-0">
                   <div class="dropdown admin-activity-dropdown-wrap">
                       <button class="boc d-flex align-items-center justify-content-center position-relative db-activity-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open live activity" title="Live Activity" style="width:38px;height:38px;padding:0;border-radius:12px;text-decoration:none;color:var(--tx);" onclick="resetAdminActivityBadge('desktop')">
@@ -254,6 +254,8 @@
                      <!-- Profile Dropdown -->
                      <div class="db-dropdown profile-dd" id="profileDropdown" style="right:0">
                         <div style="padding:8px 0">
+                           <a href="{{ route('admin.account') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-user-shield me-2"></i>Account Management</a>
+                           <a href="{{ route('admin.settings.index') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-gear me-2"></i>System Settings</a>
                            <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                               @csrf
                               <button type="submit" class="profile-menu-item danger" style="width:100%;text-align:left;"><i class="fa-solid fa-right-from-bracket" style="color:#f87171"></i>Log Out</button>
@@ -349,6 +351,238 @@
                });
             });
          }
+
+         function setupAdminPageSearch() {
+            const form = document.querySelector('[data-admin-page-search-form]');
+            const input = document.querySelector('[data-admin-page-search-input]');
+            const clearButton = document.querySelector('[data-admin-page-search-clear]');
+            const count = document.querySelector('[data-admin-page-search-count]');
+
+            if (!form || !input || form.dataset.searchReady === 'true') return;
+
+            form.dataset.searchReady = 'true';
+
+            const state = {
+               query: '',
+               matches: [],
+               activeIndex: -1,
+               timer: 0,
+               applying: false
+            };
+
+            function getContentRoot() {
+               return document.querySelector('.db-content');
+            }
+
+            function escapeRegExp(value) {
+               return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+
+            function getTerms(query) {
+               const seen = Object.create(null);
+               return (String(query || '').trim().match(/\S+/g) || [])
+                  .map(term => term.trim())
+                  .filter(term => {
+                     const key = term.toLocaleLowerCase();
+                     if (!key || seen[key]) return false;
+                     seen[key] = true;
+                     return true;
+                  })
+                  .sort((a, b) => b.length - a.length);
+            }
+
+            function restoreHighlights(root) {
+               const scope = root || getContentRoot() || document;
+               Array.from(scope.querySelectorAll('[data-admin-page-search-highlight]')).forEach(mark => {
+                  const parent = mark.parentNode;
+                  if (!parent) return;
+                  parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+                  parent.normalize();
+               });
+            }
+
+            function isSearchableTextNode(node, root) {
+               const parent = node.parentElement;
+               if (!parent || !node.nodeValue || !node.nodeValue.trim()) return false;
+               if (parent.closest('script, style, noscript, template, textarea, input, select, option, svg, canvas, [hidden], [aria-hidden="true"], [data-admin-page-search-skip], [data-page-search-skip]')) return false;
+
+               let element = parent;
+               while (element && element !== root) {
+                  const styles = window.getComputedStyle(element);
+                  if (styles.display === 'none' || styles.visibility === 'hidden') return false;
+                  element = element.parentElement;
+               }
+
+               return true;
+            }
+
+            function highlightTextNode(node, pattern) {
+               const value = node.nodeValue || '';
+               const fragment = document.createDocumentFragment();
+               let lastIndex = 0;
+               let hasMatch = false;
+
+               value.replace(pattern, function(match, _term, offset) {
+                  hasMatch = true;
+                  if (offset > lastIndex) {
+                     fragment.appendChild(document.createTextNode(value.slice(lastIndex, offset)));
+                  }
+
+                  const mark = document.createElement('mark');
+                  mark.className = 'sr-search-highlight';
+                  mark.dataset.adminPageSearchHighlight = 'true';
+                  mark.textContent = match;
+                  fragment.appendChild(mark);
+                  lastIndex = offset + match.length;
+                  return match;
+               });
+
+               if (!hasMatch) return;
+
+               if (lastIndex < value.length) {
+                  fragment.appendChild(document.createTextNode(value.slice(lastIndex)));
+               }
+
+               node.parentNode.replaceChild(fragment, node);
+            }
+
+            function updateCount() {
+               if (!count) return;
+
+               if (!state.query) {
+                  count.textContent = '';
+                  return;
+               }
+
+               count.textContent = state.matches.length > 0
+                  ? (state.activeIndex + 1) + '/' + state.matches.length
+                  : '0';
+            }
+
+            function setActiveMatch(index, shouldScroll) {
+               state.matches.forEach(match => match.classList.remove('is-current'));
+
+               if (!state.matches.length) {
+                  state.activeIndex = -1;
+                  updateCount();
+                  return;
+               }
+
+               state.activeIndex = (index + state.matches.length) % state.matches.length;
+               const activeMatch = state.matches[state.activeIndex];
+               activeMatch.classList.add('is-current');
+               updateCount();
+
+               if (shouldScroll) {
+                  activeMatch.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+               }
+            }
+
+            function applySearch(query, options) {
+               const root = getContentRoot();
+               state.query = String(query || '').trim();
+               state.applying = true;
+               restoreHighlights(root);
+
+               if (!root || !state.query) {
+                  state.matches = [];
+                  state.activeIndex = -1;
+                  if (clearButton) clearButton.hidden = true;
+                  updateCount();
+                  state.applying = false;
+                  return;
+               }
+
+               const terms = getTerms(state.query);
+               if (!terms.length) {
+                  state.matches = [];
+                  state.activeIndex = -1;
+                  if (clearButton) clearButton.hidden = true;
+                  updateCount();
+                  state.applying = false;
+                  return;
+               }
+
+               const pattern = new RegExp('(' + terms.map(escapeRegExp).join('|') + ')', 'gi');
+               const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                  acceptNode: function(node) {
+                     pattern.lastIndex = 0;
+                     return isSearchableTextNode(node, root) && pattern.test(node.nodeValue)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                  }
+               });
+               const nodes = [];
+
+               while (walker.nextNode()) {
+                  nodes.push(walker.currentNode);
+               }
+
+               nodes.forEach(node => {
+                  pattern.lastIndex = 0;
+                  highlightTextNode(node, pattern);
+               });
+
+               state.matches = Array.from(root.querySelectorAll('[data-admin-page-search-highlight]'));
+               if (clearButton) clearButton.hidden = false;
+               setActiveMatch(0, Boolean(options && options.scroll));
+               state.applying = false;
+            }
+
+            function scheduleSearch() {
+               window.clearTimeout(state.timer);
+               state.timer = window.setTimeout(function() {
+                  applySearch(input.value);
+               }, 120);
+            }
+
+            function clearSearch() {
+               window.clearTimeout(state.timer);
+               input.value = '';
+               applySearch('');
+               input.focus({ preventScroll: true });
+            }
+
+            form.addEventListener('submit', function(event) {
+               event.preventDefault();
+               window.clearTimeout(state.timer);
+               if (String(input.value || '').trim() !== state.query) {
+                  applySearch(input.value, { scroll: true });
+                  return;
+               }
+               setActiveMatch(state.activeIndex + 1, true);
+            });
+
+            input.addEventListener('input', scheduleSearch);
+            input.addEventListener('keydown', function(event) {
+               if (event.key === 'Escape' && input.value) {
+                  event.preventDefault();
+                  clearSearch();
+               }
+            });
+
+            clearButton?.addEventListener('click', clearSearch);
+
+            document.addEventListener('keydown', function(event) {
+               const tagName = document.activeElement ? document.activeElement.tagName : '';
+               const isTyping = /^(INPUT|TEXTAREA|SELECT)$/.test(tagName) || document.activeElement?.isContentEditable;
+
+               if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !isTyping) {
+                  event.preventDefault();
+                  input.focus({ preventScroll: true });
+               }
+            });
+
+            window.SpeakReadyAdminPageSearch = {
+               refresh: function() {
+                  if (state.applying || !input.value.trim()) return;
+                  applySearch(input.value);
+               },
+               clear: clearSearch
+            };
+         }
+
+         setupAdminPageSearch();
       </script>
       <script>
           let adminLastSeenActivityId = localStorage.getItem('admin_last_seen_activity_id') || 0;

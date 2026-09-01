@@ -942,6 +942,7 @@
     function updateDocumentMetadata(doc, nextContent, url, options) {
         var nextTitle = (doc.querySelector('title') || {}).textContent || document.title;
         document.title = nextTitle;
+        document.body.classList.toggle('interview-session-shell', Boolean(doc.body && doc.body.classList.contains('interview-session-shell')));
 
         var contextTitle = nextContent.getAttribute('data-page-title') || nextTitle.replace(/\s*-\s*SpeakReady AI.*$/i, '');
         var desktopContext = document.querySelector('.db-page-context strong');

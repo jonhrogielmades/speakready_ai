@@ -895,17 +895,21 @@ class UserController extends Controller
             ->firstOrFail();
 
         $feedbackRefreshed = false;
+        $sessionEndedEarly = $sessionRecord->status === 'ended'
+            || (bool) data_get($sessionRecord->action_plan ?? [], 'ended_early', false);
 
-        try {
-            $feedbackRefreshed = app(InterviewController::class)
-                ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
-        } catch (\Throwable $exception) {
-            Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
-                'session_id' => $sessionRecord->id,
-                'user_id' => Auth::id(),
-                'error_type' => $exception::class,
-                'message' => $exception->getMessage(),
-            ]);
+        if (! $sessionEndedEarly && $sessionRecord->status === 'completed') {
+            try {
+                $feedbackRefreshed = app(InterviewController::class)
+                    ->ensureCompletedSessionFeedbackIsCurrent($sessionRecord, $sessionRecord->gameLevel);
+            } catch (\Throwable $exception) {
+                Log::warning('Detailed feedback refresh failed; rendering saved report data.', [
+                    'session_id' => $sessionRecord->id,
+                    'user_id' => Auth::id(),
+                    'error_type' => $exception::class,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
         }
 
         if ($feedbackRefreshed) {
@@ -924,7 +928,7 @@ class UserController extends Controller
 
         $comparisonRows = $this->comparisonRowsFor($sessionRecord);
 
-        return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows'));
+        return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly'));
     }
 
     public function exportSession(InterviewSession $session)

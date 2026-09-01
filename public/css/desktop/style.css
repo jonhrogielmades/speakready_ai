@@ -9845,6 +9845,120 @@ body .modal-title {
     width: 100% !important;
   }
 
+  body.admin-shell #dashboard .db-top-admin-search {
+    height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 0 10px 0 14px !important;
+    border: 1px solid var(--shell-border) !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+  }
+
+  .lm body.admin-shell #dashboard .db-top-admin-search,
+  html.lm body.admin-shell #dashboard .db-top-admin-search {
+    background: rgba(15, 23, 42, 0.025) !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search:focus-within {
+    border-color: rgba(96, 165, 250, 0.58) !important;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.13) !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search input {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    color: var(--tx) !important;
+    box-shadow: none !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search input::placeholder {
+    color: var(--tx3) !important;
+    opacity: 1 !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search > i {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 14px !important;
+    transform: none !important;
+    color: #60a5fa !important;
+    font-size: 0.9rem !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search .db-search-count {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 40px !important;
+    color: var(--tx3) !important;
+    font-size: 0.66rem !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search .db-search-clear {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    border: 1px solid rgba(148, 163, 184, 0.24) !important;
+    border-radius: 8px !important;
+    background: rgba(15, 23, 42, 0.08) !important;
+    color: var(--tx2) !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search .db-search-clear[hidden] {
+    display: none !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search .db-search-clear:hover,
+  body.admin-shell #dashboard .db-top-admin-search .db-search-clear:focus-visible {
+    border-color: rgba(96, 165, 250, 0.46) !important;
+    color: #60a5fa !important;
+    outline: none !important;
+  }
+
+  body.admin-shell #dashboard .db-top-admin-search .db-search-clear i {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    transform: none !important;
+    color: currentColor !important;
+    font-size: 0.72rem !important;
+  }
+
+  body.admin-shell #dashboard .sr-search-highlight {
+    border-radius: 4px !important;
+    background: #fde68a !important;
+    color: #713f12 !important;
+    -webkit-text-fill-color: #713f12 !important;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.18) !important;
+  }
+
+  body.admin-shell #dashboard .sr-search-highlight.is-current {
+    background: #fb923c !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.28) !important;
+  }
+
   body.admin-shell #dashboard .db-top-actions {
     min-width: 0 !important;
     flex: 0 0 auto !important;

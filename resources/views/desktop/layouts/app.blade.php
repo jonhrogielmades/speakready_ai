@@ -75,7 +75,7 @@
       @include('desktop.partials.onboarding-styles')
       @stack('styles')
    </head>
-   <body class="user-desktop-shell desktop-shell" data-layout-shell="desktop" data-app-surface="user">
+   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user">
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">

@@ -6368,3 +6368,197 @@
         -webkit-text-fill-color: #1d4ed8 !important;
     }
 }
+
+/* Final placement for the setup submit action inside the stepper controls. */
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions #btn-start-interview[hidden] {
+    display: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions #setupStepNext[hidden] {
+    display: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions #btn-start-interview {
+    width: auto !important;
+    min-width: 88px !important;
+    min-height: 40px !important;
+    padding: 0 14px !important;
+    border: 0 !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #2563eb, #0891b2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 12px 22px rgba(37, 99, 235, 0.22) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    font-size: 0.78rem !important;
+    font-weight: 900 !important;
+    line-height: 1.1 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+    transform: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions {
+    align-items: center !important;
+    justify-content: flex-end !important;
+    min-width: max-content !important;
+    overflow: visible !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions .setup-step-btn {
+    flex: 0 0 auto !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions #setupStepPrev {
+    min-width: 78px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-actions #btn-start-interview i {
+    margin-left: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .summary-val.summary-val-pending,
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #sumDuration.summary-val-pending {
+    color: var(--setup-pro-muted, #64748b) !important;
+    -webkit-text-fill-color: var(--setup-pro-muted, #64748b) !important;
+    font-weight: 800 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-structure .structure-select-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .assistance-stack {
+    grid-auto-flow: row dense !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-stack {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    align-items: start !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-level-field {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-feedback-field {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-question-field,
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-content .assistance-context-panel {
+    grid-column: 1 / -1 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option {
+    min-height: 72px !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option input[type="radio"] {
+    appearance: none !important;
+    width: 26px !important;
+    height: 26px !important;
+    flex: 0 0 26px !important;
+    border: 2px solid rgba(100, 116, 139, 0.65) !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 0 0 6px #ffffff !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option input[type="radio"]:checked {
+    border-color: #2563eb !important;
+    box-shadow: inset 0 0 0 6px #ffffff, inset 0 0 0 999px #2563eb !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option:has(input[type="radio"]:checked) {
+    border-color: rgba(37, 99, 235, 0.72) !important;
+    background: rgba(37, 99, 235, 0.08) !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-copy {
+    display: grid !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-copy strong {
+    color: var(--setup-pro-text, #0f172a) !important;
+    font-size: 0.86rem !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-copy small {
+    color: var(--setup-pro-muted, #64748b) !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-list {
+    align-items: stretch !important;
+    grid-auto-rows: 72px !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option {
+    display: flex !important;
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
+    overflow: hidden !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option input[type="radio"] {
+    display: block !important;
+    inline-size: 26px !important;
+    block-size: 26px !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+    max-width: 26px !important;
+    max-height: 26px !important;
+    flex: 0 0 26px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 999px !important;
+    background: #ffffff !important;
+    box-shadow: inset 0 0 0 6px #ffffff !important;
+    transform: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-option input[type="radio"]:checked {
+    border-color: #2563eb !important;
+    background: radial-gradient(circle at center, #2563eb 0 42%, #ffffff 44% 100%) !important;
+    box-shadow: none !important;
+}
+
+html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup #panel-inclusive .camera-mode-copy {
+    align-content: center !important;
+    min-height: 0 !important;
+}

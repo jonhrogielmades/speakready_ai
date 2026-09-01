@@ -132,10 +132,18 @@
 
         function getViewportBuffers(config) {
             const mobile = isMobileTour(config.serverDetectedMobile);
+            const mobileHeader = document.getElementById('mob-header');
+            const mobileNav = document.getElementById('mob-bottom-nav');
+            const measuredMobileTop = isElementVisible(mobileHeader) ?
+                Math.ceil(mobileHeader.getBoundingClientRect().height + 10) :
+                78;
+            const measuredMobileBottom = isElementVisible(mobileNav) ?
+                Math.ceil(mobileNav.getBoundingClientRect().height + 12) :
+                96;
 
             return {
-                top: mobile ? (config.mobileTopBuffer ?? 78) : (config.desktopTopBuffer ?? 24),
-                bottom: mobile ? (config.mobileBottomBuffer ?? 96) : (config.desktopBottomBuffer ?? 24),
+                top: mobile ? (config.mobileTopBuffer ?? measuredMobileTop) : (config.desktopTopBuffer ?? 24),
+                bottom: mobile ? (config.mobileBottomBuffer ?? measuredMobileBottom) : (config.desktopBottomBuffer ?? 24),
             };
         }
 
@@ -293,9 +301,32 @@
                     cleanupLater(() => window.removeEventListener('scroll', onViewportChange));
                 }
 
-                function getPopoverPlacement(rect, popoverRect, preferredSide, preferredAlign) {
+                function getClampedStageFrame(rect, padding) {
+                    const viewportWidth = Math.max(1, window.innerWidth);
+                    const viewportHeight = Math.max(1, window.innerHeight);
+                    const minEdge = 4;
+                    const maxLeft = Math.max(minEdge, viewportWidth - minEdge - 1);
+                    const maxTop = Math.max(minEdge, viewportHeight - minEdge - 1);
+                    const left = Math.min(Math.max(minEdge, rect.left - padding), maxLeft);
+                    const top = Math.min(Math.max(minEdge, rect.top - padding), maxTop);
+                    const right = Math.min(viewportWidth - minEdge, Math.max(left + 1, rect.right + padding));
+                    const bottom = Math.min(viewportHeight - minEdge, Math.max(top + 1, rect.bottom + padding));
+
+                    return {
+                        top,
+                        left,
+                        width: Math.max(1, right - left),
+                        height: Math.max(1, bottom - top),
+                    };
+                }
+
+                function getPopoverPlacement(rect, popoverRect, preferredSide, preferredAlign, viewportBuffers) {
                     const gap = 12;
                     const margin = 14;
+                    const safeTop = Math.max(margin, viewportBuffers?.top ?? margin);
+                    const safeBottom = Math.max(margin, viewportBuffers?.bottom ?? margin);
+                    const safeLeft = margin;
+                    const safeRight = margin;
                     let side = preferredSide || 'bottom';
                     let top = rect.bottom + gap;
                     let left = rect.left + (rect.width - popoverRect.width) / 2;
@@ -318,25 +349,28 @@
                         else top = rect.bottom - popoverRect.height;
                     }
 
-                    if (top < margin && side === 'top') {
+                    if (top < safeTop && side === 'top') {
                         top = rect.bottom + gap;
                     }
 
-                    if (top + popoverRect.height > window.innerHeight - margin && side === 'bottom') {
+                    if (top + popoverRect.height > window.innerHeight - safeBottom && side === 'bottom') {
                         top = rect.top - popoverRect.height - gap;
                     }
 
-                    if (left < margin && side === 'left') {
+                    if (left < safeLeft && side === 'left') {
                         left = rect.right + gap;
                     }
 
-                    if (left + popoverRect.width > window.innerWidth - margin && side === 'right') {
+                    if (left + popoverRect.width > window.innerWidth - safeRight && side === 'right') {
                         left = rect.left - popoverRect.width - gap;
                     }
 
+                    const maxTop = Math.max(safeTop, window.innerHeight - popoverRect.height - safeBottom);
+                    const maxLeft = Math.max(safeLeft, window.innerWidth - popoverRect.width - safeRight);
+
                     return {
-                        top: Math.min(Math.max(margin, top), Math.max(margin, window.innerHeight - popoverRect.height - margin)),
-                        left: Math.min(Math.max(margin, left), Math.max(margin, window.innerWidth - popoverRect.width - margin)),
+                        top: Math.min(Math.max(safeTop, top), maxTop),
+                        left: Math.min(Math.max(safeLeft, left), maxLeft),
                     };
                 }
 
@@ -377,11 +411,14 @@
                         const padding = options.stagePadding ?? 8;
                         const radius = options.stageRadius ?? 14;
                         const popoverConfig = step.popover || {};
+                        const stageFrame = getClampedStageFrame(rect, padding);
+                        const viewportBuffers = getViewportBuffers(options);
+                        const availablePopoverHeight = Math.max(140, window.innerHeight - viewportBuffers.top - viewportBuffers.bottom - 8);
 
-                        stage.style.top = `${Math.max(4, rect.top - padding)}px`;
-                        stage.style.left = `${Math.max(4, rect.left - padding)}px`;
-                        stage.style.width = `${Math.min(window.innerWidth - 8, rect.width + (padding * 2))}px`;
-                        stage.style.height = `${Math.min(window.innerHeight - 8, rect.height + (padding * 2))}px`;
+                        stage.style.top = `${stageFrame.top}px`;
+                        stage.style.left = `${stageFrame.left}px`;
+                        stage.style.width = `${stageFrame.width}px`;
+                        stage.style.height = `${stageFrame.height}px`;
                         stage.style.borderRadius = `${radius}px`;
 
                         const isLast = !api.hasNextStep();
@@ -411,9 +448,10 @@
 
                         popover.style.visibility = 'hidden';
                         popover.style.display = 'block';
+                        popover.style.maxHeight = `${availablePopoverHeight}px`;
 
                         const popoverRect = popover.getBoundingClientRect();
-                        const placement = getPopoverPlacement(rect, popoverRect, popoverConfig.side, popoverConfig.align);
+                        const placement = getPopoverPlacement(rect, popoverRect, popoverConfig.side, popoverConfig.align, viewportBuffers);
 
                         popover.style.top = `${placement.top}px`;
                         popover.style.left = `${placement.left}px`;
@@ -517,6 +555,325 @@
             return configuredTitle || contentTitle || headingTitle || documentTitle || 'this page';
         }
 
+        function routeMatches(routeName, routePrefixes) {
+            return routePrefixes.some((routePrefix) => routeName === routePrefix || routeName.startsWith(`${routePrefix}.`));
+        }
+
+        function getTourProfile(config, pageTitle) {
+            const routeName = String(config?.routeName || '').toLowerCase();
+            const path = String(window.location.pathname || '').toLowerCase();
+            const base = {
+                heroTitle: `${pageTitle} overview`,
+                heroDescription: 'Start here to understand the goal of this page and the main information it gives you.',
+                workspaceTitle: 'Main workspace',
+                workspaceDescription: 'Use this area to review, practice, update, or manage the page content.',
+                metricsTitle: 'Progress details',
+                metricsDescription: 'Cards, lists, and tables summarize your interview activity so you can spot what needs attention.',
+                actionsTitle: 'Available actions',
+                actionsDescription: 'Use the primary buttons and controls here to continue the workflow for this page.',
+                navigationTitle: 'User navigation',
+                navigationDescription: 'Move between mock interviews, modules, voice drills, missions, challenges, coach, reports, and mastery.',
+                toolsTitle: 'Page tools',
+                toolsDescription: 'Use search, replay this tutorial, switch fullscreen or theme, check notifications, and manage account or language options.',
+                heroSelectors: [],
+                workspaceSelectors: [],
+                metricsSelectors: [],
+                actionSelectors: [],
+            };
+            const withDefaults = (overrides) => Object.assign({}, base, overrides);
+
+            if (routeMatches(routeName, ['dashboard']) || path.endsWith('/dashboard')) {
+                return withDefaults({
+                    heroTitle: 'Readiness workspace',
+                    heroDescription: 'This dashboard ties together your latest interview readiness, practice history, and next recommended actions.',
+                    workspaceTitle: 'Recommended next steps',
+                    workspaceDescription: 'Use AI recommendations, recent sessions, and the daily challenge to decide what to practice next.',
+                    metricsTitle: 'Readiness snapshot',
+                    metricsDescription: 'Your score, XP, streak, rating, and trend summarize recent practice across interviews, challenges, and drills.',
+                    actionsTitle: 'Start practice',
+                    actionsDescription: 'Jump into a mock interview, challenge, voice drill, module, or coach prompt from the visible action buttons.',
+                    heroSelectors: ['.sr-hero-image-panel', '.sr-score-panel', '#srDashboardTitle'],
+                    workspaceSelectors: ['#card-ai-recommendations', '#card-recent-sessions', '#dashboardCoachForm'],
+                    metricsSelectors: ['.sr-mobile-stat-grid', '.sr-stats-desktop', '#card-progress-chart', '#card-skill-radar'],
+                    actionSelectors: ['#card-daily-challenge', '.sr-challenge-cta', '.sr-btn-primary'],
+                });
+            }
+
+            if (routeMatches(routeName, ['interview.setup'])) {
+                return withDefaults({
+                    heroTitle: 'Mock interview setup',
+                    heroDescription: 'Build a Philippines-focused job or school interview with role, structure, accessibility, assistance, and response-mode choices.',
+                    workspaceTitle: 'Setup panels',
+                    workspaceDescription: 'Work through each setup panel to choose the scenario, difficulty, timing, camera option, AI assistance, and answer mode.',
+                    metricsTitle: 'Live setup summary',
+                    metricsDescription: 'The summary panel keeps your current choices aligned before the custom interview is generated.',
+                    actionsTitle: 'Setup controls',
+                    actionsDescription: 'Use Back, Next, and Start to move through the guided setup without losing your selected options.',
+                    heroSelectors: ['#sec-interview-setup .setup-hero', '#setupStepper'],
+                    workspaceSelectors: ['#panel-basic', '#panel-structure', '#panel-inclusive', '#panel-content', '#panel-response'],
+                    metricsSelectors: ['#panel-summary'],
+                    actionSelectors: ['#setupStepNext', '#btn-start-interview', '#setupStepPrev'],
+                });
+            }
+
+            if (routeMatches(routeName, ['interview.session', 'interview.review', 'user.review'])) {
+                return withDefaults({
+                    heroTitle: 'Interview practice session',
+                    heroDescription: 'Answer the AI interviewer, use typed or voice responses, and review trustworthy coaching after each scored session.',
+                    workspaceTitle: 'Question and response',
+                    workspaceDescription: 'The interviewer panel, answer box, and session controls guide the current question and your reply.',
+                    metricsTitle: 'Optional coaching signals',
+                    metricsDescription: 'Camera, STAR, transcript, and voice analytics are practice signals only; readiness is still based on answer quality.',
+                    actionsTitle: 'Session actions',
+                    actionsDescription: 'Use the visible controls to listen, record, move between questions, retry, export, or finish the session.',
+                    heroSelectors: ['.ai-avatar-panel', '#sessionHero', '#review-summary'],
+                    workspaceSelectors: ['#answerForm', '#questionPanel', '#reviewAnswers', '.retry-panel'],
+                    metricsSelectors: ['#cameraPanel', '#overallReadiness', '#voiceAnalyticsPanel', '.star-item', '#feedback-summary'],
+                    actionSelectors: ['#sessionControls', '#btnFinish', '#btnNext', '.retry-action', '.js-export-session'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.feedback'])) {
+                return withDefaults({
+                    heroTitle: 'Feedback center',
+                    heroDescription: 'Review recent AI summaries, answer-by-answer coaching, practice recommendations, and searchable interview history.',
+                    workspaceTitle: 'Coaching panels',
+                    workspaceDescription: 'Use answer coaching and next-practice recommendations to turn scored feedback into focused practice.',
+                    metricsTitle: 'Feedback history',
+                    metricsDescription: 'Filter and scan previous sessions by scenario, score, rating, feedback, and available follow-up actions.',
+                    actionsTitle: 'Filters and actions',
+                    actionsDescription: 'Search, filter, open details, retry answers, clear history, or continue practice from the controls here.',
+                    heroSelectors: ['#feedbackModulesLikeHero', '#feedbackAiSummary'],
+                    workspaceSelectors: ['#feedbackAnswerCoaching', '#feedbackPracticeRecommendations'],
+                    metricsSelectors: ['#feedbackTable', '#feedbackPagination', '#feedback-empty-state'],
+                    actionSelectors: ['#feedback-filters', '#feedbackSearch', '#scenarioFilter'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.progress'])) {
+                return withDefaults({
+                    heroTitle: 'Progress analytics',
+                    heroDescription: 'Track readiness movement, practice consistency, learning progress, voice drills, goals, and badges in one private dashboard.',
+                    workspaceTitle: 'Practice plan and trends',
+                    workspaceDescription: 'Follow personalized practice recommendations and compare readiness trends across your completed sessions.',
+                    metricsTitle: 'Skill signals',
+                    metricsDescription: 'Scenario, skill, STAR, voice, activity, milestone, and achievement panels show where growth is happening.',
+                    actionsTitle: 'Open next work',
+                    actionsDescription: 'Use suggested modules, session history, and goal links to continue the most useful next practice.',
+                    heroSelectors: ['#progressModulesLikeHero', '#progress-stats'],
+                    workspaceSelectors: ['#personalized-practice-plan', '#readiness-trend', '#history-table'],
+                    metricsSelectors: ['#category-perf', '#skill-tracker', '#strengths-tracker', '#voice-progress', '#activity-calendar', '#goals-milestones', '#achievements-badges'],
+                    actionSelectors: ['#recommended-next', '#learning-progress', '.progress-actions'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.reports'])) {
+                return withDefaults({
+                    heroTitle: 'Interview reports',
+                    heroDescription: 'Reports turn completed scored interviews into readiness summaries, question review, improvement themes, and exports.',
+                    workspaceTitle: 'Report sections',
+                    workspaceDescription: 'Read the summary, comparison, feedback, question analysis, and learning recommendations for the latest report.',
+                    metricsTitle: 'Question and improvement details',
+                    metricsDescription: 'Use question review and improvement areas to see what worked, what was missing, and what to practice next.',
+                    actionsTitle: 'Export tools',
+                    actionsDescription: 'Download PDF, Excel, or CSV files, or print the report for school, job, or mentor review.',
+                    heroSelectors: ['#portfolioReport .sr-page-hero', '#report-readiness'],
+                    workspaceSelectors: ['#report-feedback', '#report-comparison', '#report-learning'],
+                    metricsSelectors: ['#report-question-review', '#report-improvements', '#report-empty-state'],
+                    actionSelectors: ['#report-export', '.js-export-pdf', '.js-export-excel', '.js-print-report'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.coach'])) {
+                return withDefaults({
+                    heroTitle: 'Readiness Coach',
+                    heroDescription: 'Chat with the interview coach for Philippines preparation, resumes, applications, answer evidence, and career planning.',
+                    workspaceTitle: 'Coach conversation',
+                    workspaceDescription: 'Messages appear in the chat area, while the input supports prompts, documents, resumes, and job descriptions.',
+                    metricsTitle: 'Conversation history',
+                    metricsDescription: 'Return to earlier coaching threads or start fresh when you switch roles, schools, or target scenarios.',
+                    actionsTitle: 'Ask the coach',
+                    actionsDescription: 'Send a question, attach supporting files, clear a thread, or open quick prompts from the coach controls.',
+                    heroSelectors: ['#ai-coach-page .coach-progress-hero', '#coachChatTitle'],
+                    workspaceSelectors: ['#chatBox', '#coach-input-area', '#coachFiles'],
+                    metricsSelectors: ['#coach-sidebar', '#coachActionsMenu'],
+                    actionSelectors: ['#coachActions', '#coachActionsToggle', '#coachSendBtn', '.chat-send-btn'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.learning'])) {
+                return withDefaults({
+                    heroTitle: 'Philippines interview challenges',
+                    heroDescription: 'Challenge paths use Learning Games to build XP, energy management, combo streaks, and role-specific practice.',
+                    workspaceTitle: 'Challenge journey',
+                    workspaceDescription: 'Search or switch paths, choose a level, review its goals and energy cost, then start the challenge.',
+                    metricsTitle: 'Player stats',
+                    metricsDescription: 'Track level, energy, accuracy, combo streaks, certificates, and skill XP as you complete challenges.',
+                    actionsTitle: 'Start or upgrade',
+                    actionsDescription: 'Start a challenge or open Skill Trees to spend earned XP on training perks.',
+                    heroSelectors: ['#learning-games-page .sr-learning-hero', '#learning-games-page .sr-page-hero'],
+                    workspaceSelectors: ['#modules-list', '#nav-pills-container', '#learningSearchInput', '#learningCategorySelect'],
+                    metricsSelectors: ['#dashboard-stats', '.level-card', '.ll-stat-card'],
+                    actionSelectors: ['#btn-skill-tree', '.start-challenge-btn'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.modules'])) {
+                return withDefaults({
+                    heroTitle: 'Interview modules',
+                    heroDescription: 'Modules organize lessons, resources, quizzes, and practice activities around Philippines interview skills.',
+                    workspaceTitle: 'Module library',
+                    workspaceDescription: 'Search modules, open a learning path, and use chapter tabs to move between content, resources, quizzes, and activities.',
+                    metricsTitle: 'Learning progress',
+                    metricsDescription: 'Cards and progress indicators show which modules are started, active, recommended, or completed.',
+                    actionsTitle: 'Module actions',
+                    actionsDescription: 'Open a module, continue a chapter, take a quiz, or complete a practice activity from the visible controls.',
+                    heroSelectors: ['#interview-modules-page .modules-hero', '#interview-modules-page .sr-page-hero', '#modules-hero-title'],
+                    workspaceSelectors: ['#moduleSearchInput', '#modules-list', '#moduleTabs', '#chapters'],
+                    metricsSelectors: ['.module-card', '.module-path-copy', '.module-rec-copy'],
+                    actionSelectors: ['#quizzes-tab', '#activities-tab', 'a[href*="/modules/"]', '.module-card .btn'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.drills.voice'])) {
+                return withDefaults({
+                    heroTitle: 'Voice rehearsal',
+                    heroDescription: 'Practice spoken answers with prompts, transcript feedback, pacing, filler words, clarity, and saved voice progress.',
+                    workspaceTitle: 'Recording workspace',
+                    workspaceDescription: 'Choose a scenario and intention, record your response, then review the live transcript and highlighted speech patterns.',
+                    metricsTitle: 'Voice assessment',
+                    metricsDescription: 'Assessment cards summarize clarity, delivery, pace, filler words, keywords, and practice history.',
+                    actionsTitle: 'Recording controls',
+                    actionsDescription: 'Start, stop, reset, save, switch tabs, or generate a new prompt from the visible voice-drill controls.',
+                    heroSelectors: ['#voice-rehearsal-page .vr-hero', '#voice-rehearsal-page .sr-page-hero'],
+                    workspaceSelectors: ['#voiceCategoryButton', '#transcriptView', '#promptCard'],
+                    metricsSelectors: ['#analysisPanel', '#moduleTabs', '.voice-live-stats', '.instant-feedback-panel', '.intention-coach-panel'],
+                    actionSelectors: ['#btnStart', '#btnStop', '#categorySelect', '#intentionSelect'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.missions'])) {
+                return withDefaults({
+                    heroTitle: 'Mission mode',
+                    heroDescription: 'Missions create practical speaking tasks for interviews, school panels, workplace conversations, and role-specific preparation.',
+                    workspaceTitle: 'Mission board',
+                    workspaceDescription: 'Pick a prepared mission or generate one from your target goal, then use the prompt, timer, typed answer, and voice practice.',
+                    metricsTitle: 'Mission result',
+                    metricsDescription: 'Scoring checks structure, evidence, tone, and next actions for the selected mission.',
+                    actionsTitle: 'Mission controls',
+                    actionsDescription: 'Generate a mission, start the timer, record voice practice, score your answer, or reset the task.',
+                    heroSelectors: ['#mission-mode-page .mission-progress-hero', '#mission-mode-page .sr-page-hero'],
+                    workspaceSelectors: ['#missionGrid', '#missionTool', '#missionAnswer'],
+                    metricsSelectors: ['#missionResultPanel', '#missionScoreRing', '#missionFeedbackList'],
+                    actionSelectors: ['#generateMissionBtn', '#missionTimerBtn', '#missionScoreBtn'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.applications'])) {
+                return withDefaults({
+                    heroTitle: 'Job application tracker',
+                    heroDescription: 'Track target jobs, compare resume and job-description evidence, and generate role-specific practice plans.',
+                    workspaceTitle: 'Application planner',
+                    workspaceDescription: 'Add the job details, resume, description, stage, deadline, and notes so SpeakReady can build a smart preparation plan.',
+                    metricsTitle: 'Tracked applications',
+                    metricsDescription: 'Application cards show match score, missing keywords, deadlines, stages, and plan completion.',
+                    actionsTitle: 'Plan actions',
+                    actionsDescription: 'Add or update jobs, practice from a saved target, and check off preparation tasks as they are completed.',
+                    heroSelectors: ['#job-tracker-page .sr-page-hero', '#job-tracker-summary'],
+                    workspaceSelectors: ['#job-tracker-form', '#job-tracker-list'],
+                    metricsSelectors: ['#job-tracker-summary', '.tracker-application-card', '.match-ring'],
+                    actionSelectors: ['.plan-item', '.tracker-actions', 'button[type="submit"]'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.packs'])) {
+                return withDefaults({
+                    heroTitle: 'Interview packs',
+                    heroDescription: 'Use curated company, role, focus, persona, pressure-mode, and sample-question packs to start targeted practice.',
+                    workspaceTitle: 'Pack browser',
+                    workspaceDescription: 'Search by company, role, focus, or question and filter by difficulty before choosing a pack.',
+                    metricsTitle: 'Pack details',
+                    metricsDescription: 'Each card shows difficulty, focus, persona, pressure mode, and sample questions for the simulation.',
+                    actionsTitle: 'Start pack practice',
+                    actionsDescription: 'Open a pack to launch a practice session with its role and interview scenario prefilled.',
+                    heroSelectors: ['#interview-packs-page .sr-page-hero', '#pack-summary'],
+                    workspaceSelectors: ['#pack-browser', '#packSearch', '#packDifficulty'],
+                    metricsSelectors: ['#pack-summary', '.pack-card'],
+                    actionSelectors: ['.pack-card a', '.pack-card button'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.skills'])) {
+                return withDefaults({
+                    heroTitle: 'Skill Trees',
+                    heroDescription: 'Spend Skill XP earned from PH Challenges on perks that strengthen your learning and practice loop.',
+                    workspaceTitle: 'Available perks',
+                    workspaceDescription: 'Review each perk, its XP type, cost, unlocked state, and the benefit it adds to your training.',
+                    metricsTitle: 'Skill XP overview',
+                    metricsDescription: 'XP totals show leadership, communication, technical, and problem-solving growth.',
+                    actionsTitle: 'Unlock or return',
+                    actionsDescription: 'Unlock affordable perks or return to PH Challenges to earn more XP.',
+                    heroSelectors: ['#skill-trees-page .skill-tree-hero', '#skill-trees-page .sr-page-hero'],
+                    workspaceSelectors: ['.perks-panel', '.perk-card'],
+                    metricsSelectors: ['.skill-xp-overview', '.stat-card'],
+                    actionSelectors: ['.btn-unlock', '.skill-back-link'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.leaderboard']) || path.includes('/personal-mastery')) {
+                return withDefaults({
+                    heroTitle: 'Personal Mastery',
+                    heroDescription: 'Track private readiness growth, best scores, streaks, STAR stories, checklist progress, and milestones without public ranking.',
+                    workspaceTitle: 'Mastery plan',
+                    workspaceDescription: 'Use recommended drills, career tracks, STAR story bank, weekly review, and coach shortcuts to keep practice focused.',
+                    metricsTitle: 'Private growth metrics',
+                    metricsDescription: 'Personal best, latest score, baseline growth, streak, badges, and checklist completion stay centered on your own progress.',
+                    actionsTitle: 'Mastery actions',
+                    actionsDescription: 'Save truthful STAR stories, toggle checklist items, open coach shortcuts, or jump back to progress analytics.',
+                    heroSelectors: ['#personal-mastery-page .mastery-hero-card', '#leaderboard-page .sr-page-hero'],
+                    workspaceSelectors: ['#mastery-next-action', '#mastery-drills', '#mastery-story-bank', '#leaderboard-container'],
+                    metricsSelectors: ['.mastery-stats-grid', '#mastery-tracks', '#mastery-badges', '#col-xp', '#col-streak'],
+                    actionSelectors: ['#masteryStoryForm', '#mastery-checklist', '.mastery-progress-btn'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.notifications'])) {
+                return withDefaults({
+                    heroTitle: 'Notifications',
+                    heroDescription: 'Review alerts, activity updates, reminders, and system messages connected to your practice account.',
+                    workspaceTitle: 'Notification list',
+                    workspaceDescription: 'Unread and read items appear here with dates, context, and quick actions.',
+                    metricsTitle: 'Activity state',
+                    metricsDescription: 'Badges and empty states show whether anything needs attention.',
+                    actionsTitle: 'Notification actions',
+                    actionsDescription: 'Mark items as read, delete individual updates, clear groups, or open all notification details.',
+                    heroSelectors: ['#notifications-page .notif-hero', '#notificationActionStatus'],
+                    workspaceSelectors: ['#notificationsPageList', '.notification-row'],
+                    metricsSelectors: ['#notificationsPageList', '.notifications-empty-state'],
+                    actionSelectors: ['.notification-action-btn', '#notificationActionStatus'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.account'])) {
+                return withDefaults({
+                    heroTitle: 'Account management',
+                    heroDescription: 'Keep your profile, target role, photo, language, password, and account controls up to date.',
+                    workspaceTitle: 'Profile details',
+                    workspaceDescription: 'Update your name, email, target position, and profile photo including crop controls when a new image is selected.',
+                    metricsTitle: 'Security and preferences',
+                    metricsDescription: 'Password, language, notifications, and account safety controls help keep the practice experience personal.',
+                    actionsTitle: 'Save changes',
+                    actionsDescription: 'Use the save, password, crop, and account-action buttons to apply only the changes you want.',
+                    heroSelectors: ['#account-page .sr-page-hero', '#accountProfileForm'],
+                    workspaceSelectors: ['#accountProfileForm', '#profileCropModal'],
+                    metricsSelectors: ['#accountPasswordForm', '#accountDeleteForm'],
+                    actionSelectors: ['#accountProfileForm button[type="submit"]', '#accountPasswordForm button[type="submit"]', '#profileCropZoom'],
+                });
+            }
+
+            return base;
+        }
+
         function makeCompletionKey(config) {
             if (config && config.completionKey) return config.completionKey;
 
@@ -575,8 +932,11 @@
             const steps = [];
             const usedElements = new Set();
             const contentOnly = !(config && config.includeShellSteps);
+            const tourProfile = getTourProfile(config, pageTitle);
 
             const pageHero = findVisibleElement([
+                ...(tourProfile.heroSelectors || []),
+                '#userAppContent .sr-hero-card',
                 '#userAppContent .sr-page-hero',
                 '#userAppContent .progress-hero',
                 '#userAppContent .feedback-hero',
@@ -591,6 +951,7 @@
                 '#userAppContent .skill-tree-hero',
                 '#userAppContent h1',
                 '#userAppContent h2',
+                '#mob-content .sr-hero-card',
                 '#mob-content .sr-page-hero',
                 '#mob-content .progress-hero',
                 '#mob-content .feedback-hero',
@@ -611,13 +972,14 @@
                 steps,
                 usedElements,
                 pageHero,
-                `${pageTitle} overview`,
-                'Start here to understand the goal of this page and the main information it gives you.',
+                tourProfile.heroTitle,
+                tourProfile.heroDescription,
                 'bottom',
                 'start'
             );
 
             const primaryWorkspace = findVisibleElement([
+                ...(tourProfile.workspaceSelectors || []),
                 '#userAppContent form',
                 '#userAppContent .chat-container',
                 '#userAppContent #workspaceRow',
@@ -626,6 +988,11 @@
                 '#userAppContent .module-card',
                 '#userAppContent .ll-module-card',
                 '#userAppContent .level-card',
+                '#userAppContent .tracker-panel',
+                '#userAppContent .mastery-panel',
+                '#userAppContent .feedback-insight-panel',
+                '#userAppContent .notifications-list-panel',
+                '#userAppContent .perks-panel',
                 '#userAppContent .premium-panel',
                 '#userAppContent .sr-card',
                 '#userAppContent .card',
@@ -637,24 +1004,33 @@
                 '#mob-content .module-card',
                 '#mob-content .ll-module-card',
                 '#mob-content .level-card',
+                '#mob-content .tracker-panel',
+                '#mob-content .mastery-panel',
+                '#mob-content .feedback-insight-panel',
+                '#mob-content .notifications-list-panel',
+                '#mob-content .perks-panel',
                 '#mob-content .premium-panel',
                 '#mob-content .sr-card',
                 '#mob-content .card',
-            ]);
+            ], { contentOnly });
 
             pushStep(
                 steps,
                 usedElements,
                 primaryWorkspace,
-                'Main workspace',
-                'Use this area to review, practice, update, or manage the page content.',
+                tourProfile.workspaceTitle,
+                tourProfile.workspaceDescription,
                 'top',
                 'center'
             );
 
             const metricsOrList = findVisibleElement([
+                ...(tourProfile.metricsSelectors || []),
                 '#dashboard-stats',
                 '#progress-stats',
+                '#userAppContent .mastery-stats-grid',
+                '#userAppContent .tracker-stats',
+                '#userAppContent .pack-summary',
                 '#userAppContent .stat-grid',
                 '#userAppContent .db-stat-card',
                 '#userAppContent .sr-stat-card',
@@ -662,6 +1038,9 @@
                 '#userAppContent .ll-stat-card',
                 '#userAppContent table',
                 '#userAppContent .list-group',
+                '#mob-content .mastery-stats-grid',
+                '#mob-content .tracker-stats',
+                '#mob-content .pack-summary',
                 '#mob-content .stat-grid',
                 '#mob-content .db-stat-card',
                 '#mob-content .sr-stat-card',
@@ -675,22 +1054,31 @@
                 steps,
                 usedElements,
                 metricsOrList,
-                'Progress details',
-                'Cards, lists, and tables summarize your interview activity so you can spot what needs attention.',
+                tourProfile.metricsTitle,
+                tourProfile.metricsDescription,
                 'top',
                 'center'
             );
 
             const actionArea = findVisibleElement([
+                ...(tourProfile.actionSelectors || []),
                 '#userAppContent .sr-page-actions',
                 '#userAppContent .progress-actions',
                 '#userAppContent .tracker-actions',
+                '#userAppContent .coach-actions',
+                '#userAppContent .start-challenge-btn',
+                '#userAppContent .mission-btn-primary',
+                '#userAppContent .btn-unlock',
                 '#userAppContent .btn-primary',
                 '#userAppContent button[type="submit"]',
                 '#userAppContent a.btn',
                 '#mob-content .sr-page-actions',
                 '#mob-content .progress-actions',
                 '#mob-content .tracker-actions',
+                '#mob-content .coach-actions',
+                '#mob-content .start-challenge-btn',
+                '#mob-content .mission-btn-primary',
+                '#mob-content .btn-unlock',
                 '#mob-content .btn-primary',
                 '#mob-content button[type="submit"]',
                 '#mob-content a.btn',
@@ -700,8 +1088,8 @@
                 steps,
                 usedElements,
                 actionArea,
-                'Available actions',
-                'Use the primary buttons and controls here to continue the workflow for this page.',
+                tourProfile.actionsTitle,
+                tourProfile.actionsDescription,
                 'top',
                 'center'
             );
@@ -717,22 +1105,22 @@
                     navigation,
                     mobile ? 'Mobile navigation' : 'Sidebar navigation',
                     mobile ?
-                        'Use the bottom tabs and More menu to move between the user pages.' :
-                        'Use the sidebar to move between interview practice, training, and progress pages.',
+                        'Use Home, Progress, Interview, Feedback, and More to move through the updated practice areas.' :
+                        tourProfile.navigationDescription,
                     mobile ? 'top' : 'right',
                     'center'
                 );
 
                 const pageTools = mobile ?
-                    findVisibleElement(['#mobTutorialBtn', '#mobFullscreenBtn', '#mobNotifBtn', '.ucp-mobile-launcher', '.mob-avatar']) :
-                    findVisibleElement(['#dbTutorialBtn', '#dbFullscreenBtn', '#bellBtn', '#userPill', '[data-ucp-open]']);
+                    findVisibleElement(['#mob-header', '#mobTutorialBtn', '#mobFullscreenBtn', '#mobThBtn', '#mobBellBtn', '#mobProfileBtn', '.ucp-mobile-launcher']) :
+                    findVisibleElement(['.db-top', '#dbPageSearch', '#dbTutorialBtn', '#dbFullscreenBtn', '#dbThBtn', '#bellBtn', '#userPill', '[data-ucp-open]']);
 
                 pushStep(
                     steps,
                     usedElements,
                     pageTools,
-                    'Page tools',
-                    'Open the tutorial again, change view options, check notifications, or access your account tools from here.',
+                    tourProfile.toolsTitle,
+                    tourProfile.toolsDescription,
                     mobile ? 'bottom' : 'bottom',
                     'center'
                 );
@@ -745,7 +1133,7 @@
                     usedElements,
                     content,
                     `${pageTitle} tutorial`,
-                    'This page is ready to use. Explore the visible controls to continue.',
+                    'This page is ready to use. Follow the visible panels and controls to continue your interview preparation.',
                     'bottom',
                     'center'
                 );
@@ -867,6 +1255,11 @@
                     stageRadius: config.stageRadius ?? 14,
                     overlayOpacity: config.overlayOpacity ?? 0.58,
                     popoverClass: getPopoverClass(),
+                    serverDetectedMobile: config.serverDetectedMobile,
+                    mobileTopBuffer: config.mobileTopBuffer,
+                    mobileBottomBuffer: config.mobileBottomBuffer,
+                    desktopTopBuffer: config.desktopTopBuffer,
+                    desktopBottomBuffer: config.desktopBottomBuffer,
                     steps,
                     onHighlightStarted: (element, step, options) => {
                         setTourHighlightedElement(element);
@@ -1063,6 +1456,7 @@
             const suppliedContext = config || {};
             const context = isCurrentTourScope(suppliedContext.pageScope) ? suppliedContext : {};
             context.pageScope = getCurrentPageScope();
+            context.includeShellSteps = suppliedContext.includeShellSteps !== false;
             const registeredTour = getRegisteredTour();
 
             if ((window.__speakReadyPageTourRegistered || window.__speakReadyFallbackTourRegistered) && hasCurrentRegisteredTour()) {
@@ -1083,6 +1477,7 @@
                 pageTitle: context.pageTitle,
                 routeName: context.routeName,
                 serverDetectedMobile: context.serverDetectedMobile,
+                includeShellSteps: context.includeShellSteps !== false,
                 stepsDesktop: steps,
                 stepsMobile: steps,
                 autoStart: context.autoStart === true,

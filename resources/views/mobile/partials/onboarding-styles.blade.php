@@ -3,11 +3,13 @@
         max-width: min(360px, calc(100vw - 28px));
         max-height: min(78vh, calc(100vh - 112px));
         overflow: auto;
+        overscroll-behavior: contain;
         border-radius: 14px;
         padding: 16px;
         box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
         font-family: "Poppins", sans-serif;
         box-sizing: border-box;
+        overflow-wrap: anywhere;
     }
 
     .sr-native-tour-overlay,
@@ -82,6 +84,8 @@
         line-height: 1.25;
         font-weight: 800;
         letter-spacing: 0;
+        margin: 0;
+        padding-right: 34px;
     }
 
     .driver-popover.sr-driver-popover .driver-popover-description {
@@ -89,6 +93,7 @@
         font-size: 0.84rem;
         line-height: 1.5;
         margin-top: 7px;
+        margin-bottom: 0;
     }
 
     .driver-popover.sr-driver-popover.driverjs-theme-light .driver-popover-description {
@@ -96,6 +101,8 @@
     }
 
     .driver-popover.sr-driver-popover .driver-popover-footer {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
         gap: 8px;
         margin-top: 14px;
@@ -112,6 +119,9 @@
     }
 
     .driver-popover.sr-driver-popover .driver-popover-navigation-btns {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         gap: 8px;
     }
 
@@ -187,7 +197,10 @@
 
     @media (max-width: 575px) {
         .driver-popover.sr-driver-popover {
+            width: calc(100vw - 28px);
+            max-width: calc(100vw - 28px);
             padding: 14px;
+            border-radius: 12px;
         }
 
         .driver-popover.sr-driver-popover .driver-popover-footer {
@@ -197,6 +210,10 @@
         .driver-popover.sr-driver-popover .driver-popover-navigation-btns {
             width: 100%;
             justify-content: flex-end;
+        }
+
+        .driver-popover.sr-driver-popover .driver-popover-footer button {
+            flex: 1 1 0;
         }
     }
 </style>

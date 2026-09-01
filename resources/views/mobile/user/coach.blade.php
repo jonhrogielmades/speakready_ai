@@ -869,14 +869,14 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview advice, resume tips, and practice guidance.', side: 'bottom', align: 'center' }},
-            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type a question or prompt here, then press Enter to send it.', side: 'top', align: 'center' }}
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your Readiness Coach responds here with Philippines interview prep, resume, application, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
             { element: '#coach-sidebar', popover: { title: 'Conversation History', description: 'Start a new chat or return to an earlier coaching conversation.', side: 'right', align: 'start' }},
-            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your AI Coach responds here with interview advice, resume tips, and practice guidance.', side: 'bottom', align: 'center' }},
-            { element: '#coach-input-area', popover: { title: 'Ask Anything', description: 'Type a question or prompt here, then press Enter to send it.', side: 'top', align: 'center' }}
+            { element: '#chatBox', popover: { title: 'Coach Messages', description: 'Your Readiness Coach responds here with Philippines interview prep, resume, application, and career guidance.', side: 'bottom', align: 'center' }},
+            { element: '#coach-input-area', popover: { title: 'Ask Or Attach', description: 'Type a prep question, paste an answer, or attach a resume, certificate, or job description for coaching.', side: 'top', align: 'center' }}
         ];
 
         window.createSpeakReadyTour({

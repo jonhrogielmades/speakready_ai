@@ -269,3 +269,106 @@
             min-height: 108px !important;
         }
     }
+
+    #sec-admin-settings {
+        --settings-page-title: #f8fafc;
+        --settings-page-copy: #cbd5e1;
+        --settings-muted: #94a3b8;
+        --settings-accent: #60a5fa;
+        --settings-hero-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.9));
+        --settings-hero-border: rgba(147, 197, 253, 0.24);
+        --settings-hero-shadow: 0 18px 42px rgba(2, 6, 23, 0.28);
+        --settings-card-bg: rgba(15, 23, 42, 0.92);
+        --settings-card-border: rgba(148, 163, 184, 0.22);
+        --settings-card-shadow: 0 14px 30px rgba(2, 6, 23, 0.22);
+        --settings-card-hover-border: rgba(96, 165, 250, 0.55);
+        --settings-control-bg: rgba(15, 23, 42, 0.9);
+        --settings-control-border: rgba(148, 163, 184, 0.26);
+    }
+
+    html.lm #sec-admin-settings,
+    .lm #sec-admin-settings {
+        --settings-page-title: #0f172a;
+        --settings-page-copy: #334155;
+        --settings-muted: #64748b;
+        --settings-accent: #2563eb;
+        --settings-hero-bg: linear-gradient(135deg, #eef6ff, #f7f2ff);
+        --settings-hero-border: rgba(147, 197, 253, 0.7);
+        --settings-hero-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+        --settings-card-bg: #ffffff;
+        --settings-card-border: #dbeafe;
+        --settings-card-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        --settings-card-hover-border: rgba(37, 99, 235, 0.45);
+        --settings-control-bg: #f8fafc;
+        --settings-control-border: #cbd5e1;
+    }
+
+    #sec-admin-settings > .d-flex.justify-content-between {
+        align-items: center !important;
+        min-height: 116px;
+        padding: 22px 18px;
+        border: 1px solid var(--settings-hero-border) !important;
+        border-radius: 8px;
+        background: var(--settings-hero-bg) !important;
+        box-shadow: var(--settings-hero-shadow);
+    }
+
+    #sec-admin-settings > .d-flex.justify-content-between h4,
+    #sec-admin-settings > .d-flex.justify-content-between .fw-bold,
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] .fw-bold {
+        color: var(--settings-page-title) !important;
+        -webkit-text-fill-color: var(--settings-page-title) !important;
+        text-shadow: none !important;
+    }
+
+    #sec-admin-settings > .d-flex.justify-content-between p {
+        color: var(--settings-page-copy) !important;
+        -webkit-text-fill-color: var(--settings-page-copy) !important;
+    }
+
+    #sec-admin-settings > .d-flex.justify-content-between h4 i {
+        color: var(--settings-accent) !important;
+        -webkit-text-fill-color: var(--settings-accent) !important;
+    }
+
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] {
+        background: var(--settings-card-bg) !important;
+        border-color: var(--settings-card-border) !important;
+        box-shadow: var(--settings-card-shadow) !important;
+        color: var(--settings-page-title) !important;
+    }
+
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"]:hover,
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"]:focus-visible {
+        border-color: var(--settings-card-hover-border) !important;
+    }
+
+    #sec-admin-settings .settings-grid button[data-bs-toggle="modal"] span:last-child {
+        color: var(--settings-muted) !important;
+        -webkit-text-fill-color: var(--settings-muted) !important;
+    }
+
+    #sec-admin-settings .modal-content,
+    #sec-admin-settings .btn-save-fixed,
+    #sec-admin-settings .premium-card {
+        background: var(--settings-card-bg) !important;
+        border-color: var(--settings-card-border) !important;
+        color: var(--settings-page-title) !important;
+    }
+
+    #sec-admin-settings .form-control,
+    #sec-admin-settings .form-select,
+    #sec-admin-settings .custom-switch-container,
+    #sec-admin-settings .list-group-item {
+        background: var(--settings-control-bg) !important;
+        border-color: var(--settings-control-border) !important;
+        color: var(--settings-page-title) !important;
+    }
+
+    #sec-admin-settings .form-label,
+    #sec-admin-settings .text-muted,
+    #sec-admin-settings small,
+    #sec-admin-settings .custom-switch-container small {
+        color: var(--settings-muted) !important;
+        -webkit-text-fill-color: var(--settings-muted) !important;
+    }

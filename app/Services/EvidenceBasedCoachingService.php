@@ -87,7 +87,7 @@ final class EvidenceBasedCoachingService
                 $observationData,
                 (string) ($metrics['delivery_transcript'] ?? $answerText),
                 $metrics,
-                (bool) ($metrics['camera_coaching_enabled'] ?? false)
+                (bool) ($metrics['camera_detection_enabled'] ?? $metrics['camera_coaching_enabled'] ?? false)
             );
         }
 
@@ -166,7 +166,7 @@ final class EvidenceBasedCoachingService
                 'mapped_skills' => $questionTip['mapped_skills'],
             ],
             'priority_actions' => $priorityActions,
-            'transparency_note' => 'The question match is based on this answer, its exact question, and quoted parts of the answer. The feedback cannot prove facts outside the answer. Speaking notes use saved voice text and time data. Pronunciation notes are only coaching notes when they are turned on and checked. Optional camera coaching is only a browser estimate. It is never used to guess confidence, honesty, personality, job fit, or intent, and it does not change the readiness score.',
+            'transparency_note' => 'The question match is based on this answer, its exact question, and quoted parts of the answer. The feedback cannot prove facts outside the answer. Speaking notes use saved voice text and time data. Pronunciation notes are only coaching notes when they are turned on and checked. Optional camera detection is only a browser estimate. It is never used to guess confidence, honesty, personality, job fit, or intent, and it does not change the readiness score.',
         ];
     }
 
@@ -411,14 +411,14 @@ final class EvidenceBasedCoachingService
             $shoulders = (int) round(($cameraShouldersLevel / max(1, $cameraShouldersMeasured)) * 100);
             $upright = (int) round(($cameraUpright / max(1, $cameraUprightMeasured)) * 100);
             $highMovement = (int) round(($cameraHighMovement / max(1, $cameraMovementMeasured)) * 100);
-            $observations[] = "Optional camera coaching had enough checks for {$coverage['camera_measured']} answers: a face was seen in {$visibility}% of checks, the head looked camera-facing in {$facing}% of face checks, hands were visible in {$hands}% of checks, and body position was seen in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of checks.';
+            $observations[] = "Optional camera detection had enough checks for {$coverage['camera_measured']} answers: a face was seen in {$visibility}% of checks, the head looked camera-facing in {$facing}% of face checks, hands were visible in {$hands}% of checks, and body position was seen in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of checks.';
             if ($cameraShouldersMeasured > 0 || $cameraUprightMeasured > 0 || $cameraMovementMeasured > 0) {
                 $observations[] = "Camera notes across checked parts: shoulders looked level in {$shoulders}% of body checks, upper body looked upright in {$upright}% of body checks, hand movement appeared in {$gesture}% of checks where hands were seen, and higher movement appeared in {$highMovement}% of movement checks.";
             }
         } elseif ($coverage['camera_insufficient'] > 0) {
             $observations[] = 'Optional camera sampling was tried, but there were not enough samples for a good note.';
         } else {
-            $observations[] = 'Optional camera coaching was not measured, so no camera note was made.';
+            $observations[] = 'Optional camera detection was not measured, so no camera note was made.';
         }
 
         foreach ($alignmentIssueBuckets as $issueCode => $bucket) {
@@ -835,14 +835,14 @@ final class EvidenceBasedCoachingService
         $observation = $status === 'insufficient_data'
             ? 'Optional browser camera samples did not cover enough of the answer for a clear camera note.'
             : (isset($reasonLabels[$unavailableReason])
-                ? 'Optional camera coaching was not measured because '.$reasonLabels[$unavailableReason].'.'
-                : 'Optional camera coaching was not measured for this answer.');
+                ? 'Optional camera detection was not measured because '.$reasonLabels[$unavailableReason].'.'
+                : 'Optional camera detection was not measured for this answer.');
 
         return [
             'status' => $status === 'insufficient_data' ? 'insufficient_data' : 'not_measured',
             'observation' => $observation,
-            'tip' => 'For camera coaching, use steady front light and keep your face, shoulders, and hands in the preview when possible.',
-            'tips' => ['For camera coaching, use steady front light and keep your face, shoulders, and hands in the preview when possible.'],
+            'tip' => 'For camera detection, use steady front light and keep your face, shoulders, and hands in the preview when possible.',
+            'tips' => ['For camera detection, use steady front light and keep your face, shoulders, and hands in the preview when possible.'],
             'evidence' => $status === 'insufficient_data' ? [
                 'source' => $camera['source'] ?? 'browser_reported_landmark_estimate',
                 'sample_count' => (int) ($camera['sample_count'] ?? 0),

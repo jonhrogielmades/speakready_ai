@@ -659,6 +659,52 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame('insufficient_data', $tooFewDetections['camera']['status']);
     }
 
+    public function test_camera_detection_disabled_ignores_submitted_camera_samples(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $observations = $service->normalizeObservationData([
+            'camera_samples' => [
+                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 0],
+                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 4],
+                ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 8],
+            ],
+        ], 'I explained my approach and verified the result.', [
+            'response_mode' => 'voice',
+            'voice_duration' => 30,
+        ], false);
+
+        $this->assertSame('not_measured', $observations['camera']['status']);
+        $this->assertSame(0, $observations['camera']['sample_count']);
+        $this->assertSame([], $observations['camera']['samples']);
+        $this->assertNull($observations['camera']['source']);
+    }
+
+    public function test_camera_detection_metric_key_enables_camera_samples(): void
+    {
+        $service = new EvidenceBasedCoachingService;
+
+        $coaching = $service->forAnswer(
+            'I explained my approach and verified the result.',
+            ['type' => 'Personal', 'question_text' => 'Tell me about yourself.'],
+            [
+                'response_mode' => 'voice',
+                'voice_duration' => 30,
+                'camera_detection_enabled' => true,
+            ],
+            [
+                'camera_samples' => [
+                    ['face_detected' => true, 'camera_facing' => true, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 0],
+                    ['face_detected' => true, 'camera_facing' => false, 'pose_detected' => true, 'hands_visible' => true, 'at_seconds' => 4],
+                    ['face_detected' => false, 'camera_facing' => false, 'pose_detected' => true, 'hands_visible' => false, 'at_seconds' => 8],
+                ],
+            ]
+        );
+
+        $this->assertSame('measured', data_get($coaching, 'camera_feedback.status'));
+        $this->assertSame(3, data_get($coaching, 'camera_feedback.evidence.sample_count'));
+    }
+
     public function test_camera_feedback_reports_only_observable_estimates_with_a_caveat(): void
     {
         $service = new EvidenceBasedCoachingService;

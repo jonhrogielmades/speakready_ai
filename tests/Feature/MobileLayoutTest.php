@@ -205,7 +205,7 @@ class MobileLayoutTest extends TestCase
             ->withHeader('User-Agent', $desktopUserAgent)
             ->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('class="user-desktop-shell desktop-shell"', false)
+            ->assertSee('user-desktop-shell desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
             ->assertSee('class="db-sidebar"', false)
             ->assertDontSee('id="mob-bottom-nav"', false)
@@ -305,7 +305,64 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('data-ucp-search', false);
     }
 
-    public function test_mobile_interview_session_does_not_start_in_fullscreen_mode(): void
+    public function test_desktop_interview_session_hides_camera_detection_panel_when_enabled(): void
+    {
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+        ]);
+        $category = Category::create([
+            'title' => 'Behavioral',
+            'description' => 'Behavioral questions',
+            'status' => 'active',
+            'type' => 'core',
+        ]);
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Developer',
+            'num_questions' => 1,
+            'response_mode' => 'text',
+            'accommodation_profile' => ['camera_detection' => true],
+            'status' => 'in_progress',
+        ]);
+        Question::create([
+            'category_id' => $category->id,
+            'interview_session_id' => $session->id,
+            'question_text' => 'Describe a time you solved a difficult issue.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->withHeader('User-Agent', $desktopUserAgent)
+            ->get(route('interview.session'));
+
+        $response->assertOk()
+            ->assertSee('css/desktop/interview/session.css?v=22', false)
+            ->assertSee('const cameraDetectionEnabled = true;', false)
+            ->assertSee('interview-session-browser-fullscreen', false)
+            ->assertSee('interview-ready-fullscreen', false)
+            ->assertSee('Camera ON', false)
+            ->assertDontSee('<i class="fa-regular fa-clock"></i>Self-paced', false)
+            ->assertSee('function handleInterviewEscapeKey(event)', false)
+            ->assertSee('exitReadyFullscreenShell();', false)
+            ->assertSee('has-desktop-camera-pip', false)
+            ->assertSee('class="desktop-camera-pip d-none d-lg-flex"', false)
+            ->assertSee('id="userCamera"', false)
+            ->assertSee('alt="AI Avatar"', false)
+            ->assertSee("document.getElementById('userCamera') || document.getElementById('userCameraMobile')", false)
+            ->assertDontSee('id="questionTimerChip"', false)
+            ->assertDontSee('id="cameraPanel"', false)
+            ->assertDontSee('id="cameraDetectionStatus"', false);
+    }
+
+    public function test_mobile_interview_session_uses_camera_detection_gate_and_fullscreen_script(): void
     {
         $user = User::factory()->create([
             'is_admin' => false,
@@ -337,23 +394,46 @@ class MobileLayoutTest extends TestCase
 
         $iphoneUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->withSession(['active_interview_id' => $session->id])
             ->withHeader('User-Agent', $iphoneUserAgent)
-            ->get(route('interview.session'))
-            ->assertOk()
+            ->get(route('interview.session'));
+
+        $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=4', false)
-            ->assertSee('class="mobile-camera-pip d-lg-none"', false)
-            ->assertSee('id="userCameraMobile"', false)
-            ->assertSee('const cameraPreviewEnabled = Boolean(document.getElementById(\'userCameraMobile\'))', false)
+            ->assertSee('css/mobile/interview/session.css?v=8', false)
+            ->assertSee('const cameraDetectionEnabled = false;', false)
+            ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
+            ->assertSee('Camera OFF', false)
             ->assertSee('function clearSubmittedAnswerInput()', false)
             ->assertSee("chatContainer.innerHTML = ''", false)
             ->assertSee('if (!isSubmittingAnswer)', false)
             ->assertSee('mobile-response-end-session-action', false)
             ->assertSee('mobile-response-end-session-btn', false)
             ->assertSee('id="responseFullscreenToggle"', false)
-            ->assertDontSee('<body class="mobile-interview-fullscreen"', false)
-            ->assertDontSee('class="mobile-interview-fullscreen"', false);
+            ->assertSee('enterMobileFullscreen({ requestBrowser: false });', false)
+            ->assertSee('enterMobileFullscreen();', false)
+            ->assertSee('function handleInterviewEscapeKey(event)', false)
+            ->assertSee('exitMobileFullscreen();', false)
+            ->assertDontSee('class="mobile-camera-pip d-lg-none"', false)
+            ->assertDontSee('id="userCameraMobile"', false)
+            ->assertDontSee('<body class="mobile-interview-fullscreen"', false);
+
+        $session->update([
+            'accommodation_profile' => ['camera_detection' => true],
+        ]);
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->withHeader('User-Agent', $iphoneUserAgent)
+            ->get(route('interview.session'));
+
+        $response->assertOk()
+            ->assertSee('const cameraDetectionEnabled = true;', false)
+            ->assertSee('Camera ON', false)
+            ->assertSee('class="mobile-camera-pip d-lg-none"', false)
+            ->assertSee('id="userCameraMobile"', false)
+            ->assertDontSee('id="cameraPanel"', false)
+            ->assertDontSee('id="cameraDetectionStatus"', false);
     }
 }

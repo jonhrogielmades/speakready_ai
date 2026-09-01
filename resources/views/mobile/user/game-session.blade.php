@@ -174,9 +174,9 @@
             <div class="col-lg-4 px-0 ps-lg-3">
                 <!-- Session Navigation (Mobile fallback / Overview) -->
                 @if($cameraCoachingEnabled)
-                <!-- Optional descriptive body-language coach; never used in readiness scoring. -->
+                <!-- Optional body-language detection; never used in readiness scoring. -->
                 <div class="panel d-none d-lg-block" id="cameraPanel">
-                    <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Optional Body-Language Coach</div>
+                    <div class="panel-title"><i class="fa-solid fa-camera-web me-2"></i> Body-Language Detection</div>
                     <div style="position:relative;background:#000;height:180px;border-radius:12px;margin-bottom:15px;overflow:hidden;display:flex;align-items:center;justify-content:center">
                         <video id="userCamera" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1);"></video>
                         <div class="face-scanner-box" id="faceScannerBox" style="display:none;position:absolute;width:120px;height:120px;border:2px solid #34d399;border-radius:12px;box-shadow:0 0 15px rgba(52,211,153,0.3);transition:all 0.3s ease;">
@@ -970,7 +970,7 @@
                     document.getElementById('vaWpm').innerText = wpm;
                     answersData[currentQIdx].wpm = wpm;
 
-                    // Optional body-language guidance is descriptive and never affects scoring.
+                    // Optional body-language detection is descriptive and never affects scoring.
                     if (cameraCoachingEnabled && recTimerSeconds % 2 === 0) {
                         trackBodyLanguage();
                     }
@@ -1254,18 +1254,18 @@
         let onboardingTour = null;
         if (typeof window.createSpeakReadyTour === 'function') {
             const stepsMobile = [
-                { element: '.ai-avatar-panel', popover: { title: 'AI Coach', description: 'The coach presents each Philippines challenge question and guides the session flow.', side: 'bottom', align: 'start' }},
+                { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each Philippines challenge question and guides the Learning Game flow.', side: 'bottom', align: 'start' }},
                 { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'top', align: 'start' }},
-                { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Private framing, hand, posture, and movement prompts are optional and never affect readiness or challenge scoring.', side: 'top', align: 'start' }},
+                { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, hands, and movement. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }},
                 { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'top', align: 'start' }},
                 { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'top', align: 'start' }},
                 { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'top', align: 'start' }}
             ];
 
             const stepsDesktop = [
-                { element: '.ai-avatar-panel', popover: { title: 'AI Coach', description: 'The coach presents each Philippines challenge question and guides the session flow.', side: 'right', align: 'start' }},
+                { element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each Philippines challenge question and guides the Learning Game flow.', side: 'right', align: 'start' }},
                 { element: '#answerForm', popover: { title: 'Your Response', description: 'Type or speak your answer here while live metrics update.', side: 'right', align: 'start' }},
-                { element: '#cameraPanel', popover: { title: 'Optional Body-Language Coach', description: 'Private framing, hand, posture, and movement prompts are optional and never affect readiness or challenge scoring.', side: 'left', align: 'start' }},
+                { element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, hands, and movement. Camera observations never affect readiness or challenge scoring.', side: 'left', align: 'start' }},
                 { element: '#overallReadiness', popover: { title: 'AI Visualizer', description: 'Watch instant feedback for clarity, relevance, and professionalism.', side: 'left', align: 'start' }},
                 { element: '.star-item', popover: { title: 'STAR Analyzer', description: 'This tracks Situation, Task, Action, and Result coverage in your answer.', side: 'left', align: 'start' }},
                 { element: '#voiceAnalyticsPanel', popover: { title: 'Voice Analytics', description: 'Review speaking duration, pace, and filler word usage.', side: 'left', align: 'start' }}
@@ -1294,7 +1294,7 @@
             }
         };
 
-        // ARENA COUNTDOWN LOGIC
+        // Learning Game countdown logic
         let countdownValue = 3;
         const countdownText = document.getElementById('countdown-text');
         const overlay = document.getElementById('get-ready-overlay');

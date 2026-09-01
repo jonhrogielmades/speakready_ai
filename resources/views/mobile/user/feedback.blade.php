@@ -326,18 +326,18 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#feedbackAiSummary', popover: { title: 'AI Summary', description: 'See your latest score and focus.', side: 'bottom', align: 'start' }},
-            { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Coaching', description: 'Review each latest answer.', side: 'bottom', align: 'start' }},
-            { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose what to practice next.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackAiSummary', popover: { title: 'AI Summary', description: 'See your latest readiness score, status, and coaching focus from completed practice.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Coaching', description: 'Review each latest answer with evidence, strengths, gaps, and a next-try direction.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'start' }},
             { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'start' }},
             { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past Philippines practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'center' }}
         ];
 
         const stepsDesktop = [
-            { element: '#feedbackAiSummary', popover: { title: 'AI Summary', description: 'See your latest score and focus.', side: 'bottom', align: 'start' }},
-            { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Coaching', description: 'Review each latest answer.', side: 'bottom', align: 'start' }},
-            { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose what to practice next.', side: 'bottom', align: 'end' }},
+            { element: '#feedbackAiSummary', popover: { title: 'AI Summary', description: 'See your latest readiness score, status, and coaching focus from completed practice.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackAnswerCoaching', popover: { title: 'Answer Coaching', description: 'Review each latest answer with evidence, strengths, gaps, and a next-try direction.', side: 'bottom', align: 'start' }},
+            { element: '#feedbackPracticeRecommendations', popover: { title: 'Next Practice', description: 'Choose a module, drill, challenge, or interview action based on the feedback patterns.', side: 'bottom', align: 'end' }},
             { element: '#feedback-filters', popover: { title: 'Filters & Search', description: 'Filter by scenario or search keywords to find a specific feedback record.', side: 'bottom', align: 'end' }},
             { element: '#feedbackTable', popover: { title: 'Interview History', description: 'Review past Philippines practice interviews, scores, ratings, and available actions.', side: 'top', align: 'center' }},
             { element: '#feedbackPagination', popover: { title: 'Pagination', description: 'Move through older interview feedback records from here.', side: 'top', align: 'end' }}

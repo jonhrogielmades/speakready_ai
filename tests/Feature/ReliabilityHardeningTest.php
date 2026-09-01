@@ -682,7 +682,7 @@ class ReliabilityHardeningTest extends TestCase
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
     }
 
-    public function test_abort_interview_deletes_unfinished_session_data_and_clears_active_keys(): void
+    public function test_abort_interview_marks_session_ended_preserves_answers_and_clears_active_keys(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category(['title' => 'Software Engineering']);
@@ -694,7 +694,7 @@ class ReliabilityHardeningTest extends TestCase
         InterviewAnswer::create([
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
-            'answer_text' => 'Draft answer that should be removed.',
+            'answer_text' => 'Draft answer that should be preserved.',
         ]);
         Score::create([
             'interview_session_id' => $session->id,
@@ -717,21 +717,46 @@ class ReliabilityHardeningTest extends TestCase
                 'active_interview_provider' => 'openai',
                 'active_interview_context' => 'interview',
             ])
-            ->postJson(route('interview.abort'), ['session_id' => $session->id])
+            ->postJson(route('interview.abort'), [
+                'session_id' => $session->id,
+                'duration_seconds' => 95,
+                'current_question_index' => 0,
+                'question_id' => $question->id,
+                'answer_text' => 'Final draft answer saved before ending.',
+                'response_mode' => 'text',
+                'elapsed_seconds' => 31,
+            ])
             ->assertOk()
             ->assertJson([
                 'success' => true,
-                'redirect_url' => route('interview.setup'),
+                'redirect_url' => route('user.review', $session->id),
             ])
             ->assertSessionMissing('active_interview_id')
             ->assertSessionMissing('active_interview_provider')
             ->assertSessionMissing('active_interview_context');
 
-        $this->assertDatabaseMissing('interview_sessions', ['id' => $session->id]);
-        $this->assertDatabaseMissing('questions', ['id' => $question->id]);
-        $this->assertDatabaseMissing('interview_answers', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseHas('interview_sessions', [
+            'id' => $session->id,
+            'status' => 'ended',
+            'score_eligible' => false,
+            'duration_seconds' => 95,
+            'current_question_index' => 0,
+        ]);
+        $this->assertDatabaseHas('questions', ['id' => $question->id]);
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'Final draft answer saved before ending.',
+        ]);
         $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
         $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session->id))
+            ->assertOk()
+            ->assertSee('Ended Session Review')
+            ->assertSee('No feedback is available for this session.')
+            ->assertSee('Final draft answer saved before ending.');
     }
 
     public function test_interview_session_renders_human_opening_and_closing_conversation_flow(): void

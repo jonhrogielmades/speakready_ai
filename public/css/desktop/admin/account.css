@@ -1,0 +1,51 @@
+/* Admin account page refinements. */
+#account-page .admin-account-side-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#account-page .admin-account-side-stack > .account-card {
+    margin-bottom: 0 !important;
+}
+
+#account-page .admin-account-status-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#account-page .admin-account-meta-list {
+    display: grid;
+    gap: 10px;
+}
+
+#account-page .admin-account-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid var(--acct-field-border);
+    border-radius: 12px;
+    background: var(--acct-field-bg);
+}
+
+#account-page .admin-account-meta-row span {
+    color: var(--acct-muted);
+    font-size: 0.74rem;
+    font-weight: 800;
+}
+
+#account-page .admin-account-meta-row strong {
+    color: var(--acct-ink);
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-align: right;
+}
+
+#account-page .admin-settings-shortcut {
+    margin-top: 2px;
+    text-decoration: none;
+}

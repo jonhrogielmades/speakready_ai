@@ -404,6 +404,23 @@ class UserSideHardeningTest extends TestCase
         ]);
     }
 
+    public function test_interview_start_stores_camera_detection_setting(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        $this->actingAs($user)
+            ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+                'camera_detection' => '1',
+            ]))
+            ->assertRedirect(route('interview.session'));
+
+        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
+
+        $this->assertTrue((bool) data_get($session->accommodation_profile, 'camera_detection'));
+        $this->assertTrue((bool) data_get($session->accommodation_profile, 'camera_coaching'));
+    }
+
     public function test_interview_start_rejects_unsupported_core_categories(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

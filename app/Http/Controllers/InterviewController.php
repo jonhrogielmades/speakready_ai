@@ -80,6 +80,7 @@ class InterviewController extends Controller
             'live_feedback_mode' => ['nullable', Rule::in(['coaching', 'real_interview'])],
             'interview_format' => ['nullable', Rule::in(['standard', 'hr_screen', 'hiring_manager', 'panel', 'phone', 'asynchronous', 'technical', 'case', 'presentation'])],
             'source_pack_key' => ['nullable', Rule::in(array_keys(QuestionDatasetProvider::all()))],
+            'camera_detection' => 'nullable|boolean',
             'camera_coaching' => 'nullable|boolean',
             'separate_language_scoring' => 'nullable|boolean',
             'extended_time' => 'nullable|boolean',
@@ -166,8 +167,15 @@ class InterviewController extends Controller
         // regardless of which healthy provider the configured fallback chain selects.
         $provider = AIService::defaultProviderKey();
         $profilePreferences = Profile::firstOrCreate(['user_id' => Auth::id()])->inclusive_preferences ?? [];
+        $cameraDetectionEnabled = filter_var(
+            $validated['camera_detection']
+                ?? $validated['camera_coaching']
+                ?? data_get($profilePreferences, 'camera_detection', data_get($profilePreferences, 'camera_coaching', false)),
+            FILTER_VALIDATE_BOOLEAN
+        );
         $accommodationProfile = [
-            'camera_coaching' => filter_var($validated['camera_coaching'] ?? data_get($profilePreferences, 'camera_coaching', false), FILTER_VALIDATE_BOOLEAN),
+            'camera_detection' => $cameraDetectionEnabled,
+            'camera_coaching' => $cameraDetectionEnabled,
             'separate_language_scoring' => filter_var($validated['separate_language_scoring'] ?? data_get($profilePreferences, 'separate_language_scoring', false), FILTER_VALIDATE_BOOLEAN),
             'extended_time' => filter_var($validated['extended_time'] ?? data_get($profilePreferences, 'extended_time', false), FILTER_VALIDATE_BOOLEAN),
             'captions' => filter_var($validated['captions'] ?? data_get($profilePreferences, 'captions', false), FILTER_VALIDATE_BOOLEAN),
@@ -1227,17 +1235,75 @@ class InterviewController extends Controller
 
         $validated = $request->validate([
             'session_id' => 'nullable|integer',
+            'duration_seconds' => 'nullable|integer|min:0|max:28800',
+            'current_question_index' => 'nullable|integer|min:0|max:200',
+            'question_id' => 'nullable|exists:questions,id',
+            'answer_text' => 'nullable|string|max:20000',
+            'speech_transcript' => 'nullable|string|max:20000',
+            'transcript_timeline' => 'nullable|string|max:50000',
+            'observation_data' => 'nullable|string|max:50000',
+            'pronunciation_analysis' => 'nullable|string|max:100000',
+            'paste_event_count' => 'nullable|integer|min:0|max:500',
+            'pasted_character_count' => 'nullable|integer|min:0|max:20000',
+            'response_mode' => ['nullable', Rule::in(['text', 'voice', 'hybrid', 'voice_and_text'])],
+            'is_skipped' => 'nullable',
+            'timed_out' => 'nullable',
+            'elapsed_seconds' => 'nullable|integer|min:0|max:7200',
+            'wpm' => 'nullable|integer|min:0|max:400',
+            'voice_duration' => 'nullable|integer|min:0|max:7200',
+            'filler_words_count' => 'nullable|integer|min:0|max:500',
+            'pause_count' => 'nullable|integer|min:0|max:500',
+            'confidence_score' => 'nullable|integer|min:0|max:100',
+            'self_reported_confidence' => 'nullable|integer|min:0|max:100',
+            'eye_contact_score' => 'nullable|integer|min:0|max:100',
+            'posture_score' => 'nullable|integer|min:0|max:100',
         ]);
 
         $sessionId = $validated['session_id'] ?? session('active_interview_id');
         $sessionRecord = $sessionId ? InterviewSession::find($sessionId) : null;
+        $redirectUrl = route('interview.setup');
 
         if ($sessionRecord && (int) $sessionRecord->user_id !== (int) Auth::id()) {
             abort(403);
         }
 
         if ($sessionRecord && in_array($sessionRecord->status, ['in_progress', 'processing'], true)) {
-            $this->deleteInterviewSessionData($sessionRecord);
+            $draftAnswer = $this->cleanTranscribedAnswer($validated['answer_text'] ?? '');
+            if ($draftAnswer !== '' && ! empty($validated['question_id'])) {
+                $question = $this->questionForSession($validated['question_id'], $sessionRecord);
+                if (! $question) {
+                    abort(403);
+                }
+
+                $this->persistInterviewAnswer($sessionRecord, $question, $validated, $draftAnswer);
+            }
+
+            DB::transaction(function () use ($sessionRecord, $validated) {
+                if (Schema::hasTable('feedback')) {
+                    Feedback::where('interview_session_id', $sessionRecord->id)->delete();
+                }
+
+                if (Schema::hasTable('scores')) {
+                    Score::where('interview_session_id', $sessionRecord->id)->delete();
+                }
+
+                $sessionRecord->forceFill([
+                    'status' => 'ended',
+                    'score_eligible' => false,
+                    'duration_seconds' => $validated['duration_seconds'] ?? $sessionRecord->duration_seconds,
+                    'current_question_index' => $validated['current_question_index'] ?? $sessionRecord->current_question_index,
+                    'notes' => 'Ended early by the user before final feedback generation.',
+                    'session_state' => null,
+                    'action_plan' => [
+                        'ended_early' => true,
+                        'headline' => 'Session ended early. No feedback was generated.',
+                    ],
+                ])->save();
+            });
+
+            $redirectUrl = route('user.review', $sessionRecord->id);
+        } elseif ($sessionRecord && $sessionRecord->status === 'ended') {
+            $redirectUrl = route('user.review', $sessionRecord->id);
         }
 
         if (! $sessionRecord || (int) session('active_interview_id') === (int) ($sessionRecord->id ?? 0)) {
@@ -1246,7 +1312,7 @@ class InterviewController extends Controller
 
         return response()->json([
             'success' => true,
-            'redirect_url' => route('interview.setup'),
+            'redirect_url' => $redirectUrl,
         ]);
     }
 
@@ -1724,12 +1790,12 @@ class InterviewController extends Controller
                 $clientData,
                 $deliveryTranscript,
                 $metrics,
-                (bool) data_get($session->accommodation_profile, 'camera_coaching', false)
+                (bool) data_get($session->accommodation_profile, 'camera_detection', data_get($session->accommodation_profile, 'camera_coaching', false))
             );
         } catch (\Throwable $error) {
             $this->logAnswerAnalysisFallback('observation_data', $error, $session, $question);
 
-            return $this->fallbackObservationData($deliveryTranscript, $metrics, (bool) data_get($session->accommodation_profile, 'camera_coaching', false));
+            return $this->fallbackObservationData($deliveryTranscript, $metrics, (bool) data_get($session->accommodation_profile, 'camera_detection', data_get($session->accommodation_profile, 'camera_coaching', false)));
         }
     }
 
@@ -1984,7 +2050,7 @@ class InterviewController extends Controller
             'samples' => [],
             'source' => null,
             'unavailable_reason' => $cameraEnabled ? 'analysis_unavailable' : null,
-            'caveat' => 'Optional camera coaching was not measured. It is never used to guess confidence, honesty, personality, job fit, or intent.',
+            'caveat' => 'Optional camera detection was not measured. It is never used to guess confidence, honesty, personality, job fit, or intent.',
         ];
     }
 
@@ -2025,11 +2091,11 @@ class InterviewController extends Controller
         ];
         $cameraFeedback = [
             'status' => $cameraStatus === 'insufficient_data' ? 'insufficient_data' : 'not_measured',
-            'observation' => 'Optional camera coaching was not measured for this answer.',
+            'observation' => 'Optional camera detection was not measured for this answer.',
             'tip' => 'Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.',
             'tips' => ['Use steady front lighting and keep your face, shoulders, and hands within the preview when possible.'],
             'evidence' => [],
-            'limitation' => 'Camera coaching was not available or could not be used for this request.',
+            'limitation' => 'Camera detection was not available or could not be used for this request.',
         ];
         $contentAlignment = [
             'answer_id' => $metrics['answer_id'] ?? null,
@@ -2452,7 +2518,8 @@ class InterviewController extends Controller
             'pronunciation_score' => $answer->pronunciation_score,
             'scoring_confidence' => $scoringConfidence ?? $answer->scoring_confidence ?? 0,
             'is_skipped' => (bool) ($answer->is_skipped ?? false),
-            'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_coaching', false),
+            'camera_detection_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
+            'camera_coaching_enabled' => (bool) data_get($session?->accommodation_profile, 'camera_detection', data_get($session?->accommodation_profile, 'camera_coaching', false)),
         ], $evaluation);
     }
 

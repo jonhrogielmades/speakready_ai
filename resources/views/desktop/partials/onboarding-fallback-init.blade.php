@@ -9,6 +9,7 @@
             routeName: @json($tutorialRouteName),
             pageTitle: @json($tutorialPageTitle),
             pageScope: @json(request()->getRequestUri()),
+            includeShellSteps: true,
             autoStart: false,
             serverDetectedMobile: @json((bool) ($isMobile ?? false)),
         };

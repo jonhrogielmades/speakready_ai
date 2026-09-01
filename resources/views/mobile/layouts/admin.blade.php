@@ -2499,7 +2499,7 @@
                <i class="fa-solid fa-clipboard-check"></i>
                <span>Audit</span>
             </a>
-            <button class="mob-nav-item {{ request()->routeIs('admin.categories', 'admin.questions', 'admin.modules*', 'admin.game*', 'admin.sessions.archive', 'admin.feedback.complaints', 'admin.contacts.*', 'admin.ai.*', 'admin.settings.*') ? 'active' : '' }}"
+            <button class="mob-nav-item {{ request()->routeIs('admin.account', 'admin.categories', 'admin.questions', 'admin.modules*', 'admin.game*', 'admin.sessions.archive', 'admin.feedback.complaints', 'admin.contacts.*', 'admin.ai.*', 'admin.settings.*') ? 'active' : '' }}"
                     id="mobnav-more"
                     type="button"
                     aria-controls="mobProfileDropdown"
@@ -2569,7 +2569,7 @@
             <div class="mob-profile-account">
                <div class="mob-profile-section-title">System</div>
                <div class="mob-profile-grid mb-2">
-                  <a href="{{ route('admin.users.show', Auth::user()) }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.users.show') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
+                  <a href="{{ route('admin.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.account') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
                   <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
                </div>
                <form action="{{ route('logout') }}" method="POST">

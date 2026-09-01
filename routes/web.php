@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminAccountController;
 use App\Http\Controllers\AdminSessionController;
 use App\Http\Controllers\AdminSettingController;
 use App\Http\Controllers\AdminUserController;
@@ -242,6 +243,10 @@ Route::middleware(['auth', 'user'])->group(function () {
 // Admin Routes
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    Route::get('/admin/account', [AdminAccountController::class, 'edit'])->name('admin.account');
+    Route::post('/admin/account/profile', [AdminAccountController::class, 'updateProfile'])->name('admin.account.profile');
+    Route::post('/admin/account/password', [AdminAccountController::class, 'updatePassword'])->name('admin.account.password');
 
     // System Settings
     Route::get('/admin/settings', [AdminSettingController::class, 'index'])->name('admin.settings.index');
